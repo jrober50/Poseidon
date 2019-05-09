@@ -136,6 +136,7 @@ clean:
 	rm -f $(OBJ)/d.*.o
 	rm -f $(OBJ)/p.*.o
 	rm -f $(OBJ)/i.*.o
+	rm -f $(OBJ)/e.*.o
 	rm -f $(OBJ)/*.mod DONE
 	rm -f $(BIN)/*.x
 
