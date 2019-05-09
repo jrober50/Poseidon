@@ -396,7 +396,8 @@ INTEGER                                                     ::  Local_Theta_Star
 !                                                                                               !
 !###############################################################################################!
 INTEGER                                                    ::  Num_Timer_Calls=25
-REAL(KIND = idp), DIMENSION(:),ALLOCATABLE                 ::  Time_Table
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                ::  Iter_Time_Table
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                ::  Run_Time_Table
 
 
 

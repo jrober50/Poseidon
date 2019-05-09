@@ -91,7 +91,7 @@ USE Units_Module, &
 
 
 USE Test_Functions_Module, &
-            ONLY :  Poseidon_Initialize_CFA_Test_Prob_Par_CHIMERA
+            ONLY :  Poseidon_Initialize_CFA_Test_Problem_CHIMERA
 
 
 
@@ -174,7 +174,6 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  x_e, x_c, y_e, y
 !   Output Variables    !
 !                       !
 
-INTEGER                                                     ::  NUM_SAMPLES
 REAL(KIND = idp)                                            ::  potential
 
 
@@ -278,16 +277,21 @@ CALL Unpack_CHIMERA_Parameters()
 
 
 
-ALLOCATE( CHIMERA_R_LOCS(0:CHIMERA_R_ELEMS+1), CHIMERA_T_LOCS(0:CHIMERA_T_ELEMS+1), CHIMERA_P_LOCS(0:CHIMERA_P_ELEMS+1))
-ALLOCATE( CHIMERA_Delta_R(0:CHIMERA_R_ELEMS), CHIMERA_Delta_T(0:CHIMERA_T_ELEMS), CHIMERA_DELTA_P(0:CHIMERA_P_ELEMS))
+ALLOCATE( CHIMERA_R_LOCS(0:CHIMERA_R_ELEMS+1),  &
+          CHIMERA_T_LOCS(0:CHIMERA_T_ELEMS+1),  &
+          CHIMERA_P_LOCS(0:CHIMERA_P_ELEMS+1)   )
+
+ALLOCATE( CHIMERA_Delta_R(0:CHIMERA_R_ELEMS),   &
+          CHIMERA_Delta_T(0:CHIMERA_T_ELEMS),   &
+          CHIMERA_DELTA_P(0:CHIMERA_P_ELEMS)    )
+
 ALLOCATE( Enclosed_Mass(0:CHIMERA_R_ELEMS+1) )
 ALLOCATE( CHIMERA_Potential(0:CHIMERA_R_ELEMS) )
-ALLOCATE( CHIMERA_E(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS, 1:CHIMERA_P_ELEMS) )
-ALLOCATE( CHIMERA_S(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS, 1:CHIMERA_P_ELEMS) )
-ALLOCATE( CHIMERA_Si(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS, 1:CHIMERA_P_ELEMS, 1:3) )
+ALLOCATE( CHIMERA_E(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS,1:CHIMERA_P_ELEMS) )
+ALLOCATE( CHIMERA_S(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS,1:CHIMERA_P_ELEMS) )
+ALLOCATE( CHIMERA_Si(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS,1:CHIMERA_P_ELEMS, 1:3) )
 
-Left_Limit = CHIMERA_LEFT_LIMIT
-Right_Limit = CHIMERA_RIGHT_LIMIT
+
 
 Num_Input_Nodes(1) = CHIMERA_R_INPUT_NODES
 Num_Input_Nodes(2) = CHIMERA_T_INPUT_NODES
@@ -315,56 +319,23 @@ CALL Set_Units( "C" )
 !!                                       !!
 !!   Poseidon Initialization Variables   !!
 !!                                       !!
+Left_Limit          = CHIMERA_LEFT_LIMIT
+Right_Limit         = CHIMERA_RIGHT_LIMIT
+Num_Procs           = CHIMERA_PROCS
+Num_y_Procs         = CHIMERA_y_PROCS
+Num_z_Procs         = CHIMERA_z_PROCS
+Problem_Dimension   = CHIMERA_DIMENSION
+Inner_Radius        = CHIMERA_INNER_RADIUS
+Core_Radius         = CHIMERA_CORE_RADIUS
+Outer_Radius        = CHIMERA_OUTER_RADIUS
+nx                  = CHIMERA_R_ELEMS
+nc                  = CHIMERA_C_ELEMS
+ny                  = CHIMERA_T_ELEMS
+nz                  = CHIMERA_P_ELEMS
+MESH_TYPE           = CHIMERA_MESH_TYPE
+TEST_NUM            = 3
 
 
-Num_Procs = CHIMERA_PROCS
-Num_y_Procs = CHIMERA_y_PROCS
-Num_z_Procs = CHIMERA_z_PROCS
-
-Problem_Dimension = CHIMERA_DIMENSION
-
-
-!   Set the Inner Radius of the Problem !
-Inner_Radius = CHIMERA_INNER_RADIUS
-
-!   Set the Core Radius of the Problem !
-Core_Radius = CHIMERA_CORE_RADIUS
-
-!   Set the Outer Radius of the Problem !
-Outer_Radius = CHIMERA_OUTER_RADIUS !* 15 * 1000 * 100
-
-
-
-
-
-!   Set the Number of Radial Elements   !
-!nx = 4
-nx = CHIMERA_R_ELEMS
-nc = CHIMERA_C_ELEMS
-
-
-!   Set the Number of Theta Elements    !
-!ny = 2*Num_Procs                  !   For a 1-Dimensional Simulation Set equal to 1
-ny = CHIMERA_T_ELEMS
-
-
-!   Set the Number of Phi Elements      !
-!nz = 2*Num_Procs                  !   For a 1 or 2-Dimensional Simulations Set equal to 1
-nz = CHIMERA_P_ELEMS
-
-
-
-
-
-MESH_TYPE = CHIMERA_MESH_TYPE
-TEST_NUM = 3
-
-NUM_SAMPLES = 20
-
-
-
-PRINT*,"Test Number ",TEST_NUM
-PRINT*,"Mesh Type   ",Mesh_Type
 
 
 
@@ -373,22 +344,6 @@ PRINT*,"Mesh Type   ",Mesh_Type
 !                                       !
 !       Initialize the MPI World        !
 !                                       !
-
-
-!PRINT*,"BEFORE MPI_INIT"
-
-
-!CALL MPI_INIT(ierr)
-!CALL MPI_COMM_SIZE(MPI_COMM_WORLD, nPROCS, ierr)
-!CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
-
-!IF( myID == 0) THEN
-
-!PRINT*,"BEFORE CREATE CHIMERA_COMM_WORLD",NUM_PROCS, nPROCS
-!PRINT*,"   "
-!PRINT*,"  "
-!END IF
-
 
 IF ( NUM_PROCS == nPROCS ) THEN
 
@@ -423,6 +378,7 @@ ELSE IF ( NUM_PROCS < nPROCs ) THEN
         CALL MPI_COMM_RANK(CHIMERA_COMM_WORLD, myID_Chimera, ierr)
     ELSE
 
+        ! If process doesn't belong give bogus id.
         myID_CHIMERA = -1
 
     END IF
@@ -437,31 +393,13 @@ ELSE IF ( NUM_PROCS > nPROCS ) THEN
 
 END IF
 
-IF( myID == 0) THEN
-
-    PRINT*,"  "
-    PRINT*,"AFTER CREATE CHIMERA_COMM_WORLD"
-    PRINT*,"  "
-
-END IF
-CALL SLEEP(1)
-CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
 
 
-!IF (nPROCS .NE. Num_Procs ) THEN
-!    IF (myID == 0 ) THEN
-!       PRINT*,"Not the expected number of CHIMERA processes, may cause errors"
-!       PRINT*," Expected : ",Num_Procs," Found : ",nPROCS
-!       PRINT*,"Checked in d.main_3D.F90, line 360"
-!    END IF
-!    RUN_POSEIDON_FLAG = .FALSE.
-!
-!END IF
-
+! Check if there are enough processes to fill process grid
 IF ( Num_y_Procs * Num_Z_procs .NE. NUM_PROCS ) THEN
     IF (myID == 0) THEN
        PRINT*,"Grid will not divide evenly onto processes"
-       PRINT*,"Checked in d.main_3D.F90, line 370"
+       PRINT*,"Checked in d.main_3D.F90, line 445"
     END IF
     RUN_POSEIDON_FLAG = .FALSE.
 
@@ -485,11 +423,7 @@ IF ( Problem_Dimension .EQ. 1 ) THEN
     myid_theta = 0
     myid_phi = 0
 
-
-
 ELSE IF ( Problem_Dimension .EQ. 2 ) THEN
-
-
 
     !   2-D Set up
 
@@ -498,8 +432,6 @@ ELSE IF ( Problem_Dimension .EQ. 2 ) THEN
 
     myid_theta = myid_CHIMERA
     myid_phi = 0
-
-
 
 ELSE IF ( Problem_Dimension .EQ. 3 ) THEN
 
@@ -530,22 +462,12 @@ END IF
 IF ( ngrid == 2 ) THEN
 
 
-
-
 ELSE
 
     MPI_COMM_GRID = MPI_COMM_WORLD
 
 END IF
 
-
-
-IF( myID == -130) THEN
-
-     PRINT*,"ny",ny,"nz",nz
-     PRINT*,"Num_Y_PROCS",Num_y_Procs,"Num_z_Procs",Num_z_Procs
-     PRINT*,"ij_ray_dim",ij_ray_dim,"ik_ray_dim",ik_ray_dim
-END IF
 
 
 
@@ -565,15 +487,10 @@ ALLOCATE(dx_c(1:nx))
 ALLOCATE(dy_c(-5:ny+6), tmp_dy_c(1:ny))
 ALLOCATE(dz_c(-5:nz+6), tmp_dz_c(1:nz))
 
-!                                               !
-!   For this example, we build uniform meshes.  !
-!                                               !
 
 IF ( TEST_NUM == 2 ) THEN
 
-    PRINT*,"Before Load_CHIMERA_HDF5",myID_chimera
     CALL Load_CHIMERA_HDF5(file_number, stride, path, frame_flag)
-    PRINT*,"After  Load_CHIMERA_HDF5",myID_chimera
 
     dx_c(0:nx) = CHIMERA_Delta_R(0:nx)
     dy_c(0:ny) = CHIMERA_Delta_T(0:ny)
@@ -593,7 +510,7 @@ ELSE
                          y_e(0:ny), y_c(1:ny), dy_c(1:ny),             &
                          z_e(0:nz), z_c(1:nz), dz_c(1:nz)              )
 
-    OPEN( UNIT = 42, file = 'OUTPUT/rmesh.out')
+    OPEN( UNIT = 42, file = 'OUTPUT/R_Mesh.out')
     WRITE(42,*) x_e
     CLOSE( UNIT = 42)
 
@@ -633,19 +550,22 @@ Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
 
 
-
-ALLOCATE(   Local_E(1:Num_Input_Nodes(1)*Num_Input_Nodes(2)*Num_Input_Nodes(3),       &
-                    0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1    ),                  &
-            Local_S(1:Num_Input_Nodes(1)*Num_Input_Nodes(2)*Num_Input_Nodes(3),       &
-                    0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1     ),                 &
-            Local_Si(1:Num_Input_Nodes(1)*Num_Input_Nodes(2)*Num_Input_Nodes(3),      &
-                    0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1, 1:3)                  )
+ALLOCATE(   Local_E(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1    ),             &
+            Local_S(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1     ),            &
+            Local_Si(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1, 1:3)            )
 
 
 
 
 
-CALL Poseidon_Initialize_CFA_Test_Prob_Par_CHIMERA(Test_Num, nx, ny, nz,                &
+
+
+
+
+!
+!   Initialize Source Variables Based on Test Problem
+!
+CALL Poseidon_Initialize_CFA_Test_Problem_CHIMERA(  Test_Num, nx, ny, nz,               &
                                                     nx, ij_ray_dim, ik_ray_dim,         &
                                                     Num_Input_Nodes,                    &
                                                     Input_R_Quad,                       &
@@ -656,64 +576,22 @@ CALL Poseidon_Initialize_CFA_Test_Prob_Par_CHIMERA(Test_Num, nx, ny, nz,        
 
 
 
-!DO i = 0,nPROCS
 !
-!    if (myid == i ) THEN
+!   Call Poseidon Interface
 !
-!        PRINT*,myid,"Local_E"
-!        PRINT*,Local_E
-!        PRINT*,"++++++++++++++++"
-!
-!    END IF
-!
-!    CALL MPI_Barrier(MPI_COMM_WORLD,ierr)
-!
-!!    PRINT*,"after barrier",myid
-!END DO
+mode = 1
+modeb = 0
+imin = 1
+imax = nx
+CALL Poseidon_CFA_3D(   mode, modeb, imin, imax, nx,                    &
+                        ij_ray_dim, ik_ray_dim, ny, nz,                 &
+                        x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,      &
+                        Num_Input_Nodes,                                &
+                        Input_R_Quad, Input_T_Quad, Input_P_Quad,       &
+                        Left_Limit, Right_Limit,                        &
+                        Local_E, Local_S, Local_Si                      )
 
 
-
-
-
-
-
-!
-!   Make Poseidon Calls
-!
-
-
-!RUN_POSEIDON_FLAG = .FALSE.
-
-IF ( RUN_POSEIDON_FLAG .EQV. .TRUE. ) THEN
-
-
-    IF ( myid == 0 ) THEN
-
-        PRINT*,"----------  CHIMERA Variables ----------"
-        PRINT*,"        CHIMERA_Y_nPROCS = ",CHIMERA_y_PROCS
-        PRINT*,"        CHIMERA_z_nPROCS = ",CHIMERA_z_PROCS
-
-    END IF
-
-!   PRINT*,"Left & Right Limits",Left_Limit, Right_Limit,CHIMERA_LEFT_LIMIT,CHIMERA_RIGHT_LIMIT
-
-
-    mode = 1
-    modeb = 0
-    imin = 1
-    imax = nx
-    CALL Poseidon_CFA_3D(   mode, modeb, imin, imax, nx,                    &
-                            ij_ray_dim, ik_ray_dim, ny, nz,                 &
-                            x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,      &
-                            Num_Input_Nodes,                                &
-                            Input_R_Quad, Input_T_Quad, Input_P_Quad,       &
-                            Left_Limit, Right_Limit,                        &
-                            Local_E, Local_S, Local_Si                      )
-
-
-
-
-END IF
 
 
 

@@ -12,18 +12,16 @@ NPROCS=1
 
 ## Select Machine
 
-MACHINE_NAME	=MacBook
+MACHINE_NAME    =NicksMacBook
+#MACHINE_NAME	=MacBook
 #MACHINE_NAME	=Rhea
 #MACHINE_NAME	=BlueWaters
 
 
 ## Select Mode
 
-CMODE	=DEBUG
-#CMODE	=OPTIMIZE
-
-# MacBook Only
-#CMODE	=DEEPDEBUG 
+#CMODE	=DEBUG
+CMODE	=OPTIMIZE
 
 
 ## Compile with Openmp
@@ -39,8 +37,6 @@ PETSC_MODE	=ON
 #PETSC_MODE	=OFF
 
 
-
-
 ## Compile with HDF5
 
 HDF5_MODE       =ON
@@ -51,6 +47,9 @@ HDF5_MODE       =ON
 
 MPI_MODE        =ON
 #MPI_MODE       =OFF
+
+
+
 
 
 #-------------------------------- Code Objects ---------------------------------#
@@ -83,11 +82,11 @@ include makefile_dictionary
 #---------------------------- Compilation Rules ------------------------------------#
 
 
-Poseidon : $(CODE_com) $(CODE_par) $(CODE_ext) $(CODE_o) $(CODE_itf)
+yahil : $(CODE_com) $(CODE_par) $(CODE_ext) $(CODE_o) $(CODE_itf)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(SRC)/$(CODE_drv:%.o=%.$(EXT)) -o $(DRIVER_OBJ)
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/main_$(DIMENSION).x
-	@echo ">>> compiled on `hostname -s` with $(COMP_$(MACHINE_NAME)) <<<"
+	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 
 
@@ -120,6 +119,8 @@ $(CODE_itf):%.o: $(SRC)/%.$(EXT)
 run: 
 	./$(BIN)/main_$(DIMENSION).x 
 
+run_yahil:
+	mpirun  -np $(NPROCS) ./$(BIN)/main_$(DIMENSION).x
 
 run_mpi:
 	mpirun  -np $(NPROCS) ./$(BIN)/main_$(DIMENSION).x
@@ -139,4 +140,6 @@ clean:
 	rm -f $(BIN)/*.x
 
 
-
+clean_output:
+	rm -f $(OUT)/*.out
+	rm -f $(OUT)/Iteration_Reports/*.out

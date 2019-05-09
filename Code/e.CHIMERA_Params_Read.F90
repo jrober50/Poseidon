@@ -71,71 +71,72 @@ INTEGER                                 ::  CHIMERA_read
 INTEGER                                 ::  iskipp
 INTEGER                                 ::  istat
 
-INTEGER                                 ::  RE, CE, TE, PE
-INTEGER                                 ::  MT, ST
-INTEGER                                 ::  RQ, TQ, PQ
-INTEGER                                 ::  DIM
-INTEGER                                 ::  PROCS, yPROCS, zPROCS
-REAL(KIND = idp)                        ::  LL, RL, IR, CR, OR
-REAL(KIND = idp)                        ::  DEN
-INTEGER                                 ::  PWA
-REAL(KIND = idp)                        ::  SST, SSK, SSG
-
-
-
-
+INTEGER,            DIMENSION(1:14)     ::  Int_Params
+REAL(KIND = idp),   DIMENSION(1:9)      ::  Real_Params
+INTEGER,            DIMENSION(1:9)      ::  Real_Params_Flags
 
 
 
 CHIMERA_read = 42
 
-OPEN(UNIT=CHIMERA_read, FILE='Params/CHIMERA_Params.d', STATUS='NEW', IOSTAT=istat)
+OPEN(UNIT=CHIMERA_read, FILE='Params/Driver_Params.d', STATUS='NEW', IOSTAT=istat)
 IF ( istat .NE. 0 ) THEN
-    OPEN(UNIT=CHIMERA_read, FILE='Params/CHIMERA_Params.d', STATUS='OLD', IOSTAT=istat)
+    OPEN(UNIT=CHIMERA_read, FILE='Params/Driver_Params.d', STATUS='OLD', IOSTAT=istat)
 END IF
 
-CALL READ_CHIMERA_PARAMETERS( CHIMERA_read,                     &
-                                RE, CE, TE, PE, RQ, TQ, PQ,     &
-                                DIM, PROCS, yPROCS, zPROCS,     &
-                                LL, RL, IR, CR, OR, MT, ST,     &
-                                DEN, PWA,                       &
-                                SST, SSK, SSG                   )
+
+! Set Initial Values !
+Int_Params = -1
+Real_Params_Flags = -1
+
+CALL READ_CHIMERA_PARAMETERS( CHIMERA_read,         &
+                              Int_Params,           &
+                              Real_Params,          &
+                              Real_Params_Flags     )
 
 CLOSE(UNIT=CHIMERA_read,STATUS='keep',IOSTAT=istat)
 
 
 
+! Integers
+CHIMERA_R_ELEMS             = Int_Params(1) ! RE
+CHIMERA_C_ELEMS             = Int_Params(2) ! CE
+CHIMERA_T_ELEMS             = Int_Params(3) ! TE
+CHIMERA_P_ELEMS             = Int_Params(4) ! PE
+CHIMERA_R_INPUT_NODES       = Int_Params(5) ! RQ
+CHIMERA_T_INPUT_NODES       = Int_Params(6) ! TQ
+CHIMERA_P_INPUT_NODES       = Int_Params(7) ! PQ
+
+CHIMERA_MESH_TYPE           = Int_Params(8) ! MT
+IF ( Int_Params(13) .NE. -1 ) THEN
+    CHIMERA_DIMENSION       = Int_Params(9) ! DIM
+END IF
+CHIMERA_PROCS               = Int_Params(10) ! PROCS
+CHIMERA_y_PROCS             = Int_Params(11) ! yPROCS
+CHIMERA_z_PROCS             = Int_Params(12) ! zPROCS
+
+IF ( Int_Params(13) .NE. -1 ) THEN
+    CHIMERA_SOLVER_TYPE     = Int_Params(13) ! ST
+END IF
+
+POWER_A                     = Int_Params(14) ! PWA
 
 
+! Reals
+CHIMERA_LEFT_LIMIT          = Real_Params(1) ! LL
+CHIMERA_RIGHT_LIMIT         = Real_Params(2) ! RL
+CHIMERA_INNER_RADIUS        = Real_Params(3) ! IR
+CHIMERA_CORE_RADIUS         = Real_Params(4) ! CR
+CHIMERA_OUTER_RADIUS        = Real_Params(5) ! OR
+
+IF ( Real_Params_Flags(6) .NE.  -1 ) THEN
+    RHO_O                   = Real_Params(6) ! DEN
+END IF
 
 
-
-CHIMERA_R_ELEMS             = RE
-CHIMERA_C_ELEMS             = CE
-CHIMERA_T_ELEMS             = TE
-CHIMERA_P_ELEMS             = PE
-CHIMERA_R_INPUT_NODES       = RQ
-CHIMERA_T_INPUT_NODES       = TQ
-CHIMERA_P_INPUT_NODES       = PQ
-CHIMERA_LEFT_LIMIT          = LL
-CHIMERA_RIGHT_LIMIT         = RL
-CHIMERA_MESH_TYPE           = MT
-CHIMERA_INNER_RADIUS        = IR
-CHIMERA_CORE_RADIUS         = CR
-CHIMERA_OUTER_RADIUS        = OR
-CHIMERA_DIMENSION           = DIM
-CHIMERA_PROCS               = PROCS
-CHIMERA_y_PROCS             = yPROCS
-CHIMERA_z_PROCS             = zPROCS
-
-CHIMERA_SOLVER_TYPE         = ST
-
-RHO_O                       = DEN
-POWER_A                     = PWA
-
-SELFSIM_T                   = SST
-SELFSIM_KAPPA               = SSK
-SELFSIM_GAMMA               = SSG
+SELFSIM_T                   = Real_Params(7) ! SST
+SELFSIM_KAPPA               = Real_Params(8) ! SSK
+SELFSIM_GAMMA               = Real_Params(9) ! SSG
 
 
 
@@ -153,23 +154,17 @@ END SUBROUTINE UNPACK_CHIMERA_PARAMETERS
 !                  READ_CHIMERA_PARAMETERS                                          !
 !                                                                                   !
  !#################################################################################!
-SUBROUTINE READ_CHIMERA_PARAMETERS( nreadp,                             &
-                                    RE, CE, TE, PE, RQ, TQ, PQ,         &
-                                    DIM, PROCS, yPROCS, zPROCS,         &
-                                    LL, RL, IR, CR, OR, MT, ST,         &
-                                    DEN, PWA,                           &
-                                    SST, SSK, SSG                       )
+SUBROUTINE READ_CHIMERA_PARAMETERS( nreadp,                     &
+                                    Int_Params,                 &
+                                    Real_Params,                &
+                                    Real_Params_Flags           )
 
 INTEGER, INTENT(IN)                                 ::  nreadp
-INTEGER,INTENT(INOUT)                               ::  RE, CE, TE, PE
-INTEGER,INTENT(INOUT)                               ::  RQ, TQ, PQ
-INTEGER,INTENT(INOUT)                               ::  DIM
-INTEGER,INTENT(INOUT)                               ::  MT, ST
-INTEGER,INTENT(INOUT)                               ::  PROCS, yPROCS, zPROCS
-REAL(KIND = idp), INTENT(INOUT)                     ::  LL, RL, IR, CR, OR
-REAL(KIND = idp), INTENT(INOUT)                     ::  DEN
-INTEGER,INTENT(INOUT)                               ::  PWA
-REAL(KIND = idp), INTENT(INOUT)                     ::  SST, SSK, SSG
+
+INTEGER,            DIMENSION(1:14),INTENT(INOUT)   ::  Int_Params
+REAL(KIND = idp),   DIMENSION(1:9), INTENT(INOUT)   ::  Real_Params
+INTEGER,            DIMENSION(1:9), INTENT(INOUT)   ::  Real_Params_Flags
+
 
 INTEGER                             :: iskipp
 INTEGER                             :: istat
@@ -198,28 +193,28 @@ Param_type = line(1:6)
 Param_name = line(40:60)
 
 IF ( Param_type == 'DIM   ' ) THEN
-    READ (line, 111) DIM
+    READ (line, 111) INT_PARAMS(9)
     CYCLE
 END IF
 
 IF ( Param_type == 'RE    ' ) THEN
-    READ (line, 111) RE
+    READ (line, 111) INT_PARAMS(1)
     CYCLE
 END IF
 
 IF ( Param_type == 'CE    ' ) THEN
-    READ (line, 111) CE
+    READ (line, 111) INT_PARAMS(2)
     CYCLE
 END IF
 
 
 IF ( Param_type == 'TE    ' ) THEN
-    READ (line, 111) TE
+    READ (line, 111) INT_PARAMS(3)
     CYCLE
 END IF
 
 IF ( Param_type == 'PE    ' ) THEN
-    READ (line, 111) PE
+    READ (line, 111) INT_PARAMS(4)
     CYCLE
 END IF
 
@@ -227,17 +222,17 @@ END IF
 
 
 IF ( Param_type == 'RQ    ' ) THEN
-    READ (line, 111) RQ
+    READ (line, 111) INT_PARAMS(5)
     CYCLE
 END IF
 
 IF ( Param_type == 'TQ    ' ) THEN
-    READ (line, 111) TQ
+    READ (line, 111) INT_PARAMS(6)
     CYCLE
 END IF
 
 IF ( Param_type == 'PQ    ' ) THEN
-    READ (line, 111) PQ
+    READ (line, 111) INT_PARAMS(7)
     CYCLE
 END IF
 
@@ -246,19 +241,19 @@ END IF
 
 
 IF ( Param_type == 'PROC  ' ) THEN
-    READ (line, 111) PROCS
+    READ (line, 111) INT_PARAMS(10)
     CYCLE
 END IF
 
 
 IF ( Param_type == 'yPROC ' ) THEN
-    READ (line, 111) yPROCS
+    READ (line, 111) INT_PARAMS(11)
     CYCLE
 END IF
 
 
 IF ( Param_type == 'zPROC ' ) THEN
-    READ (line, 111) zPROCS
+    READ (line, 111) INT_PARAMS(12)
     CYCLE
 END IF
 
@@ -266,69 +261,78 @@ END IF
 
 
 IF ( Param_type == 'LL    ' ) THEN
-    READ (line, 131) LL
+    READ (line, 131) REAL_PARAMS(1)
+    REAL_PARAMS_FLAGS(1) = 1
     CYCLE
 END IF
 
 
 IF ( Param_type == 'RL    ' ) THEN
-    READ (line, 131) RL
+    READ (line, 131) REAL_PARAMS(2)
+    REAL_PARAMS_FLAGS(2) = 1
     CYCLE
 END IF
 
 IF ( Param_type == 'IR    ' ) THEN
-    READ (line, 131) IR
+    READ (line, 131) REAL_PARAMS(3)
+    REAL_PARAMS_FLAGS(3) = 1
     CYCLE
 END IF
 
 
 IF ( Param_type == 'CR    ' ) THEN
-    READ (line, 131) CR
+    READ (line, 131) REAL_PARAMS(4)
+    REAL_PARAMS_FLAGS(4) = 1
     CYCLE
 END IF
 
 IF ( Param_type == 'OR    ' ) THEN
-    READ (line, 131) OR
+    READ (line, 131) REAL_PARAMS(5)
+    REAL_PARAMS_FLAGS(5) = 1
     CYCLE
 END IF
 
 
 IF ( Param_type == 'MT    ' ) THEN
-    READ (line, 111) MT
+    READ (line, 111) INT_PARAMS(8)
     CYCLE
 END IF
 
 
 IF ( Param_type == 'ST    ' ) THEN
-    READ (line, 111) ST
+    READ (line, 111) INT_PARAMS(13)
     CYCLE
 END IF
 
 IF ( Param_type == 'DEN   ' ) THEN
-     READ (line, 131) DEN
-     CYCLE
+    READ (line, 131) REAL_PARAMS(6)
+    REAL_PARAMS_FLAGS(6) = 1
+    CYCLE
 END IF
 
 IF ( Param_type == 'PWA   ' ) THEN
-     READ (line, 111) PWA
-     CYCLE
+    READ (line, 111) INT_PARAMS(14)
+    CYCLE
 END IF
 
 
 
 IF ( Param_type == 'SST   ' ) THEN
-     READ (line, 131) SST
-     CYCLE
+    READ (line, 131) REAL_PARAMS(7)
+    REAL_PARAMS_FLAGS(7) = 1
+    CYCLE
 END IF
 
 IF ( Param_type == 'SSK   ' ) THEN
-     READ (line, 131) SSK
-     CYCLE
+    READ (line, 131) REAL_PARAMS(8)
+    REAL_PARAMS_FLAGS(8) = 1
+    CYCLE
 END IF
 
 IF ( Param_type == 'SSG   ' ) THEN
-     READ (line, 131) SSG
-     CYCLE
+    READ (line, 131) REAL_PARAMS(9)
+    REAL_PARAMS_FLAGS(9) = 1
+    CYCLE
 END IF
 
 

@@ -250,23 +250,19 @@ DO re = 0,NUM_R_ELEMENTS - 1
 
     DO rd = 0,DEGREE
  
-
-        CUR_PSI_LOC = (re*Degree + rd)*(ULM_LENGTH)                  
-
         ! 2 sqrt(pi) is Ylm normalization factor
 
 
-        !CUR_VAL_PSI = 1.0_idp
-      !  CUR_PSI_LOC = CFA_Matrix_Map( 1, 0, 0, re, rd )
+        CUR_PSI_LOC = (re*Degree + rd)*(ULM_LENGTH)
+
         Coefficient_Vector(CUR_PSI_LOC) = 2.0_idp * sqrt(pi)                                       &
                                         * ( 1.0_idp - 0.5_idp                                          &
                                             * Analytic_Solution(R_Values(rd),0.0_idp,0.0_idp)/csqr   )
 
 
+
         CUR_ALPHPSI_LOC = (re*Degree + rd)*(ULM_LENGTH) + 1
 
-!        CUR_ALPHPSI_LOC = CFA_Matrix_Map( 2, 0, 0, re, rd )
-        !CUR_VAL_ALPHAPSI = 1.0_idp
         Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)                             &
                                         * ( 1.0_idp + 0.5_idp                                   &
                                             * Analytic_Solution(R_Values(rd),0.0_idp,0.0_idp)/csqr  )
@@ -285,11 +281,6 @@ DO re = 0,NUM_R_ELEMENTS - 1
 END DO
 
 
-
-IF (myID == 0 ) THEN
-    PRINT*,"Near Solution Guess Initialized"
-    PRINT*,"Shift_Vector",rlocs(re),Shift_Solution(rlocs(re),rlocs,NUM_R_ELEMENTS), Coefficient_Vector(Cur_Shift_Loc)
-END IF
 
 END SUBROUTINE Initialize_Special_Guess_Values
 
@@ -1496,7 +1487,6 @@ Shift_Vector_BC = (3.0_idp/2.0_idp)                        &
 
 
 
-PRINT*,"Shift_Vector_BC",R_OUTER, Shift_Vector_BC
 
 
 END SUBROUTINE Calc_Shift_BC_1D

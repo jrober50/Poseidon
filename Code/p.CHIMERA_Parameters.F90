@@ -28,7 +28,7 @@ IMPLICIT NONE
 !
 !   CHIMERA Set-up Variables
 !
-INTEGER                     ::  CHIMERA_DIMENSION
+INTEGER                     ::  CHIMERA_DIMENSION   =   3   ! Default = 3
 
 INTEGER                     ::  CHIMERA_R_ELEMS
 INTEGER                     ::  CHIMERA_C_ELEMS
@@ -64,7 +64,7 @@ INTEGER                     ::  nPROCS
 INTEGER                     ::  ij_ray_dim
 INTEGER                     ::  ik_ray_dim
 
-INTEGER                     ::  CHIMERA_SOLVER_TYPE
+INTEGER                     ::  CHIMERA_SOLVER_TYPE = 2     ! Default = 2 -> CFA
 
 INTEGER                     ::  MPI_COMM_XY
 INTEGER                     ::  MPI_COMM_XZ

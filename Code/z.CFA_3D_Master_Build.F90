@@ -25,7 +25,7 @@ MODULE CFA_3D_Master_Build_Module                                               
 !##!                                                                                !##!
 !##!    +301+   REDUCE_3D_NONLAPLACIAN_SOE                                          !##!
 !##!                                                                                !##!
-!##!    +401+   FINISH_3D_NONLAPLACIAN_MATRIX                                       !##!
+!##!    +401+   FINISH_3D_JACOBIAN_MATRIX                                           !##!
 !##!                                                                                !##!
 !##!    +501+   FINISH_3D_RHS_VECTOR                                                !##!
 !##!                                                                                !##!
@@ -176,9 +176,7 @@ USE Jacobian_Internal_Functions_Module, &
 
 
 USE IO_Functions_Module, &
-                                ONLY :  WRITE_BDDtoFULL_MATRIX,         &
-                                        WRITE_BDDtoFULL_MATRIX_Block,   &
-                                        Clock_In
+                                ONLY :  Clock_In
 
 
 
@@ -200,21 +198,31 @@ SUBROUTINE CFA_3D_Master_Build()
 
 
 REAL(KIND = idp)        :: timea, timeb, timec
-
-INTEGER                 :: re
+INTEGER                 :: i,j
 
 timea = 0.0_idp
 timeb = 0.0_idp
 timec = 0.0_idp
 
+PRINT*,"Before CFA_3D_Apply_BCs_Part1"
+PRINT*,Coefficient_Vector(0:4)
+!*!
+!*! Alter the Coefficient Vector to Reflect Boundary Conditions
+!*!
+timeb = MPI_Wtime()
+CALL CFA_3D_Apply_BCs_Part1()
+timec = MPI_Wtime()
+CALL Clock_In(timec-timeb, 4)
 
-!Block_STF_MATVEC = 0.0_idp
-Block_RHS_Vector = 0.0_idp
-!BLOCK_ELEM_STF_MATVEC = 0.0_idp
+PRINT*,"AFTER CFA_3D_Apply_BCs_Part1"
+PRINT*,Coefficient_Vector(0:4)
 
 
 
 
+!*!
+!*! Create the Non-Laplacian Contributions to the Linear System
+!*!
 timeb = MPI_Wtime()
 CALL CREATE_3D_NONLAPLACIAN_SOE()
 timea = MPI_Wtime()
@@ -222,42 +230,49 @@ CALL Clock_In(timea-timeb, 9)
 
 
 
+
+!*!
+!*! Reduce the Non-Laplacian Contributions to Processes involved in the solve
+!*!
 timeb = MPI_Wtime()
 CALL REDUCE_3D_NONLAPLACIAN_SOE()
 timea = MPI_Wtime()
 CALL Clock_In(timea-timeb, 10)
 
 
-
+!*!
+!*! Add the Laplacian contribution to the Jacobian Matrix
+!*!
 timeb = MPI_Wtime()
-CALL FINISH_3D_NONLAPLACIAN_MATRIX()
+CALL FINISH_3D_JACOBIAN_MATRIX()
 timea = MPI_Wtime()
 CALL Clock_In(timea-timeb, 11)
 
 
-
+!*!
+!*! Add the Laplacian contribution to the Residual Vector
+!*!
 timeb = MPI_Wtime()
 CALL FINISH_3D_RHS_VECTOR()
 timea = MPI_Wtime()
 CALL Clock_In(timea-timeb, 12)
 
 
+PRINT*,"Before CFA_3D_Apply_BCs_Part2"
+PRINT*,Coefficient_Vector(0:4)
 
-!PRINT*,"RHS_Vector"
-!PRINT*,Block_RHS_Vector
-!
-!PRINT*,"BLOCK_STF_MAT"
-!DO re = 0,NUM_R_ELEMENTS -1
-!    PRINT*,"RE = ",re
-!    PRINT*,BLOCK_STF_MAT(:,re)
-!
-!
-!END DO
-
+!*!
+!*! Alter the Jacobian Matrix to Reflect Boundary Conditions
+!*!
+timeb = MPI_Wtime()
+CALL CFA_3D_Apply_BCs_Part2()
+timec = MPI_Wtime()
+CALL Clock_In(timec-timeb, 13)
 
 
 
-
+PRINT*,"AFTER CFA_3D_Apply_BCs_Part2"
+PRINT*,Coefficient_Vector(0:4)
 
 
 END SUBROUTINE CFA_3D_Master_Build
@@ -501,8 +516,6 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
         Global_pe = Block_P_Begin + Local_pe
 
-
-                                                              !
         deltap_overtwo = (plocs(Global_pe + 1) - plocs(Global_pe))/2.0_idp
         CUR_P_LOCS(:) = deltap_overtwo * (INT_P_LOCATIONS(:)+1.0_idp) + plocs(Global_pe)
 
@@ -524,12 +537,9 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
             SIN_VAL(:) = DSIN(CUR_T_LOCS(:))
             COS_VAL(:) = DCOS(CUR_T_LOCS(:))
 
-
-
             COS_SQUARE(:) = COS_VAL(:)*COS_VAL(:)
             SIN_SQUARE(:) = SIN_VAL(:)*SIN_VAL(:)
             CSC_SQUARE(:) = CSC_VAL(:)*CSC_VAL(:)
-
 
             DO td = 1,NUM_T_QUAD_POINTS
 
@@ -539,6 +549,10 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
 
 
+
+            !*!
+            !*! Calculate Current Values of CFA Varaiables and their Deriviatives
+            !*!
             timea = MPI_Wtime()
             CALL Calc_3D_Current_Values(Global_re , Local_te  , Local_pe,       &
                                         CUR_VAL_PSI, CUR_DRV_PSI,                       &
@@ -550,49 +564,16 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
                                         SIN_VAL,                                        &
                                         DELTAR_OVERTWO, DELTAT_OVERTWO, DELTAP_OVERTWO  )
 
+
             timeb = MPI_Wtime()
 
-            DO  i = 0,nPROCS_POSEIDON-1
-                IF (myID_Poseidon == -130) THEN
-                    PRINT*,"myID_Poseidon",myID_Poseidon,"RE = ",local_RE
-                    PRINT*,"CUR_R_LOCS",CUR_R_LOCS
-                    PRINT*," "
-                    PRINT*,"CUR_VAL_PSI"
-                    PRINT*,CUR_VAL_PSI(:,1,1)
-                    PRINT*," "
-                    PRINT*,"CUR_VAL_ALPHAPSI"
-                    PRINT*,CUR_VAL_ALPHAPSI(:,1,1)
-                    PRINT*," "
-!                    PRINT*,"CUR_DRV_BETA1"
-!                    PRINT*,CUR_DRV_BETA(1,1,:,:,:)
-!                    PRINT*," "
-                 END IF
-                 CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
-            END DO
-
-
-            DO  i = 0,nPROCS_POSEIDON-1
-                IF (myID_Poseidon == -130) THEN
-                    PRINT*,"myID_Poseidon",myID_Poseidon,"RE = ",local_RE
-                    PRINT*,"CUR_R_LOCS",CUR_R_LOCS
-                    PRINT*," "
-                    PRINT*,"CUR_DRV_PSI"
-                    PRINT*,CUR_DRV_PSI(1,:,1,1)
-                    PRINT*," "
-                    PRINT*,"CUR_DRV_ALPHAPSI"
-                    PRINT*,CUR_DRV_ALPHAPSI(1,:,1,1)
-                    PRINT*," "
-!                    PRINT*,"CUR_DRV_BETA1"
-!                    PRINT*,CUR_DRV_BETA(1,1,:,:,:)
-!                    PRINT*," "
-                 END IF
-                 CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
-            END DO
 
 
 
 
-
+            !*!
+            !*!  Calculate the Sub-Jacobian and RHS Terms
+            !*!
             CALL Calc_3D_SubJcbn_Terms( Local_re, Local_te, Local_pe,             &
                                         CUR_VAL_PSI, CUR_DRV_PSI,                       &
                                         CUR_VAL_ALPHAPSI, CUR_DRV_ALPHAPSI,             &
@@ -613,6 +594,10 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
             
 
 
+
+            !*!
+            !*! Create the Residual Vector ( Sans Laplacian Contribution )
+            !*!
             CALL CREATE_3D_RHS_VECTOR(  Local_re, Local_te, Local_pe,           &
                                         RHS_TERMS,                              &
                                         R_SQUARE, deltar_OVERtwo,        &
@@ -622,7 +607,9 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
             timed = MPI_Wtime()
 
 
-
+            !*!
+            !*! Create Jacobian Matrix ( Sans Laplacian Contribution )
+            !*!
             CALL CREATE_3D_JCBN_MATRIX( Local_re, Local_te, Local_pe,               &
                                         Global_re , Global_te  , Global_pe,         &
                                         TWOOVER_DELTAR,                             &
@@ -641,7 +628,9 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
 
 
-
+            !*!
+            !*! Update Timer Values
+            !*!
             time_CurVals = time_CurVals + timeb - timea
             time_SJT = time_SJT + timec - timeb
             time_RHS = time_RHS + timed - timec
@@ -654,11 +643,6 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 END DO  ! pe Loop
 
 
-
-!print*,"|| Calc_3D_Current_Values TIME :",time_CurVals
-!print*,"|| CREATE_3D_SubJcbn_Terms TIME:",time_SJT
-!print*,"|| CREATE_3D_RHS_VECTOR TIME   :",time_RHS
-!print*,"\/ CREATE_3D_JCBN_MATRIX TIME  :",time_JCBNM
 CALL Clock_In(time_CurVals, 5)
 CALL Clock_In(time_SJT, 6)
 CALL Clock_In(time_RHS, 7)
@@ -1591,11 +1575,11 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
         ! J_{1,4lmn}
         ! Reused_Value * kappa_{20}
-        SUBJCBN_BETA2_TERMS(1, rd, td, pd) = REUSED_VALUE * FourThirds                                      &
-                                    * ( COTAN_VAL(td) /CUR_R_LOCS(rd)       * CUR_VAL_BETA(1,rd,td,pd)      &
-                                            + 2.0_idp * COTAN_VAL(td)       * CUR_VAL_BETA(2,rd,td,pd)      &
-                                            - COTAN_VAL(td)                 * CUR_DRV_BETA(2,2,rd,td,pd)    &
-                                            + 2.0_idp * COTAN_VAL(td)       * CUR_DRV_BETA(3,3,rd,td,pd)    )
+        SUBJCBN_BETA2_TERMS(1, rd, td, pd) = REUSED_VALUE * FourThirds * COTAN_VAL(td)                      &
+                                            * ( 1.0_idp /CUR_R_LOCS(rd)     * CUR_VAL_BETA(1,rd,td,pd)      &
+                                              + 2.0_idp                     * CUR_VAL_BETA(2,rd,td,pd)      &
+                                              - 1.0_idp                     * CUR_DRV_BETA(2,2,rd,td,pd)    &
+                                              + 2.0_idp                     * CUR_DRV_BETA(3,3,rd,td,pd)    )
         ! J_{1,4lmn}
         ! Reused_Value * kappa_{21}
         SUBJCBN_BETA2_TERMS(2, rd, td, pd) = REUSED_VALUE                                                   &
@@ -1650,6 +1634,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
         SUBJCBN_BETA2_TERMS(19, rd, td, pd) = (TwoThirds*CSC_SQUARE(td) / R_SQUARE(rd)) * JCBN_n_ARRAY(3)
         SUBJCBN_BETA2_TERMS(20, rd, td, pd) = (OneThird*CSC_SQUARE(td) / R_SQUARE(rd))                                      &
                                             * ( 7.0_idp*COTAN_VAL(td) + 3.0_idp * JCBN_n_ARRAY(2)  )
+
 
 
 
@@ -2210,16 +2195,7 @@ DO d = 0,DEGREE
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(12, :, td, pd), Common_Term_A(:))   &
                                           + OneThird * Ylm_Cross_Terms(2) * SUM( Common_Term_B )
 
-!                        PRINT*,"Unc_Term(14)"
-!                        PRINT*,Ylm_Cross_Terms(1)                                      &
-!                                          , DOT_PRODUCT(SUBJCBN_BETA2_TERMS(9, :, td, pd), Common_Term_A(:))    &
-!                                          , Ylm_Cross_Terms(1)                                      &
-!                                          , DOT_PRODUCT(SUBJCBN_BETA2_TERMS(10, :, td, pd), Common_Term_B(:))   &
-!                                          , Ylm_Cross_Terms(2)                                      &
-!                                          , DOT_PRODUCT(SUBJCBN_BETA2_TERMS(11, :, td, pd), Common_Term_A(:))   &
-!                                          , Ylm_Cross_Terms(3)                                      &
-!                                          , DOT_PRODUCT(SUBJCBN_BETA2_TERMS(12, :, td, pd), Common_Term_A(:))   &
-!                                          , OneThird * Ylm_Cross_Terms(2) * SUM( Common_Term_B )
+
 
                         Uncommon_Terms(15) = Uncommon_Terms(15)                                                 &
                                           + Ylm_Cross_Terms(1)                                      &
@@ -2350,24 +2326,12 @@ DO d = 0,DEGREE
 
 
 
+
+
+
                     END DO  ! td Loop
                 END DO  ! pd Loop
 
-                IF (myID_Poseidon == -130) THEN
-                    PRINT*," "
-                    PRINT*,"Uncommon_Terms",Global_RE,d,dp
-                    PRINT*,Uncommon_Terms
-!                    PRINT*,"Common_Term_A"
-!                    PRINT*,Common_Term_A
-                    PRINT*," "
-                END IF 
-
-!                PRINT*,"************  Uncommon_Terms specially modified  ************"
-!                PRINT*,"************     Uncommon_Terms(6:25) = 0.0      ************"
-!                Uncommon_Terms(1:5) = 0.0_idp
-!                Uncommon_Terms(6:10) = 0.0_idp
-!                Uncommon_Terms(11:15) = 0.0_idp
-!                Uncommon_Terms(16:25) = 0.0_idp
 
                 MATVEC_LOC = jloc*ELEM_PROB_DIM + iloc
                 BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                             &
@@ -2615,10 +2579,10 @@ END SUBROUTINE REDUCE_3D_NONLAPLACIAN_SOE
 
 !+401+##############################################################################!
 !                                                                                   !
-!                  FINISH_3D_NONLAPLACIAN_MATRIX                             !
+!                  FINISH_3D_JACOBIAN_MATRIX                             !
 !                                                                                   !
 !###################################################################################!
-SUBROUTINE FINISH_3D_NONLAPLACIAN_MATRIX()
+SUBROUTINE FINISH_3D_JACOBIAN_MATRIX()
 
 
 
@@ -2792,7 +2756,7 @@ END IF
 
 
 
-END SUBROUTINE FINISH_3D_NONLAPLACIAN_MATRIX
+END SUBROUTINE FINISH_3D_JACOBIAN_MATRIX
 
 
 
@@ -2981,7 +2945,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
                  + myID_SUBSHELL*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
     End_Here = Start_Here + SUBSHELL_Prob_Dim - 1
 
-!    PRINT*,"Before ZGBMV",myID 
     CALL ZGBMV('N',                                         &   ! TRANS
                 SUBSHELL_PROB_DIM,                          &   ! M
                 SUBSHELL_PROB_DIM,                          &   ! N
@@ -3000,7 +2963,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
     Start_Here = myID_SubShell*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
     END_HERE = Start_HERE + SUBSHELL_PROB_DIM -1
-
     Block_RHS_Vector(Start_Here:End_Here) = Block_RHS_Vector(Start_Here:End_Here)   &
                                           + TMP_VECTOR(0:SUBSHELL_PROB_DIM-1)
 
@@ -3057,42 +3019,28 @@ INTEGER                                             ::  i, l, m, ui, d
 
 INTEGER                                             ::  Value_Location
 
-
-
 !*!
 !*!     Steps 1
 !*!
 DO ui = 1,NUM_CFA_VARS
 
 
-
     !*!
     !*!     Innner BCs
     !*!
-
     IF ( INNER_CFA_BC_TYPE(ui) == 'D' ) THEN
 
-
         DO l = 0,L_LIMIT
-
             DO m = -M_VALUES(l),M_VALUES(l)
 
-!                Value_Location =  CFA_Matrix_Map( ui, l, m, 0, 0)
                 Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
-
                 Coefficient_Vector( Value_Location ) = 0.0_idp
 
             END DO
-
         END DO
 
-
-!        Value_Location =  CFA_Matrix_Map( ui, 0, 0, 0, 0 )
         Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
-
         Coefficient_Vector( Value_Location ) = 2.0_idp * sqrt(pi) * INNER_CFA_BC_VALUES(ui)
-
-
     END IF
 
 
@@ -3102,37 +3050,29 @@ DO ui = 1,NUM_CFA_VARS
     !*!
     !*!     Outer BCs
     !*!
-
     IF ( OUTER_CFA_BC_TYPE(ui) == 'D' ) THEN
 
-
-
         DO l = 1,L_LIMIT
-
             DO m = -M_VALUES(l),M_VALUES(l)
 
-!                Value_Location = CFA_Matrix_Map( ui, l, m, NUM_R_ELEMENTS-1, DEGREE )
-                Value_Location =  MAtrix_Location( ui, l, m, NUM_R_ELEMENTS-1, DEGREE )
-
+                Value_Location =  Matrix_Location( ui, l, m, NUM_R_ELEMENTS-1, DEGREE )
                 Coefficient_Vector( Value_Location ) = 0.0_idp
 
             END DO
         END DO
 
-!        Value_Location = CFA_Matrix_Map( ui, 0, 0, NUM_R_ELEMENTS-1, DEGREE )
         Value_Location =  MAtrix_Location( ui, 0, 0, NUM_R_ELEMENTS-1, DEGREE  )
-
         Coefficient_Vector( Value_Location ) = 2.0_idp * sqrt(pi) * OUTER_CFA_BC_VALUES(ui)
 
     END IF
 
-
-
 END DO
 
 
-
 END SUBROUTINE CFA_3D_Dirichlet_BCs_Part1
+
+
+
 
 
 
@@ -3165,29 +3105,26 @@ DO ui = 1,NUM_CFA_VARS
     IF ( INNER_CFA_BC_TYPE(ui) == 'D' .AND. myID_PETSc == 0 ) THEN
 
         DO l = 0,L_LIMIT
-
             DO m = -M_VALUES(l),M_VALUES(l)
 
-
-!                Value_Location =  5*(l*(l+1)+m) + ui
                 Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
-
                 RHS_VECTOR(Value_Location ) = 0.0_idp
 
              END DO
          END DO
- !        RHS_VECTOR(ui) = 2.0_idp*sqrt(pi)*INNER_CFA_BC_VALUES(ui)
                 !*!
                 !*!     Modify the Stiffness Matrix !
                 !*!
 
+
+         Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
          DO i = 0,ELEM_PROB_DIM-1
 
-              BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+ui-1, 0)=0.0_idp
+              BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+Value_Location, 0)=0.0_idp
 
          END DO
-         BLOCK_ELEM_STF_MATVEC((ui-1)*ELEM_PROB_DIM:ui*ELEM_PROB_DIM-1, 0) = 0.0_idp
-         BLOCK_ELEM_STF_MATVEC((ui-1) + (ui-1)*ELEM_PROB_DIM, 0) = 1.0_idp
+         BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1, 0) = 0.0_idp
+         BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM+ Value_Location, 0) = 1.0_idp
 
 
     END IF
@@ -3204,17 +3141,13 @@ DO ui = 1,NUM_CFA_VARS
     IF ( OUTER_CFA_BC_TYPE(ui) == 'D' .AND. myID_PETSC == NUM_SUBSHELLS-1 ) THEN
 
         DO l = 0,L_LIMIT
-
             DO m = -M_VALUES(l),M_VALUES(l)
 
-                Value_Location =  MAtrix_Location( ui, l, m, NUM_R_ELEMS_PER_BLOCK-1, DEGREE )
-
+                Value_Location =  Matrix_Location( ui, l, m, NUM_R_ELEMS_PER_BLOCK-1, DEGREE )
                 Block_RHS_VECTOR(Value_Location ) = 0.0_idp
 
              END DO
          END DO
-
-
 
                 !*!
                 !*!     Modify the Stiffness Matrix !
@@ -3233,15 +3166,9 @@ DO ui = 1,NUM_CFA_VARS
 
           BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM+Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 1.0_idp
 
-
-
     END IF
 
-
-
 END DO
-
-
 
 
 END SUBROUTINE CFA_3D_Dirichlet_BCs_Part2
@@ -3249,15 +3176,17 @@ END SUBROUTINE CFA_3D_Dirichlet_BCs_Part2
 
 
 
+
+
 !+605+###########################################################################!
 !                                                                                !
-!                  CFA_Neumann_BCs                                                 !
+!                  CFA_Neumann_BCs                                               !
 !                                                                                !
 !################################################################################!
 SUBROUTINE CFA_3D_Neumann_BCs( )
 
 
-
+! Nothing needs to be done. Score!
 
 
 END SUBROUTINE CFA_3D_Neumann_BCs
@@ -3311,11 +3240,8 @@ Tmp_U_Value = 0.0_idp
 
 IF ( r == rlocs(0) ) THEN
 
-
     DO l = 0,L_Limit
-
         DO m = -M_VALUES(l),M_VALUES(l)
-
 
             Current_Location =  Matrix_Location( 1, l, m, 0, 0 )
 
@@ -3340,7 +3266,6 @@ IF ( r == rlocs(0) ) THEN
                             * Spherical_Harmonic(l,m,theta,phi)
 
         END DO
-
     END DO
 
 ELSE
@@ -3352,21 +3277,14 @@ ELSE
         IF ( r > rlocs(re) .AND. r <= rlocs(re+1) ) THEN
 
             r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
-
             LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
 
 
             DO l = 0,L_Limit
-
                 DO m = -M_VALUES(l),M_VALUES(l)
-
                     DO d = 0,DEGREE
 
-
-
                         TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi) * LagP(d)
-
-
 
                         Current_Location = Matrix_Location( 1, l, m, re, d )
 
@@ -3378,9 +3296,7 @@ ELSE
 
 
                     END DO  !   d Loop
-
                 END DO  !   m Loop
-
             END DO  !   l Loop
             
             EXIT
@@ -3392,14 +3308,10 @@ END IF
 
 
 Return_Psi = REAL(Tmp_U_Value(1), KIND = idp)
-
 Return_AlphaPsi = REAL(Tmp_U_Value(2), KIND = idp)
-
 Return_Beta1 = REAL(Tmp_U_Value(3), KIND = idp)
 Return_Beta2 = REAL(Tmp_U_Value(4), KIND = idp)
 Return_Beta3 = REAL(Tmp_U_Value(5), KIND = idp)
-
-
 
 
 

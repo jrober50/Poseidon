@@ -10,30 +10,41 @@
 SRC	= ./Code
 OBJ	= ./Obj
 BIN	= ./Bin
+OUT     = ./OUTPUT
 EXT	= F90
 
 
+### Fortran Compiler
 
-COMP_MacBook	= gfortran
-COMP_Rhea	= ifort
-COMP_BlueWaters	= ftn
+FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90
+FORT_MacBook 	   = /usr/local/openmpi/bin/mpif90
+FORT_Rhea	   = mpifort
+FORT_BlueWaters    = ftn
 
 
-FORT_MacBook 	= /usr/local/openmpi/bin/mpif90
-FORT_Rhea	= mpifort
-FORT_BlueWaters = ftn
+
+#### Debuging Options
+
+STD_DEBUG_NicksMacBook    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
+STD_OPTIMIZE_NicksMacBook = -O2 
 
 STD_DEBUG_MacBook	= -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
-STD_DEEPDEBUG_MacBook	= -g -Wall -Wextra -Wcharacter-truncation -Wconversion -Wsurprising -Waliasing -Wimplicit-interface -pedantic -fimplicit-none -fbacktrace -fcheck=all
 STD_OPTIMIZE_MacBook	= -O2 
 
+STD_DEBUG_Rhea          = -O0 -traceback -check all,noarg_temp_created -fpe0 -gen-interfaces -warn interfaces
 STD_OPTIMIZE_Rhea	= -O2
-STD_DEBUG_Rhea		= -O0 -traceback -check all,noarg_temp_created -fpe0 -gen-interfaces -warn interfaces 
 
+STD_DEBUG_BlueWaters    = -g -G0 -R bcdps
 STD_OPTIMIZE_BlueWaters	= -O2
-STD_DEBUG_BlueWaters	= -g -G0 -R bcdps
 
 
+
+
+
+### OpenMP 
+
+OPENMP_NicksMacBook_ON               = -fopenmp
+OPENMP_NicksMacBook_OFF              =
 
 OPENMP_MacBook_ON		= -fopenmp
 OPENMP_MacBook_OFF		= 
@@ -46,13 +57,21 @@ OPENMP_BlueWaters_OFF		= -h noomp
 
 
 
+
+
+### PETSc Linkers
+
 PETSC_Rhea_ON		= -cpp -B /sw/rhea/petsc/3.7.2/rhel6.7_gnu4.8.2  -B /sw/rhea/openmpi/1.8.4/rhel6.6_intell4.0.4  
 PETSC_Rhea_OFF		= 
+
+PETSC_NicksMacBook_DIR       = /usr/local/petsc/petsc-3.10.4
+PETSC_NicksMacBook_ARCH      = /usr/local/petsc/petsc-3.10.4/arch-darwin-c-debug
+PETSC_NicksMacBook_ON        = -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
+PETSC_NicksMacBook_Off       =
 
 
 PETSC_MacBook_DIR       = /usr/local/petsc/petsc-3.10.4
 PETSC_MacBook_ARCH      = /usr/local/petsc/petsc-3.10.4/arch-darwin-c-debug
-
 PETSC_MacBook_ON	= -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
 PETSC_MacBook_Off	=
 
@@ -60,6 +79,12 @@ PETSC_BlueWaters_ON	=
 PETSC_BlueWaters_OFF	= 
 
 
+
+
+#### HDF5
+
+HDF5_NicksMacBook_ON         = -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5
+HDF5_NicksMacBook_OFF        =
 HDF5_MacBook_ON		= -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5  
 HDF5_MacBook_OFF 	=
 HDF5_Rhea_ON            =
@@ -68,17 +93,26 @@ HDF5_BlueWaters_ON      =
 HDF5_Bluewaters_OFF     = 
 
 
-#MPI_MacBook_Link        = -Wl,-flat_namespace -Wl,-commons,use_dylibs -I/usr/local/lib -L/usr/local/lib -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi_mpifh -lmpi
-#MPI_MacBook_Compile     = -I/usr/local/include -Wl,-flat_namespace -Wl,-commons,use_dylibs -I/usr/local/lib 
-
-MPI_MacBook_Link        = -I/usr/local/openmpi/lib 
-MPI_MacBook_Compile     = -L/usr/local/openmpi/include
 
 
-MPI_MacBook_ON          = $(MPI_MacBook_Link) $(MPI_MacBook_Compile)
-MPI_MacBook_OFF         = 
+#### MPI
+
+MPI_NicksMacBook_Lib        = -I/usr/local/openmpi/lib
+MPI_NicksMacBook_Include    = -L/usr/local/openmpi/include
+
+MPI_MacBook_Lib             = -I/usr/local/openmpi/lib 
+MPI_MacBook_Include         = -L/usr/local/openmpi/include
+
+MPI_ON                      = $(MPI_$(MACHINE_NAME)_Lib) $(MPI_$(MACHINE_NAME)_Include)
+MPI_OFF                     =
 
 
+
+
+
+#### LAPACK
+
+LAPACK_NicksMacBook     = -framework Accelerate
 LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl
 LAPACK_BlueWaters	= 
@@ -96,11 +130,20 @@ OUTPUT_LINKER_ifort	= -module
 OUTPUT_LINKER_ftn	= -J
 
 
+
+
+### Legacy, Only Used to Create Variable Names ###
+COMP_NicksMacBook  = gfortran
+COMP_MacBook       = gfortran
+COMP_Rhea          = ifort
+COMP_BlueWaters    = ftn
+
+
 STD 		=$(STD_$(CMODE)_$(MACHINE_NAME))
 OPENMP_COMP 	=$(OPENMP_$(MACHINE_NAME)_$(OPENMP_MODE))
 PETSC_COMP	=$(PETSC_$(MACHINE_NAME)_$(PETSC_MODE))
 HDF5_COMP       =$(HDF5_$(MACHINE_NAME)_$(HDF5_MODE))
-MPI_COMP        =$(MPI_$(MACHINE_NAME)_$(MPI_MODE))
+MPI_COMP        =$(MPI_$(MPI_MODE))
 FORT		=$(FORT_$(MACHINE_NAME)) $(PETSC_COMP) $(HDF5_COMP) $(OPENMP_COMP) $(MPI_COMP)  $(LAPACK_$(MACHINE_NAME))
 INCLUDE_LINKER	=$(INCLUDE_LINKER_$(COMP_$(MACHINE_NAME)))
 OUTPUT_LINKER	=$(OUTPUT_LINKER_$(COMP_$(MACHINE_NAME)))

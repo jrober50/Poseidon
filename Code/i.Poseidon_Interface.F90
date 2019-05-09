@@ -25,45 +25,49 @@ USE Units_Module, &
 
 
 USE CHIMERA_Parameters,  &
-            ONLY :  Analytic_Solution,      &
-                    Shift_Solution,         &
-                    Enclosed_Mass,          &
-                    CHIMERA_R_LOCS,         &
-                    nPROCS,                 &
-                    myID,                   &
-                    myID_Theta,             &
-                    myID_Phi,               &
-                    Ratio_T_BNDLperBLCK,    &
-                    Ratio_P_BNDLperBLCK,    &
-                    Ratio_BNDLperBLCK,      &
-                    NUM_ENTRIES,            &
-                    SELFSIM_R_VALS,         &
+            ONLY :  Analytic_Solution,                                  &
+                    Shift_Solution,                                     &
+                    Enclosed_Mass,                                      &
+                    CHIMERA_R_LOCS,                                     &
+                    nPROCS,                                             &
+                    myID,                                               &
+                    myID_Theta,                                         &
+                    myID_Phi,                                           &
+                    Ratio_T_BNDLperBLCK,                                &
+                    Ratio_P_BNDLperBLCK,                                &
+                    Ratio_BNDLperBLCK,                                  &
+                    NUM_ENTRIES,                                        &
+                    SELFSIM_R_VALS,                                     &
                     SELFSIM_T
 
 
 USE Poseidon_Parameters, &
-            ONLY :  DOMAIN_DIM,             &
-                    DEGREE,                 &
-                    L_LIMIT,                &
-                    NUM_CFA_VARS,           &
-                    DATA_DIST_MODE,         &
-                    NUM_R_ELEMS_PER_SHELL,  &
-                    NUM_SHELLS,             &
-                    NUM_BLOCKS_PER_SHELL,   &
-                    NUM_BLOCK_THETA_ROWS,   &
-                    NUM_BLOCK_PHI_COLUMNS,  &
-                    nPROCS_POSEIDON,        &
-                    STF_MAPPING_FLAG,       &
-                    NUM_R_ELEMS_PER_BLOCK,  &
-                    NUM_T_ELEMS_PER_BLOCK,  &
-                    NUM_P_ELEMS_PER_BLOCK,  &
-                    NUM_R_QUAD_POINTS,      &
-                    NUM_T_QUAD_POINTS,      &
-                    NUM_P_QUAD_POINTS,      &
-                    R_COARSEN_FACTOR,       &
-                    T_COARSEN_FACTOR,       &
-                    P_COARSEN_FACTOR,       &
-                    SOL_DIST_SCHEME
+            ONLY :  DOMAIN_DIM,                                         &
+                    DEGREE,                                             &
+                    L_LIMIT,                                            &
+                    NUM_CFA_VARS,                                       &
+                    DATA_DIST_MODE,                                     &
+                    NUM_R_ELEMS_PER_SHELL,                              &
+                    NUM_SHELLS,                                         &
+                    NUM_BLOCKS_PER_SHELL,                               &
+                    NUM_BLOCK_THETA_ROWS,                               &
+                    NUM_BLOCK_PHI_COLUMNS,                              &
+                    nPROCS_POSEIDON,                                    &
+                    STF_MAPPING_FLAG,                                   &
+                    NUM_R_ELEMS_PER_BLOCK,                              &
+                    NUM_T_ELEMS_PER_BLOCK,                              &
+                    NUM_P_ELEMS_PER_BLOCK,                              &
+                    NUM_R_QUAD_POINTS,                                  &
+                    NUM_T_QUAD_POINTS,                                  &
+                    NUM_P_QUAD_POINTS,                                  &
+                    R_COARSEN_FACTOR,                                   &
+                    T_COARSEN_FACTOR,                                   &
+                    P_COARSEN_FACTOR,                                   &
+                    SOL_DIST_SCHEME,                                    &
+                    WRITE_TIMETABLE_FLAG,                               &
+                    WRITE_REPORT_FLAG,                                  &
+                    WRITE_RESULTS_FLAG,                                 &
+                    ITER_REPORT_NUM_SAMPLES
 
 
 USE Global_Variables_And_Parameters, &
@@ -121,31 +125,31 @@ USE Additional_Functions_Module, &
 
 
 USE IO_Functions_Module, &
-            ONLY :  Clock_In,                &
-                    PRINT_TIMETABLE
+            ONLY :  Clock_In,                                           &
+                    OUTPUT_ITER_TIMETABLE
 
 USE Poseidon_Parameter_Read_Module, &
-            ONLY :  WRITE_CFA_COEFFICIENTS,  &
+            ONLY :  WRITE_CFA_COEFFICIENTS,                             &
                     READ_CFA_COEFFICIENTS 
 
 
 
 USE Jacobian_Internal_Functions_Module, &
-            ONLY :  Calc_Shift_BC_1D,                 &
-                    Calc_Shift_1D,                    &
-                    Write_Shift_1D,                   &
+            ONLY :  Calc_Shift_BC_1D,                                   &
+                    Calc_Shift_1D,                                      &
+                    Write_Shift_1D,                                     &
                     Initialize_Special_Guess_Values
 
 
 USE Mesh_Module, &
-            ONLY :  Create_Uniform_1D_Mesh,             &
-                    Create_Logarithmic_1D_Mesh,         &
+            ONLY :  Create_Uniform_1D_Mesh,                             &
+                    Create_Logarithmic_1D_Mesh,                         &
                     Create_Split_1D_Mesh
 
 
 
-USE Poseidon_Internal_Communication_Module,             &
-            ONLY :  Poseidon_CrsThrd_Block_Share,       &
+USE Poseidon_Internal_Communication_Module,                             &
+            ONLY :  Poseidon_CFA_Block_Share,                           &
                     Poseidon_Distribute_Solution
 
 
@@ -284,16 +288,7 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Num_Input_Nodes(1)*Num_Input_Nodes
 !!!     Local Variables     !!!
 !!                           !!
 !                             !
-
-
-
-
-
-INTEGER                                                     ::  h,i,j,k,l,my_j, my_k
-
-
-
-
+INTEGER                                                     ::  i
 
 
 REAL(KIND = idp), DIMENSION(1)                              ::  Input_Quad
@@ -321,30 +316,6 @@ REAL(KIND = idp)                                            ::  Outer_Potential,
 
 
 
-REAL(KIND = idp)                                            ::  deltar, r,          &
-                                                                theta, phi,         &
-                                                                Analytic_Val,       &
-                                                                Solver_Val,         &
-                                                                Solver_Valb,        & 
-                                                                Error_Val
-
-
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,          &
-                                                                Output_rc,          &
-                                                                Output_dr
-
-
-
-INTEGER                                                     ::  NUM_SAMPLES
-
-
-REAL(KIND = idp)                                            ::  Return_Psi,         &
-                                                                Return_AlphaPsi,    &
-                                                                Return_Beta1,       &
-                                                                Return_Beta2,       &
-                                                                Return_Beta3
-
-
 REAL(KIND = idp)                                            ::  csqr
 INTEGER                                                     ::  ierr
 
@@ -356,21 +327,6 @@ real(KIND = idp)                                            ::  Shift_Vector_BC
 REAL(KIND = idp), DIMENSION(0:nx)                           ::  Shift_Vector
 
 
-LOGICAL                        ::  Output_to_File
-CHARACTER(LEN = 19)            ::  filenamea,filenameb
-INTEGER                        ::  file_ida, file_idb
-
-
-Output_to_File = .TRUE. 
-
-110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A10)                     !!! Output Header
-
-111 FORMAT (11X,A1,18X,A13,10X,A18,10X,A11,14X,A11,14X,A11)             !!! Output Header for Results file
-112 FORMAT (11X,A1,16X,A18,9x,A14)                                     !!! Output Header for Analytic Solution file
-
-113 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)               !!! Output
-114 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)    !!! Output for Results file
-115 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)                                     !!! Output for Analytic Solution file
 
 
 !                                         !
@@ -392,8 +348,6 @@ IF (MODE == 1) THEN
 
     CALL Set_Units( "C" )
 
-
-
     CALL Poseidon_Initialize(   x_e(1),                         & ! Inner_Radius
                                 x_e(nx+1),                      & ! Outer_Radius
                                 nx,                             & ! NUM_R_ELEMENTS
@@ -410,9 +364,6 @@ IF (MODE == 1) THEN
 
 !    PRINT*,"               Initialize Time :", timeb-timea, myID
     CALL Clock_In(timeb-timea, 1)
-
-
-
 
 
 END IF
@@ -438,7 +389,7 @@ Ratio_BNDLperBLCK = Ratio_T_BNDLperBLCK * Ratio_P_BNDLperBLCK
 !   as the mesh is set and matrix generated as part of the initialization.
 !
 IF ( ( MODE .NE. 1) .AND. ( MODEb == 1 ) )  THEN
-    PRINT*,"here"
+
     CALL Poseidon_Set_Mesh(dx_c)
 
 END IF
@@ -452,27 +403,18 @@ END IF
 !!!       Insert Source Variables       !!!
 !!                                       !!
 !                                         !
-
-
-
 timea = MPI_Wtime()
 
-
-
-
-IF (myID == 0) THEN
-     PRINT*,"Before Pseidon_CrsThrd_Block_Share",myID
-END IF
-
-CALL Poseidon_CrsThrd_Block_Share(  myID, myID_Theta, myID_Phi,                              &
-                                   Local_E, Local_S, Local_Si,                               &
-                                   nx, ij_ray_dim, ik_ray_dim,                               &
-                                   Num_Input_Nodes(1),Num_Input_Nodes(2),Num_Input_Nodes(2), &
-                                   Input_R_Quad, Input_T_Quad, Input_P_Quad,                 &
-                                   Left_Limit, Right_Limit,                                  &
-                                   nx, ny, nz,                                               &
-                                   dx_c, dy_c(1:ny), dz_c(1:nz),                             &
-                                   Block_Source_E, Block_Source_S, Block_Source_Si           )
+! Poseidon_CFA_Block_Share takes source data and redistributes it into Poseidon's preferred decomposition.
+CALL Poseidon_CFA_Block_Share(  myID, myID_Theta, myID_Phi,                               &
+                                Local_E, Local_S, Local_Si,                               &
+                                nx, ij_ray_dim, ik_ray_dim,                               &
+                                Num_Input_Nodes(1),Num_Input_Nodes(2),Num_Input_Nodes(2), &
+                                Input_R_Quad, Input_T_Quad, Input_P_Quad,                 &
+                                Left_Limit, Right_Limit,                                  &
+                                nx, ny, nz,                                               &
+                                dx_c, dy_c(1:ny), dz_c(1:nz),                             &
+                                Block_Source_E, Block_Source_S, Block_Source_Si           )
 
 
 
@@ -496,65 +438,39 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     !!!       Set Boundary Conditions       !!!
     !!                                       !!
     !                                         !
+    timea = MPI_Wtime()
 
+
+    ! Initializes the functions Analytic_Solution and Shift_Solution ( Used in Calc_Shift_BC_1D )
     CALL Initialize_Special_Guess_Values()
 
-
-!    CALL Calc_Shift_1D( Shift_Vector,                                    &
-!                           NUM_Input_Nodes(1), NUM_Input_Nodes(2), NUM_Input_Nodes(3),     &
-!                           NUM_R_ELEMENTS, ij_ray_dim, ik_ray_dim, DOMAIN_DIM,             &
-!                           Local_Si, rlocs          )
-
-
-!    CALL Write_Shift_1D( Shift_Vector,                                                     &
-!                         NUM_R_ELEMENTS,                                                   &
-!                         rlocs,                                                            &
-!                         SELFSIM_T                  )
-
+    ! Calculate the Dirichlet Outer Boundary Value for the Shift Vector
     CALL Calc_Shift_BC_1D( Shift_Vector_BC,                       &
                            NUM_Input_Nodes(1), NUM_Input_Nodes(2), NUM_Input_Nodes(3),     &
                            NUM_R_ELEMENTS, ij_ray_dim, ik_ray_dim, DOMAIN_DIM,             &
                            Local_Si, rlocs          ) 
 
 
-
-
-
-    timea = MPI_Wtime()
-
-
+    ! Calculate the Dirichlet Outer Boundary Value for the Lapse Function and Conformal Factor
     Inner_Potential = Analytic_Solution(rlocs(0), 0.0_idp, 0.0_idp)
     Outer_Potential = Analytic_Solution(rlocs(NUM_R_ELEMENTS), 0.0_idp, 0.0_idp)
-    
-!    Inner_Potential = 0.0_idp
-!    Outer_Potential = Grav_Constant_G *Enclosed_Mass(NUM_R_ELEMENTS)            &
-!                    / CHIMERA_R_LOCS(NUM_R_ELEMENTS)
+
+    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/(Speed_of_Light*Speed_of_Light)
+    Pot_to_Psi      = 1.0_idp - 0.5_idp*Outer_Potential/(Speed_of_Light*Speed_of_Light)
 
 
-
-    csqr = Speed_of_Light*Speed_of_Light
-
-    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/csqr
-    Pot_to_Psi = 1.0_idp - 0.5_idp*Outer_Potential/csqr
-
-
+    ! Set BC type, N = Neumann, D = Dirichlet
     INNER_BC_TYPES = (/"N", "N","N","N","N"/)
-
     OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 
-
-    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Inner_Potential/csqr
-
-
+    ! Set BC Values
     INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
-
-    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/csqr
-
     OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
+    
 
+    ! Commit BC types and values to Poseidon
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
-
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
 
 
@@ -567,11 +483,14 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
 
 
-        !                                         !
-        !!                                       !!
-        !!!             Run Poseidon            !!!
-        !!                                       !!
-        !                                         !
+    !                                         !
+    !!                                       !!
+    !!!             Run Poseidon            !!!
+    !!                                       !!
+    !                                         !
+
+    ! Run Poseidon. Upon Completion of this subroutine, the coefficients
+    ! for the solution vector will be known.
     CALL Poseidon_Run()
 
 
@@ -594,93 +513,25 @@ CALL Clock_In(timea-timeb, 19)
         !!!            Output Results           !!!
         !!                                       !!
         !                                         !
-IF (( .TRUE. ) .AND. (myID == 0)) THEN
-    NUM_SAMPLES = 1000
-
-    ALLOCATE( Output_re(0:NUM_SAMPLES) )
-    ALLOCATE( Output_rc(1:NUM_SAMPLES) )
-    ALLOCATE( Output_dr(1:NUM_SAMPLES) )
-
-
-    ! Open Results File
-    file_ida = 42
-    filenamea = "OUTPUT/Results.out"
-    OPEN( Unit = file_ida, file = filenamea )
-    WRITE(file_ida,111)"r","Psi Potential","AlphaPsi Potential","Beta1 Value","Beta2 Value","Beta3 Value"
-
-    ! Open Solution File
-    file_idb = 43
-    filenameb = "OUTPUT/Solution.out"
-    OPEN( Unit = file_idb, file = filenameb )
-    WRITE(file_idb,112)"r","Analytic Potential","Beta1 Solution"
-
-
-    ! Set Output locations
-    theta = pi/2.0_idp
-    phi = pi/2.0_idp
-
-    CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_SAMPLES,        &
-                                    output_re, output_rc, output_dr                 )
-
-
-
-    DO i = 1,NUM_SAMPLES
-
-        CALL Calc_3D_Values_At_Location( output_rc(i), theta, phi,                   &
-                                         Return_Psi, Return_AlphaPsi,                &
-                                         Return_Beta1, Return_Beta2, Return_Beta3    )
-
-        Analytic_Val = Analytic_Solution(output_rc(i),theta,phi)
-        Solver_Val = 2.0_idp*csqr*(1.0_idp - Return_Psi)
-        Solver_Valb = 2.0_idp*csqr*(Return_AlphaPsi - 1.0_idp)
-        Error_Val = ABS((Analytic_Val - Solver_Val)/Analytic_Val)
-
-
-       WRITE(42,114) output_rc(i), Return_Psi, Return_AlphaPsi, Return_Beta1,Return_Beta2,Return_Beta3
-       WRITE(43,115) output_rc(i),Analytic_Val, Shift_Solution(output_rc(i),rlocs,NUM_R_ELEMENTS)
-
-
-
-    END DO
-
-
-    ! Close Files
-    CLOSE( Unit = file_ida)
-    CLOSE( Unit = file_idb)
-
-
+IF ( myID == 0 ) THEN
+    CALL Output_Final_Results()
 END IF
 
-
-
-
-        !                                         !
-        !!                                       !!
-        !!!         Output Coefficients         !!!
-        !!                                       !!
-        !                                         !
-IF ( myID == 0) THEN
-
-    CALL WRITE_CFA_COEFFICIENTS()
-
-    CALL READ_CFA_COEFFICIENTS()
-
-END IF
-
-
-
-
-
-IF ( myID_PETSC == 0) THEN 
-
-   CALL Print_TimeTable(0)
-
-END IF
+                               
+PRINT*,"At End"
+PRINT*,Coefficient_Vector(0:4)
 
 
 
 
 END SUBROUTINE Poseidon_CFA_3D
+
+
+
+
+
+
+
 
 
 
@@ -810,7 +661,7 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Num_Input_Nodes(1)*Num_Input_Nodes
 
 
 
-INTEGER                                                     ::  h,i,j,k,l,my_j, my_k
+INTEGER                                                     ::  i
 
 
 
@@ -876,13 +727,12 @@ real(KIND = idp)                                            ::  Shift_Vector_BC
 
 REAL(KIND = idp), DIMENSION(0:nx)                           ::  Shift_Vector
 
-
 LOGICAL                        ::  Output_to_File
 CHARACTER(LEN = 19)            ::  filenamea,filenameb
 INTEGER                        ::  file_ida, file_idb
 
 
-Output_to_File = .TRUE.
+
 
 110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A10)                     !!! Output Header
 
@@ -1012,6 +862,7 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
 
+
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
 
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
@@ -1059,7 +910,7 @@ END IF
 
 IF ( myID_PETSC == 0) THEN
 
-   CALL Print_TimeTable(0)
+   CALL Output_Iter_TimeTable(0)
 
 END IF
 
@@ -1086,6 +937,119 @@ END SUBROUTINE Poseidon_Newt_3D
 
 
 
+
+
+ !+201+############################################################################!
+!                                                                                   !
+!                           OUTPUT_FINAL_RESULTS                                    !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE OUTPUT_FINAL_RESULTS()
+
+
+INTEGER                                                     ::  NUM_SAMPLES
+
+CHARACTER(LEN = 19)            ::  filenamea,filenameb
+INTEGER                        ::  file_ida, file_idb
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,          &
+                                                                Output_rc,          &
+                                                                Output_dr
+
+REAL(KIND = idp)                                            ::  Return_Psi,         &
+                                                                Return_AlphaPsi,    &
+                                                                Return_Beta1,       &
+                                                                Return_Beta2,       &
+                                                                Return_Beta3
+
+
+REAL(KIND = idp)                                            ::  deltar, r,          &
+                                                                theta, phi,         &
+                                                                Analytic_Val,       &
+                                                                Solver_Val,         &
+                                                                Solver_Valb,        &
+                                                                Error_Val
+
+REAL(KIND = idp)                                            ::  csqr
+INTEGER                                                     ::  i
+
+
+
+110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A10)                      !!! Output Header
+
+111 FORMAT (11X,A1,24X,A3,19X,A8,15X,A11,14X,A11,14X,A11)             !!! Output Header for Results file
+112 FORMAT (11X,A1,16X,A18,9x,A14)                                      !!! Output Header for Analytic Solution file
+
+113 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)               !!! Output
+114 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)    !!! Output for Results file
+115 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)                                     !!! Output for Analytic Solution file
+
+
+
+IF ( WRITE_RESULTS_FLAG == 1 ) THEN
+    NUM_SAMPLES = 1000
+
+    ALLOCATE( Output_re(0:NUM_SAMPLES) )
+    ALLOCATE( Output_rc(1:NUM_SAMPLES) )
+    ALLOCATE( Output_dr(1:NUM_SAMPLES) )
+
+
+    ! Open Results File
+    file_ida = 42
+    filenamea = "OUTPUT/Results.out"
+    OPEN( Unit = file_ida, file = filenamea )
+    WRITE(file_ida,111)"r","Psi","AlphaPsi","Beta1 Value","Beta2 Value","Beta3 Value"
+
+    ! Open Solution File
+    file_idb = 43
+    filenameb = "OUTPUT/Solution.out"
+    OPEN( Unit = file_idb, file = filenameb )
+    WRITE(file_idb,112)"r","Analytic Potential","Beta1 Solution"
+
+
+    ! Set Output locations
+    theta = pi/2.0_idp
+    phi = pi/2.0_idp
+
+    CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_SAMPLES,        &
+                                    output_re, output_rc, output_dr                 )
+
+
+
+    DO i = 1,NUM_SAMPLES
+
+        CALL Calc_3D_Values_At_Location( output_rc(i), theta, phi,                   &
+                                         Return_Psi, Return_AlphaPsi,                &
+                                         Return_Beta1, Return_Beta2, Return_Beta3    )
+
+        Analytic_Val = Analytic_Solution(output_rc(i),theta,phi)
+        Solver_Val = 2.0_idp*csqr*(1.0_idp - Return_Psi)
+        Solver_Valb = 2.0_idp*csqr*(Return_AlphaPsi - 1.0_idp)
+        Error_Val = ABS((Analytic_Val - Solver_Val)/Analytic_Val)
+
+
+       WRITE(42,114) output_rc(i), Return_Psi, Return_AlphaPsi, Return_Beta1,Return_Beta2,Return_Beta3
+       WRITE(43,115) output_rc(i),Analytic_Val, Shift_Solution(output_rc(i),rlocs,NUM_R_ELEMENTS)
+
+
+
+    END DO
+
+
+    ! Close Files
+    CLOSE( Unit = file_ida)
+    CLOSE( Unit = file_idb)
+
+
+END IF
+
+
+
+
+
+
+
+END SUBROUTINE OUTPUT_FINAL_RESULTS
 
 
 

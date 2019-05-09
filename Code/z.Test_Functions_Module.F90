@@ -117,7 +117,7 @@ CONTAINS
 !                                   3) MacLaurin Ellipsoid                          !
 !                                                                                   !
  !#################################################################################!
-SUBROUTINE Poseidon_Initialize_CFA_Test_Prob_Par_CHIMERA(   Test_Number,                                &
+SUBROUTINE Poseidon_Initialize_CFA_Test_Problem_CHIMERA(    Test_Number,                                &
                                                             Num_Global_R, Num_Global_T, Num_Global_P,   &
                                                             Num_Local_R, Num_Local_T, Num_Local_P,      &
                                                             NUM_LOCS, R_QUAD,                           &
@@ -319,7 +319,7 @@ END IF
 
 
 
-END SUBROUTINE Poseidon_Initialize_CFA_Test_Prob_Par_CHIMERA
+END SUBROUTINE Poseidon_Initialize_CFA_Test_Problem_CHIMERA
 
 
 

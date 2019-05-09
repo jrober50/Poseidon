@@ -97,7 +97,8 @@ USE Global_Variables_And_Parameters, &
                     Elem_PROB_DIM_SQR,          &
                     Block_Prob_Dim,             &
                     BLOCK_NONZEROS,             &
-                    Time_Table,                 &
+                    Iter_Time_Table,            &
+                    Run_Time_Table,             &
                     Num_Timer_Calls,            &
                     STF_NNZ,                    &
                     STF_MAT,                    &
@@ -234,9 +235,10 @@ ALLOCATE(INT_P_LOCATIONS(1:NUM_P_QUAD_POINTS), INT_P_WEIGHTS(1:NUM_P_QUAD_POINTS
 
 
 
-ALLOCATE( Time_Table(1:Num_Timer_Calls) )
-Time_Table = 0.0_idp
-
+ALLOCATE( ITER_TIME_TABLE(1:Num_Timer_Calls) )
+ALLOCATE( RUN_TIME_TABLE(1:NUM_TIMER_CALLS) )
+ITER_TIME_TABLE = 0.0_idp
+RUN_TIME_TABLE = 0.0_idp
 
 END SUBROUTINE Allocate_Poseidon_CFA_Variables
 
@@ -388,8 +390,8 @@ ALLOCATE(STF_ELEM_VAL(0:STF_NNZ-1,0:L_LIMIT), STF_ROW_IND(0:STF_NNZ-1), STF_COL_
 
 
 
-ALLOCATE( Time_Table(1:Num_Timer_Calls) )
-Time_Table = 0.0_idp
+ALLOCATE( ITER_TIME_TABLE(1:Num_Timer_Calls) )
+ITER_TIME_TABLE = 0.0_idp
 
 
 END SUBROUTINE Allocate_Poseidon_Newtonian_Variables

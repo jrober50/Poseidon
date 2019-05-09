@@ -172,7 +172,7 @@ Enclosed_Mass = kappa**(1.50_idp)                                   &
 
 
 
-IF ( .TRUE. ) THEN
+IF ( .FALSE. ) THEN
 
     PRINT*,"Using Yahil self-similar profile with following parameters."
     PRINT*,"Time = ",t
@@ -190,9 +190,7 @@ IF (.FALSE.) THEN
     PRINT*,"(t**(4.0_idp - 3.0_idp*gamma))",(t**(4.0_idp - 3.0_idp*gamma))
 END IF
 
-!PRINT*,"Input_R"
-!PRINT*,Input_R
-!PRINT*," "
+
 
 
 
@@ -207,12 +205,13 @@ CALL CONVERT_SELF_SIMILAR(  t, kappa, gamma,                        &
 !PRINT*,"Input_E"
 !PRINT*,Input_E
 !PRINT*," "
-!PRINT*,"Input_M"
-!PRINT*,Input_M
+!PRINT*,"Input_S"
+!PRINT*,Input_S
 !PRINT*," "
-!PRINT*,"Enclosed_Mass"
-!PRINT*,Enclosed_mass
+!PRINT*,"Input_Si"
+!PRINT*,Input_Si
 !PRINT*," "
+
 
 
 
@@ -355,11 +354,9 @@ DO re = 0,NUM_R_ELEM-1
 
                 ! Interpolate Self-Similar Values to Input locations
                 Density = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
-!                Velocity = (Input_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
-                Velocity = 0.0_idp
+                Velocity = (Input_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
 
-!                PRINT*,"**********************  Velocity Zeroed  **************************"
-!                Velocity = 0.0_idp
+
 
                 ! Calculate Usable Quantities
                 Pressure = kappa * Density**gamma
@@ -398,6 +395,8 @@ DO re = 0,NUM_R_ELEM-1
 
                                 Input_E(nd, re,te,pe) = E
                                 Input_Si(nd, re, te, pe, 1) = Si
+                                Input_Si(nd, re, te, pe, 2) = 0.0_idp
+                                Input_Si(nd, re, te, pe, 3) = 0.0_idp
                                 Input_S(nd, re, te, pe) = S
 
                             END DO ! pd

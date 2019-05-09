@@ -37,93 +37,100 @@ USE Poseidon_Constants_Module, &
             ONLY :  idp, pi, fdp
 
 USE Units_Module, &
-            ONLY :  Grav_Constant_G
-
+            ONLY :  Grav_Constant_G,            &
+                    C_Square
 
 USE Poseidon_Parameters, &
-            ONLY :  DOMAIN_DIM,             &
-                    DEGREE,                 &
-                    L_LIMIT,                &
-                    DATA_DIST_MODE,         &
-                    NUM_CFA_VARS,           &
-                    NUM_R_ELEMS_PER_SHELL,    &
-                    NUM_R_ELEMS_PER_SUBSHELL, &
-                    NUM_SHELLS,             &
-                    NUM_SUBSHELLS,          &
-                    NUM_SUBSHELLS_PER_SHELL,&
-                    NUM_BLOCKS,             &
-                    NUM_BLOCKS_PER_SHELL,   &
-                    NUM_BLOCK_THETA_ROWS,   &
-                    NUM_BLOCK_PHI_COLUMNS,  &
-                    nPROCS_POSEIDON,        &
-                    STF_MAPPING_FLAG,       &
-                    NUM_R_ELEMS_PER_BLOCK,  &
-                    NUM_T_ELEMS_PER_BLOCK,  &
-                    NUM_P_ELEMS_PER_BLOCK,  &
-                    R_COARSEN_FACTOR,       &
-                    T_COARSEN_FACTOR,       &
-                    P_COARSEN_FACTOR,       &
-                    NUM_R_QUAD_POINTS,      &
-                    NUM_T_QUAD_POINTS,      &
-                    NUM_P_QUAD_POINTS,      &
-                    MAX_ITERATIONS,         &
-                    CONVERGENCE_CRITERIA
+            ONLY :  DOMAIN_DIM,                 &
+                    DEGREE,                     &
+                    L_LIMIT,                    &
+                    DATA_DIST_MODE,             &
+                    NUM_CFA_VARS,               &
+                    NUM_R_ELEMS_PER_SHELL,      &
+                    NUM_R_ELEMS_PER_SUBSHELL,   &
+                    NUM_SHELLS,                 &
+                    NUM_SUBSHELLS,              &
+                    NUM_SUBSHELLS_PER_SHELL,    &
+                    NUM_BLOCKS,                 &
+                    NUM_BLOCKS_PER_SHELL,       &
+                    NUM_BLOCK_THETA_ROWS,       &
+                    NUM_BLOCK_PHI_COLUMNS,      &
+                    nPROCS_POSEIDON,            &
+                    STF_MAPPING_FLAG,           &
+                    NUM_R_ELEMS_PER_BLOCK,      &
+                    NUM_T_ELEMS_PER_BLOCK,      &
+                    NUM_P_ELEMS_PER_BLOCK,      &
+                    R_COARSEN_FACTOR,           &
+                    T_COARSEN_FACTOR,           &
+                    P_COARSEN_FACTOR,           &
+                    NUM_R_QUAD_POINTS,          &
+                    NUM_T_QUAD_POINTS,          &
+                    NUM_P_QUAD_POINTS,          &
+                    CUR_ITERATION,              &
+                    MAX_ITERATIONS,             &
+                    CONVERGENCE_CRITERIA,       &
+                    CONVERGENCE_FLAG,           &
+                    ITER_REPORT_NUM_SAMPLES,    &
+                    WRITE_REPORT_FLAG,          &
+                    RUN_REPORT_FILE_ID
 
 
 
 USE Global_Variables_And_Parameters, &
-                                ONLY :  R_INNER, R_OUTER,                               &
-                                        NUM_R_ELEMENTS, NUM_T_ELEMENTS, NUM_P_ELEMENTS, &
-                                        NUM_R_NODES,                                    &
-                                        BLOCK_NUM_R_NODES,                              &
-                                        SUBSHELL_NUM_R_NODES,                           &
-                                        rlocs, tlocs, plocs,                            &
-                                        RHS_Vector,                                     &
-                                        Coefficient_Vector,                             &
-                                        Source_Term_Coefficients,                       &
-                                        Test_Space_Allocated_Flag,                      &
-                                        Stiffness_Matrix_Initialized_Flag,              &
-                                        FirstCall_Flag,                                 &
-                                        INNER_BC_SET_FLAG, OUTER_BC_SET_FLAG,           &
-                                        INNER_BC_TYPE, OUTER_BC_TYPE,                   &
-                                        INNER_DIR_BC_INPUT, INNER_NEU_BC_INPUT,         &
-                                        OUTER_DIR_BC_INPUT, OUTER_NEU_BC_INPUT,         &
-                                        INNER_UNIFORM_DIR_BC_FLAG, OUTER_UNIFORM_DIR_BC_FLAG,   &
-                                        RADIAL_MESH_SET_FLAG,                           &
-                                        THETA_MESH_SET_FLAG,                            &
-                                        PHI_MESH_SET_FLAG,                              &
-                                        INT_R_LOCATIONS,                                &
-                                        INT_R_WEIGHTS,                                  &
-                                        INT_T_LOCATIONS,                                &
-                                        INT_T_WEIGHTS,                                  &
-                                        INT_P_LOCATIONS,                                &
-                                        INT_P_WEIGHTS,                                  &
-                                        LOCAL_NODE_LOCATIONS,                           &
-                                        ierr,                                           &
-                                        myID_Poseidon,                                  &
-                                        PHYSICS_TYPE,                                   &
-                                        VAR_DIM,                                        &
-                                        ELEM_VAR_DIM,                                   &
-                                        BLOCK_VAR_DIM,                                  &
-                                        SUBSHELL_VAR_DIM,                               &
-                                        PROB_DIM,                                       &
-                                        ELEM_PROB_DIM,                                  &
-                                        ELEM_PROB_DIM_SQR,                              &
-                                        BLOCK_PROB_DIM,                                 &
-                                        SUBSHELL_PROB_DIM,                              &
-                                        INNER_CFA_BC_VALUES,                            &
-                                        OUTER_CFA_BC_VALUES,                            &
-                                        INNER_CFA_BC_TYPE,                              &
-                                        OUTER_CFA_BC_TYPE,                              &
-                                        NUM_OFF_DIAGONALS,                              &
-                                        LM_LENGTH,                                      &
-                                        ULM_LENGTH,                                     &
-                                        M_VALUES,                                       &
-                                        Matrix_Location,                                &
-                                        LM_Location,                                    &
-                                        POSEIDON_COMM_WORLD,                            &
-                                        NONZEROS,                                       &
-                                        BLOCK_NONZEROS
+            ONLY :  R_INNER, R_OUTER,                               &
+                    NUM_R_ELEMENTS, NUM_T_ELEMENTS, NUM_P_ELEMENTS, &
+                    NUM_R_NODES,                                    &
+                    BLOCK_NUM_R_NODES,                              &
+                    SUBSHELL_NUM_R_NODES,                           &
+                    rlocs, tlocs, plocs,                            &
+                    RHS_Vector,                                     &
+                    Coefficient_Vector,                             &
+                    Source_Term_Coefficients,                       &
+                    Test_Space_Allocated_Flag,                      &
+                    Stiffness_Matrix_Initialized_Flag,              &
+                    FirstCall_Flag,                                 &
+                    INNER_BC_SET_FLAG, OUTER_BC_SET_FLAG,           &
+                    INNER_BC_TYPE, OUTER_BC_TYPE,                   &
+                    INNER_DIR_BC_INPUT, INNER_NEU_BC_INPUT,         &
+                    OUTER_DIR_BC_INPUT, OUTER_NEU_BC_INPUT,         &
+                    INNER_UNIFORM_DIR_BC_FLAG,                      &
+                    OUTER_UNIFORM_DIR_BC_FLAG,                      &
+                    RADIAL_MESH_SET_FLAG,                           &
+                    THETA_MESH_SET_FLAG,                            &
+                    PHI_MESH_SET_FLAG,                              &
+                    INT_R_LOCATIONS,                                &
+                    INT_R_WEIGHTS,                                  &
+                    INT_T_LOCATIONS,                                &
+                    INT_T_WEIGHTS,                                  &
+                    INT_P_LOCATIONS,                                &
+                    INT_P_WEIGHTS,                                  &
+                    LOCAL_NODE_LOCATIONS,                           &
+                    ierr,                                           &
+                    myID_Poseidon,                                  &
+                    PHYSICS_TYPE,                                   &
+                    VAR_DIM,                                        &
+                    ELEM_VAR_DIM,                                   &
+                    BLOCK_VAR_DIM,                                  &
+                    SUBSHELL_VAR_DIM,                               &
+                    PROB_DIM,                                       &
+                    ELEM_PROB_DIM,                                  &
+                    ELEM_PROB_DIM_SQR,                              &
+                    BLOCK_PROB_DIM,                                 &
+                    SUBSHELL_PROB_DIM,                              &
+                    INNER_CFA_BC_VALUES,                            &
+                    OUTER_CFA_BC_VALUES,                            &
+                    INNER_CFA_BC_TYPE,                              &
+                    OUTER_CFA_BC_TYPE,                              &
+                    NUM_OFF_DIAGONALS,                              &
+                    LM_LENGTH,                                      &
+                    ULM_LENGTH,                                     &
+                    M_VALUES,                                       &
+                    Matrix_Location,                                &
+                    LM_Location,                                    &
+                    POSEIDON_COMM_WORLD,                            &
+                    NONZEROS,                                       &
+                    BLOCK_NONZEROS,                                 &
+                    RUN_TIME_TABLE
 
 
 
@@ -131,40 +138,47 @@ USE Global_Variables_And_Parameters, &
 
 
 USE Additional_Functions_Module, &
-                                ONLY :  Spherical_Harmonic,                             &
-                                        Map_To_X_Space, Map_From_X_Space,               &
-                                        Initialize_LG_Quadrature,                       &
-                                        Initialize_LG_Quadrature_Locations,             &
-                                        CFA_3D_Matrix_Map,                              &
-                                        CFA_2D_Matrix_Map,                              &
-                                        CFA_1D_Matrix_Map,                              &
-                                        CFA_1D_LM_Map,                                  &
-                                        CFA_2D_LM_Map,                                  &
-                                        CFA_3D_LM_Map,                                  &
-                                        Generate_Defined_Mesh,                          &
-                                        Generate_Defined_Coarse_Mesh
+            ONLY :  Spherical_Harmonic,                             &
+                    Map_To_X_Space, Map_From_X_Space,               &
+                    Initialize_LG_Quadrature,                       &
+                    Initialize_LG_Quadrature_Locations,             &
+                    CFA_3D_Matrix_Map,                              &
+                    CFA_2D_Matrix_Map,                              &
+                    CFA_1D_Matrix_Map,                              &
+                    CFA_1D_LM_Map,                                  &
+                    CFA_2D_LM_Map,                                  &
+                    CFA_3D_LM_Map,                                  &
+                    Generate_Defined_Mesh,                          &
+                    Generate_Defined_Coarse_Mesh
 
 
 USE Allocate_Variables_Module, &
-                                ONLY :  Allocate_Poseidon_CFA_Variables,                &
-                                        Deallocate_Poseidon_CFA_Variables
+            ONLY :  Allocate_Poseidon_CFA_Variables,                &
+                    Deallocate_Poseidon_CFA_Variables
 
 
 USE Jacobian_Internal_Functions_Module,  &
-                                ONLY :  Initialize_Guess_Values,                        &
-                                        Initialize_Ylm_Table,                           &
-                                        Initialize_Ylm_Tables,                           &
-                                        Initialize_Lagrange_Poly_Tables
+            ONLY :  Initialize_Guess_Values,                        &
+                    Initialize_Ylm_Table,                           &
+                    Initialize_Ylm_Tables,                          &
+                    Initialize_Lagrange_Poly_Tables
 
 USE CFA_Newton_Raphson_Module, &
-                                ONLY :  CFA_Newton_Raphson
+            ONLY :  CFA_Newton_Raphson
+
+USE CFA_3D_Master_Build_Module, &
+                        ONLY :  Calc_3D_Values_At_Location
 
 USE Poseidon_MPI_Module, &
-                                ONLY :  CREATE_POSEIDON_COMMUNICATORS
+            ONLY :  CREATE_POSEIDON_COMMUNICATORS
 
 USE Poseidon_Parameter_Read_Module, &
-                                ONLY :  UNPACK_POSEIDON_PARAMETERS
+            ONLY :  UNPACK_POSEIDON_PARAMETERS
 
+
+USE IO_Functions_Module, &
+            ONLY :  OPEN_RUN_REPORT_FILE,                           &
+                    CLOSE_RUN_REPORT_FILE
 
 USE mpi
 
@@ -281,7 +295,6 @@ INTEGER    ::  NON_ZEROS_B
 
 REAL(KIND = idp)            :: timea, timeb, timec
 
-!REAL(KIND = idp) :: TMPA, TMPB, TMPC
 
 
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, tmpID, ierr)
@@ -289,40 +302,34 @@ CALL MPI_COMM_SIZE(MPI_COMM_WORLD, nPROCS, ierr)
 
 
 
+ !                                      !
+!!  Load Poseidon Parameters From File  !!
+ !                                      !
 CALL UNPACK_POSEIDON_PARAMETERS() 
+
 
 
  !                                          !
 !!  Set Global Variables to Input Values    !!
  !                                          !
-
-
-
-
 R_INNER = Inner_Radius
 R_OUTER = Outer_Radius
-
-
-
 
 
 NUM_R_ELEMENTS = R_Elements_Input/R_Coarsen_Factor
 NUM_T_ELEMENTS = T_Elements_Input/T_Coarsen_Factor
 NUM_P_ELEMENTS = P_Elements_Input/P_Coarsen_Factor
 
-
-
-
-
-
-
 !
-!   NUM_R_NODES - Number of total radial nodes
+!   *_NUM_R_NODES - Number of total radial nodes in total, per block, per subshell
 !
-
 NUM_R_NODES             = DEGREE*NUM_R_ELEMENTS + 1
 BLOCK_NUM_R_NODES       = DEGREE*NUM_R_ELEMS_PER_BLOCK + 1
 SUBSHELL_NUM_R_NODES    = DEGREE*NUM_R_ELEMS_PER_SUBSHELL + 1
+
+
+
+
 
 
 IF (NUM_R_ELEMS_PER_SHELL*NUM_SHELLS .NE. NUM_R_ELEMENTS ) THEN
@@ -464,19 +471,9 @@ END IF
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+!
+!   Associate the Correct Map Functions, and Set Spherical Harmonic Length
+!
 IF ( DOMAIN_DIM == 1 ) THEN
 
     LM_LENGTH = 1
@@ -530,7 +527,6 @@ ELSE IF ( PHYSICS_TYPE == "CFA" ) THEN
     PROB_DIM            = NUM_CFA_VARS*VAR_DIM
     ELEM_PROB_DIM       = NUM_CFA_VARS*ELEM_VAR_DIM
     ELEM_PROB_DIM_SQR   = ELEM_PROB_DIM*ELEM_PROB_DIM
-!    LOCAL_PROB_DIM      = NUM_CFA_VARS*LOCAL_VAR_DIM
     BLOCK_PROB_DIM      = NUM_CFA_VARS*BLOCK_VAR_DIM
     SUBSHELL_PROB_DIM   = NUM_CFA_VARS*SUBSHELL_VAR_DIM
 
@@ -624,25 +620,9 @@ CALL Allocate_Poseidon_CFA_Variables()
 
 
 
-
-!LOCAL_NODE_LOCATIONS(0) = -1.0_idp
-!LOCAL_NODE_LOCATIONS(1:DEGREE-1) = Initialize_LG_Quadrature_Locations(DEGREE-1)
-!LOCAL_NODE_LOCATIONS(DEGREE) = 1.0_idp
-
-
-
 CALL Initialize_LG_Quadrature(NUM_R_QUAD_POINTS, INT_R_LOCATIONS, INT_R_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_T_QUAD_POINTS, INT_T_LOCATIONS, INT_T_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
-
-
-
-
-!PRINT*,"In Init"
-!PRINT*,"Num_R_QUAD_POINTS",NUM_R_QUAD_POINTS
-!PRINT*,"Int_R_Locations",INT_R_LOCATIONS
-!PRINT*,"Int_R_Weights",INT_R_WEIGHTS
-!PRINT*,"Int_T_WEights",Int_T_WeightS
 
 
 
@@ -653,17 +633,9 @@ CALL Initialize_Lagrange_Poly_Tables()
 
 
 
-
-
-
-
-
-
-
-
-                                         !                                          !
-                                        !!      Set Initial Mesh (Optional)         !!
-                                         !                                          !
+                     !                                          !
+                    !!      Set Initial Mesh (Optional)         !!
+                     !                                          !
 
 
 
@@ -697,21 +669,11 @@ END IF
 
 
 
-
-
 CALL CREATE_POSEIDON_COMMUNICATORS( DATA_DIST_MODE )
 
-timea = MPI_Wtime()
-CALL Initialize_Ylm_Table()
-timeb = MPI_WTime()
+
 CALL Initialize_Ylm_Tables()
-timec = MPI_Wtime()
 
-IF (tmpID == 0 ) THEN
-
-    PRINT*,"Orig",timeb-timea,"New",timec-timea
-
-END IF
 
 END SUBROUTINE Poseidon_Initialize
 
@@ -740,6 +702,12 @@ SUBROUTINE Poseidon_Run()
 LOGICAL                                             ::  Readiness_Flag
 
 
+IF ( myID_Poseidon == 0 ) THEN
+    CALL OPEN_RUN_REPORT_FILE()
+END IF
+
+
+
 !CALL Poseidon_Readiness_Check(Readiness_Flag)
 Readiness_Flag = .TRUE.
 
@@ -753,7 +721,10 @@ ELSE
 
 END IF
 
-
+    IF ( myID_Poseidon == 0 ) THEN
+        CALL OUTPUT_RUN_REPORT(Cur_Iteration, myID_Poseidon)
+        CALL CLOSE_RUN_REPORT_FILE()
+    END IF
 
 
 
@@ -787,13 +758,6 @@ SUBROUTINE Poseidon_Close()
 CALL Deallocate_Poseidon_CFA_Variables
 
 DEALLOCATE(LOCAL_NODE_LOCATIONS)
-
-
-
-
-
-
-
 
 
 Stiffness_Matrix_Initialized_Flag = .FALSE.
@@ -1109,6 +1073,195 @@ Readiness_Flag = .NOT. Error_Flag
 
 
 END SUBROUTINE Poseidon_Readiness_Check
+
+
+
+
+
+
+
+
+!+501+##########################################################################!
+!                                                                               !
+!                   OUTPUT_ITERATION_REPORT                                     !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE OUTPUT_RUN_REPORT(Iter, Rank)
+
+INTEGER, INTENT(IN)                 :: Iter, Rank
+
+INTEGER                                         ::  FILE_ID
+INTEGER                                         ::  i
+REAL(KIND = idp)                                ::  r, theta, phi, deltar
+REAL(KIND = idp)                                ::  Analytic_Val, Solver_Val
+REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
+REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
+REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
+
+120 FORMAT (A61)
+121 FORMAT (A1)
+122 FORMAT (A41,I2.2)
+123 FORMAT (A38,ES22.15)
+
+109 FORMAT (A,I2.2,A,I2.2)
+110 FORMAT (11X,A1,18X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
+111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
+112 FORMAT (A43,I2.2,A2,I2.2,A4)
+
+FILE_ID = RUN_REPORT_FILE_ID
+
+
+
+! Write Title to File
+IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+
+    WRITE(FILE_ID,'(A)')"                                Average Timing Results"
+    WRITE(FILE_ID,'(A)')"            ============================================================="
+    WRITE(FILE_ID,'(A)')" "
+    WRITE(FILE_ID,123)"                    Initialize Time : ",RUN_TIME_TABLE(1)
+    WRITE(FILE_ID,123)" Input/Communicate Source Data Time : ",RUN_TIME_TABLE(2)
+    WRITE(FILE_ID,123)"     Input Boundary Conditions Time : ",RUN_TIME_TABLE(3)
+    WRITE(FILE_ID,123)"        CFA_3D_Apply_BCs_Part1 Time : ",RUN_TIME_TABLE(4)
+    WRITE(FILE_ID,120)"-------------------------------------------------------------"
+    WRITE(FILE_ID,123)" ||     Calc_3D_Current_Values Time : ",RUN_TIME_TABLE(5)
+    WRITE(FILE_ID,123)" ||    CREATE_3D_SubJcbn_Terms Time : ",RUN_TIME_TABLE(6)
+    WRITE(FILE_ID,123)" ||       CREATE_3D_RHS_VECTOR Time : ",RUN_TIME_TABLE(7)
+    WRITE(FILE_ID,123)"\  /     CREATE_3D_JCBN_MATRIX Time : ",RUN_TIME_TABLE(8)
+    WRITE(FILE_ID,120)"-\/ ---------------------------------------------------------"
+    WRITE(FILE_ID,123)"CREATE_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(9)
+    WRITE(FILE_ID,123)"REDUCE_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(10)
+    WRITE(FILE_ID,123)"FINISH_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(11)
+    WRITE(FILE_ID,123)"          FINISH_3D_RHS_VECTOR Time : ",RUN_TIME_TABLE(12)
+    WRITE(FILE_ID,123)"        CFA_3D_Apply_BCs_Part2 Time : ",RUN_TIME_TABLE(13)
+    WRITE(FILE_ID,123)"                    CFA_Solver Time : ",RUN_TIME_TABLE(14)
+    WRITE(FILE_ID,123)"        CFA_Coefficient_Update Time : ",RUN_TIME_TABLE(15)
+    WRITE(FILE_ID,123)"   CFA_Coefficient_Share_PETSc Time : ",RUN_TIME_TABLE(16)
+    WRITE(FILE_ID,123)"         CFA_Convergence_Check Time : ",RUN_TIME_TABLE(17)
+    WRITE(FILE_ID,123)"               Total Iteration Time : ",RUN_TIME_TABLE(18)
+    WRITE(FILE_ID,123)"             Poseidon_Dist_Sol Time : ",RUN_TIME_TABLE(19)
+    WRITE(FILE_ID,120)"============================================================="
+    WRITE(FILE_ID,121)" "
+    WRITE(FILE_ID,121)" "
+    WRITE(FILE_ID,121)" "
+    WRITE(FILE_ID,121)" "
+
+END IF
+
+
+
+
+
+
+
+
+
+WRITE(FILE_ID,'(A)')"                                 Convergence Results"
+WRITE(FILE_ID,'(A)')"            ============================================================="
+WRITE(FILE_ID,'(A)')""
+IF ( Cur_Iteration == 2 ) THEN
+    WRITE(FILE_ID,'(A,I2.2,A)')"The Newton-Raphson solver exited after ",Cur_Iteration-1," Iteration."
+ELSE
+    WRITE(FILE_ID,'(A,I2.2,A)')"The Newton-Raphson solver exited after ",Cur_Iteration-1," Iterations."
+END IF
+
+
+IF ( CONVERGENCE_FLAG == 1 ) THEN
+
+    WRITE(FILE_ID,'(A)')"The solution converged within the tolerance set."
+
+ELSE IF ( CONVERGENCE_FLAG == 2 ) THEN
+
+    WRITE(FILE_ID,'(A)')"The solution did not converge within the maximum number of iterations allowed."
+    WRITE(FILE_ID,'(A,I2.2)')"The maximum number of iterations allowed is ",Max_Iterations
+
+END IF
+WRITE(FILE_ID,'(A)')" "
+WRITE(FILE_ID,'(A)')" "
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+! Write Results Table Header to Screen
+IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+    IF ( Rank == 0 ) THEN
+        PRINT*,"++++++++++++++++++++++++++ myID,",Rank,"Sample Run Results ++++++++++++++++++++++++++"
+        WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+    END IF
+END IF
+
+! Write Results Table Header to File
+IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+    WRITE(FILE_ID,'(A)')"                                 Sample of Final Results"
+    WRITE(FILE_ID,'(A)')"            ============================================================="
+    WRITE(FILE_ID,'(A)')" "
+    WRITE(FILE_ID,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+END IF
+
+
+deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+DO i = 0,ITER_REPORT_NUM_SAMPLES
+
+    r = i*deltar + R_INNER
+    theta = pi/2.0_idp
+    phi = pi/2.0_idp
+
+
+    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+                                    Return_Psi, Return_AlphaPsi,                &
+                                    Return_Beta1, Return_Beta2, Return_Beta3    )
+
+
+
+
+    ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
+    ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
+
+    ! Calculate Conformal Factor value from Newtonian Potential
+    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+
+    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
+    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
+
+
+    ! Write Results to Screen
+    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        IF ( Rank == 0 ) THEN
+            WRITE(*,111) r,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+        END IF
+    END IF
+
+    ! Write Results to File
+    IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        WRITE(FILE_ID,111) r,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+    END IF
+
+END DO
+
+
+
+
+
+
+END SUBROUTINE OUTPUT_RUN_REPORT
+
+
 
 
 

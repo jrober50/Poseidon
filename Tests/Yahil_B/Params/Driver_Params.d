@@ -1,5 +1,5 @@
 RE               700                   RE	   ! Number of Radial Elements
-CE                 1                   CE          ! Number of Radial Elements in Core
+CE               100                   CE          ! Number of Radial Elements in Core
 TE                 1                   TE          ! Number of Theta Elements
 PE                 1                   PE          ! Number of Phi Elements
 
