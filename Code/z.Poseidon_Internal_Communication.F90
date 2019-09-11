@@ -32,11 +32,11 @@ USE Units_Module, &
             ONLY :  Set_Units, Grav_Constant_G
 
 
-USE CHIMERA_Parameters,  &
+USE DRIVER_Parameters,  &
             ONLY :  Analytic_Solution,      &
                     Shift_Solution,         &
                     Enclosed_Mass,          &
-                    CHIMERA_R_LOCS,         &
+                    DRIVER_R_LOCS,         &
                     nPROCS,                 &
                     myID,                   &
                     myID_Theta,             &
@@ -74,7 +74,7 @@ USE Poseidon_Parameters, &
                     SOL_DIST_SCHEME
 
 
-USE Global_Variables_And_Parameters, &
+USE Poseidon_Variables_Module, &
             ONLY :  ierr,                                               &
                     myID_Poseidon,                                      &
                     myID_Shell,                                         &
@@ -391,6 +391,7 @@ Shift_Factor_C = Local_RD_Dim
 Shift_Factor_D = R_Coarsen_Factor*T_Coarsen_Factor*Local_RD_Dim*Local_TD_Dim
 Shift_Factor_E = R_Coarsen_Factor*Local_RD_Dim
 
+
 Delta_x_Ratio = 2.0_idp/(Right_Limit - Left_Limit)
 
 
@@ -532,12 +533,14 @@ DO Shell = 0, NUM_SHELLS - 1
                 Start_Here = Cur_Elem_Num*Num_Input_DOF + 3
                 End_Here = (Cur_Elem_Num+1)*Num_Input_DOF+2
 
+
                 Send_Message(Start_Here:End_Here) = My_Source_E(1:NUM_Input_DOF, Input_Shell_R_Loc, j, k )
 
 
 
                 Start_Here = Cur_Elem_Num*Num_Input_DOF + 3 + Size_of_Send
                 End_Here = (Cur_Elem_Num+1)*Num_Input_DOF+2 + Size_of_Send
+
 
                 Send_Message(Start_Here:End_Here) = My_Source_S(1:NUM_Input_DOF, Input_Shell_R_Loc, j, k )
 
@@ -582,7 +585,6 @@ DO Shell = 0, NUM_SHELLS - 1
 
 
 
-
     !
     !   If Process is responsible for a block in the current shell
     !   then receive data.
@@ -596,7 +598,6 @@ DO Shell = 0, NUM_SHELLS - 1
             !$OMP MASTER
             CALL MPI_Recv( Recv_Message, Size_of_Send_b+3, MPI_DOUBLE, MPI_ANY_SOURCE,      &
                                 6, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr                  )
-
             !$OMP END MASTER
             !$OMP BARRIER
 
@@ -720,7 +721,6 @@ DO Shell = 0, NUM_SHELLS - 1
 
         END DO ! Block_Index Loop
 
-
         !
         !   Translate from Input Quadrature to Poseidon Quadrate
         !
@@ -729,6 +729,7 @@ DO Shell = 0, NUM_SHELLS - 1
         DO k = 0,NUM_P_ELEMS_PER_BLOCK - 1
             DO j = 0,NUM_T_ELEMS_PER_BLOCK - 1
                 DO i = 0,NUM_R_ELEMS_PER_BLOCK - 1
+
 
                     Input_RE_Start = i * R_Coarsen_Factor
                     Delta_FREoCRE(1:R_Coarsen_Factor) = Input_Delta_R(Input_RE_Start+1:Input_RE_Start+R_Coarsen_Factor)     &
@@ -741,7 +742,6 @@ DO Shell = 0, NUM_SHELLS - 1
                     Input_PE_Start = Block_Input_PE_Begin + k * P_Coarsen_Factor
                     Delta_FPEoCPE(1:P_Coarsen_Factor) = Input_Delta_P(Input_PE_Start+1:Input_PE_Start+P_Coarsen_Factor)     &
                                                       / (plocs(Block_PE_Begin + k + 1) - plocs(Block_PE_Begin + k))
-
 
                     DO kk = 0,P_Coarsen_Factor - 1
 
@@ -789,7 +789,6 @@ DO Shell = 0, NUM_SHELLS - 1
 
 
 
-
                     !
                     !   Create Translation Matrix
                     !
@@ -800,7 +799,6 @@ DO Shell = 0, NUM_SHELLS - 1
                                                                        Input_CR_Locations           )
 
                     END DO
-
 
                     DO Local_T = 1,NUM_T_QUAD_POINTS
                         T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly(Local_T_Locations(Local_T),  &
@@ -815,7 +813,6 @@ DO Shell = 0, NUM_SHELLS - 1
                                                                        Input_CP_Locations           )
 
                     END DO
-
 
 
                     DO Local_P = 1,NUM_P_QUAD_POINTS
@@ -846,26 +843,23 @@ DO Shell = 0, NUM_SHELLS - 1
                         END DO  !   Local_T Loop
                     END DO  !   Local_P looop
 
-
                     !
                     !   MV_Mult to Convert
                     !
-
                     DO Local_Here = 1,Num_Local_DOF
 
-                            Local_E_Coeffs(Local_Here) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
-                                                                      TMP_E_Storage(:,i,j,k)            )
+                        Local_E_Coeffs(Local_Here) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
+                                                                  TMP_E_Storage(:,i,j,k)            )
 
-                            Local_S_Coeffs(Local_Here) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
-                                                                      TMP_S_Storage(:,i,j,k)            )
+                        Local_S_Coeffs(Local_Here) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
+                                                                  TMP_S_Storage(:,i,j,k)            )
 
-                            DO d = 1,DOMAIN_DIM
-                                Local_Si_Coeffs(Local_Here,d) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
-                                                                             TMP_Si_Storage(:,i,j,k,d)         )
-                            END DO
+                        DO d = 1,DOMAIN_DIM
+                            Local_Si_Coeffs(Local_Here,d) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
+                                                                         TMP_Si_Storage(:,i,j,k,d)         )
+                        END DO
 
                     END DO
-
 
 
 
@@ -907,7 +901,6 @@ DO Shell = 0, NUM_SHELLS - 1
         !$OMP END DO
 
     END IF
-
     !$OMP MASTER
     CALL MPI_WAIT(request, status, ierr)
     !$OMP END MASTER

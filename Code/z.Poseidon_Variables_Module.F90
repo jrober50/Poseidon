@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Global_Variables_And_Parameters                                              !##!
+MODULE Poseidon_Variables_Module                                                    !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -155,9 +155,9 @@ REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  LOCAL_NODE_LOCATIONS
 !   Mesh Variables                                                  !
 !                                                                   !
 !===================================================================!
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         :: rlocs
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         :: tlocs
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         :: plocs
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  rlocs
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  tlocs
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  plocs
 
 
 LOGICAL                                             ::  RADIAL_MESH_SET_FLAG = .FALSE.
@@ -395,15 +395,17 @@ INTEGER                                                     ::  Local_Theta_Star
 !                                     Output/Timing Variables                                   !
 !                                                                                               !
 !###############################################################################################!
-INTEGER                                                    ::  Num_Timer_Calls=25
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                ::  Iter_Time_Table
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                ::  Run_Time_Table
+INTEGER                                                     ::  Num_Timer_Calls=25
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Iter_Time_Table
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Time_Table
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Run_Time_Table
+
+INTEGER                                                     :: Total_Run_Iters=1
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Convergence_Table
 
 
 
 
 
-
-
-
-END MODULE Global_Variables_And_Parameters
+END MODULE Poseidon_Variables_Module

@@ -40,7 +40,7 @@ USE Poseidon_Parameters, &
                     NUM_P_QUAD_POINTS
 
 
-USE Global_Variables_And_Parameters,            &
+USE Poseidon_Variables_Module,            &
             ONLY :  ierr,                       &
                     myID_Poseidon,              &
                     myID_Shell,                 &
@@ -115,7 +115,6 @@ INTEGER                                             ::  here
 ALLOCATE(   Block_Array(0:NUM_BLOCKS_PER_SHELL-1)   )
 ALLOCATE(   Shell_Array(0:NUM_SUBSHELLS-1)             )
 ALLOCATE(   Workers_Array(0:nPROCS_POSEIDON-1)      )
-
 
 
 
@@ -208,7 +207,6 @@ CALL MPI_COMM_RANK(POSEIDON_COMM_DIST, myID_DIST, ierr)
 
 IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
-
         myShell = myID_Poseidon/NUM_BLOCKS_PER_SHELL
 
 
@@ -237,7 +235,7 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
         CALL MPI_COMM_SIZE(POSEIDON_COMM_SHELL, nPROCS_SHELL, ierr)
 
 
-
+        PRINT*,myID_Poseidon, myID_Shell
 
 
         !

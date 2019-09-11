@@ -71,11 +71,17 @@ USE Poseidon_Parameters, &
                     NUM_CFA_VARS,           &
                     STF_MAPPING_FLAG
 
-USE Global_Variables_And_Parameters,    &
+USE Poseidon_Variables_Module,    &
             ONLY :  NUM_R_ELEMENTS,     &
                     VAR_DIM,            &
                     NUM_OFF_DIAGONALS,  &
-                    ULM_LENGTH
+                    ULM_LENGTH,         &
+                    Coefficient_Vector,     &
+                    M_VALUES,               &
+                    rlocs,                  &
+                    tlocs,                  &
+                    plocs,                  &
+                    Matrix_Location
 
 IMPLICIT NONE
 
@@ -1410,7 +1416,132 @@ END SUBROUTINE Generate_Defined_Coarse_Mesh
 
 
 
+!+701+###########################################################################!
+!                                                                                !
+!                  Calc_3D_Values_At_Location          !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Calc_3D_Values_At_Location( r, theta, phi, Return_Psi, Return_AlphaPsi,  &
+                                        Return_Beta1, Return_Beta2, Return_Beta3    )
 
+
+REAL(KIND = idp), INTENT(IN)                                ::  r, theta, phi
+REAL(KIND = idp), INTENT(INOUT)                             ::  Return_Psi,         &
+                                                                Return_AlphaPsi,    &
+                                                                Return_Beta1,       &
+                                                                Return_Beta2,       &
+                                                                Return_Beta3
+
+
+
+COMPLEX(KIND = idp), DIMENSION(1:5)                         ::  Tmp_U_Value
+
+
+REAL(KIND = idp)                                                ::  r_tmp
+REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
+
+INTEGER                                                         ::  re, l, m, d
+
+
+INTEGER                                                         :: Current_Location
+
+
+
+COMPLEX(KIND = idp)                                             ::  TMP_VALUE_A
+REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  xlocP, weightP
+
+
+Tmp_U_Value = 0.0_idp
+
+IF ( r == rlocs(0) ) THEN
+
+    DO l = 0,L_Limit
+        DO m = -M_VALUES(l),M_VALUES(l)
+
+            Current_Location =  Matrix_Location( 1, l, m, 0, 0 )
+
+            TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
+
+            Tmp_U_Value(1) = Tmp_U_Value(1) + Coefficient_Vector( Current_Location + 0 ) * TMP_VALUE_A
+            Tmp_U_Value(2) = Tmp_U_Value(2) + Coefficient_Vector( Current_Location + 1 ) * TMP_VALUE_A
+            Tmp_U_Value(3) = Tmp_U_Value(3) + Coefficient_Vector( Current_Location + 2 ) * TMP_VALUE_A
+            Tmp_U_Value(4) = Tmp_U_Value(4) + Coefficient_Vector( Current_Location + 3 ) * TMP_VALUE_A
+            Tmp_U_Value(5) = Tmp_U_Value(5) + Coefficient_Vector( Current_Location + 4 ) * TMP_VALUE_A
+
+        END DO
+    END DO
+
+ELSE
+
+    CALL Initialize_LGL_Quadrature(DEGREE,xlocP,weightP)
+
+    DO re = 0,NUM_R_ELEMENTS-1
+
+        IF ( r > rlocs(re) .AND. r <= rlocs(re+1) ) THEN
+
+            r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
+            LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
+
+
+            DO l = 0,L_Limit
+                DO m = -M_VALUES(l),M_VALUES(l)
+                    DO d = 0,DEGREE
+
+                        TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi) * LagP(d)
+
+                        Current_Location = Matrix_Location( 1, l, m, re, d )
+
+                        Tmp_U_Value(1) = Tmp_U_Value(1) + Coefficient_Vector( Current_Location + 0 ) * TMP_VALUE_A
+                        Tmp_U_Value(2) = Tmp_U_Value(2) + Coefficient_Vector( Current_Location + 1 ) * TMP_VALUE_A
+                        Tmp_U_Value(3) = Tmp_U_Value(3) + Coefficient_Vector( Current_Location + 2 ) * TMP_VALUE_A
+                        Tmp_U_Value(4) = Tmp_U_Value(4) + Coefficient_Vector( Current_Location + 3 ) * TMP_VALUE_A
+                        Tmp_U_Value(5) = Tmp_U_Value(5) + Coefficient_Vector( Current_Location + 4 ) * TMP_VALUE_A
+
+
+                    END DO  !   d Loop
+                END DO  !   m Loop
+            END DO  !   l Loop
+
+            EXIT
+        END IF
+
+    END DO
+
+    IF ( r > rlocs(NUM_R_ELEMENTS) ) THEN
+
+        DO l = 0,L_Limit
+            DO m = -M_VALUES(l),M_VALUES(l)
+
+
+                Current_Location = Matrix_Location( 1, l, m, NUM_R_ELEMENTS-1, DEGREE )
+
+                TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
+
+                Tmp_U_Value(1) = Tmp_U_Value(1) + Coefficient_Vector( Current_Location + 0 ) * TMP_VALUE_A
+                Tmp_U_Value(2) = Tmp_U_Value(2) + Coefficient_Vector( Current_Location + 1 ) * TMP_VALUE_A
+                Tmp_U_Value(3) = Tmp_U_Value(3) + Coefficient_Vector( Current_Location + 2 ) * TMP_VALUE_A
+                Tmp_U_Value(4) = Tmp_U_Value(4) + Coefficient_Vector( Current_Location + 3 ) * TMP_VALUE_A
+                Tmp_U_Value(5) = Tmp_U_Value(5) + Coefficient_Vector( Current_Location + 4 ) * TMP_VALUE_A
+
+            END DO  !   m Loop
+        END DO  !   l Loop
+    END IF
+
+END IF
+
+
+
+Return_Psi      = REAL(Tmp_U_Value(1), KIND = idp)
+Return_AlphaPsi = REAL(Tmp_U_Value(2), KIND = idp)
+Return_Beta1    = REAL(Tmp_U_Value(3), KIND = idp)
+Return_Beta2    = REAL(Tmp_U_Value(4), KIND = idp)
+Return_Beta3    = REAL(Tmp_U_Value(5), KIND = idp)
+
+
+
+
+
+END SUBROUTINE Calc_3D_Values_At_Location
 
 
 

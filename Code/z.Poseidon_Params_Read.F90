@@ -10,7 +10,13 @@ MODULE Poseidon_Parameter_Read_Module                                           
 !##!                                                                                !##!
 !##!================================================================================!##!
 !##!                                                                                !##!
+!##!    Contains:                                                                   !##!
 !##!                                                                                !##!
+!##!    +101+   UNPACK_POSEIDON_PARAMETERS                                          !##!
+!##!    +102+    READ_POSEIDON_PARAMETERS                                           !##!
+!##!                                                                                !##!
+!##!    +201+    WRITE_CFA_COEFFICIENTS                                             !##!
+!##!    +202+    READ_CFA_COEFFICIENTS                                              !##!
 !##!                                                                                !##!
 !######################################################################################!
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
@@ -28,39 +34,43 @@ USE Poseidon_Constants_Module, &
 
 
 USE Poseidon_Parameters, &
-            ONLY :  DOMAIN_DIM,             &
-                    DEGREE,                 &
-                    L_LIMIT,                &
-                    NUM_R_ELEMS_PER_SHELL,  &
-                    NUM_R_ELEMS_PER_SUBSHELL,&
-                    NUM_SHELLS,             &
-                    NUM_SUBSHELLS,          &
-                    NUM_BLOCKS,             &
-                    NUM_SUBSHELLS_PER_SHELL,&
-                    NUM_BLOCKS_PER_SHELL,   &
-                    NUM_BLOCK_THETA_ROWS,   &
-                    NUM_BLOCK_PHI_COLUMNS,  &
-                    nPROCS_POSEIDON,        &
-                    NUM_R_ELEMS_PER_BLOCK,  &
-                    NUM_T_ELEMS_PER_BLOCK,  &
-                    NUM_P_ELEMS_PER_BLOCK,  &
-                    NUM_R_QUAD_POINTS,      &
-                    NUM_T_QUAD_POINTS,      &
-                    NUM_P_QUAD_POINTS,      &
-                    NUM_QUAD_DOF,           &
-                    R_COARSEN_FACTOR,       &
-                    T_COARSEN_FACTOR,       &
-                    P_COARSEN_FACTOR,       &
-                    MAX_ITERATIONS,         &
-                    CONVERGENCE_CRITERIA,   &
-                    WRITE_TIMETABLE_FLAG,   &
-                    WRITE_REPORT_FLAG, &
-                    ITER_REPORT_NUM_SAMPLES,&
-                    WRITE_RESULTS_FLAG
+            ONLY :  DOMAIN_DIM,                 &
+                    DEGREE,                     &
+                    L_LIMIT,                    &
+                    NUM_CFA_VARS,               &
+                    NUM_R_ELEMS_PER_SHELL,      &
+                    NUM_R_ELEMS_PER_SUBSHELL,   &
+                    NUM_SHELLS,                 &
+                    NUM_SUBSHELLS,              &
+                    NUM_BLOCKS,                 &
+                    NUM_SUBSHELLS_PER_SHELL,    &
+                    NUM_BLOCKS_PER_SHELL,       &
+                    NUM_BLOCK_THETA_ROWS,       &
+                    NUM_BLOCK_PHI_COLUMNS,      &
+                    nPROCS_POSEIDON,            &
+                    NUM_R_ELEMS_PER_BLOCK,      &
+                    NUM_T_ELEMS_PER_BLOCK,      &
+                    NUM_P_ELEMS_PER_BLOCK,      &
+                    NUM_R_QUAD_POINTS,          &
+                    NUM_T_QUAD_POINTS,          &
+                    NUM_P_QUAD_POINTS,          &
+                    NUM_QUAD_DOF,               &
+                    R_COARSEN_FACTOR,           &
+                    T_COARSEN_FACTOR,           &
+                    P_COARSEN_FACTOR,           &
+                    MAX_ITERATIONS,             &
+                    CONVERGENCE_CRITERIA,       &
+                    WRITE_TIMETABLE_FLAG,       &
+                    WRITE_REPORT_FLAG,          &
+                    ITER_REPORT_NUM_SAMPLES,    &
+                    WRITE_RESULTS_FLAG,         &
+                    NEW_PETSC_SOLVER_FLAG
 
 
-USE Global_Variables_And_Parameters, &
-            ONLY :  Coefficient_Vector,    &
+USE Poseidon_Variables_Module, &
+            ONLY :  Coefficient_Vector,         &
+                    ULM_LENGTH,                 &
+                    NUM_R_ELEMENTS,             &
                     PROB_DIM
 
 IMPLICIT NONE
@@ -90,7 +100,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE     :: REAL_PARAMS
 
 
 
-NUM_INT_PARAMS  = 24
+NUM_INT_PARAMS  = 25
 NUM_REAL_PARAMS = 1
 
 ALLOCATE( INT_PARAMS(1:NUM_INT_PARAMS) )
@@ -131,6 +141,7 @@ NUM_BLOCKS_PER_SHELL        = INT_PARAMS(9)
 NUM_BLOCK_THETA_ROWS        = INT_PARAMS(10)
 NUM_BLOCK_PHI_COLUMNS       = INT_PARAMS(11)
 
+
 NUM_R_ELEMS_PER_BLOCK       = INT_PARAMS(5)
 NUM_T_ELEMS_PER_BLOCK       = INT_PARAMS(12)
 NUM_P_ELEMS_PER_BLOCK       = INT_PARAMS(13)
@@ -168,6 +179,10 @@ END IF
 IF ( INT_PARAMS(24) .NE. -1 ) THEN
     WRITE_RESULTS_FLAG          = INT_PARAMS(24)    ! Default = 0, Off
 END IF
+
+
+NEW_PETSC_SOLVER_FLAG           = INT_PARAMS(25)
+
 
 
 
@@ -398,6 +413,12 @@ IF ( Param_type == 'CC    ' ) THEN
 END IF
 
 
+IF ( Param_type == 'NPS   ' ) THEN
+    READ (line, 111) INT_PARAMS(25)
+    CYCLE
+END IF
+
+
 
 END DO READ
 
@@ -422,22 +443,34 @@ END SUBROUTINE READ_POSEIDON_PARAMETERS
 SUBROUTINE WRITE_CFA_COEFFICIENTS( )
 
 
-INTEGER                                          :: i
+INTEGER                                             :: i
+INTEGER                                             ::  re, d, l, m, u, here
 
-INTEGER                                 :: Coeffs_Write
+INTEGER                                             :: Coeffs_Write
 
 
-INTEGER                                 :: iskipp
-INTEGER                                 :: istat
+INTEGER                                             :: iskipp
+INTEGER                                             :: istat
 
 Coeffs_Write = 13
 
-OPEN(UNIT=Coeffs_Write, FILE='Params/CFA_Coeffs.c', ACTION='WRITE', STATUS='REPLACE',IOSTAT=istat)
+OPEN(UNIT=Coeffs_Write, FILE='Params/CFA_Coeffs.coefs', ACTION='WRITE', STATUS='REPLACE',IOSTAT=istat)
 
-DO i = 0,PROB_DIM-1
+!DO i = 0,PROB_DIM-1
+!    WRITE(Coeffs_Write,'(2ES24.17)') REAL(Coefficient_Vector(i)), AIMAG(Coefficient_Vector(i))
+!END DO
 
-    WRITE(Coeffs_Write,'(2ES24.17)') REAL(Coefficient_Vector(i)), AIMAG(Coefficient_Vector(i))
-
+DO re = 0,NUM_R_ELEMENTS-1
+    DO d = 0,DEGREE
+        DO l = 0,L_LIMIT
+            DO m = -l,l
+                here = (re*DEGREE+d)*ULM_LENGTH+(l*(l+1)+m)*NUM_CFA_VARS
+                WRITE(Coeffs_Write,'(A2,I1,A3,I2)')"L=",l,",M=",l
+                WRITE(Coeffs_Write,'(2ES24.17)')Coefficient_Vector(here:here+4)
+            END DO
+            WRITE(Coeffs_Write,'(/ /)')
+        END DO
+    END DO
 END DO
 
 CLOSE(UNIT=Coeffs_Write,STATUS='keep',IOSTAT=istat)
@@ -474,9 +507,9 @@ REAL(KIND=idp), DIMENSION(0:1,0:PROB_DIM-1)        :: TMP
 
 Coeffs_Read = 13
 
-OPEN(UNIT=Coeffs_Read, FILE='Params/CFA_Coeffs.c', STATUS='NEW', IOSTAT=istat)
+OPEN(UNIT=Coeffs_Read, FILE='Params/CFA_Coeffs.coefs', STATUS='NEW', IOSTAT=istat)
 IF ( istat .NE. 0 ) THEN
-    OPEN(UNIT=Coeffs_READ, FILE='Params/CFA_Coeffs.c', STATUS='OLD', IOSTAT=istat)
+    OPEN(UNIT=Coeffs_READ, FILE='Params/CFA_Coeffs.coefs', STATUS='OLD', IOSTAT=istat)
 END IF
 
 
@@ -489,7 +522,7 @@ CLOSE(UNIT=Coeffs_Read,STATUS='keep',IOSTAT=istat)
 
 
 !Coefficient_Vector = 0.0_idp
-!Coefficient_Vector(:) = CMPLX(TMP(0,:), TMP(1,:), KIND =idp)
+Coefficient_Vector(:) = CMPLX(TMP(0,:), TMP(1,:), KIND =idp)
 
 
 

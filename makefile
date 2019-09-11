@@ -1,6 +1,6 @@
 #=========================== Makefile for Poseidon ============================#
 
-## Select Dimension
+# Select Dimension
 
 #DIMENSION=1D
 #DIMENSION=2D
@@ -20,8 +20,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-#CMODE	=DEBUG
-CMODE	=OPTIMIZE
+CMODE	=DEBUG
+#CMODE	=OPTIMIZE
 
 
 ## Compile with Openmp
@@ -89,6 +89,13 @@ yahil : $(CODE_com) $(CODE_par) $(CODE_ext) $(CODE_o) $(CODE_itf)
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 
+replot: $(CODE_com) $(CODE_par) $(CODE_ext) $(CODE_o) $(CODE_itf)
+	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(SRC)/d.replot.F90 -o $(OBJ)/d.replot.o
+	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/replot.x
+	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
+
+
 
 PoseidonLib: $(CODE_com) $(CODE_o)
 	ar crv $(OBJ)/Poseidon.a $(OBJ)/*.o
@@ -125,6 +132,8 @@ run_yahil:
 run_mpi:
 	mpirun  -np $(NPROCS) ./$(BIN)/main_$(DIMENSION).x
 
+run_replot:
+	mpirun ./$(BIN)/replot.x
 
 
 #------------------------------- Clean Up Rule  ------------------------------------#
@@ -144,3 +153,5 @@ clean:
 clean_output:
 	rm -f $(OUT)/*.out
 	rm -f $(OUT)/Iteration_Reports/*.out
+	rm -f $(OUT)/CHIMERA_RESULTS/*.out
+	rm -f $(OUT)/Yahil_RESULTS/*.out

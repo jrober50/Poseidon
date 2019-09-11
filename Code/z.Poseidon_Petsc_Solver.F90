@@ -49,7 +49,7 @@ USE Poseidon_Parameters, &
                                         WRITE_REPORT_FLAG,     &
                                         ITER_REPORT_FILE_ID
 
-USE Global_Variables_And_Parameters, &
+USE Poseidon_Variables_Module, &
                                 ONLY :  NUM_R_ELEMENTS,             &
                                         NUM_T_ELEMENTS,             &
                                         NUM_P_ELEMENTS,             &
@@ -81,6 +81,10 @@ USE Global_Variables_And_Parameters, &
                                         BLOCK_ELEM_STF_MATVEC,      &
                                         myShell,                    &
                                         Update_Vector
+
+USE IO_Functions_Module,    &
+                                ONLY :  OUTPUT_PETSC_REPORT
+
 #include <petsc/finclude/petscsys.h>
 #include <petsc/finclude/petscksp.h>
 #include <petsc/finclude/petscmat.h>
@@ -174,7 +178,11 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     Length_Val_a = ELEM_PROB_DIM - ULM_LENGTH
     Length_Val_b = ULM_LENGTH
     Local_Length_RHS = SUBSHELL_PROB_DIM
-    
+!    IF ( myID_PETSc == NUM_SUBSHELLS-1) THEN           Set in z.Posidon_MPI_Module
+!       Local_Length = SUBSHELL_PROB_DIM
+!    ELSE
+!       Local_Length = SUBSHELL_PROB_DIM - ULM_LENGTH
+!    END IF
 
 
     ALLOCATE( Index_Array_Sol(0:Local_Length-1) )
@@ -383,13 +391,68 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
 
+
+!     start_here=myID_PETSc*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
+!     end_here=start_here + Local_Length - 1
+!     Index_Array_RHS =  (/(i,i=start_here,end_here,1)/)
+!     CALL VecGetValues(Source, Local_Length, Index_Array_RHS, Petsc_SourceValues,jerr)
+!    DO i = 0,NUM_SUBSHELLS-1
+!       IF ( myID_PETSC == 0) THEN
+!           PRINT*,"Get RHS_Vector (PETSC)",i,Start_Here,End_Here
+!           PRINT*,Petsc_SourceValues
+!           PRINT*," "
+!       END IF
+!       CALL SLEEP(1)
+!       CALL MPI_BARRIER(POSEIDON_COMM_PETSC, jerr)
+!    END DO
+!    PRINT*," "
+
+
+
+!    DO re = 0,NUM_R_ELEMS_PER_SUBSHELL-1
+!
+!!
+!!       Calc Shell_re from subshell_re
+!!
+!
+!        Block_Re = myID_Shell*NUM_R_ELEMS_PER_SUBSHELL + re
+!        Global_Re = myID_PETSc*NUM_R_ELEMS_PER_SUBSHELL + re
+!
+!        start_here=(myID_PETSc*NUM_R_ELEMS_PER_SUBSHELL + re)*DEGREE*ULM_LENGTH
+!        end_here=start_here+Elem_Prob_Dim-1
+!        Index_Array_MAT(0:ELEM_PROB_DIM-1) =  (/(i,i=start_here,end_here,1)/)
+!
+!        DO i = 0,ELEM_PROB_DIM-1
+!            i_here = start_here+i
+!
+!            CALL MatGetValues( Stiffness, 1, i_here, ELEM_PROB_DIM, Index_Array_Mat, Petsc_MatValues, jerr )
+!
+!            DO j = 0,NUM_SUBSHELLS-1
+!              IF ( myID_PETSC == j) THEN
+!                 PRINT*,"MatGetValues myID",j,"Re",Block_re," row",i,i_here
+!                 PRINT*,Petsc_MatValues
+!                 PRINT*,"========================================================"
+!              END IF
+!              CALL MPI_BARRIER(POSEIDON_COMM_PETSC, jerr)
+!            END DO
+!            CALL SLEEP(1)
+!            PRINT*," "
+!
+!        END DO
+!
+!
+!    END DO
+
+
+
+
     !   Create Solver
     !
     CALL KSPCreate(POSEIDON_COMM_PETSC,ksp, jerr)
     CALL KSPSetOperators(ksp, Stiffness, Stiffness, jerr)
     CALL KSPGetPC(ksp, pc, jerr)
 
-    CALL PCSetType(pc, PCCHOLESKY, jerr)
+    CALL PCSetType(pc, PCILU, jerr)
 
 !    CALL KSPSetType(ksp, KSPBCGS, jerr)
     CALL KSPSetType(ksp, KSPPREONLY, jerr)
@@ -441,8 +504,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     Update_Vector = 0.0_idp
     Update_Vector(Start_Here:End_Here) = Sol_Vec
 
-    PRINT*,"At end of Petsc_Solver"
-    PRINT*,Update_Vector(0:4)
 
 
 
@@ -472,45 +533,6 @@ END SUBROUTINE PETSC_Distributed_Solve
 
 
 
-
-
-
-!+101+###########################################################################!
-!                                                                                !
-!                  OUTPUT_PETSC_REPORT                                           !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_PETSC_REPORT( matset_time, solve_time, Iter_Count,   &
-                                rtol, abstol, dtol, maxits             )
-
-REAL(KIND = idp),   INTENT(IN)                          ::  matset_time, solve_time
-PetscInt,           INTENT(IN)                          ::  Iter_Count, maxits
-double precision,   INTENT(IN)                          ::  rtol, abstol, dtol
-
-INTEGER                                                 ::  FILE_ID
-
-
-
-IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-
-    FILE_ID = ITER_REPORT_FILE_ID
-
-    WRITE(FILE_ID,'(A)')"                                     PETSc Results"
-    WRITE(FILE_ID,'(A)')"            ============================================================="
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,'(A,ES22.15)')"Set Matrix Values Time ",matset_time
-!    WRITE(ITER_REPORT_FILE_ID,'(A,ES22.15)')"Solver Type : KSPPREONLY, PCCHOLESKY"
-    WRITE(FILE_ID,'(A)')"Solver Type : KSPBCGS, PCCHOLESKY"
-    WRITE(FILE_ID,'(A,ES22.15)')"Solve Time ",solve_time
-    WRITE(FILE_ID,'(A,I2.2)')"Solve Iterations :",Iter_Count
-    WRITE(FILE_ID,'(A,ES22.15,ES22.15,ES22.15,I2.2)')"Solve Tolerances :",rtol, abstol, dtol, maxits
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,'(A)')" "
-END IF
-
-
-END SUBROUTINE OUTPUT_PETSC_REPORT
 
 
 

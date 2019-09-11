@@ -96,7 +96,7 @@ USE Poseidon_Parameters, &
                                         NUM_BLOCK_PHI_COLUMNS,      &
                                         NUM_R_ELEMS_PER_SHELL
 
-USE Global_Variables_And_Parameters, &
+USE Poseidon_Variables_Module, &
                                 ONLY :  NUM_R_ELEMENTS,             &
                                         NUM_T_ELEMENTS,             &
                                         NUM_P_ELEMENTS,             &
@@ -123,7 +123,6 @@ USE Global_Variables_And_Parameters, &
                                         Lagrange_Poly_Table,        &
                                         LPT_LPT,                    &
                                         Coefficient_Vector,         &
-                                        RHS_Vector,                 &
                                         nPROCS_SHELL,               &
                                         myID_Poseidon,              &
                                         myID_Shell,                 &
@@ -166,11 +165,13 @@ USE Additional_Functions_Module, &
                                         Initialize_LGL_Quadrature,  &
                                         Map_To_X_Space,             &
                                         CFA_Matrix_Map,             &
-                                        CFA_ALL_Matrix_Map
+                                        CFA_ALL_Matrix_Map,         &
+                                        Calc_3D_Values_At_Location
 
 
 USE Jacobian_Internal_Functions_Module, &
-                                ONLY :  JCBN_mu_FUNCTION_3D_ALL,    &
+                                ONLY :  JCBN_kappa_FUNCTION_3D_ALL,    &
+                                        JCBN_kappa_FUNCTION_3D_SUB,    &
                                         JCBN_BIGK_SUBROUTINE,       &
                                         JCBN_BIGK_FUNCTION
 
@@ -198,14 +199,27 @@ SUBROUTINE CFA_3D_Master_Build()
 
 
 REAL(KIND = idp)        :: timea, timeb, timec
-INTEGER                 :: i,j
+INTEGER                 :: i,j,k,l,u
 
 timea = 0.0_idp
 timeb = 0.0_idp
 timec = 0.0_idp
 
-PRINT*,"Before CFA_3D_Apply_BCs_Part1"
-PRINT*,Coefficient_Vector(0:4)
+
+!PRINT*,"IN CFA_3D_Master_Build"
+!PRINT*,"Block_Source_E"
+!PRINT*,Block_Source_E
+!WRITE(*,'(/ / / /)')
+!PRINT*,"Block_Source_S"
+!PRINT*,Block_Source_S
+!WRITE(*,'(/ / / /)')
+
+
+
+
+
+
+
 !*!
 !*! Alter the Coefficient Vector to Reflect Boundary Conditions
 !*!
@@ -214,8 +228,7 @@ CALL CFA_3D_Apply_BCs_Part1()
 timec = MPI_Wtime()
 CALL Clock_In(timec-timeb, 4)
 
-PRINT*,"AFTER CFA_3D_Apply_BCs_Part1"
-PRINT*,Coefficient_Vector(0:4)
+
 
 
 
@@ -228,7 +241,17 @@ CALL CREATE_3D_NONLAPLACIAN_SOE()
 timea = MPI_Wtime()
 CALL Clock_In(timea-timeb, 9)
 
-
+!PRINT*,"RHS_VECTOR"
+!PRINT*,Block_RHS_Vector
+!DO i = 0,NUM_R_ELEMENTS-1
+!    DO j = 0,DEGREE
+!        k = CFA_ALL_Matrix_Map(1, 0, i, j)
+!        PRINT*,Block_RHS_Vector(k)
+!    END DO
+!END DO
+!k = CFA_ALL_Matrix_Map(1, 0, NUM_R_ELEMENTS-1, DEGREE)
+!PRINT*,Block_RHS_Vector(k)
+!WRITE(*,'(/ /)')
 
 
 !*!
@@ -249,6 +272,15 @@ timea = MPI_Wtime()
 CALL Clock_In(timea-timeb, 11)
 
 
+!
+!DO i = 0,NUM_R_ELEMENTS-1
+!    PRINT*,BLOCK_ELEM_STF_MATVEC(:,i)
+!    WRITE(*,'(/ / / /)')
+!END DO
+
+
+
+
 !*!
 !*! Add the Laplacian contribution to the Residual Vector
 !*!
@@ -257,9 +289,26 @@ CALL FINISH_3D_RHS_VECTOR()
 timea = MPI_Wtime()
 CALL Clock_In(timea-timeb, 12)
 
+!
+!PRINT*,"RHS_VECTOR"
+!PRINT*,REAL(Block_RHS_Vector, KIND = idp)
 
-PRINT*,"Before CFA_3D_Apply_BCs_Part2"
-PRINT*,Coefficient_Vector(0:4)
+
+!DO i = 0,NUM_R_ELEMENTS-1
+!    DO j = 0,DEGREE
+!        k = CFA_ALL_Matrix_Map(1, 0, i, j)
+!        l = CFA_ALL_Matrix_Map(5, 8, i, j)
+!        IF ( ANY(Block_RHS_Vector(k:l) .NE. Block_RHS_Vector(k:l) ) ) THEN
+!            PRINT*,Block_RHS_Vector(k:l)
+!            PRINT*," "
+!        END IF
+!    END DO
+!END DO
+!k = CFA_ALL_Matrix_Map(1, 0, NUM_R_ELEMENTS-1, DEGREE)
+!PRINT*,Block_RHS_Vector(k)
+!WRITE(*,'(/ /)')
+
+
 
 !*!
 !*! Alter the Jacobian Matrix to Reflect Boundary Conditions
@@ -269,10 +318,17 @@ CALL CFA_3D_Apply_BCs_Part2()
 timec = MPI_Wtime()
 CALL Clock_In(timec-timeb, 13)
 
+!PRINT*,"RHS_VECTOR"
+!DO i = 0,NUM_R_ELEMENTS-1
+!    DO j = 0,DEGREE
+!        k = CFA_ALL_Matrix_Map(1, 0, i, j)
+!        PRINT*,REAL(Block_RHS_Vector(k), KIND = idp)
+!    END DO
+!END DO
+!k = CFA_ALL_Matrix_Map(1, 0, NUM_R_ELEMENTS-1, DEGREE)
+!PRINT*,REAL(Block_RHS_Vector(k), KIND = idp)
+!WRITE(*,'(/ /)')
 
-
-PRINT*,"AFTER CFA_3D_Apply_BCs_Part2"
-PRINT*,Coefficient_Vector(0:4)
 
 
 END SUBROUTINE CFA_3D_Master_Build
@@ -292,19 +348,12 @@ END SUBROUTINE CFA_3D_Master_Build
 
 
 
-!+201+##########################################################################!
-!                                                                               !
-!                  CREATE_3D_NONLAPLACIAN_SOE                                   !
-!                                                                               !
-!###############################################################################!
+!+201+###############################################################################!
+!                                                                                    !
+!                                  CREATE_3D_NONLAPLACIAN_SOE                        !
+!                                                                                    !
+!####################################################################################!
 SUBROUTINE CREATE_3D_NONLAPLACIAN_SOE()
-
-
-
-
-
-
-
 
 INTEGER                                                         ::  Local_re,       &
                                                                     Local_te,       &
@@ -358,58 +407,44 @@ REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  CUR_T_LOCS
 REAL(KIND = idp), DIMENSION(1:NUM_P_QUAD_POINTS)                ::  CUR_P_LOCS
 
 
-REAL(KIND = idp), DIMENSION(1:8)                                ::  PSI_POWER
-REAL(KIND = idp), DIMENSION(1:4)                                ::  ALPHAPSI_POWER
 
 
+REAL(KIND = idp),  DIMENSION(1:5,                   &
+                             1:NUM_R_QUAD_POINTS,   &
+                             1:NUM_T_QUAD_POINTS,   &
+                             1:NUM_P_QUAD_POINTS    )           ::  RHS_TERMS
 
 
+REAL(KIND = idp),  DIMENSION(1:14,                  &
+                             1:NUM_R_QUAD_POINTS,   &
+                             1:NUM_T_QUAD_POINTS,   &
+                             1:NUM_P_QUAD_POINTS    )           ::  SUBJCBN_PSI_TERMS
 
+REAL(KIND = idp), DIMENSION(1:14,                   &
+                             1:NUM_R_QUAD_POINTS,   &
+                             1:NUM_T_QUAD_POINTS,   &
+                             1:NUM_P_QUAD_POINTS    )           ::  SUBJCBN_ALPHAPSI_TERMS
 
+REAL(KIND = idp), DIMENSION(1:20,                   &
+                             1:NUM_R_QUAD_POINTS,   &
+                             1:NUM_T_QUAD_POINTS,   &
+                             1:NUM_P_QUAD_POINTS    )           ::  SUBJCBN_BETA1_TERMS
 
-COMPLEX(KIND = idp)                                             ::  Common_Term_A
-REAL(KIND = idp)                                                ::  Common_Term_B,  &
-                                                                    Common_Term_C,  &
-                                                                    Common_Term_D
+REAL(KIND = idp), DIMENSION(1:20,                   &
+                             1:NUM_R_QUAD_POINTS,   &
+                             1:NUM_T_QUAD_POINTS,   &
+                             1:NUM_P_QUAD_POINTS    )           ::  SUBJCBN_BETA2_TERMS
 
-
-
-REAL(KIND = idp),  DIMENSION(1:5,                                    &
-                                         1:NUM_R_QUAD_POINTS,        &
-                                         1:NUM_T_QUAD_POINTS,        &
-                                         1:NUM_P_QUAD_POINTS         )  ::  RHS_TERMS
-
-
-REAL(KIND = idp),  DIMENSION(1:14,                                   &
-                                         1:NUM_R_QUAD_POINTS,        &
-                                         1:NUM_T_QUAD_POINTS,        &
-                                         1:NUM_P_QUAD_POINTS         )  ::  SUBJCBN_PSI_TERMS
-
-REAL(KIND = idp), DIMENSION(1:14,                                    &
-                                         1:NUM_R_QUAD_POINTS,        &
-                                         1:NUM_T_QUAD_POINTS,        &
-                                         1:NUM_P_QUAD_POINTS         )  ::  SUBJCBN_ALPHAPSI_TERMS
-
-REAL(KIND = idp), DIMENSION(1:20,                                    &
-                                         1:NUM_R_QUAD_POINTS,        &
-                                         1:NUM_T_QUAD_POINTS,        &
-                                         1:NUM_P_QUAD_POINTS         )  ::  SUBJCBN_BETA1_TERMS
-
-REAL(KIND = idp), DIMENSION(1:20,                                    &
-                                         1:NUM_R_QUAD_POINTS,        &
-                                         1:NUM_T_QUAD_POINTS,        &
-                                         1:NUM_P_QUAD_POINTS         )  ::  SUBJCBN_BETA2_TERMS
-
-REAL(KIND = idp), DIMENSION(1:20,                                    &
-                                         1:NUM_R_QUAD_POINTS,        &
-                                         1:NUM_T_QUAD_POINTS,        &
-                                         1:NUM_P_QUAD_POINTS         )  ::  SUBJCBN_BETA3_TERMS
+REAL(KIND = idp), DIMENSION(1:20,                   &
+                             1:NUM_R_QUAD_POINTS,   &
+                             1:NUM_T_QUAD_POINTS,   &
+                             1:NUM_P_QUAD_POINTS    )           ::  SUBJCBN_BETA3_TERMS
 
 
 
 COMPLEX(KIND = idp)                                                     ::  REUSED_VALUE
 
-REAL(KIND = idp), DIMENSION(1:3,1:3)                                    ::  JCBN_mu_Array
+REAL(KIND = idp), DIMENSION(1:3,1:3)                                    ::  JCBN_kappa_Array
 REAL(KIND = idp), DIMENSION(1:3)                                        ::  JCBN_n_ARRAY
 
 REAL(KIND = idp)                                                        ::  JCBN_BIGK_VALUE
@@ -445,8 +480,6 @@ REAL(KIND = idp)                                                        ::  TWOO
                                                                             deltat_overtwo,     &
                                                                             deltap_overtwo
 
-REAL(KIND = idp)                                                        ::  REAL_L
-
 
 
 REAL(KIND = idp), DIMENSION( 1:NUM_R_QUAD_POINTS,        &
@@ -465,7 +498,7 @@ REAL(KIND = idp)                                    ::  timea, timeb, timec, tim
 
 
 INTEGER                                             ::  ierr, i
-
+INTEGER                                             ::  CUR_LOC
 
 time_CURVALS = 0.0_idp
 time_SJT = 0.0_idp
@@ -571,6 +604,27 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
 
 
+
+
+!            PRINT*,"RE",Global_RE,"TE",Local_te
+!            PRINT*,"PSI Val"
+!            PRINT*,CUR_VAL_PSI
+!            PRINT*,"PSI DRV"
+!            PRINT*,CUR_DRV_PSI(1,:,:,:)
+!            PRINT*,"ALPHAPSI Val"
+!            PRINT*,CUR_VAL_ALPHAPSI
+!            PRINT*,"ALPHAPSI DRV"
+!            PRINT*,CUR_DRV_ALPHAPSI(1,:,:,:)
+!            PRINT*,"BETA VAL"
+!            PRINT*,CUR_VAL_BETA(1,:,1,1)
+!            PRINT*,"BETA DRV"
+!            PRINT*,CUR_DRV_BETA(1,1,:,1,1)
+!            PRINT*,"BETADDRV"
+!            PRINT*,CUR_DDRV_BETA(1,1,1,:,1,1)
+!            PRINT*,"+++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+
+
             !*!
             !*!  Calculate the Sub-Jacobian and RHS Terms
             !*!
@@ -591,7 +645,10 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
 
             timec = MPI_Wtime()
-            
+
+!            PRINT*,"RE",Global_RE,"TE",Local_te
+!            PRINT*,RHS_TERMS
+!            PRINT*,"+++++++++++++++++++++++++++++++++++++++++++++++++++"
 
 
 
@@ -603,8 +660,9 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
                                         R_SQUARE, deltar_OVERtwo,        &
                                         Int_Factor                              )
 
-
             timed = MPI_Wtime()
+
+
 
 
             !*!
@@ -616,6 +674,7 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
                                         SUBJCBN_PSI_TERMS, SUBJCBN_ALPHAPSI_TERMS,  &
                                         SUBJCBN_BETA1_TERMS, SUBJCBN_BETA2_TERMS,   &
                                         SUBJCBN_BETA3_TERMS,                        &
+                                        R_SQUARE, RSIN_SQUARE,                      &
                                         Int_Factor                                  )
 
 
@@ -638,9 +697,9 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
 
 
-        END DO  ! re Loop
+        END DO  ! pe Loop
     END DO  ! te Loop
-END DO  ! pe Loop
+END DO  ! re Loop
 
 
 CALL Clock_In(time_CurVals, 5)
@@ -764,13 +823,7 @@ INTEGER                                                         ::  lm_loc
 
 COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Local_Coefficients
 
-
-
-
 REAL(KIND = idp)                                                :: TWO_OVER_DELTAR
-
-
-REAL(KIND = idp)                                                :: SQRT_NORM_TERM, REAL_L
 
 
                           !                                                 !
@@ -821,11 +874,6 @@ TWO_OVER_DELTAR = 2.0_idp/(rlocs(re+1) - rlocs(re))
 
 
 
-
-
-
-
-
 !$OMP DO SCHEDULE(dynamic), COLLAPSE(3)
 DO pd = 1,NUM_P_QUAD_POINTS
 
@@ -867,6 +915,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
                     Local_Coefficients(1:5) = Coefficient_Vector(Current_Location:Current_Location+4)
+
 
 
                     TMP_U_Value(:) = TMP_U_Value(:)                                         &
@@ -1003,6 +1052,11 @@ DO pd = 1,NUM_P_QUAD_POINTS
             CUR_DDRV_BETA(1, 3, 3, rd, td, pd )   = REAL(Tmp_BETA_PR_DDRV_Value(5), KIND = idp)
             CUR_DDRV_BETA(2, 3, 3, rd, td, pd )   = REAL(Tmp_BETA_PT_DDRV_Value(5), KIND = idp)
             CUR_DDRV_BETA(3, 3, 3, rd, td, pd )   = REAL(Tmp_BETA_PP_DDRV_Value(5), KIND = idp)
+
+
+!            PRINT*,CUR_R_LOCS(rd),REAL(Tmp_U_Value(3), KIND = idp),     &
+!                    REAL(Tmp_U_R_DRV_Value(3), KIND = idp),             &
+!                    REAL(Tmp_U_RR_DDRV_Value(3), KIND = idp)
 
 
         END DO  !   rd Loop
@@ -1152,11 +1206,11 @@ INTEGER                                                                     ::  
                                                                                 i
 
 
-REAL(KIND = idp), DIMENSION(1:8)                                            ::  PSI_POWER
+REAL(KIND = idp), DIMENSION(1:11)                                            ::  PSI_POWER
 REAL(KIND = idp), DIMENSION(1:4)                                            ::  ALPHAPSI_POWER
 
 
-REAL(KIND = idp), DIMENSION(1:3,1:3)                                        ::  JCBN_mu_Array
+REAL(KIND = idp), DIMENSION(1:3,1:3)                                        ::  JCBN_kappa_Array
 REAL(KIND = idp), DIMENSION(1:3)                                            ::  JCBN_n_ARRAY
 
 REAL(KIND = idp)                                                            ::  JCBN_BIGK_VALUE
@@ -1175,7 +1229,7 @@ REAL(KIND = idp)                                                            ::  
 !$OMP PARALLEL DEFAULT(none)                                            &
 !$OMP PRIVATE( pd, td, rd,                                              &
 !$OMP           PSI_POWER, ALPHAPSI_POWER,                              &
-!$OMP           JCBN_BIGK_VALUE, JCBN_mu_ARRAY,JCBN_n_ARRAY,            &
+!$OMP           JCBN_BIGK_VALUE, JCBN_kappa_ARRAY,JCBN_n_ARRAY,            &
 !$OMP           REUSED_VALUE                                        )   &
 !$OMP SHARED( re, te, pe,                                               &
 !$OMP           NUM_P_QUAD_POINTS, NUM_T_QUAD_POINTS, NUM_R_QUAD_POINTS,&
@@ -1206,7 +1260,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         PSI_POWER(1) = CUR_VAL_PSI(rd, td, pd)
-        DO i = 2,8
+        DO i = 2,11
 
             PSI_POWER(i) = PSI_POWER(i-1)*PSI_POWER(1)
 
@@ -1230,7 +1284,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
 
-        JCBN_mu_Array = JCBN_mu_FUNCTION_3D_ALL( rd, td, pd,                                    &
+        JCBN_kappa_Array = JCBN_kappa_FUNCTION_3D_ALL( rd, td, pd,                                    &
                                                 CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
                                                 R_INVERSE(rd), RSIN_SQUARE(rd, td),             &
                                                 SIN_VAL(td), SIN_SQUARE(td), CSC_SQUARE(td),    &
@@ -1239,11 +1293,19 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
 
+        CALL JCBN_kappa_FUNCTION_3D_SUB( rd, td, pd,                                    &
+                                                CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
+                                                R_INVERSE(rd), RSIN_SQUARE(rd, td),             &
+                                                SIN_VAL(td), SIN_SQUARE(td), CSC_SQUARE(td),    &
+                                                COS_VAL(td), COTAN_VAL(td),                     &
+                                                CUR_VAL_BETA, CUR_DRV_BETA                      )
+
 
         JCBN_n_ARRAY(:) = CUR_DRV_ALPHAPSI(:, rd, td, pd) / ALPHAPSI_POWER(1)   &
                             - 7 * CUR_DRV_PSI(:, rd, td, pd )/ PSI_POWER(1)
 
-
+!        JCBN_n_ARRAY(:) =   CUR_DRV_ALPHAPSI(:, rd, td, pd) / (ALPHAPSI_POWER(1)*PSI_POWER(10))   &
+!                            - 7 * CUR_DRV_PSI(:, rd, td, pd )/ PSI_POWER(11)
 
 
 
@@ -1253,7 +1315,6 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
         RHS_Terms(1, rd, td, pd) = - TwoPi * GR_Source_Scalar * Block_Source_E(rd, td, pd, re, te, pe) * PSI_POWER(5)            &
                                  - PSI_POWER(7)/ (16.0_idp * ALPHAPSI_POWER(2)) * JCBN_BIGK_VALUE
-
 
 
       
@@ -1282,15 +1343,40 @@ DO pd = 1,NUM_P_QUAD_POINTS
                             + CUR_DDRV_BETA(1, 2, 2, rd, td, pd )                               &
                             + CUR_DDRV_BETA(1, 3, 3, rd, td, pd )                               &
                             + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1, 1, rd, td, pd)           &
-                            + COTAN_VAL(td) * CUR_DRV_BETA(1, 2, rd, td, pd)                    &
-                            - 2.0_idp /R_SQUARE(rd) * CUR_VAL_BETA(1, rd, td, pd )              &
+                            + COTAN_VAL(td)          * CUR_DRV_BETA(1, 2, rd, td, pd)           &
+                            - 2.0_idp /R_SQUARE(rd)  * CUR_VAL_BETA(1, rd, td, pd )             &
                             )                                                                   &
-                      + JCBN_n_ARRAY(1)* JCBN_mu_Array(1,1)                                     &
-                      + JCBN_n_ARRAY(2)* JCBN_mu_Array(2,1)                                     &
-                      + JCBN_n_ARRAY(3)* JCBN_mu_Array(3,1)
+                      + JCBN_n_ARRAY(1)* JCBN_kappa_Array(1,1)                                     &
+                      + JCBN_n_ARRAY(2)* JCBN_kappa_Array(2,1)                                     &
+                      + JCBN_n_ARRAY(3)* JCBN_kappa_Array(3,1)
 
-
-
+!        PRINT*,"RHS_TERM 3 ",rd ,td ,pd
+!        PRINT*,RHS_TERMS(1:3, rd,td,pd)
+!        PRINT*,16.0_idp * pi                                                &
+!                          * ALPHAPSI_POWER(1)                                                   &
+!                          * PSI_POWER(3)                                                        &
+!                          * GR_Source_Scalar                                                    &
+!                          * Block_Source_Si(rd, td, pd, re, te, pe, 1)
+!        PRINT*,2.0_idp/R_SQUARE(rd) * CUR_VAL_BETA(1,rd,td,pd)                          &  ! New
+!                     + 2.0_idp*COTAN_VAL(td)/CUR_R_LOCS(rd) * CUR_VAL_BETA(2,rd,td,pd)          &  ! New
+!                     + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(2,2,rd,td,pd)                      &  ! New
+!                     + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(3,3,rd,td,pd)
+!        PRINT*, - OneThird                                                                 &
+!                          * ( CUR_DDRV_BETA(1, 1, 1, rd, td, pd )                               &
+!                            + CUR_DDRV_BETA(1, 2, 2, rd, td, pd )                               &
+!                            + CUR_DDRV_BETA(1, 3, 3, rd, td, pd )                               &
+!                            + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1, 1, rd, td, pd)           &
+!                            + COTAN_VAL(td)          * CUR_DRV_BETA(1, 2, rd, td, pd)           &
+!                            - 2.0_idp /R_SQUARE(rd)  * CUR_VAL_BETA(1, rd, td, pd )             &
+!                            )
+!        PRINT*,JCBN_n_ARRAY(1)* JCBN_kappa_Array(1,1)                                     &
+!                      + JCBN_n_ARRAY(2)* JCBN_kappa_Array(2,1)                                     &
+!                      + JCBN_n_ARRAY(3)* JCBN_kappa_Array(3,1)
+!        PRINT*,"----"
+!        PRINT*, CUR_DDRV_BETA(1, 1, 1, rd, td, pd )         &
+!              , 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1, 1, rd, td, pd)     &
+!              , - 2.0_idp /R_SQUARE(rd)  * CUR_VAL_BETA(1, rd, td, pd )     &
+!              , CUR_R_LOCS(rd)
 
 
         RHS_Terms(4, rd, td, pd) =  16.0_idp * pi                                               &
@@ -1308,11 +1394,11 @@ DO pd = 1,NUM_P_QUAD_POINTS
                                + CUR_DDRV_BETA(2, 3, 3, rd, td, pd )                            &
                                + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(2, 1, rd, td, pd)        &
                                + COTAN_VAL(td) * CUR_DRV_BETA(2, 2, rd, td, pd)                 &
-                               - CSC_SQUARE(td) * CUR_VAL_BETA(2, rd, td, pd)     &
-                             )                                                                  &
-                        + JCBN_n_ARRAY(1) * JCBN_mu_Array(1,2)                                  &
-                        + JCBN_n_ARRAY(2) * JCBN_mu_Array(2,2)                                  &
-                        + JCBN_n_ARRAY(3) * JCBN_mu_Array(3,2)
+                               - CSC_SQUARE(td) * CUR_VAL_BETA(2, rd, td, pd)                   &
+                               )                                                                &
+                        + JCBN_n_ARRAY(1) * JCBN_kappa_Array(1,2)                                  &
+                        + JCBN_n_ARRAY(2) * JCBN_kappa_Array(2,2)                                  &
+                        + JCBN_n_ARRAY(3) * JCBN_kappa_Array(3,2)
 
 
 
@@ -1327,16 +1413,16 @@ DO pd = 1,NUM_P_QUAD_POINTS
                         - COTAN_VAL(td)/RSIN_SQUARE(rd,td) * CUR_DRV_BETA(3,2,rd,td,pd)     &  ! NEW
                         - 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1,3,rd,td,pd)               &  ! NEW
                         - 2.0_idp*COTAN_VAL(td) / R_SQUARE(rd) * CUR_DRV_BETA(2,3,rd,td,pd) &  ! NEW
-                        - ( OneThird*CSC_SQUARE(td)/R_SQUARE(rd ))                          &
+                        - ( OneThird /RSIN_SQUARE(rd, td ))                                 &
                              * ( CUR_DDRV_BETA(3, 1, 1, rd, td, pd )                        &
                                + CUR_DDRV_BETA(3, 2, 2, rd, td, pd )                        &
                                + CUR_DDRV_BETA(3, 3, 3, rd, td, pd )                        &
                                + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(3, 1, rd, td, pd)    &
                                + COTAN_VAL(td) * CUR_DRV_BETA(3, 2, rd, td, pd)             &
                              )                                                              &
-                        + JCBN_n_ARRAY(1) * JCBN_mu_Array(1,3)                              &
-                        + JCBN_n_ARRAY(2) * JCBN_mu_Array(2,3)                              &
-                        + JCBN_n_ARRAY(3) * JCBN_mu_Array(3,3)
+                        + JCBN_n_ARRAY(1) * JCBN_kappa_Array(1,3)                              &
+                        + JCBN_n_ARRAY(2) * JCBN_kappa_Array(2,3)                              &
+                        + JCBN_n_ARRAY(3) * JCBN_kappa_Array(3,3)
 
 
 
@@ -1368,9 +1454,9 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
         ! J_{3,1lmn} Non-Derivative Term
         SUBJCBN_PSI_TERMS(3, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                                   &
-                                                * (CUR_DRV_PSI(1, rd, td, pd )*JCBN_mu_ARRAY(1,1)       &
-                                                  + CUR_DRV_PSI(2, rd, td, pd )*JCBN_mu_ARRAY(2,1)      &
-                                                  + CUR_DRV_PSI(3, rd, td, pd )*JCBN_mu_ARRAY(3,1) )    &
+                                                * ( CUR_DRV_PSI(1, rd, td, pd )*JCBN_kappa_ARRAY(1,1)      &
+                                                  + CUR_DRV_PSI(2, rd, td, pd )*JCBN_kappa_ARRAY(2,1)      &
+                                                  + CUR_DRV_PSI(3, rd, td, pd )*JCBN_kappa_ARRAY(3,1) )    &
                                             - 48.0_idp * pi                                             &
                                                 * GR_Source_Scalar                                      &
                                                 * Block_Source_Si(rd, td, pd, re, te, pe, 1)            &
@@ -1379,15 +1465,14 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         ! J_{3,1lmn} Derivative Terms
-        SUBJCBN_PSI_TERMS(4:6, rd, td, pd) = (7.0_idp/ PSI_POWER(1) )*JCBN_mu_ARRAY(1:3,1)
-
+        SUBJCBN_PSI_TERMS(4:6, rd, td, pd) = (7.0_idp/ PSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,1)
 
 
         ! J_{4,1lmn} Non-Derivative Term
         SUBJCBN_PSI_TERMS(7, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                                   &
-                                                * (CUR_DRV_PSI(1, rd, td, pd)*JCBN_mu_ARRAY(1,2)        &
-                                                 + CUR_DRV_PSI(2, rd, td, pd)*JCBN_mu_ARRAY(2,2)        &
-                                                 + CUR_DRV_PSI(3, rd, td, pd)*JCBN_mu_ARRAY(3,2) )      &
+                                               * ( CUR_DRV_PSI(1, rd, td, pd)*JCBN_kappa_ARRAY(1,2)        &
+                                                 + CUR_DRV_PSI(2, rd, td, pd)*JCBN_kappa_ARRAY(2,2)        &
+                                                 + CUR_DRV_PSI(3, rd, td, pd)*JCBN_kappa_ARRAY(3,2) )      &
                                             - 48.0_idp * pi                                             &
                                                 * GR_Source_Scalar                                      &
                                                 * Block_Source_Si(rd, td, pd, re, te, pe, 2)            &
@@ -1395,7 +1480,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
                                                 * PSI_POWER(2)
 
         ! J_{4,1lmn} Derivative Terms
-        SUBJCBN_PSI_TERMS(8:10, rd, td, pd) = (7.0_idp/ PSI_POWER(1) )*JCBN_mu_ARRAY(1:3,2)
+        SUBJCBN_PSI_TERMS(8:10, rd, td, pd) = (7.0_idp/ PSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,2)
 
 
 
@@ -1404,17 +1489,17 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
         ! J_{5,1lmn} Non-Derivative Term
         SUBJCBN_PSI_TERMS(11, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                  &
-                                * (CUR_DRV_PSI(1, rd, td, pd)*JCBN_mu_ARRAY(1,3)        &
-                                 + CUR_DRV_PSI(2, rd, td, pd)*JCBN_mu_ARRAY(2,3)        &
-                                 + CUR_DRV_PSI(3, rd, td, pd)*JCBN_mu_ARRAY(3,3) )      &
-                            - 48.0_idp * pi                                             &
-                                * GR_Source_Scalar                                      &
-                                * Block_Source_Si(rd, td, pd, re, te, pe, 3)            &
-                                * ALPHAPSI_POWER(1)                                     &
-                                * PSI_POWER(2)
+                                            * ( CUR_DRV_PSI(1, rd, td, pd)*JCBN_kappa_ARRAY(1,3)           &
+                                              + CUR_DRV_PSI(2, rd, td, pd)*JCBN_kappa_ARRAY(2,3)           &
+                                              + CUR_DRV_PSI(3, rd, td, pd)*JCBN_kappa_ARRAY(3,3) )         &
+                                            - 48.0_idp * pi                                             &
+                                                * GR_Source_Scalar                                      &
+                                                * Block_Source_Si(rd, td, pd, re, te, pe, 3)            &
+                                                * ALPHAPSI_POWER(1)                                     &
+                                                * PSI_POWER(2)
 
         ! J_{5,1lmn} Derivative Terms
-        SUBJCBN_PSI_TERMS(12:14, rd, td, pd) = (7.0_idp/ PSI_POWER(1) )*JCBN_mu_ARRAY(1:3,3)
+        SUBJCBN_PSI_TERMS(12:14, rd, td, pd) = (7.0_idp/ PSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,3)
 
 
 
@@ -1440,9 +1525,9 @@ DO pd = 1,NUM_P_QUAD_POINTS
                                                     * JCBN_BIGK_VALUE
 
         ! J_{3,2lmn} Non-Derivative Term
-        SUBJCBN_ALPHAPSI_TERMS(3, rd, td, pd) = (CUR_DRV_ALPHAPSI(1, rd, td, pd )*JCBN_mu_Array(1,1)        &
-                                                + CUR_DRV_ALPHAPSI(2, rd, td, pd )*JCBN_mu_Array(2,1)       &
-                                                + CUR_DRV_ALPHAPSI(3, rd, td, pd )*JCBN_mu_Array(3,1)   )   &
+        SUBJCBN_ALPHAPSI_TERMS(3, rd, td, pd) = ( CUR_DRV_ALPHAPSI(1, rd, td, pd )*JCBN_kappa_Array(1,1)       &
+                                                + CUR_DRV_ALPHAPSI(2, rd, td, pd )*JCBN_kappa_Array(2,1)       &
+                                                + CUR_DRV_ALPHAPSI(3, rd, td, pd )*JCBN_kappa_Array(3,1)   )   &
                                                 /ALPHAPSI_POWER(2)                                          &
                                                 -16.0_idp * pi                                              &
                                                     * GR_Source_Scalar                                      &
@@ -1451,15 +1536,15 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         ! J_{3,2lmn} Derivative Terms
-        SUBJCBN_ALPHAPSI_TERMS(4:6, rd, td, pd) = (-1.0_idp/ALPHAPSI_POWER(1) )*JCBN_mu_ARRAY(1:3,1)
+        SUBJCBN_ALPHAPSI_TERMS(4:6, rd, td, pd) = (-1.0_idp/ALPHAPSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,1)
 
 
 
 
         ! J_{4,2lmn} Non-Derivative Term
-        SUBJCBN_ALPHAPSI_TERMS(7, rd, td, pd) = ( CUR_DRV_ALPHAPSI(1, rd, td, pd )*JCBN_mu_Array(1,2)       &
-                                                + CUR_DRV_ALPHAPSI(2, rd, td, pd )*JCBN_mu_Array(2,2)       &
-                                                + CUR_DRV_ALPHAPSI(3, rd, td, pd )*JCBN_mu_Array(3,2)   )   &
+        SUBJCBN_ALPHAPSI_TERMS(7, rd, td, pd) = ( CUR_DRV_ALPHAPSI(1, rd, td, pd )*JCBN_kappa_Array(1,2)       &
+                                                + CUR_DRV_ALPHAPSI(2, rd, td, pd )*JCBN_kappa_Array(2,2)       &
+                                                + CUR_DRV_ALPHAPSI(3, rd, td, pd )*JCBN_kappa_Array(3,2)   )   &
                                                 /ALPHAPSI_POWER(2)                                          &
                                                 -16.0_idp * pi                                              &
                                                     * GR_Source_Scalar                                      &
@@ -1468,14 +1553,14 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         ! J_{4,2lmn} Derivative Terms
-        SUBJCBN_ALPHAPSI_TERMS(8:10, rd, td, pd) = (-1.0_idp/ ALPHAPSI_POWER(1) )*JCBN_mu_ARRAY(1:3,2)
+        SUBJCBN_ALPHAPSI_TERMS(8:10, rd, td, pd) = (-1.0_idp/ ALPHAPSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,2)
 
 
 
         ! J_{5,2lmn} Non-Derivative Term
-        SUBJCBN_ALPHAPSI_TERMS(11, rd, td, pd) = (CUR_DRV_ALPHAPSI(1, rd, td, pd ) * JCBN_mu_Array(1,3)     &
-                                                 + CUR_DRV_ALPHAPSI(2, rd, td, pd ) * JCBN_mu_Array(2,3)    &
-                                                 + CUR_DRV_ALPHAPSI(3, rd, td, pd ) * JCBN_mu_Array(3,3)  ) &
+        SUBJCBN_ALPHAPSI_TERMS(11, rd, td, pd) = ( CUR_DRV_ALPHAPSI(1, rd, td, pd ) * JCBN_kappa_Array(1,3)    &
+                                                 + CUR_DRV_ALPHAPSI(2, rd, td, pd ) * JCBN_kappa_Array(2,3)    &
+                                                 + CUR_DRV_ALPHAPSI(3, rd, td, pd ) * JCBN_kappa_Array(3,3)  ) &
                                                 /ALPHAPSI_POWER(2)                                          &
                                                 -16.0_idp * pi                                              &
                                                     * GR_Source_Scalar                                      &
@@ -1483,7 +1568,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
                                                     * PSI_POWER(3)
 
         ! J_{5,2lmn} Derivative Terms
-        SUBJCBN_ALPHAPSI_TERMS(12:14, rd, td, pd) = (-1.0_idp/ ALPHAPSI_POWER(1) )*JCBN_mu_ARRAY(1:3,3)
+        SUBJCBN_ALPHAPSI_TERMS(12:14, rd, td, pd) = (-1.0_idp/ ALPHAPSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,3)
 
 
 
@@ -1524,8 +1609,8 @@ DO pd = 1,NUM_P_QUAD_POINTS
         ! J_{1,3lmn}
         ! Reused_Value * kappa_{13}
         SUBJCBN_BETA1_TERMS(4, rd, td, pd) = REUSED_VALUE                                           &
-                                * ( 2.0_idp*CSC_SQUARE(td)/R_SQUARE(rd)   * CUR_DRV_BETA(3,1,rd,td,pd)    &
-                                + 2.0_idp                                 * CUR_DRV_BETA(1,3,rd,td,pd)    )
+                                * ( 2.0_idp/RSIN_SQUARE(rd,td)      * CUR_DRV_BETA(3,1,rd,td,pd)    &
+                                + 2.0_idp                           * CUR_DRV_BETA(1,3,rd,td,pd)    )
 
 
         ! J_{2,3lmn}
@@ -1541,9 +1626,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
         ! J_{3,3lmn} Derivative Terms
         SUBJCBN_BETA1_TERMS(10, rd, td, pd) = OneThird * ((2.0_idp/CUR_R_LOCS(rd)) - 4.0_idp * JCBN_n_ARRAY(1) )
         SUBJCBN_BETA1_TERMS(11, rd, td, pd) = -(1.0_idp/R_SQUARE(rd)) * JCBN_n_ARRAY(2)
-        SUBJCBN_BETA1_TERMS(12, rd, td, pd) = -(CSC_SQUARE(td)/R_SQUARE(rd)) * JCBN_n_ARRAY(3)
-
-        ! J_{3,3lmn} Double Derivative Term
+        SUBJCBN_BETA1_TERMS(12, rd, td, pd) = -(1.0_idp/RSIN_SQUARE(rd,td)) * JCBN_n_ARRAY(3)
 
 
 
@@ -1551,7 +1634,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
         SUBJCBN_BETA1_TERMS(13, rd, td, pd) = -(TwoThirds/R_CUBED(rd)) * JCBN_n_ARRAY(2)
 
         ! J_{4,3lmn} Derivative Terms
-        SUBJCBN_BETA1_TERMS(14, rd, td, pd) = - (TwoThirds / R_SQUARE(rd)) * JCBN_n_ARRAY(2)
+        SUBJCBN_BETA1_TERMS(14, rd, td, pd) = (TwoThirds / R_SQUARE(rd)) * JCBN_n_ARRAY(2)
         SUBJCBN_BETA1_TERMS(15, rd, td, pd) = (8.0_idp / (3.0_idp * R_CUBED(rd))) - JCBN_n_ARRAY(1)*(1.0_idp/R_SQUARE(rd))
         SUBJCBN_BETA1_TERMS(16, rd, td, pd) = 0.0_idp
 
@@ -1560,10 +1643,13 @@ DO pd = 1,NUM_P_QUAD_POINTS
         SUBJCBN_BETA1_TERMS(17, rd, td, pd) = -(TwoThirds*CSC_SQUARE(td)/R_CUBED(rd))* JCBN_n_ARRAY(3)
 
         ! J_{5,3lmn} Derivative Terms
-        SUBJCBN_BETA1_TERMS(18, rd, td, pd) = -(TwoThirds*CSC_SQUARE(td)/R_SQUARE(rd)) * JCBN_n_ARRAY(3)
+        SUBJCBN_BETA1_TERMS(18, rd, td, pd) = -(TwoThirds/RSIN_SQUARE(rd,td)) * JCBN_n_ARRAY(3)
         SUBJCBN_BETA1_TERMS(19, rd, td, pd) = 0.0_idp
-        SUBJCBN_BETA1_TERMS(20, rd, td, pd) = (OneThird*CSC_SQUARE(td) / R_SQUARE(rd)) * (( 8.0_idp /CUR_R_LOCS(rd) )             &
+        SUBJCBN_BETA1_TERMS(20, rd, td, pd) = (OneThird / RSIN_SQUARE(rd,td)) * (( 8.0_idp /CUR_R_LOCS(rd) )             &
                                                 + 3.0_idp * JCBN_n_ARRAY(1) )
+
+
+
 
 
         !
@@ -1571,12 +1657,10 @@ DO pd = 1,NUM_P_QUAD_POINTS
         !
 
 
-
-
         ! J_{1,4lmn}
         ! Reused_Value * kappa_{20}
         SUBJCBN_BETA2_TERMS(1, rd, td, pd) = REUSED_VALUE * FourThirds * COTAN_VAL(td)                      &
-                                            * ( 1.0_idp /CUR_R_LOCS(rd)     * CUR_VAL_BETA(1,rd,td,pd)      &
+                                            * ( 1.0_idp / CUR_R_LOCS(rd)    * CUR_VAL_BETA(1,rd,td,pd)      &
                                               + 2.0_idp                     * CUR_VAL_BETA(2,rd,td,pd)      &
                                               - 1.0_idp                     * CUR_DRV_BETA(2,2,rd,td,pd)    &
                                               + 2.0_idp                     * CUR_DRV_BETA(3,3,rd,td,pd)    )
@@ -1617,22 +1701,22 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         ! J_{4,4lmn} Non-Derivative Term
-        SUBJCBN_BETA2_TERMS(13, rd, td, pd) = (TwoThirds / R_SQUARE(rd)) * COTAN_VAL(td) * JCBN_n_ARRAY(2)               &
-                                                - OneThird * (2.0_idp - 4.0_idp*COTAN_VAL(td)*COTAN_VAL(td))/R_SQUARE(rd)
+        SUBJCBN_BETA2_TERMS(13, rd, td, pd) = (TwoThirds/R_SQUARE(rd)) * COTAN_VAL(td) * JCBN_n_ARRAY(2)               &
+                                            + (TwoThirds/R_SQUARE(rd)) * (1.0_idp - 2.0_idp*COTAN_VAL(td)*COTAN_VAL(td))
 
         ! J_{4,4lmn} Derivative Terms
         SUBJCBN_BETA2_TERMS(14, rd, td, pd) = -JCBN_n_ARRAY(1) + 2.0_idp/CUR_R_LOCS(rd)
         SUBJCBN_BETA2_TERMS(15, rd, td, pd) = (OneThird / R_SQUARE(rd) )* ( COTAN_VAL(td) - 4.0_idp * JCBN_n_ARRAY(2) )
-        SUBJCBN_BETA2_TERMS(16, rd, td, pd) = - (1.0_idp*CSC_SQUARE(td)/R_SQUARE(rd)) * JCBN_n_ARRAY(3)
+        SUBJCBN_BETA2_TERMS(16, rd, td, pd) = - JCBN_n_ARRAY(3)/RSIN_SQUARE(rd,td)
 
 
         ! J_{5,4lmn} Non-Derivative Term
-        SUBJCBN_BETA2_TERMS(17, rd, td, pd) = -FourThirds*(COTAN_VAL(td)*CSC_SQUARE(td)/R_SQUARE(rd))* JCBN_n_ARRAY(3)
+        SUBJCBN_BETA2_TERMS(17, rd, td, pd) = -FourThirds*(COTAN_VAL(td)/RSIN_SQUARE(rd,td))* JCBN_n_ARRAY(3)
 
         ! J_{5,4lmn} Derivative Terms
         SUBJCBN_BETA2_TERMS(18, rd, td, pd) = 0.0_idp
-        SUBJCBN_BETA2_TERMS(19, rd, td, pd) = (TwoThirds*CSC_SQUARE(td) / R_SQUARE(rd)) * JCBN_n_ARRAY(3)
-        SUBJCBN_BETA2_TERMS(20, rd, td, pd) = (OneThird*CSC_SQUARE(td) / R_SQUARE(rd))                                      &
+        SUBJCBN_BETA2_TERMS(19, rd, td, pd) = (TwoThirds / RSIN_SQUARE(rd,td)) * JCBN_n_ARRAY(3)
+        SUBJCBN_BETA2_TERMS(20, rd, td, pd) = (OneThird / RSIN_SQUARE(rd,td))                                      &
                                             * ( 7.0_idp*COTAN_VAL(td) + 3.0_idp * JCBN_n_ARRAY(2)  )
 
 
@@ -1654,32 +1738,25 @@ DO pd = 1,NUM_P_QUAD_POINTS
         ! Reused_Value * kappa_{31}
         SUBJCBN_BETA3_TERMS(2, rd, td, pd) = REUSED_VALUE                                           &
                                 * ( 2.0_idp * RSIN_SQUARE(rd, td)   * CUR_DRV_BETA(1,3,rd,td,pd)    &
-                                + 2.0_idp                   * CUR_DRV_BETA(3,1,rd,td,pd)    )
+                                    + 2.0_idp                       * CUR_DRV_BETA(3,1,rd,td,pd)    )
 
         ! Reused_Value * kappa_{32}
         SUBJCBN_BETA3_TERMS(3, rd, td, pd) = REUSED_VALUE                                           &
                                 * ( 2.0_idp * SIN_SQUARE(td)    * CUR_DRV_BETA(2,3,rd,td,pd)        &
-                                + 2.0_idp                   * CUR_DRV_BETA(3,2,rd,td,pd)    )
+                                    + 2.0_idp                   * CUR_DRV_BETA(3,2,rd,td,pd)        )
 
         ! Reused_Value * kappa_{33}
         SUBJCBN_BETA3_TERMS(4, rd, td, pd) = REUSED_VALUE * FourThirds                              &
                                 * ( 1.0_idp /CUR_R_LOCS(rd)         * CUR_VAL_BETA(1,rd,td,pd)      &
-                                + 2.0_idp * COTAN_VAL(td)       * CUR_VAL_BETA(2,rd,td,pd)          &
-                                - 1.0_idp                   * CUR_DRV_BETA(1,1,rd,td,pd)            &
-                                - 1.0_idp                   * CUR_DRV_BETA(2,2,rd,td,pd)            &
-                                + 2.0_idp                   * CUR_DRV_BETA(3,3,rd,td,pd)    )
+                                    + 2.0_idp * COTAN_VAL(td)       * CUR_VAL_BETA(2,rd,td,pd)      &
+                                    - 1.0_idp                       * CUR_DRV_BETA(1,1,rd,td,pd)    &
+                                    - 1.0_idp                       * CUR_DRV_BETA(2,2,rd,td,pd)    &
+                                    + 2.0_idp                       * CUR_DRV_BETA(3,3,rd,td,pd)    )
 
 
         ! J_{2,5lmn}
         SUBJCBN_BETA3_TERMS(5:8, rd, td, pd) = -7.0_idp * ( ALPHAPSI_POWER(1)/PSI_POWER(1) )        &
                                                 * SUBJCBN_BETA3_TERMS(1:4, rd, td, pd)
-
-
-
-
-
-
-
 
 
 
@@ -1706,7 +1783,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
         ! J_{5,5lmn} Derivative Terms
         SUBJCBN_BETA3_TERMS(18, rd, td, pd) = -JCBN_n_ARRAY(1) + 2.0_idp/CUR_R_LOCS(rd)
         SUBJCBN_BETA3_TERMS(19, rd, td, pd) = (-1.0_idp/R_SQUARE(rd)) * JCBN_n_ARRAY(2) + 2.0_idp*COTAN_VAL(td)/R_SQUARE(rd)
-        SUBJCBN_BETA3_TERMS(20, rd, td, pd) = -(FourThirds*CSC_SQUARE(td) / R_SQUARE(rd)) * JCBN_n_ARRAY(3)
+        SUBJCBN_BETA3_TERMS(20, rd, td, pd) = -(FourThirds / RSIN_SQUARE(rd,td)) * JCBN_n_ARRAY(3)
 
 
 
@@ -1714,15 +1791,14 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
 
-        END DO ! pd loop
+        END DO ! rd loop
     END DO  ! td loop
-END DO  ! rd loop
+END DO  ! pd loop
 
 
 !$OMP END DO
 
 !$OMP END PARALLEL
-
 
 
 
@@ -1810,6 +1886,7 @@ DO d = 0,DEGREE
 
         Current_i_Location = CFA_ALL_Matrix_Map(1, lm_loc, re, d)
 
+
         RHS_TMP = 0.0_idp
         DO pd = 1,NUM_P_QUAD_POINTS
             DO td = 1,NUM_T_QUAD_POINTS
@@ -1829,7 +1906,6 @@ DO d = 0,DEGREE
                 END DO  ! rd Loop
             END DO  ! td Loop
         END DO  ! pd Loop
-
 
         Block_RHS_Vector(Current_i_Location:Current_i_Location+4)                             &
             = Block_RHS_Vector(Current_i_Location:Current_i_Location+4)                       &
@@ -1872,12 +1948,13 @@ END SUBROUTINE CREATE_3D_RHS_VECTOR
 !                  CREATE_3D_JCBN_MATRIX          !
 !                                                                                !
 !################################################################################!
-SUBROUTINE CREATE_3D_JCBN_MATRIX( Local_re, Local_te, Local_pe,                   &
+SUBROUTINE CREATE_3D_JCBN_MATRIX(   Local_re, Local_te, Local_pe,                   &
                                     Global_re, Global_te, Global_pe,                &
                                     TWOOVER_DELTAR,                                 &
                                     SUBJCBN_PSI_TERMS, SUBJCBN_ALPHAPSI_TERMS,      &
                                     SUBJCBN_BETA1_TERMS, SUBJCBN_BETA2_TERMS,       &
                                     SUBJCBN_BETA3_TERMS,                            &
+                                    R_SQUARE, RSIN_SQUARE,                          &
                                     Int_Factor                                      )
 
 
@@ -1926,7 +2003,10 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_R_QUAD_POINTS,        &
 
 
 
+REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_R_QUAD_POINTS,    &
+                                        1:NUM_T_QUAD_POINTS     )       ::  RSIN_SQUARE
 
+REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_R_QUAD_POINTS)            ::  R_SQUARE
 
 
 
@@ -1956,7 +2036,7 @@ REAL(KIND = idp), DIMENSION(1:NUM_R_QUAD_POINTS)                        ::  Comm
 
 
 
-COMPLEX(KIND = idp), DIMENSION(1:25)                                    ::  Uncommon_Terms
+COMPLEX(KIND = idp), DIMENSION(1:25)                                    ::  Jacobian_Terms
 
 
 REAL(KIND = idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:2)                   ::  Current_Lag_Polys
@@ -1982,7 +2062,7 @@ INTEGER                                                                 ::  i, i
 !$OMP           Common_Term_A, Common_Term_B, Common_Term_C,            &
 !$OMP           Current_Lag_Polys,                                      &
 !$OMP           Ylm_Cross_Terms,                                        &
-!$OMP           Uncommon_Terms                                      )   &
+!$OMP           Jacobian_Terms                                      )   &
 !$OMP SHARED(   Local_re, Local_te, Local_pe,                           &
 !$OMP           DEGREE,                                                 &
 !$OMP           NUM_P_QUAD_POINTS, NUM_T_QUAD_POINTS, NUM_R_QUAD_POINTS,&
@@ -2000,6 +2080,7 @@ INTEGER                                                                 ::  i, i
 !$OMP           ELEM_PROB_DIM,                                          &
 !$OMP           Ylm_Table_Block,                                        &
 !$OMP           OneThird,                                               &
+!$OMP           R_SQUARE, RSIN_SQUARE,                                  &
 !$OMP           M_VALUES,                                               &
 !$OMP           POSEIDON_COMM_WORLD, myID_Poseidon,                     &
 !$OMP           LM_Length, ULM_Length                                   )
@@ -2021,14 +2102,14 @@ DO d = 0,DEGREE
                                     * TWOOVER_DELTAR
 
 
-            jloc = d*ULM_LENGTH + NUM_CFA_VARS*lm_loc
+            jloc = d*ULM_LENGTH + lm_loc*5
 
-            DO lpmp_loc = 0,LM_Length - 1
+            DO lpmp_loc = 0,LM_Length-1
 
 
-                iloc = dp*ULM_LENGTH + NUM_CFA_VARS * lpmp_loc
+                iloc = dp*ULM_LENGTH + lpmp_loc*5
 
-                Uncommon_Terms = 0.0_idp
+                Jacobian_Terms = 0.0_idp
 
 
                 DO pd = 1,NUM_P_QUAD_POINTS
@@ -2040,32 +2121,39 @@ DO d = 0,DEGREE
                         Common_Term_C(:) = Current_Lag_Polys(:,2) * Int_Factor(:, td, pd)
 
 
-                        Ylm_Cross_Terms(1) = Ylm_Values(lm_loc, td, pd, Local_te, Local_pe)       &
-                                           *  Ylm_CC_Values(lm_loc, td, pd, Local_te, Local_pe)
-                        Ylm_Cross_Terms(2) = Ylm_dt_Values(lm_loc, td, pd, Local_te, Local_pe)    &
-                                           *  Ylm_CC_Values(lm_loc, td, pd, Local_te, Local_pe)
-                        Ylm_Cross_Terms(3) = Ylm_dp_Values(lm_loc, td, pd, Local_te, Local_pe)    &
-                                           *  Ylm_CC_Values(lm_loc, td, pd, Local_te, Local_pe)
-                        Ylm_Cross_Terms(4) = Ylm_dtt_Values(lm_loc, td, pd, Local_te, Local_pe)   &
-                                           *  Ylm_CC_Values(lm_loc, td, pd, Local_te, Local_pe)
-                        Ylm_Cross_Terms(5) = Ylm_dtp_Values(lm_loc, td, pd, Local_te, Local_pe)   &
-                                           *  Ylm_CC_Values(lm_loc, td, pd, Local_te, Local_pe)
-                        Ylm_Cross_Terms(6) = Ylm_dpp_Values(lm_loc, td, pd, Local_te, Local_pe)   &
-                                           *  Ylm_CC_Values(lm_loc, td, pd, Local_te, Local_pe)
+                        Ylm_Cross_Terms(1) =  Ylm_Values(lm_loc, td, pd, Local_te, Local_pe)       &
+                                           *  Ylm_CC_Values(lpmp_loc, td, pd, Local_te, Local_pe)
+
+                        Ylm_Cross_Terms(2) =  Ylm_dt_Values(lm_loc, td, pd, Local_te, Local_pe)    &
+                                           *  Ylm_CC_Values(lpmp_loc, td, pd, Local_te, Local_pe)
+
+                        Ylm_Cross_Terms(3) =  Ylm_dp_Values(lm_loc, td, pd, Local_te, Local_pe)    &
+                                           *  Ylm_CC_Values(lpmp_loc, td, pd, Local_te, Local_pe)
+
+                        Ylm_Cross_Terms(4) =  Ylm_dtt_Values(lm_loc, td, pd, Local_te, Local_pe)   &
+                                           *  Ylm_CC_Values(lpmp_loc, td, pd, Local_te, Local_pe)
+
+                        Ylm_Cross_Terms(5) =  Ylm_dtp_Values(lm_loc, td, pd, Local_te, Local_pe)   &
+                                           *  Ylm_CC_Values(lpmp_loc, td, pd, Local_te, Local_pe)
+
+                        Ylm_Cross_Terms(6) =  Ylm_dpp_Values(lm_loc, td, pd, Local_te, Local_pe)   &
+                                           *  Ylm_CC_Values(lpmp_loc, td, pd, Local_te, Local_pe)
 
 
-                        Uncommon_Terms(1) = Uncommon_Terms(1)                                                   &
+
+                        !  Psi Function Jacobian Elements !
+                        Jacobian_Terms(1) = Jacobian_Terms(1)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_PSI_TERMS(1, :, td, pd), Common_Term_A(:))
 
 
 
-                        Uncommon_Terms(2) = Uncommon_Terms(2)                                                   &
+                        Jacobian_Terms(2) = Jacobian_Terms(2)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT( SUBJCBN_ALPHAPSI_TERMS(1, :, td, pd), Common_Term_A(:) )
 
 
-                        Uncommon_Terms(3) = Uncommon_Terms(3)                                                   &
+                        Jacobian_Terms(3) = Jacobian_Terms(3)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(1, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2076,7 +2164,7 @@ DO d = 0,DEGREE
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(4, :, td, pd), Common_Term_A(:))
 
 
-                        Uncommon_Terms(4) = Uncommon_Terms(4)                                                   &
+                        Jacobian_Terms(4) = Jacobian_Terms(4)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(1, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2086,7 +2174,7 @@ DO d = 0,DEGREE
                                           + Ylm_Cross_Terms(3)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(4, :, td, pd), Common_Term_A(:))
 
-                        Uncommon_Terms(5) = Uncommon_Terms(5)                                                   &
+                        Jacobian_Terms(5) = Jacobian_Terms(5)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(1, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2103,18 +2191,18 @@ DO d = 0,DEGREE
 
 
 
-
-                        Uncommon_Terms(6) = Uncommon_Terms(6)                                                   &
+                        !  Alpha Psi Function Jacobian Elements     !
+                        Jacobian_Terms(6) = Jacobian_Terms(6)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_PSI_TERMS(2, :, td, pd), Common_Term_A(:))
 
 
 
-                        Uncommon_Terms(7) = Uncommon_Terms(7)                                                   &
+                        Jacobian_Terms(7) = Jacobian_Terms(7)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(2, :, td, pd), Common_Term_A(:))
 
-                        Uncommon_Terms(8) = Uncommon_Terms(8)                                                   &
+                        Jacobian_Terms(8) = Jacobian_Terms(8)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(5, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2125,7 +2213,7 @@ DO d = 0,DEGREE
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(8, :, td, pd), Common_Term_A(:))
 
 
-                        Uncommon_Terms(9) = Uncommon_Terms(9)                                                   &
+                        Jacobian_Terms(9) = Jacobian_Terms(9)                                                   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(5, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2135,7 +2223,7 @@ DO d = 0,DEGREE
                                           + Ylm_Cross_Terms(3)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(8, :, td, pd), Common_Term_A(:))
 
-                        Uncommon_Terms(10) = Uncommon_Terms(10)                                                 &
+                        Jacobian_Terms(10) = Jacobian_Terms(10)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(5, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2150,8 +2238,8 @@ DO d = 0,DEGREE
 
 
 
-
-                        Uncommon_Terms(11) = Uncommon_Terms(11)                                             &
+                        !   Beta 1 Function Jacobian Elements !
+                        Jacobian_Terms(11) = Jacobian_Terms(11)                                             &
                                           + Ylm_Cross_Terms(1)                                              &
                                           * DOT_PRODUCT(SUBJCBN_PSI_TERMS(3, :, td, pd), Common_Term_A(:))  &
                                           + Ylm_Cross_Terms(1)                                              &
@@ -2161,7 +2249,14 @@ DO d = 0,DEGREE
                                           + Ylm_Cross_Terms(3)                                              &
                                           * DOT_PRODUCT(SUBJCBN_PSI_TERMS(6, :, td, pd), Common_Term_A(:))
 
-                        Uncommon_Terms(12) = Uncommon_Terms(12)                                                 &
+!                        PRINT*,"Jacobian Terms(11)"
+!                        PRINT*,REAL(DOT_PRODUCT(SUBJCBN_PSI_TERMS(3, :, td, pd), Common_Term_A(:)), KIND = idp),    &
+!                                REAL(DOT_PRODUCT(SUBJCBN_PSI_TERMS(4, :, td, pd), Common_Term_A(:)), KIND = idp),    &
+!                                REAL(DOT_PRODUCT(SUBJCBN_PSI_TERMS(5, :, td, pd), Common_Term_A(:)), KIND = idp),    &
+!                                REAL(DOT_PRODUCT(SUBJCBN_PSI_TERMS(6, :, td, pd), Common_Term_A(:)), KIND = idp)
+
+
+                        Jacobian_Terms(12) = Jacobian_Terms(12)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(3, :, td, pd), Common_Term_A(:)) &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2172,7 +2267,14 @@ DO d = 0,DEGREE
                                           * DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(6, :, td, pd), Common_Term_A(:))
 
 
-                        Uncommon_Terms(13) = Uncommon_Terms(13)                                                 &
+!                        PRINT*,"Jacobian Terms(12)"
+!                        PRINT*,REAL(DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(3, :, td, pd), Common_Term_A(:)), KIND = idp),    &
+!                                REAL(DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(4, :, td, pd), Common_Term_A(:)), KIND = idp),    &
+!                                REAL(DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(5, :, td, pd), Common_Term_A(:)), KIND = idp),    &
+!                                REAL(DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(6, :, td, pd), Common_Term_A(:)), KIND = idp)
+
+
+                        Jacobian_Terms(13) = Jacobian_Terms(13)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(9, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2184,7 +2286,7 @@ DO d = 0,DEGREE
                                           + OneThird * Ylm_Cross_Terms(1) * SUM( Common_Term_C )
 
 
-                        Uncommon_Terms(14) = Uncommon_Terms(14)                                                 &
+                        Jacobian_Terms(14) = Jacobian_Terms(14)                                                 &
                                           + Ylm_Cross_Terms(1)                                      &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(9, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(1)                                      &
@@ -2197,7 +2299,7 @@ DO d = 0,DEGREE
 
 
 
-                        Uncommon_Terms(15) = Uncommon_Terms(15)                                                 &
+                        Jacobian_Terms(15) = Jacobian_Terms(15)                                                 &
                                           + Ylm_Cross_Terms(1)                                      &
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(9, :, td, pd), Common_Term_A(:))    &
                                           + Ylm_Cross_Terms(2)                                     &
@@ -2210,12 +2312,13 @@ DO d = 0,DEGREE
 
 
 
+!                        PRINT*,"Beta Jacobian Elements"
+!                        PRINT*,REAL(JAcobian_Terms(11:12), KIND = idp)
 
 
 
-
-
-                        Uncommon_Terms(16) = Uncommon_Terms(16)                                                 &
+                        !   Beta 2 Function Jacobian Elements !
+                        Jacobian_Terms(16) = Jacobian_Terms(16)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_PSI_TERMS(7, :, td, pd), Common_Term_A(:))      &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2225,7 +2328,7 @@ DO d = 0,DEGREE
                                           + Ylm_Cross_Terms(3)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_PSI_TERMS(10, :, td, pd), Common_Term_A(:))
 
-                        Uncommon_Terms(17) = Uncommon_Terms(17)                                                 &
+                        Jacobian_Terms(17) = Jacobian_Terms(17)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(7, :, td, pd), Common_Term_A(:)) &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2236,17 +2339,17 @@ DO d = 0,DEGREE
                                           * DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(10, :, td, pd), Common_Term_A(:))
 
 
-                        Uncommon_Terms(18) = Uncommon_Terms(18)                                                 &
+                        Jacobian_Terms(18) = Jacobian_Terms(18)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(13, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(14, :, td, pd), Common_Term_B(:))   &
                                           + Ylm_Cross_Terms(3)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(16, :, td, pd), Common_Term_A(:))   &
-                                          + OneThird * Ylm_Cross_Terms(2) * SUM( Common_Term_B )
+                                          + OneThird * Ylm_Cross_Terms(2) * SUM( Common_Term_B(:)/ R_SQUARE(:) )
 
 
-                        Uncommon_Terms(19) = Uncommon_Terms(19)                                                 &
+                        Jacobian_Terms(19) = Jacobian_Terms(19)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(13, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2255,16 +2358,16 @@ DO d = 0,DEGREE
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(15, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(3)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(16, :, td, pd), Common_Term_A(:))   &
-                                          + OneThird * Ylm_Cross_Terms(4)  * SUM( Common_Term_A )
+                                          + OneThird * Ylm_Cross_Terms(4)  * SUM( Common_Term_A(:)/ R_SQUARE(:) )
 
-                        Uncommon_Terms(20) = Uncommon_Terms(20)                                                 &
+                        Jacobian_Terms(20) = Jacobian_Terms(20)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(13, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(14, :, td, pd), Common_Term_B(:))   &
                                           + Ylm_Cross_Terms(2)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(15, :, td, pd), Common_Term_A(:))   &
-                                          + OneThird * Ylm_Cross_Terms(5) * SUM( Common_Term_A )
+                                          + OneThird * Ylm_Cross_Terms(5) * SUM( Common_Term_A(:)/ R_SQUARE(:) )
 
 
 
@@ -2272,8 +2375,8 @@ DO d = 0,DEGREE
 
 
 
-
-                        Uncommon_Terms(21) = Uncommon_Terms(21)                                                 &
+                        !   Beta 3 Function Jacobian Elements !
+                        Jacobian_Terms(21) = Jacobian_Terms(21)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_PSI_TERMS(11, :, td, pd), Common_Term_A(:))     &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2283,7 +2386,7 @@ DO d = 0,DEGREE
                                           + Ylm_Cross_Terms(3)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_PSI_TERMS(14, :, td, pd), Common_Term_A(:))
 
-                        Uncommon_Terms(22) = Uncommon_Terms(22)                                                 &
+                        Jacobian_Terms(22) = Jacobian_Terms(22)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(11, :, td, pd), Common_Term_A(:))&
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2294,26 +2397,26 @@ DO d = 0,DEGREE
                                           * DOT_PRODUCT(SUBJCBN_ALPHAPSI_TERMS(14, :, td, pd), Common_Term_A(:))
 
 
-                        Uncommon_Terms(23) = Uncommon_Terms(23)                                                 &
+                        Jacobian_Terms(23) = Jacobian_Terms(23)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(17, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(2)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(19, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(3)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA1_TERMS(20, :, td, pd), Common_Term_A(:))   &
-                                          + OneThird * Ylm_Cross_Terms(3) * SUM( Common_Term_B )
+                                          + OneThird * Ylm_Cross_Terms(3) * SUM( Common_Term_B(:)/ RSIN_SQUARE(:,td) )
 
 
-                        Uncommon_Terms(24) = Uncommon_Terms(24)                                                 &
+                        Jacobian_Terms(24) = Jacobian_Terms(24)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(17, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(18, :, td, pd), Common_Term_B(:))   &
                                           + Ylm_Cross_Terms(2)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA2_TERMS(19, :, td, pd), Common_Term_A(:))   &
-                                          + OneThird * Ylm_Cross_Terms(4) * SUM( Common_Term_A )
+                                          + OneThird * Ylm_Cross_Terms(4) * SUM( Common_Term_A(:)/ RSIN_SQUARE(:,td) )
 
-                        Uncommon_Terms(25) = Uncommon_Terms(25)                                                 &
+                        Jacobian_Terms(25) = Jacobian_Terms(25)                                                 &
                                           + Ylm_Cross_Terms(1)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(17, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(1)                                                  &
@@ -2322,7 +2425,7 @@ DO d = 0,DEGREE
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(19, :, td, pd), Common_Term_A(:))   &
                                           + Ylm_Cross_Terms(3)                                                  &
                                           * DOT_PRODUCT(SUBJCBN_BETA3_TERMS(20, :, td, pd), Common_Term_A(:))   &
-                                          + OneThird * Ylm_Cross_Terms(6) * SUM( Common_Term_A )
+                                          + OneThird * Ylm_Cross_Terms(6) * SUM( Common_Term_A(:)/ RSIN_SQUARE(:,td) )
 
 
 
@@ -2333,31 +2436,41 @@ DO d = 0,DEGREE
                 END DO  ! pd Loop
 
 
+
+                ! Psi Jacobian Elements
                 MATVEC_LOC = jloc*ELEM_PROB_DIM + iloc
                 BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                             &
                         = BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                   &
-                        + Uncommon_Terms(1:5)
+                        + Jacobian_Terms(1:5)
 
+                ! AlphaPsi Jacobian Elements
                 MATVEC_LOC = (jloc+1)*ELEM_PROB_DIM + iloc
                 BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                             &
                         = BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                   &
-                        + Uncommon_Terms(6:10)
+                        + Jacobian_Terms(6:10)
 
+                ! Beta 1 Jacobian Elements
                 MATVEC_LOC = (jloc+2)*ELEM_PROB_DIM + iloc
                 BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                             &
                         = BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                   &
-                        + Uncommon_Terms(11:15)
+                        + Jacobian_Terms(11:15)
 
+                ! Beta 2 Jacobian Elements
                 MATVEC_LOC = (jloc+3)*ELEM_PROB_DIM + iloc
                 BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                             &
                         = BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                   &
-                        + Uncommon_Terms(16:20)
+                        + Jacobian_Terms(16:20)
 
+                ! Beta 3 Jacobian Elements
                 MATVEC_LOC = (jloc+4)*ELEM_PROB_DIM + iloc
                 BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                             &
                         = BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                   &
-                        + Uncommon_Terms(21:25)
+                        + Jacobian_Terms(21:25)
 
+
+!                PRINT*,"Beta Jacobian Elements"
+!                MATVEC_LOC = (jloc+2)*ELEM_PROB_DIM + iloc
+!                PRINT*,REAL(BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re), KIND = idp)
 
 
             END DO  ! lm_loc Loop
@@ -2670,9 +2783,6 @@ IF ( myID_SubShell .NE. -1 ) THEN
 
                 DO dp = 0,DEGREE
 
-!                    Reusable_Values(dp) = SUM ( ( -R_SQUARE(:) * LPT_LPT(:,dp,d,1,1)       &
-!                                                + L_Lp1 * LPT_LPT(:,dp,d,0,0)        )    &
-!                                                * INT_R_WEIGHTS(:) * TWOOVER_DELTAR     )
 
 
                     Reusable_Values(dp) = SUM ( ( -R_SQUARE(:) * LPT_LPT(:,dp,d,1,1)* TWOOVER_DELTAR* TWOOVER_DELTAR      &
@@ -2805,14 +2915,12 @@ INTEGER                                                         ::  Start_Here, 
                                                                     End_Here
 
 
-COMPLEX(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1)                ::  TMP_VECTOR
+COMPLEX(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1)           ::  TMP_VECTOR
 
 
-INTEGER :: Start_Here_b, End_Here_b
+INTEGER                                                         :: Start_Here_b, End_Here_b
 
 INTEGER                                                         ::  ierr
-
-REAL(KIND = idp)           ::  timea, timeb, timec
 
 
 
@@ -2822,9 +2930,6 @@ INTEGER :: i,j
 IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
     Block_STF_MAT = 0.0_idp
-
-
-    timea = MPI_Wtime()
 
     !$OMP PARALLEL DEFAULT(none)                                            &
     !$OMP PRIVATE( ui, l, m, re, d, dp, rd,                                 &
@@ -2933,12 +3038,10 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
         !$OMP END DO
 
     END DO ! re Loop
-!    !$OMP END DO
 
     !$OMP END PARALLEL
 
 
-    timeb=MPI_Wtime()
 
 
     Start_Here = mySHELL*NUM_R_ELEMS_PER_BLOCK*DEGREE*ULM_LENGTH                &
@@ -2960,13 +3063,34 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
                 1                                           )   ! INCY
 
 
+!    PRINT*,"In FINISH_3D_RHS_VECTOR"
+!    DO re = 0, NUM_R_ELEMS_PER_SUBSHELL-1
+!        DO d = 0,DEGREE
+!            Start_here = CFA_ALL_Matrix_Map(1, 0, re, d)
+!            End_here = CFA_ALL_Matrix_Map(5, 0, re, d)
+!            PRINT*,Start_Here,                                          &
+!                    REAL(Block_RHS_Vector(Start_here),KIND=idp),        &
+!                    REAL(TMP_Vector(Start_here),KIND=idp),              &
+!                    REAL(Block_RHS_Vector(Start_here)+TMP_Vector(Start_here),KIND=idp)
+!!            TMP_VECTOR(Start_Here) = 0.0_idp
+!
+!        END DO
+!    END DO ! re
+!    WRITE(*,'(/ /)')
+
+
 
     Start_Here = myID_SubShell*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
     END_HERE = Start_HERE + SUBSHELL_PROB_DIM -1
+
+!    DO re = Start_Here, END_HERE
+!        PRINT*,Block_RHS_Vector(re), TMP_VECTOR(re), Block_RHS_Vector(re)+TMP_VECTOR(re)
+!    END DO
     Block_RHS_Vector(Start_Here:End_Here) = Block_RHS_Vector(Start_Here:End_Here)   &
                                           + TMP_VECTOR(0:SUBSHELL_PROB_DIM-1)
 
-    timec=MPI_Wtime()
+
+
 
  
 END IF
@@ -3108,7 +3232,7 @@ DO ui = 1,NUM_CFA_VARS
             DO m = -M_VALUES(l),M_VALUES(l)
 
                 Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
-                RHS_VECTOR(Value_Location ) = 0.0_idp
+                Block_RHS_VECTOR(Value_Location ) = 0.0_idp
 
              END DO
          END DO
@@ -3176,6 +3300,120 @@ END SUBROUTINE CFA_3D_Dirichlet_BCs_Part2
 
 
 
+!+604+###########################################################################!
+!                                                                                !
+!                  CFA_Dirichlet_BCs                                                  !
+!                                                                                !
+!################################################################################!
+SUBROUTINE CFA_3D_Dirichlet_BCs_Part2_New( )
+
+
+
+INTEGER                                             ::  i, l, m, ui, d
+
+INTEGER                                             ::  Value_Location
+
+
+
+!*!
+!*!     Step 3
+!*!
+DO ui = 1,NUM_CFA_VARS
+
+
+
+    !*!
+    !*!     Innner BCs
+    !*!
+
+    IF ( INNER_CFA_BC_TYPE(ui) == 'D' .AND. myID_PETSc == 0 ) THEN
+
+        DO l = 0,L_LIMIT
+            DO m = -M_VALUES(l),M_VALUES(l)
+
+                Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
+                Block_RHS_VECTOR(Value_Location ) = 0.0_idp
+
+             END DO
+         END DO
+                !*!
+                !*!     Modify the Stiffness Matrix !
+                !*!
+
+
+         Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
+         DO i = 0,ELEM_PROB_DIM-1
+
+              BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+Value_Location, 0)=0.0_idp
+
+         END DO
+         BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1, 0) = 0.0_idp
+         BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM+ Value_Location, 0) = 1.0_idp
+
+
+    END IF
+
+
+
+
+
+
+    !*!
+    !*!     Outer BCs
+    !*!
+
+    IF ( OUTER_CFA_BC_TYPE(ui) == 'D' .AND. myID_PETSC == NUM_SUBSHELLS-1 ) THEN
+
+        DO l = 0,L_LIMIT
+            DO m = -M_VALUES(l),M_VALUES(l)
+
+                Value_Location =  Matrix_Location( ui, l, m, NUM_R_ELEMS_PER_BLOCK-1, DEGREE )
+                Block_RHS_VECTOR(Value_Location ) = 0.0_idp
+
+             END DO
+         END DO
+
+                !*!
+                !*!     Modify the Stiffness Matrix !
+                !*!
+
+!        PRINT*,"ELEM_PROB_DIM",ELEM_PROB_DIM
+        DO l = 0,L_LIMIT
+            DO m = -M_VALUES(l),M_VALUES(l)
+
+                Value_Location =  Matrix_Location( ui, l, m, 0, DEGREE )
+
+                DO i = 0,ELEM_PROB_DIM-1
+
+                    ! Clear the Column !
+                    BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM + Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
+!                    PRINT*,"ui",ui,"l",l,"m",m,"i",i," loc",i*ELEM_PROB_DIM + Value_Location
+                END DO
+                ! Clear the Row !
+                BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1,       &
+                                     NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
+
+
+                Value_Location =  Matrix_Location( ui, l, m, 0, DEGREE )
+!                PRINT*,"*ui",ui,"l",l,"m",m,"i",i," loc",Value_Location*ELEM_PROB_DIM+Value_Location
+                BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM+Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 1.0_idp
+
+            END DO ! m
+
+        END DO  ! l
+
+
+
+
+    END IF
+
+END DO
+
+
+END SUBROUTINE CFA_3D_Dirichlet_BCs_Part2_New
+
+
+
 
 
 !+605+###########################################################################!
@@ -3197,125 +3435,6 @@ END SUBROUTINE CFA_3D_Neumann_BCs
 
 
 
-
-
-
-!+701+###########################################################################!
-!                                                                                !
-!                  Calc_3D_Values_At_Location          !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Calc_3D_Values_At_Location( r, theta, phi, Return_Psi, Return_AlphaPsi,  &
-                                        Return_Beta1, Return_Beta2, Return_Beta3    )
-
-
-REAL(KIND = idp), INTENT(IN)                                ::  r, theta, phi
-REAL(KIND = idp), INTENT(INOUT)                             ::  Return_Psi,         &
-                                                                Return_AlphaPsi,    &
-                                                                Return_Beta1,       &
-                                                                Return_Beta2,       &
-                                                                Return_Beta3
-
-
-
-COMPLEX(KIND = idp), DIMENSION(1:5)                         ::  Tmp_U_Value
-
-
-REAL(KIND = idp)                                                ::  r_tmp
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
-
-INTEGER                                                         ::  re, l, m, d
-
-
-INTEGER                                                         :: Current_Location
-
-
-
-COMPLEX(KIND = idp)                                             ::  TMP_VALUE_A
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  xlocP, weightP
-
-
-
-Tmp_U_Value = 0.0_idp
-
-IF ( r == rlocs(0) ) THEN
-
-    DO l = 0,L_Limit
-        DO m = -M_VALUES(l),M_VALUES(l)
-
-            Current_Location =  Matrix_Location( 1, l, m, 0, 0 )
-
-            Tmp_U_Value(1) = Tmp_U_Value(1)                                 &
-                            + Coefficient_Vector( Current_Location + 0 )    &
-                            * Spherical_Harmonic(l,m,theta,phi)
-
-            Tmp_U_Value(2) = Tmp_U_Value(2)                                 &
-                            + Coefficient_Vector( Current_Location + 1 )    &
-                            * Spherical_Harmonic(l,m,theta,phi)
-
-            Tmp_U_Value(3) = Tmp_U_Value(3)                                 &
-                            + Coefficient_Vector( Current_Location + 2 )    &
-                            * Spherical_Harmonic(l,m,theta,phi)
-
-            Tmp_U_Value(4) = Tmp_U_Value(4)                                 &
-                            + Coefficient_Vector( Current_Location + 3 )    &
-                            * Spherical_Harmonic(l,m,theta,phi)
-
-            Tmp_U_Value(5) = Tmp_U_Value(5)                                 &
-                            + Coefficient_Vector( Current_Location + 4 )    &
-                            * Spherical_Harmonic(l,m,theta,phi)
-
-        END DO
-    END DO
-
-ELSE
-
-    CALL Initialize_LGL_Quadrature(DEGREE,xlocP,weightP)
-
-    DO re = 0,NUM_R_ELEMENTS-1
-
-        IF ( r > rlocs(re) .AND. r <= rlocs(re+1) ) THEN
-
-            r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
-            LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
-
-
-            DO l = 0,L_Limit
-                DO m = -M_VALUES(l),M_VALUES(l)
-                    DO d = 0,DEGREE
-
-                        TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi) * LagP(d)
-
-                        Current_Location = Matrix_Location( 1, l, m, re, d )
-
-                        Tmp_U_Value(1) = Tmp_U_Value(1) + Coefficient_Vector( Current_Location ) * TMP_VALUE_A
-                        Tmp_U_Value(2) = Tmp_U_Value(2) + Coefficient_Vector( Current_Location + 1 ) * TMP_VALUE_A
-                        Tmp_U_Value(3) = Tmp_U_Value(3) + Coefficient_Vector( Current_Location + 2 ) * TMP_VALUE_A
-                        Tmp_U_Value(4) = Tmp_U_Value(4) + Coefficient_Vector( Current_Location + 3 ) * TMP_VALUE_A
-                        Tmp_U_Value(5) = Tmp_U_Value(5) + Coefficient_Vector( Current_Location + 4 ) * TMP_VALUE_A
-
-
-                    END DO  !   d Loop
-                END DO  !   m Loop
-            END DO  !   l Loop
-            
-            EXIT
-        END IF
-
-    END DO
-
-END IF
-
-
-Return_Psi = REAL(Tmp_U_Value(1), KIND = idp)
-Return_AlphaPsi = REAL(Tmp_U_Value(2), KIND = idp)
-Return_Beta1 = REAL(Tmp_U_Value(3), KIND = idp)
-Return_Beta2 = REAL(Tmp_U_Value(4), KIND = idp)
-Return_Beta3 = REAL(Tmp_U_Value(5), KIND = idp)
-
-
-
-END SUBROUTINE Calc_3D_Values_At_Location
 
 
 

@@ -27,36 +27,46 @@ MODULE CHIMERA_HDF5_Module                                                      
 USE Poseidon_Constants_Module, &
                         ONLY :  idp,pi,eps
 USE Units_Module, &
-                        ONLY :  Grav_Constant_G,    &
-                                C_Square,           &
+                        ONLY :  Grav_Constant_G,        &
+                                Speed_of_Light,         &
+                                C_Square,               &
                                 GR_Source_Scalar
 
-USE CHIMERA_Parameters, &
-                        ONLY :  CHIMERA_R_ELEMS,    &
-                                CHIMERA_T_ELEMS,    &
-                                CHIMERA_P_ELEMS,    &
-                                CHIMERA_R_LOCS,     &
-                                CHIMERA_T_LOCS,     &
-                                CHIMERA_P_LOCS,     &
-                                CHIMERA_Delta_R,    &
-                                CHIMERA_Delta_T,    &
-                                CHIMERA_Delta_P,    &
-                                Enclosed_Mass,      &
-                                CHIMERA_Potential,  &
-                                CHIMERA_E,          &
-                                CHIMERA_S,          &
-                                CHIMERA_Si,         &
-                                CHIMERA_T_LOCS_LOCAL,&
-                                CHIMERA_P_LOCS_LOCAL,&
-                                myID,               &
-                                myID_theta,         &
-                                myID_phi,           &
-                                ij_ray_dim,         &
-                                ik_ray_dim,         &
-                                MPI_COMM_GRID,      &
-                                CHIMERA_PROCS,      &
-                                CHIMERA_y_PROCS,    &
-                                CHIMERA_z_PROCS
+USE Driver_Parameters, &
+                        ONLY :  DRIVER_R_ELEMS,        &
+                                DRIVER_T_ELEMS,        &
+                                DRIVER_P_ELEMS,        &
+                                DRIVER_R_LOCS,         &
+                                DRIVER_T_LOCS,         &
+                                DRIVER_P_LOCS,         &
+                                DRIVER_R_INPUT_NODES,  &
+                                DRIVER_T_INPUT_NODES,  &
+                                DRIVER_P_INPUT_NODES,  &
+                                DRIVER_Delta_R,        &
+                                DRIVER_Delta_T,        &
+                                DRIVER_Delta_P,        &
+                                Enclosed_Mass,          &
+                                DRIVER_POTENTIAL,      &
+                                DRIVER_LAPSE_VAL,      &
+                                SOURCE_OUTPUT_FLAG,    &
+                                DRIVER_E,              &
+                                DRIVER_S,              &
+                                DRIVER_Si,             &
+                                DRIVER_T_LOCS_LOCAL,   &
+                                DRIVER_P_LOCS_LOCAL,   &
+                                myID,                   &
+                                myID_theta,             &
+                                myID_phi,               &
+                                ij_ray_dim,             &
+                                ik_ray_dim,             &
+                                MPI_COMM_GRID,          &
+                                DRIVER_PROCS,          &
+                                DRIVER_y_PROCS,        &
+                                DRIVER_z_PROCS
+
+USE CHIMERA_TEST_FUNCS_Module,  &
+                        ONLY :  INIT_CHIMERA_POTENTIAL, &
+                                INIT_CHIMERA_SHIFT_VAL
 
 USE HDF5_IO_Module
 USE MPI
@@ -113,7 +123,8 @@ REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  vel_r
 REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  vel_t
 REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  vel_p
 REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  int_e
-
+REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  Lapse_Val
+REAL(KIND = idp), DIMENSION(1)                                  :: time
 
 
 CONTAINS
@@ -124,36 +135,48 @@ CONTAINS
 !################################################################################!
 SUBROUTINE LOAD_CHIMERA_HDF5(file_number, stride, path, frame_flag )
 
-INTEGER, INTENT(IN)           :: file_number
-INTEGER, INTENT(IN)           :: stride
+INTEGER, INTENT(IN)                                 :: file_number
+INTEGER, INTENT(IN)                                 :: stride
 
-LOGICAL, INTENT(IN)           :: frame_flag
+LOGICAL, INTENT(IN)                                 :: frame_flag
 
-CHARACTER(len=*), INTENT(IN)  :: path
+CHARACTER(len=*), INTENT(IN)                        :: path
 
-INTEGER, DIMENSION(:), ALLOCATABLE      :: here
-INTEGER                       :: i,j,k
+INTEGER                                             :: here
+INTEGER                                             :: i,j,k
+INTEGER                                             :: pd, td, rd
 
-REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  :: Specific_Enthalpy
-REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  :: V_Square
-REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  :: Reusable_Value
-REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  :: Lorentz_Factor_Sqr
+REAL(KIND = idp)                                    :: Specific_Enthalpy
+REAL(KIND = idp)                                    :: V_Square
+REAL(KIND = idp)                                    :: Reusable_Value
 
+INTEGER, DIMENSION(1:3)                             ::  Num_Nodes
 
-REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  :: E
-REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE  :: Si
-REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  :: S
+REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE   ::  HR_Density
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         ::  Quad_Locs
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         ::  Quad_Weights
+
+REAL(KIND = idp)                                    ::  R_Center
+REAL(KIND = idp)                                    ::  deltar_overtwo
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         ::  CUR_R_LOCS
 
 INTEGER :: error
 
+
+
+
+
+
+
 imin = 1
-imax = CHIMERA_R_ELEMS
+imax = DRIVER_R_ELEMS
 
 jmin = 1
-jmax = CHIMERA_T_ELEMS
+jmax = DRIVER_T_ELEMS
 
 kmin = 1
-kmax = CHIMERA_P_ELEMS
+kmax = DRIVER_P_ELEMS
 
 i_lower = imin
 i_upper = imax
@@ -164,11 +187,16 @@ j_upper = jmax
 k_lower = kmin
 k_upper = kmax
 
-IF ( CHIMERA_T_ELEMS > 1) j_lower = 0
-IF ( CHIMERA_T_ELEMS > 1) j_upper = ij_ray_dim + 1
-IF ( CHIMERA_P_ELEMS > 1) k_lower = 0
-IF ( CHIMERA_P_ELEMS > 1) k_upper = ik_ray_dim + 1
+IF ( DRIVER_T_ELEMS > 1) j_lower = 1
+IF ( DRIVER_T_ELEMS > 1) j_upper = ij_ray_dim
+IF ( DRIVER_P_ELEMS > 1) k_lower = 1
+IF ( DRIVER_P_ELEMS > 1) k_upper = ik_ray_dim
 
+
+ALLOCATE( HR_DENSITY(DRIVER_R_INPUT_NODES,k_lower:k_upper,j_lower:j_upper,i_lower:i_upper))
+ALLOCATE( Quad_Locs(1:DRIVER_R_INPUT_NODES) )
+ALLOCATE( Quad_Weights(1:DRIVER_R_INPUT_NODES) )
+ALLOCATE( Cur_R_Locs(1:DRIVER_R_INPUT_NODES) )
 
 
 
@@ -179,31 +207,18 @@ ALLOCATE( vel_r(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 ALLOCATE( vel_t(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 ALLOCATE( vel_p(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 ALLOCATE( int_e(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
+ALLOCATE( Lapse_Val(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 
-ALLOCATE( Specific_Enthalpy(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
-ALLOCATE( V_Square(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
-ALLOCATE( Lorentz_Factor_Sqr(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
-ALLOCATE( Reusable_Value(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 
-ALLOCATE( E(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
-ALLOCATE( Si(1:3,k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
-ALLOCATE( S(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
+CALL Initialize_LG_Quadrature(DRIVER_R_INPUT_NODES, Quad_Locs, Quad_Weights)
 
-ALLOCATE( here(k_lower:k_upper) )
 
-PRINT*,"Before OPEN_CHIMERA_HDF5",myID
 !  Open CHIMERA HDF5 File  !
 CALL OPEN_CHIMERA_HDF5( file_number, path, frame_flag )
 
-
-CALL MPI_BARRIER(MPI_COMM_WORLD, error)
-PRINT*,"Before READ_CHIMERA_HDF5",myID
 !  Read Relevant data into arrays !
 CALL READ_CHIMERA_HDF5( file_number, stride )
 
-
-CALL MPI_BARRIER(MPI_COMM_WORLD, error)
-PRINT*,"Before CLOSE_CHIMERA_HDF5",myID
 !  Close CHIMERA HDF5 File  !
 CALL CLOSE_CHIMERA_HDF5()
 
@@ -211,138 +226,88 @@ CALL CLOSE_CHIMERA_HDF5()
 
 
 
+Density(:,:,DRIVER_R_ELEMS) = Density(:,:,DRIVER_R_ELEMS-1)
+
+
+!DO i = i_lower, i_upper-1
+!
+!    r_center = (DRIVER_R_LOCS(i)+DRIVER_R_LOCS(i+1))/2.0_idp
+!    deltar_overtwo = (DRIVER_R_LOCS(i+1)-DRIVER_R_LOCS(i))/2.0_idp
+!    CUR_R_LOCS(:) = deltar_overtwo * (Quad_Locs(:) + 1.0_idp ) + DRIVER_R_LOCS(i)
+!
+!    DO rd = 1,DRIVER_R_INPUT_NODES
+!
+!        IF ( CUR_R_LOCS(rd) < r_center  ) THEN
+!
+!
+!        ELSE
+!
+!
+!        END IF
+!    END DO  ! rd Loop
+!END DO  ! i Loop
 
 
 
 
-
-Density(:,:,CHIMERA_R_ELEMS) = Density(:,:,CHIMERA_R_ELEMS-1)
 
 
 
 !  Convert CHIMERA data into CFA Input !
+DO i = i_lower, i_upper
+    DO j = j_lower, j_upper
+        DO k = k_lower, k_upper
 
-!Enclosed_Mass = (4.0_idp/3.0_idp)*pi* ( r_{i+1)^3 - r_{i}^3 ) * rho_i
-Enclosed_Mass(0) = (4.0_idp/3.0_idp)*pi*DENSITY(k_lower,j_lower,1)     &
-                                       *CHIMERA_R_LOCS(0)**3    
+            Specific_Enthalpy = C_Square + int_e(k,j,i) + Pressure(k,j,i)/Density(k,j,i)
+            V_Square = vel_r(k,j,i)*vel_r(k,j,i) + vel_t(k,j,i)*vel_t(k,j,i) + vel_p(k,j,i)*vel_p(k,j,i)
 
-DO i = 1,CHIMERA_R_ELEMS
+            Reusable_Value = (Density(k,j,i)*Specific_Enthalpy)/(1.0_idp - V_Square/C_Square)
 
-    Enclosed_Mass(i) = Enclosed_Mass(i-1)                                 &
-                       + (4.0_idp/3.0_idp)*pi*DENSITY(k_lower,j_lower,i)  &
-                                          *( CHIMERA_R_LOCS(i)**3       &
-                                           - CHIMERA_R_LOCS(i-1)**3)
-
-END DO 
-
+            DO pd = 1, DRIVER_P_INPUT_NODES
+                DO td = 1, DRIVER_T_INPUT_NODES
+                    DO rd = 1, DRIVER_R_INPUT_NODES
 
 
 
+                        here = (pd-1) * DRIVER_R_INPUT_NODES*DRIVER_T_INPUT_NODES             &
+                             + (td-1) * DRIVER_R_INPUT_NODES                                   &
+                             + rd
 
+                        DRIVER_E(here,i-1,j-1,k-1) = Reusable_Value - Pressure(k,j,i)
+                        DRIVER_S(here,i-1,j-1,k-1) = Reusable_Value*V_Square/C_Square + 3.0_idp * Pressure(k,j,i)
+                        DRIVER_Si(here,i-1,j-1,k-1,1) = Reusable_Value*vel_r(k,j,i)/C_Square
+                        DRIVER_Si(here,i-1,j-1,k-1,2) = Reusable_Value*vel_t(k,j,i)/C_Square
+                        DRIVER_Si(here,i-1,j-1,k-1,3) = Reusable_Value*vel_p(k,j,i)/C_Square
 
+                        DRIVER_LAPSE_VAL(i-1,j-1,k-1) = Lapse_Val(k,j,i)
 
+                    END DO
+                END DO
+            END DO
 
-CHIMERA_Potential(CHIMERA_R_ELEMS) = -Grav_Constant_G * Enclosed_Mass(CHIMERA_R_ELEMS)       &
-                                                      /CHIMERA_R_LOCS(CHIMERA_R_ELEMS)
-
-
-DO i = CHIMERA_R_ELEMS-1,2, -1
-
-     CHIMERA_Potential(i) = CHIMERA_Potential(i+1) - Grav_Constant_G                         &
-                                                   * Enclosed_Mass(i)                        &
-                                                   / (CHIMERA_R_LOCS(i)*CHIMERA_R_LOCS(i))   &
-                                                   * CHIMERA_Delta_R(i)
-
-END DO
-!CHIMERA_Potential(1) = CHIMERA_Potential(2)/2.0_idp
-
-CHIMERA_Potential(1) = CHIMERA_Potential(2) - 3*Grav_Constant_G*Enclosed_Mass(2)     &
-                                              /(2*CHIMERA_R_LOCS(2))
-
-
-
-
-
-
-int_e = 0.0_idp
-Pressure = 0.0_idp
-
-Specific_Enthalpy = C_Square + (int_e + Pressure)/Density
-
-V_Square = vel_r*vel_r + vel_t*vel_t + vel_p*vel_p
-Lorentz_Factor_Sqr = 1.0_idp/(1.0_idp - V_Square/C_Square)
-
-Reusable_Value = (GR_Source_Scalar*Density*Specific_Enthalpy) / (1.0_idp - V_Square/C_Square)
-
-IF (ANY(DENSITY .eq. 0.0_idp) ) THEN
-
-    DO i = i_lower, i_upper
-
-        IF ( DENSITY(k_lower, j_lower, i) == 0.0_idp) THEN
-
-            Reusable_Value(:,:,i) = 0.0_idp
-
-        END IF
+        END DO
     END DO
-
-END IF
-
-
-!CHIMERA_E = Reusable_Value - GR_Source_Scalar*Pressure
-!CHIMERA_Si(1,k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) = Reusable_Value(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper)   &
-!                                                              * vel_r(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper)
-!CHIMERA_Si(2,:,:,:) = Reusable_Value*vel_t
-!CHIMERA_Si(3,:,:,:) = Reusable_Value*vel_p
-!CHIMERA_S = Reusable_Value*V_Square - 3.0_idp*GR_Source_Scalar*Pressure
-
-
-
-CHIMERA_S = 0.0_idp
-CHIMERA_Si = 0.0_idp
-
-
-DO k = k_lower, k_upper
-   DO j = j_lower, j_upper
-      DO i = i_lower, i_upper
-
-!            CHIMERA_E(i,j,k) = GR_Source_Scalar*Density(k,j,i)*C_Square
-
-           CHIMERA_E(i,j,k) = Reusable_Value(k,j,i) - GR_SOURCE_Scalar*Pressure(k,j,i)
-!           CHIMERA_S(i,j,k) = Reusable_Value(k,j,i)*V_Square(k,j,i) - 3.0_idp * GR_SOURCE_Scalar*Pressure(k,j,i)
-!           CHIMERA_Si(i,j,k,1) = Reusable_Value(k,j,i)*vel_r(k,j,i)
-!           CHIMERA_Si(i,j,k,2) = Reusable_Value(k,j,i)*vel_t(k,j,i)
-!           CHIMERA_Si(i,j,k,2) = Reusable_Value(k,j,i)*vel_p(k,j,i)
-
-      END DO
-   END DO
 END DO
 
 
 
 
 
-IF (myID == -130) THEN
-
-   PRINT*," "
-   PRINT*,"Density"
-   PRINT*,"i_upper",i_upper
-   PRINT*," "
-   DO i = i_lower, i_upper
-      DO j = j_lower, j_upper
-!          PRINT*,i,CHIMERA_R_LOCS(i),CHIMERA_E(i,j_lower,k_lower)
-          PRINT*,i,CHIMERA_R_LOCS(i),Density(k_lower,j_lower,i), int_e(k_lower, j_lower, i), Pressure(k_lower, j_lower, i)
-!          PRINT*,i,CHIMERA_R_LOCS(i), Density(k_lower, j_lower, i), CHIMERA_E(i,j_lower, k_lower)
-!          PRINT*,i,CHIMERA_R_LOCS(i), Enclosed_Mass(i), CHIMERA_Potential(i)
-!          PRINT*,i,CHIMERA_E(i,j_lower, k_lower),Reusable_Value(k_lower,j_lower,i), Density(k_lower, j_lower,i)
-      END DO
-   END DO
-   PRINT*," "
-   PRINT*," "
 
 
-END IF
+CALL INIT_CHIMERA_POTENTIAL( k_lower, k_upper, j_lower, j_upper, i_lower, i_upper, Density )
+
+Num_Nodes = (/ DRIVER_R_INPUT_NODES, DRIVER_T_INPUT_NODES, DRIVER_P_INPUT_NODES /)
+CALL INIT_CHIMERA_SHIFT_VAL( Num_Nodes,                                         &
+                             DRIVER_R_ELEMS,DRIVER_T_ELEMS,DRIVER_P_ELEMS,   &
+                             DRIVER_Si,                                        &
+                             DRIVER_R_LOCS                                     &
+                            )
 
 
+
+
+CALL WRITE_CHIMERA_OUTPUT( file_number )
 
 
 
@@ -353,11 +318,9 @@ DEALLOCATE( vel_r )
 DEALLOCATE( vel_t )
 DEALLOCATE( vel_p )
 DEALLOCATE( int_e )
+DEALLOCATE( Lapse_Val )
 
-DEALLOCATE( Specific_Enthalpy )
-DEALLOCATE( V_Square )
-!DEALLOCATE( Lorentz_Factor_Sqr )
-DEALLOCATE( Reusable_Value )
+
 
 END SUBROUTINE LOAD_CHIMERA_HDF5
 
@@ -428,8 +391,6 @@ IF (myID == 0 ) THEN
     ! Close HDF5 !
     CALL h5close_f(error)
 
-    PRINT*," End of myID==0"
-
 END IF ! myID == 0
 
 CALL MPI_BCAST( nz_hyperslabs, 1, MPI_INTEGER, 0, MPI_COMM_GRID, error )
@@ -442,17 +403,17 @@ k_offset = myID_phi * ik_ray_dim
 ! Initialize hyperslabs and communicators
 !-----------------------------------------------------------------------
 
-nz_hyperslab_width = CHIMERA_P_ELEMS / nz_hyperslabs
-IF( MOD( CHIMERA_z_PROCS, nz_hyperslabs ) /= 0 ) THEN
-    PRINT*, 'CHIMERA_z_PROCS should be evenly divisible by nz_hyperslabs'
-    PRINT*, 'CHIMERA_z_PROCS = ', CHIMERA_z_PROCS, ' nz_hyperslabs = ', nz_hyperslabs
+nz_hyperslab_width = DRIVER_P_ELEMS / nz_hyperslabs
+IF( MOD( DRIVER_z_PROCS, nz_hyperslabs ) /= 0 ) THEN
+    PRINT*, 'DRIVER_z_PROCS should be evenly divisible by nz_hyperslabs'
+    PRINT*, 'DRIVER_z_PROCS = ', DRIVER_z_PROCS, ' nz_hyperslabs = ', nz_hyperslabs
     CALL MPI_ABORT( MPI_COMM_WORLD, 666, error)
 END IF
 
-nz_hyperslab_procwidth = CHIMERA_z_PROCS / nz_hyperslabs
-IF( nz_hyperslabs > CHIMERA_z_PROCS ) THEN
-    PRINT*, 'nz_hyperslabs cannot be more than CHIMERA_z_PROCS'
-    PRINT*, 'CHIMERA_z_PROCS = ', CHIMERA_z_PROCS, ' nz_hyperslabs = ', nz_hyperslabs
+nz_hyperslab_procwidth = DRIVER_z_PROCS / nz_hyperslabs
+IF( nz_hyperslabs > DRIVER_z_PROCS ) THEN
+    PRINT*, 'nz_hyperslabs cannot be more than DRIVER_z_PROCS'
+    PRINT*, 'DRIVER_z_PROCS = ', DRIVER_z_PROCS, ' nz_hyperslabs = ', nz_hyperslabs
     CALL MPI_ABORT( MPI_COMM_WORLD, 666, error)
 END IF
 
@@ -461,7 +422,7 @@ k_hyperslab_offset = MOD( k_offset, nz_hyperslab_width )
 
 !-- Create MPI communicator for each group of writers
 my_hyperslab_group = myID_phi / nz_hyperslab_procwidth + 1
-nproc_per_hyperslab_group = CHIMERA_z_PROCS / nz_hyperslabs
+nproc_per_hyperslab_group = DRIVER_z_PROCS / nz_hyperslabs
 
 ALLOCATE(hyperslab_group_member(nproc_per_hyperslab_group))
 
@@ -536,41 +497,30 @@ END SUBROUTINE OPEN_CHIMERA_HDF5
 SUBROUTINE CLOSE_CHIMERA_HDF5()
 
 INTEGER                                 :: error
-INTEGER                                 :: iproc
-INTEGER                                 :: nproc_per_hyperslab_group
-INTEGER                                 :: mpi_world_group
-INTEGER                                 :: mpi_group_per_hyperslab_group
 
-INTEGER, DIMENSION(1)                   :: slab_data
-
-INTEGER, DIMENSION(:), ALLOCATABLE      :: hyperslab_group_member
 
 
 
 ! Close file !
 CALL h5fclose_f(file_id, error)
+IF ( error /= 0 ) THEN
+    PRINT*, '***ERROR in trying to close file with id = ', file_id
+    WRITE(nlog, '(a50)') '***ERROR in trying to close file with id = ', file_id
+    CALL MPI_ABORT(MPI_COMM_WORLD,666, error)
+END IF
+
 
 ! Close HDF5 !
 CALL h5close_f(error)
-
-
 IF ( error /= 0 ) THEN
-    PRINT*, '***ERROR in trying to close file '
-    WRITE(nlog, '(a50)') '***ERROR in trying to close file'
+    PRINT*, '***ERROR in trying to close HDF5 '
+    WRITE(nlog, '(a50)') '***ERROR in trying to close HDF5'
     CALL MPI_ABORT(MPI_COMM_WORLD,666, error)
 END IF
 
-! Destroy hyperslab comminicator so it may be recreated for a new frame
 
-!CALL MPI_COMM_FREE(mpi_comm_per_hyperslab_group, error)
 
-IF ( error /= 0 ) THEN
-    PRINT*, '***ERROR in trying to close file '
-    WRITE(nlog, '(a50)') '***ERROR in trying to close file'
-    CALL MPI_ABORT(MPI_COMM_WORLD,666, error)
-END IF
 
-RETURN
 END SUBROUTINE CLOSE_CHIMERA_HDF5
 
 
@@ -615,24 +565,22 @@ INTEGER, DIMENSION(2)                               :: phi_index_bound
 
 
 
-REAL(KIND = idp), DIMENSION(0:CHIMERA_R_ELEMS)                  :: x_ef
-REAL(KIND = idp), DIMENSION(0:CHIMERA_T_ELEMS)                  :: y_ef
-REAL(KIND = idp), DIMENSION(0:CHIMERA_P_ELEMS)                  :: z_ef
+REAL(KIND = idp), DIMENSION(0:DRIVER_R_ELEMS)                      :: x_ef
+REAL(KIND = idp), DIMENSION(0:DRIVER_T_ELEMS)                      :: y_ef
+REAL(KIND = idp), DIMENSION(0:DRIVER_P_ELEMS)                      :: z_ef
 
-REAL(KIND = idp), DIMENSION(0:CHIMERA_R_ELEMS)                    :: dx_cf
-REAL(KIND = idp), DIMENSION(0:CHIMERA_T_ELEMS)                    :: dy_cf
-REAL(KIND = idp), DIMENSION(0:CHIMERA_P_ELEMS)                    :: dz_cf
+REAL(KIND = idp), DIMENSION(0:DRIVER_R_ELEMS-1)                    :: dx_cf
+REAL(KIND = idp), DIMENSION(0:DRIVER_T_ELEMS-1)                    :: dy_cf
+REAL(KIND = idp), DIMENSION(0:DRIVER_P_ELEMS-1)                    :: dz_cf
 
-REAL(KIND = idp), DIMENSION(1)                                  :: time_in
 
-REAL(KIND = idp), DIMENSION(CHIMERA_T_ELEMS,CHIMERA_P_ELEMS)    :: ongrid_mask
+REAL(KIND = idp), DIMENSION(DRIVER_T_ELEMS,DRIVER_P_ELEMS)    :: ongrid_mask
 
 REAL(KIND = idp)                                                :: r2dr     ! 1/3 (r_outer^3 - r_inner^3)
-REAL(KIND = idp), DIMENSION(CHIMERA_R_ELEMS)                    :: send_buff, recv_buff
+REAL(KIND = idp), DIMENSION(DRIVER_R_ELEMS)                    :: send_buff, recv_buff
 
 REAL(KIND = idp)                                                :: lw_max, l_x, l_y, l_z, rsinth  ! widths of zones
 REAL(KIND = idp)                                                :: min_omega
-
 
 
 
@@ -645,56 +593,57 @@ CALL h5gopen_f(file_id, '/mesh', group_id, error)
 datasize1d(1) = 3
 CALL read_1d_slab('array_dimensions', array_dimensions, group_id, datasize1d)
 
-IF ( array_dimensions(1) /= CHIMERA_R_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of nx:', CHIMERA_R_ELEMS, '/=', array_dimensions(1)
+IF ( array_dimensions(1) /= DRIVER_R_ELEMS ) THEN
+    PRINT *, '*** ERROR: non-matching value of nx:', DRIVER_R_ELEMS, '/=', array_dimensions(1)
     CALL MPI_ABORT(MPI_COMM_WORLD,101,error)
 END IF
 
-IF ( array_dimensions(2) /= CHIMERA_T_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of ny:', CHIMERA_T_ELEMS, '/=', array_dimensions(2)
+IF ( array_dimensions(2) /= DRIVER_T_ELEMS ) THEN
+    PRINT *, '*** ERROR: non-matching value of ny:', DRIVER_T_ELEMS, '/=', array_dimensions(2)
     CALL MPI_ABORT(MPI_COMM_WORLD,102,error)
 END IF
 
-IF ( array_dimensions(3) /= CHIMERA_P_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of nz:', CHIMERA_P_ELEMS, '/=', array_dimensions(3)
+IF ( array_dimensions(3) /= DRIVER_P_ELEMS ) THEN
+    PRINT *, '*** ERROR: non-matching value of nz:', DRIVER_P_ELEMS, '/=', array_dimensions(3)
     CALL MPI_ABORT(MPI_COMM_WORLD,103,error)
 END IF
 
 
 
+datasize1d(1) = 1
+CALL HDF5_READ('time',time, group_id, datasize1d, error )
 
 
-! Read Element Edge Locations !
-datasize1d(1) = CHIMERA_R_ELEMS+1
-CALL read_1d_slab('x_ef', x_ef(1:CHIMERA_R_ELEMS+1), group_id, datasize1d)
-CALL read_1d_slab('dx_cf',dx_cf(0:CHIMERA_R_ELEMS), group_id, datasize1d)
 
-datasize1d(1) = CHIMERA_T_ELEMS+1
-CALL read_1d_slab('y_ef', y_ef(1:CHIMERA_T_ELEMS+1), group_id, datasize1d)
-CALL read_1d_slab('dy_cf',dy_cf(0:CHIMERA_R_ELEMS), group_id, datasize1d)
+! Read Element Edge and Center Locations !
+datasize1d(1) = DRIVER_R_ELEMS+1
+CALL read_1d_slab('x_ef', x_ef(0:DRIVER_R_ELEMS), group_id, datasize1d)
+CALL read_1d_slab('dx_cf',dx_cf(0:DRIVER_R_ELEMS-1), group_id, datasize1d)
 
-datasize1d(1) = CHIMERA_P_ELEMS+1
-CALL read_1d_slab('z_ef', z_ef(1:CHIMERA_P_ELEMS+1), group_id, datasize1d)
-CALL read_1d_slab('dz_cf',dz_cf(0:CHIMERA_R_ELEMS), group_id, datasize1d)
+datasize1d(1) = DRIVER_T_ELEMS+1
+CALL read_1d_slab('y_ef', y_ef(0:DRIVER_T_ELEMS), group_id, datasize1d)
+CALL read_1d_slab('dy_cf',dy_cf(0:DRIVER_T_ELEMS-1), group_id, datasize1d)
 
+datasize1d(1) = DRIVER_P_ELEMS+1
+CALL read_1d_slab('z_ef', z_ef(0:DRIVER_P_ELEMS), group_id, datasize1d)
+CALL read_1d_slab('dz_cf',dz_cf(0:DRIVER_P_ELEMS-1), group_id, datasize1d)
 
-CHIMERA_R_LOCS = x_ef
-CHIMERA_T_LOCS = y_ef
-CHIMERA_P_LOCS = z_ef
+x_ef(0) = 0.0_idp
+y_ef(0) = 0.0_idp
+z_ef(0) = 0.0_idp
+DRIVER_R_LOCS = x_ef
+DRIVER_T_LOCS = y_ef
+DRIVER_P_LOCS = z_ef
 
-CHIMERA_Delta_R = dx_cf
-
-CHIMERA_Delta_T = dy_cf
-CHIMERA_Delta_P = dz_cf
-
-!CHIMERA_T_LOCS_LOCAL = y_ef(j_offset+1:j_offset+ij_ray_dim+1)
-!CHIMERA_P_LOCS_LOCAL = z_ef(k_offset+1:k_offset+ik_ray_dim+1)
-
-
+DRIVER_Delta_R = dx_cf
+DRIVER_Delta_T = dy_cf
+DRIVER_Delta_P = dz_cf
 
 
 ! Close Mesh Group !
 CALL h5gclose_f(group_id, error)
+
+
 
 
 
@@ -706,12 +655,8 @@ CALL h5gclose_f(group_id, error)
 ! Open fluid Group !
 CALL h5gopen_f(file_id, '/fluid', group_id, error)
 
-
-
-
-datasize3d = (/CHIMERA_R_ELEMS, ij_ray_dim, ik_ray_dim/)
+datasize3d = (/DRIVER_R_ELEMS, ij_ray_dim, ik_ray_dim/)
 slab_offset3d = (/0,j_offset,k_hyperslab_offset/)
-
 
 
 ! Read Density !
@@ -726,21 +671,35 @@ CALL read_scalar_HDF(vel_r,'u_c', group_id, datasize3d, slab_offset3d )
 ! Read Theta Velocity !
 CALL read_scalar_HDF(vel_t,'v_c', group_id, datasize3d, slab_offset3d )
 
+
 ! Read Phi Velocity !
 CALL read_scalar_HDF(vel_p,'w_c', group_id, datasize3d, slab_offset3d )
 
 ! Read Internal Energy  !
 CALL read_scalar_HDF(int_e,'e_int', group_id, datasize3d, slab_offset3d )
 
+! Close fluid group
+CALL h5gclose_f(group_id, error)
+
+
+
+
+!! Open fluid Group !
+CALL h5gopen_f(file_id, '/metadata', group_id, error)
+
+datasize3d = (/DRIVER_R_ELEMS, ij_ray_dim, ik_ray_dim/)
+slab_offset3d = (/0,j_offset,k_hyperslab_offset/)
 
 
 ! Read Lapse Function !
-!   datasize1d(1) = imax-imin+1
-!   CALL read_1d_slab('agr_c', lapse(imin:imax), group_id, datasize1d )
+CALL read_scalar_HDF(Lapse_Val,'agr_e',group_id, datasize3d, slab_offset3d )
 
 
 ! Close fluid group
 CALL h5gclose_f(group_id, error)
+
+
+
 
 
 
@@ -798,13 +757,145 @@ END SUBROUTINE READ_SCALAR_HDF
 
 
 
+!+501+###########################################################################!
+!                                                                                !
+!              WRITE_CHIMERA_OUTPUT                                              !
+!                                                                                !
+!################################################################################!
+SUBROUTINE WRITE_CHIMERA_OUTPUT( file_number )
+
+INTEGER, INTENT(IN)                                 ::  file_number
+
+INTEGER                                             ::  File_IDa = 72
+INTEGER                                             ::  File_IDb = 73
+INTEGER                                             ::  File_IDc = 74
+INTEGER                                             ::  File_IDd = 75
+INTEGER                                             ::  File_IDe = 76
+INTEGER                                             ::  File_IDf = 77
+INTEGER                                             ::  File_IDg = 78
+
+
+CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namea
+CHARACTER(LEN = :), ALLOCATABLE                     ::  file_nameb
+CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namec
+CHARACTER(LEN = :), ALLOCATABLE                     ::  file_named
+CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namee
+CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namef
+CHARACTER(LEN = :), ALLOCATABLE                     ::  file_nameg
+
+
+LOGICAL                                             ::  exist
+INTEGER                                             ::  i, j, k
+
+110 FORMAT (11X,A1,24X,A5)
+111 FORMAT (11X,A1,24X,A1,22X,A2,22X,A1,22X,A3)
+112 FORMAT (11X,A1,23X,A3,17X,A8)
+
+114 FORMAT (E22.15,3x,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
+115 FORMAT (E22.15,3X,ES22.15,3X,ES22.15)
+
+
+IF ( SOURCE_OUTPUT_FLAG == 1 ) THEN
+
+    ALLOCATE( character(len=46) :: file_namea )
+    ALLOCATE( character(len=48) :: file_nameb )
+    ALLOCATE( character(len=49) :: file_namec )
+    ALLOCATE( character(len=46) :: file_named )
+    ALLOCATE( character(len=46) :: file_namee )
+    ALLOCATE( character(len=46) :: file_namef )
+    ALLOCATE( character(len=50) :: file_nameg )
+
+
+    WRITE(file_namea,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Lapse_',file_number,'.out'
+    WRITE(file_nameb,'(A39,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Density_',file_number,'.out'
+    WRITE(file_namec,'(A40,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Velocity_',file_number,'.out'
+    WRITE(file_named,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_rlocs_',file_number,'.out'
+    WRITE(file_namee,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_tlocs_',file_number,'.out'
+    WRITE(file_namef,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_plocs_',file_number,'.out'
+    WRITE(file_nameg,'(A41,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_potential_',file_number,'.out'
+
+
+    OPEN(unit = file_ida,file = file_namea)
+    OPEN(unit = file_idb,file = file_nameb)
+    OPEN(unit = file_idc,file = file_namec)
+    OPEN(unit = file_idd,file = file_named)
+    OPEN(unit = file_ide,file = file_namee)
+    OPEN(unit = file_idf,file = file_namef)
+    OPEN(unit = file_idg,file = file_nameg)
+
+
+    ! Output CHIMERA rlocs
+    WRITE(file_IDd,*)1.0_idp
+    DO i = 0,DRIVER_R_ELEMS-1
+        WRITE(file_IDd,*) (DRIVER_R_LOCS(i+1)+DRIVER_R_LOCS(i))/2.0_idp
+    END DO
+
+    ! Output CHIMERA tlocs
+    DO i = 0,ij_ray_dim-1
+        WRITE(file_IDe,*) (DRIVER_T_LOCS(i+1)+DRIVER_T_LOCS(i))/2.0_idp
+    END DO
+
+    ! Output CHIMERA tlocs
+    DO i = 0,ik_ray_dim-1
+        WRITE(file_IDf,*) (DRIVER_P_LOCS(i+1)+DRIVER_P_LOCS(i))/2.0_idp
+    END DO
+
+
+    ! Output CHIMERA Density
+    DO k = 1,ik_ray_dim
+        DO j = 1, ij_ray_dim
+
+            WRITE(file_idb,*)Density(k,j,1),Density(k,j,:)
+
+        END DO ! j Loop
+    END DO ! k Loop
+
+    ! Output CHIMERA Velocity
+    DO k = 1,ik_ray_dim
+        DO j = 1, ij_ray_dim
+
+            WRITE(file_idc,*)Vel_R(k,j,1),Vel_R(k,j,:)
+
+        END DO ! j Loop
+    END DO ! k Loop
+
+
+    ! Output CHIMERA Potential
+    WRITE(file_IDg,*)DRIVER_Potential
+
+
+    WRITE(File_IDa,*)DRIVER_Lapse_val
+
+
+
+    CLOSE(unit = file_ida)
+    CLOSE(unit = file_idb)
+    CLOSE(unit = file_idc)
+    CLOSE(unit = file_idd)
+    CLOSE(unit = file_ide)
+    CLOSE(unit = file_idf)
+    CLOSE(unit = file_IDg)
+
+END IF
 
 
 
 
 
+WRITE(file_namea,'(A45)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Frame_Time.out'
+inquire(file = file_namea, exist=exist)
 
+IF (( exist ) .AND. (file_number .NE. 1 )) THEN
+    OPEN(unit = file_ida,file = file_namea,status="old",position="append", action="write" )
+    WRITE(file_ida,'(I5.5,E22.15)') file_number, time
+    CLOSE(unit=file_ida)
+ELSE
+    OPEN(unit = file_ida,file = file_namea)
+    WRITE(file_ida,'(I5.5,E22.15)') file_number, time
+    CLOSE(unit=file_ida)
+END IF
 
+END SUBROUTINE WRITE_CHIMERA_OUTPUT
 
 
 

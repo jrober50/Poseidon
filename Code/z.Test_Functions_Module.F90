@@ -38,37 +38,46 @@ USE Poseidon_Constants_Module, &
                 ONLY :  idp, pi, Speed_of_Light,Grav_Constant_G
 
 
-USE CHIMERA_Parameters, &
-                ONLY :  CHIMERA_R_ELEMS,        &
-                        CHIMERA_T_ELEMS,        &
-                        CHIMERA_P_ELEMS,        &
-                        CHIMERA_R_LOCS,         &
-                        CHIMERA_INNER_RADIUS,   &
-                        CHIMERA_OUTER_RADIUS,   &
-                        CHIMERA_Potential,      &
-                        CHIMERA_E,              &
-                        CHIMERA_S,              &
-                        CHIMERA_Si,             &
-                        myID,                   &
-                        myID_Theta,             &
-                        myID_Phi,               &
-                        POWER_A,                &
-                        RHO_O,                  &
-                        Analytic_Solution,      &
-                        Shift_Solution,         &
-                        SELFSIM_T,              &
-                        SELFSIM_KAPPA,          &
-                        SELFSIM_GAMMA
+USE DRIVER_Parameters, &
+                ONLY :  DRIVER_R_ELEMS,                        &
+                        DRIVER_T_ELEMS,                        &
+                        DRIVER_P_ELEMS,                        &
+                        DRIVER_R_LOCS,                         &
+                        DRIVER_R_INPUT_NODES,                  &
+                        DRIVER_T_INPUT_NODES,                  &
+                        DRIVER_P_INPUT_NODES,                  &
+                        DRIVER_INNER_RADIUS,                   &
+                        DRIVER_OUTER_RADIUS,                   &
+                        DRIVER_POTENTIAL,                      &
+                        DRIVER_SHIFT_VAL,                      &
+                        DRIVER_E,                              &
+                        DRIVER_S,                              &
+                        DRIVER_Si,                             &
+                        myID,                                   &
+                        myID_Theta,                             &
+                        myID_Phi,                               &
+                        POWER_A,                                &
+                        RHO_O,                                  &
+                        Analytic_Solution,                      &
+                        Shift_Solution,                         &
+                        SELFSIM_T,                              &
+                        SELFSIM_KAPPA,                          &
+                        SELFSIM_GAMMA,                          &
+                        SELFSIM_ECC
+
+USE CHIMERA_TEST_FUNCS_Module, &
+                ONLY :  Test_Chimera_Simulated_Potential,       &
+                        Test_Chimera_Simulated_Shift
 
 
 USE Additional_Functions_Module, &
-                ONLY :  Map_From_X_Space,                           &
-                        Initialize_LG_Quadrature_Locations,         &
+                ONLY :  Map_From_X_Space,                       &
+                        Initialize_LG_Quadrature_Locations,     &
                         Generate_Defined_Mesh
 
 USE SelfSimilar_Module, &
-            ONLY :  UNPACK_SELF_SIMILAR,      &
-                    SELFSIM_NEWT_SOL,         &
+            ONLY :  UNPACK_SELF_SIMILAR,                        &
+                    SELFSIM_NEWT_SOL,                           &
                     SELFSIM_SHIFT_SOL
  
 USE mpi
@@ -120,8 +129,8 @@ CONTAINS
 SUBROUTINE Poseidon_Initialize_CFA_Test_Problem_CHIMERA(    Test_Number,                                &
                                                             Num_Global_R, Num_Global_T, Num_Global_P,   &
                                                             Num_Local_R, Num_Local_T, Num_Local_P,      &
-                                                            NUM_LOCS, R_QUAD,                           &
-                                                            deltar, r_locs,                             &
+                                                            NUM_LOCS, R_QUAD, T_QUAD,                   &
+                                                            deltar, r_locs, t_locs,                     &
                                                             Input_E, Input_S, Input_Si )
 
 
@@ -140,9 +149,13 @@ INTEGER,                        INTENT(IN)                                  ::  
 INTEGER, DIMENSION(1:3),        INTENT(IN)                                  ::  NUM_LOCS
  
 REAL(KIND = idp), DIMENSION(1:NUM_LOCS(1)), INTENT(IN)                      ::  R_QUAD
+REAL(KIND = idp), DIMENSION(1:NUM_LOCS(2)), INTENT(IN)                      ::  T_QUAD
+
 
 REAL(KIND = idp), DIMENSION(1:NUM_GLOBAL_R), INTENT(INOUT)                     ::  deltar
 REAL(KIND = idp), DIMENSION(0:NUM_GLOBAL_R), INTENT(INOUT)                     ::  r_locs
+REAL(KIND = idp), DIMENSION(0:NUM_GLOBAL_T), INTENT(INOUT)                     ::  t_locs
+
 
 REAL(KIND = idp), DIMENSION(    1:NUM_LOCS(1)*NUM_LOCS(2)*NUM_LOCS(3), &
                                 0:NUM_Local_R-1,                      &
@@ -230,81 +243,57 @@ IF (Test_Number .EQ. 1) THEN
     CALL Test_Source_Spherical_Symmetry(QUAD_NUMBERS, Test_Source_Input,  &
                                         Num_Global_R, Num_Global_T, Num_Global_P)
 
-
     my_i_start = myid_theta*Num_Local_T
     my_j_start = myid_phi*Num_Local_P
 
     DO pe = 0, Num_Local_P-1
-
         DO te = 0,Num_Local_T-1
-
             DO re = 0,NUM_Local_R-1
-
-
 
                 rho(:, re, te, pe) = Test_Source_Input(:,re+1,              &
                                                         my_i_start + te+1,  &
                                                         my_j_start + pe+1   )
-
-
-
             END DO
-
         END DO
-
     END DO
 
     Input_E = (Grav_Constant_G/csqr) * rho
     Input_S = 0.0_idp
     Input_Si = 0.0_idp
 
-!    PRINT*," Rho          Input_E"
-!    DO re = 0,NUM_Local_R-1
-
-!          PRINT*,rho(:,re,0,0), Input_E(:,re,0,0)
-
-!    END DO 
-
 
     Analytic_Solution => Test_Spherical_Symmetry_No_Surface
+
+
+
+
+
 
 
 ELSE IF (Test_Number == 2) THEN
 
 
+
+
     Analytic_Solution => Test_Chimera_Simulated_Potential
+    Shift_Solution => Test_Chimera_Simulated_Shift
+
+    Input_E = DRIVER_E
+    Input_S = DRIVER_S
+    Input_Si = DRIVER_Si
 
 
-    Input_E(1,:,:,:) = CHIMERA_E(:,:,:)
-    Input_S(1,:,:,:) = CHIMERA_S(:,:,:)
-    Input_Si(1,:,:,:,1) = CHIMERA_Si(:,:,:,1)
-    Input_Si(1,:,:,:,2) = CHIMERA_Si(:,:,:,2)
-    Input_Si(1,:,:,:,3) = CHIMERA_Si(:,:,:,3)
 
-    IF (myID == -130 ) THEN
-
-        DO i = 0,NUM_GLOBAL_R-1
-
-              PRINT*,i,Input_E(1,i,0,0), Input_S(1,i,0,0), Input_Si(1,i,0,0,1), Input_Si(1,i,0,0,2), Input_Si(1,i,0,0,3)
-
-        END DO
-
-    END IF 
 
 ELSE IF ( Test_Number == 3) THEN
 
 
-    CALL UNPACK_SELF_SIMILAR( SELFSIM_T, SELFSIM_KAPPA, SELFSIM_GAMMA,  &
-                              Num_Locs, R_Quad,                         &
+    CALL UNPACK_SELF_SIMILAR( SELFSIM_T, SELFSIM_KAPPA, SELFSIM_GAMMA, SELFSIM_ECC,  &
+                              Num_Locs, R_Quad, T_QUAD,                 &
                               NUM_LOCAL_R, NUM_LOCAL_T, NUM_LOCAL_P,    &
-                              deltar, r_locs,                           &
+                              deltar, r_locs, t_locs,                   &
                               Input_E, Input_S, Input_Si                )
 
-
-
-!    Input_E = (Grav_Constant_G/(csqr*csqr))*Input_E
-!    Input_S = (Grav_Constant_G/(csqr*csqr))*Input_S
-!    Input_Si = (Grav_Constant_G/(csqr*csqr))*Input_Si
 
 
 
@@ -379,9 +368,9 @@ REAL(KIND = idp)                                            ::  Star_Surface
                             !!  Global Variables  !!
                              !                    !
 
-!INTEGER,                                                   ::  CHIMERA_R_ELEMS,             &
-!                                                               CHIMERA_T_ELEMS,             &
-!                                                               CHIMERA_P_ELEMS
+!INTEGER,                                                   ::  DRIVER_R_ELEMS,             &
+!                                                               DRIVER_T_ELEMS,             &
+!                                                               DRIVER_P_ELEMS
 
 
 REAL(KIND = idp), DIMENSION(1:R_Elements) :: Delta_R_Vector
@@ -389,8 +378,8 @@ REAL(KIND = idp), DIMENSION(0:R_Elements) :: rlocations
 
 rlocations = 0.0_idp
 
-Delta_R_Vector = (CHIMERA_OUTER_RADIUS - 0.0_idp) / REAL(R_Elements )
-Star_Surface = CHIMERA_OUTER_RADIUS + 1.0_idp
+Delta_R_Vector = (DRIVER_OUTER_RADIUS - 0.0_idp) / REAL(R_Elements )
+Star_Surface = DRIVER_OUTER_RADIUS + 1.0_idp
 
 
 CALL Generate_Defined_Mesh(R_Elements, 0.0_idp, Delta_R_Vector, rlocations)
@@ -581,10 +570,10 @@ REAL(KIND = idp)                    ::  r_out_sqr,          &
 
 
 
-r_out_sqr = CHIMERA_OUTER_RADIUS*CHIMERA_OUTER_RADIUS
-r_out_cube = r_out_sqr * CHIMERA_OUTER_RADIUS
+r_out_sqr = DRIVER_OUTER_RADIUS*DRIVER_OUTER_RADIUS
+r_out_cube = r_out_sqr * DRIVER_OUTER_RADIUS
 
-enclosed_mass = (4.0_idp/(3.0_idp+POWER_A))* pi *RHO_O * CHIMERA_OUTER_RADIUS**(3+POWER_A)
+enclosed_mass = (4.0_idp/(3.0_idp+POWER_A))* pi *RHO_O * DRIVER_OUTER_RADIUS**(3+POWER_A)
 
 TMP = 1.0_idp
 IF (POWER_A > -2) THEN
@@ -593,7 +582,7 @@ IF (POWER_A > -2) THEN
 
 !    Test_Spherical_Symmetry_No_Surface = - Grav_Constant_G * enclosed_mass *(3*r_out_sqr - r*r)/(2*r_out_cube)
      Test_Spherical_Symmetry_No_Surface = - Grav_Constant_G * 4.0_idp*pi*RHO_O                     &
-                                        * ( CHIMERA_OUTER_RADIUS**(2+POWER_A)/(2+POWER_A)          &
+                                        * ( DRIVER_OUTER_RADIUS**(2+POWER_A)/(2+POWER_A)          &
                                           - r**(2+POWER_A)/(6+5*POWER_A+POWER_A*POWER_A)   )
 
 
@@ -612,7 +601,7 @@ ELSE IF (POWER_A  < -3) THEN
 
 
      Test_Spherical_Symmetry_No_Surface = - Grav_Constant_G * 4.0_idp*pi*RHO_O                     &
-                                        * ( CHIMERA_OUTER_RADIUS**(2+POWER_A)/(2+POWER_A)          &
+                                        * ( DRIVER_OUTER_RADIUS**(2+POWER_A)/(2+POWER_A)          &
                                           - r**(2+POWER_A)/(6+5*POWER_A+POWER_A*POWER_A)   )
 
 END IF
@@ -622,59 +611,6 @@ END IF
 
 
 END FUNCTION Test_Spherical_Symmetry_No_Surface
-
-
-
-
-
-
-
-
-
-
-!+301+##################################################################
-!
-!   Test_Chimera_Simulated_Potential
-!
-!#######################################################################
-PURE FUNCTION Test_Chimera_Simulated_Potential(r, theta, phi)
-
-REAL(KIND = idp),INTENT(IN)         :: r, theta, phi
-REAL(KIND = idp)                    :: Test_Chimera_Simulated_Potential
-REAL(KIND = idp)                    :: Sol
-INTEGER                             :: i
-
-
-IF ( r >= CHIMERA_R_LOCS(CHIMERA_R_ELEMS) ) THEN
-
-     Sol = CHIMERA_POTENTIAL(CHIMERA_R_ELEMS)
-
-ELSE 
-
-   DO i = 1,CHIMERA_R_ELEMS-1
-
-      if (( r >= CHIMERA_R_LOCS(i) ) .AND. ( r < CHIMERA_R_LOCS(i+1))) THEN
-
-          Sol = ( (r-CHIMERA_R_LOCS(i))*CHIMERA_POTENTIAL(i+1)        &
-                 +(CHIMERA_R_LOCS(i+1)-r)*CHIMERA_POTENTIAL(i) )      &
-                / (CHIMERA_R_LOCS(i+1) - CHIMERA_R_LOCS(i))
-  
-          EXIT
-      END IF   
-   END DO
-END IF
-
-TEST_CHIMERA_Simulated_Potential = Sol
-
-
-END FUNCTION Test_Chimera_Simulated_Potential
-
-
-
-
-
-
-
 
 
 

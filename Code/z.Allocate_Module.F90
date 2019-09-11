@@ -48,10 +48,11 @@ USE Poseidon_Parameters, &
                     NUM_P_ELEMS_PER_BLOCK,  &
                     NUM_R_QUAD_POINTS,      &
                     NUM_T_QUAD_POINTS,      &
-                    NUM_P_QUAD_POINTS
+                    NUM_P_QUAD_POINTS,      &
+                    MAX_ITERATIONS
 
 
-USE Global_Variables_And_Parameters, &
+USE Poseidon_Variables_Module, &
             ONLY :  NUM_R_ELEMENTS,             &
                     NUM_T_ELEMENTS,             &
                     NUM_P_ELEMENTS,             &
@@ -98,6 +99,8 @@ USE Global_Variables_And_Parameters, &
                     Block_Prob_Dim,             &
                     BLOCK_NONZEROS,             &
                     Iter_Time_Table,            &
+                    Frame_Time_Table,           &
+                    Frame_Convergence_Table,    &
                     Run_Time_Table,             &
                     Num_Timer_Calls,            &
                     STF_NNZ,                    &
@@ -132,15 +135,9 @@ ALLOCATE(tlocs(0:NUM_T_ELEMENTS))
 ALLOCATE(plocs(0:NUM_P_ELEMENTS))
 
 
-
-
-
-
-ALLOCATE( RHS_Vector( 0:PROB_DIM-1 ) )
+!ALLOCATE( RHS_Vector( 0:PROB_DIM-1 ) )
 ALLOCATE( Update_Vector(0:PROB_DIM-1 ) )
 ALLOCATE( Coefficient_Vector(0:PROB_DIM-1 ) )
-
-
 
 
 ALLOCATE( Block_RHS_Vector( 0:Block_PROB_DIM-1) )
@@ -148,11 +145,6 @@ ALLOCATE( Block_STF_Mat( 0:2*NUM_OFF_DIAGONALS, 0:SUBSHELL_PROB_DIM-1) )
 
 
 ALLOCATE( BLOCK_ELEM_STF_MATVEC(0:ELEM_PROB_DIM_SQR-1 ,0:NUM_R_ELEMS_PER_BLOCK-1) )
-
-
-
-
-
 
 
 
@@ -235,10 +227,14 @@ ALLOCATE(INT_P_LOCATIONS(1:NUM_P_QUAD_POINTS), INT_P_WEIGHTS(1:NUM_P_QUAD_POINTS
 
 
 
-ALLOCATE( ITER_TIME_TABLE(1:Num_Timer_Calls) )
+ALLOCATE( ITER_TIME_TABLE(1:NUM_TIMER_CALLS) )
+ALLOCATE( FRAME_TIME_TABLE(1:NUM_TIMER_CALLS) )
 ALLOCATE( RUN_TIME_TABLE(1:NUM_TIMER_CALLS) )
 ITER_TIME_TABLE = 0.0_idp
+FRAME_TIME_TABLE = 0.0_idp
 RUN_TIME_TABLE = 0.0_idp
+
+ALLOCATE( FRAME_CONVERGENCE_TABLE(1:MAX_ITERATIONS))
 
 END SUBROUTINE Allocate_Poseidon_CFA_Variables
 
@@ -264,36 +260,44 @@ DEALLOCATE(rlocs)
 DEALLOCATE(tlocs)
 DEALLOCATE(plocs)
 
+!DEALLOCATE( RHS_Vector )
+DEALLOCATE( Update_Vector )
+DEALLOCATE( Coefficient_Vector )
 
 
-
+DEALLOCATE( Block_RHS_Vector )
+DEALLOCATE( Block_STF_Mat )
+DEALLOCATE( Block_ELEM_STF_MATVEC )
 
 
 DEALLOCATE( Lagrange_Poly_Table )
-
+DEALLOCATE( LPT_LPT )
 
 DEALLOCATE(INT_R_LOCATIONS, INT_R_WEIGHTS)
 DEALLOCATE(INT_T_LOCATIONS, INT_T_WEIGHTS)
 DEALLOCATE(INT_P_LOCATIONS, INT_P_WEIGHTS)
 
+DEALLOCATE( LOCAL_NODE_LOCATIONS )
+DEALLOCATE( M_VALUES )
 
-IF ( PHYSICS_TYPE == 'NEW' ) THEN
+DEALLOCATE( Block_Source_E )
+DEALLOCATE( Block_Source_S )
+DEALLOCATE( Block_Source_Si )
 
-    DEALLOCATE( Source_Term_Coefficients )
-
-ELSE IF ( PHYSICS_TYPE == 'CFA' ) THEN
-
-    DEALLOCATE( Block_Source_E )
-    DEALLOCATE( Block_Source_S )
-    DEALLOCATE( Block_Source_Si )
-
-
-END IF
-
-DEALLOCATE( Coefficient_Vector )
+DEALLOCATE( Ylm_Table_Block )
+DEALLOCATE( Ylm_Values )
+DEALLOCATE( Ylm_CC_Values )
+DEALLOCATE( Ylm_dt_Values )
+DEALLOCATE( Ylm_dp_Values)
+DEALLOCATE( Ylm_dtt_Values)
+DEALLOCATE( Ylm_dtp_Values)
+DEALLOCATE( Ylm_dpp_Values)
 
 
-DEALLOCATE(RHS_Vector)
+
+DEALLOCATE( ITER_TIME_TABLE )
+DEALLOCATE( RUN_TIME_TABLE  )
+
 
 
 

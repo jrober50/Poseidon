@@ -47,8 +47,9 @@ MODULE CFA_Newton_Raphson_Module                                                
 USE Poseidon_Constants_Module, &
                         ONLY : idp, pi, speed_of_light, C_Square
 
-USE CHIMERA_Parameters, &
-                        ONLY :  Analytic_Solution
+USE DRIVER_Parameters, &
+                        ONLY :  Analytic_Solution,          &
+                                FRAME_REPORT_FLAG
 
 USE Poseidon_Parameters, &
                         ONLY :  DOMAIN_DIM,                 &
@@ -66,9 +67,10 @@ USE Poseidon_Parameters, &
                                 CONVERGENCE_FLAG,           &
                                 WRITE_REPORT_FLAG,          &
                                 ITER_REPORT_NUM_SAMPLES,    &
-                                ITER_REPORT_FILE_ID
+                                ITER_REPORT_FILE_ID,        &
+                                FRAME_REPORT_FILE_ID
 
-USE Global_Variables_And_Parameters, &
+USE Poseidon_Variables_Module, &
                         ONLY :  NUM_R_ELEMENTS,             &
                                 NUM_T_ELEMENTS,             &
                                 NUM_P_ELEMENTS,             &
@@ -83,7 +85,6 @@ USE Global_Variables_And_Parameters, &
                                 VAR_DIM,                    &
                                 Lagrange_Poly_Table,        &
                                 Coefficient_Vector,         &
-                                RHS_Vector,                 &
                                 Block_RHS_Vector,           &
                                 myID_Poseidon,              &
                                 myID_PETSC,                 &
@@ -102,7 +103,10 @@ USE Global_Variables_And_Parameters, &
                                 Update_Vector,              &
                                 NUM_OFF_DIAGONALS,          &
                                 R_INNER, R_OUTER,           &
-                                ITER_TIME_TABLE
+                                Total_Run_Iters,            &
+                                ITER_TIME_TABLE,            &
+                                FRAME_CONVERGENCE_TABLE,    &
+                                Matrix_Location
 
 USE CFA_3D_Master_Build_Module, &
                         ONLY :  CFA_3D_Master_Build,        &
@@ -148,16 +152,15 @@ CONTAINS
 SUBROUTINE CFA_Newton_Raphson()
 
 
-LOGICAL                                         :: CONVERGED = .FALSE.
+LOGICAL                                         :: CONVERGED
 
 REAL(KIND = idp)                                :: timea, timeb, timec
 
-INTEGER :: i,j
+INTEGER :: i,j,k,l
 
 timea = 0.0_idp
 timeb = 0.0_idp
 timec = 0.0_idp
-
 
 !*!
 !*! Initialize Guess
@@ -165,12 +168,14 @@ timec = 0.0_idp
 CALL Initialize_Special_Guess_Values()
 !CALL Initialize_Guess_Values()
 
-
-
+IF (myID_Poseidon == 0 ) THEN
+    CALL OUTPUT_GUESS(0, 0)
+END IF
 
 
 
 Cur_Iteration = 1
+CONVERGED = .FALSE.
 DO WHILE ( CONVERGED .EQV. .FALSE. )
 
     IF (myID_Poseidon == 0 ) THEN
@@ -187,14 +192,12 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
 
 
 
-
-
     !*!
     !*! Create the System
     !*!
     CALL CFA_3D_Master_Build()
 
-
+    
 
 
 
@@ -207,29 +210,57 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     CALL Clock_In(timec-timeb, 14)
 
 
-    PRINT*,"AFTER CFA_Solve"
-    PRINT*,Coefficient_Vector(0:4)
+!    DO i = 0,NUM_R_ELEMENTS-1
+!        DO j = 0,DEGREE
+!            k = Matrix_Location(3, 0, 0, i, j)
+!            PRINT*,i,j,Update_Vector(k)
+!        END DO
+!    END DO
 
 
 
-     !*!
-     !*! Update Coefficient_Vector
-     !*!
-     timeb = MPI_Wtime()
-     CALL CFA_Update_Share
-     timec = MPI_Wtime()
-     CALL Clock_In(timec-timeb, 16)
+    !*!
+    !*! Update Coefficient_Vector
+    !*!
+    timeb = MPI_Wtime()
+    CALL CFA_Update_Share
+    timec = MPI_Wtime()
+    CALL Clock_In(timec-timeb, 16)
+
+!    PRINT*,"UPDATE_VECTOR"
+!    DO i = 0,NUM_R_ELEMENTS-1
+!        DO j = 0,DEGREE
+!            k = CFA_ALL_Matrix_Map(1, 0, i, j)
+!            l = CFA_ALL_Matrix_Map(5, 3, i, j)
+!            PRINT*,Update_Vector(k:l)
+!            PRINT*," "
+!        END DO
+!    END DO
+!    k = CFA_ALL_Matrix_Map(1, 0, NUM_R_ELEMENTS-1, DEGREE)
+!    PRINT*,REAL(Block_RHS_Vector(k), KIND = idp)
+!    WRITE(*,'(/ /)')
+
+    !*!
+    !*!  Share Coefficient Vector
+    !*!
+    timeb = MPI_Wtime()
+    CALL CFA_Coefficient_Update_All
+    timec = MPI_Wtime()
+    CALL Clock_In(timec-timeb, 15)
 
 
 
 
-     !*!
-     !*!  Share Coefficient Vector
-     !*!
-     timeb = MPI_Wtime()
-     CALL CFA_Coefficient_Update_All
-     timec = MPI_Wtime()
-     CALL Clock_In(timec-timeb, 15)
+
+!    DO i = 0,NUM_R_ELEMENTS-1
+!        DO j = 0,DEGREE
+!            k = Matrix_Location(1, 0, 0, i, j)
+!            l = Matrix_Location(5,L_LIMIT,L_LIMIT,i,j)
+!            PRINT*,i,j
+!            PRINT*,Coefficient_Vector(k:l)
+!            PRINT*," "
+!        END DO
+!    END DO
 
 
 
@@ -261,7 +292,13 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     END IF
 
 
+
+
+    WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
+
+
     Cur_Iteration = Cur_Iteration + 1
+    Total_Run_Iters = Total_Run_Iters + 1
 
 END DO
 
@@ -333,12 +370,7 @@ END SUBROUTINE CFA_Solve
 !###############################################################################!
 SUBROUTINE CFA_Coefficient_Update_All( )
 
-INTEGER         :: re, d, lm_loc, CUR_I_LOC
-
-
 Coefficient_Vector = Coefficient_Vector + Update_Vector
-
-
 
 END SUBROUTINE CFA_Coefficient_Update_All
 
@@ -646,8 +678,8 @@ SUBROUTINE OUTPUT_ITERATION_REPORT(Iter, Rank)
 
 INTEGER, INTENT(IN)                 :: Iter, Rank
 
-INTEGER                                         ::  FILE_ID
-INTEGER                                         ::  i
+INTEGER, DIMENSION(0:1)                         ::  FILE_ID
+INTEGER                                         ::  i, j
 REAL(KIND = idp)                                ::  r, theta, phi, deltar
 REAL(KIND = idp)                                ::  Analytic_Val, Solver_Val
 REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
@@ -664,47 +696,63 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
-FILE_ID = ITER_REPORT_FILE_ID
 
 
+FILE_ID = -1
+IF ( FRAME_REPORT_FLAG == 1 ) THEN
 
-! Write Title to File
+    FILE_ID(0) = FRAME_REPORT_FILE_ID
+
+END IF
+
 IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-
-    WRITE(FILE_ID,'(A)')"                                     Timing Results"
-    WRITE(FILE_ID,'(A)')"            ============================================================="
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,123)"                    Initialize Time : ",ITER_TIME_TABLE(1)
-    WRITE(FILE_ID,123)" Input/Communicate Source Data Time : ",ITER_TIME_TABLE(2)
-    WRITE(FILE_ID,123)"     Input Boundary Conditions Time : ",ITER_TIME_TABLE(3)
-    WRITE(FILE_ID,123)"        CFA_3D_Apply_BCs_Part1 Time : ",ITER_TIME_TABLE(4)
-    WRITE(FILE_ID,120)"-------------------------------------------------------------"
-    WRITE(FILE_ID,123)" ||     Calc_3D_Current_Values Time : ",ITER_TIME_TABLE(5)
-    WRITE(FILE_ID,123)" ||    CREATE_3D_SubJcbn_Terms Time : ",ITER_TIME_TABLE(6)
-    WRITE(FILE_ID,123)" ||       CREATE_3D_RHS_VECTOR Time : ",ITER_TIME_TABLE(7)
-    WRITE(FILE_ID,123)"\  /     CREATE_3D_JCBN_MATRIX Time : ",ITER_TIME_TABLE(8)
-    WRITE(FILE_ID,120)"-\/ ---------------------------------------------------------"
-    WRITE(FILE_ID,123)"CREATE_3D_NONLAPLACIAN_STF_MAT Time : ",ITER_TIME_TABLE(9)
-    WRITE(FILE_ID,123)"REDUCE_3D_NONLAPLACIAN_STF_MAT Time : ",ITER_TIME_TABLE(10)
-    WRITE(FILE_ID,123)"FINISH_3D_NONLAPLACIAN_STF_MAT Time : ",ITER_TIME_TABLE(11)
-    WRITE(FILE_ID,123)"          FINISH_3D_RHS_VECTOR Time : ",ITER_TIME_TABLE(12)
-    WRITE(FILE_ID,123)"        CFA_3D_Apply_BCs_Part2 Time : ",ITER_TIME_TABLE(13)
-    WRITE(FILE_ID,123)"                    CFA_Solver Time : ",ITER_TIME_TABLE(14)
-    WRITE(FILE_ID,123)"        CFA_Coefficient_Update Time : ",ITER_TIME_TABLE(15)
-    WRITE(FILE_ID,123)"   CFA_Coefficient_Share_PETSc Time : ",ITER_TIME_TABLE(16)
-    WRITE(FILE_ID,123)"         CFA_Convergence_Check Time : ",ITER_TIME_TABLE(17)
-    WRITE(FILE_ID,123)"               Total Iteration Time : ",ITER_TIME_TABLE(18)
-    WRITE(FILE_ID,123)"             Poseidon_Dist_Sol Time : ",ITER_TIME_TABLE(19)
-    WRITE(FILE_ID,120)"============================================================="
-    WRITE(FILE_ID,121)" "
-    WRITE(FILE_ID,121)" "
-    WRITE(FILE_ID,121)" "
-    WRITE(FILE_ID,121)" "
-
+    FILE_ID(1) = ITER_REPORT_FILE_ID
 END IF
 
 
 
+! Write Title to File
+DO i = 0,1
+
+    IF ( FILE_ID(i) .NE. -1 ) THEN
+
+        WRITE(FILE_ID(i),'(A)')"                                     Timing Results"
+        WRITE(FILE_ID(i),'(A)')"            ============================================================="
+        WRITE(FILE_ID(i),'(A)')" "
+        WRITE(FILE_ID(i),123)"                    Initialize Time : ",ITER_TIME_TABLE(1)
+        WRITE(FILE_ID(i),123)" Input/Communicate Source Data Time : ",ITER_TIME_TABLE(2)
+        WRITE(FILE_ID(i),123)"     Input Boundary Conditions Time : ",ITER_TIME_TABLE(3)
+        WRITE(FILE_ID(i),123)"        CFA_3D_Apply_BCs_Part1 Time : ",ITER_TIME_TABLE(4)
+        WRITE(FILE_ID(i),120)"-------------------------------------------------------------"
+        WRITE(FILE_ID(i),123)" ||     Calc_3D_Current_Values Time : ",ITER_TIME_TABLE(5)
+        WRITE(FILE_ID(i),123)" ||    CREATE_3D_SubJcbn_Terms Time : ",ITER_TIME_TABLE(6)
+        WRITE(FILE_ID(i),123)" ||       CREATE_3D_RHS_VECTOR Time : ",ITER_TIME_TABLE(7)
+        WRITE(FILE_ID(i),123)"\  /     CREATE_3D_JCBN_MATRIX Time : ",ITER_TIME_TABLE(8)
+        WRITE(FILE_ID(i),120)"-\/ ---------------------------------------------------------"
+        WRITE(FILE_ID(i),123)"CREATE_3D_NONLAPLACIAN_STF_MAT Time : ",ITER_TIME_TABLE(9)
+        WRITE(FILE_ID(i),123)"REDUCE_3D_NONLAPLACIAN_STF_MAT Time : ",ITER_TIME_TABLE(10)
+        WRITE(FILE_ID(i),123)"FINISH_3D_NONLAPLACIAN_STF_MAT Time : ",ITER_TIME_TABLE(11)
+        WRITE(FILE_ID(i),123)"          FINISH_3D_RHS_VECTOR Time : ",ITER_TIME_TABLE(12)
+        WRITE(FILE_ID(i),123)"        CFA_3D_Apply_BCs_Part2 Time : ",ITER_TIME_TABLE(13)
+        WRITE(FILE_ID(i),123)"                    CFA_Solver Time : ",ITER_TIME_TABLE(14)
+        WRITE(FILE_ID(i),123)"        CFA_Coefficient_Update Time : ",ITER_TIME_TABLE(15)
+        WRITE(FILE_ID(i),123)"   CFA_Coefficient_Share_PETSc Time : ",ITER_TIME_TABLE(16)
+        WRITE(FILE_ID(i),123)"         CFA_Convergence_Check Time : ",ITER_TIME_TABLE(17)
+        WRITE(FILE_ID(i),123)"               Total Iteration Time : ",ITER_TIME_TABLE(18)
+        WRITE(FILE_ID(i),123)"             Poseidon_Dist_Sol Time : ",ITER_TIME_TABLE(19)
+        WRITE(FILE_ID(i),120)"============================================================="
+        WRITE(FILE_ID(i),121)" "
+        WRITE(FILE_ID(i),121)" "
+        WRITE(FILE_ID(i),121)" "
+        WRITE(FILE_ID(i),121)" "
+
+        WRITE(FILE_ID(i),'(A,I2.2,A)')"                        Iteration ",Iter," Results"
+        WRITE(FILE_ID(i),'(A)')"            ============================================================="
+        WRITE(FILE_ID(i),'(A)')" "
+        WRITE(FILE_ID(i),110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+
+    END IF
+END DO
 
 
 
@@ -718,13 +766,7 @@ IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
     END IF
 END IF
 
-! Write Results Table Header to File
-IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    WRITE(FILE_ID,'(A)')"                                   Iterations Results"
-    WRITE(FILE_ID,'(A)')"            ============================================================="
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
-END IF
+
 
 
 deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
@@ -761,20 +803,103 @@ DO i = 0,ITER_REPORT_NUM_SAMPLES
     END IF
 
     ! Write Results to File
-    IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-        WRITE(FILE_ID,111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
-    END IF
+    DO j = 0,1
+        IF ( FILE_ID(j) .NE. -1 ) THEN
+            WRITE(FILE_ID(j),111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+        END IF
+    END DO ! j Loop
 
-END DO
+END DO  ! i Loop
 
 
-
-
-
+WRITE( FRAME_REPORT_FILE_ID, '(4/)')
 
 END SUBROUTINE OUTPUT_ITERATION_REPORT
 
 
+
+
+
+
+
+
+
+!+501+##########################################################################!
+!                                                                               !
+!                   OUTPUT_GUESS                                                !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE OUTPUT_GUESS(Iter, Rank)
+
+INTEGER, INTENT(IN)                 :: Iter, Rank
+
+INTEGER                                         ::  FILE_ID
+INTEGER                                         ::  i
+REAL(KIND = idp)                                ::  r, theta, phi, deltar
+REAL(KIND = idp)                                ::  Analytic_Val, Solver_Val
+REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
+REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
+REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
+
+120 FORMAT (A61)
+121 FORMAT (A1)
+122 FORMAT (A41,I2.2)
+123 FORMAT (A38,ES22.15)
+
+109 FORMAT (A,I2.2,A,I2.2)
+110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
+111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
+112 FORMAT (A43,I2.2,A2,I2.2,A4)
+
+
+
+
+! Write Results Table Header to Screen
+IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+    IF ( Rank == 0 ) THEN
+        PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
+        WRITE(*,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+    END IF
+END IF
+
+deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+DO i = 0,ITER_REPORT_NUM_SAMPLES
+
+    r = i*deltar + R_INNER
+    theta = pi/2.0_idp
+    phi = pi/2.0_idp
+
+
+    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+                                    Return_Psi, Return_AlphaPsi,                &
+                                    Return_Beta1, Return_Beta2, Return_Beta3    )
+
+    ! Determine the Newtonian Potential at the location r, theta, phi
+    Analytic_Val = Analytic_Solution(r,theta,phi)
+
+
+    ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
+    ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
+
+    ! Calculate Conformal Factor value from Newtonian Potential
+    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+
+    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
+    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
+
+
+    ! Write Results to Screen
+    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        IF ( Rank == 0 ) THEN
+            WRITE(*,111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+        END IF
+    END IF
+
+
+END DO
+
+
+END SUBROUTINE OUTPUT_GUESS
 
 
 
@@ -791,38 +916,73 @@ SUBROUTINE CONVERGENCE_CHECK(CONVERGED, Iteration)
 LOGICAL, INTENT(INOUT)              :: CONVERGED
 INTEGER, INTENT(IN)                 :: Iteration
 
-INTEGER                             :: FILE_ID
+INTEGER, DIMENSION(0:1)                                 ::  FILE_ID
+INTEGER                                                 ::  i
+
+FILE_ID = -1
+IF ( FRAME_REPORT_FLAG == 1 ) THEN
+    FILE_ID(0) = FRAME_REPORT_FILE_ID
+END IF
+
+IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+    FILE_ID(1) = ITER_REPORT_FILE_ID
+END IF
+
+
+
 
 IF (myID_Poseidon == 0) THEN
 
-    FILE_ID = ITER_REPORT_FILE_ID
-    WRITE(FILE_ID,'(A)')"                                 Convergence Results"
-    WRITE(FILE_ID,'(A)')"            ============================================================="
-    WRITE(FILE_ID,'(A)')""
-    WRITE(FILE_ID,'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(Update_Vector)) ",MAXVAL(ABS(Update_Vector)),   &
-                                          "  Criteria ",Convergence_Criteria
+
 
     IF ( MAXVAL(ABS(Update_Vector)) .LE. Convergence_Criteria ) THEN
-        IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-            WRITE(FILE_ID,'(A,I2.2,A,ES22.15,A,ES22.15)')"CONVERGED IN ", Iteration,                 &
-                                                         " Iterations", MAXVAL(ABS(Update_Vector)),  &
-                                                         " <= ",Convergence_Criteria
-            WRITE(FILE_ID,'(A)')" "
-        END IF
+
         CONVERGED = .TRUE.
         CONVERGENCE_FLAG = 1
 
     ELSE IF ( Iteration .GE. Max_Iterations ) THEN
-        IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-            WRITE(FILE_ID,'(A)')"Iteration Exceeded Max Iteration Limit"
-            WRITE(FILE_ID,'(A)')" "
-        END IF
+
         CONVERGED = .TRUE.
         CONVERGENCE_FLAG = 2
+
     END IF
 
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,'(A)')" "
+
+!   Add the current iteration's convergence check value to the frame table
+    Frame_Convergence_Table(Iteration) =    MAXVAL(ABS(Update_Vector))
+
+!   Output data to files
+    DO i = 0,1
+        IF ( FILE_ID(i) .NE. -1 ) THEN
+            WRITE(FILE_ID(i),'(A)')"                                 Convergence Results"
+            WRITE(FILE_ID(i),'(A)')"            ============================================================="
+            WRITE(FILE_ID(i),'(A)')""
+            WRITE(FILE_ID(i),'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(Update_Vector)) ",      &
+                                                     MAXVAL(ABS(Update_Vector)),                            &
+                                                     "  Criteria ",Convergence_Criteria
+            IF ( CONVERGENCE_FLAG == 1 ) THEN
+                WRITE(FILE_ID(i),'(A,I2.2,A,ES22.15,A,ES22.15)')"CONVERGED IN ", Iteration," Iterations"
+            ELSE IF ( CONVERGENCE_FLAG == 2 ) THEN
+                WRITE(FILE_ID(i),'(A)')"Iteration Exceeded Max Iteration Limit"
+            END IF
+            WRITE(FILE_ID(i),'(3/)')
+
+
+
+        END IF
+    END DO
+
+
+!   Output data to screen
+    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        WRITE(*,'(A)')"                                 Convergence Results"
+        WRITE(*,'(A)')"            ============================================================="
+        WRITE(*,'(A)')""
+        WRITE(*,'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(Update_Vector)) ",MAXVAL(ABS(Update_Vector)),   &
+                                              "  Criteria ",Convergence_Criteria
+    END IF
+
+
 
 END IF
 

@@ -27,35 +27,41 @@ PROGRAM Poseidon_CFA                                                            
 USE Poseidon_Constants_Module, &
             ONLY :  idp, pi
 
-USE CHIMERA_Parameters, &
-            ONLY :  CHIMERA_R_ELEMS,        &
-                    CHIMERA_C_ELEMS,        &
-                    CHIMERA_T_ELEMS,        &
-                    CHIMERA_P_ELEMS,        &
-                    CHIMERA_R_INPUT_NODES,  &
-                    CHIMERA_T_INPUT_NODES,  &
-                    CHIMERA_P_INPUT_NODES,  &
-                    CHIMERA_LEFT_LIMIT,     &
-                    CHIMERA_RIGHT_LIMIT,    &
-                    CHIMERA_INNER_RADIUS,   &
-                    CHIMERA_CORE_RADIUS,    &
-                    CHIMERA_OUTER_RADIUS,   &
-                    CHIMERA_MESH_TYPE,      &
-                    CHIMERA_R_LOCS,         &
-                    CHIMERA_T_LOCS,         &
-                    CHIMERA_P_LOCS,         &
-                    CHIMERA_Delta_R,        &
-                    CHIMERA_Delta_T,        &
-                    CHIMERA_Delta_P,        &
+USE DRIVER_Parameters, &
+            ONLY :  DRIVER_R_ELEMS,        &
+                    DRIVER_C_ELEMS,        &
+                    DRIVER_T_ELEMS,        &
+                    DRIVER_P_ELEMS,        &
+                    DRIVER_R_INPUT_NODES,  &
+                    DRIVER_T_INPUT_NODES,  &
+                    DRIVER_P_INPUT_NODES,  &
+                    DRIVER_LEFT_LIMIT,     &
+                    DRIVER_RIGHT_LIMIT,    &
+                    DRIVER_INNER_RADIUS,   &
+                    DRIVER_CORE_RADIUS,    &
+                    DRIVER_OUTER_RADIUS,   &
+                    DRIVER_MESH_TYPE,      &
+                    DRIVER_R_LOCS,         &
+                    DRIVER_T_LOCS,         &
+                    DRIVER_P_LOCS,         &
+                    DRIVER_Delta_R,        &
+                    DRIVER_Delta_T,        &
+                    DRIVER_Delta_P,        &
                     ENCLOSED_MASS,          &
-                    CHIMERA_Potential,      &
-                    CHIMERA_E,              &
-                    CHIMERA_S,              &
-                    CHIMERA_Si,             &
-                    CHIMERA_DIMENSION,      &
-                    CHIMERA_PROCS,          &
-                    CHIMERA_y_PROCS,        &
-                    CHIMERA_z_PROCS,        &
+                    DRIVER_POTENTIAL,      &
+                    DRIVER_SHIFT_VAL,      &
+                    DRIVER_LAPSE_VAL,      &
+                    DRIVER_E,              &
+                    DRIVER_S,              &
+                    DRIVER_Si,             &
+                    DRIVER_TEST_NUMBER,    &
+                    DRIVER_FRAME,          &
+                    DRIVER_START_FRAME,    &
+                    DRIVER_END_FRAME,      &
+                    DRIVER_DIMENSION,      &
+                    DRIVER_PROCS,          &
+                    DRIVER_y_PROCS,        &
+                    DRIVER_z_PROCS,        &
                     MPI_COMM_XY,            &
                     MPI_COMM_XZ,            &
                     MPI_COMM_GRID,          &
@@ -67,14 +73,17 @@ USE CHIMERA_Parameters, &
                     myID_phi,               &
                     ngrid,                  &
                     SELFSIM_T,              &
+                    SELFSIM_START_T,        &
+                    SELFSIM_END_T,          &
+                    SELFSIM_NUM_FRAMES,     &
                     SELFSIM_KAPPA,          &
-                    SELFSIM_GAMMA
+                    SELFSIM_GAMMA,          &
+                    CHIMERA_START_FRAME,    &
+                    CHIMERA_END_FRAME
 
-USE CHIMERA_Params_Read_Module, &
-            ONLY :  Unpack_CHIMERA_Parameters
+USE Driver_Params_Read_Module, &
+            ONLY :  Unpack_Driver_Parameters
 
-USE SelfSimilar_Module, &
-            ONLY :  UNPACK_SELF_SIMILAR
 
 USE CHIMERA_HDF5_Module, &
             ONLY :  Load_CHIMERA_HDF5
@@ -89,17 +98,23 @@ USE Units_Module, &
 
 
 
-
 USE Test_Functions_Module, &
             ONLY :  Poseidon_Initialize_CFA_Test_Problem_CHIMERA
 
 
-
+USE IO_Functions_Module, &
+            ONLY :  Open_Run_Report_File,                           &
+                    Output_Run_Report,                              &
+                    Close_Run_Report_File,                          &
+                    Open_Frame_Report_File,                         &
+                    Output_Frame_Report,                            &
+                    Close_Frame_Report_File
 
 
 
 USE Poseidon_Interface, &
-            ONLY :  Poseidon_CFA_3D
+            ONLY :  Poseidon_CFA_3D,                                &
+                    Poseidon_Shutdown
 
 
 USE Additional_Functions_Module, &
@@ -217,8 +232,8 @@ INTEGER                                                     :: Num_y_Procs, Num_
 INTEGER                                                     :: n_y_procs, n_z_procs
 INTEGER                                                     :: j_block_col, k_block_row
 
-INTEGER                                                     ::  CHIMERA_COMM_WORLD,     &
-                                                                CHIMERA_GROUP_WORLD,    &
+INTEGER                                                     ::  DRIVER_COMM_WORLD,     &
+                                                                DRIVER_GROUP_WORLD,    &
                                                                 MPI_GROUP_WORLD
 
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  Workers_Array
@@ -249,16 +264,19 @@ REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE           ::  Local_S
 REAL(KIND = idp), DIMENSION(:,:,:,:,:), ALLOCATABLE         ::  Local_Si
 
 
-INTEGER                       :: Test_Num
-INTEGER                       :: Mesh_Type
+INTEGER                         :: Test_Num
+INTEGER                         :: Mesh_Type
+INTEGER                         :: FIRST_FRAME_FLAG
+INTEGER                         :: CHIMERA_FRAME
+REAL(KIND = idp)                :: SELFSIM_TIME
+REAL(KIND = idp)                :: SELFSIM_DELTA_T
 
+INTEGER                         :: file_number=00001
+INTEGER                         :: stride=1
 
-INTEGER                       :: file_number=00002
-INTEGER                       :: stride=1
+LOGICAL                         :: frame_flag=.TRUE.
 
-LOGICAL                       :: frame_flag=.TRUE.
-
-CHARACTER(len=12)              :: path='Data3/Frames'
+CHARACTER(len=12)               :: path='Data3/Frames'
 
 CALL MPI_INIT(ierr)
 
@@ -271,32 +289,36 @@ CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
 !!      CHIMERA Setup Parameters        !!
 !!                                      !!
 
-CALL Unpack_CHIMERA_Parameters()
+CALL Unpack_DRIVER_Parameters()
 
 
 
 
 
-ALLOCATE( CHIMERA_R_LOCS(0:CHIMERA_R_ELEMS+1),  &
-          CHIMERA_T_LOCS(0:CHIMERA_T_ELEMS+1),  &
-          CHIMERA_P_LOCS(0:CHIMERA_P_ELEMS+1)   )
+ALLOCATE( DRIVER_R_LOCS(0:DRIVER_R_ELEMS+1),  &
+          DRIVER_T_LOCS(0:DRIVER_T_ELEMS+1),  &
+          DRIVER_P_LOCS(0:DRIVER_P_ELEMS+1)   )
 
-ALLOCATE( CHIMERA_Delta_R(0:CHIMERA_R_ELEMS),   &
-          CHIMERA_Delta_T(0:CHIMERA_T_ELEMS),   &
-          CHIMERA_DELTA_P(0:CHIMERA_P_ELEMS)    )
+ALLOCATE( DRIVER_Delta_R(0:DRIVER_R_ELEMS-1),   &
+          DRIVER_Delta_T(0:DRIVER_T_ELEMS-1),   &
+          DRIVER_DELTA_P(0:DRIVER_P_ELEMS-1)    )
 
-ALLOCATE( Enclosed_Mass(0:CHIMERA_R_ELEMS+1) )
-ALLOCATE( CHIMERA_Potential(0:CHIMERA_R_ELEMS) )
-ALLOCATE( CHIMERA_E(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS,1:CHIMERA_P_ELEMS) )
-ALLOCATE( CHIMERA_S(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS,1:CHIMERA_P_ELEMS) )
-ALLOCATE( CHIMERA_Si(1:CHIMERA_R_ELEMS,1:CHIMERA_T_ELEMS,1:CHIMERA_P_ELEMS, 1:3) )
+ALLOCATE( Enclosed_Mass(0:DRIVER_R_ELEMS+1) )
+ALLOCATE( DRIVER_Potential(0:DRIVER_R_ELEMS) )
+ALLOCATE( DRIVER_SHIFT_VAL(0:DRIVER_R_ELEMS) )
 
 
 
-Num_Input_Nodes(1) = CHIMERA_R_INPUT_NODES
-Num_Input_Nodes(2) = CHIMERA_T_INPUT_NODES
-Num_Input_Nodes(3) = CHIMERA_P_INPUT_NODES
+Num_Input_Nodes(1) = DRIVER_R_INPUT_NODES
+Num_Input_Nodes(2) = DRIVER_T_INPUT_NODES
+Num_Input_Nodes(3) = DRIVER_P_INPUT_NODES
 Num_DOF = Num_Input_Nodes(1)*Num_Input_Nodes(2)*Num_Input_Nodes(3)
+
+
+ALLOCATE( DRIVER_E(1:Num_DOF, 0:DRIVER_R_ELEMS-1,0:DRIVER_T_ELEMS-1,0:DRIVER_P_ELEMS-1) )
+ALLOCATE( DRIVER_S(1:Num_DOF, 0:DRIVER_R_ELEMS-1,0:DRIVER_T_ELEMS-1,0:DRIVER_P_ELEMS-1) )
+ALLOCATE( DRIVER_Si(1:Num_DOF, 0:DRIVER_R_ELEMS-1,0:DRIVER_T_ELEMS-1,0:DRIVER_P_ELEMS-1, 1:3) )
+
 
 ALLOCATE(   Input_R_Quad(1:Num_Input_Nodes(1)),         &
             Input_T_Quad(1:Num_Input_Nodes(2)),         &
@@ -319,21 +341,21 @@ CALL Set_Units( "C" )
 !!                                       !!
 !!   Poseidon Initialization Variables   !!
 !!                                       !!
-Left_Limit          = CHIMERA_LEFT_LIMIT
-Right_Limit         = CHIMERA_RIGHT_LIMIT
-Num_Procs           = CHIMERA_PROCS
-Num_y_Procs         = CHIMERA_y_PROCS
-Num_z_Procs         = CHIMERA_z_PROCS
-Problem_Dimension   = CHIMERA_DIMENSION
-Inner_Radius        = CHIMERA_INNER_RADIUS
-Core_Radius         = CHIMERA_CORE_RADIUS
-Outer_Radius        = CHIMERA_OUTER_RADIUS
-nx                  = CHIMERA_R_ELEMS
-nc                  = CHIMERA_C_ELEMS
-ny                  = CHIMERA_T_ELEMS
-nz                  = CHIMERA_P_ELEMS
-MESH_TYPE           = CHIMERA_MESH_TYPE
-TEST_NUM            = 3
+Left_Limit          = DRIVER_LEFT_LIMIT
+Right_Limit         = DRIVER_RIGHT_LIMIT
+Num_Procs           = DRIVER_PROCS
+Num_y_Procs         = DRIVER_y_PROCS
+Num_z_Procs         = DRIVER_z_PROCS
+Problem_Dimension   = DRIVER_DIMENSION
+Inner_Radius        = DRIVER_INNER_RADIUS
+Core_Radius         = DRIVER_CORE_RADIUS
+Outer_Radius        = DRIVER_OUTER_RADIUS
+nx                  = DRIVER_R_ELEMS
+nc                  = DRIVER_C_ELEMS
+ny                  = DRIVER_T_ELEMS
+nz                  = DRIVER_P_ELEMS
+MESH_TYPE           = DRIVER_MESH_TYPE
+TEST_NUM            = DRIVER_TEST_NUMBER
 
 
 
@@ -347,8 +369,8 @@ TEST_NUM            = 3
 
 IF ( NUM_PROCS == nPROCS ) THEN
 
-    CALL MPI_COMM_DUP(MPI_COMM_WORLD, CHIMERA_COMM_WORLD, ierr)
-    CALL MPI_COMM_RANK(CHIMERA_COMM_WORLD, myID_Chimera, ierr)
+    CALL MPI_COMM_DUP(MPI_COMM_WORLD, DRIVER_COMM_WORLD, ierr)
+    CALL MPI_COMM_RANK(DRIVER_COMM_WORLD, myID_Chimera, ierr)
 
 ELSE IF ( NUM_PROCS < nPROCs ) THEN
 
@@ -363,19 +385,19 @@ ELSE IF ( NUM_PROCS < nPROCs ) THEN
     CALL MPI_Group_incl(    MPI_GROUP_WORLD,            &
                             NUM_PROCS,                  &
                             Workers_Array,              &
-                            CHIMERA_GROUP_WORLD,        &
+                            DRIVER_GROUP_WORLD,        &
                             ierr                        )
 
 
     CALL MPI_Comm_create_group( MPI_COMM_WORLD,             &
-                                CHIMERA_GROUP_WORLD,        &
+                                DRIVER_GROUP_WORLD,        &
                                 0,                          &
-                                CHIMERA_COMM_WORLD,         &
+                                DRIVER_COMM_WORLD,         &
                                 ierr                        )
 
-    IF ( MPI_COMM_NULL .NE. CHIMERA_COMM_WORLD ) THEN
+    IF ( MPI_COMM_NULL .NE. DRIVER_COMM_WORLD ) THEN
 
-        CALL MPI_COMM_RANK(CHIMERA_COMM_WORLD, myID_Chimera, ierr)
+        CALL MPI_COMM_RANK(DRIVER_COMM_WORLD, myID_Chimera, ierr)
     ELSE
 
         ! If process doesn't belong give bogus id.
@@ -483,113 +505,126 @@ END IF
 !
 
 ALLOCATE( x_e(0:nx), x_c(1:nx), y_e(-5:ny+7), y_c(-5:ny+6), z_e(-5:ny+7), z_c(-5:ny+6) )
-ALLOCATE(dx_c(1:nx))
-ALLOCATE(dy_c(-5:ny+6), tmp_dy_c(1:ny))
-ALLOCATE(dz_c(-5:nz+6), tmp_dz_c(1:nz))
+ALLOCATE( dx_c(1:nx))
+ALLOCATE( dy_c(-5:ny+6), tmp_dy_c(1:ny))
+ALLOCATE( dz_c(-5:nz+6), tmp_dz_c(1:nz))
+
+ALLOCATE(   Local_E(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1    ),             &
+            Local_S(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1     ),            &
+            Local_Si(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1, 1:3)            )
+
+ALLOCATE( DRIVER_LAPSE_VAL(0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1) )
 
 
+
+
+
+
+!
+!   Set Up Frame Iterations
+!
 IF ( TEST_NUM == 2 ) THEN
 
-    CALL Load_CHIMERA_HDF5(file_number, stride, path, frame_flag)
+    DRIVER_START_FRAME = 1
+    DRIVER_END_FRAME = CHIMERA_END_FRAME - CHIMERA_START_FRAME + 1
 
-    dx_c(0:nx) = CHIMERA_Delta_R(0:nx)
-    dy_c(0:ny) = CHIMERA_Delta_T(0:ny)
-    dz_c(0:nz) = CHIMERA_Delta_P(0:nz)
+ELSE IF ( TEST_NUM == 3 ) THEN
+
+    DRIVER_START_FRAME = 1
+    DRIVER_END_FRAME = SELFSIM_NUM_FRAMES
+    IF ( SELFSIM_NUM_FRAMES .NE. 1 ) THEN
+        SELFSIM_DELTA_T = (SELFSIM_END_T - SELFSIM_START_T)/(SELFSIM_NUM_FRAMES-1)
+    ELSE
+        SELFSIM_DELTA_T = SELFSIM_START_T
+    END IF
+
+END IF
+FIRST_FRAME_FLAG = 1
 
 
-    x_e(0:nx) = CHIMERA_R_LOCS(0:nx)
-    y_e(0:ny) = CHIMERA_T_LOCS(0:ny)
-    z_e(0:nz) = CHIMERA_P_LOCS(0:nz)
-
-ELSE
-
-    CALL Create_3D_Mesh( Mesh_Type,                                    &
-                         Inner_Radius, Core_Radius, Outer_Radius,      &
-                         nx, nc, ny, nz,                               &
-                         x_e, x_c, dx_c,                               &
-                         y_e(0:ny), y_c(1:ny), dy_c(1:ny),             &
-                         z_e(0:nz), z_c(1:nz), dz_c(1:nz)              )
-
-    OPEN( UNIT = 42, file = 'OUTPUT/R_Mesh.out')
-    WRITE(42,*) x_e
-    CLOSE( UNIT = 42)
-
+IF ( myID == 0 ) THEN
+    CALL Open_Run_Report_File()
 END IF
 
 
 
 
 
-!
-!   RECREATE CHIMERA LOCAL DATA
-!
+DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
+
+    CALL OPEN_FRAME_REPORT_FILE(DRIVER_FRAME)
 
 
-!                                                                       !
-!   For this example the quadrature points in each dimension are the    !
-!   Lobatto quadrature points.                                          !
-!                                                                       !
-Input_R_Quad = Initialize_LG_Quadrature_Locations(Num_Input_Nodes(1))
-Input_T_Quad = Initialize_LG_Quadrature_Locations(Num_Input_Nodes(2))
-Input_P_Quad = Initialize_LG_Quadrature_Locations(Num_Input_Nodes(3))
+    WRITE(*,'(A16,I3.3,A4,I3.3)')"Current Frame = ",DRIVER_FRAME," of ",DRIVER_END_FRAME
+    IF ( TEST_NUM == 3 ) THEN
+        !  Yahil Self-Similar Test, Calculate Time Parameter
+        SELFSIM_T = (DRIVER_FRAME - 1 )*SELFSIM_DELTA_T + SELFSIM_START_T
+        WRITE(*,'(A13,ES17.10,A4)')"Yahil Time = ",SELFSIM_T," ms."
+    END IF
 
 
+    IF ( TEST_NUM == 2 ) THEN
+        !  CHIMERA Test, Calculate Current CHIMERA Frame
+
+        CHIMERA_FRAME = CHIMERA_START_FRAME + DRIVER_FRAME - 1
+        WRITE(*,'(A28,I3.3)')"CHIMERA HDF5 Frame number = ",CHIMERA_FRAME
 
 
-!                                                                       !
-!   As the Lobatto points are defined in [-1,1] space, but we want to   !
-!   provide source input on a [-.5, .5] space, we need to map the       !
-!   the locations from one space to the other.                          !
-!                                                                       !
+        CALL Load_CHIMERA_HDF5(CHIMERA_FRAME, stride, path, frame_flag)
 
-!   Function - Map_From_X_Space - This Function maps Input_R_Quad (Real Double Value/Vector in [-1,1] space) to
-!                                   a space defined by the limits (Real Double Values)
-Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
-Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
-Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
+        dx_c(1:nx) = DRIVER_Delta_R(0:nx-1)
+        dy_c(1:ny) = DRIVER_Delta_T(0:ny-1)
+        dz_c(1:nz) = DRIVER_Delta_P(0:nz-1)
 
 
-
-ALLOCATE(   Local_E(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1    ),             &
-            Local_S(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1     ),            &
-            Local_Si(1:Num_DOF, 0:nx-1, 0:ij_ray_dim-1, 0:ik_ray_dim-1, 1:3)            )
+        x_e(0:nx) = DRIVER_R_LOCS(0:nx)
+        y_e(0:ny) = DRIVER_T_LOCS(0:ny)
+        z_e(0:nz) = DRIVER_P_LOCS(0:nz)
 
 
 
+    ELSE
 
+        ! Other Test, Create Mesh
+        CALL Create_3D_Mesh( Mesh_Type,                                    &
+                             Inner_Radius, Core_Radius, Outer_Radius,      &
+                             nx, nc, ny, nz,                               &
+                             x_e, x_c, dx_c,                               &
+                             y_e(0:ny), y_c(1:ny), dy_c(1:ny),             &
+                             z_e(0:nz), z_c(1:nz), dz_c(1:nz)              )
 
+        OPEN( UNIT = 42, file = 'OUTPUT/R_Mesh.out')
+        WRITE(42,*) x_e
+        CLOSE( UNIT = 42)
 
-
-
-
-!
-!   Initialize Source Variables Based on Test Problem
-!
-CALL Poseidon_Initialize_CFA_Test_Problem_CHIMERA(  Test_Num, nx, ny, nz,               &
-                                                    nx, ij_ray_dim, ik_ray_dim,         &
-                                                    Num_Input_Nodes,                    &
-                                                    Input_R_Quad,                       &
-                                                    dx_c, x_e,                          &
-                                                    Local_E, Local_S, Local_Si          )
+    END IF
 
 
 
 
 
-!
-!   Call Poseidon Interface
-!
-mode = 1
-modeb = 0
-imin = 1
-imax = nx
-CALL Poseidon_CFA_3D(   mode, modeb, imin, imax, nx,                    &
-                        ij_ray_dim, ik_ray_dim, ny, nz,                 &
-                        x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,      &
-                        Num_Input_Nodes,                                &
-                        Input_R_Quad, Input_T_Quad, Input_P_Quad,       &
-                        Left_Limit, Right_Limit,                        &
-                        Local_E, Local_S, Local_Si                      )
+    !                                                                       !
+    !   For this example the quadrature points in each dimension are the    !
+    !   Lobatto quadrature points.                                          !
+    !                                                                       !
+    Input_R_Quad = Initialize_LG_Quadrature_Locations(Num_Input_Nodes(1))
+    Input_T_Quad = Initialize_LG_Quadrature_Locations(Num_Input_Nodes(2))
+    Input_P_Quad = Initialize_LG_Quadrature_Locations(Num_Input_Nodes(3))
+
+
+
+
+    !                                                                       !
+    !   As the Lobatto points are defined in [-1,1] space, but we want to   !
+    !   provide source input on a [-.5, .5] space, we need to map the       !
+    !   the locations from one space to the other.                          !
+    !                                                                       !
+
+    !   Function - Map_From_X_Space - This Function maps Input_R_Quad (Real Double Value/Vector in [-1,1] space) to
+    !                                   a space defined by the limits (Real Double Values)
+    Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
+    Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
+    Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
 
 
@@ -601,13 +636,73 @@ CALL Poseidon_CFA_3D(   mode, modeb, imin, imax, nx,                    &
 
 
 
+    !
+    !   Initialize Source Variables Based on Test Problem
+    !
+    CALL Poseidon_Initialize_CFA_Test_Problem_CHIMERA(  Test_Num, nx, ny, nz,               &
+                                                        nx, ij_ray_dim, ik_ray_dim,         &
+                                                        Num_Input_Nodes,                    &
+                                                        Input_R_Quad, Input_T_Quad,         &
+                                                        dx_c, x_e, y_e(0:ny),               &
+                                                        Local_E, Local_S, Local_Si          )
+
+
+    !
+    !   Call Poseidon Interface
+    !
+
+    modeb = 0
+    imin = 1
+    imax = nx
+    !   CHOOSE OPERATIONAL MODE
+    !
+    !   Mode = 0    :   Initalize, Run
+    !   Mode = 1    :              Run
+    !   Mode = 2    :              Run, Close
+    !   Mode = 3    :   Initalize, Run, Close
+
+
+    IF ( FIRST_FRAME_FLAG == 1 ) THEN
+        mode = 0
+    ELSE IF ( DRIVER_FRAME == DRIVER_END_FRAME) THEN
+        mode = 2
+    ELSE IF ( ( DRIVER_FRAME == DRIVER_END_FRAME) .AND. ( FIRST_FRAME_FLAG == 1 ) ) THEN
+        mode = 3
+    ELSE
+        mode = 1
+    END IF
+
+    CALL Poseidon_CFA_3D(   mode, modeb, imin, imax, nx,                    &
+                            ij_ray_dim, ik_ray_dim, ny, nz,                 &
+                            x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,      &
+                            Num_Input_Nodes,                                &
+                            Input_R_Quad, Input_T_Quad, Input_P_Quad,       &
+                            Left_Limit, Right_Limit,                        &
+                            Local_E, Local_S, Local_Si                      )
+
+
+
+    CALL OUTPUT_FRAME_REPORT(DRIVER_FRAME)
+    CALL CLOSE_FRAME_REPORT_FILE()
+    FIRST_FRAME_FLAG = 0
+END DO ! Frame Loop
+
+
+
+IF ( myID == 0 ) THEN
+    CALL OUTPUT_RUN_REPORT()
+!    CALL CLOSE_RUN_REPORT_FILE()
+END IF
+
+CALL Poseidon_Shutdown()
 CALL MPI_Finalize(ierr)
 
 
-
+WRITE(*,'(//A18//)')"DING! You're Done!"
 
 
 
 
 
 END PROGRAM Poseidon_CFA
+
