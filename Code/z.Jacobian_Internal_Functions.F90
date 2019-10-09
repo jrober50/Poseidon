@@ -244,6 +244,8 @@ Coefficient_Vector = 0.0_idp
 csqr = Speed_of_Light*Speed_of_Light
 
 
+!PRINT*,"ALPHA_PSI initial guess set to one"
+
 
 DO re = 0,NUM_R_ELEMENTS - 1
 
@@ -263,7 +265,7 @@ DO re = 0,NUM_R_ELEMENTS - 1
 
 
         CUR_ALPHPSI_LOC = (re*Degree + rd)*(ULM_LENGTH) + 1
-
+!        Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)
         Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)                                    &
                                         * ( 1.0_idp + 0.5_idp                                       &
                                             * Analytic_Solution(R_Values(rd),0.0_idp,0.0_idp)/csqr  )

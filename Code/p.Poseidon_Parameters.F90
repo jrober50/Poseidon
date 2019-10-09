@@ -91,6 +91,7 @@ INTEGER                     ::  RUN_REPORT_FILE_ID
 INTEGER                     ::  ITER_REPORT_FILE_ID
 INTEGER                     ::  FRAME_REPORT_FILE_ID
 
+INTEGER                     ::  OUTPUT_MATRIX_FLAG
 
 INTEGER                     ::  NEW_PETSC_SOLVER_FLAG
 

@@ -442,7 +442,6 @@ CALL Initialize_LG_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
 
 
 
-
                                  !                                          !
                                 !!   Initialize Lagrange Polynomial Tables  !!
                                  !                                          !

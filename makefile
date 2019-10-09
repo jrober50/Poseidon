@@ -20,8 +20,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-CMODE	=DEBUG
-#CMODE	=OPTIMIZE
+#CMODE	=DEBUG
+CMODE	=OPTIMIZE
 
 
 ## Compile with Openmp
@@ -155,3 +155,5 @@ clean_output:
 	rm -f $(OUT)/Iteration_Reports/*.out
 	rm -f $(OUT)/CHIMERA_RESULTS/*.out
 	rm -f $(OUT)/Yahil_RESULTS/*.out
+	rm -f $(OUT)/Poseidon_Objects/*.out
+

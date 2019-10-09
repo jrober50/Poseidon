@@ -66,6 +66,7 @@ USE Poseidon_Parameters, &
                                 CONVERGENCE_CRITERIA,       &
                                 CONVERGENCE_FLAG,           &
                                 WRITE_REPORT_FLAG,          &
+                                OUTPUT_MATRIX_FLAG,         &
                                 ITER_REPORT_NUM_SAMPLES,    &
                                 ITER_REPORT_FILE_ID,        &
                                 FRAME_REPORT_FILE_ID
@@ -121,7 +122,8 @@ USE Jacobian_Internal_Functions_Module,  &
 USE IO_Functions_Module, &
                         ONLY :  Clock_In,                   &
                                 OPEN_ITER_REPORT_FILE,      &
-                                CLOSE_ITER_REPORT_FILE
+                                CLOSE_ITER_REPORT_FILE,     &
+                                OUTPUT_JACOBIAN_MATRIX
 
 USE Poseidon_Petsc_Solver, &
                         ONLY : PETSC_Distributed_Solve
@@ -174,6 +176,7 @@ END IF
 
 
 
+
 Cur_Iteration = 1
 CONVERGED = .FALSE.
 DO WHILE ( CONVERGED .EQV. .FALSE. )
@@ -197,7 +200,21 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     !*!
     CALL CFA_3D_Master_Build()
 
-    
+    IF ( OUTPUT_MATRIX_FLAG == 1 ) THEN
+        CALL OUTPUT_JACOBIAN_MATRIX()
+    END IF
+
+
+!    DO i = 0,NUM_R_ELEMENTS-1
+!        DO j = 0,DEGREE
+!            k = Matrix_Location(1, 0, 0, i, j)
+!            l = Matrix_Location(5,L_LIMIT,L_LIMIT,i,j)
+!            PRINT*,i,j
+!            PRINT*,Block_RHS_VECTOR(k:l)
+!            PRINT*," "
+!        END DO
+!    END DO
+
 
 
 
@@ -208,6 +225,8 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     CALL CFA_Solve()
     timec = MPI_Wtime()
     CALL Clock_In(timec-timeb, 14)
+
+
 
 
 !    DO i = 0,NUM_R_ELEMENTS-1
@@ -261,6 +280,7 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
 !            PRINT*," "
 !        END DO
 !    END DO
+
 
 
 

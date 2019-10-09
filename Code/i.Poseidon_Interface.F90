@@ -452,6 +452,8 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     Outer_Potential = Analytic_Solution(rlocs(NUM_R_ELEMENTS), 0.0_idp, 0.0_idp)
 
 
+    !PRINT*,"ALPHAPSI BC set to one"
+    !Pot_to_AlphaPsi = 1.0_idp
     Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/(Speed_of_Light*Speed_of_Light)
     Pot_to_Psi      = 1.0_idp - 0.5_idp*Outer_Potential/(Speed_of_Light*Speed_of_Light)
 

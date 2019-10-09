@@ -362,7 +362,6 @@ TEST_NUM            = DRIVER_TEST_NUMBER
 
 
 
-
 !                                       !
 !       Initialize the MPI World        !
 !                                       !
@@ -598,7 +597,6 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
         CLOSE( UNIT = 42)
 
     END IF
-
 
 
 

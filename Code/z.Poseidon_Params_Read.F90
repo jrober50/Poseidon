@@ -60,6 +60,7 @@ USE Poseidon_Parameters, &
                     P_COARSEN_FACTOR,           &
                     MAX_ITERATIONS,             &
                     CONVERGENCE_CRITERIA,       &
+                    OUTPUT_MATRIX_FLAG,         &
                     WRITE_TIMETABLE_FLAG,       &
                     WRITE_REPORT_FLAG,          &
                     ITER_REPORT_NUM_SAMPLES,    &
@@ -100,7 +101,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE     :: REAL_PARAMS
 
 
 
-NUM_INT_PARAMS  = 25
+NUM_INT_PARAMS  = 26
 NUM_REAL_PARAMS = 1
 
 ALLOCATE( INT_PARAMS(1:NUM_INT_PARAMS) )
@@ -184,9 +185,11 @@ END IF
 NEW_PETSC_SOLVER_FLAG           = INT_PARAMS(25)
 
 
+OUTPUT_MATRIX_FLAG              = INT_PARAMS(26)
 
 
-CONVERGENCE_CRITERIA        = REAL_PARAMS(1)
+
+CONVERGENCE_CRITERIA            = REAL_PARAMS(1)
 
 
 
@@ -418,7 +421,10 @@ IF ( Param_type == 'NPS   ' ) THEN
     CYCLE
 END IF
 
-
+IF ( Param_type == 'OMF   ' ) THEN
+    READ (line, 111) INT_PARAMS(26)
+    CYCLE
+END IF
 
 END DO READ
 

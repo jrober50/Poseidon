@@ -212,7 +212,15 @@ END IF
 
 
 
+PRINT*,"Input_V Zeroed"
+Input_V = 0.0_idp
 
+
+
+PRINT*,"Delta_R"
+print*,Delta_R
+print*,"r_locs"
+print*,r_locs
 
 CALL CONVERT_SELF_SIMILAR_3D(  t, kappa, gamma, ecc,                   &
                             Num_Nodes, NUM_LINES,                   &
@@ -1052,6 +1060,7 @@ WRITE(Rlocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_rlocs_',  Fra
 WRITE(Tlocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_tlocs_',  Frame_Number,'.out'
 WRITE(Plocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_plocs_',  Frame_Number,'.out'
 
+
 OPEN( UNIT = File_ID(1), FILE=Density_Filename   )
 OPEN( UNIT = File_ID(2), FILE=RadVel_Filename    )
 OPEN( UNIT = File_ID(3), FILE=Rlocs_Filename     )
@@ -1117,7 +1126,6 @@ DO pe = 0,NUM_P_ELEM-1
 
                             r_sqr = CUR_R_LOCS(rd)*CUR_R_LOCS(rd)
                             r_eff(rd) = sqrt(ooomes*r_sqr - ooomes*r_sqr*ecc_sqr*sin_sqr)
-
 
 
                             IF ( ( r_eff(rd) > Input_R(Line) ) .AND. ( r_eff(rd) <= Input_R(Line + 1) ) ) THEN

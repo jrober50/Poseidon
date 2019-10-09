@@ -29,13 +29,6 @@ MODULE CFA_3D_Master_Build_Module                                               
 !##!                                                                                !##!
 !##!    +501+   FINISH_3D_RHS_VECTOR                                                !##!
 !##!                                                                                !##!
-!##!    +601+   CFA_3D_Apply_BCs_Part1                                              !##!
-!##!    +602+   CFA_3D_Apply_BCs_Part2                                              !##!
-!##!    +603+   CFA_3D_Dirichlet_BCs_Part1                                          !##!
-!##!    +604+   CFA_3D_Dirichlet_BCs_Part2                                          !##!
-!##!    +605+   CFA_3D_Neumann_BCs                                                  !##!
-!##!                                                                                !##!
-!##!    +701+   Calc_3D_Values_At_Location                                          !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
 !######################################################################################!
@@ -179,6 +172,10 @@ USE Jacobian_Internal_Functions_Module, &
 USE IO_Functions_Module, &
                                 ONLY :  Clock_In
 
+USE Poseidon_BC_Module, &
+                                ONLY :  CFA_3D_Apply_BCs_Part1,         &
+                                        CFA_3D_Apply_BCs_Part2
+
 
 
 IMPLICIT NONE
@@ -205,6 +202,8 @@ timea = 0.0_idp
 timeb = 0.0_idp
 timec = 0.0_idp
 
+
+!PRINT*,"RHS_TERMS(2), SUBJCBN_PSI_TERMS(2), SUBJCBN_ALPHAPSI_TERMS(2) modified, in subjacobian term"
 
 !PRINT*,"IN CFA_3D_Master_Build"
 !PRINT*,"Block_Source_E"
@@ -318,15 +317,25 @@ CALL CFA_3D_Apply_BCs_Part2()
 timec = MPI_Wtime()
 CALL Clock_In(timec-timeb, 13)
 
+
+
 !PRINT*,"RHS_VECTOR"
-!DO i = 0,NUM_R_ELEMENTS-1
-!    DO j = 0,DEGREE
-!        k = CFA_ALL_Matrix_Map(1, 0, i, j)
-!        PRINT*,REAL(Block_RHS_Vector(k), KIND = idp)
+!DO u = 1,5
+!    DO l = 0,LM_LENGTH-1
+!        k = CFA_ALL_Matrix_Map(u, l, 0, 0)
+!        PRINT*,0,0,u,l,REAL(Block_RHS_Vector(k), KIND = idp)
 !    END DO
 !END DO
-!k = CFA_ALL_Matrix_Map(1, 0, NUM_R_ELEMENTS-1, DEGREE)
-!PRINT*,REAL(Block_RHS_Vector(k), KIND = idp)
+!DO i = 0,NUM_R_ELEMENTS-1
+!    DO j = 1,DEGREE
+!        DO u = 1,5
+!            DO l = 0,LM_LENGTH-1
+!                k = CFA_ALL_Matrix_Map(u, l, i, j)
+!                PRINT*,i,j,u,l,REAL(Block_RHS_Vector(k), KIND = idp)
+!            END DO
+!        END DO
+!    END DO
+!END DO
 !WRITE(*,'(/ /)')
 
 
@@ -1225,7 +1234,6 @@ REAL(KIND = idp)                                                            ::  
 
 
 
-
 !$OMP PARALLEL DEFAULT(none)                                            &
 !$OMP PRIVATE( pd, td, rd,                                              &
 !$OMP           PSI_POWER, ALPHAPSI_POWER,                              &
@@ -1261,51 +1269,45 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
         PSI_POWER(1) = CUR_VAL_PSI(rd, td, pd)
         DO i = 2,11
-
             PSI_POWER(i) = PSI_POWER(i-1)*PSI_POWER(1)
-
         END DO
 
 
         ALPHAPSI_POWER(1) = CUR_VAL_ALPHAPSI(rd, td, pd)
         DO i = 2,4
-
             ALPHAPSI_POWER(i) = ALPHAPSI_POWER(i-1)*ALPHAPSI_POWER(1)
-
         END DO
 
 
         ! K_{ij}K^{ij} = Psi^{14}/AlphaPsi^{2} * BIGK
-        JCBN_BIGK_VALUE = JCBN_BIGK_FUNCTION(rd, td, pd,                                        &
-                                                CUR_VAL_BETA, CUR_DRV_BETA,                     &
+        JCBN_BIGK_VALUE = JCBN_BIGK_FUNCTION(rd, td, pd,                                                        &
+                                                CUR_VAL_BETA, CUR_DRV_BETA,                                     &
                                                 CUR_R_LOCS(rd), R_SQUARE(rd), SIN_SQUARE(td), CSC_SQUARE(td),   &
-                                                RSIN_SQUARE(rd, td), COTAN_VAL(td)              )
+                                                RSIN_SQUARE(rd, td), COTAN_VAL(td)                              )
 
 
 
 
-        JCBN_kappa_Array = JCBN_kappa_FUNCTION_3D_ALL( rd, td, pd,                                    &
-                                                CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
-                                                R_INVERSE(rd), RSIN_SQUARE(rd, td),             &
-                                                SIN_VAL(td), SIN_SQUARE(td), CSC_SQUARE(td),    &
-                                                COS_VAL(td), COTAN_VAL(td),                     &
-                                                CUR_VAL_BETA, CUR_DRV_BETA                      )
+        JCBN_kappa_Array = JCBN_kappa_FUNCTION_3D_ALL( rd, td, pd,                                  &
+                                                CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),          &
+                                                R_INVERSE(rd), RSIN_SQUARE(rd, td),                 &
+                                                SIN_VAL(td), SIN_SQUARE(td), CSC_SQUARE(td),        &
+                                                COS_VAL(td), COTAN_VAL(td),                         &
+                                                CUR_VAL_BETA, CUR_DRV_BETA                          )
 
 
 
-        CALL JCBN_kappa_FUNCTION_3D_SUB( rd, td, pd,                                    &
-                                                CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
-                                                R_INVERSE(rd), RSIN_SQUARE(rd, td),             &
-                                                SIN_VAL(td), SIN_SQUARE(td), CSC_SQUARE(td),    &
-                                                COS_VAL(td), COTAN_VAL(td),                     &
-                                                CUR_VAL_BETA, CUR_DRV_BETA                      )
+        CALL JCBN_kappa_FUNCTION_3D_SUB( rd, td, pd,                                                &
+                                                CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),          &
+                                                R_INVERSE(rd), RSIN_SQUARE(rd, td),                 &
+                                                SIN_VAL(td), SIN_SQUARE(td), CSC_SQUARE(td),        &
+                                                COS_VAL(td), COTAN_VAL(td),                         &
+                                                CUR_VAL_BETA, CUR_DRV_BETA                          )
 
 
         JCBN_n_ARRAY(:) = CUR_DRV_ALPHAPSI(:, rd, td, pd) / ALPHAPSI_POWER(1)   &
                             - 7 * CUR_DRV_PSI(:, rd, td, pd )/ PSI_POWER(1)
 
-!        JCBN_n_ARRAY(:) =   CUR_DRV_ALPHAPSI(:, rd, td, pd) / (ALPHAPSI_POWER(1)*PSI_POWER(10))   &
-!                            - 7 * CUR_DRV_PSI(:, rd, td, pd )/ PSI_POWER(11)
 
 
 
@@ -1318,7 +1320,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
       
-
+!         RHS_Terms(2, rd, td, pd) = 0.0_idp
         RHS_Terms(2, rd, td, pd) = TwoPi * ALPHAPSI_POWER(1) * PSI_POWER(4)                             &
                         * GR_Source_Scalar * ( Block_Source_E(rd, td, pd, re, te, pe)                   &
                                                + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe)  )    &
@@ -1329,25 +1331,25 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
 
-        RHS_Terms(3, rd, td, pd) = 16.0_idp * pi                                                &
-                          * ALPHAPSI_POWER(1)                                                   &
-                          * PSI_POWER(3)                                                        &
-                          * GR_Source_Scalar                                                    &
-                          * Block_Source_Si(rd, td, pd, re, te, pe, 1)                          &
-                     + 2.0_idp/R_SQUARE(rd) * CUR_VAL_BETA(1,rd,td,pd)                          &  ! New
-                     + 2.0_idp*COTAN_VAL(td)/CUR_R_LOCS(rd) * CUR_VAL_BETA(2,rd,td,pd)          &  ! New
-                     + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(2,2,rd,td,pd)                      &  ! New
-                     + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(3,3,rd,td,pd)                      &  ! New
-                     - OneThird                                                                 &
-                          * ( CUR_DDRV_BETA(1, 1, 1, rd, td, pd )                               &
-                            + CUR_DDRV_BETA(1, 2, 2, rd, td, pd )                               &
-                            + CUR_DDRV_BETA(1, 3, 3, rd, td, pd )                               &
-                            + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1, 1, rd, td, pd)           &
-                            + COTAN_VAL(td)          * CUR_DRV_BETA(1, 2, rd, td, pd)           &
-                            - 2.0_idp /R_SQUARE(rd)  * CUR_VAL_BETA(1, rd, td, pd )             &
-                            )                                                                   &
-                      + JCBN_n_ARRAY(1)* JCBN_kappa_Array(1,1)                                     &
-                      + JCBN_n_ARRAY(2)* JCBN_kappa_Array(2,1)                                     &
+        RHS_Terms(3, rd, td, pd) = 16.0_idp * pi                                                    &
+                          * ALPHAPSI_POWER(1)                                                       &
+                          * PSI_POWER(3)                                                            &
+                          * GR_Source_Scalar                                                        &
+                          * Block_Source_Si(rd, td, pd, re, te, pe, 1)                              &
+                     + 2.0_idp/R_SQUARE(rd) * CUR_VAL_BETA(1,rd,td,pd)                              &   ! New
+                     + 2.0_idp*COTAN_VAL(td)/CUR_R_LOCS(rd) * CUR_VAL_BETA(2,rd,td,pd)              &   ! New
+                     + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(2,2,rd,td,pd)                          &   ! New
+                     + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(3,3,rd,td,pd)                          &   ! New
+                     - OneThird                                                                     &
+                          * ( CUR_DDRV_BETA(1, 1, 1, rd, td, pd )                                   &
+                            + CUR_DDRV_BETA(1, 2, 2, rd, td, pd )                                   &
+                            + CUR_DDRV_BETA(1, 3, 3, rd, td, pd )                                   &
+                            + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1, 1, rd, td, pd)               &
+                            + COTAN_VAL(td)          * CUR_DRV_BETA(1, 2, rd, td, pd)               &
+                            - 2.0_idp /R_SQUARE(rd)  * CUR_VAL_BETA(1, rd, td, pd )                 &
+                            )                                                                       &
+                      + JCBN_n_ARRAY(1)* JCBN_kappa_Array(1,1)                                      &
+                      + JCBN_n_ARRAY(2)* JCBN_kappa_Array(2,1)                                      &
                       + JCBN_n_ARRAY(3)* JCBN_kappa_Array(3,1)
 
 !        PRINT*,"RHS_TERM 3 ",rd ,td ,pd
@@ -1379,49 +1381,49 @@ DO pd = 1,NUM_P_QUAD_POINTS
 !              , CUR_R_LOCS(rd)
 
 
-        RHS_Terms(4, rd, td, pd) =  16.0_idp * pi                                               &
-                           * ALPHAPSI_POWER(1)                                                  &
-                           * PSI_POWER(3)                                                       &
-                           * GR_Source_Scalar                                                   &
-                           * Block_Source_Si(rd, td, pd, re, te, pe, 2)                         &
-                        - 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1,2, rd, td, pd)                &            !NEW
-                        - (1.0_idp - COTAN_VAL(td)*COTAN_VAL(td))/R_SQUARE(rd) * CUR_VAL_BETA(2,rd,td,pd) &  !NEW
-                        - 2.0_idp/R_CUBED(rd) * CUR_DRV_BETA(2,1, rd, td, pd)                   &            !NEW
-                        + (2.0_idp*COTAN_VAL(td))/R_SQUARE(rd) * CUR_DRV_BETA(3,3,rd,td,pd)     &            !NEW
-                        - ( OneThird /R_SQUARE(rd) )                                            &
-                             * ( CUR_DDRV_BETA(2, 1, 1, rd, td, pd )                            &
-                               + CUR_DDRV_BETA(2, 2, 2, rd, td, pd )                            &
-                               + CUR_DDRV_BETA(2, 3, 3, rd, td, pd )                            &
-                               + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(2, 1, rd, td, pd)        &
-                               + COTAN_VAL(td) * CUR_DRV_BETA(2, 2, rd, td, pd)                 &
-                               - CSC_SQUARE(td) * CUR_VAL_BETA(2, rd, td, pd)                   &
-                               )                                                                &
-                        + JCBN_n_ARRAY(1) * JCBN_kappa_Array(1,2)                                  &
-                        + JCBN_n_ARRAY(2) * JCBN_kappa_Array(2,2)                                  &
+        RHS_Terms(4, rd, td, pd) =  16.0_idp * pi                                                           &
+                           * ALPHAPSI_POWER(1)                                                              &
+                           * PSI_POWER(3)                                                                   &
+                           * GR_Source_Scalar                                                               &
+                           * Block_Source_Si(rd, td, pd, re, te, pe, 2)                                     &
+                        - 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1,2, rd, td, pd)                            &   !NEW
+                        - (1.0_idp - COTAN_VAL(td)*COTAN_VAL(td))/R_SQUARE(rd) * CUR_VAL_BETA(2,rd,td,pd)   &   !NEW
+                        - 2.0_idp/R_CUBED(rd) * CUR_DRV_BETA(2,1, rd, td, pd)                               &   !NEW
+                        + (2.0_idp*COTAN_VAL(td))/R_SQUARE(rd) * CUR_DRV_BETA(3,3,rd,td,pd)                 &   !NEW
+                        - ( OneThird /R_SQUARE(rd) )                                                        &
+                             * ( CUR_DDRV_BETA(2, 1, 1, rd, td, pd )                                        &
+                               + CUR_DDRV_BETA(2, 2, 2, rd, td, pd )                                        &
+                               + CUR_DDRV_BETA(2, 3, 3, rd, td, pd )                                        &
+                               + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(2, 1, rd, td, pd)                    &
+                               + COTAN_VAL(td) * CUR_DRV_BETA(2, 2, rd, td, pd)                             &
+                               - CSC_SQUARE(td) * CUR_VAL_BETA(2, rd, td, pd)                               &
+                               )                                                                            &
+                        + JCBN_n_ARRAY(1) * JCBN_kappa_Array(1,2)                                           &
+                        + JCBN_n_ARRAY(2) * JCBN_kappa_Array(2,2)                                           &
                         + JCBN_n_ARRAY(3) * JCBN_kappa_Array(3,2)
 
 
 
 
 
-        RHS_Terms(5, rd, td, pd) = 16.0_idp * pi                                            &
-                          * ALPHAPSI_POWER(1)                                               &
-                          * PSI_POWER(3)                                                    &
-                          * GR_Source_Scalar                                                &
-                          * Block_Source_Si(rd, td, pd, re, te, pe, 3)                      &
-                        - 2.0_idp/(CUR_R_LOCS(rd)*RSIN_SQUARE(rd,td)) * CUR_DRV_BETA(3,1,rd,td,pd) & ! NEW
-                        - COTAN_VAL(td)/RSIN_SQUARE(rd,td) * CUR_DRV_BETA(3,2,rd,td,pd)     &  ! NEW
-                        - 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1,3,rd,td,pd)               &  ! NEW
-                        - 2.0_idp*COTAN_VAL(td) / R_SQUARE(rd) * CUR_DRV_BETA(2,3,rd,td,pd) &  ! NEW
-                        - ( OneThird /RSIN_SQUARE(rd, td ))                                 &
-                             * ( CUR_DDRV_BETA(3, 1, 1, rd, td, pd )                        &
-                               + CUR_DDRV_BETA(3, 2, 2, rd, td, pd )                        &
-                               + CUR_DDRV_BETA(3, 3, 3, rd, td, pd )                        &
-                               + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(3, 1, rd, td, pd)    &
-                               + COTAN_VAL(td) * CUR_DRV_BETA(3, 2, rd, td, pd)             &
-                             )                                                              &
-                        + JCBN_n_ARRAY(1) * JCBN_kappa_Array(1,3)                              &
-                        + JCBN_n_ARRAY(2) * JCBN_kappa_Array(2,3)                              &
+        RHS_Terms(5, rd, td, pd) = 16.0_idp * pi                                                            &
+                          * ALPHAPSI_POWER(1)                                                               &
+                          * PSI_POWER(3)                                                                    &
+                          * GR_Source_Scalar                                                                &
+                          * Block_Source_Si(rd, td, pd, re, te, pe, 3)                                      &
+                        - 2.0_idp/(CUR_R_LOCS(rd)*RSIN_SQUARE(rd,td)) * CUR_DRV_BETA(3,1,rd,td,pd)          & ! NEW
+                        - COTAN_VAL(td)/RSIN_SQUARE(rd,td) * CUR_DRV_BETA(3,2,rd,td,pd)                     &  ! NEW
+                        - 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(1,3,rd,td,pd)                               &  ! NEW
+                        - 2.0_idp*COTAN_VAL(td) / R_SQUARE(rd) * CUR_DRV_BETA(2,3,rd,td,pd)                 &  ! NEW
+                        - ( OneThird /RSIN_SQUARE(rd, td ))                                                 &
+                             * ( CUR_DDRV_BETA(3, 1, 1, rd, td, pd )                                        &
+                               + CUR_DDRV_BETA(3, 2, 2, rd, td, pd )                                        &
+                               + CUR_DDRV_BETA(3, 3, 3, rd, td, pd )                                        &
+                               + 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(3, 1, rd, td, pd)                    &
+                               + COTAN_VAL(td) * CUR_DRV_BETA(3, 2, rd, td, pd)                             &
+                             )                                                                              &
+                        + JCBN_n_ARRAY(1) * JCBN_kappa_Array(1,3)                                           &
+                        + JCBN_n_ARRAY(2) * JCBN_kappa_Array(2,3)                                           &
                         + JCBN_n_ARRAY(3) * JCBN_kappa_Array(3,3)
 
 
@@ -1441,7 +1443,11 @@ DO pd = 1,NUM_P_QUAD_POINTS
                                                 * PSI_POWER(6)/ALPHAPSI_POWER(2)                        &
                                                 * JCBN_BIGK_VALUE
 
+
+
+
         ! J_{2,1lmn}
+!        SUBJCBN_PSI_TERMS(2, rd, td, pd) = 0.0_idp
         SUBJCBN_PSI_TERMS(2, rd, td, pd) = -8.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3)             &
                                             * GR_Source_Scalar                                          &
                                             * ( Block_Source_E(rd, td, pd, re, te, pe)                  &
@@ -1453,14 +1459,14 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         ! J_{3,1lmn} Non-Derivative Term
-        SUBJCBN_PSI_TERMS(3, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                                   &
-                                                * ( CUR_DRV_PSI(1, rd, td, pd )*JCBN_kappa_ARRAY(1,1)      &
-                                                  + CUR_DRV_PSI(2, rd, td, pd )*JCBN_kappa_ARRAY(2,1)      &
-                                                  + CUR_DRV_PSI(3, rd, td, pd )*JCBN_kappa_ARRAY(3,1) )    &
-                                            - 48.0_idp * pi                                             &
-                                                * GR_Source_Scalar                                      &
-                                                * Block_Source_Si(rd, td, pd, re, te, pe, 1)            &
-                                                * ALPHAPSI_POWER(1)                                     &
+        SUBJCBN_PSI_TERMS(3, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                                       &
+                                                * ( CUR_DRV_PSI(1, rd, td, pd )*JCBN_kappa_ARRAY(1,1)       &
+                                                  + CUR_DRV_PSI(2, rd, td, pd )*JCBN_kappa_ARRAY(2,1)       &
+                                                  + CUR_DRV_PSI(3, rd, td, pd )*JCBN_kappa_ARRAY(3,1) )     &
+                                            - 48.0_idp * pi                                                 &
+                                                * GR_Source_Scalar                                          &
+                                                * Block_Source_Si(rd, td, pd, re, te, pe, 1)                &
+                                                * ALPHAPSI_POWER(1)                                         &
                                                 * PSI_POWER(2)
 
 
@@ -1469,14 +1475,14 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         ! J_{4,1lmn} Non-Derivative Term
-        SUBJCBN_PSI_TERMS(7, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                                   &
-                                               * ( CUR_DRV_PSI(1, rd, td, pd)*JCBN_kappa_ARRAY(1,2)        &
-                                                 + CUR_DRV_PSI(2, rd, td, pd)*JCBN_kappa_ARRAY(2,2)        &
-                                                 + CUR_DRV_PSI(3, rd, td, pd)*JCBN_kappa_ARRAY(3,2) )      &
-                                            - 48.0_idp * pi                                             &
-                                                * GR_Source_Scalar                                      &
-                                                * Block_Source_Si(rd, td, pd, re, te, pe, 2)            &
-                                                * ALPHAPSI_POWER(1)                                     &
+        SUBJCBN_PSI_TERMS(7, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                                       &
+                                               * ( CUR_DRV_PSI(1, rd, td, pd)*JCBN_kappa_ARRAY(1,2)         &
+                                                 + CUR_DRV_PSI(2, rd, td, pd)*JCBN_kappa_ARRAY(2,2)         &
+                                                 + CUR_DRV_PSI(3, rd, td, pd)*JCBN_kappa_ARRAY(3,2) )       &
+                                            - 48.0_idp * pi                                                 &
+                                                * GR_Source_Scalar                                          &
+                                                * Block_Source_Si(rd, td, pd, re, te, pe, 2)                &
+                                                * ALPHAPSI_POWER(1)                                         &
                                                 * PSI_POWER(2)
 
         ! J_{4,1lmn} Derivative Terms
@@ -1488,14 +1494,14 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         ! J_{5,1lmn} Non-Derivative Term
-        SUBJCBN_PSI_TERMS(11, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                  &
-                                            * ( CUR_DRV_PSI(1, rd, td, pd)*JCBN_kappa_ARRAY(1,3)           &
-                                              + CUR_DRV_PSI(2, rd, td, pd)*JCBN_kappa_ARRAY(2,3)           &
-                                              + CUR_DRV_PSI(3, rd, td, pd)*JCBN_kappa_ARRAY(3,3) )         &
-                                            - 48.0_idp * pi                                             &
-                                                * GR_Source_Scalar                                      &
-                                                * Block_Source_Si(rd, td, pd, re, te, pe, 3)            &
-                                                * ALPHAPSI_POWER(1)                                     &
+        SUBJCBN_PSI_TERMS(11, rd, td, pd) = (-7.0_idp / PSI_POWER(2) )                                      &
+                                            * ( CUR_DRV_PSI(1, rd, td, pd)*JCBN_kappa_ARRAY(1,3)            &
+                                              + CUR_DRV_PSI(2, rd, td, pd)*JCBN_kappa_ARRAY(2,3)            &
+                                              + CUR_DRV_PSI(3, rd, td, pd)*JCBN_kappa_ARRAY(3,3) )          &
+                                            - 48.0_idp * pi                                                 &
+                                                * GR_Source_Scalar                                          &
+                                                * Block_Source_Si(rd, td, pd, re, te, pe, 3)                &
+                                                * ALPHAPSI_POWER(1)                                         &
                                                 * PSI_POWER(2)
 
         ! J_{5,1lmn} Derivative Terms
@@ -1512,10 +1518,11 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
         ! J_{1,2lmn}
-        SUBJCBN_ALPHAPSI_TERMS(1, rd, td, pd) = -PSI_POWER(7)/(8.0_idp*ALPHAPSI_POWER(3))               &
+        SUBJCBN_ALPHAPSI_TERMS(1, rd, td, pd) = -PSI_POWER(7)/(8.0_idp*ALPHAPSI_POWER(3))                   &
                                                 * JCBN_BIGK_VALUE
 
         ! J_{2,2lmn}
+!        SUBJCBN_ALPHAPSI_TERMS(2, rd, td, pd) = 0.0_idp
         SUBJCBN_ALPHAPSI_TERMS(2, rd, td, pd) =  -TwoPi * PSI_POWER(4)                                      &
                                                 * GR_Source_Scalar                                          &
                                                 *( Block_Source_E(rd, td, pd, re, te, pe)                   &
@@ -2102,12 +2109,12 @@ DO d = 0,DEGREE
                                     * TWOOVER_DELTAR
 
 
-            jloc = d*ULM_LENGTH + lm_loc*5
+            jloc = d*ULM_LENGTH + lm_loc*NUM_CFA_VARS
 
             DO lpmp_loc = 0,LM_Length-1
 
 
-                iloc = dp*ULM_LENGTH + lpmp_loc*5
+                iloc = dp*ULM_LENGTH + lpmp_loc*NUM_CFA_VARS
 
                 Jacobian_Terms = 0.0_idp
 
@@ -2889,7 +2896,7 @@ END SUBROUTINE FINISH_3D_JACOBIAN_MATRIX
 SUBROUTINE FINISH_3D_RHS_VECTOR()
 
 
-INTEGER                                                         ::  ui, l, m, re, d, dp, rd
+INTEGER                                                         ::  ui, l, m, re, d, dp, rd,k
 
 INTEGER                                                         ::  Current_i_Location, &
                                                                     Current_j_Location
@@ -3090,6 +3097,17 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
                                           + TMP_VECTOR(0:SUBSHELL_PROB_DIM-1)
 
 
+!    PRINT*,"FINISH_#D_RHS_VECTOR modified"
+!    DO i = 0,NUM_R_ELEMENTS-1
+!        DO j = 0,DEGREE
+!            DO l = 0,L_LIMIT
+!                DO m = -l,l
+!                    k = Matrix_Location(2, 0, 0, i, j)
+!                    Block_RHS_VECTOR(k) = 0.0_idp
+!                END DO
+!            END DO
+!        END DO
+!    END DO
 
 
  
@@ -3105,329 +3123,7 @@ END SUBROUTINE FINISH_3D_RHS_VECTOR
 
 
 
-!+601+###########################################################################!
-!                                                                                !
-!                  CFA_3D_Apply_BCs                                                  !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CFA_3D_Apply_BCs_Part1(  )
 
-CALL CFA_3D_Dirichlet_BCs_Part1()
-CALL CFA_3D_Neumann_BCs()
-
-END SUBROUTINE CFA_3D_Apply_BCs_Part1
-
-
-
-!+602+###########################################################################!
-!                                                                                !
-!                  CFA_3D_Apply_BCs                                                  !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CFA_3D_Apply_BCs_Part2(  )
-
-CALL CFA_3D_Dirichlet_BCs_Part2()
-CALL CFA_3D_Neumann_BCs()
-
-END SUBROUTINE CFA_3D_Apply_BCs_Part2
-
-
-!+603+###########################################################################!
-!                                                                                !
-!                  CFA_3D_Dirichlet_BCs                                                  !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CFA_3D_Dirichlet_BCs_Part1( )
-
-INTEGER                                             ::  i, l, m, ui, d
-
-INTEGER                                             ::  Value_Location
-
-!*!
-!*!     Steps 1
-!*!
-DO ui = 1,NUM_CFA_VARS
-
-
-    !*!
-    !*!     Innner BCs
-    !*!
-    IF ( INNER_CFA_BC_TYPE(ui) == 'D' ) THEN
-
-        DO l = 0,L_LIMIT
-            DO m = -M_VALUES(l),M_VALUES(l)
-
-                Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
-                Coefficient_Vector( Value_Location ) = 0.0_idp
-
-            END DO
-        END DO
-
-        Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
-        Coefficient_Vector( Value_Location ) = 2.0_idp * sqrt(pi) * INNER_CFA_BC_VALUES(ui)
-    END IF
-
-
-
-
-
-    !*!
-    !*!     Outer BCs
-    !*!
-    IF ( OUTER_CFA_BC_TYPE(ui) == 'D' ) THEN
-
-        DO l = 1,L_LIMIT
-            DO m = -M_VALUES(l),M_VALUES(l)
-
-                Value_Location =  Matrix_Location( ui, l, m, NUM_R_ELEMENTS-1, DEGREE )
-                Coefficient_Vector( Value_Location ) = 0.0_idp
-
-            END DO
-        END DO
-
-        Value_Location =  MAtrix_Location( ui, 0, 0, NUM_R_ELEMENTS-1, DEGREE  )
-        Coefficient_Vector( Value_Location ) = 2.0_idp * sqrt(pi) * OUTER_CFA_BC_VALUES(ui)
-
-    END IF
-
-END DO
-
-
-END SUBROUTINE CFA_3D_Dirichlet_BCs_Part1
-
-
-
-
-
-
-!+604+###########################################################################!
-!                                                                                !
-!                  CFA_Dirichlet_BCs                                                  !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CFA_3D_Dirichlet_BCs_Part2( )
-
-
-
-INTEGER                                             ::  i, l, m, ui, d
-
-INTEGER                                             ::  Value_Location
-
-
-
-!*!
-!*!     Step 3
-!*!
-DO ui = 1,NUM_CFA_VARS
-
-
-
-    !*!
-    !*!     Innner BCs
-    !*!
-
-    IF ( INNER_CFA_BC_TYPE(ui) == 'D' .AND. myID_PETSc == 0 ) THEN
-
-        DO l = 0,L_LIMIT
-            DO m = -M_VALUES(l),M_VALUES(l)
-
-                Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
-                Block_RHS_VECTOR(Value_Location ) = 0.0_idp
-
-             END DO
-         END DO
-                !*!
-                !*!     Modify the Stiffness Matrix !
-                !*!
-
-
-         Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
-         DO i = 0,ELEM_PROB_DIM-1
-
-              BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+Value_Location, 0)=0.0_idp
-
-         END DO
-         BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1, 0) = 0.0_idp
-         BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM+ Value_Location, 0) = 1.0_idp
-
-
-    END IF
-
-
-
-
-
-
-    !*!
-    !*!     Outer BCs
-    !*!
-
-    IF ( OUTER_CFA_BC_TYPE(ui) == 'D' .AND. myID_PETSC == NUM_SUBSHELLS-1 ) THEN
-
-        DO l = 0,L_LIMIT
-            DO m = -M_VALUES(l),M_VALUES(l)
-
-                Value_Location =  Matrix_Location( ui, l, m, NUM_R_ELEMS_PER_BLOCK-1, DEGREE )
-                Block_RHS_VECTOR(Value_Location ) = 0.0_idp
-
-             END DO
-         END DO
-
-                !*!
-                !*!     Modify the Stiffness Matrix !
-                !*!
-          Value_Location =  Matrix_Location( ui, 0, 0, 0, DEGREE )
-
-          DO i = 0,ELEM_PROB_DIM-1
-
-              ! Clear the Column !
-              BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM + Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
-
-          END DO
-          ! Clear the Row !
-          BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1,       &
-                                 NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
-
-          BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM+Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 1.0_idp
-
-    END IF
-
-END DO
-
-
-END SUBROUTINE CFA_3D_Dirichlet_BCs_Part2
-
-
-
-
-!+604+###########################################################################!
-!                                                                                !
-!                  CFA_Dirichlet_BCs                                                  !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CFA_3D_Dirichlet_BCs_Part2_New( )
-
-
-
-INTEGER                                             ::  i, l, m, ui, d
-
-INTEGER                                             ::  Value_Location
-
-
-
-!*!
-!*!     Step 3
-!*!
-DO ui = 1,NUM_CFA_VARS
-
-
-
-    !*!
-    !*!     Innner BCs
-    !*!
-
-    IF ( INNER_CFA_BC_TYPE(ui) == 'D' .AND. myID_PETSc == 0 ) THEN
-
-        DO l = 0,L_LIMIT
-            DO m = -M_VALUES(l),M_VALUES(l)
-
-                Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
-                Block_RHS_VECTOR(Value_Location ) = 0.0_idp
-
-             END DO
-         END DO
-                !*!
-                !*!     Modify the Stiffness Matrix !
-                !*!
-
-
-         Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
-         DO i = 0,ELEM_PROB_DIM-1
-
-              BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+Value_Location, 0)=0.0_idp
-
-         END DO
-         BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1, 0) = 0.0_idp
-         BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM+ Value_Location, 0) = 1.0_idp
-
-
-    END IF
-
-
-
-
-
-
-    !*!
-    !*!     Outer BCs
-    !*!
-
-    IF ( OUTER_CFA_BC_TYPE(ui) == 'D' .AND. myID_PETSC == NUM_SUBSHELLS-1 ) THEN
-
-        DO l = 0,L_LIMIT
-            DO m = -M_VALUES(l),M_VALUES(l)
-
-                Value_Location =  Matrix_Location( ui, l, m, NUM_R_ELEMS_PER_BLOCK-1, DEGREE )
-                Block_RHS_VECTOR(Value_Location ) = 0.0_idp
-
-             END DO
-         END DO
-
-                !*!
-                !*!     Modify the Stiffness Matrix !
-                !*!
-
-!        PRINT*,"ELEM_PROB_DIM",ELEM_PROB_DIM
-        DO l = 0,L_LIMIT
-            DO m = -M_VALUES(l),M_VALUES(l)
-
-                Value_Location =  Matrix_Location( ui, l, m, 0, DEGREE )
-
-                DO i = 0,ELEM_PROB_DIM-1
-
-                    ! Clear the Column !
-                    BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM + Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
-!                    PRINT*,"ui",ui,"l",l,"m",m,"i",i," loc",i*ELEM_PROB_DIM + Value_Location
-                END DO
-                ! Clear the Row !
-                BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1,       &
-                                     NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
-
-
-                Value_Location =  Matrix_Location( ui, l, m, 0, DEGREE )
-!                PRINT*,"*ui",ui,"l",l,"m",m,"i",i," loc",Value_Location*ELEM_PROB_DIM+Value_Location
-                BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM+Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 1.0_idp
-
-            END DO ! m
-
-        END DO  ! l
-
-
-
-
-    END IF
-
-END DO
-
-
-END SUBROUTINE CFA_3D_Dirichlet_BCs_Part2_New
-
-
-
-
-
-!+605+###########################################################################!
-!                                                                                !
-!                  CFA_Neumann_BCs                                               !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CFA_3D_Neumann_BCs( )
-
-
-! Nothing needs to be done. Score!
-
-
-END SUBROUTINE CFA_3D_Neumann_BCs
 
 
 
