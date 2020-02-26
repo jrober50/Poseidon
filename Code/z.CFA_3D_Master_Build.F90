@@ -152,13 +152,10 @@ USE Poseidon_Variables_Module, &
 
 
 
-USE Additional_Functions_Module, &
+USE Poseidon_Additional_Functions_Module, &
                                 ONLY :  Lagrange_Poly,              &
                                         Spherical_Harmonic,         &
                                         Initialize_LGL_Quadrature,  &
-                                        Map_To_X_Space,             &
-                                        CFA_Matrix_Map,             &
-                                        CFA_ALL_Matrix_Map,         &
                                         Calc_3D_Values_At_Location
 
 
@@ -176,7 +173,9 @@ USE Poseidon_BC_Module, &
                                 ONLY :  CFA_3D_Apply_BCs_Part1,         &
                                         CFA_3D_Apply_BCs_Part2
 
-
+USE Poseidon_Mapping_Functions_Module, &
+                                ONLY :  Map_To_X_Space,             &
+                                        CFA_ALL_Matrix_Map
 
 IMPLICIT NONE
 
@@ -2473,6 +2472,9 @@ DO d = 0,DEGREE
                 BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                             &
                         = BLOCK_ELEM_STF_MATVEC(MATVEC_LOC:MATVEC_LOC+4,Local_re)                   &
                         + Jacobian_Terms(21:25)
+
+
+
 
 
 !                PRINT*,"Beta Jacobian Elements"

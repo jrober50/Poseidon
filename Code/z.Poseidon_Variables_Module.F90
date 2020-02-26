@@ -82,6 +82,9 @@ INTEGER                                     :: BLOCK_PROB_DIM
 INTEGER                                     :: SUBSHELL_PROB_DIM
 
 
+INTEGER                                     ::  NUM_TP_QUAD_POINTS
+
+
 
 INTEGER                                     :: LM_LENGTH
 INTEGER                                     :: ULM_LENGTH
@@ -98,22 +101,22 @@ INTEGER                                                     ::  Ratio_BNDLperBLC
 
 ABSTRACT INTERFACE
     PURE FUNCTION Matrix_Location_Pointer(ui, l, m, re, d)
-        INTEGER                                         ::  Matrix_Location_Pointer
-        INTEGER, INTENT(IN)                             ::  ui, l, m, re, d
+        INTEGER                                             ::  Matrix_Location_Pointer
+        INTEGER, INTENT(IN)                                 ::  ui, l, m, re, d
     END FUNCTION Matrix_Location_Pointer
 END INTERFACE
 
-PROCEDURE(Matrix_Location_Pointer), POINTER          ::   Matrix_Location => NULL()
+PROCEDURE(Matrix_Location_Pointer), POINTER                 ::   Matrix_Location => NULL()
 
 
 ABSTRACT INTERFACE
     PURE FUNCTION LM_Location_Pointer(l, m)
-        INTEGER                                         ::  LM_Location_Pointer
-        INTEGER, INTENT(IN)                             ::  l, m
+        INTEGER                                             ::  LM_Location_Pointer
+        INTEGER, INTENT(IN)                                 ::  l, m
     END FUNCTION LM_Location_Pointer
 END INTERFACE
 
-PROCEDURE(LM_Location_Pointer), POINTER          ::   LM_Location => NULL()
+PROCEDURE(LM_Location_Pointer), POINTER                     ::   LM_Location => NULL()
 
 
 
@@ -144,6 +147,8 @@ LOGICAL                                             ::  Matrix_Cholesky_Factoriz
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  INT_R_LOCATIONS, INT_R_WEIGHTS
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  INT_T_LOCATIONS, INT_T_WEIGHTS
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  INT_P_LOCATIONS, INT_P_WEIGHTS
+
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  INT_TP_WEIGHTS
 
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  LOCAL_NODE_LOCATIONS
 
@@ -178,13 +183,13 @@ LOGICAL                                             ::  PHI_MESH_SET_FLAG = .FAL
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:,:)        :: Ylm_Table_Block
 
 
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:)          :: Ylm_Values
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:)          :: Ylm_CC_Values
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:)          :: Ylm_dt_Values
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:)          :: Ylm_dp_Values
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:)          :: Ylm_dtt_Values
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:)          :: Ylm_dtp_Values
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:)          :: Ylm_dpp_Values
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:)          :: Ylm_Values
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:)          :: Ylm_dt_Values
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:)          :: Ylm_dp_Values
+
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:)          :: Ylm_CC_Values
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:)          :: Ylm_CC_DT_Values
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:)          :: Ylm_CC_DP_Values
 
 
 
@@ -241,18 +246,18 @@ INTEGER                                             ::  NUM_OFF_DIAGONALS
 
 
 !!! Newtonian Variables
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)     :: STF_MAT_Integrals
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)     ::  STF_MAT_Integrals
 
 
 !!! STF_MAT in full matrix form !!!
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)     :: STF_MAT
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)     ::  STF_MAT
 
 
 
 !!! STF_MAT in CCS form !!!
-INTEGER                                             :: STF_NNZ
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:,:)       :: STF_ELEM_VAL
-INTEGER, ALLOCATABLE, DIMENSION(:)                  :: STF_COL_PTR, STF_ROW_IND
+INTEGER                                             ::  STF_NNZ
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:,:)       ::  STF_ELEM_VAL
+INTEGER, ALLOCATABLE, DIMENSION(:)                  ::  STF_COL_PTR, STF_ROW_IND
 
 
 !===================================================================!
@@ -400,11 +405,11 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Iter_Time_Table
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Time_Table
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Run_Time_Table
 
-INTEGER                                                     :: Total_Run_Iters=1
+INTEGER                                                     ::  Total_Run_Iters=1
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Convergence_Table
 
-
+INTEGER, DIMENSION(:), ALLOCATABLE                          ::  Iteration_Histogram
 
 
 

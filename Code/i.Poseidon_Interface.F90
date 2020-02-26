@@ -40,6 +40,8 @@ USE DRIVER_Parameters,  &
                     SELFSIM_R_VALS,                                     &
                     SELFSIM_T,                                          &
                     DRIVER_TEST_NUMBER,                                 &
+                    DRIVER_FIRST_GUESS_FLAG,                            &
+                    DRIVER_SUBSEQUENT_GUESS_FLAG,                       &
                     DRIVER_FRAME
 
 
@@ -107,22 +109,21 @@ USE Poseidon_Main_Module, &
                     Poseidon_Set_Mesh,                                  &
                     Poseidon_CFA_Set_Uniform_Boundary_Conditions
 
-USE Poseidon_Initialize_Module, &
+USE Poseidon_Initialization_Module, &
             ONLY :  Poseidon_Initialize
 
 
-USE CFA_3D_Master_Build_Module,     &
-            ONLY : Calc_3D_Values_At_Location
+USE Poseidon_Additional_Functions_Module, &
+            ONLY :  Calc_3D_Values_At_Location
 
 
-USE Additional_Functions_Module, &
+USE Driver_Additional_Functions_Module, &
             ONLY :  Lagrange_Poly,                                      &
                     Spherical_Harmonic,                                 &
                     Map_To_X_Space, Map_From_X_Space,                   &
                     Initialize_LGL_Quadrature,                          &
                     Initialize_LGL_Quadrature_Locations,                &
-                    Initialize_LG_Quadrature_Locations,                 &
-                    MVMULT_FULL
+                    Initialize_LG_Quadrature_Locations
 
 
 USE IO_Functions_Module, &
@@ -155,8 +156,10 @@ USE Poseidon_Internal_Communication_Module,                             &
                     Poseidon_Distribute_Solution
 
 
-USE New_PETSc_Module,                                                   &
-            ONLY :  New_PETSc_Routine
+USE Initial_Guess_Module,                                               &
+            ONLY :  Initialize_Flat_Space_Guess_Values,                 &
+                    Initialize_Calculated_Guess_Values,                 &
+                    Load_Initial_Guess_From_File
 
 
 use mpi
@@ -341,7 +344,7 @@ REAL(KIND = idp), DIMENSION(0:nx)                           ::  Shift_Vector
 !!                                       !!
 !                                         !
 IF (( MODE == 0 ) .OR. ( MODE == 3 )) THEN
-    ! Enetered if this is the first call
+    ! Entered if this is the first call
 
     timea = MPI_Wtime()
 
@@ -432,30 +435,39 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
     !                                         !
     !!                                       !!
-    !!!       Set Boundary Conditions       !!!
+    !!!    Calculate Boundary Conditions    !!!
     !!                                       !!
     !                                         !
     timea = MPI_Wtime()
-    ! Initializes the functions Analytic_Solution and Shift_Solution ( Used in Calc_Shift_BC_1D )
-    CALL Initialize_Special_Guess_Values()
+
 
     ! Calculate the Dirichlet Outer Boundary Value for the Shift Vector
-    CALL Calc_Shift_BC_1D( Shift_Vector_BC,                       &
-                           NUM_Input_Nodes(1), NUM_Input_Nodes(2), NUM_Input_Nodes(3),     &
-                           NUM_R_ELEMENTS, ij_ray_dim, ik_ray_dim, DOMAIN_DIM,             &
-                           Local_Si, rlocs          ) 
-
-
+    CALL Calc_Shift_BC_1D( Shift_Vector_BC,                                                 &
+                           NUM_Input_Nodes(1), NUM_Input_Nodes(2), NUM_Input_Nodes(3),      &
+                           NUM_R_ELEMENTS, ij_ray_dim, ik_ray_dim, DOMAIN_DIM,              &
+                           Local_Si, rlocs          )
 
     ! Calculate the Dirichlet Outer Boundary Value for the Lapse Function and Conformal Factor
     Inner_Potential = Analytic_Solution(rlocs(0), 0.0_idp, 0.0_idp)
     Outer_Potential = Analytic_Solution(rlocs(NUM_R_ELEMENTS), 0.0_idp, 0.0_idp)
 
 
+
+
+
     !PRINT*,"ALPHAPSI BC set to one"
     !Pot_to_AlphaPsi = 1.0_idp
     Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/(Speed_of_Light*Speed_of_Light)
     Pot_to_Psi      = 1.0_idp - 0.5_idp*Outer_Potential/(Speed_of_Light*Speed_of_Light)
+
+
+
+
+    !                                         !
+    !!                                       !!
+    !!!       Set Boundary Conditions       !!!
+    !!                                       !!
+    !                                         !
 
     ! Set BC type, N = Neumann, D = Dirichlet
     INNER_BC_TYPES = (/"N", "N","D","D","D"/)
@@ -478,8 +490,38 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
 
 
+    !                                         !
+    !!                                       !!
+    !!!          Set Initial Guess          !!!
+    !!                                       !!
+    !                                         !
+    IF (( MODE == 0 ) .OR. ( MODE == 3 )) THEN
+        ! Entered only on first Frame
 
+        SELECT CASE ( DRIVER_FIRST_GUESS_FLAG )
+            CASE( 1 )   ! Flat Space Guess
+                CALL Initialize_Flat_Space_Guess_Values
+            CASE( 2 )   ! Calculated Guess ( Tests Only )
+                CALL Initialize_Calculated_Guess_Values
+            CASE( 3 )   ! Load From File
 
+        END SELECT
+    ELSE
+        ! Entered on all subsequent frames
+
+        SELECT CASE ( DRIVER_SUBSEQUENT_GUESS_FLAG )
+            CASE( 1 )   ! Flat Space Guess
+                CALL Initialize_Flat_Space_Guess_Values
+            CASE( 2 )   ! Calculated Guess ( Tests Only )
+                CALL Initialize_Calculated_Guess_Values
+            CASE( 3 )   ! Load From File
+
+            
+            CASE( 4 )   ! Use Solution from Last Frame
+                ! No Action Required
+
+        END SELECT
+    END IF
 
 
 
@@ -495,7 +537,7 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
     ELSE IF ( NEW_PETSC_SOLVER_FLAG == 1 ) THEN
 
-        CALL New_PETSc_Routine()
+!        CALL New_PETSc_Routine()
 
     END IF
 

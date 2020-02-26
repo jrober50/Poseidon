@@ -58,6 +58,7 @@ USE DRIVER_Parameters, &
                     DRIVER_FRAME,          &
                     DRIVER_START_FRAME,    &
                     DRIVER_END_FRAME,      &
+                    DRIVER_TOTAL_FRAMES,    &
                     DRIVER_DIMENSION,      &
                     DRIVER_PROCS,          &
                     DRIVER_y_PROCS,        &
@@ -79,7 +80,10 @@ USE DRIVER_Parameters, &
                     SELFSIM_KAPPA,          &
                     SELFSIM_GAMMA,          &
                     CHIMERA_START_FRAME,    &
-                    CHIMERA_END_FRAME
+                    CHIMERA_END_FRAME,      &
+                    Iteration_History,      &
+                    DRIVER_RUN_TIME_TABLE,  &
+                    DRIVER_FRAME_TIME_TABLE
 
 USE Driver_Params_Read_Module, &
             ONLY :  Unpack_Driver_Parameters
@@ -98,17 +102,18 @@ USE Units_Module, &
 
 
 
-USE Test_Functions_Module, &
+USE Driver_Test_Functions_Module, &
             ONLY :  Poseidon_Initialize_CFA_Test_Problem_CHIMERA
 
 
-USE IO_Functions_Module, &
+USE Driver_IO_Functions_Module, &
             ONLY :  Open_Run_Report_File,                           &
                     Output_Run_Report,                              &
                     Close_Run_Report_File,                          &
                     Open_Frame_Report_File,                         &
                     Output_Frame_Report,                            &
-                    Close_Frame_Report_File
+                    Close_Frame_Report_File,                        &
+                    Output_Iteration_History
 
 
 
@@ -116,8 +121,12 @@ USE Poseidon_Interface, &
             ONLY :  Poseidon_CFA_3D,                                &
                     Poseidon_Shutdown
 
+USE Poseidon_Info_Module, &
+            ONLY :  PQ_Iterations_Max,                              &
+                    PQ_Iterations_Used
 
-USE Additional_Functions_Module, &
+
+USE Driver_Additional_Functions_Module, &
             ONLY :  Map_From_X_Space,                       &
                     Initialize_LG_Quadrature_Locations
 
@@ -324,8 +333,8 @@ ALLOCATE(   Input_R_Quad(1:Num_Input_Nodes(1)),         &
             Input_T_Quad(1:Num_Input_Nodes(2)),         &
             Input_P_Quad(1:Num_Input_Nodes(3))          )
 
-
-
+ALLOCATE( Driver_Frame_Time_Table(1:25) )
+ALLOCATE( Driver_Run_Time_Table(1:25) )
 
 
 
@@ -528,7 +537,6 @@ IF ( TEST_NUM == 2 ) THEN
     DRIVER_END_FRAME = CHIMERA_END_FRAME - CHIMERA_START_FRAME + 1
 
 ELSE IF ( TEST_NUM == 3 ) THEN
-
     DRIVER_START_FRAME = 1
     DRIVER_END_FRAME = SELFSIM_NUM_FRAMES
     IF ( SELFSIM_NUM_FRAMES .NE. 1 ) THEN
@@ -544,6 +552,12 @@ FIRST_FRAME_FLAG = 1
 IF ( myID == 0 ) THEN
     CALL Open_Run_Report_File()
 END IF
+
+DRIVER_TOTAL_FRAMES = DRIVER_END_FRAME - DRIVER_START_FRAME + 1
+ALLOCATE( Iteration_History(1:DRIVER_TOTAL_FRAMES) )
+
+
+
 
 
 
@@ -662,12 +676,16 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
 
     IF ( FIRST_FRAME_FLAG == 1 ) THEN
         mode = 0
+        modeb = 0
     ELSE IF ( DRIVER_FRAME == DRIVER_END_FRAME) THEN
         mode = 2
+        modeb = 1
     ELSE IF ( ( DRIVER_FRAME == DRIVER_END_FRAME) .AND. ( FIRST_FRAME_FLAG == 1 ) ) THEN
         mode = 3
+        modeb = 0
     ELSE
         mode = 1
+        modeb = 1
     END IF
 
     CALL Poseidon_CFA_3D(   mode, modeb, imin, imax, nx,                    &
@@ -679,6 +697,7 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
                             Local_E, Local_S, Local_Si                      )
 
 
+    CALL PQ_ITERATIONS_USED( Iteration_History(DRIVER_FRAME) )
 
     CALL OUTPUT_FRAME_REPORT(DRIVER_FRAME)
     CALL CLOSE_FRAME_REPORT_FILE()
@@ -686,10 +705,10 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
 END DO ! Frame Loop
 
 
-
 IF ( myID == 0 ) THEN
     CALL OUTPUT_RUN_REPORT()
-!    CALL CLOSE_RUN_REPORT_FILE()
+    CALL OUTPUT_ITERATION_HISTORY()
+    CALL CLOSE_RUN_REPORT_FILE()
 END IF
 
 CALL Poseidon_Shutdown()

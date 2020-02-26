@@ -23,17 +23,18 @@ MODULE SelfSimilar_Module                                                       
 !                                   !
 !===================================!
 USE Poseidon_Constants_Module, &
-            ONLY :  idp,             &
-                    eps,             &
-                    pi,              &
-                    Grav_Constant_G, &
+            ONLY :  idp,                &
+                    eps,                &
+                    pi,                 &
+                    Grav_Constant_G,    &
                     Speed_of_Light
 
 USE DRIVER_PARAMETERS,  &
-            ONLY :  NUM_ENTRIES,       &
-                    SELFSIM_R_VALS,    &
-                    SELFSIM_POT_VALS,  &
-                    SELFSIM_SHIFT_VALs,&
+            ONLY :  NUM_ENTRIES,        &
+                    SELFSIM_R_VALS,     &
+                    SELFSIM_POT_VALS,   &
+                    SELFSIM_SHIFT_VALs, &
+                    SELFSIM_V_SWITCH,   &
                     Analytic_Solution
 
 
@@ -211,16 +212,16 @@ IF (.FALSE.) THEN
 END IF
 
 
+IF ( SELFSIM_V_SWITCH == 0 ) THEN
+    PRINT*,"Input_V Zeroed"
+    Input_V = 0.0_idp
+END IF
 
-PRINT*,"Input_V Zeroed"
-Input_V = 0.0_idp
 
-
-
-PRINT*,"Delta_R"
-print*,Delta_R
-print*,"r_locs"
-print*,r_locs
+!PRINT*,"Delta_R"
+!print*,Delta_R
+!print*,"r_locs"
+!print*,r_locs
 
 CALL CONVERT_SELF_SIMILAR_3D(  t, kappa, gamma, ecc,                   &
                             Num_Nodes, NUM_LINES,                   &
@@ -390,7 +391,7 @@ DO re = 0,NUM_R_ELEM-1
                 Density = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
                 Velocity = (Input_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
 !                Velocity = 0.0_idp
-
+!                PRINT*,"Velocity Zeroed"
 
                 ! Calculate Usable Quantities
                 Pressure = kappa * Density**gamma
@@ -401,7 +402,7 @@ DO re = 0,NUM_R_ELEM-1
                 LF_sqr = 1.0_idp/(1.0_idp - vsqr/csqr)
 
 
-
+                PRINT*,Density,Specific_Enthalpy,LF_sqr, Pressure
                 !  Calculate CFA Input Values
                 E  = Density*Specific_Enthalpy*LF_sqr - Pressure
                 Si = Density*Specific_Enthalpy*LF_sqr*Velocity/csqr
@@ -1153,7 +1154,6 @@ DO pe = 0,NUM_P_ELEM-1
 
                                 vsqr = Velocity*Velocity
                                 LF_sqr = 1.0_idp/(1.0_idp - vsqr/csqr)
-
 
 
                                 !  Calculate CFA Input Values

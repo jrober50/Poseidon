@@ -67,6 +67,7 @@ USE Poseidon_Parameters, &
                                 CONVERGENCE_FLAG,           &
                                 WRITE_REPORT_FLAG,          &
                                 OUTPUT_MATRIX_FLAG,         &
+                                OUTPUT_RHS_VECTOR_FLAG,     &
                                 ITER_REPORT_NUM_SAMPLES,    &
                                 ITER_REPORT_FILE_ID,        &
                                 FRAME_REPORT_FILE_ID
@@ -77,14 +78,6 @@ USE Poseidon_Variables_Module, &
                                 NUM_P_ELEMENTS,             &
                                 rlocs, tlocs, plocs,        &
                                 NUM_R_NODES,                &
-                                INT_R_LOCATIONS,            &
-                                INT_T_LOCATIONS,            &
-                                INT_P_LOCATIONS,            &
-                                INT_R_WEIGHTS,              &
-                                INT_T_WEIGHTS,              &
-                                INT_P_WEIGHTS,              &
-                                VAR_DIM,                    &
-                                Lagrange_Poly_Table,        &
                                 Coefficient_Vector,         &
                                 Block_RHS_Vector,           &
                                 myID_Poseidon,              &
@@ -98,6 +91,7 @@ USE Poseidon_Variables_Module, &
                                 PROB_DIM,                   &
                                 Block_Prob_Dim,             &
                                 SUBSHELL_PROB_DIM,          &
+                                ELEM_PROB_DIM_SQR,          &
                                 Local_Length,               &
                                 ULM_LENGTH,                 &
                                 LM_LENGTH,                  &
@@ -107,13 +101,14 @@ USE Poseidon_Variables_Module, &
                                 Total_Run_Iters,            &
                                 ITER_TIME_TABLE,            &
                                 FRAME_CONVERGENCE_TABLE,    &
+                                Iteration_Histogram,        &
                                 Matrix_Location
 
 USE CFA_3D_Master_Build_Module, &
-                        ONLY :  CFA_3D_Master_Build,        &
-                                CFA_3D_Apply_BCs_Part1,     &
-                                CFA_3D_Apply_BCs_Part2,     &
-                                Calc_3D_Values_At_Location
+                        ONLY :  CFA_3D_Master_Build
+
+USE Poseidon_Additional_Functions_Module, &
+                        ONLY :  Calc_3D_Values_At_Location
 
 USE Jacobian_Internal_Functions_Module,  &
                         ONLY :  Initialize_Guess_Values,        &
@@ -123,14 +118,16 @@ USE IO_Functions_Module, &
                         ONLY :  Clock_In,                   &
                                 OPEN_ITER_REPORT_FILE,      &
                                 CLOSE_ITER_REPORT_FILE,     &
-                                OUTPUT_JACOBIAN_MATRIX
+                                OUTPUT_JACOBIAN_MATRIX,     &
+                                OUTPUT_RHS_VECTOR
 
 USE Poseidon_Petsc_Solver, &
                         ONLY : PETSC_Distributed_Solve
 
-USE Additional_Functions_Module, &
-                        ONLY :  Lagrange_Poly,              &
-                                CFA_ALL_Matrix_Map
+USE Poseidon_Residual_Equations_Module, &
+                        ONLY :  Output_Residual,            &
+                                Output_Final_Residual
+
 
 USE MPI
 
@@ -164,16 +161,11 @@ timea = 0.0_idp
 timeb = 0.0_idp
 timec = 0.0_idp
 
-!*!
-!*! Initialize Guess
-!*!
-CALL Initialize_Special_Guess_Values()
-!CALL Initialize_Guess_Values()
+
 
 IF (myID_Poseidon == 0 ) THEN
     CALL OUTPUT_GUESS(0, 0)
 END IF
-
 
 
 
@@ -203,15 +195,14 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     IF ( OUTPUT_MATRIX_FLAG == 1 ) THEN
         CALL OUTPUT_JACOBIAN_MATRIX()
     END IF
+    IF ( OUTPUT_RHS_VECTOR_FLAG == 1 ) THEN
+        CALL OUTPUT_RHS_VECTOR()
+    END IF
 
-
+!    PRINT*,"ELEM_PROB_DIM_SQR",ELEM_PROB_DIM_SQR
 !    DO i = 0,NUM_R_ELEMENTS-1
-!        DO j = 0,DEGREE
-!            k = Matrix_Location(1, 0, 0, i, j)
-!            l = Matrix_Location(5,L_LIMIT,L_LIMIT,i,j)
-!            PRINT*,i,j
-!            PRINT*,Block_RHS_VECTOR(k:l)
-!            PRINT*," "
+!        DO j = 0,ELEM_PROB_DIM_SQR-1
+!            PRINT*,BLOCK_ELEM_STF_MATVEC(j,i)
 !        END DO
 !    END DO
 
@@ -228,7 +219,10 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
 
 
 
+    !CALL Output_Residual()
 
+!    PRINT*, REAL(Update_Vector, KIND = idp)
+!    PRINT*,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 !    DO i = 0,NUM_R_ELEMENTS-1
 !        DO j = 0,DEGREE
 !            k = Matrix_Location(3, 0, 0, i, j)
@@ -236,8 +230,8 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
 !        END DO
 !    END DO
 
-
-
+!    PRINT*,REAL(Coefficient_Vector, KIND = idp)
+!    PRINT*,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     !*!
     !*! Update Coefficient_Vector
     !*!
@@ -245,6 +239,8 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     CALL CFA_Update_Share
     timec = MPI_Wtime()
     CALL Clock_In(timec-timeb, 16)
+
+
 
 !    PRINT*,"UPDATE_VECTOR"
 !    DO i = 0,NUM_R_ELEMENTS-1
@@ -267,8 +263,8 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     timec = MPI_Wtime()
     CALL Clock_In(timec-timeb, 15)
 
-
-
+!    PRINT*,"============================================================="
+!    PRINT*,REAL(Coefficient_Vector, KIND = idp)
 
 
 !    DO i = 0,NUM_R_ELEMENTS-1
@@ -284,7 +280,7 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
 
 
 
-
+    !CALL Output_Residual()
     !*!
     !*! Check for convergence
     !*!
@@ -317,10 +313,36 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
 
 
+
     Cur_Iteration = Cur_Iteration + 1
     Total_Run_Iters = Total_Run_Iters + 1
 
 END DO
+Iteration_Histogram(Cur_Iteration-1) = Iteration_Histogram(Cur_Iteration-1) + 1
+
+
+
+
+IF ( OUTPUT_RHS_VECTOR_FLAG == 1 ) THEN
+    !*!
+    !*! Clean the System
+    !*!
+    Block_RHS_Vector = 0.0_idp
+    BLOCK_ELEM_STF_MATVEC = 0.0_idp
+
+
+
+    !*!
+    !*! Create the System
+    !*!
+    CALL CFA_3D_Master_Build()
+
+    CALL OUTPUT_RHS_VECTOR()
+END IF
+
+
+
+
 
 
 END SUBROUTINE CFA_Newton_Raphson
@@ -939,6 +961,9 @@ INTEGER, INTENT(IN)                 :: Iteration
 INTEGER, DIMENSION(0:1)                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
+COMPLEX(KIND = idp)                                     ::  RMS_VALUE
+COMPLEX(KIND = idp)                                     ::  Euclidean
+
 FILE_ID = -1
 IF ( FRAME_REPORT_FLAG == 1 ) THEN
     FILE_ID(0) = FRAME_REPORT_FILE_ID
@@ -950,8 +975,11 @@ END IF
 
 
 
-
 IF (myID_Poseidon == 0) THEN
+
+    RMS_VALUE = SQRT( SUM(Update_Vector**2)/size(Update_Vector) )
+    Euclidean = SQRT( SUM(ABS(Update_Vector)**2) )
+
 
 
 
@@ -967,6 +995,8 @@ IF (myID_Poseidon == 0) THEN
 
     END IF
 
+
+    PRINT*,"RMS ",RMS_VALUE," Euclidean ",Euclidean," MAXVAL ",MAXVAL(ABS(Update_Vector))
 
 !   Add the current iteration's convergence check value to the frame table
     Frame_Convergence_Table(Iteration) =    MAXVAL(ABS(Update_Vector))

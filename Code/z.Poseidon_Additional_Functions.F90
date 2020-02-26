@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Additional_Functions_Module                                                  !##!
+MODULE Poseidon_Additional_Functions_Module                                         !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -40,15 +40,6 @@ MODULE Additional_Functions_Module                                              
 !##!                                                                                !##!
 !##!    +601+   SphericalHarmonic_OrthogonalityTest                                 !##!
 !##!                                                                                !##!
-!##!    +701+   CFA_Matrix_Map                                                      !##!
-!##!    +702+   CFA_3D_Matrix_Map                                                   !##!
-!##!    +703+   CFA_2D_Matrix_Map                                                   !##!
-!##!    +704+   CFA_1D_Matrix_Map                                                   !##!
-!##!    +705+   CFA_1D_LM_Map                                                       !##!
-!##!    +706+   CFA_2D_LM_Map                                                       !##!
-!##!    +707+   CFA_3D_LM_Map                                                       !##!
-!##!                                                                                !##!
-!##!                                                                                !##!
 !##!    +801+   Generate_Defined_Coarse_Mesh                                        !##!
 !##!                                                                                !##!
 !######################################################################################!
@@ -72,10 +63,11 @@ USE Poseidon_Parameters, &
                     STF_MAPPING_FLAG
 
 USE Poseidon_Variables_Module,    &
-            ONLY :  NUM_R_ELEMENTS,     &
-                    VAR_DIM,            &
-                    NUM_OFF_DIAGONALS,  &
-                    ULM_LENGTH,         &
+            ONLY :  NUM_R_ELEMENTS,         &
+                    VAR_DIM,                &
+                    NUM_OFF_DIAGONALS,      &
+                    ULM_LENGTH,             &
+                    LM_LENGTH,              &
                     Coefficient_Vector,     &
                     M_VALUES,               &
                     rlocs,                  &
@@ -1139,190 +1131,8 @@ END SUBROUTINE SphericalHarmonic_OrthogonalityTest
 
 
 
-!+701+###########################################################################!
-!                                                                                !
-!                  CFA_Matrix_Map                                                  !
-!                                                                                !
-!################################################################################!
-PURE FUNCTION CFA_Matrix_Map( ui, l, m, re, d )
 
-INTEGER                                     :: CFA_Matrix_Map
-
-INTEGER, INTENT(IN)                         :: ui, l, m, re, d
-
-
-
-
-
-CFA_Matrix_Map = (re*DEGREE + d)* ((2+DOMAIN_DIM)*(L_LIMIT+1)*(L_LIMIT+1))  &
-                  + (l*(l+1) + m)*(2+DOMAIN_DIM)                            &
-                  + (ui - 1)
-
-
-
-
-END FUNCTION CFA_Matrix_Map
-
-
-!+702+##########################################################################!
-!                                                                               !
-!                  CFA_3D_Matrix_Map                                            !
-!                                                                               !
-!###############################################################################!
-PURE FUNCTION CFA_3D_Matrix_Map( ui, l, m, re, d )
-
-INTEGER                                     :: CFA_3D_Matrix_Map
-
-INTEGER, INTENT(IN)                         :: ui, l, m, re, d
-
-
-
-
-
-CFA_3D_Matrix_Map = (re*DEGREE + d) * ULM_LENGTH           &
-                  + (l*(l+1) + m) * NUM_CFA_VARS        &
-                  + (ui - 1)
-
-
-
-
-END FUNCTION CFA_3D_Matrix_Map
-
-
-
-
-!+703+##########################################################################!
-!                                                                               !
-!                  CFA_2D_Matrix_Map                                            !
-!                                                                               !
-!###############################################################################!
-PURE FUNCTION CFA_2D_Matrix_Map( ui, l, m, re, d )
-
-INTEGER                                     :: CFA_2D_Matrix_Map
-
-INTEGER, INTENT(IN)                         :: ui, l, m, re, d
-
-
-
-
-
-CFA_2D_Matrix_Map = (re*DEGREE + d) * ULM_LENGTH            &
-                  + l * NUM_CFA_VARS          &
-                  + (ui - 1)
-
-
-
-
-END FUNCTION CFA_2D_Matrix_Map
-
-
-!+704+##########################################################################!
-!                                                                               !
-!                  CFA_1D_Matrix_Map                                            !
-!                                                                               !
-!###############################################################################!
-PURE FUNCTION CFA_1D_Matrix_Map( ui, l ,m, re, d )
-
-INTEGER                                     :: CFA_1D_Matrix_Map
-
-INTEGER, INTENT(IN)                         :: ui, l, m, re, d
-
-
-
-
-
-CFA_1D_Matrix_Map = NUM_CFA_VARS*(re*DEGREE + d) + (ui - 1)
-
-
-
-
-END FUNCTION CFA_1D_Matrix_Map
-
-
-
-
-
-
-!+702+##########################################################################!
-!                                                                               !
-!                  CFA_3D_Matrix_Map                                            !
-!                                                                               !
-!###############################################################################!
-PURE FUNCTION CFA_ALL_Matrix_Map( ui, lm_loc, re, d )
-
-INTEGER                                     :: CFA_ALL_Matrix_Map
-
-INTEGER, INTENT(IN)                         :: ui, lm_loc, re, d
-
-
-
-
-
-CFA_ALL_Matrix_Map = (re*DEGREE + d) * ULM_LENGTH           &
-                  + lm_loc * NUM_CFA_VARS        &
-                  + (ui - 1)
-
-
-
-
-END FUNCTION CFA_ALL_Matrix_Map
-
-
-
-
-
-
-!+705+##########################################################################!
-!                                                                               !
-!                  CFA_1D_LM_Map                                            !
-!                                                                               !
-!###############################################################################!
-PURE FUNCTION CFA_1D_LM_Map( l , m )
-
-INTEGER                                     :: CFA_1D_LM_Map
-INTEGER, INTENT(IN)                         :: l, m
-
-CFA_1D_LM_Map = 0
-
-END FUNCTION CFA_1D_LM_Map
-
-!+706+##########################################################################!
-!                                                                               !
-!                  CFA_2D_LM_Map                                            !
-!                                                                               !
-!###############################################################################!
-PURE FUNCTION CFA_2D_LM_Map( l , m )
-
-INTEGER                                     :: CFA_2D_LM_Map
-INTEGER, INTENT(IN)                         :: l, m
-
-CFA_2D_LM_Map = l
-
-END FUNCTION CFA_2D_LM_Map
-
-
-
-!+707+##########################################################################!
-!                                                                               !
-!                  CFA_3D_LM_Map                                            !
-!                                                                               !
-!###############################################################################!
-PURE FUNCTION CFA_3D_LM_Map( l , m )
-
-INTEGER                                     :: CFA_3D_LM_Map
-INTEGER, INTENT(IN)                         :: l, m
-
-CFA_3D_LM_Map = l*(l+1) + m
-
-END FUNCTION CFA_3D_LM_Map
-
-
-
-
-
-
-
-!+801+##################################################################################!
+!+701+##################################################################################!
 !                                                                                       !
 !       GENERATE_DEFINED_MESH - Generate the values for the mesh sent in using          !
 !                                predefined values for the width of each element.       !
@@ -1440,7 +1250,7 @@ COMPLEX(KIND = idp), DIMENSION(1:5)                         ::  Tmp_U_Value
 REAL(KIND = idp)                                                ::  r_tmp
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
 
-INTEGER                                                         ::  re, l, m, d
+INTEGER                                                         ::  re, l, m, d, u
 
 
 INTEGER                                                         :: Current_Location
@@ -1455,21 +1265,22 @@ Tmp_U_Value = 0.0_idp
 
 IF ( r == rlocs(0) ) THEN
 
-    DO l = 0,L_Limit
-        DO m = -M_VALUES(l),M_VALUES(l)
+    DO u = 1,NUM_CFA_VARS
+        DO l = 0,L_Limit
+            DO m = -M_VALUES(l),M_VALUES(l)
+        
 
-            Current_Location =  Matrix_Location( 1, l, m, 0, 0 )
 
-            TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
+                TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
+                Current_Location =  Matrix_Location( u, l, m, 0, 0 )
+                Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector(Current_Location) * TMP_VALUE_A
+                
+                
+            END DO ! m Loop
+        END DO  ! l Loop
+    END DO  ! u Loop
 
-            Tmp_U_Value(1) = Tmp_U_Value(1) + Coefficient_Vector( Current_Location + 0 ) * TMP_VALUE_A
-            Tmp_U_Value(2) = Tmp_U_Value(2) + Coefficient_Vector( Current_Location + 1 ) * TMP_VALUE_A
-            Tmp_U_Value(3) = Tmp_U_Value(3) + Coefficient_Vector( Current_Location + 2 ) * TMP_VALUE_A
-            Tmp_U_Value(4) = Tmp_U_Value(4) + Coefficient_Vector( Current_Location + 3 ) * TMP_VALUE_A
-            Tmp_U_Value(5) = Tmp_U_Value(5) + Coefficient_Vector( Current_Location + 4 ) * TMP_VALUE_A
 
-        END DO
-    END DO
 
 ELSE
 
@@ -1482,25 +1293,20 @@ ELSE
             r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
             LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
 
-
-            DO l = 0,L_Limit
-                DO m = -M_VALUES(l),M_VALUES(l)
-                    DO d = 0,DEGREE
-
-                        TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi) * LagP(d)
-
-                        Current_Location = Matrix_Location( 1, l, m, re, d )
-
-                        Tmp_U_Value(1) = Tmp_U_Value(1) + Coefficient_Vector( Current_Location + 0 ) * TMP_VALUE_A
-                        Tmp_U_Value(2) = Tmp_U_Value(2) + Coefficient_Vector( Current_Location + 1 ) * TMP_VALUE_A
-                        Tmp_U_Value(3) = Tmp_U_Value(3) + Coefficient_Vector( Current_Location + 2 ) * TMP_VALUE_A
-                        Tmp_U_Value(4) = Tmp_U_Value(4) + Coefficient_Vector( Current_Location + 3 ) * TMP_VALUE_A
-                        Tmp_U_Value(5) = Tmp_U_Value(5) + Coefficient_Vector( Current_Location + 4 ) * TMP_VALUE_A
+            DO u = 1,NUM_CFA_VARS
+                DO l = 0,L_Limit
+                    DO m = -M_VALUES(l),M_VALUES(l)
+                        DO d = 0,DEGREE
 
 
-                    END DO  !   d Loop
-                END DO  !   m Loop
-            END DO  !   l Loop
+                            TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi) * LagP(d)
+                            Current_Location = Matrix_Location( u, l, m, re, d )
+                            Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector( Current_Location ) * TMP_VALUE_A
+
+                        END DO  !   d Loop
+                    END DO  !   m Loop
+                END DO  !   l Loop
+            END DO ! u Loop
 
             EXIT
         END IF
@@ -1509,22 +1315,19 @@ ELSE
 
     IF ( r > rlocs(NUM_R_ELEMENTS) ) THEN
 
-        DO l = 0,L_Limit
-            DO m = -M_VALUES(l),M_VALUES(l)
+        DO u = 1,NUM_CFA_VARS
+            DO l = 0,L_Limit
+                DO m = -M_VALUES(l),M_VALUES(l)
 
 
-                Current_Location = Matrix_Location( 1, l, m, NUM_R_ELEMENTS-1, DEGREE )
+                    Current_Location = Matrix_Location( u, l, m, NUM_R_ELEMENTS-1, DEGREE )
+                    TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
+                    Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector( Current_Location ) * TMP_VALUE_A
 
-                TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
 
-                Tmp_U_Value(1) = Tmp_U_Value(1) + Coefficient_Vector( Current_Location + 0 ) * TMP_VALUE_A
-                Tmp_U_Value(2) = Tmp_U_Value(2) + Coefficient_Vector( Current_Location + 1 ) * TMP_VALUE_A
-                Tmp_U_Value(3) = Tmp_U_Value(3) + Coefficient_Vector( Current_Location + 2 ) * TMP_VALUE_A
-                Tmp_U_Value(4) = Tmp_U_Value(4) + Coefficient_Vector( Current_Location + 3 ) * TMP_VALUE_A
-                Tmp_U_Value(5) = Tmp_U_Value(5) + Coefficient_Vector( Current_Location + 4 ) * TMP_VALUE_A
-
-            END DO  !   m Loop
-        END DO  !   l Loop
+                END DO  !   m Loop
+            END DO  !   l Loop
+        END DO ! u Loop
     END IF
 
 END IF
@@ -1553,4 +1356,4 @@ END SUBROUTINE Calc_3D_Values_At_Location
 
 
 
-END MODULE Additional_Functions_Module
+END MODULE Poseidon_Additional_Functions_Module

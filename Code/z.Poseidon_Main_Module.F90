@@ -137,17 +137,11 @@ USE Poseidon_Variables_Module, &
 
 
 
-USE Additional_Functions_Module, &
+USE Poseidon_Additional_Functions_Module, &
             ONLY :  Spherical_Harmonic,                             &
                     Map_To_X_Space, Map_From_X_Space,               &
                     Initialize_LG_Quadrature,                       &
                     Initialize_LG_Quadrature_Locations,             &
-                    CFA_3D_Matrix_Map,                              &
-                    CFA_2D_Matrix_Map,                              &
-                    CFA_1D_Matrix_Map,                              &
-                    CFA_1D_LM_Map,                                  &
-                    CFA_2D_LM_Map,                                  &
-                    CFA_3D_LM_Map,                                  &
                     Generate_Defined_Mesh,                          &
                     Generate_Defined_Coarse_Mesh
 
@@ -159,15 +153,11 @@ USE Allocate_Variables_Module, &
 
 USE Jacobian_Internal_Functions_Module,  &
             ONLY :  Initialize_Guess_Values,                        &
-                    Initialize_Ylm_Table,                           &
                     Initialize_Ylm_Tables,                          &
                     Initialize_Lagrange_Poly_Tables
 
 USE CFA_Newton_Raphson_Module, &
             ONLY :  CFA_Newton_Raphson
-
-USE CFA_3D_Master_Build_Module, &
-            ONLY :  Calc_3D_Values_At_Location
 
 USE Poseidon_MPI_Module, &
             ONLY :  CREATE_POSEIDON_COMMUNICATORS
@@ -175,10 +165,9 @@ USE Poseidon_MPI_Module, &
 USE Poseidon_Parameter_Read_Module, &
             ONLY :  UNPACK_POSEIDON_PARAMETERS
 
+USE Poseidon_Additional_Functions_Module, &
+                        ONLY :  Calc_3D_Values_At_Location
 
-USE IO_Functions_Module, &
-            ONLY :  OPEN_RUN_REPORT_FILE,                           &
-                    CLOSE_RUN_REPORT_FILE
 
 USE mpi
 

@@ -80,8 +80,6 @@ USE Jacobian_Internal_Functions_Module,  &
                                 Initialize_Special_Guess_Values
 
 
-USE New_PETSc_Build_Module,  &
-                        ONLY :  Create_Resdiual_Vector
 
 USE CFA_3D_Master_Build_Module,  &
                         ONLY :  Calc_3D_Current_Values,             &
@@ -478,16 +476,16 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
             !*!
             !*!  Calculate the Sub-Jacobian and RHS Terms
             !*!
-            CALL Create_Resdiual_Vector( Local_re, Local_te, Local_pe,                   &
-                                         CUR_VAL_PSI, CUR_DRV_PSI,                       &
-                                         CUR_VAL_ALPHAPSI, CUR_DRV_ALPHAPSI,             &
-                                         CUR_VAL_BETA, CUR_DRV_BETA, CUR_DDRV_BETA,      &
-                                         Int_Factor,                                     &
-                                         RHS_TERMS,                                      &
-                                         CUR_R_LOCS, CUR_T_LOCS, CUR_P_LOCS,             &
-                                         R_SQUARE, R_CUBED, R_INVERSE,                   &
-                                         SIN_VAL, COS_VAL, CSC_VAL, COTAN_VAL,           &
-                                         SIN_SQUARE, CSC_SQUARE, RSIN_SQUARE             )
+!            CALL Create_Resdiual_Vector( Local_re, Local_te, Local_pe,                   &
+!                                         CUR_VAL_PSI, CUR_DRV_PSI,                       &
+!                                         CUR_VAL_ALPHAPSI, CUR_DRV_ALPHAPSI,             &
+!                                         CUR_VAL_BETA, CUR_DRV_BETA, CUR_DDRV_BETA,      &
+!                                         Int_Factor,                                     &
+!                                         RHS_TERMS,                                      &
+!                                         CUR_R_LOCS, CUR_T_LOCS, CUR_P_LOCS,             &
+!                                         R_SQUARE, R_CUBED, R_INVERSE,                   &
+!                                         SIN_VAL, COS_VAL, CSC_VAL, COTAN_VAL,           &
+!                                         SIN_SQUARE, CSC_SQUARE, RSIN_SQUARE             )
 
 
 

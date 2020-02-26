@@ -56,6 +56,7 @@ USE Poseidon_Variables_Module, &
             ONLY :  NUM_R_ELEMENTS,             &
                     NUM_T_ELEMENTS,             &
                     NUM_P_ELEMENTS,             &
+                    NUM_TP_QUAD_POINTS,         &
                     NUM_R_NODES,                &
                     PROB_DIM,                   &
                     Block_PROB_DIM,             &
@@ -79,14 +80,14 @@ USE Poseidon_Variables_Module, &
                     INT_T_WEIGHTS,              &
                     INT_P_LOCATIONS,            &
                     INT_P_WEIGHTS,              &
+                    INT_TP_WEIGHTS,             &
                     Ylm_Table_Block,            &
                     Ylm_Values,                 &
-                    Ylm_CC_Values,              &
                     Ylm_dt_Values,              &
                     Ylm_dp_Values,              &
-                    Ylm_dtt_Values,             &
-                    Ylm_dtp_Values,             &
-                    Ylm_dpp_Values,             &
+                    Ylm_CC_Values,          &
+                    Ylm_CC_dt_Values,       &
+                    Ylm_CC_dp_Values,       &
                     LM_Length,                  &
                     M_VALUES,                   &
                     Lagrange_Poly_Table,        &
@@ -101,6 +102,7 @@ USE Poseidon_Variables_Module, &
                     Iter_Time_Table,            &
                     Frame_Time_Table,           &
                     Frame_Convergence_Table,    &
+                    Iteration_Histogram,        &
                     Run_Time_Table,             &
                     Num_Timer_Calls,            &
                     STF_NNZ,                    &
@@ -183,39 +185,36 @@ ALLOCATE( M_VALUES(0:L_LIMIT) )
 
 
 
-ALLOCATE( Ylm_Table_Block(  -L_LIMIT:L_LIMIT, -1:L_LIMIT,               &
-                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,   &
-                            0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)     )
+!ALLOCATE( Ylm_Table_Block(  -L_LIMIT:L_LIMIT, -1:L_LIMIT,               &
+!                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,   &
+!                            0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)     )
 
 
 
-ALLOCATE( Ylm_Values(   0:LM_Length,                                          &
-                        1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
-                        0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
-
-ALLOCATE( Ylm_CC_Values(    0:LM_Length,                                          &
-                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
+ALLOCATE( Ylm_Values(       0:LM_Length-1,                                          &
+                            1:NUM_TP_QUAD_POINTS,                                   &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
-ALLOCATE( Ylm_dt_Values(    0:LM_Length,                                          &
-                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
+ALLOCATE( Ylm_dt_Values(    0:LM_Length-1,                                          &
+                            1:NUM_TP_QUAD_POINTS,                                   &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
-ALLOCATE( Ylm_dp_Values(    0:LM_Length,                                          &
-                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
+ALLOCATE( Ylm_dp_Values(    0:LM_Length-1,                                          &
+                            1:NUM_TP_QUAD_POINTS,                                   &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
-ALLOCATE( Ylm_dtt_Values(   0:LM_Length,                                          &
-                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
+ALLOCATE( Ylm_CC_Values(    1:NUM_TP_QUAD_POINTS,                                   &
+                            0:LM_Length-1,                                          &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
-ALLOCATE( Ylm_dtp_Values(   0:LM_Length,                                          &
-                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
+ALLOCATE( Ylm_CC_dt_Values( 1:NUM_TP_QUAD_POINTS,                                   &
+                            0:LM_Length-1,                                          &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
-ALLOCATE( Ylm_dpp_Values(   0:LM_Length,                                          &
-                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
+ALLOCATE( Ylm_CC_dp_Values( 1:NUM_TP_QUAD_POINTS,                                   &
+                            0:LM_Length-1,                                          &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
+
 
 ALLOCATE( Lagrange_Poly_Table(0:DEGREE, 1:NUM_R_QUAD_POINTS, 0:2)   )
 ALLOCATE( LPT_LPT( 1:NUM_R_QUAD_POINTS,0:DEGREE,0:DEGREE,0:1,0:2)       )
@@ -224,7 +223,7 @@ ALLOCATE(INT_R_LOCATIONS(1:NUM_R_QUAD_POINTS), INT_R_WEIGHTS(1:NUM_R_QUAD_POINTS
 ALLOCATE(INT_T_LOCATIONS(1:NUM_T_QUAD_POINTS), INT_T_WEIGHTS(1:NUM_T_QUAD_POINTS))
 ALLOCATE(INT_P_LOCATIONS(1:NUM_P_QUAD_POINTS), INT_P_WEIGHTS(1:NUM_P_QUAD_POINTS))
 
-
+ALLOCATE( INT_TP_WEIGHTS(1:NUM_TP_QUAD_POINTS) )
 
 
 ALLOCATE( ITER_TIME_TABLE(1:NUM_TIMER_CALLS) )
@@ -235,6 +234,8 @@ FRAME_TIME_TABLE = 0.0_idp
 RUN_TIME_TABLE = 0.0_idp
 
 ALLOCATE( FRAME_CONVERGENCE_TABLE(1:MAX_ITERATIONS))
+ALLOCATE( Iteration_Histogram(1:MAX_ITERATIONS) )
+Iteration_Histogram = 0
 
 END SUBROUTINE Allocate_Poseidon_CFA_Variables
 
@@ -284,14 +285,11 @@ DEALLOCATE( Block_Source_E )
 DEALLOCATE( Block_Source_S )
 DEALLOCATE( Block_Source_Si )
 
-DEALLOCATE( Ylm_Table_Block )
+!DEALLOCATE( Ylm_Table_Block )
 DEALLOCATE( Ylm_Values )
 DEALLOCATE( Ylm_CC_Values )
 DEALLOCATE( Ylm_dt_Values )
 DEALLOCATE( Ylm_dp_Values)
-DEALLOCATE( Ylm_dtt_Values)
-DEALLOCATE( Ylm_dtp_Values)
-DEALLOCATE( Ylm_dpp_Values)
 
 
 
@@ -300,7 +298,7 @@ DEALLOCATE( RUN_TIME_TABLE  )
 
 
 
-
+DEALLOCATE( ITERATION_HISTOGRAM )
 
 
 
@@ -364,11 +362,11 @@ ALLOCATE( M_VALUES(0:L_LIMIT) )
 
 
 ALLOCATE( Ylm_Values(   0:LM_Length,                                            &
-                        1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
+                        1:NUM_TP_QUAD_POINTS,                                   &
                         0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
 ALLOCATE( Ylm_CC_Values(    0:LM_Length,                                            &
-                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
+                            1:NUM_TP_QUAD_POINTS,                                   &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
 

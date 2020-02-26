@@ -593,20 +593,20 @@ CALL h5gopen_f(file_id, '/mesh', group_id, error)
 datasize1d(1) = 3
 CALL read_1d_slab('array_dimensions', array_dimensions, group_id, datasize1d)
 
-IF ( array_dimensions(1) /= DRIVER_R_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of nx:', DRIVER_R_ELEMS, '/=', array_dimensions(1)
-    CALL MPI_ABORT(MPI_COMM_WORLD,101,error)
-END IF
-
-IF ( array_dimensions(2) /= DRIVER_T_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of ny:', DRIVER_T_ELEMS, '/=', array_dimensions(2)
-    CALL MPI_ABORT(MPI_COMM_WORLD,102,error)
-END IF
-
-IF ( array_dimensions(3) /= DRIVER_P_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of nz:', DRIVER_P_ELEMS, '/=', array_dimensions(3)
-    CALL MPI_ABORT(MPI_COMM_WORLD,103,error)
-END IF
+!IF ( array_dimensions(1) /= DRIVER_R_ELEMS ) THEN
+!    PRINT *, '*** ERROR: non-matching value of nx:', DRIVER_R_ELEMS, '/=', array_dimensions(1)
+!    CALL MPI_ABORT(MPI_COMM_WORLD,101,error)
+!END IF
+!
+!IF ( array_dimensions(2) /= DRIVER_T_ELEMS ) THEN
+!    PRINT *, '*** ERROR: non-matching value of ny:', DRIVER_T_ELEMS, '/=', array_dimensions(2)
+!    CALL MPI_ABORT(MPI_COMM_WORLD,102,error)
+!END IF
+!
+!IF ( array_dimensions(3) /= DRIVER_P_ELEMS ) THEN
+!    PRINT *, '*** ERROR: non-matching value of nz:', DRIVER_P_ELEMS, '/=', array_dimensions(3)
+!    CALL MPI_ABORT(MPI_COMM_WORLD,103,error)
+!END IF
 
 
 
@@ -614,10 +614,12 @@ datasize1d(1) = 1
 CALL HDF5_READ('time',time, group_id, datasize1d, error )
 
 
-
+PRINT*,"HERE"
 ! Read Element Edge and Center Locations !
 datasize1d(1) = DRIVER_R_ELEMS+1
 CALL read_1d_slab('x_ef', x_ef(0:DRIVER_R_ELEMS), group_id, datasize1d)
+
+PRINT*,"THERE"
 CALL read_1d_slab('dx_cf',dx_cf(0:DRIVER_R_ELEMS-1), group_id, datasize1d)
 
 datasize1d(1) = DRIVER_T_ELEMS+1

@@ -77,10 +77,14 @@ INTEGER                     ::  RESULTS_OUTPUT_FLAG
 INTEGER                     ::  RUN_REPORT_FLAG
 INTEGER                     ::  FRAME_REPORT_FLAG
 
+INTEGER                     ::  DRIVER_FIRST_GUESS_FLAG
+INTEGER                     ::  DRIVER_SUBSEQUENT_GUESS_FLAG
+
 
 INTEGER                     ::  DRIVER_FRAME
 INTEGER                     ::  DRIVER_START_FRAME
 INTEGER                     ::  DRIVER_END_FRAME
+INTEGER                     ::  DRIVER_TOTAL_FRAMES
 
 REAL(KIND=idp), ALLOCATABLE, DIMENSION(:)           ::  DRIVER_R_LOCS
 REAL(KIND=idp), ALLOCATABLE, DIMENSION(:)           ::  DRIVER_T_LOCS
@@ -163,7 +167,17 @@ REAL(KIND=idp), ALLOCATABLE, DIMENSION(:)               :: SELFSIM_R_VALS
 REAL(KIND=idp), ALLOCATABLE, DIMENSION(:)               :: SELFSIM_POT_VALS
 REAL(KIND=idp), ALLOCATABLE, DIMENSION(:)               :: SELFSIM_SHIFT_VALS
 
+INTEGER                                                 :: SELFSIM_V_SWITCH
 
+
+
+
+
+
+INTEGER, DIMENSION(:), ALLOCATABLE                      ::  Iteration_History
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Driver_Iter_Time_Table
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Driver_Frame_Time_Table
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Driver_Run_Time_Table
 
 
 

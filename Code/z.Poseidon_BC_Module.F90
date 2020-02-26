@@ -79,16 +79,7 @@ USE Poseidon_Variables_Module, &
                                         Block_Source_E,             &
                                         Block_Source_S,             &
                                         Block_Source_Si,            &
-                                        Ylm_Table_Block,            &
-                                        Ylm_Values,                 &
-                                        Ylm_CC_Values,              &
-                                        Ylm_dt_Values,              &
-                                        Ylm_dp_Values,              &
-                                        Ylm_dtt_Values,             &
-                                        Ylm_dtp_Values,             &
-                                        Ylm_dpp_Values,             &
                                         Lagrange_Poly_Table,        &
-                                        LPT_LPT,                    &
                                         Coefficient_Vector,         &
                                         nPROCS_SHELL,               &
                                         myID_Poseidon,              &
@@ -121,14 +112,15 @@ USE Poseidon_Variables_Module, &
                                         Matrix_Location,            &
                                         LM_Location
 
-USE Additional_Functions_Module, &
+USE Poseidon_Additional_Functions_Module, &
                                 ONLY :  Lagrange_Poly,              &
                                         Spherical_Harmonic,         &
                                         Initialize_LGL_Quadrature,  &
-                                        Map_To_X_Space,             &
-                                        CFA_Matrix_Map,             &
-                                        CFA_ALL_Matrix_Map,         &
                                         Calc_3D_Values_At_Location
+
+USE Poseidon_Mapping_Functions_Module, &
+                                ONLY :  Map_To_X_Space
+
 
 IMPLICIT NONE
 
@@ -272,16 +264,16 @@ DO ui = 1,NUM_CFA_VARS
             !*!
 
 
-        !Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
+        Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
         DO i = 0,ELEM_PROB_DIM-1
-
-          BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+ui-1, 0)=0.0_idp
+            ! Clear the Column !
+            BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+value_location, 0)=0.0_idp
 
         END DO
-!        BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1, 0) = 0.0_idp
-!        BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM+ Value_Location, 0) = 1.0_idp
-        BLOCK_ELEM_STF_MATVEC((ui-1)*ELEM_PROB_DIM:ui*ELEM_PROB_DIM-1, 0) = 0.0_idp
-        BLOCK_ELEM_STF_MATVEC((ui-1) + (ui-1)*ELEM_PROB_DIM, 0) = 1.0_idp
+
+        ! Clear the Row !
+        BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1, 0) = 0.0_idp
+        BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM+Value_Location, 0) = 1.0_idp
 
     END IF
 

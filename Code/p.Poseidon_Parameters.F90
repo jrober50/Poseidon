@@ -77,7 +77,7 @@ INTEGER                     ::  CONVERGENCE_FLAG    = 0
 
 REAL(KIND =idp)             ::  CONVERGENCE_CRITERIA
 
-
+INTEGER                     ::  INITIAL_GUESS_FLAG
 
 INTEGER                     ::  WRITE_TIMETABLE_FLAG      = 0
 INTEGER                     ::  WRITE_REPORT_FLAG         = 0
@@ -92,6 +92,7 @@ INTEGER                     ::  ITER_REPORT_FILE_ID
 INTEGER                     ::  FRAME_REPORT_FILE_ID
 
 INTEGER                     ::  OUTPUT_MATRIX_FLAG
+INTEGER                     ::  OUTPUT_RHS_VECTOR_FLAG
 
 INTEGER                     ::  NEW_PETSC_SOLVER_FLAG
 

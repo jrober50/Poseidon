@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Test_Functions_Module                                                        !##!
+MODULE Driver_Test_Functions_Module                                                 !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -70,7 +70,7 @@ USE CHIMERA_TEST_FUNCS_Module, &
                         Test_Chimera_Simulated_Shift
 
 
-USE Additional_Functions_Module, &
+USE Driver_Additional_Functions_Module, &
                 ONLY :  Map_From_X_Space,                       &
                         Initialize_LG_Quadrature_Locations,     &
                         Generate_Defined_Mesh
@@ -620,4 +620,4 @@ END FUNCTION Test_Spherical_Symmetry_No_Surface
 
 
 
-END MODULE Test_Functions_Module
+END MODULE Driver_Test_Functions_Module

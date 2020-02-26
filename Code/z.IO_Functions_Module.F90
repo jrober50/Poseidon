@@ -63,7 +63,8 @@ USE Poseidon_Parameters, &
                             RUN_REPORT_FILE_ID,                             &
                             ITER_REPORT_FILE_ID,                            &
                             FRAME_REPORT_FILE_ID,                           &
-                            WRITE_REPORT_FLAG
+                            WRITE_REPORT_FLAG,                              &
+                            OUTPUT_RHS_VECTOR_FLAG
 
 USE DRIVER_Parameters,  &
                     ONLY :  Analytic_Solution,                              &
@@ -88,28 +89,30 @@ USE Poseidon_Variables_Module, &
                             INT_P_LOCATIONS,                                &
                             VAR_DIM,                                        &
                             NUM_OFF_DIAGONALS,                              &
+                            SUBSHELL_PROB_DIM,                              &
+                            Block_PROB_DIM,                                 &
+                            BLOCK_RHS_VECTOR,                               &
                             BLOCK_ELEM_STF_MATVEC,                          &
+                            ELEM_PROB_DIM_SQR,                              &
                             Total_Run_Iters,                                &
                             Num_Timer_Calls,                                &
                             ITER_TIME_TABLE,                                &
                             FRAME_TIME_TABLE,                               &
                             FRAME_CONVERGENCE_TABLE,                        &
+                            Iteration_Histogram,                            &
                             RUN_TIME_TABLE
  
 
-USE Additional_Functions_Module, &
+USE Poseidon_Additional_Functions_Module, &
                     ONLY :  Map_From_x_Space,                               &
                             Initialize_LGL_Quadrature_Locations,            &
                             Lagrange_Poly,                                  &
                             Lagrange_Poly_Deriv,                            &
                             Lagrange_Second_Deriv,                          &
-                            CFA_Matrix_Map
-
-USE Additional_Functions_Module,     &
-                    ONLY : Calc_3D_Values_At_Location
+                            Calc_3D_Values_At_Location
 
 
-USE Mesh_Module, &
+USE Poseidon_Mesh_Module, &
                     ONLY :  Create_Uniform_1D_Mesh,                         &
                             Create_Logarithmic_1D_Mesh,                     &
                             Create_Split_1D_Mesh
@@ -297,479 +300,6 @@ END SUBROUTINE CLOSE_ITER_REPORT_FILE
 
 
 
- !+201+############################################################################!
-!                                                                                   !
-!                     OPEN_RUN_REPORT_FILE                                          !
-!                                                                                   !
- !#################################################################################!
-SUBROUTINE OPEN_RUN_REPORT_FILE()
-
-CHARACTER(LEN = 22)                                     ::  FILE_NAME
-INTEGER                                                 ::  istat
-LOGICAL                                                 ::  FLAG, OK
-
-
-IF ( RUN_REPORT_FLAG == 1 ) THEN
-    WRITE(FILE_NAME,'(A)')"OUTPUT/Run_Report.out"
-    CALL OPEN_NEW_FILE( FILE_NAME, RUN_REPORT_FILE_ID )
-END IF
-
-
-END SUBROUTINE OPEN_RUN_REPORT_FILE
-
-
-!+202+##########################################################################!
-!                                                                               !
-!                   OUTPUT_RUN_REPORT                                           !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE OUTPUT_RUN_REPORT()
-
-
-INTEGER                                         ::  FILE_ID
-INTEGER                                         ::  i
-REAL(KIND = idp)                                ::  r, theta, phi, deltar
-REAL(KIND = idp)                                ::  Analytic_Val, Solver_Val
-REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
-REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
-REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
-
-120 FORMAT (A61)
-121 FORMAT (A1)
-122 FORMAT (A41,I2.2)
-123 FORMAT (A38,ES22.15)
-
-109 FORMAT (A,I2.2,A,I2.2)
-110 FORMAT (11X,A1,18X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
-111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
-112 FORMAT (A43,I2.2,A2,I2.2,A4)
-
-FILE_ID = RUN_REPORT_FILE_ID
-
-
-
-! Write Timetable to File
-IF ( RUN_REPORT_FLAG == 1 ) THEN
-
-    WRITE(FILE_ID,'(A)')"                                Average Timing Results"
-    WRITE(FILE_ID,'(A)')"            ============================================================="
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,123)"                    Initialize Time : ",RUN_TIME_TABLE(1)
-    WRITE(FILE_ID,123)" Input/Communicate Source Data Time : ",RUN_TIME_TABLE(2)
-    WRITE(FILE_ID,123)"     Input Boundary Conditions Time : ",RUN_TIME_TABLE(3)
-    WRITE(FILE_ID,123)"        CFA_3D_Apply_BCs_Part1 Time : ",RUN_TIME_TABLE(4)
-    WRITE(FILE_ID,120)"-------------------------------------------------------------"
-    WRITE(FILE_ID,123)" ||     Calc_3D_Current_Values Time : ",RUN_TIME_TABLE(5)
-    WRITE(FILE_ID,123)" ||    CREATE_3D_SubJcbn_Terms Time : ",RUN_TIME_TABLE(6)
-    WRITE(FILE_ID,123)" ||       CREATE_3D_RHS_VECTOR Time : ",RUN_TIME_TABLE(7)
-    WRITE(FILE_ID,123)"\  /     CREATE_3D_JCBN_MATRIX Time : ",RUN_TIME_TABLE(8)
-    WRITE(FILE_ID,120)"-\/ ---------------------------------------------------------"
-    WRITE(FILE_ID,123)"CREATE_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(9)
-    WRITE(FILE_ID,123)"REDUCE_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(10)
-    WRITE(FILE_ID,123)"FINISH_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(11)
-    WRITE(FILE_ID,123)"          FINISH_3D_RHS_VECTOR Time : ",RUN_TIME_TABLE(12)
-    WRITE(FILE_ID,123)"        CFA_3D_Apply_BCs_Part2 Time : ",RUN_TIME_TABLE(13)
-    WRITE(FILE_ID,123)"                    CFA_Solver Time : ",RUN_TIME_TABLE(14)
-    WRITE(FILE_ID,123)"        CFA_Coefficient_Update Time : ",RUN_TIME_TABLE(15)
-    WRITE(FILE_ID,123)"   CFA_Coefficient_Share_PETSc Time : ",RUN_TIME_TABLE(16)
-    WRITE(FILE_ID,123)"         CFA_Convergence_Check Time : ",RUN_TIME_TABLE(17)
-    WRITE(FILE_ID,123)"               Total Iteration Time : ",RUN_TIME_TABLE(18)
-    WRITE(FILE_ID,123)"             Poseidon_Dist_Sol Time : ",RUN_TIME_TABLE(19)
-    WRITE(FILE_ID,120)"============================================================="
-    WRITE(FILE_ID,121)" "
-    WRITE(FILE_ID,121)" "
-    WRITE(FILE_ID,121)" "
-    WRITE(FILE_ID,121)" "
-
-
-    WRITE(FILE_ID,'(A)')"                                 Convergence Results"
-    WRITE(FILE_ID,'(A)')"            ============================================================="
-    WRITE(FILE_ID,'(A)')""
-    IF ( Cur_Iteration == 2 ) THEN
-        WRITE(FILE_ID,'(A,I2.2,A)')"The Newton-Raphson solver exited after ",Cur_Iteration-1," Iteration."
-    ELSE
-        WRITE(FILE_ID,'(A,I2.2,A)')"The Newton-Raphson solver exited after ",Cur_Iteration-1," Iterations."
-    END IF
-
-
-    IF ( CONVERGENCE_FLAG == 1 ) THEN
-
-        WRITE(FILE_ID,'(A)')"The solution converged within the tolerance set."
-
-    ELSE IF ( CONVERGENCE_FLAG == 2 ) THEN
-
-        WRITE(FILE_ID,'(A)')"The solution did not converge within the maximum number of iterations allowed."
-        WRITE(FILE_ID,'(A,I2.2)')"The maximum number of iterations allowed is ",Max_Iterations
-
-    END IF
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,'(A)')" "
-
-
-    WRITE(FILE_ID,'(A)')"                                 Sample of Final Results"
-    WRITE(FILE_ID,'(A)')"            ============================================================="
-    WRITE(FILE_ID,'(A)')" "
-    WRITE(FILE_ID,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
-END IF
-
-
-! Write Timetable to Screen
-IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    WRITE(*,'(A)')" "
-    WRITE(*,'(A)')" "
-    WRITE(*,'(A)')"            ============================================================="
-    WRITE(*,'(A)')"                                Average Timing Results"
-    WRITE(*,'(A)')"            ============================================================="
-    WRITE(*,'(A)')" "
-    WRITE(*,123)"                    Initialize Time : ",RUN_TIME_TABLE(1)
-    WRITE(*,123)" Input/Communicate Source Data Time : ",RUN_TIME_TABLE(2)
-    WRITE(*,123)"     Input Boundary Conditions Time : ",RUN_TIME_TABLE(3)
-    WRITE(*,123)"        CFA_3D_Apply_BCs_Part1 Time : ",RUN_TIME_TABLE(4)
-    WRITE(*,120)"-------------------------------------------------------------"
-    WRITE(*,123)" ||     Calc_3D_Current_Values Time : ",RUN_TIME_TABLE(5)
-    WRITE(*,123)" ||    CREATE_3D_SubJcbn_Terms Time : ",RUN_TIME_TABLE(6)
-    WRITE(*,123)" ||       CREATE_3D_RHS_VECTOR Time : ",RUN_TIME_TABLE(7)
-    WRITE(*,123)"\  /     CREATE_3D_JCBN_MATRIX Time : ",RUN_TIME_TABLE(8)
-    WRITE(*,120)"-\/ ---------------------------------------------------------"
-    WRITE(*,123)"CREATE_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(9)
-    WRITE(*,123)"REDUCE_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(10)
-    WRITE(*,123)"FINISH_3D_NONLAPLACIAN_STF_MAT Time : ",RUN_TIME_TABLE(11)
-    WRITE(*,123)"          FINISH_3D_RHS_VECTOR Time : ",RUN_TIME_TABLE(12)
-    WRITE(*,123)"        CFA_3D_Apply_BCs_Part2 Time : ",RUN_TIME_TABLE(13)
-    WRITE(*,123)"                    CFA_Solver Time : ",RUN_TIME_TABLE(14)
-    WRITE(*,123)"        CFA_Coefficient_Update Time : ",RUN_TIME_TABLE(15)
-    WRITE(*,123)"   CFA_Coefficient_Share_PETSc Time : ",RUN_TIME_TABLE(16)
-    WRITE(*,123)"         CFA_Convergence_Check Time : ",RUN_TIME_TABLE(17)
-    WRITE(*,123)"               Total Iteration Time : ",RUN_TIME_TABLE(18)
-    WRITE(*,123)"             Poseidon_Dist_Sol Time : ",RUN_TIME_TABLE(19)
-    WRITE(*,120)"============================================================="
-    WRITE(*,121)" "
-    WRITE(*,121)" "
-    WRITE(*,121)" "
-    WRITE(*,121)" "
-
-END IF
-
-
-
-
-! Write Results Table Header to Screen
-IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    PRINT*,"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
-    WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
-END IF
-
-
-
-
-deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
-DO i = 0,ITER_REPORT_NUM_SAMPLES
-
-    r = i*deltar + R_INNER
-    theta = pi/2.0_idp
-    phi = pi/2.0_idp
-
-
-    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
-                                    Return_Psi, Return_AlphaPsi,                &
-                                    Return_Beta1, Return_Beta2, Return_Beta3    )
-
-
-
-    ! Calculate Conformal Factor value from Newtonian Potential
-    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
-
-    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
-
-
-    ! Write Results to Screen
-    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-        WRITE(*,111) r,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
-    END IF
-
-    ! Write Results to File
-    IF ( RUN_REPORT_FLAG == 1 ) THEN
-        WRITE(FILE_ID,111) r,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
-    END IF
-
-END DO
-
-
-
-END SUBROUTINE OUTPUT_RUN_REPORT
-
-
-
-
-
- !+203+############################################################################!
-!                                                                                   !
-!                    CLOSE_RUN_REPORT_FILE                                          !
-!                                                                                   !
- !#################################################################################!
-SUBROUTINE CLOSE_RUN_REPORT_FILE()
-
-IF ( RUN_REPORT_FLAG == 1 ) THEN
-    CLOSE( UNIT = RUN_REPORT_FILE_ID )
-END IF
-
-END SUBROUTINE CLOSE_RUN_REPORT_FILE
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- !+301+############################################################################!
-!                                                                                   !
-!                     OPEN_FRAME_REPORT_FILE                                          !
-!                                                                                   !
- !#################################################################################!
-SUBROUTINE OPEN_FRAME_REPORT_FILE(Frame)
-
-INTEGER, INTENT(IN)                                     ::  Frame
-
-CHARACTER(LEN = 53)                                     ::  FILE_NAME
-INTEGER                                                 ::  istat
-LOGICAL                                                 ::  FLAG, OK
-
-109 FORMAT (A,I2.2)
-
-
-
-IF ( myID == 0 ) THEN
-    IF ( FRAME_REPORT_FLAG == 1 ) THEN
-
-        WRITE(FILE_NAME,'(A)')"OUTPUT/Iteration_Reports/Frame_Report_SCRATCH.out"
-        CALL OPEN_NEW_FILE( FILE_NAME, FRAME_REPORT_FILE_ID )
-
-    END IF ! WRITE_REPORT_FLAGS
-END IF ! myID == 0
-
-
-END SUBROUTINE OPEN_FRAME_REPORT_FILE
-
-
-
-
-!+302+##########################################################################!
-!                                                                               !
-!                   OUTPUT_ITERATION_REPORT                                     !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE OUTPUT_FRAME_REPORT(FRAME)
-
-INTEGER, INTENT(IN)                 :: FRAME
-
-INTEGER                                         ::  FILE_ID, FILE_IDb
-INTEGER                                         ::  i
-REAL(KIND = idp)                                ::  r, theta, phi, deltar
-REAL(KIND = idp)                                ::  Analytic_Val, Solver_Val
-REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
-REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
-REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
-
-CHARACTER(LEN = 53)                             ::  FILE_NAME
-
-CHARACTER(LEN = 300)                            ::  Line
-INTEGEr                                         ::  io_stat
-
-
-120 FORMAT (12X,A61)
-121 FORMAT (A1)
-122 FORMAT (A41,I2.2)
-123 FORMAT (12X,A38,ES22.15)
-
-109 FORMAT (A,I2.2,A,I2.2)
-110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
-111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
-112 FORMAT (A43,I2.2,A2,I2.2,A4)
-
-132 FORMAT (A38,I2.2,A4)
-
-142 FORMAT (16X,A,10X,A)
-143 FORMAT (19X,I2.2,15X,ES22.15)
-
-
-WRITE(FILE_NAME,132)"OUTPUT/Iteration_Reports/Frame_Report_",Frame,".out"
-CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
-
-
-IF ( myID == 0 ) THEN
-    ! Write Title to File
-    IF ( FRAME_REPORT_FLAG == 1 ) THEN
-
-        WRITE(FILE_ID,109)"                                Report for Frame ",Frame
-        WRITE(FILE_ID,'(A)')"-----------------------------------------------------------------------------------------"
-        WRITE(FILE_ID,'(2/)')
-
-
-        IF ( Cur_Iteration == 2 ) THEN
-            WRITE(FILE_ID,'(A,I2.2,A)')"The Newton-Raphson solver exited after ",Cur_Iteration-1," Iteration."
-        ELSE
-            WRITE(FILE_ID,'(A,I2.2,A)')"The Newton-Raphson solver exited after ",Cur_Iteration-1," Iterations."
-        END IF
-
-
-        IF ( CONVERGENCE_FLAG == 1 ) THEN
-
-            WRITE(FILE_ID,'(A)')"The solution converged within the tolerance set."
-
-        ELSE IF ( CONVERGENCE_FLAG == 2 ) THEN
-
-            WRITE(FILE_ID,'(A)')"The solution did not converge within the maximum number of iterations allowed."
-            WRITE(FILE_ID,'(A,I2.2)')"The maximum number of iterations allowed is ",Max_Iterations
-
-        END IF
-        WRITE(FILE_ID,'(2/)')
-
-
-
-
-        WRITE(FILE_ID,'(A)')"                              Average Timing Results"
-        WRITE(FILE_ID,'(A)')"            ============================================================="
-        WRITE(FILE_ID,'(A)')" "
-        WRITE(FILE_ID,123)"                    Initialize Time : ",FRAME_TIME_TABLE(1)
-        WRITE(FILE_ID,123)" Input/Communicate Source Data Time : ",FRAME_TIME_TABLE(2)
-        WRITE(FILE_ID,123)"     Input Boundary Conditions Time : ",FRAME_TIME_TABLE(3)
-        WRITE(FILE_ID,123)"        CFA_3D_Apply_BCs_Part1 Time : ",FRAME_TIME_TABLE(4)
-        WRITE(FILE_ID,120)"-------------------------------------------------------------"
-        WRITE(FILE_ID,123)" ||     Calc_3D_Current_Values Time : ",FRAME_TIME_TABLE(5)
-        WRITE(FILE_ID,123)" ||    CREATE_3D_SubJcbn_Terms Time : ",FRAME_TIME_TABLE(6)
-        WRITE(FILE_ID,123)" ||       CREATE_3D_RHS_VECTOR Time : ",FRAME_TIME_TABLE(7)
-        WRITE(FILE_ID,123)"\  /     CREATE_3D_JCBN_MATRIX Time : ",FRAME_TIME_TABLE(8)
-        WRITE(FILE_ID,120)"-\/ ---------------------------------------------------------"
-        WRITE(FILE_ID,123)"CREATE_3D_NONLAPLACIAN_STF_MAT Time : ",FRAME_TIME_TABLE(9)
-        WRITE(FILE_ID,123)"REDUCE_3D_NONLAPLACIAN_STF_MAT Time : ",FRAME_TIME_TABLE(10)
-        WRITE(FILE_ID,123)"FINISH_3D_NONLAPLACIAN_STF_MAT Time : ",FRAME_TIME_TABLE(11)
-        WRITE(FILE_ID,123)"          FINISH_3D_RHS_VECTOR Time : ",FRAME_TIME_TABLE(12)
-        WRITE(FILE_ID,123)"        CFA_3D_Apply_BCs_Part2 Time : ",FRAME_TIME_TABLE(13)
-        WRITE(FILE_ID,123)"                    CFA_Solver Time : ",FRAME_TIME_TABLE(14)
-        WRITE(FILE_ID,123)"        CFA_Coefficient_Update Time : ",FRAME_TIME_TABLE(15)
-        WRITE(FILE_ID,123)"   CFA_Coefficient_Share_PETSc Time : ",FRAME_TIME_TABLE(16)
-        WRITE(FILE_ID,123)"         CFA_Convergence_Check Time : ",FRAME_TIME_TABLE(17)
-        WRITE(FILE_ID,123)"               Total Iteration Time : ",FRAME_TIME_TABLE(18)
-        WRITE(FILE_ID,123)"             Poseidon_Dist_Sol Time : ",FRAME_TIME_TABLE(19)
-        WRITE(FILE_ID,120)"============================================================="
-        WRITE(FILE_ID,121)" "
-        WRITE(FILE_ID,121)" "
-        WRITE(FILE_ID,121)" "
-        WRITE(FILE_ID,121)" "
-
-
-
-        WRITE(FILE_ID,'(A)')"                                  Frame's Convergence"
-        WRITE(FILE_ID,'(A)')"            ============================================================="
-        WRITE(FILE_ID,'(A)')" "
-        WRITE(FILE_ID,142)"Iteration","MAXVAL(ABS(Update_Vector))"
-        DO i = 1,CUR_ITERATION-1
-            WRITE(FILE_ID,143)i,FRAME_CONVERGENCE_TABLE(i)
-        END DO
-        WRITE(FILE_ID,'(2/)')
-
-
-
-
-        WRITE(FILE_ID,'(A)')"                                   Frame's Results"
-        WRITE(FILE_ID,'(A)')"            ============================================================="
-        WRITE(FILE_ID,'(A)')" "
-        WRITE(FILE_ID,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
-
-
-
-
-        deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
-
-        DO i = 0,ITER_REPORT_NUM_SAMPLES
-
-            r = i*deltar + R_INNER
-            theta = pi/2.0_idp
-            phi = pi/2.0_idp
-
-
-            CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
-                                            Return_Psi, Return_AlphaPsi,                &
-                                            Return_Beta1, Return_Beta2, Return_Beta3    )
-
-            ! Determine the Newtonian Potential at the location r, theta, phi
-            Analytic_Val = Analytic_Solution(r,theta,phi)
-
-
-            ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
-            ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
-
-            ! Calculate Conformal Factor value from Newtonian Potential
-            PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
-
-            ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-            AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
-
-            ! Write Results to File
-            WRITE(FILE_ID,111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
-
-        END DO
-        WRITE( FILE_ID, '(4/)')
-
-
-
-
-        ! Copy from Scratch File into Frame Report !
-        REWIND( UNIT=FRAME_REPORT_FILE_ID )
-        DO
-            READ(FRAME_REPORT_FILE_ID,'(A)', iostat=io_stat) Line
-            IF (io_stat /= 0 ) THEN
-                EXIT
-            END IF
-            WRITE(FILE_ID, '(A)') Line
-        END DO
-
-
-    END IF ! FRAME_REPORT_FLAG == 1
-
-    CLOSE( UNIT = FILE_ID)
-    CLOSE( UNIT = FRAME_REPORT_FILE_ID, STATUS='delete' )
-
-END IF ! myID == 0
-
-END SUBROUTINE OUTPUT_FRAME_REPORT
-
-
-
-
-
- !+303+############################################################################!
-!                                                                                   !
-!                    CLOSE_RUN_REPORT_FILE                                          !
-!                                                                                   !
- !#################################################################################!
-SUBROUTINE CLOSE_FRAME_REPORT_FILE()
-
-
-CLOSE( UNIT = FRAME_REPORT_FILE_ID, STATUS='delete' )
-
-
-END SUBROUTINE CLOSE_FRAME_REPORT_FILE
-
-
-
-
-
-
-
-
-
 
 
  !+401+############################################################################!
@@ -816,7 +346,6 @@ REAL(KIND = idp)                                            ::  deltar, r,      
                                                                 Solver_Valb,        &
                                                                 Error_Val
 
-REAL(KIND = idp)                                            ::  csqr
 INTEGER                                                     ::  i, j, k
 
 INTEGER                                                     ::  NUM_THETA_RAYS,     &
@@ -837,24 +366,27 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
                                                                 P_Holder
 
 
-110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A10)                      !!! Output Header
+110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A10)                              !!! Output Header
 
-111 FORMAT (11X,A1,24X,A3,19X,A8,15X,A11,14X,A11,14X,A11)             !!! Output Header for Results file
-112 FORMAT (11X,A1,16X,A18,9x,A14)                                      !!! Output Header for Analytic Solution file
+111 FORMAT (11X,A1,24X,A3,19X,A8,15X,A11,14X,A11,14X,A11)                       !!! Output Header for Results file
+112 FORMAT (11X,A1,16X,A18,9x,A14)                                              !!! Output Header for Analytic Solution file
 
 113 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)               !!! Output
 114 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)    !!! Output for Results file
 115 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)                                     !!! Output for Analytic Solution file
 
+116 FORMAT (A,I5.5,A4)
 
 IF ( WRITE_RESULTS_FLAG == 1 ) THEN
     NUM_SAMPLES = 1000
 
-    ALLOCATE( Output_re(0:NUM_SAMPLES) )
-    ALLOCATE( Output_rc(1:NUM_SAMPLES) )
-    ALLOCATE( Output_dr(1:NUM_SAMPLES) )
+
 
     IF ( DRIVER_TEST_NUMBER == 1 ) THEN
+
+        ALLOCATE( Output_re(0:NUM_SAMPLES) )
+        ALLOCATE( Output_rc(1:NUM_SAMPLES) )
+        ALLOCATE( Output_dr(1:NUM_SAMPLES) )
         ! Open Results File
         file_ida = 42
         filenamea = "OUTPUT/Results.out"
@@ -884,8 +416,8 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
                                              Return_Beta1, Return_Beta2, Return_Beta3    )
 
             Analytic_Val = Analytic_Solution(output_rc(i),theta,phi)
-            Solver_Val = 2.0_idp*csqr*(1.0_idp - Return_Psi)
-            Solver_Valb = 2.0_idp*csqr*(Return_AlphaPsi - 1.0_idp)
+            Solver_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+            Solver_Valb = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
             Error_Val = ABS((Analytic_Val - Solver_Val)/Analytic_Val)
 
 
@@ -903,6 +435,10 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
 
     ELSE IF ( DRIVER_TEST_NUMBER == 5 ) THEN
+
+        ALLOCATE( Output_re(0:NUM_SAMPLES) )
+        ALLOCATE( Output_rc(1:NUM_SAMPLES) )
+        ALLOCATE( Output_dr(1:NUM_SAMPLES) )
 
         ! Open Results File
         file_ida = 42
@@ -933,8 +469,8 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
                                              Return_Beta1, Return_Beta2, Return_Beta3    )
 
             Analytic_Val = Analytic_Solution(output_rc(i),theta,phi)
-            Solver_Val = 2.0_idp*csqr*(1.0_idp - Return_Psi)
-            Solver_Valb = 2.0_idp*csqr*(Return_AlphaPsi - 1.0_idp)
+            Solver_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+            Solver_Valb = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
             Error_Val = ABS((Analytic_Val - Solver_Val)/Analytic_Val)
 
 
@@ -964,15 +500,15 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
         ALLOCATE( File_IDs(1:Num_Files) )
 
 
-        WRITE(Filenames(1),'(A37,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/Results_Lapse_",DRIVER_FRAME,".out"
-        WRITE(Filenames(2),'(A41,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/Results_ConFactor_",DRIVER_FRAME,".out"
-        WRITE(Filenames(3),'(A37,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/Results_Beta1_",DRIVER_FRAME,".out"
-        WRITE(Filenames(4),'(A37,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/Results_Beta2_",DRIVER_FRAME,".out"
-        WRITE(Filenames(5),'(A37,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/Results_Beta3_",DRIVER_FRAME,".out"
-        WRITE(Filenames(6),'(A45)')"OUTPUT/CHIMERA_RESULTS/Results_Dimensions.out"
-        WRITE(Filenames(7),'(A32,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/R_VALUES_",DRIVER_FRAME,".out"
-        WRITE(Filenames(8),'(A32,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/T_VALUES_",DRIVER_FRAME,".out"
-        WRITE(Filenames(9),'(A32,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/P_VALUES_",DRIVER_FRAME,".out"
+        WRITE(Filenames(1),116)"OUTPUT/CHIMERA_RESULTS/Results_Lapse_",DRIVER_FRAME,".out"
+        WRITE(Filenames(2),116)"OUTPUT/CHIMERA_RESULTS/Results_ConFactor_",DRIVER_FRAME,".out"
+        WRITE(Filenames(3),116)"OUTPUT/CHIMERA_RESULTS/Results_Beta1_",DRIVER_FRAME,".out"
+        WRITE(Filenames(4),116)"OUTPUT/CHIMERA_RESULTS/Results_Beta2_",DRIVER_FRAME,".out"
+        WRITE(Filenames(5),116)"OUTPUT/CHIMERA_RESULTS/Results_Beta3_",DRIVER_FRAME,".out"
+        WRITE(Filenames(6),'(A)')"OUTPUT/CHIMERA_RESULTS/Results_Dimensions.out"
+        WRITE(Filenames(7),116)"OUTPUT/CHIMERA_RESULTS/R_VALUES_",DRIVER_FRAME,".out"
+        WRITE(Filenames(8),116)"OUTPUT/CHIMERA_RESULTS/T_VALUES_",DRIVER_FRAME,".out"
+        WRITE(Filenames(9),116)"OUTPUT/CHIMERA_RESULTS/P_VALUES_",DRIVER_FRAME,".out"
 
 
 
@@ -994,10 +530,14 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
             DELTA_PHI = 2.0_idp*pi/(NUM_PHI_RAYS-1)
         END IF
 
-        NUM_THETA_RAYS = 1
-        DELTA_THETA = pi/(NUM_THETA_RAYS+1)
+        NUM_THETA_RAYS = 100
+        DELTA_THETA = pi/(NUM_THETA_RAYS-1)
 
         NUM_RADIAL_SAMPLES = 1000
+
+        ALLOCATE( Output_re(0:NUM_RADIAL_SAMPLES) )
+        ALLOCATE( Output_rc(1:NUM_RADIAL_SAMPLES) )
+        ALLOCATE( Output_dr(1:NUM_RADIAL_SAMPLES) )
         CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,  &
                                          output_re, output_rc, output_dr        )
 
@@ -1132,29 +672,33 @@ END SUBROUTINE OUTPUT_PETSC_REPORT
 !################################################################################!
 SUBROUTINE OUTPUT_JACOBIAN_MATRIX()
 
-CHARACTER(LEN = 43)                                     ::  FILE_NAME
-CHARACTER(LEN = 47)                                     ::  FILE_NAMEb
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 61)                                     ::  FILE_NAMEb
+CHARACTER(LEN = 40)                                     ::  fmt
+
 
 INTEGER                                                 ::  FILE_ID
-INTEGEr                                                 ::  re
+INTEGEr                                                 ::  re,e
 
-100 FORMAT (A37,I2.2,A2,I2.2,A4)
-101 FORMAT (A33,I2.2,A2,I2.2,A4)
+100 FORMAT (A,I2.2,A,I2.2,A)
 
-WRITE(FILE_NAMEb,100)"OUTPUT/Poseidon_Objects/STF_MAT_DIM_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+
+
+WRITE(FILE_NAMEb,100)"OUTPUT/Poseidon_Objects/Linear_System/STF_MAT_DIM_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAMEb, FILE_ID )
 WRITE(FILE_ID,*) NUM_R_ELEMS_PER_BLOCK,DEGREE,L_LIMIT
 CLOSE(FILE_ID)
 
 
-WRITE(FILE_NAME,101)"OUTPUT/Poseidon_Objects/STF_MAT_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/Linear_System/STF_MAT_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
 
 DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
-
-    WRITE(FILE_ID,*) BLOCK_ELEM_STF_MATVEC(:,re)
-    WRITE(FILE_ID,'(/)')
+    DO e = 0,ELEM_PROB_DIM_SQR-1
+        WRITE(FILE_ID,fmt) BLOCK_ELEM_STF_MATVEC(e,re)
+    END DO
 END DO
 
 
@@ -1163,6 +707,91 @@ END SUBROUTINE OUTPUT_JACOBIAN_MATRIX
 
 
 
+
+!+404+###########################################################################!
+!                                                                                !
+!                   OUTPUT_RHS_VECTOR                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE OUTPUT_RHS_VECTOR()
+
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 40)                                     ::  fmt
+
+INTEGER                                                 ::  FILE_ID
+INTEGER                                                 ::  i
+
+100 FORMAT (A,I2.2,A,I2.2,A)
+101 FORMAT (I5.5," ",I2.2," ",I2.2)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!fmt = '(F16.10,SP,F16.10,"i")'
+
+
+WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/Linear_System/RHS_VEC_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+
+
+WRITE(FILE_ID, 101)NUM_R_ELEMENTS,DEGREE,L_LIMIT
+DO i = 0,Block_PROB_DIM-1
+    WRITE(FILE_ID,TRIM(fmt)) BLOCK_RHS_VECTOR(i)
+END DO
+
+END SUBROUTINE OUTPUT_RHS_VECTOR
+
+
+
+
+
+
+!+404+###########################################################################!
+!                                                                                !
+!                   OUTPUT_RHS_VECTOR                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE OUTPUT_RHS_VECTOR_Parts(Laplace, Source)
+
+COMPLEX(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1), INTENT(IN)       :: Laplace
+COMPLEX(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1), INTENT(IN)       :: Source
+
+
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 40)                                     ::  fmt
+
+INTEGER                                                 ::  FILE_ID
+INTEGER                                                 ::  i
+
+100 FORMAT (A,I2.2,A,I2.2,A)
+101 FORMAT (I5.5," ",I2.2," ",I2.2)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!fmt = '(F16.10,SP,F16.10,"i")'
+
+
+WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/Linear_System/RHS_LAP_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+
+
+WRITE(FILE_ID, 101)NUM_R_ELEMENTS,DEGREE,L_LIMIT
+DO i = 0,Block_PROB_DIM-1
+    WRITE(FILE_ID,TRIM(fmt)) Laplace(i)
+END DO
+
+
+WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/Linear_System/RHS_SRC_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+
+
+WRITE(FILE_ID, 101)NUM_R_ELEMENTS,DEGREE,L_LIMIT
+DO i = 0,Block_PROB_DIM-1
+    WRITE(FILE_ID,TRIM(fmt)) Source(i)
+END DO
+
+
+
+
+
+END SUBROUTINE OUTPUT_RHS_VECTOR_Parts
 
 
 
@@ -1276,6 +905,15 @@ END IF
 
 
 END SUBROUTINE OPEN_NEW_FILE
+
+
+
+
+
+
+
+
+
 
 
 END MODULE IO_Functions_Module

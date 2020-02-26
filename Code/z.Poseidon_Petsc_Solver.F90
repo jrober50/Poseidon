@@ -455,7 +455,8 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     CALL PCSetType(pc, PCILU, jerr)
 
 !    CALL KSPSetType(ksp, KSPBCGS, jerr)
-    CALL KSPSetType(ksp, KSPPREONLY, jerr)
+    CALL KSPSetType(ksp, KSPGMRES, jerr)
+!    CALL KSPSetType(ksp, KSPPREONLY, jerr)
 
     CALL KSPSetFromOptions(ksp, jerr)
 

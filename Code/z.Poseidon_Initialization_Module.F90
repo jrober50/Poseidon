@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Poseidon_Initialize_Module                                                   !##!
+MODULE Poseidon_Initialization_Module                                                   !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -74,6 +74,7 @@ USE Poseidon_Parameters, &
 USE Poseidon_Variables_Module, &
             ONLY :  R_INNER, R_OUTER,                               &
                     NUM_R_ELEMENTS, NUM_T_ELEMENTS, NUM_P_ELEMENTS, &
+                    NUM_TP_QUAD_POINTS,                             &
                     NUM_R_NODES,                                    &
                     BLOCK_NUM_R_NODES,                              &
                     SUBSHELL_NUM_R_NODES,                           &
@@ -99,6 +100,7 @@ USE Poseidon_Variables_Module, &
                     INT_T_WEIGHTS,                                  &
                     INT_P_LOCATIONS,                                &
                     INT_P_WEIGHTS,                                  &
+                    INT_TP_WEIGHTS,                                 &
                     LOCAL_NODE_LOCATIONS,                           &
                     ierr,                                           &
                     myID_Poseidon,                                  &
@@ -132,17 +134,9 @@ USE Poseidon_Variables_Module, &
 
 
 
-USE Additional_Functions_Module, &
-            ONLY :  Spherical_Harmonic,                             &
-                    Map_To_X_Space, Map_From_X_Space,               &
-                    Initialize_LG_Quadrature,                       &
+USE Poseidon_Additional_Functions_Module, &
+            ONLY :  Initialize_LG_Quadrature,                       &
                     Initialize_LG_Quadrature_Locations,             &
-                    CFA_3D_Matrix_Map,                              &
-                    CFA_2D_Matrix_Map,                              &
-                    CFA_1D_Matrix_Map,                              &
-                    CFA_1D_LM_Map,                                  &
-                    CFA_2D_LM_Map,                                  &
-                    CFA_3D_LM_Map,                                  &
                     Generate_Defined_Mesh,                          &
                     Generate_Defined_Coarse_Mesh
 
@@ -154,14 +148,13 @@ USE Allocate_Variables_Module, &
 
 USE Jacobian_Internal_Functions_Module,  &
             ONLY :  Initialize_Guess_Values,                        &
-                    Initialize_Ylm_Table,                           &
                     Initialize_Ylm_Tables,                          &
                     Initialize_Lagrange_Poly_Tables
 
 USE CFA_Newton_Raphson_Module, &
             ONLY :  CFA_Newton_Raphson
 
-USE CFA_3D_Master_Build_Module, &
+USE Poseidon_Additional_Functions_Module, &
             ONLY :  Calc_3D_Values_At_Location
 
 USE Poseidon_MPI_Module, &
@@ -170,13 +163,18 @@ USE Poseidon_MPI_Module, &
 USE Poseidon_Parameter_Read_Module, &
             ONLY :  UNPACK_POSEIDON_PARAMETERS
 
-
-USE IO_Functions_Module, &
-            ONLY :  OPEN_RUN_REPORT_FILE,                           &
-                    CLOSE_RUN_REPORT_FILE
-
 USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Set_Mesh
+
+
+USE Poseidon_Mapping_Functions_Module,  &
+            ONLY :  CFA_3D_Matrix_Map,                              &
+                    CFA_2D_Matrix_Map,                              &
+                    CFA_1D_Matrix_Map,                              &
+                    CFA_1D_LM_Map,                                  &
+                    CFA_2D_LM_Map,                                  &
+                    CFA_3D_LM_Map
+
 
 USE mpi
 
@@ -284,7 +282,7 @@ REAL(KIND = idp), DIMENSION(1:T_Elements_Input)                                 
 REAL(KIND = idp), DIMENSION(1:P_Elements_Input)                                 ::  Delta_P_Vector
 
 
-
+INTEGER                                                                         ::  td, pd
 INTEGER                                                                         ::  nPROCS, tmpID
 INTEGER                                                                         ::  l
 INTEGER                                                                         ::  NUM_JACOBIAN_ELEMENTS
@@ -325,8 +323,10 @@ BLOCK_NUM_R_NODES       = DEGREE*NUM_R_ELEMS_PER_BLOCK + 1
 SUBSHELL_NUM_R_NODES    = DEGREE*NUM_R_ELEMS_PER_SUBSHELL + 1
 
 
-
-
+!
+!   NUM_TP_QUAD_POINTS = number of angular quadrature points per radial point
+!
+NUM_TP_QUAD_POINTS = NUM_T_QUAD_POINTS*NUM_P_QUAD_POINTS
 
 
 CALL CHECK_SETUP(R_Elements_Input, T_Elements_Input, P_Elements_Input, TmpID )
@@ -437,6 +437,11 @@ CALL Initialize_LG_Quadrature(NUM_R_QUAD_POINTS, INT_R_LOCATIONS, INT_R_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_T_QUAD_POINTS, INT_T_LOCATIONS, INT_T_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
 
+DO td = 1,NUM_T_QUAD_POINTS
+    DO pd = 1,NUM_P_QUAD_POINTS
+        INT_TP_WEIGHTS( (td-1)*NUM_P_QUAD_POINTS+pd ) = INT_T_WEIGHTS(td)*INT_P_WEIGHTS(pd)
+    END DO
+END DO
 
 
 
@@ -804,4 +809,4 @@ END SUBROUTINE CHECK_SETUP
 
 
 
-END MODULE Poseidon_Initialize_Module
+END MODULE Poseidon_Initialization_Module

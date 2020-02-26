@@ -91,9 +91,6 @@ USE Poseidon_Variables_Module, &
                         Ylm_CC_Values,              &
                         Ylm_dt_Values,              &
                         Ylm_dp_Values,              &
-                        Ylm_dtt_Values,             &
-                        Ylm_dtp_Values,             &
-                        Ylm_dpp_Values,             &
                         Lagrange_Poly_Table,        &
                         LPT_LPT,                    &
                         Coefficient_Vector,         &
@@ -134,25 +131,22 @@ USE Poseidon_Variables_Module, &
 
 
 
-USE Additional_Functions_Module, &
+USE Poseidon_Additional_Functions_Module, &
                 ONLY :  Lagrange_Poly,              &
                         Spherical_Harmonic,         &
-                        Initialize_LGL_Quadrature,  &
-                        Map_To_X_Space,             &
-                        CFA_Matrix_Map,             &
-                        CFA_ALL_Matrix_Map
+                        Initialize_LGL_Quadrature
 
 
 USE Jacobian_Internal_Functions_Module, &
                 ONLY :  JCBN_kappa_FUNCTION_3D_ALL,    &
-                        JCBN_BIGK_SUBROUTINE,       &
                         JCBN_BIGK_FUNCTION
 
 
 USE IO_Functions_Module, &
                 ONLY :  Clock_In
 
-
+USE Poseidon_Mapping_Functions_Module, &
+                ONLY :  CFA_ALL_Matrix_Map
 
 IMPLICIT NONE
 

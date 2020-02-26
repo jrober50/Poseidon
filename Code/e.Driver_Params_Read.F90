@@ -27,38 +27,41 @@ USE Poseidon_Constants_Module, &
 
 
 USE DRIVER_Parameters, &
-            ONLY :  DRIVER_R_ELEMS,         &
-                    DRIVER_C_ELEMS,         &
-                    DRIVER_T_ELEMS,         &
-                    DRIVER_P_ELEMS,         &
-                    DRIVER_R_INPUT_NODES,   &
-                    DRIVER_T_INPUT_NODES,   &
-                    DRIVER_P_INPUT_NODES,   &
-                    DRIVER_LEFT_LIMIT,      &
-                    DRIVER_RIGHT_LIMIT,     &
-                    DRIVER_INNER_RADIUS,    &
-                    DRIVER_CORE_RADIUS,     &
-                    DRIVER_OUTER_RADIUS,    &
-                    DRIVER_TEST_NUMBER,     &
-                    DRIVER_DIMENSION,       &
-                    DRIVER_PROCS,           &
-                    DRIVER_y_PROCS,         &
-                    DRIVER_z_PROCS,         &
-                    DRIVER_MESH_TYPE,       &
-                    DRIVER_SOLVER_TYPE,     &
-                    RESULTS_OUTPUT_FLAG,    &
-                    SOURCE_OUTPUT_FLAG,     &
-                    RUN_REPORT_FLAG,        &
-                    FRAME_REPORT_FLAG,      &
-                    RHO_O,                  &
-                    POWER_A,                &
-                    SELFSIM_START_T,        &
-                    SELFSIM_END_T,          &
-                    SELFSIM_NUM_FRAMES,     &
-                    SELFSIM_KAPPA,          &
-                    SELFSIM_GAMMA,          &
-                    SELFSIM_ECC,            &
-                    CHIMERA_START_FRAME,    &
+            ONLY :  DRIVER_R_ELEMS,             &
+                    DRIVER_C_ELEMS,             &
+                    DRIVER_T_ELEMS,             &
+                    DRIVER_P_ELEMS,             &
+                    DRIVER_R_INPUT_NODES,       &
+                    DRIVER_T_INPUT_NODES,       &
+                    DRIVER_P_INPUT_NODES,       &
+                    DRIVER_LEFT_LIMIT,          &
+                    DRIVER_RIGHT_LIMIT,         &
+                    DRIVER_INNER_RADIUS,        &
+                    DRIVER_CORE_RADIUS,         &
+                    DRIVER_OUTER_RADIUS,        &
+                    DRIVER_TEST_NUMBER,         &
+                    DRIVER_FIRST_GUESS_FLAG,    &
+                    DRIVER_SUBSEQUENT_GUESS_FLAG,   &
+                    DRIVER_DIMENSION,           &
+                    DRIVER_PROCS,               &
+                    DRIVER_y_PROCS,             &
+                    DRIVER_z_PROCS,             &
+                    DRIVER_MESH_TYPE,           &
+                    DRIVER_SOLVER_TYPE,         &
+                    RESULTS_OUTPUT_FLAG,        &
+                    SOURCE_OUTPUT_FLAG,         &
+                    RUN_REPORT_FLAG,            &
+                    FRAME_REPORT_FLAG,          &
+                    RHO_O,                      &
+                    POWER_A,                    &
+                    SELFSIM_START_T,            &
+                    SELFSIM_END_T,              &
+                    SELFSIM_NUM_FRAMES,         &
+                    SELFSIM_KAPPA,              &
+                    SELFSIM_GAMMA,              &
+                    SELFSIM_ECC,                &
+                    SELFSIM_V_SWITCH,           &
+                    CHIMERA_START_FRAME,        &
                     CHIMERA_END_FRAME
 
 
@@ -81,7 +84,7 @@ INTEGER                                     ::  DRIVER_read
 INTEGER                                     ::  iskipp
 INTEGER                                     ::  istat
 
-INTEGER,            DIMENSION(1:21)         ::  Int_Params
+INTEGER,            DIMENSION(1:24)         ::  Int_Params
 REAL(KIND = idp),   DIMENSION(1:11)         ::  Real_Params
 INTEGER,            DIMENSION(1:11)         ::  Real_Params_Flags
 
@@ -125,8 +128,8 @@ DRIVER_PROCS                = Int_Params(10)    ! PROCS
 DRIVER_y_PROCS              = Int_Params(11)    ! yPROCS
 DRIVER_z_PROCS              = Int_Params(12)    ! zPROCS
 
-IF ( Int_Params(15) .NE. -1 ) THEN
-    DRIVER_TEST_NUMBER      = Int_Params(13)    ! CTN
+IF ( Int_Params(13) .NE. -1 ) THEN
+    DRIVER_TEST_NUMBER      = Int_Params(13)    ! DTN (Defaults is 3)
 END IF
 
 SOURCE_OUTPUT_FLAG          = Int_Params(14)    ! SOF
@@ -141,9 +144,10 @@ CHIMERA_END_FRAME           = Int_Params(19)    ! CEF
 POWER_A                     = Int_Params(20)    ! PWA
 
 SELFSIM_NUM_FRAMES          = Int_Params(21)    ! YNF
+SELFSIM_V_SWITCH            = Int_Params(22)    ! SSV
 
-
-
+DRIVER_FIRST_GUESS_FLAG     = Int_Params(23)    ! FGF
+DRIVER_SUBSEQUENT_GUESS_FLAG = Int_Params(24)   ! SGF
 
 ! Reals
 DRIVER_LEFT_LIMIT          = Real_Params(1)     !   LL
@@ -183,7 +187,7 @@ SUBROUTINE READ_DRIVER_PARAMETERS( nreadp,                     &
 
 INTEGER, INTENT(IN)                                 ::  nreadp
 
-INTEGER,            DIMENSION(1:21), INTENT(INOUT)   ::  Int_Params
+INTEGER,            DIMENSION(1:24), INTENT(INOUT)   ::  Int_Params
 REAL(KIND = idp),   DIMENSION(1:11), INTENT(INOUT)   ::  Real_Params
 INTEGER,            DIMENSION(1:11), INTENT(INOUT)   ::  Real_Params_Flags
 
@@ -413,6 +417,23 @@ END IF
 IF ( Param_type == 'SSE   ' ) THEN
     READ (line, 121) REAL_PARAMS(11)
     REAL_PARAMS_FLAGS(11) = 1
+    CYCLE
+END IF
+
+
+IF ( Param_type == 'SSV   ' ) THEN
+    READ (line, 111) INT_PARAMS(22)
+    CYCLE
+END IF
+
+IF ( Param_type == 'FGF   ' ) THEN
+    READ (line, 111) INT_PARAMS(23)
+    CYCLE
+END IF
+
+
+IF ( Param_type == 'SGF   ' ) THEN
+    READ (line, 111) INT_PARAMS(24)
     CYCLE
 END IF
 
