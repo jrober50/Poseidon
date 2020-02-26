@@ -2,7 +2,7 @@
 #
 #	Lists the code components of Poseidon.
 #
-#=============================================================================#
+#==============================================================================#
 
 #
 #       Driver Code File = Main Program File, ONLY 1 FILE
@@ -12,17 +12,21 @@ CODE_drv = d.main_3D.o
 #
 #       External Code Files - Used by Driver Code only
 #
-CODE_ext = e.Driver_Params_Read.o              \
+CODE_ext = e.Driver_Params_Read.o               \
+           e.Driver_Additional_Functions.o      \
            e.SelfSimilar.o                      \
            e.HDF5_IO.o                          \
            e.CHIMERA_TEST_FUNCS.o               \
+           e.Driver_Test_Functions.o            \
            e.CHIMERA_HDF5.o                     \
-           e.Mesh_Module.o
+           e.Mesh_Module.o                      \
+           e.Driver_IO_Functions.o
 
 #
 #	Interface Code - Used to Link Poseidon with other projects
 #
-CODE_itf = i.Poseidon_Interface.o
+CODE_itf = i.Initial_Guess.o               \
+           i.Poseidon_Interface.o
 
 
 #
@@ -44,20 +48,22 @@ CODE_par = p.Poseidon_Parameters.o               \
 #
 CODE_o  = z.Poseidon_Variables_Module.o          \
           z.Allocate_Module.o                    \
-          z.Additional_Functions_Module.o        \
+          z.Poseidon_Info.o                      \
+          z.Poseidon_Mesh_Module.o               \
+          z.Poseidon_Mapping_Functions.o         \
+          z.Poseidon_Additional_Functions.o      \
           z.Poseidon_Internal_Communication.o    \
           z.Jacobian_Internal_Functions.o        \
           z.IO_Functions_Module.o                \
           z.Poseidon_BC_Module.o                 \
-	  z.CFA_3D_Master_Build.o	 	 \
+          z.Poseidon_SubJacobian_Functions.o     \
+          z.CFA_3D_Master_Build_New.o            \
           z.Poseidon_Petsc_Solver.o		 \
-	  z.CFA_Newton_Raphson.o                 \
-          z.Test_Functions_Module.o              \
-	  z.Poseidon_MPI_Module.o                \
+          z.Poseidon_Residual_Equations.o        \
+          z.CFA_Newton_Raphson.o                 \
+          z.Poseidon_MPI_Module.o                \
           z.Poseidon_Params_Read.o               \
           z.Poseidon_Main_Module.o               \
-          z.Poseidon_Initialize_Module.o         \
-          z.New_PETSc_Build_Module.o             \
-          z.New_PETSc_Module.o
+          z.Poseidon_Initialization_Module.o     
 
 

@@ -82,14 +82,14 @@ include makefile_dictionary
 #---------------------------- Compilation Rules ------------------------------------#
 
 
-yahil : $(CODE_com) $(CODE_par) $(CODE_ext) $(CODE_o) $(CODE_itf)
+yahil : $(CODE_com) $(CODE_par) $(CODE_o) $(CODE_ext) $(CODE_itf)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(SRC)/$(CODE_drv:%.o=%.$(EXT)) -o $(DRIVER_OBJ)
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/main_$(DIMENSION).x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 
-replot: $(CODE_com) $(CODE_par) $(CODE_ext) $(CODE_o) $(CODE_itf)
+replot: $(CODE_com) $(CODE_par) $(CODE_o) $(CODE_ext) $(CODE_itf)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(SRC)/d.replot.F90 -o $(OBJ)/d.replot.o
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/replot.x
@@ -108,10 +108,10 @@ $(CODE_com):%.o: $(SRC)/%.$(EXT)
 $(CODE_par):%.o: $(SRC)/%.$(EXT)
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
 
-$(CODE_ext):%.o: $(SRC)/%.$(EXT)
+$(CODE_o):%.o:  $(SRC)/%.$(EXT)
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
 
-$(CODE_o):%.o:  $(SRC)/%.$(EXT)
+$(CODE_ext):%.o: $(SRC)/%.$(EXT)
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
 
 $(CODE_itf):%.o: $(SRC)/%.$(EXT)
@@ -124,7 +124,7 @@ $(CODE_itf):%.o: $(SRC)/%.$(EXT)
 
 
 run: 
-	./$(BIN)/main_$(DIMENSION).x 
+	$(BIN)/main_$(DIMENSION).x 
 
 run_yahil:
 	mpirun  -np $(NPROCS) ./$(BIN)/main_$(DIMENSION).x
@@ -156,4 +156,5 @@ clean_output:
 	rm -f $(OUT)/CHIMERA_RESULTS/*.out
 	rm -f $(OUT)/Yahil_RESULTS/*.out
 	rm -f $(OUT)/Poseidon_Objects/*.out
-
+	rm -f $(OUT)/Poseidon_Objects/Linear_System/*.out
+	rm -f $(OUT)/Poseidon_Objects/Residual/*.out
