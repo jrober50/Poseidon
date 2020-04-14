@@ -66,6 +66,7 @@ USE Poseidon_Parameters, &
                     CONVERGENCE_CRITERIA,       &
                     CONVERGENCE_FLAG,           &
                     ITER_REPORT_NUM_SAMPLES,    &
+                    OUTPUT_SETUP_TABLE_FLAG,    &
                     WRITE_REPORT_FLAG,          &
                     RUN_REPORT_FILE_ID
 
@@ -125,8 +126,6 @@ USE Poseidon_Variables_Module, &
                     Matrix_Location,                                &
                     LM_Location,                                    &
                     POSEIDON_COMM_WORLD,                            &
-                    NONZEROS,                                       &
-                    BLOCK_NONZEROS,                                 &
                     RUN_TIME_TABLE
 
 
@@ -150,9 +149,6 @@ USE Jacobian_Internal_Functions_Module,  &
             ONLY :  Initialize_Guess_Values,                        &
                     Initialize_Ylm_Tables,                          &
                     Initialize_Lagrange_Poly_Tables
-
-USE CFA_Newton_Raphson_Module, &
-            ONLY :  CFA_Newton_Raphson
 
 USE Poseidon_Additional_Functions_Module, &
             ONLY :  Calc_3D_Values_At_Location
@@ -242,6 +238,312 @@ CONTAINS
 !                                                                                           !
  !#########################################################################################!
 SUBROUTINE Poseidon_Initialize( mode,                                                                   &
+                                FEM_Degree, SH_Limit,                                                   &
+                                Inner_Radius, Outer_Radius,                                             &
+                                R_Elements_Input, T_Elements_Input, P_Elements_Input,                   &
+                                Local_R_Elements_Input, Local_T_Elements_Input, Local_P_Elements_Input, &
+                                Input_Delta_R_Vector, Input_Delta_T_Vector, Input_Delta_P_Vector        )
+
+
+
+                                         !                          !
+                                        !!      Input Variables     !!
+                                         !
+
+INTEGER, INTENT(IN)                                                             ::  mode,                   &
+                                                                                    FEM_Degree,             &
+                                                                                    SH_Limit,               &
+                                                                                    R_Elements_Input,       &
+                                                                                    T_Elements_Input,       &
+                                                                                    P_Elements_Input,       &
+                                                                                    Local_R_Elements_Input, &
+                                                                                    Local_T_Elements_Input, &
+                                                                                    Local_P_Elements_Input
+
+REAL(KIND = idp), INTENT(IN)                                                    ::  Inner_Radius,           &
+                                                                                    Outer_Radius
+
+
+REAL(KIND = idp), DIMENSION(1:R_Elements_Input),    OPTIONAL,   INTENT(IN)      ::  Input_Delta_R_Vector
+REAL(KIND = idp), DIMENSION(1:T_Elements_Input),    OPTIONAL,   INTENT(IN)      ::  Input_Delta_T_Vector
+REAL(KIND = idp), DIMENSION(1:P_Elements_Input),    OPTIONAL,   INTENT(IN)      ::  Input_Delta_P_Vector
+
+
+
+
+
+                                         !                              !
+                                        !!     Subroutine Variables     !!
+                                         !                              !
+
+REAL(KIND = idp), DIMENSION(1:R_Elements_Input)                                 ::  Delta_R_Vector
+REAL(KIND = idp), DIMENSION(1:T_Elements_Input)                                 ::  Delta_T_Vector
+REAL(KIND = idp), DIMENSION(1:P_Elements_Input)                                 ::  Delta_P_Vector
+
+
+INTEGER                                                                         ::  td, pd
+INTEGER                                                                         ::  nPROCS, tmpID
+INTEGER                                                                         ::  l
+
+
+
+REAL(KIND = idp)                                                                :: timea, timeb, timec
+
+
+
+CALL MPI_COMM_SIZE(MPI_COMM_WORLD, nPROCS,ierr)
+CALL MPI_COMM_RANK(MPI_COMM_WORLD, tmpID, ierr)
+
+
+DEGREE = FEM_Degree
+L_LIMIT = SH_Limit
+
+
+ !                                          !
+!!  Set Global Variables to Input Values    !!
+ !                                          !
+R_INNER = Inner_Radius
+R_OUTER = Outer_Radius
+
+
+NUM_R_ELEMENTS = R_Elements_Input/R_Coarsen_Factor
+NUM_T_ELEMENTS = T_Elements_Input/T_Coarsen_Factor
+NUM_P_ELEMENTS = P_Elements_Input/P_Coarsen_Factor
+
+!
+!   *_NUM_R_NODES - Number of total radial nodes in total, per block, per subshell
+!
+NUM_R_NODES             = DEGREE*NUM_R_ELEMENTS + 1
+BLOCK_NUM_R_NODES       = DEGREE*NUM_R_ELEMS_PER_BLOCK + 1
+SUBSHELL_NUM_R_NODES    = DEGREE*NUM_R_ELEMS_PER_SUBSHELL + 1
+
+
+!
+!   NUM_TP_QUAD_POINTS = number of angular quadrature points per radial point
+!
+NUM_TP_QUAD_POINTS = NUM_T_QUAD_POINTS*NUM_P_QUAD_POINTS
+
+
+CALL CHECK_SETUP(R_Elements_Input, T_Elements_Input, P_Elements_Input, TmpID )
+
+
+
+
+
+
+
+!
+!   Associate the Correct Map Functions, and Set Spherical Harmonic Length
+!
+IF ( DOMAIN_DIM == 1 ) THEN
+
+    LM_LENGTH = 1
+    Matrix_Location => CFA_1D_Matrix_Map
+    LM_Location => CFA_1D_LM_Map
+
+ELSE IF ( DOMAIN_DIM == 2 ) THEN
+
+    LM_LENGTH = L_LIMIT + 1
+    Matrix_Location => CFA_2D_Matrix_Map
+    LM_Location => CFA_2D_LM_Map
+
+ELSE IF ( DOMAIN_DIM == 3 ) THEN
+
+    LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
+    Matrix_Location => CFA_3D_Matrix_Map
+    LM_Location => CFA_3D_LM_Map
+
+END IF
+
+
+
+
+
+
+!
+!   VAR_DIM - Length of vector required to hold coefficients for 1 variable.
+!
+VAR_DIM             = LM_LENGTH*NUM_R_NODES
+ELEM_VAR_DIM        = LM_LENGTH*(DEGREE + 1)
+BLOCK_VAR_DIM       = LM_LENGTH*BLOCK_NUM_R_NODES
+SUBSHELL_VAR_DIM    = LM_LENGTH*SUBSHELL_NUM_R_NODES
+
+
+
+!
+!   PROB_DIM - Length of vector required to hold coefficients for all variables
+!
+IF ( PHYSICS_TYPE == "NEW" ) THEN
+
+    ULM_LENGTH = LM_LENGTH
+    PROB_DIM = VAR_DIM
+    ELEM_PROB_DIM = ELEM_VAR_DIM
+    ELEM_PROB_DIM_SQR = ELEM_VAR_DIM*ELEM_VAR_DIM
+    BLOCK_PROB_DIM = BLOCK_VAR_DIM
+    SUBSHELL_PROB_DIM = SUBSHELL_VAR_DIM
+
+ELSE IF ( PHYSICS_TYPE == "CFA" ) THEN
+
+    ULM_LENGTH          = NUM_CFA_VARS*LM_LENGTH
+    PROB_DIM            = NUM_CFA_VARS*VAR_DIM
+    ELEM_PROB_DIM       = NUM_CFA_VARS*ELEM_VAR_DIM
+    ELEM_PROB_DIM_SQR   = ELEM_PROB_DIM*ELEM_PROB_DIM
+    BLOCK_PROB_DIM      = NUM_CFA_VARS*BLOCK_VAR_DIM
+    SUBSHELL_PROB_DIM   = NUM_CFA_VARS*SUBSHELL_VAR_DIM
+
+END IF
+
+
+NUM_OFF_DIAGONALS = ULM_LENGTH*(DEGREE + 1) - 1
+
+
+
+
+
+
+                                 !                                      !
+                                !!      Allocate Space for Poseidon     !!
+                                 !                                      !
+CALL Allocate_Poseidon_CFA_Variables()
+
+
+
+
+
+
+
+
+                                 !                                          !
+                                !!      Initialize Reusable Quadratures     !!
+                                 !                                          !
+
+CALL Initialize_LG_Quadrature(NUM_R_QUAD_POINTS, INT_R_LOCATIONS, INT_R_WEIGHTS)
+CALL Initialize_LG_Quadrature(NUM_T_QUAD_POINTS, INT_T_LOCATIONS, INT_T_WEIGHTS)
+CALL Initialize_LG_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
+
+IF ( NUM_T_QUAD_POINTS == 1 ) THEN
+    ! 1D Cheat !
+    INT_T_WEIGHTS = 4.0_idp/pi
+END IF
+
+
+DO td = 1,NUM_T_QUAD_POINTS
+    DO pd = 1,NUM_P_QUAD_POINTS
+        INT_TP_WEIGHTS( (td-1)*NUM_P_QUAD_POINTS+pd ) = INT_T_WEIGHTS(td)*INT_P_WEIGHTS(pd)
+    END DO
+END DO
+
+
+
+                                 !                                          !
+                                !!   Initialize Lagrange Polynomial Tables  !!
+                                 !                                          !
+CALL Initialize_Lagrange_Poly_Tables()
+
+
+
+
+
+
+
+
+                                 !                                          !
+                                !!      Set Initial Mesh (Optional)         !!
+                                 !                                          !
+
+CALL Generate_Defined_Coarse_Mesh(R_Elements_Input, NUM_R_ELEMENTS, R_Coarsen_Factor,     &
+                                  R_INNER, Input_Delta_R_Vector, rlocs)
+RADIAL_MESH_SET_FLAG = .TRUE.
+
+
+CALL Generate_Defined_Coarse_Mesh(T_Elements_Input, NUM_T_ELEMENTS, T_Coarsen_Factor,     &
+                                  0.0_idp, Input_Delta_T_Vector, tlocs)
+THETA_MESH_SET_FLAG = .TRUE.
+
+
+CALL Generate_Defined_Coarse_Mesh(P_Elements_Input, NUM_P_ELEMENTS, P_Coarsen_Factor,     &
+                                  0.0_idp, Input_Delta_P_Vector, plocs)
+PHI_MESH_SET_FLAG = .TRUE.
+
+
+
+
+
+IF ( DOMAIN_DIM == 1 ) THEN
+     M_VALUES = 0
+ELSE IF ( DOMAIN_DIM == 2 ) THEN
+     M_VALUES = 0
+ELSE IF ( DOMAIN_DIM == 3 ) THEN
+     M_VALUES = (/(l,l=0,L_LIMIT,1)/)
+END IF
+
+
+
+
+
+
+CALL CREATE_POSEIDON_COMMUNICATORS( DATA_DIST_MODE )
+
+CALL Initialize_Ylm_Tables()
+
+
+
+CALL OUTPUT_SETUP_TABLE( mode, nPROCS, R_Elements_Input, T_Elements_Input, P_Elements_Input )
+
+
+
+END SUBROUTINE Poseidon_Initialize
+
+
+
+
+
+
+
+ !+101+####################################################################################!
+!                                                                                           !
+!       Poseidon_Initialize                                                                 !
+!                                                                                           !
+!===========================================================================================!
+!                                                                                           !
+!   Sets code parameters, allocates space, and initializes functions and variables needed   !
+!   to run Poseidon.                                                                        !
+!                                                                                           !
+!-------------------------------------------------------------------------------------------!
+!                                                                                           !
+!       Input Variables     :                                                               !
+!                                                                                           !
+!       FEM_Degree_Input        -       Integer, Order of Finite Element Method solver to   !
+!                                               be performed.                               !
+!                                                                                           !
+!       L_Limit_Input           -       Integer, Limit on the l value of the Spherical      !
+!                                               Harmonic spectral decomposition.            !
+!                                                                                           !
+!       Inner_Radius            -       Real, Inner radius of the computational domain.     !
+!                                                                                           !
+!       Outer_Radius            -       Real, Outer radius of the computational domain.     !
+!                                                                                           !
+!       R_Elements_Input        -       Integer, Number of radial elements.                 !
+!                                                                                           !
+!       T_Elements_Input        -       Integer, Number of theta elements.                  !
+!                                                                                           !
+!       P_Elements_Input        -       Integer, Number of phi elements.                    !
+!                                                                                           !
+!       Input_Delta_R_Vector    -       Optional Real Vector, Dimension(1:R_Elements_Input) !
+!                                       Each value corresponds to the radial length of the  !
+!                                       each radial shell of elements starting from         !
+!                                       Inner_Radius.                                       !
+!                                                                                           !
+!       Input_Delta_T_Vector    -       Optional Real Vector, Dimension(1:T_Elements_Input) !
+!                                       Each value correspons to the angular width of each  !
+!                                       theta wedge of elements starting from 0.            !
+!                                                                                           !
+!       Input_Delta_P_Vector    -       Optional Real Vector, Dimension(1:P_Elements_Input) !
+!                                       Each value correspons to the angular width of each  !
+!                                       phi wedge of elements starting from 0.              !
+!                                                                                           !
+ !#########################################################################################!
+SUBROUTINE Poseidon_Initialize_From_File( mode,                                                         &
                                 Inner_Radius, Outer_Radius,                                             &
                                 R_Elements_Input, T_Elements_Input, P_Elements_Input,                   &
                                 Local_R_Elements_Input, Local_T_Elements_Input, Local_P_Elements_Input, &
@@ -285,8 +587,7 @@ REAL(KIND = idp), DIMENSION(1:P_Elements_Input)                                 
 INTEGER                                                                         ::  td, pd
 INTEGER                                                                         ::  nPROCS, tmpID
 INTEGER                                                                         ::  l
-INTEGER                                                                         ::  NUM_JACOBIAN_ELEMENTS
-REAL(KIND = idp)                                                                ::  SPARSITY
+
 
 
 REAL(KIND = idp)                                                                :: timea, timeb, timec
@@ -399,18 +700,8 @@ ELSE IF ( PHYSICS_TYPE == "CFA" ) THEN
 END IF
 
 
-NUM_JACOBIAN_ELEMENTS = PROB_DIM*PROB_DIM
-
 NUM_OFF_DIAGONALS = ULM_LENGTH*(DEGREE + 1) - 1
 
-NONZEROS = NUM_R_ELEMENTS*ELEM_PROB_DIM_SQR          &
-         - (NUM_R_ELEMENTS-1)*ULM_LENGTH*ULM_LENGTH
-
-BLOCK_NONZEROS = NUM_R_ELEMS_PER_BLOCK*ELEM_PROB_DIM_SQR          &
-               - (NUM_R_ELEMS_PER_BLOCK-1)*ULM_LENGTH*ULM_LENGTH
-
-
-SPARSITY = REAL(NONZEROS,KIND =idp)/REAL(NUM_JACOBIAN_ELEMENTS, KIND = idp)
 
 
 
@@ -419,7 +710,6 @@ SPARSITY = REAL(NONZEROS,KIND =idp)/REAL(NUM_JACOBIAN_ELEMENTS, KIND = idp)
                                  !                                      !
                                 !!      Allocate Space for Poseidon     !!
                                  !                                      !
-
 CALL Allocate_Poseidon_CFA_Variables()
 
 
@@ -437,13 +727,17 @@ CALL Initialize_LG_Quadrature(NUM_R_QUAD_POINTS, INT_R_LOCATIONS, INT_R_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_T_QUAD_POINTS, INT_T_LOCATIONS, INT_T_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
 
+IF ( NUM_T_QUAD_POINTS == 1 ) THEN
+    ! 1D Cheat !
+    INT_T_WEIGHTS = 4.0_idp/pi
+END IF
+
+
 DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
         INT_TP_WEIGHTS( (td-1)*NUM_P_QUAD_POINTS+pd ) = INT_T_WEIGHTS(td)*INT_P_WEIGHTS(pd)
     END DO
 END DO
-
-
 
 
 
@@ -481,7 +775,6 @@ PHI_MESH_SET_FLAG = .TRUE.
 
 
 
-
 IF ( DOMAIN_DIM == 1 ) THEN
      M_VALUES = 0
 ELSE IF ( DOMAIN_DIM == 2 ) THEN
@@ -501,153 +794,11 @@ CALL Initialize_Ylm_Tables()
 
 
 
-1401 FORMAT('------------- POSEIDON PARAMETERS --------------'/)
-1402 FORMAT('         ACTIVE DIMENSIONS = ',I12.1)
-1403 FORMAT('                    DEGREE = ',I12.1)
-1404 FORMAT('                   L_LIMIT = ',I12.1)
-1405 FORMAT('              NUM_CFA_VARS = ',I12.1)
-1406 FORMAT('                    nPROCS = ',I12.1)
-1407 FORMAT('           nPROCS_POSEIDON = ',I12.1)
-1408 FORMAT('   CHIMERA RADIAL ELEMENTS = ',I12.1)
-1409 FORMAT('    CHIMERA THETA ELEMENTS = ',I12.1)
-1410 FORMAT('      CHIMERA PHI ELEMENTS = ',I12.1)
-1411 FORMAT('  POSEIDON RADIAL ELEMENTS = ',I12.1)
-1412 FORMAT('   POSEIDON THETA ELEMENTS = ',I12.1)
-1413 FORMAT('     POSEIDON PHI ELEMENTS = ',I12.1)
-1414 FORMAT('          R_COARSEN_FACTOR = ',I12.1)
-1415 FORMAT('          T_COARSEN_FACTOR = ',I12.1)
-1416 FORMAT('          P_COARSEN_FACTOR = ',I12.1)
-1417 FORMAT('               NUM_R_NODES = ',I12.1)
-1418 FORMAT('          NUMBER OF SHELLS = ',I12.1)
-1419 FORMAT('       NUMBER OF SUBSHELLS = ',I12.1)
-1420 FORMAT('       SUBSHELLS PER SHELL = ',I12.1)
-1421 FORMAT('      NUM BLOCKS PER SHELL = ',I12.1)
-1422 FORMAT('     NUM_R_ELEMS_PER_SHELL = ',I12.1)
-1423 FORMAT('     NUM_T_ELEMS_PER_BLOCK = ',I12.1)
-1424 FORMAT('     NUM_P_ELEMS_PER_BLOCK = ',I12.1)
-1425 FORMAT('                   VAR_DIM = ',I12.1)
-1426 FORMAT('             BLOCK_VAR_DIM = ',I12.1)
-1427 FORMAT('                  PROB_DIM = ',I12.1)
-1428 FORMAT('            BLOCK_PROB_DIM = ',I12.1)
-1429 FORMAT('         SUBSHELL_PROB_DIM = ',I12.1)
-1430 FORMAT('         NUM_OFF_DIAGONALS = ',I12.1)
-1431 FORMAT('     NUM JACOBIAN ELEMENTS = ',I12.1)
-1432 FORMAT(' NUM NNZ JACOBIAN ELEMENTS = ',I12.1)
-1433 FORMAT('        JACOBIAN SPARSITY  = ',F12.6)
-1434 FORMAT('         NUM NNZ PER BLOCK = ',I12.1)
-1435 FORMAT('              Inner Radius = ',ES20.12E3)
-1436 FORMAT('              Outer Radius = ',ES20.12E3)
-1437 FORMAT('      # Radial Quad Points = ',I12.1)
-1438 FORMAT('       # Theta Quad Points = ',I12.1)
-1439 FORMAT('         # Phi Quad Points = ',I12.1)
-1440 FORMAT('        Maximum Iterations = ',I12.1)
-1441 FORMAT('      Convergence Criteria = ',ES20.12E3)
-
-
-IF ( ( myID_Poseidon == 0 ) .AND. (mode == 0 ) ) THEN
-
-    WRITE(*,1401)
-    WRITE(*,1402)DOMAIN_DIM
-    WRITE(*,1403)DEGREE
-    WRITE(*,1404)L_LIMIT
-    WRITE(*,1405)NUM_CFA_VARS
-    WRITE(*,1406)nPROCS
-    WRITE(*,1407)nPROCS_POSEIDON
-    WRITE(*,1408)R_ELEMENTS_INPUT
-    WRITE(*,1409)T_ELEMENTS_INPUT
-    WRITE(*,1410)P_ELEMENTS_INPUT
-    WRITE(*,1411)NUM_R_ELEMENTS
-    WRITE(*,1412)NUM_T_ELEMENTS
-    WRITE(*,1413)NUM_P_ELEMENTS
-    WRITE(*,1414)R_COARSEN_FACTOR
-    WRITE(*,1415)T_COARSEN_FACTOR
-    WRITE(*,1416)P_COARSEN_FACTOR
-    WRITE(*,1417)NUM_R_NODES
-    WRITE(*,1418)NUM_SHELLS
-    WRITE(*,1419)NUM_SUBSHELLS
-    WRITE(*,1420)NUM_SUBSHELLS_PER_SHELL
-    WRITE(*,1421)NUM_BLOCKS_PER_SHELL
-    WRITE(*,1422)NUM_R_ELEMS_PER_SHELL
-    WRITE(*,1423)NUM_T_ELEMS_PER_BLOCK
-    WRITE(*,1424)NUM_P_ELEMS_PER_BLOCK
-    WRITE(*,1425)VAR_DIM
-    WRITE(*,1426)BLOCK_VAR_DIM
-    WRITE(*,1427)PROB_DIM
-    WRITE(*,1428)BLOCK_PROB_DIM
-    WRITE(*,1429)SUBSHELL_PROB_DIM
-    WRITE(*,1430)NUM_OFF_DIAGONALS
-    WRITE(*,1431)NUM_JACOBIAN_ELEMENTS
-    WRITE(*,1432)NONZEROS
-    WRITE(*,1433)SPARSITY
-    WRITE(*,1434)BLOCK_NONZEROS
-    WRITE(*,1435)R_INNER
-    WRITE(*,1436)R_OUTER
-    WRITE(*,1437)NUM_R_QUAD_POINTS
-    WRITE(*,1438)NUM_T_QUAD_POINTS
-    WRITE(*,1439)NUM_P_QUAD_POINTS
-    WRITE(*,1440)MAX_ITERATIONS
-    WRITE(*,1441)CONVERGENCE_CRITERIA
-
-END IF
-IF ( ( myID_Poseidon == 0 ) .AND. (mode == 0 ) ) THEN
-
-    WRITE(RUN_REPORT_FILE_ID,1401)
-    WRITE(RUN_REPORT_FILE_ID,1402)DOMAIN_DIM
-    WRITE(RUN_REPORT_FILE_ID,1403)DEGREE
-    WRITE(RUN_REPORT_FILE_ID,1404)L_LIMIT
-    WRITE(RUN_REPORT_FILE_ID,1405)NUM_CFA_VARS
-    WRITE(RUN_REPORT_FILE_ID,1406)nPROCS
-    WRITE(RUN_REPORT_FILE_ID,1407)nPROCS_POSEIDON
-    WRITE(RUN_REPORT_FILE_ID,1408)R_ELEMENTS_INPUT
-    WRITE(RUN_REPORT_FILE_ID,1409)T_ELEMENTS_INPUT
-    WRITE(RUN_REPORT_FILE_ID,1410)P_ELEMENTS_INPUT
-    WRITE(RUN_REPORT_FILE_ID,1411)NUM_R_ELEMENTS
-    WRITE(RUN_REPORT_FILE_ID,1412)NUM_T_ELEMENTS
-    WRITE(RUN_REPORT_FILE_ID,1413)NUM_P_ELEMENTS
-    WRITE(RUN_REPORT_FILE_ID,1414)R_COARSEN_FACTOR
-    WRITE(RUN_REPORT_FILE_ID,1415)T_COARSEN_FACTOR
-    WRITE(RUN_REPORT_FILE_ID,1416)P_COARSEN_FACTOR
-    WRITE(RUN_REPORT_FILE_ID,1417)NUM_R_NODES
-    WRITE(RUN_REPORT_FILE_ID,1418)NUM_SHELLS
-    WRITE(RUN_REPORT_FILE_ID,1419)NUM_SUBSHELLS
-    WRITE(RUN_REPORT_FILE_ID,1420)NUM_SUBSHELLS_PER_SHELL
-    WRITE(RUN_REPORT_FILE_ID,1421)NUM_BLOCKS_PER_SHELL
-    WRITE(RUN_REPORT_FILE_ID,1422)NUM_R_ELEMS_PER_SHELL
-    WRITE(RUN_REPORT_FILE_ID,1423)NUM_T_ELEMS_PER_BLOCK
-    WRITE(RUN_REPORT_FILE_ID,1424)NUM_P_ELEMS_PER_BLOCK
-    WRITE(RUN_REPORT_FILE_ID,1425)VAR_DIM
-    WRITE(RUN_REPORT_FILE_ID,1426)BLOCK_VAR_DIM
-    WRITE(RUN_REPORT_FILE_ID,1427)PROB_DIM
-    WRITE(RUN_REPORT_FILE_ID,1428)BLOCK_PROB_DIM
-    WRITE(RUN_REPORT_FILE_ID,1429)SUBSHELL_PROB_DIM
-    WRITE(RUN_REPORT_FILE_ID,1430)NUM_OFF_DIAGONALS
-    WRITE(RUN_REPORT_FILE_ID,1431)NUM_JACOBIAN_ELEMENTS
-    WRITE(RUN_REPORT_FILE_ID,1432)NONZEROS
-    WRITE(RUN_REPORT_FILE_ID,1433)SPARSITY
-    WRITE(RUN_REPORT_FILE_ID,1434)BLOCK_NONZEROS
-    WRITE(RUN_REPORT_FILE_ID,1435)R_INNER
-    WRITE(RUN_REPORT_FILE_ID,1436)R_OUTER
-    WRITE(RUN_REPORT_FILE_ID,1437)NUM_R_QUAD_POINTS
-    WRITE(RUN_REPORT_FILE_ID,1438)NUM_T_QUAD_POINTS
-    WRITE(RUN_REPORT_FILE_ID,1439)NUM_P_QUAD_POINTS
-    WRITE(RUN_REPORT_FILE_ID,1440)MAX_ITERATIONS
-    WRITE(RUN_REPORT_FILE_ID,1441)CONVERGENCE_CRITERIA
-    WRITE(RUN_REPORT_FILE_ID,'(/ / / / / / / /)')
-
-
-END IF
+CALL OUTPUT_SETUP_TABLE( mode, nPROCS, R_Elements_Input, T_Elements_Input, P_Elements_Input )
 
 
 
-
-END SUBROUTINE Poseidon_Initialize
-
-
-
-
-
-
-
+END SUBROUTINE Poseidon_Initialize_From_File
 
 
 
@@ -802,6 +953,190 @@ END IF
 
 
 END SUBROUTINE CHECK_SETUP
+
+
+
+
+
+
+
+
+
+
+
+
+!+301+######################################################################################!
+!                                                                                           !
+!       OUTPUT_SETUP_TABLE                                                                  !
+!                                                                                           !
+!###########################################################################################!
+SUBROUTINE OUTPUT_SETUP_TABLE( mode, nPROCS, R_ELEMENTS_INPUT, T_ELEMENTS_INPUT, P_ELEMENTS_INPUT )
+
+INTEGER, INTENT(IN)                                                 :: mode
+INTEGER, INTENT(IN)                                                 :: nPROCS
+INTEGER, INTENT(IN)                                                 :: R_ELEMENTS_INPUT
+INTEGER, INTENT(IN)                                                 :: T_ELEMENTS_INPUT
+INTEGER, INTENT(IN)                                                 :: P_ELEMENTS_INPUT
+INTEGER                                                                         ::  NUM_JACOBIAN_ELEMENTS
+INTEGER                                                                         ::  NONZEROS
+INTEGER                                                                         ::  BLOCK_NONZEROS
+REAL(KIND = idp)                                                                ::  SPARSITY
+
+
+
+1401 FORMAT('------------- POSEIDON PARAMETERS --------------'/)
+1402 FORMAT('         ACTIVE DIMENSIONS = ',I12.1)
+1403 FORMAT('                    DEGREE = ',I12.1)
+1404 FORMAT('                   L_LIMIT = ',I12.1)
+1405 FORMAT('              NUM_CFA_VARS = ',I12.1)
+1406 FORMAT('                    nPROCS = ',I12.1)
+1407 FORMAT('           nPROCS_POSEIDON = ',I12.1)
+1408 FORMAT('    SOURCE RADIAL ELEMENTS = ',I12.1)
+1409 FORMAT('     SOURCE THETA ELEMENTS = ',I12.1)
+1410 FORMAT('       SOURCE PHI ELEMENTS = ',I12.1)
+1411 FORMAT('  POSEIDON RADIAL ELEMENTS = ',I12.1)
+1412 FORMAT('   POSEIDON THETA ELEMENTS = ',I12.1)
+1413 FORMAT('     POSEIDON PHI ELEMENTS = ',I12.1)
+1414 FORMAT('          R_COARSEN_FACTOR = ',I12.1)
+1415 FORMAT('          T_COARSEN_FACTOR = ',I12.1)
+1416 FORMAT('          P_COARSEN_FACTOR = ',I12.1)
+1417 FORMAT('               NUM_R_NODES = ',I12.1)
+1418 FORMAT('          NUMBER OF SHELLS = ',I12.1)
+1419 FORMAT('       NUMBER OF SUBSHELLS = ',I12.1)
+1420 FORMAT('       SUBSHELLS PER SHELL = ',I12.1)
+1421 FORMAT('      NUM BLOCKS PER SHELL = ',I12.1)
+1422 FORMAT('     NUM_R_ELEMS_PER_SHELL = ',I12.1)
+1423 FORMAT('     NUM_T_ELEMS_PER_BLOCK = ',I12.1)
+1424 FORMAT('     NUM_P_ELEMS_PER_BLOCK = ',I12.1)
+1425 FORMAT('                   VAR_DIM = ',I12.1)
+1426 FORMAT('             BLOCK_VAR_DIM = ',I12.1)
+1427 FORMAT('                  PROB_DIM = ',I12.1)
+1428 FORMAT('            BLOCK_PROB_DIM = ',I12.1)
+1429 FORMAT('         SUBSHELL_PROB_DIM = ',I12.1)
+1430 FORMAT('         NUM_OFF_DIAGONALS = ',I12.1)
+1431 FORMAT('     NUM JACOBIAN ELEMENTS = ',I12.1)
+1432 FORMAT(' NUM NNZ JACOBIAN ELEMENTS = ',I12.1)
+1433 FORMAT('        JACOBIAN SPARSITY  = ',F12.6)
+1434 FORMAT('         NUM NNZ PER BLOCK = ',I12.1)
+1435 FORMAT('              Inner Radius = ',ES20.12E3)
+1436 FORMAT('              Outer Radius = ',ES20.12E3)
+1437 FORMAT('      # Radial Quad Points = ',I12.1)
+1438 FORMAT('       # Theta Quad Points = ',I12.1)
+1439 FORMAT('         # Phi Quad Points = ',I12.1)
+1440 FORMAT('        Maximum Iterations = ',I12.1)
+1441 FORMAT('      Convergence Criteria = ',ES20.12E3)
+
+IF ( OUTPUT_SETUP_TABLE_FLAG == 1 ) THEN
+
+    NUM_JACOBIAN_ELEMENTS = PROB_DIM*PROB_DIM
+
+    NONZEROS = NUM_R_ELEMENTS*ELEM_PROB_DIM_SQR          &
+             - (NUM_R_ELEMENTS-1)*ULM_LENGTH*ULM_LENGTH
+
+    BLOCK_NONZEROS = NUM_R_ELEMS_PER_BLOCK*ELEM_PROB_DIM_SQR          &
+                   - (NUM_R_ELEMS_PER_BLOCK-1)*ULM_LENGTH*ULM_LENGTH
+
+
+    SPARSITY = REAL(NONZEROS,KIND =idp)/REAL(NUM_JACOBIAN_ELEMENTS, KIND = idp)
+
+
+    IF ( ( myID_Poseidon == 0 ) .AND. (mode == 0 ) ) THEN
+
+        WRITE(*,1401)
+        WRITE(*,1402)DOMAIN_DIM
+        WRITE(*,1403)DEGREE
+        WRITE(*,1404)L_LIMIT
+        WRITE(*,1405)NUM_CFA_VARS
+        WRITE(*,1406)nPROCS
+        WRITE(*,1407)nPROCS_POSEIDON
+        WRITE(*,1408)R_ELEMENTS_INPUT
+        WRITE(*,1409)T_ELEMENTS_INPUT
+        WRITE(*,1410)P_ELEMENTS_INPUT
+        WRITE(*,1411)NUM_R_ELEMENTS
+        WRITE(*,1412)NUM_T_ELEMENTS
+        WRITE(*,1413)NUM_P_ELEMENTS
+        WRITE(*,1414)R_COARSEN_FACTOR
+        WRITE(*,1415)T_COARSEN_FACTOR
+        WRITE(*,1416)P_COARSEN_FACTOR
+        WRITE(*,1417)NUM_R_NODES
+        WRITE(*,1418)NUM_SHELLS
+        WRITE(*,1419)NUM_SUBSHELLS
+        WRITE(*,1420)NUM_SUBSHELLS_PER_SHELL
+        WRITE(*,1421)NUM_BLOCKS_PER_SHELL
+        WRITE(*,1422)NUM_R_ELEMS_PER_SHELL
+        WRITE(*,1423)NUM_T_ELEMS_PER_BLOCK
+        WRITE(*,1424)NUM_P_ELEMS_PER_BLOCK
+        WRITE(*,1425)VAR_DIM
+        WRITE(*,1426)BLOCK_VAR_DIM
+        WRITE(*,1427)PROB_DIM
+        WRITE(*,1428)BLOCK_PROB_DIM
+        WRITE(*,1429)SUBSHELL_PROB_DIM
+        WRITE(*,1430)NUM_OFF_DIAGONALS
+        WRITE(*,1431)NUM_JACOBIAN_ELEMENTS
+        WRITE(*,1432)NONZEROS
+        WRITE(*,1433)SPARSITY
+        WRITE(*,1434)BLOCK_NONZEROS
+        WRITE(*,1435)R_INNER
+        WRITE(*,1436)R_OUTER
+        WRITE(*,1437)NUM_R_QUAD_POINTS
+        WRITE(*,1438)NUM_T_QUAD_POINTS
+        WRITE(*,1439)NUM_P_QUAD_POINTS
+        WRITE(*,1440)MAX_ITERATIONS
+        WRITE(*,1441)CONVERGENCE_CRITERIA
+
+    END IF
+    IF ( ( myID_Poseidon == 0 ) .AND. (mode == 0 ) ) THEN
+
+        WRITE(RUN_REPORT_FILE_ID,1401)
+        WRITE(RUN_REPORT_FILE_ID,1402)DOMAIN_DIM
+        WRITE(RUN_REPORT_FILE_ID,1403)DEGREE
+        WRITE(RUN_REPORT_FILE_ID,1404)L_LIMIT
+        WRITE(RUN_REPORT_FILE_ID,1405)NUM_CFA_VARS
+        WRITE(RUN_REPORT_FILE_ID,1406)nPROCS
+        WRITE(RUN_REPORT_FILE_ID,1407)nPROCS_POSEIDON
+        WRITE(RUN_REPORT_FILE_ID,1408)R_ELEMENTS_INPUT
+        WRITE(RUN_REPORT_FILE_ID,1409)T_ELEMENTS_INPUT
+        WRITE(RUN_REPORT_FILE_ID,1410)P_ELEMENTS_INPUT
+        WRITE(RUN_REPORT_FILE_ID,1411)NUM_R_ELEMENTS
+        WRITE(RUN_REPORT_FILE_ID,1412)NUM_T_ELEMENTS
+        WRITE(RUN_REPORT_FILE_ID,1413)NUM_P_ELEMENTS
+        WRITE(RUN_REPORT_FILE_ID,1414)R_COARSEN_FACTOR
+        WRITE(RUN_REPORT_FILE_ID,1415)T_COARSEN_FACTOR
+        WRITE(RUN_REPORT_FILE_ID,1416)P_COARSEN_FACTOR
+        WRITE(RUN_REPORT_FILE_ID,1417)NUM_R_NODES
+        WRITE(RUN_REPORT_FILE_ID,1418)NUM_SHELLS
+        WRITE(RUN_REPORT_FILE_ID,1419)NUM_SUBSHELLS
+        WRITE(RUN_REPORT_FILE_ID,1420)NUM_SUBSHELLS_PER_SHELL
+        WRITE(RUN_REPORT_FILE_ID,1421)NUM_BLOCKS_PER_SHELL
+        WRITE(RUN_REPORT_FILE_ID,1422)NUM_R_ELEMS_PER_SHELL
+        WRITE(RUN_REPORT_FILE_ID,1423)NUM_T_ELEMS_PER_BLOCK
+        WRITE(RUN_REPORT_FILE_ID,1424)NUM_P_ELEMS_PER_BLOCK
+        WRITE(RUN_REPORT_FILE_ID,1425)VAR_DIM
+        WRITE(RUN_REPORT_FILE_ID,1426)BLOCK_VAR_DIM
+        WRITE(RUN_REPORT_FILE_ID,1427)PROB_DIM
+        WRITE(RUN_REPORT_FILE_ID,1428)BLOCK_PROB_DIM
+        WRITE(RUN_REPORT_FILE_ID,1429)SUBSHELL_PROB_DIM
+        WRITE(RUN_REPORT_FILE_ID,1430)NUM_OFF_DIAGONALS
+        WRITE(RUN_REPORT_FILE_ID,1431)NUM_JACOBIAN_ELEMENTS
+        WRITE(RUN_REPORT_FILE_ID,1432)NONZEROS
+        WRITE(RUN_REPORT_FILE_ID,1433)SPARSITY
+        WRITE(RUN_REPORT_FILE_ID,1434)BLOCK_NONZEROS
+        WRITE(RUN_REPORT_FILE_ID,1435)R_INNER
+        WRITE(RUN_REPORT_FILE_ID,1436)R_OUTER
+        WRITE(RUN_REPORT_FILE_ID,1437)NUM_R_QUAD_POINTS
+        WRITE(RUN_REPORT_FILE_ID,1438)NUM_T_QUAD_POINTS
+        WRITE(RUN_REPORT_FILE_ID,1439)NUM_P_QUAD_POINTS
+        WRITE(RUN_REPORT_FILE_ID,1440)MAX_ITERATIONS
+        WRITE(RUN_REPORT_FILE_ID,1441)CONVERGENCE_CRITERIA
+        WRITE(RUN_REPORT_FILE_ID,'(/ / / / / / / /)')
+
+
+    END IF
+END IF
+
+
+END SUBROUTINE OUTPUT_SETUP_TABLE
+
 
 
 

@@ -58,6 +58,9 @@ USE Driver_Additional_Functions_Module, &
                         ONLY :  Map_From_X_Space,                       &
                                 Initialize_LGL_Quadrature_Locations
 
+USE IO_Functions_Module, &
+                        ONLY :  OPEN_EXISTING_FILE
+
 
 IMPLICIT NONE
 
@@ -198,9 +201,7 @@ DO re = 0,NUM_R_ELEMENTS - 1
  
         ! 2 sqrt(pi) is Ylm normalization factor
 
-
         CUR_PSI_LOC = Matrix_Location( 1, 0, 0, re, d )
-
         Coefficient_Vector(CUR_PSI_LOC) = 2.0_idp * sqrt(pi)                                        &
                                         * ( 1.0_idp - 0.5_idp                                       &
                                             * Analytic_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
@@ -213,10 +214,10 @@ DO re = 0,NUM_R_ELEMENTS - 1
                                             * Analytic_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
 
 
-
         CUR_SHIFT_LOC = Matrix_Location( 3, 0, 0, re, d )
         Coefficient_Vector(Cur_Shift_Loc) = 2.0_idp*sqrt(pi)*Shift_Solution(R_Values(d),rlocs,NUM_R_ELEMENTS)
-
+!        Coefficient_Vector(Cur_Shift_Loc) = 0.0_idp
+        
     END DO
 END DO
 
@@ -240,8 +241,36 @@ END SUBROUTINE Initialize_Calculated_Guess_Values
 SUBROUTINE Load_Initial_Guess_From_File()
 
 
-! Coming Soon To a Theater Near You !
+INTEGER                                                 ::  Frame_Num, Iter_Num
 
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 40)                                     ::  fmt
+
+INTEGER                                                 ::  FILE_ID
+INTEGER                                                 ::  i
+
+INTEGER                                                 ::  istat
+
+
+100 FORMAT (A,I2.2,A,I2.2,A)
+101 FORMAT (I5.5," ",I2.2," ",I2.2)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!fmt = '(F16.10,SP,F16.10,"i")'
+
+
+
+Frame_Num = 1
+Iter_Num = 2
+
+
+WRITE(FILE_NAME,100)"Data3/Poseidon_Coeffs/COEFF_VEC_F",Frame_Num,"_I",Iter_Num,".out"
+CALL OPEN_EXISTING_FILE( FILE_NAME, FILE_ID, istat )
+
+READ(FILE_ID,*)Coefficient_Vector
+
+
+CLOSE(FILE_ID)
 
 END SUBROUTINE Load_Initial_Guess_From_File
 

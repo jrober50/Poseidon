@@ -303,10 +303,9 @@ CALL Unpack_DRIVER_Parameters()
 
 
 
-
-ALLOCATE( DRIVER_R_LOCS(0:DRIVER_R_ELEMS+1),  &
-          DRIVER_T_LOCS(0:DRIVER_T_ELEMS+1),  &
-          DRIVER_P_LOCS(0:DRIVER_P_ELEMS+1)   )
+ALLOCATE( DRIVER_R_LOCS(0:DRIVER_R_ELEMS),  &
+          DRIVER_T_LOCS(0:DRIVER_T_ELEMS),  &
+          DRIVER_P_LOCS(0:DRIVER_P_ELEMS)   )
 
 ALLOCATE( DRIVER_Delta_R(0:DRIVER_R_ELEMS-1),   &
           DRIVER_Delta_T(0:DRIVER_T_ELEMS-1),   &
@@ -697,6 +696,8 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
                             Local_E, Local_S, Local_Si                      )
 
 
+
+
     CALL PQ_ITERATIONS_USED( Iteration_History(DRIVER_FRAME) )
 
     CALL OUTPUT_FRAME_REPORT(DRIVER_FRAME)
@@ -710,7 +711,6 @@ IF ( myID == 0 ) THEN
     CALL OUTPUT_ITERATION_HISTORY()
     CALL CLOSE_RUN_REPORT_FILE()
 END IF
-
 CALL Poseidon_Shutdown()
 CALL MPI_Finalize(ierr)
 

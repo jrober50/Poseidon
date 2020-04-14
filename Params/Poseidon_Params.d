@@ -1,9 +1,9 @@
 DIM                3                   DIM        ! Dimensions
 DEGREE             1                   DEGREE     ! FEM Degree
-LLIMIT             0                   LLIMIT     ! Spherical Harmonic Expansion Limit
+LLIMIT             1                   LLIMIT     ! Spherical Harmonic Expansion Limit
 
-NREPS            700                   NREPS      ! Number of Radial Elements Per Shell
-NREPSS           700                   NREPSS     ! Number of Radial Elements Per Subshell
+NREPS             10                   NREPS      ! Number of Radial Elements Per Shell
+NREPSS            10                   NREPSS     ! Number of Radial Elements Per SubShell
 
 NTEPB              1                   NTEPB      ! Number of Theta Elements Per Block
 NPEPB              1                   NPEPB      ! Number of Phi Elements Per Block
@@ -21,15 +21,21 @@ PRQ                8                   PRQ        ! Number of Radial Quadrature 
 PTQ                8                   PTQ        ! Number of Theta Quadrature Points Per Element
 PPQ                8                   PPQ        ! Number of Phi Quadrature Points Per Elements
 
-MI                 4                   MI         ! Maximum Newton-Raphson Iterations
+MI                10                   MI         ! Maximum Newton-Raphson Iterations
 CC           1.00E-8                   CC         ! Convergence Criteria
 
-OMF                0                   OMF        ! Write Jacobian Matrix to File
+OSTF               0                   OSTF       ! Output Setup Table Flag    :  0=Off(Default), 1=On
+OMF                1                   OMF        ! Write Jacobian Matrix to File
 ORF                1                   ORF        ! Write RHS Vector to File
 WRTTT              0                   WRTTT      ! Write Timetable Flag        : 0=Off, 1=To Screen, 2=To File, 3=Both
 WRTIR              1                   WRTIT      ! Write Iteration Report Flag : 0=Off, 1=To Screen, 2=To File, 3=Both
 IRNS              20                   IRNS       ! Number of Samples in each Iteration Report
 WRTRS              1                   WRTRS      ! Write Results to File Flag  : 0=Off, 1=To File
+
+RSMPS           1000                   RSMPS      ! Number of Radial Samples for Results Output
+TSMPS              1                   TSMPS      ! Number of Theta Samples for Results Output
+PSMPS              1                   PSMPS      ! Number of Phi Samples for Results Output
+
 
 NPS                0                   NPS        ! Use the New PETSc SNES routines
 

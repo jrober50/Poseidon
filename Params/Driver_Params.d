@@ -1,11 +1,11 @@
-RE               700                   RE	   ! Number of Radial Elements
-CE               200                   CE          ! Number of Radial Elements in Core
+RE                10                   RE	   ! Number of Radial Elements
+CE                 5                   CE          ! Number of Radial Elements in Core
 TE                 1                   TE          ! Number of Theta Elements
 PE                 1                   PE          ! Number of Phi Elements
 
 RQ                 3                   RQ          ! Number of Radial Source Points Per Element
-TQ                 1                   TQ          ! Number of Theta Source Points Per Element
-PQ                 1                   PQ          ! Number of Phi Source Points Per Element
+TQ                 3                   TQ          ! Number of Theta Source Points Per Element
+PQ                 3                   PQ          ! Number of Phi Source Points Per Element
 
 DIM                3                   DIM         ! Number of Dimensions
 
@@ -16,7 +16,7 @@ zPROC              1                   zPROC       ! Number of Processes in Phi 
 LL         -0.50E+00                   LL          ! Left Limit for Source x-Space
 RL          0.50E+00                   RL          ! Right Limit for Source x-Space
 
-DTN                2                   DTN         ! Test Number, 1 = Sphere Sym, 2 = CHIMERA, 3 = Yahil
+DTN                3                   DTN         ! Test Number, 1 = Sphere Sym, 2 = CHIMERA, 3 = Yahil
 
 SOF                1                   SOF         ! Source Output Flag,  1 = On, 0 = Off
 ROF                1                   ROF         ! Results Output Flag, 1 = On, 0 = Off
@@ -35,13 +35,13 @@ SGF                4                   SGF         ! Subsequent Guess Flag, 1,2,
 
 ! Used if DTN == 2 !
 
-CSF               60                  CSF          ! CHIMERA Start Frame
-CEF               60                  CEF          ! CHIMERA End Frame
+CSF                1                   CSF          ! CHIMERA Start Frame
+CEF                1                   CEF          ! CHIMERA End Frame
 
 
 ! Used if DTN == 3 !
 
-YST          5.0E+01                   SST         ! Self-Similar Start Time Parameter
+YST          5.0E-01                   SST         ! Self-Similar Start Time Parameter
 YET          5.0E-01                   YET         ! Self-Similar Final Time Parameter
 YNF                1                   YNF         ! Self-Similar Number of Frames
                                                    ! If one frame, uses YST

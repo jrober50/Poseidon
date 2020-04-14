@@ -223,8 +223,9 @@ DO re = 0,NUM_R_ELEM-1
 
            Psi = 1.0_idp - 0.5_idp*Test_Chimera_Simulated_Potential(rij_locs(j,i),0.0_idp,0.0_idp)/csqr
            Psi_10(j,i) = Psi**10
-
+            
       END DO
+
 
       ! Calculate Sr values at each quadrature Point.
       DO j = 1,Ord
@@ -299,7 +300,7 @@ DO re = 0,NUM_R_ELEM-1
 
    END IF
 
-
+!    PRINT*,"Driver_Shift_Val",Driver_Shift_Val(re+1)
 END DO ! re loop
 
 

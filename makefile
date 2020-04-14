@@ -20,8 +20,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-#CMODE	=DEBUG
-CMODE	=OPTIMIZE
+CMODE	=DEBUG
+#CMODE	=OPTIMIZE
 
 
 ## Compile with Openmp

@@ -59,6 +59,9 @@ USE Poseidon_Parameters, &
                             CONVERGENCE_FLAG,                               &
                             WRITE_TIMETABLE_FLAG,                           &
                             WRITE_RESULTS_FLAG,                             &
+                            WRITE_RESULTS_R_SAMPS,                          &
+                            WRITE_RESULTS_T_SAMPS,                          &
+                            WRITE_RESULTS_P_SAMPS,                          &
                             ITER_REPORT_NUM_SAMPLES,                        &
                             RUN_REPORT_FILE_ID,                             &
                             ITER_REPORT_FILE_ID,                            &
@@ -499,7 +502,6 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
         ALLOCATE( Filenames(1:Num_Files) )
         ALLOCATE( File_IDs(1:Num_Files) )
 
-
         WRITE(Filenames(1),116)"OUTPUT/CHIMERA_RESULTS/Results_Lapse_",DRIVER_FRAME,".out"
         WRITE(Filenames(2),116)"OUTPUT/CHIMERA_RESULTS/Results_ConFactor_",DRIVER_FRAME,".out"
         WRITE(Filenames(3),116)"OUTPUT/CHIMERA_RESULTS/Results_Beta1_",DRIVER_FRAME,".out"
@@ -509,7 +511,6 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
         WRITE(Filenames(7),116)"OUTPUT/CHIMERA_RESULTS/R_VALUES_",DRIVER_FRAME,".out"
         WRITE(Filenames(8),116)"OUTPUT/CHIMERA_RESULTS/T_VALUES_",DRIVER_FRAME,".out"
         WRITE(Filenames(9),116)"OUTPUT/CHIMERA_RESULTS/P_VALUES_",DRIVER_FRAME,".out"
-
 
 
         File_IDs = [(141 + i, i=1,Num_Files)]
@@ -522,7 +523,12 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
 
         ! Create Output Spacing
-        NUM_PHI_RAYS = 1
+        ! Pull Number of Samples From Parameters !
+        NUM_RADIAL_SAMPLES = WRITE_RESULTS_R_SAMPS
+        NUM_THETA_RAYS = WRITE_RESULTS_T_SAMPS
+        NUM_PHI_RAYS = WRITE_RESULTS_P_SAMPS
+
+        !  Create Phi Spacing !
         IF ( NUM_PHI_RAYS == 1 ) THEN
             DELTA_PHI = pi/2.0_idp
 !            DELTA_PHI = 0.0_idp
@@ -530,24 +536,29 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
             DELTA_PHI = 2.0_idp*pi/(NUM_PHI_RAYS-1)
         END IF
 
-        NUM_THETA_RAYS = 100
-        DELTA_THETA = pi/(NUM_THETA_RAYS-1)
+        ! Create Theta Spacing
+        IF ( NUM_THETA_RAYS == 1 ) THEN
+            DELTA_THETA = pi
+!            DELTA_PHI = 0.0_idp
+        ELSE
+            DELTA_THETA = pi/(NUM_THETA_RAYS-1)
+        END IF
 
-        NUM_RADIAL_SAMPLES = 1000
 
+        ! Create Radial Spacing !
         ALLOCATE( Output_re(0:NUM_RADIAL_SAMPLES) )
         ALLOCATE( Output_rc(1:NUM_RADIAL_SAMPLES) )
         ALLOCATE( Output_dr(1:NUM_RADIAL_SAMPLES) )
         CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,  &
                                          output_re, output_rc, output_dr        )
 
+        ! Allocate Data Holders !
         ALLOCATE( Lapse_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
         ALLOCATE( ConForm_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
         ALLOCATE( Shift_Holder(1:3,1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
         ALLOCATE( R_Holder(1:NUM_RADIAL_SAMPLES) )
         ALLOCATE( T_Holder(1:NUM_THETA_RAYS) )
         ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
-
 
 
         ! Calculate Output
@@ -698,7 +709,11 @@ CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
     DO e = 0,ELEM_PROB_DIM_SQR-1
         WRITE(FILE_ID,fmt) BLOCK_ELEM_STF_MATVEC(e,re)
+!        WRITE(*,*) BLOCK_ELEM_STF_MATVEC(e,re)
     END DO
+!    WRITE(*,*)" "
+!    WRITE(*,*)" "
+!    WRITE(*,*)" "
 END DO
 
 
@@ -797,6 +812,117 @@ END SUBROUTINE OUTPUT_RHS_VECTOR_Parts
 
 
 
+!+404+###########################################################################!
+!                                                                                !
+!                   OUTPUT_RHS_VECTOR                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_MATLAB()
+
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 40)                                     ::  fmt
+
+INTEGER                                                 ::  FILE_ID
+INTEGER                                                 ::  i
+
+100 FORMAT (A,I2.2,A,I2.2,A)
+101 FORMAT (I5.5," ",I2.2," ",I2.2)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!fmt = '(F16.10,SP,F16.10,"i")'
+
+
+WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/COEFF_VEC_MATLAB_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+
+
+WRITE(FILE_ID, 101)NUM_R_ELEMENTS,DEGREE,L_LIMIT
+DO i = 0,Block_PROB_DIM-1
+    WRITE(FILE_ID,TRIM(fmt)) COEFFICIENT_VECTOR(i)
+END DO
+
+CLOSE(FILE_ID)
+
+
+END SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_MATLAB
+
+!+404+###########################################################################!
+!                                                                                !
+!                   OUTPUT_RHS_VECTOR                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
+
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 40)                                     ::  fmt
+
+INTEGER                                                 ::  FILE_ID
+INTEGER                                                 ::  i
+
+100 FORMAT (A,I2.2,A,I2.2,A)
+101 FORMAT (I5.5," ",I2.2," ",I2.2)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!fmt = '(F16.10,SP,F16.10,"i")'
+
+
+WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/COEFF_VEC_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+
+WRITE(FILE_ID,*)Coefficient_Vector
+
+
+CLOSE(FILE_ID)
+
+
+END SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_FORTRAN
+
+
+
+!+404+###########################################################################!
+!                                                                                !
+!                   OUTPUT_RHS_VECTOR                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE READ_COEFFICIENT_VECTOR(Frame_Num, Iter_Num)
+
+INTEGER, INTENT(IN)                                     ::  Frame_Num, Iter_Num
+
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 40)                                     ::  fmt
+
+INTEGER                                                 ::  FILE_ID
+INTEGER                                                 ::  i
+
+COMPLEX(KIND = idp), DIMENSION(0:Block_PROB_DIM-1 )     ::  Test
+INTEGER                                                 :: N_RE, D, L
+INTEGER                                                 ::  istat
+CHARACTER(len = 100)                                    ::  test_str
+CHARACTER(len = 23)                                     ::  REAL_PART
+REAL(KIND = idp)                                        ::  REAL_NUM
+
+100 FORMAT (A,I2.2,A,I2.2,A)
+101 FORMAT (I5.5," ",I2.2," ",I2.2)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!fmt = '(F16.10,SP,F16.10,"i")'
+
+WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/COEFF_VEC_F",Frame_Num,"_I",Iter_Num,".out"
+CALL OPEN_EXISTING_FILE( FILE_NAME, FILE_ID, istat )
+
+READ(FILE_ID,*)Test
+
+
+CLOSE(FILE_ID)
+
+END SUBROUTINE READ_COEFFICIENT_VECTOR
+
+
+
+
+
+
+
  !+501+############################################################################!
 !                                                                                   !
 !                           CLOCK_IN                                                !
@@ -832,8 +958,6 @@ ELSE
     ! Add This Iterations Time to Running Average for the Run
     RUN_TIME_TABLE(Ident) = (RUN_TIME_TABLE(ident)*(Total_Run_Iters-1) + Time)/Total_Run_Iters
 END IF
-
-
 
 
 END SUBROUTINE CLOCK_IN
@@ -898,7 +1022,7 @@ IF ( UNIT_FLAG  ) THEN
     OPEN( Unit = File_Number, File = File_Name, IOSTAT = istat )
     IF ( istat .NE. 0 ) THEN
 
-        PRINT*,"WARNING: Could not open Run Report File at ", File_Name
+        PRINT*,"WARNING: Could not open file at ", File_Name
 
     END IF
 END IF
@@ -911,7 +1035,74 @@ END SUBROUTINE OPEN_NEW_FILE
 
 
 
+ !+501+############################################################################!
+!                                                                                   !
+!                     OPEN_EXISTING_FILE                                            !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE OPEN_EXISTING_FILE(File_Name, File_Number, istat)
 
+
+
+CHARACTER(LEN = *), INTENT(IN)                          ::  File_Name
+INTEGER,            INTENT(INOUT)                       ::  File_Number
+INTEGER,            INTENT(INOUT)                       ::  istat
+
+
+INTEGER                                                 ::  Temp_Number
+
+LOGICAL                                                 ::  FLAG, OP, EX
+LOGICAL                                                 ::  UNIT_FLAG, NAME_FLAG
+
+
+UNIT_FLAG = .FALSE.
+NAME_FLAG = .FALSE.
+
+
+!  Assigned an unused number, and assign it to new file
+FLAG = .TRUE.
+Temp_Number = 421
+DO WHILE (FLAG)
+    INQUIRE( UNIT = Temp_Number, OPENED = OP )
+
+    IF ( OP ) THEN
+        Temp_Number = Temp_Number + 1
+    ELSE
+        File_Number = Temp_Number
+        FLAG = .FALSE.
+        UNIT_FLAG = .TRUE.
+    END IF
+END DO
+
+
+
+
+! Check if file already exists !
+!INQUIRE( FILE = File_Name, EXIST = EX )
+!IF ( EX ) THEN
+!    PRINT*,"File ",File_Name," is already opened"
+!
+!ELSE
+!    PRINT*,File_Name," is not already opened."
+!    NAME_FLAG = .TRUE.
+!END IF
+
+
+
+! Open New File
+IF ( UNIT_FLAG  ) THEN
+
+    OPEN(unit=File_Number, file=File_Name, status='old', &
+         iostat=istat, action='read', position='rewind')
+    IF ( istat .NE. 0 ) THEN
+
+        PRINT*,"WARNING: Could not open file at ", File_Name
+
+    END IF
+END IF
+
+
+END SUBROUTINE OPEN_EXISTING_FILE
 
 
 

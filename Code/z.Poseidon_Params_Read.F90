@@ -65,7 +65,11 @@ USE Poseidon_Parameters, &
                     WRITE_TIMETABLE_FLAG,       &
                     WRITE_REPORT_FLAG,          &
                     ITER_REPORT_NUM_SAMPLES,    &
+                    OUTPUT_SETUP_TABLE_FLAG,    &
                     WRITE_RESULTS_FLAG,         &
+                    WRITE_RESULTS_R_SAMPS,      &
+                    WRITE_RESULTS_T_SAMPS,      &
+                    WRITE_RESULTS_P_SAMPS,      &
                     NEW_PETSC_SOLVER_FLAG
 
 
@@ -102,7 +106,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE     :: REAL_PARAMS
 
 
 
-NUM_INT_PARAMS  = 27
+NUM_INT_PARAMS  = 31
 NUM_REAL_PARAMS = 1
 
 ALLOCATE( INT_PARAMS(1:NUM_INT_PARAMS) )
@@ -189,7 +193,13 @@ NEW_PETSC_SOLVER_FLAG           = INT_PARAMS(25)
 OUTPUT_MATRIX_FLAG              = INT_PARAMS(26)
 OUTPUT_RHS_VECTOR_FLAG          = INT_PARAMS(27)
 
+WRITE_RESULTS_R_SAMPS           = INT_PARAMS(28)
+WRITE_RESULTS_T_SAMPS           = INT_PARAMS(29)
+WRITE_RESULTS_P_SAMPS           = INT_PARAMS(30)
 
+IF ( INT_PARAMS(31) .NE. -1 ) THEN
+    OUTPUT_SETUP_TABLE_FLAG     = INT_PARAMS(31)    ! Default = 0, Off
+END IF
 
 CONVERGENCE_CRITERIA            = REAL_PARAMS(1)
 
@@ -433,6 +443,23 @@ IF ( Param_type == 'ORF   ' ) THEN
 END IF
 
 
+! WRITE_RESULTS_R_SAMPS
+IF ( Param_type == 'RSMPS ' ) THEN
+    READ (line, 111) INT_PARAMS(28)
+    CYCLE
+END IF
+
+! WRITE_RESULTS_T_SAMPS
+IF ( Param_type == 'TSMPS ' ) THEN
+    READ (line, 111) INT_PARAMS(29)
+    CYCLE
+END IF
+
+! WRITE_RESULTS_P_SAMPS
+IF ( Param_type == 'PSMPS ' ) THEN
+    READ (line, 111) INT_PARAMS(30)
+    CYCLE
+END IF
 
 
 END DO READ

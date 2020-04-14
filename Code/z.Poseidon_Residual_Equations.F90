@@ -108,7 +108,6 @@ USE Poseidon_Variables_Module, &
                                         PROB_DIM,                   &
                                         Block_PROB_DIM,             &
                                         Coefficient_Vector,         &
-                                        NUM_OFF_DIAGONALS,          &
                                         LM_LENGTH,                  &
                                         M_VALUES,                   &
                                         ULM_LENGTH,                 &
@@ -123,7 +122,6 @@ USE Poseidon_Variables_Module, &
                                         BLOCK_ELEM_STF_MATVEC,      &
                                         myShell,                    &
                                         Block_RHS_Vector,           &
-                                        BLOCK_NONZEROS,             &
                                         Matrix_Location,            &
                                         LM_Location
 

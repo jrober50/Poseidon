@@ -56,11 +56,12 @@ CODE_o  = z.Poseidon_Variables_Module.o          \
           z.Jacobian_Internal_Functions.o        \
           z.IO_Functions_Module.o                \
           z.Poseidon_BC_Module.o                 \
-          z.Poseidon_SubJacobian_Functions.o     \
-          z.CFA_3D_Master_Build_New.o            \
+          z.Poseidon_SubJacobian_Functions_3D.o  \
+          z.Poseidon_Preconditioners.o           \
+          z.CFA_3D_Master_Build.o                \
           z.Poseidon_Petsc_Solver.o		 \
           z.Poseidon_Residual_Equations.o        \
-          z.CFA_Newton_Raphson.o                 \
+          z.CFA_Newton_Raphson_3D.o              \
           z.Poseidon_MPI_Module.o                \
           z.Poseidon_Params_Read.o               \
           z.Poseidon_Main_Module.o               \

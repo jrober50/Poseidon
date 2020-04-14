@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE CFA_Newton_Raphson_Module                                                    !##!
+MODULE CFA_Newton_Raphson_3D_Module                                                 !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -49,6 +49,7 @@ USE Poseidon_Constants_Module, &
 
 USE DRIVER_Parameters, &
                         ONLY :  Analytic_Solution,          &
+                                DRIVER_FRAME,               &
                                 FRAME_REPORT_FLAG
 
 USE Poseidon_Parameters, &
@@ -119,7 +120,10 @@ USE IO_Functions_Module, &
                                 OPEN_ITER_REPORT_FILE,      &
                                 CLOSE_ITER_REPORT_FILE,     &
                                 OUTPUT_JACOBIAN_MATRIX,     &
-                                OUTPUT_RHS_VECTOR
+                                OUTPUT_RHS_VECTOR,          &
+                                READ_COEFFICIENT_VECTOR,    &
+                                OUTPUT_COEFFICIENT_VECTOR_MATLAB,   &
+                                OUTPUT_COEFFICIENT_VECTOR_FORTRAN
 
 USE Poseidon_Petsc_Solver, &
                         ONLY : PETSC_Distributed_Solve
@@ -148,7 +152,7 @@ CONTAINS
 !                  CFA_Newton_Raphson                                            !
 !                                                                                !
 !################################################################################!
-SUBROUTINE CFA_Newton_Raphson()
+SUBROUTINE CFA_Newton_Raphson_3D()
 
 
 LOGICAL                                         :: CONVERGED
@@ -162,17 +166,17 @@ timeb = 0.0_idp
 timec = 0.0_idp
 
 
-
 IF (myID_Poseidon == 0 ) THEN
     CALL OUTPUT_GUESS(0, 0)
 END IF
 
-
+Cur_Iteration = 0
+CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
 
 Cur_Iteration = 1
 CONVERGED = .FALSE.
 DO WHILE ( CONVERGED .EQV. .FALSE. )
-
+    PRINT*,"Begining of Iter ",Cur_Iteration
     IF (myID_Poseidon == 0 ) THEN
         CALL OPEN_ITER_REPORT_FILE(Cur_Iteration, myID_Poseidon)
     END IF
@@ -199,14 +203,6 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
         CALL OUTPUT_RHS_VECTOR()
     END IF
 
-!    PRINT*,"ELEM_PROB_DIM_SQR",ELEM_PROB_DIM_SQR
-!    DO i = 0,NUM_R_ELEMENTS-1
-!        DO j = 0,ELEM_PROB_DIM_SQR-1
-!            PRINT*,BLOCK_ELEM_STF_MATVEC(j,i)
-!        END DO
-!    END DO
-
-
 
 
     !*!
@@ -218,20 +214,6 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     CALL Clock_In(timec-timeb, 14)
 
 
-
-    !CALL Output_Residual()
-
-!    PRINT*, REAL(Update_Vector, KIND = idp)
-!    PRINT*,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-!    DO i = 0,NUM_R_ELEMENTS-1
-!        DO j = 0,DEGREE
-!            k = Matrix_Location(3, 0, 0, i, j)
-!            PRINT*,i,j,Update_Vector(k)
-!        END DO
-!    END DO
-
-!    PRINT*,REAL(Coefficient_Vector, KIND = idp)
-!    PRINT*,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     !*!
     !*! Update Coefficient_Vector
     !*!
@@ -241,46 +223,16 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     CALL Clock_In(timec-timeb, 16)
 
 
-
-!    PRINT*,"UPDATE_VECTOR"
-!    DO i = 0,NUM_R_ELEMENTS-1
-!        DO j = 0,DEGREE
-!            k = CFA_ALL_Matrix_Map(1, 0, i, j)
-!            l = CFA_ALL_Matrix_Map(5, 3, i, j)
-!            PRINT*,Update_Vector(k:l)
-!            PRINT*," "
-!        END DO
-!    END DO
-!    k = CFA_ALL_Matrix_Map(1, 0, NUM_R_ELEMENTS-1, DEGREE)
-!    PRINT*,REAL(Block_RHS_Vector(k), KIND = idp)
-!    WRITE(*,'(/ /)')
-
     !*!
     !*!  Share Coefficient Vector
     !*!
     timeb = MPI_Wtime()
+    CALL CFA_Update_Modifier( )
     CALL CFA_Coefficient_Update_All
     timec = MPI_Wtime()
     CALL Clock_In(timec-timeb, 15)
 
-!    PRINT*,"============================================================="
-!    PRINT*,REAL(Coefficient_Vector, KIND = idp)
 
-
-!    DO i = 0,NUM_R_ELEMENTS-1
-!        DO j = 0,DEGREE
-!            k = Matrix_Location(1, 0, 0, i, j)
-!            l = Matrix_Location(5,L_LIMIT,L_LIMIT,i,j)
-!            PRINT*,i,j
-!            PRINT*,Coefficient_Vector(k:l)
-!            PRINT*," "
-!        END DO
-!    END DO
-
-
-
-
-    !CALL Output_Residual()
     !*!
     !*! Check for convergence
     !*!
@@ -308,7 +260,7 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     END IF
 
 
-
+    CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
 
     WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
 
@@ -345,10 +297,7 @@ END IF
 
 
 
-END SUBROUTINE CFA_Newton_Raphson
-
-
-
+END SUBROUTINE CFA_Newton_Raphson_3D
 
 
 
@@ -412,12 +361,42 @@ END SUBROUTINE CFA_Solve
 !###############################################################################!
 SUBROUTINE CFA_Coefficient_Update_All( )
 
+!CALL CFA_Update_Modifier()
+
 Coefficient_Vector = Coefficient_Vector + Update_Vector
 
 END SUBROUTINE CFA_Coefficient_Update_All
 
 
+!+301a+##########################################################################!
+!                                                                               !
+!               CFA_Update_Modifier                                             !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE CFA_Update_Modifier( )
 
+INTEGER                                             :: re, d, lm_loc, ui, Here
+
+
+PRINT*,"The Update Vector is Modified, in CFA_Update_Modifier, z.CFA_Newton_Raphon.F90"
+DO re = 0,NUM_R_ELEMENTS - 1
+    DO d = 0,DEGREE
+        DO ui = 4,5
+            DO lm_loc = 0,LM_LENGTH - 1
+
+                Here = (re*DEGREE + D)*ULM_LENGTH       &
+                                        + (ui - 1)*LM_LENGTH              &
+                                        + lm_loc
+
+                Update_Vector(Here) = 0.0_idp
+
+            END DO
+        END DO
+    END DO
+END DO
+
+
+END SUBROUTINE CFA_Update_Modifier
 
 
 
@@ -428,16 +407,11 @@ END SUBROUTINE CFA_Coefficient_Update_All
 !################################################################################!
 SUBROUTINE CFA_Coefficient_Update( )
 
-
-INTEGER                                                 ::  i
-INTEGER                                                 ::  Start_Here,     &
-                                                            End_Here
-
-INTEGER   :: ierr
+INTEGER                                                 ::  Start_Here
+INTEGER                                                 ::  End_Here
 
 
 IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
-
 
     Start_Here = myID_PETSc*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
     End_Here = Start_Here + Local_Length - 1
@@ -446,8 +420,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
                                             + Update_Vector(Start_Here:End_Here)
 
 END IF
-
-
 
 END SUBROUTINE CFA_Coefficient_Update
 
@@ -996,7 +968,7 @@ IF (myID_Poseidon == 0) THEN
     END IF
 
 
-    PRINT*,"RMS ",RMS_VALUE," Euclidean ",Euclidean," MAXVAL ",MAXVAL(ABS(Update_Vector))
+!    PRINT*,"RMS ",RMS_VALUE," Euclidean ",Euclidean," MAXVAL ",MAXVAL(ABS(Update_Vector))
 
 !   Add the current iteration's convergence check value to the frame table
     Frame_Convergence_Table(Iteration) =    MAXVAL(ABS(Update_Vector))
@@ -1048,4 +1020,4 @@ END SUBROUTINE CONVERGENCE_CHECK
 
 
 
-END MODULE CFA_Newton_Raphson_Module
+END MODULE CFA_Newton_Raphson_3D_Module

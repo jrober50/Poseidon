@@ -565,13 +565,22 @@ INTEGER, DIMENSION(2)                               :: phi_index_bound
 
 
 
-REAL(KIND = idp), DIMENSION(0:DRIVER_R_ELEMS)                      :: x_ef
-REAL(KIND = idp), DIMENSION(0:DRIVER_T_ELEMS)                      :: y_ef
-REAL(KIND = idp), DIMENSION(0:DRIVER_P_ELEMS)                      :: z_ef
+!REAL(KIND = idp), DIMENSION(0:DRIVER_R_ELEMS)                      :: x_ef
+!REAL(KIND = idp), DIMENSION(0:DRIVER_T_ELEMS)                      :: y_ef
+!REAL(KIND = idp), DIMENSION(0:DRIVER_P_ELEMS)                      :: z_ef
+!
+!REAL(KIND = idp), DIMENSION(0:DRIVER_R_ELEMS-1)                    :: dx_cf
+!REAL(KIND = idp), DIMENSION(0:DRIVER_T_ELEMS-1)                    :: dy_cf
+!REAL(KIND = idp), DIMENSION(0:DRIVER_P_ELEMS-1)                    :: dz_cf
 
-REAL(KIND = idp), DIMENSION(0:DRIVER_R_ELEMS-1)                    :: dx_cf
-REAL(KIND = idp), DIMENSION(0:DRIVER_T_ELEMS-1)                    :: dy_cf
-REAL(KIND = idp), DIMENSION(0:DRIVER_P_ELEMS-1)                    :: dz_cf
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: x_ef
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: y_ef
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: z_ef
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: dx_cf
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: dy_cf
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: dz_cf
+
 
 
 REAL(KIND = idp), DIMENSION(DRIVER_T_ELEMS,DRIVER_P_ELEMS)    :: ongrid_mask
@@ -593,53 +602,69 @@ CALL h5gopen_f(file_id, '/mesh', group_id, error)
 datasize1d(1) = 3
 CALL read_1d_slab('array_dimensions', array_dimensions, group_id, datasize1d)
 
-IF ( array_dimensions(1) /= DRIVER_R_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of nx:', DRIVER_R_ELEMS, '/=', array_dimensions(1)
+!IF ( array_dimensions(1) /= DRIVER_R_ELEMS ) THEN
+!    PRINT *, '*** ERROR: non-matching value of nx:', DRIVER_R_ELEMS, '/=', array_dimensions(1)
+!    CALL MPI_ABORT(MPI_COMM_WORLD,101,error)
+!END IF
+!
+!IF ( array_dimensions(2) /= DRIVER_T_ELEMS ) THEN
+!    PRINT *, '*** ERROR: non-matching value of ny:', DRIVER_T_ELEMS, '/=', array_dimensions(2)
+!    CALL MPI_ABORT(MPI_COMM_WORLD,102,error)
+!END IF
+!
+!IF ( array_dimensions(3) /= DRIVER_P_ELEMS ) THEN
+!    PRINT *, '*** ERROR: non-matching value of nz:', DRIVER_P_ELEMS, '/=', array_dimensions(3)
+!    CALL MPI_ABORT(MPI_COMM_WORLD,103,error)
+!END IF
+
+
+IF ( array_dimensions(1) < DRIVER_R_ELEMS ) THEN
+    PRINT *, '*** ERROR: Incompatable value of nx, too large:', DRIVER_R_ELEMS, '>', array_dimensions(1)
     CALL MPI_ABORT(MPI_COMM_WORLD,101,error)
 END IF
 
-IF ( array_dimensions(2) /= DRIVER_T_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of ny:', DRIVER_T_ELEMS, '/=', array_dimensions(2)
+IF ( array_dimensions(2) < DRIVER_T_ELEMS ) THEN
+    PRINT *, '*** ERROR: Incompatable value of ny, too large:', DRIVER_T_ELEMS, '>', array_dimensions(2)
     CALL MPI_ABORT(MPI_COMM_WORLD,102,error)
 END IF
 
-IF ( array_dimensions(3) /= DRIVER_P_ELEMS ) THEN
-    PRINT *, '*** ERROR: non-matching value of nz:', DRIVER_P_ELEMS, '/=', array_dimensions(3)
+IF ( array_dimensions(3) < DRIVER_P_ELEMS ) THEN
+    PRINT *, '*** ERROR: Incompatable value of nz, too large:', DRIVER_P_ELEMS, '>', array_dimensions(3)
     CALL MPI_ABORT(MPI_COMM_WORLD,103,error)
 END IF
 
+
+ALLOCATE( x_ef(0:array_dimensions(1)), dx_cf(0:array_dimensions(1)-1) )
+ALLOCATE( y_ef(0:array_dimensions(2)), dy_cf(0:array_dimensions(2)-1) )
+ALLOCATE( z_ef(0:array_dimensions(3)), dz_cf(0:array_dimensions(3)-1) )
 
 
 datasize1d(1) = 1
 CALL HDF5_READ('time',time, group_id, datasize1d, error )
 
 
-!PRINT*,"HERE"
-! Read Element Edge and Center Locations !
-datasize1d(1) = DRIVER_R_ELEMS+1
-CALL read_1d_slab('x_ef', x_ef(0:DRIVER_R_ELEMS), group_id, datasize1d)
+datasize1d(1) = array_dimensions(1)
+CALL read_1d_slab('x_ef', x_ef, group_id, datasize1d)
+CALL read_1d_slab('dx_cf',dx_cf, group_id, datasize1d)
 
-!PRINT*,"THERE"
-CALL read_1d_slab('dx_cf',dx_cf(0:DRIVER_R_ELEMS-1), group_id, datasize1d)
+datasize1d(1) = array_dimensions(2)
+CALL read_1d_slab('y_ef', y_ef, group_id, datasize1d)
+CALL read_1d_slab('dy_cf',dy_cf, group_id, datasize1d)
 
-datasize1d(1) = DRIVER_T_ELEMS+1
-CALL read_1d_slab('y_ef', y_ef(0:DRIVER_T_ELEMS), group_id, datasize1d)
-CALL read_1d_slab('dy_cf',dy_cf(0:DRIVER_T_ELEMS-1), group_id, datasize1d)
+datasize1d(1) = array_dimensions(2)
+CALL read_1d_slab('z_ef', z_ef, group_id, datasize1d)
+CALL read_1d_slab('dz_cf',dz_cf, group_id, datasize1d)
 
-datasize1d(1) = DRIVER_P_ELEMS+1
-CALL read_1d_slab('z_ef', z_ef(0:DRIVER_P_ELEMS), group_id, datasize1d)
-CALL read_1d_slab('dz_cf',dz_cf(0:DRIVER_P_ELEMS-1), group_id, datasize1d)
 
-x_ef(0) = 0.0_idp
-y_ef(0) = 0.0_idp
-z_ef(0) = 0.0_idp
-DRIVER_R_LOCS = x_ef
-DRIVER_T_LOCS = y_ef
-DRIVER_P_LOCS = z_ef
+DRIVER_R_LOCS = x_ef(0:DRIVER_R_ELEMS)
+DRIVER_T_LOCS = y_ef(0:DRIVER_T_ELEMS)
+DRIVER_P_LOCS = z_ef(0:DRIVER_P_ELEMS)
 
-DRIVER_Delta_R = dx_cf
-DRIVER_Delta_T = dy_cf
-DRIVER_Delta_P = dz_cf
+
+DRIVER_Delta_R = dx_cf(0:DRIVER_R_ELEMS-1)
+DRIVER_Delta_T = dy_cf(0:DRIVER_T_ELEMS-1)
+DRIVER_Delta_P = dz_cf(0:DRIVER_P_ELEMS-1)
+
 
 
 ! Close Mesh Group !

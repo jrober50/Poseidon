@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE SubJacobian_Functions_Module                                                  !##!
+MODULE SubJacobian_Functions_Module_3D                                              !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -105,7 +105,6 @@ USE Poseidon_Variables_Module, &
                                         BLOCK_ELEM_STF_MATVEC,      &
                                         myShell,                    &
                                         Block_RHS_Vector,           &
-                                        BLOCK_NONZEROS,             &
                                         Matrix_Location,            &
                                         LM_Location
 
@@ -816,6 +815,7 @@ REAL(KIND = idp)                                                        ::  Beta
 
 Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
 
+
 RHS_Terms(tpd, rd, 1) = - TwoPi * GR_Source_Scalar * Block_Source_E(rd, td, pd, re, te, pe) * PSI_POWER(5)   &
                          - PSI_POWER(7)/ (16.0_idp * ALPHAPSI_POWER(2)) * JCBN_BIGK_VALUE
 
@@ -911,4 +911,4 @@ END SUBROUTINE Calc_RHS_Terms
 
 
 
-END MODULE SubJacobian_Functions_Module
+END MODULE SubJacobian_Functions_Module_3D

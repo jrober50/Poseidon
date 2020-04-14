@@ -677,6 +677,28 @@ JCBN_kappa_FUNCTION_3D_ALL(3,3) = TwoThirds/( r * RSIN_SQUARE)          * CUR_VA
 END FUNCTION JCBN_kappa_FUNCTION_3D_ALL
 
 
+!+302+###########################################################################!
+!                                                                                !
+!                                                                                !
+!################################################################################!
+PURE FUNCTION JCBN_kappa_FUNCTION_1D(rd, r, CUR_VAL_BETA, CUR_DRV_BETA          )
+
+REAL(KIND = idp)                                                    ::  JCBN_kappa_FUNCTION_1D
+
+INTEGER, INTENT(IN)                                                 ::  rd
+REAL(KIND = idp), INTENT(IN)                                        ::  r
+
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_R_QUAD_POINTS )      ::  CUR_VAL_BETA
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_R_QUAD_POINTS )      ::  CUR_DRV_BETA
+
+
+
+
+JCBN_kappa_FUNCTION_1D = FourThirds     * CUR_DRV_BETA( rd )       &
+                       - FourThirds/r   * CUR_VAL_BETA( rd )
+
+
+END FUNCTION JCBN_kappa_FUNCTION_1D
 
 
 
@@ -766,7 +788,38 @@ END FUNCTION JCBN_BIGK_FUNCTION
 
 
 
+!+401+###########################################################################!
+!                                                                                !
+!                                                                                !
+!################################################################################!
+PURE FUNCTION JCBN_BIGK_FUNCTION_1D( rd, CUR_VAL_BETA, CUR_DRV_BETA,        &
+                                    R_VAL, R_SQUARE                         )
 
+REAL(KIND = idp)                    ::  JCBN_BIGK_FUNCTION_1D
+
+INTEGER, INTENT(IN)                 ::  rd
+
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_R_QUAD_POINTS )      ::  CUR_VAL_BETA
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_R_QUAD_POINTS )      ::  CUR_DRV_BETA
+
+REAL(KIND = idp), INTENT(IN)                                        ::  R_VAL, R_SQUARE
+
+
+
+
+REAL(KIND = idp)                    ::  EightThirds
+
+EightThirds = 2.0_idp*FourThirds
+
+JCBN_BIGK_FUNCTION_1D =                                                     &
+        FourThirds          * CUR_DRV_BETA( rd )    * CUR_DRV_BETA( rd )    &
+      - EightThirds/R_VAL   * CUR_DRV_BETA( rd )    * CUR_VAL_BETA( rd )    &
+      + FourThirds/R_SQUARE * CUR_VAL_BETA( rd )    * CUR_VAL_BETA( rd )
+
+
+
+
+END FUNCTION JCBN_BIGK_FUNCTION_1D
 
 
 
@@ -779,7 +832,7 @@ END FUNCTION JCBN_BIGK_FUNCTION
 
 !+401+###########################################################################!
 !                                                                                !
-!              Calc_Shift_BC_1D                                                  !
+!              Calc_Shift_1D                                                  !
 !                                                                                !
 !################################################################################!
 SUBROUTINE Calc_Shift_1D( Shift_Vector,                                       &
@@ -1007,14 +1060,7 @@ END DO ! re loop
 
 
 
-!IF ( .TRUE. ) THEN
-!   PRINT*,"    r                 Shift_Vector_R "
-!   DO re = 0,NUM_R_ELEM
 
-!       WRITE(*,'(ES22.15,1X,ES22.15,1X,ES22.15)') r_locs(re), Shift_Vector(re), Shift_Solution(r_locs(re),r_locs,NUM_R_ELEM)
-!
-!   END DO 
-!END IF
 
 END SUBROUTINE Calc_Shift_1D
 
@@ -1079,7 +1125,7 @@ END SUBROUTINE Write_Shift_1D
 
 !+401+###########################################################################!
 !                                                                                !
-!              Calc_Shift_1D                                                  !
+!              Calc_Shift_BC_1D                                                  !
 !                                                                                !
 !################################################################################!
 SUBROUTINE Calc_Shift_BC_1D( Shift_Vector_BC,                                    &
@@ -1115,7 +1161,7 @@ INTEGER                                                           ::  Ord,      
                                                                       Current_Location
 
 
-INTEGER                                                           ::  i, j, l, m, d, re
+INTEGER                                                           ::  i, j, l, m, d, re, reb
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: x_locs,     &
                                                                      ri_locs,    &
@@ -1127,17 +1173,17 @@ REAL(KIND = idp), DIMENSION(:,:), ALLOCATABLE                     :: rij_locs,  
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: AlphaPsi
 REAL(KIND = idp)                                                  :: Psi
-REAL(KIND = idp)                                                  :: Beta_Tmp
-REAL(KIND = idp)                                                  :: Inner_Int
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: Beta_Tmp
+REAL(KIND = idp)                                                  :: Inner_Int, Outer_Int
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: xlocP, yi, LagP
 REAL(KIND = idp)                                                  :: x_tmp
-Ord = 100
+Ord = 6
 
 
 
 
-
+ALLOCATE( Beta_Tmp(1:NUM_R_ELEM + 1) )
 
 ALLOCATE( LagP(0:DEGREE) )
 ALLOCATE( xlocP(0:DEGREE) )
@@ -1156,82 +1202,111 @@ CALL Initialize_LG_Quadrature( Ord, x_locs, wi )
 CALL Initialize_LGL_Quadrature( DEGREE, xlocP, yi)
 
 
-! Calculate the r locations for the Outer Integral's Quadrature Points !
-ri_locs(:) = (R_Outer-R_inner)/2.0_idp * ( x_locs(:) + 1.0_idp ) + R_Inner
+
+Beta_tmp = 0.0_idp
+
+DO re = 0,NUM_R_ELEM-1
+
+   ! Calculate the r locations for the Outer Integral's Quadrature Points !
+   ri_locs(:) = (r_locs(re+1)-r_locs(re))/2.0_idp * ( x_locs(:) + 1.0_idp ) + r_locs(re)
+
+   ! Calculate the Alpha Psi values at each of the Outer Integral's Quadrature Points !
+   DO i = 1,Ord
+      AlphaPsi(i) =  1.0_idp + 0.5_idp*Analytic_Solution(ri_locs(i),0.0_idp,0.0_idp)/C_Square
+   END DO
+
+
+   DO i = 1,Ord
+
+      ! Calculate the Quadrature Points for each of the Inner Integrals
+      rij_locs(:,i) = (ri_locs(i) - 0.0_idp)/2.0_idp *(x_locs(:) + 1.0_idp) + 0.0_idp
+
+
+      ! Calculate Psi^10 values at each of the Inner Quadrature Points
+      DO j = 1,Ord
+
+           Psi = 1.0_idp - 0.5_idp*Analytic_Solution(rij_locs(j,i),0.0_idp,0.0_idp)/C_Square
+           Psi_10(j,i) = Psi**10
+            
+      END DO
+      ! Calculate Sr values at each quadrature Point.
+      DO j = 1,Ord
+         DO reb = 0,NUM_R_ELEM - 1
+
+
+            IF ( (rij_Locs(j,i) > r_locs(reb)) .AND. (rij_Locs(j,i) .LE. r_locs(reb+1)) ) THEN
+
+!               Sr_New(j,i) = 1.0_idp/(r_locs(reb+1) - r_locs(reb))               &
+!                           * ( Sr(1,reb,0,0,1)*(r_locs(reb+1) - rij_locs(j,i))   &
+!                              +Sr(1,reb+1,0,0,1)*(rij_locs(j,i) - r_locs(reb))   )
+
+                Sr_New(j,i) = Sr(1,reb,0,0,1)
+
+               exit
+            END IF
+         END DO ! reb Loop
+
+      END DO
+
+   END DO ! i Loop
+
+
+   ! Do the Outer Integral
+   Outer_Int = 0.0_idp
+   DO i = 1,Ord
+
+
+     ! Do the Inner Integrals
+     Inner_Int = 0.0_idp
+     DO j = 1,Ord
+
+        Inner_Int = Inner_Int                                 &
+                  + rij_locs(j,i)*rij_locs(j,i)*rij_locs(j,i) &
+                  * PSI_10(j,i)                               &
+                  * Sr_New(j,i)                               &
+                  * wi(j)
+
+!                  PRINT*,"PSI_10",PSI_10(j,i),"Sr_New",Sr_New(j,i),"ri_locs(i)",ri_locs(i)
+
+      END DO ! j Loop
+
+!      PRINT*,"Inner Int",Inner_Int*( ri_locs(i) - 0.0_idp)/2.0_idp
+      Outer_Int = Outer_Int                                       &
+                + AlphaPsi(i)                                     &
+                / (ri_locs(i)*ri_locs(i)*ri_locs(i)*ri_locs(i))   &    ! *** Changed
+                * Inner_Int                                       &
+                * ( ri_locs(i) - 0.0_idp)/2.0_idp                 &
+                * wi(i)
+
+   END DO ! i Loop
 
 
 
 
-! Calculate the Alpha Psi values at each of the Outer Integral's Quadrature Points !
-DO i = 1,Ord
 
-    AlphaPsi(i) = 1.0_idp + 0.5_idp* Analytic_Solution(ri_locs(i),0.0_idp,0.0_idp)/C_Square
+   IF ( re == 0 ) THEN
 
-END DO ! i Loop
+      Beta_Tmp(re+1) = (3.0_idp/2.0_idp)                         &
+                               * 8.0_idp*pi* GR_Source_Scalar  &
+                               * r_locs(re+1)                             &
+                               * ( r_locs(re+1) - R_locs(re))/2.0_idp     &
+                               * Outer_Int
 
+   ELSE
 
-DO i = 1,Ord
+      Beta_Tmp(Re+1) = r_locs(re+1)/r_locs(re)                   &
+                               * Beta_Tmp(re)                    &
+                               + (3.0_idp/2.0_idp)                        &
+                               * 8.0_idp*pi* GR_Source_Scalar  &
+                               * r_locs(re+1)                             &
+                               * ( r_locs(re+1) - r_locs(re))/2.0_idp     &
+                               * Outer_Int
 
-   ! Calculate the Quadrature Points for each of the Inner Integrals
-   rij_locs(:,i) = (ri_locs(i) - R_Inner)/2.0_idp *(x_locs(:) + 1.0_idp) + R_Inner
+   END IF
 
+END DO ! re loop
 
-   ! Calculate Psi^10 values at each of the Inner Quadrature Points
-   DO j = 1,Ord
-      DO re = 0,NUM_R_ELEM - 1
-         IF ( (rij_Locs(j,i) > r_locs(re)) .AND. (rij_Locs(j,i) < rlocs(re+1)) ) THEN
-
-
-            ! Interpolate Sr Value to Quadrature Point !
-            Sr_New(j,i) = Sr(1,re,0,0,1)
-
-         END IF
-      END DO ! reb Loop
-
-      Psi = 1.0_idp - 0.5_idp * Analytic_Solution(rij_Locs(j,i),0.0_idp,0.0_idp)/C_Square
-      Psi_10(j,i) = Psi**10
-
-   END DO ! j Loop
-
-END DO ! i Loop
-
-
-
-! Do the Outer Integral
-Beta_Tmp = 0.0_idp
-DO i = 1,Ord
-
-
-   ! Do the Inner Integrals
-   Inner_Int = 0.0_idp
-   DO j = 1,Ord
-
-      Inner_Int = Inner_Int                                 &
-                + rij_locs(j,i)*rij_locs(j,i)*rij_locs(j,i) &
-                * PSI_10(j,i)                               &
-                * Sr_New(j,i)                               &
-                * wi(j)
-
-   END DO ! j Loop
-
-
-   Beta_Tmp = Beta_Tmp                                       &
-            + AlphaPsi(i)                                    & 
-            / (ri_locs(i)*ri_locs(i)*ri_locs(i)*ri_locs(i))  &
-            * Inner_Int                                      &
-            * (ri_locs(i) - R_Inner)/2.0_idp                 &
-            * wi(i)
-
-
-
-END DO ! i Loop
-
-Shift_Vector_BC = (3.0_idp/2.0_idp)                        &
-                * 8.0_idp * pi * GR_Source_Scalar          &
-                * R_OUTER                                  &
-                * Beta_Tmp                                 &
-                * (R_Outer - R_Inner)/2.0_idp
-
+Shift_Vector_BC = Beta_Tmp(NUM_R_ELEM)
 
 
 

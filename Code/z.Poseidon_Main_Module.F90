@@ -121,15 +121,12 @@ USE Poseidon_Variables_Module, &
                     OUTER_CFA_BC_VALUES,                            &
                     INNER_CFA_BC_TYPE,                              &
                     OUTER_CFA_BC_TYPE,                              &
-                    NUM_OFF_DIAGONALS,                              &
                     LM_LENGTH,                                      &
                     ULM_LENGTH,                                     &
                     M_VALUES,                                       &
                     Matrix_Location,                                &
                     LM_Location,                                    &
                     POSEIDON_COMM_WORLD,                            &
-                    NONZEROS,                                       &
-                    BLOCK_NONZEROS,                                 &
                     RUN_TIME_TABLE
 
 
@@ -156,8 +153,8 @@ USE Jacobian_Internal_Functions_Module,  &
                     Initialize_Ylm_Tables,                          &
                     Initialize_Lagrange_Poly_Tables
 
-USE CFA_Newton_Raphson_Module, &
-            ONLY :  CFA_Newton_Raphson
+USE CFA_Newton_Raphson_3D_Module, &
+            ONLY :  CFA_Newton_Raphson_3D
 
 USE Poseidon_MPI_Module, &
             ONLY :  CREATE_POSEIDON_COMMUNICATORS
@@ -219,8 +216,7 @@ Readiness_Flag = .TRUE.
 
 IF ( Readiness_Flag ) THEN
 
-    CALL CFA_Newton_Raphson()
-
+    CALL CFA_Newton_Raphson_3D()
 ELSE
 
     PRINT*, "ERROR IN POSEIDON : There was an error in setting up Poseidon, therefore it did not run."

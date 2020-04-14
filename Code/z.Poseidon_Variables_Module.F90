@@ -91,7 +91,6 @@ INTEGER                                     :: ULM_LENGTH
 
 INTEGER, DIMENSION(:), ALLOCATABLE          :: M_VALUES
 
-INTEGER                                     :: NONZEROS,BLOCK_NONZEROS
 
 
 INTEGER                                                     ::  Ratio_BNDLperBLCK,      &

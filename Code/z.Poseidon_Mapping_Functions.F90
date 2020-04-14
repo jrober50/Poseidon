@@ -271,10 +271,6 @@ CFA_ALL_Matrix_Map = (re*DEGREE + d) * ULM_LENGTH           &
                    + (ui - 1) * LM_LENGTH                   &
                    + lm_loc
 
-!CFA_ALL_Matrix_Map = (re*DEGREE + d) * ULM_LENGTH           &
-!                   + lm_loc * NUM_CFA_VARS        &
-!                   + (ui - 1)
-
 
 END FUNCTION CFA_ALL_Matrix_Map
 

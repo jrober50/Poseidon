@@ -110,7 +110,8 @@ USE Poseidon_Main_Module, &
                     Poseidon_CFA_Set_Uniform_Boundary_Conditions
 
 USE Poseidon_Initialization_Module, &
-            ONLY :  Poseidon_Initialize
+            ONLY :  Poseidon_Initialize,                                &
+                    Poseidon_Initialize_From_File
 
 
 USE Poseidon_Additional_Functions_Module, &
@@ -298,7 +299,7 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Num_Input_Nodes(1)*Num_Input_Nodes
 !!                           !!
 !                             !
 INTEGER                                                     ::  i
-
+INTEGER                                                     ::  FEM_Degree, SH_Limit
 
 REAL(KIND = idp), DIMENSION(1)                              ::  Input_Quad
 
@@ -315,7 +316,6 @@ REAL(KIND = idp)                                            ::  timea, timeb, to
 
 
 CHARACTER(LEN=1), DIMENSION(1:5)                            ::  INNER_BC_TYPES, OUTER_BC_TYPES
-
 REAL(KIND = idp), DIMENSION(1:5)                            ::  INNER_BC_VALUES, OUTER_BC_VALUES
 
 REAL(KIND = idp)                                            ::  Outer_Potential,    &
@@ -349,8 +349,9 @@ IF (( MODE == 0 ) .OR. ( MODE == 3 )) THEN
     timea = MPI_Wtime()
 
     CALL Set_Units( "C" )
-
-    CALL Poseidon_Initialize(   mode,                           & ! mode
+    FEM_Degree = 1
+    SH_Limit = 0
+    CALL Poseidon_Initialize_From_File(   mode,                           & ! mode
                                 x_e(1),                         & ! Inner_Radius
                                 x_e(nx+1),                      & ! Outer_Radius
                                 nx,                             & ! NUM_R_ELEMENTS
@@ -440,7 +441,7 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     !                                         !
     timea = MPI_Wtime()
 
-
+    
     ! Calculate the Dirichlet Outer Boundary Value for the Shift Vector
     CALL Calc_Shift_BC_1D( Shift_Vector_BC,                                                 &
                            NUM_Input_Nodes(1), NUM_Input_Nodes(2), NUM_Input_Nodes(3),      &
@@ -462,7 +463,6 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
 
 
-
     !                                         !
     !!                                       !!
     !!!       Set Boundary Conditions       !!!
@@ -476,8 +476,10 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     ! Set BC Values
     INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
     OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
+!    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, 0.0_idp, 0.0_idp, 0.0_idp /)
 !    OUTER_BC_VALUES = (/1.0_idp, 1.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 
+!    PRINT*,"FRAME = ",DRIVER_FRAME," Shift BC = ",Shift_Vector_BC
     
     ! Commit BC types and values to Poseidon
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
@@ -504,7 +506,7 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
             CASE( 2 )   ! Calculated Guess ( Tests Only )
                 CALL Initialize_Calculated_Guess_Values
             CASE( 3 )   ! Load From File
-
+                CALL Load_Initial_Guess_From_File
         END SELECT
     ELSE
         ! Entered on all subsequent frames
@@ -522,7 +524,6 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
         END SELECT
     END IF
-
 
 
     !                                         !
@@ -544,13 +545,11 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
 END IF
 
-
 timeb = MPI_Wtime()
 CALL Poseidon_Distribute_Solution()
 timea = MPI_Wtime()
 
 CALL Clock_In(timea-timeb, 19)
-
 
 
 
@@ -565,7 +564,6 @@ IF ( myID == 0 ) THEN
     CALL Output_Final_Results()
     CALL WRITE_CFA_COEFFICIENTS()
 END IF
-
 
 
 
@@ -814,7 +812,7 @@ IF (MODE == 1) THEN
 
 
 
-    CALL Poseidon_Initialize(   mode,                           & ! mode
+    CALL Poseidon_Initialize_From_File(   mode,                           & ! mode
                                 x_e(1),                         & ! Inner_Radius
                                 x_e(nx+1),                      & ! Outer_Radius
                                 nx,                             & ! NUM_R_ELEMENTS

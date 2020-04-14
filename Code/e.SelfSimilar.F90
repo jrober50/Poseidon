@@ -245,7 +245,6 @@ CALL CONVERT_SELF_SIMILAR_3D(  t, kappa, gamma, ecc,                   &
 
 
 
-
 CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
 CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, Input_Si, r_locs )
 
@@ -741,6 +740,8 @@ END DO ! re loop
 
 
 
+
+
 END SUBROUTINE CREATE_SELFSIM_SHIFT_SOL
 
 
@@ -1139,8 +1140,7 @@ DO pe = 0,NUM_P_ELEM-1
                                 ! Interpolate Self-Similar Values to Input locations
                                 Density = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
                                 Velocity = (Input_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
-!                                PRINT*,"Velocity Zeroed"
-!                                Velocity = 0.0_idp
+
 
 
                                 Here = re*Num_Nodes(1)+rd+1

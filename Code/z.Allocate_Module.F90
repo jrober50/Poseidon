@@ -98,7 +98,6 @@ USE Poseidon_Variables_Module, &
                     Elem_PROB_DIM,              &
                     Elem_PROB_DIM_SQR,          &
                     Block_Prob_Dim,             &
-                    BLOCK_NONZEROS,             &
                     Iter_Time_Table,            &
                     Frame_Time_Table,           &
                     Frame_Convergence_Table,    &
@@ -229,6 +228,7 @@ ALLOCATE( INT_TP_WEIGHTS(1:NUM_TP_QUAD_POINTS) )
 ALLOCATE( ITER_TIME_TABLE(1:NUM_TIMER_CALLS) )
 ALLOCATE( FRAME_TIME_TABLE(1:NUM_TIMER_CALLS) )
 ALLOCATE( RUN_TIME_TABLE(1:NUM_TIMER_CALLS) )
+
 ITER_TIME_TABLE = 0.0_idp
 FRAME_TIME_TABLE = 0.0_idp
 RUN_TIME_TABLE = 0.0_idp

@@ -108,7 +108,6 @@ USE Poseidon_Variables_Module, &
                                         BLOCK_ELEM_STF_MATVEC,      &
                                         myShell,                    &
                                         Block_RHS_Vector,           &
-                                        BLOCK_NONZEROS,             &
                                         Matrix_Location,            &
                                         LM_Location
 
@@ -257,6 +256,18 @@ DO ui = 1,NUM_CFA_VARS
                 Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
                 Block_RHS_VECTOR(Value_Location ) = 0.0_idp
 
+                Value_Location =  MAtrix_Location( ui, l, m, 0, 0 )
+                DO i = 0,ELEM_PROB_DIM-1
+                    ! Clear the Column !
+                    BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+value_location, 0)=0.0_idp
+
+                END DO
+
+                ! Clear the Row !
+                BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1, 0) = 0.0_idp
+                BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM+Value_Location, 0) = 1.0_idp
+
+
             END DO
         END DO
             !*!
@@ -264,16 +275,7 @@ DO ui = 1,NUM_CFA_VARS
             !*!
 
 
-        Value_Location =  MAtrix_Location( ui, 0, 0, 0, 0 )
-        DO i = 0,ELEM_PROB_DIM-1
-            ! Clear the Column !
-            BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM+value_location, 0)=0.0_idp
 
-        END DO
-
-        ! Clear the Row !
-        BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1, 0) = 0.0_idp
-        BLOCK_ELEM_STF_MATVEC(Value_Location*ELEM_PROB_DIM+Value_Location, 0) = 1.0_idp
 
     END IF
 
@@ -294,31 +296,29 @@ DO ui = 1,NUM_CFA_VARS
                 Value_Location =  Matrix_Location( ui, l, m, NUM_R_ELEMS_PER_BLOCK-1, DEGREE )
                 Block_RHS_VECTOR(Value_Location ) = 0.0_idp
 
+                    !*!
+                    !*!     Modify the Stiffness Matrix !
+                    !*!
+                Value_Location =  Matrix_Location( ui, l, m, 0, DEGREE )
+
+                DO i = 0,ELEM_PROB_DIM-1
+
+                    ! Clear the Column !
+                    BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM + Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
+
+                END DO
+                ! Clear the Row !
+                BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1,       &
+                                     NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
+
+                BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM+Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 1.0_idp
+
              END DO
          END DO
 
-
-
-                !*!
-                !*!     Modify the Stiffness Matrix !
-                !*!
-          Value_Location =  Matrix_Location( ui, 0, 0, 0, DEGREE )
-
-          DO i = 0,ELEM_PROB_DIM-1
-
-              ! Clear the Column !
-              BLOCK_ELEM_STF_MATVEC( i*ELEM_PROB_DIM + Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
-
-          END DO
-          ! Clear the Row !
-          BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM:(Value_Location+1)*ELEM_PROB_DIM-1,       &
-                                 NUM_R_ELEMS_PER_BLOCK-1) = 0.0_idp
-
-          BLOCK_ELEM_STF_MATVEC( Value_Location*ELEM_PROB_DIM+Value_Location, NUM_R_ELEMS_PER_BLOCK-1) = 1.0_idp
-
     END IF
 
-END DO
+END DO ! ui Loop
 
 
 END SUBROUTINE CFA_3D_Dirichlet_BCs_Part2
