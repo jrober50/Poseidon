@@ -81,7 +81,7 @@ INTEGER                     ::  DRIVER_FIRST_GUESS_FLAG
 INTEGER                     ::  DRIVER_SUBSEQUENT_GUESS_FLAG
 
 
-INTEGER                     ::  DRIVER_FRAME
+INTEGER                     ::  DRIVER_FRAME = 1
 INTEGER                     ::  DRIVER_START_FRAME
 INTEGER                     ::  DRIVER_END_FRAME
 INTEGER                     ::  DRIVER_TOTAL_FRAMES
@@ -108,9 +108,7 @@ REAL(KIND=idp), ALLOCATABLE, DIMENSION(:,:,:,:)     ::  DRIVER_E
 REAL(KIND=idp), ALLOCATABLE, DIMENSION(:,:,:,:)     ::  DRIVER_S
 REAL(KIND=idp), ALLOCATABLE, DIMENSION(:,:,:,:,:)   ::  DRIVER_Si
 
-INTEGER                    ::  Ratio_T_BNDLperBLCK
-INTEGER                    ::  Ratio_P_BNDLperBLCK
-INTEGER                    ::  Ratio_BNDLperBLCK
+
 
 !===================================================================!
 !                                                                   !
@@ -135,10 +133,10 @@ ABSTRACT INTERFACE
 END INTERFACE
 
 
-PROCEDURE(Solution_Function_Pointer), POINTER           ::   Analytic_Solution => NULL()
+PROCEDURE(Solution_Function_Pointer), POINTER           ::   Potential_Solution => NULL()
 PROCEDURE(Shift_Function_Pointer), POINTER              ::   Shift_Solution => NULL()
-
-
+LOGICAL                                                 ::   Potential_Sol_Flag
+LOGICAL                                                 ::   Shift_Sol_Flag
 
 !
 !   Spherically Symmetric Variables
@@ -178,6 +176,8 @@ INTEGER, DIMENSION(:), ALLOCATABLE                      ::  Iteration_History
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Driver_Iter_Time_Table
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Driver_Frame_Time_Table
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Driver_Run_Time_Table
+
+
 
 
 

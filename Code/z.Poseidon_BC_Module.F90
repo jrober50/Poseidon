@@ -34,13 +34,19 @@ MODULE Poseidon_BC_Module                                                       
 
 
 USE Poseidon_Constants_Module, &
-                                ONLY :  idp,                &
-                                        pi,                 &
-                                        TwoPi,              &
-                                        OneThird,           &
-                                        TwoThirds,          &
-                                        FourThirds,         &
-                                        OneThirtySecond
+                        ONLY :  idp,                &
+                                pi,                 &
+                                TwoPi,              &
+                                OneThird,           &
+                                TwoThirds,          &
+                                FourThirds,         &
+                                OneThirtySecond,    &
+                                C_Square,           &
+                                GR_Source_Scalar
+
+USE DRIVER_Parameters, &
+                        ONLY :  Potential_Solution
+
 
 USE Poseidon_Parameters, &
                                 ONLY :  DOMAIN_DIM,                 &
@@ -111,14 +117,15 @@ USE Poseidon_Variables_Module, &
                                         Matrix_Location,            &
                                         LM_Location
 
-USE Poseidon_Additional_Functions_Module, &
-                                ONLY :  Lagrange_Poly,              &
-                                        Spherical_Harmonic,         &
-                                        Initialize_LGL_Quadrature,  &
-                                        Calc_3D_Values_At_Location
+USE Poseidon_Math_Functions_Module, &
+                                ONLY :  Lagrange_Poly
 
 USE Poseidon_Mapping_Functions_Module, &
                                 ONLY :  Map_To_X_Space
+
+USE Poseidon_Quadrature_Module, &
+                        ONLY :  Initialize_LG_Quadrature,       &
+                                Initialize_LGL_Quadrature
 
 
 IMPLICIT NONE
@@ -342,6 +349,198 @@ SUBROUTINE CFA_3D_Neumann_BCs( )
 
 END SUBROUTINE CFA_3D_Neumann_BCs
 
+
+
+
+!+401+###########################################################################!
+!                                                                                !
+!              Calc_Shift_BC_1D                                                  !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Calc_Shift_BC_1D( Shift_Vector_BC,                                    &
+                          NUM_R_QUAD, NUM_T_QUAD, NUM_P_QUAD,                 &
+                          NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, Dimn,           &
+                          Sr, r_locs                                          )
+
+
+REAL(KIND = idp),      INTENT( OUT )                               ::  Shift_Vector_BC
+
+INTEGER,               INTENT( IN )                                ::  NUM_R_QUAD,  &
+                                                                       NUM_T_QUAD,  &
+                                                                       NUM_P_QUAD,  &
+                                                                       NUM_R_ELEM,  &
+                                                                       NUM_T_ELEM,  &
+                                                                       NUM_P_ELEM,  &
+                                                                       Dimn
+
+REAL(KIND = idp), DIMENSION( 1:NUM_R_QUAD*NUM_T_QUAD*NUM_P_QUAD,  &
+                             0:NUM_R_ELEM-1,                      &
+                             0:NUM_T_ELEM-1,                      &
+                             0:NUM_P_ELEM-1,                      &
+                             1:Dimn ), INTENT(IN)                  ::  Sr
+
+REAL(KIND = idp), DIMENSION( 0:NUM_R_ELEM ),  INTENT(IN)          ::  r_locs
+
+
+COMPLEX(KIND = idp)                                               ::  Basis_Funcs,  &
+                                                                      Tmp_Psi,      &
+                                                                      Tmp_AlphaPsi
+
+INTEGER                                                           ::  Ord,          &
+                                                                      Current_Location
+
+
+INTEGER                                                           ::  i, j, l, m, d, re, reb
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: x_locs,     &
+                                                                     ri_locs,    &
+                                                                     wi
+
+REAL(KIND = idp), DIMENSION(:,:), ALLOCATABLE                     :: rij_locs,    &
+                                                                     PSI_10,     &
+                                                                     Sr_New
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: AlphaPsi
+REAL(KIND = idp)                                                  :: Psi
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: Beta_Tmp
+REAL(KIND = idp)                                                  :: Inner_Int, Outer_Int
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: xlocP, yi, LagP
+REAL(KIND = idp)                                                  :: x_tmp
+Ord = 6
+
+
+
+
+ALLOCATE( Beta_Tmp(1:NUM_R_ELEM + 1) )
+
+ALLOCATE( LagP(0:DEGREE) )
+ALLOCATE( xlocP(0:DEGREE) )
+ALLOCATE( yi(0:DEGREE) )
+
+ALLOCATE( x_locs(1:Ord) )
+ALLOCATE( ri_locs(1:Ord) )
+ALLOCATE( wi(1:Ord)  )
+ALLOCATE( AlphaPsi(1:Ord) )
+
+ALLOCATE( rij_locs(1:Ord,1:Ord) )
+ALLOCATE( PSI_10(1:Ord,1:Ord)  )
+ALLOCATE( Sr_New(1:Ord,1:Ord)  )
+
+CALL Initialize_LG_Quadrature( Ord, x_locs, wi )
+CALL Initialize_LGL_Quadrature( DEGREE, xlocP, yi)
+
+
+
+Beta_tmp = 0.0_idp
+
+DO re = 0,NUM_R_ELEM-1
+
+   ! Calculate the r locations for the Outer Integral's Quadrature Points !
+   ri_locs(:) = (r_locs(re+1)-r_locs(re))/2.0_idp * ( x_locs(:) + 1.0_idp ) + r_locs(re)
+
+   ! Calculate the Alpha Psi values at each of the Outer Integral's Quadrature Points !
+   DO i = 1,Ord
+      AlphaPsi(i) =  1.0_idp + 0.5_idp*Potential_Solution(ri_locs(i),0.0_idp,0.0_idp)/C_Square
+   END DO
+
+
+   DO i = 1,Ord
+
+      ! Calculate the Quadrature Points for each of the Inner Integrals
+      rij_locs(:,i) = (ri_locs(i) - 0.0_idp)/2.0_idp *(x_locs(:) + 1.0_idp) + 0.0_idp
+
+
+      ! Calculate Psi^10 values at each of the Inner Quadrature Points
+      DO j = 1,Ord
+
+           Psi = 1.0_idp - 0.5_idp*Potential_Solution(rij_locs(j,i),0.0_idp,0.0_idp)/C_Square
+           Psi_10(j,i) = Psi**10
+            
+      END DO
+      ! Calculate Sr values at each quadrature Point.
+      DO j = 1,Ord
+         DO reb = 0,NUM_R_ELEM - 1
+
+
+            IF ( (rij_Locs(j,i) > r_locs(reb)) .AND. (rij_Locs(j,i) .LE. r_locs(reb+1)) ) THEN
+
+!               Sr_New(j,i) = 1.0_idp/(r_locs(reb+1) - r_locs(reb))               &
+!                           * ( Sr(1,reb,0,0,1)*(r_locs(reb+1) - rij_locs(j,i))   &
+!                              +Sr(1,reb+1,0,0,1)*(rij_locs(j,i) - r_locs(reb))   )
+
+                Sr_New(j,i) = Sr(1,reb,0,0,1)
+
+               exit
+            END IF
+         END DO ! reb Loop
+
+      END DO
+
+   END DO ! i Loop
+
+
+   ! Do the Outer Integral
+   Outer_Int = 0.0_idp
+   DO i = 1,Ord
+
+
+     ! Do the Inner Integrals
+     Inner_Int = 0.0_idp
+     DO j = 1,Ord
+
+        Inner_Int = Inner_Int                                 &
+                  + rij_locs(j,i)*rij_locs(j,i)*rij_locs(j,i) &
+                  * PSI_10(j,i)                               &
+                  * Sr_New(j,i)                               &
+                  * wi(j)
+
+!                  PRINT*,"PSI_10",PSI_10(j,i),"Sr_New",Sr_New(j,i),"ri_locs(i)",ri_locs(i)
+
+      END DO ! j Loop
+
+!      PRINT*,"Inner Int",Inner_Int*( ri_locs(i) - 0.0_idp)/2.0_idp
+      Outer_Int = Outer_Int                                       &
+                + AlphaPsi(i)                                     &
+                / (ri_locs(i)*ri_locs(i)*ri_locs(i)*ri_locs(i))   &    ! *** Changed
+                * Inner_Int                                       &
+                * ( ri_locs(i) - 0.0_idp)/2.0_idp                 &
+                * wi(i)
+
+   END DO ! i Loop
+
+
+
+
+
+   IF ( re == 0 ) THEN
+
+      Beta_Tmp(re+1) = (3.0_idp/2.0_idp)                         &
+                               * 8.0_idp*pi* GR_Source_Scalar  &
+                               * r_locs(re+1)                             &
+                               * ( r_locs(re+1) - R_locs(re))/2.0_idp     &
+                               * Outer_Int
+
+   ELSE
+
+      Beta_Tmp(Re+1) = r_locs(re+1)/r_locs(re)                   &
+                               * Beta_Tmp(re)                    &
+                               + (3.0_idp/2.0_idp)                        &
+                               * 8.0_idp*pi* GR_Source_Scalar  &
+                               * r_locs(re+1)                             &
+                               * ( r_locs(re+1) - r_locs(re))/2.0_idp     &
+                               * Outer_Int
+
+   END IF
+
+END DO ! re loop
+
+Shift_Vector_BC = Beta_Tmp(NUM_R_ELEM)
+
+
+
+
+END SUBROUTINE Calc_Shift_BC_1D
 
 
 END MODULE Poseidon_BC_Module

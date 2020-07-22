@@ -278,6 +278,7 @@ CALL Clock_In(timec-timeb, 4)
 Time_J = 0.0_idp
 Time_M = 0.0_idp
 
+PRINT*,"In CFA_3D_Master_Build Before CREATE_3D_NONLAPLACIAN_SOE"
 !*!
 !*! Create the Non-Laplacian Contributions to the Linear System
 !*!
@@ -286,11 +287,11 @@ CALL CREATE_3D_NONLAPLACIAN_SOE()
 timea = MPI_Wtime()
 CALL Clock_In(timea-timeb, 9)
 
-IF ( .FALSE. ) THEN
-    PRINT*,"Time_J = ",Time_J
-    PRINT*,"Time_M = ",Time_M
-    PRINT*,"Time_Tot = ",Time_J+Time_M
-END IF 
+
+PRINT*,"Time_J = ",Time_J
+PRINT*,"Time_M = ",Time_M
+PRINT*,"Time_Tot = ",Time_J+Time_M
+
 
 
 !*!
@@ -429,8 +430,9 @@ Block_T_Begin = MOD(myID_Shell,NUM_BLOCK_THETA_ROWS)*NUM_T_ELEMS_PER_BLOCK
 Block_P_Begin = (myID_Shell/NUM_BLOCK_THETA_ROWS)*NUM_P_ELEMS_PER_BLOCK
 
 
-
-
+PRINT*,"NUM_R_ELEMS_PER_BLOCK",NUM_R_ELEMS_PER_BLOCK
+PRINT*,"NUM_T_ELEMS_PER_BLOCK",NUM_T_ELEMS_PER_BLOCK
+PRINT*,"NUM_P_ELEMS_PER_BLOCK",NUM_P_ELEMS_PER_BLOCK
 
 
 !
@@ -480,6 +482,7 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
         !
         DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
+            PRINT*,"Local_pe,te,re",Local_pe,Local_te,Local_re
             Global_re = myShell*NUM_R_ELEMS_PER_SHELL + Local_re
 
 
@@ -505,6 +508,7 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
 !            END IF
 
 
+            PRINT*,"Before Calc_3D_Current_Values"
             !*!
             !*! Calculate Current Values of CFA Varaiables and their Deriviatives
             !*!
@@ -517,6 +521,7 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
 
 
 
+            PRINT*,"Before Calc_3D_SubJcbn_Terms"
             !*!
             !*!  Calculate the Sub-Jacobian and RHS Terms
             !*!
@@ -525,6 +530,7 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
             timec = MPI_Wtime()
 
 
+            PRINT*,"Before CREATE_3D_RHS_VECTOR"
             !*!
             !*! Create the Residual Vector ( Sans Laplacian Contribution )
             !*!
@@ -534,6 +540,7 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
 
 
             
+            PRINT*,"Before CREATE_3D_JCBN_MATRIX"
             !*!
             !*! Create Jacobian Matrix ( Sans Laplacian Contribution )
             !*!
@@ -697,21 +704,20 @@ END DO
 !$OMP PARALLEL DEFAULT(none)                                            &
 !$OMP PRIVATE( tpd, rd, l, m, d, ui,                                    &
 !$OMP           TMP_U_Value, Tmp_U_R_DRV_Value, Tmp_U_T_DRV_Value,      &
-!$OMP           Tmp_U_P_DRV_Value,                                      &
+!$OMP           Tmp_U_P_DRV_Value, Tmp_U_RR_DDRV_Value,                 &
 !$OMP           local_coefficients,                                     &
-!$OMP           Here, There,                                            &
-!$OMP           lm_loc                                              )   &
+!$OMP           lm_loc, Current_Location                            )   &
 !$OMP SHARED( re, te, pe,                                               &
 !$OMP           DEGREE,                                                 &
-!$OMP           NUM_TP_QUAD_POINTS, NUM_R_QUAD_POINTS,                  &
+!$OMP           NUM_P_QUAD_POINTS, NUM_T_QUAD_POINTS, NUM_R_QUAD_POINTS,&
 !$OMP           CUR_VAL_PSI, CUR_VAL_ALPHAPSI, CUR_VAL_BETA,            &
 !$OMP           CUR_DRV_PSI, CUR_DRV_ALPHAPSI, CUR_DRV_BETA,            &
+!$OMP           CUR_DDRV_BETA,                                          &
 !$OMP           CUR_R_LOCS, CUR_T_LOCS, CUR_P_LOCS,                     &
 !$OMP           R_SQUARE,                                               &
 !$OMP           SIN_VAL,                                                &
 !$OMP           myID_Poseidon,                                          &
 !$OMP           DELTAR_OVERTWO, DELTAT_OVERTWO, DELTAP_OVERTWO,         &
-!$OMP           Beta_DRV_Trace,                                         &
 !$OMP           Lagrange_Poly_Table,                                    &
 !$OMP           Ylm_Values, Ylm_dt_Values, Ylm_dp_Values,               &
 !$OMP           Coefficient_Vector,                                     &
@@ -886,16 +892,16 @@ REAL(KIND = idp)                                                        ::  JCBN
 !$OMP           NUM_P_QUAD_POINTS, NUM_T_QUAD_POINTS, NUM_R_QUAD_POINTS,&
 !$OMP           CUR_VAL_PSI, CUR_VAL_ALPHAPSI, CUR_VAL_BETA,            &
 !$OMP           CUR_DRV_PSI, CUR_DRV_ALPHAPSI, CUR_DRV_BETA,            &
+!$OMP           CUR_DDRV_BETA,                                          &
 !$OMP           CUR_R_LOCS, CUR_T_LOCS, CUR_P_LOCS,                     &
-!$OMP           SubJacobian_EQ1_Term, SubJacobian_EQ2_Term,             &
-!$OMP           SubJacobian_EQ3_Term, SubJacobian_EQ4_Term,             &
-!$OMP           SubJacobian_EQ5_Term,                                   &
-!$OMP           RSIN_SQUARE, R_SQUARE, R_CUBED,                         &
+!$OMP           RSIN_SQUARE, R_SQUARE, R_CUBED, R_INVERSE,              &
 !$OMP           SIN_VAL, SIN_SQUARE, COTAN_VAL, COS_VAL,                &
 !$OMP           CSC_VAL, CSC_SQUARE,                                    &
 !$OMP           GR_Source_Scalar,                                       &
 !$OMP           NUM_OFF_DIAGONALS,                                      &
-!$OMP           RHS_TERMS,                                              &
+!$OMP           RHS_TERMS, SUBJCBN_PSI_TERMS, SUBJCBN_ALPHAPSI_TERMS,   &
+!$OMP           SUBJCBN_BETA1_TERMS, SUBJCBN_BETA2_TERMS,               &
+!$OMP           SUBJCBN_BETA3_TERMS,                                    &
 !$OMP           Block_SOURCE_E, Block_SOURCE_S, Block_SOURCE_Si,        &
 !$OMP           OneThird, OneThirtySecond, FourThirds, TwoThirds,       &
 !$OMP           LM_Length                           )
@@ -929,6 +935,7 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                               RSIN_SQUARE(td, rd), COTAN_VAL(td)                              )
 
 
+
         JCBN_kappa_Array = JCBN_kappa_FUNCTION_3D_ALL(  rd, tpd,                                        &
                                                         CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
                                                         RSIN_SQUARE(td, rd),                            &
@@ -938,6 +945,8 @@ DO rd = 1,NUM_R_QUAD_POINTS
 
 
 
+
+        PRINT*,"AlphaPsi/Psi Power",ALPHAPSI_POWER(1),PSI_POWER(1)
         JCBN_n_ARRAY(:) = CUR_DRV_ALPHAPSI( tpd, rd, : ) / ALPHAPSI_POWER(1)   &
                             - 7 * CUR_DRV_PSI( tpd, rd, : )/ PSI_POWER(1)
 
@@ -945,6 +954,8 @@ DO rd = 1,NUM_R_QUAD_POINTS
 
 
 
+
+        PRINT*,"Before "
 
         CALL Calc_RHS_Terms( RHS_Terms,                                         &
                              re, te, pe,                                        &
@@ -959,6 +970,7 @@ DO rd = 1,NUM_R_QUAD_POINTS
         !
         !   Equation 1 ( Conformal Factor ) Subjacobian Terms
         !
+        PRINT*,"Before Calc_EQ1_SubJacobian"
         CALL Calc_EQ1_SubJacobian( SubJacobian_EQ1_Term,                              &
                                    re, te, pe,                                        &
                                    td, pd, tpd, rd,                                   &
@@ -968,19 +980,21 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                    CUR_VAL_BETA, CUR_DRV_BETA,                        &
                                    JCBN_BIGK_VALUE                                    )
 
+        PRINT*,"Before Calc_EQ2_SubJacobian"
         CALL Calc_EQ2_SubJacobian( SubJacobian_EQ2_Term,                              &
+                                   SubJacobian_EQ1_Term,                              &
                                    re, te, pe,                                        &
                                    td, pd, tpd, rd,                                   &
                                    CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
                                    SIN_SQUARE, CSC_SQUARE,                            &
                                    PSI_POWER, ALPHAPSI_POWER,                         &
-                                   CUR_VAL_BETA, CUR_DRV_BETA,                        &
                                    JCBN_BIGK_VALUE                                    )
 
 !        PRINT*,rd,td,pd
 !        PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:14)
 !        PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:14)
 
+        PRINT*,"Before Calc_EQ3_SubJacobian"
         CALL Calc_EQ3_SubJacobian( SubJacobian_EQ3_Term,                              &
                                    re, te, pe,                                        &
                                    td, pd, tpd, rd,                                   &
@@ -990,6 +1004,7 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                    CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
                                    JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
 
+        PRINT*,"Before Calc_EQ4_SubJacobian"
         CALL Calc_EQ4_SubJacobian( SubJacobian_EQ4_Term,                              &
                                    re, te, pe,                                        &
                                    td, pd, tpd, rd,                                   &
@@ -999,6 +1014,7 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                    CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
                                    JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
 
+        PRINT*,"Before Calc_EQ5_SubJacobian"
         CALL Calc_EQ5_SubJacobian( SubJacobian_EQ5_Term,                              &
                                    re, te, pe,                                        &
                                    td, pd, tpd, rd,                                   &
@@ -1089,10 +1105,9 @@ COMPLEX(KIND = idp)                                                     ::  Inne
 !$OMP           DEGREE,                                                 &
 !$OMP           R_SQUARE, Deltar_Overtwo, Int_R_Weights,                &
 !$OMP           NUM_P_QUAD_POINTS, NUM_T_QUAD_POINTS, NUM_R_QUAD_POINTS,&
+!$OMP           NUM_CFA_VARS,                                           &
 !$OMP           R_Int_Weights, TP_Int_Weights,                          &
 !$OMP           ULM_LENGTH, LM_LENGTH,                                  &
-!$OMP           Beta_DRV_Trace,                                         &
-!$OMP           OneThird,                                               &
 !$OMP           Ylm_CC_Values, Lagrange_Poly_Table,                     &
 !$OMP           Block_RHS_Vector, RHS_Terms                             )
 
@@ -1550,7 +1565,6 @@ IF ( myID_SubShell .NE. -1 ) THEN
     !$OMP           NUM_R_ELEMS_PER_SUBSHELL,                               &
     !$OMP           NUM_R_ELEMS_PER_SHELL,                                  &
     !$OMP           DEGREE, L_LIMIT,                                        &
-    !$OMP           LM_LENGTH,                                              &
     !$OMP           ELEM_PROB_DIM,                                          &
     !$OMP           BLOCK_ELEM_STF_MATVEC,                                  &
     !$OMP           rlocs,                                                  &
@@ -1712,7 +1726,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     Block_STF_MAT = 0.0_idp
 
     !$OMP PARALLEL DEFAULT(none)                                            &
-    !$OMP PRIVATE( ui, l, m, re, d, dp, rd,                                 &
+    !$OMP PRIVATE( ui, l, m, re, d, dp, rd, ui,                             &
     !$OMP           CUR_R_LOCS, TWOOVER_DELTAR,                             &
     !$OMP           R_SQUARE, Reusable_Values, L_Lp1,                       &
     !$OMP           Global_re,                                              &

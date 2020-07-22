@@ -134,10 +134,6 @@ ELSE IF ( Units_Flag == "G" ) THEN
     Speed_of_Light = 1.0_idp
 
 
-    PRINT*,"Grav_Constant_G",Grav_Constant_G
-    PRINT*,"Speed_of_Light",Speed_of_Light
-    PRINT*," "
-    PRINT*," "
 
 END IF
 

@@ -7,8 +7,7 @@ MODULE Poseidon_Parameters                                                      
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
-!##!    Contains the top level subroutines needed to inialize, run, and close       !##!
-!##!        Poseidon.                                                               !##!
+!##!    Contains parameters used to define the running of Poseidon.                 !##!
 !##!                                                                                !##!
 !##!================================================================================!##!
 !##!                                                                                !##!
@@ -67,10 +66,11 @@ INTEGER                     ::  R_COARSEN_FACTOR    = 1
 INTEGER                     ::  T_COARSEN_FACTOR    = 1
 INTEGER                     ::  P_COARSEN_FACTOR    = 1
 
-
 INTEGER                     ::  NUM_BLOCKS
 INTEGER                     ::  NUM_SUBSHELLS
 
+
+INTEGER                     ::  POSEIDON_FRAME           = 0
 INTEGER                     ::  CUR_ITERATION
 INTEGER                     ::  MAX_ITERATIONS      = 3
 INTEGER                     ::  CONVERGENCE_FLAG    = 0
@@ -79,27 +79,36 @@ REAL(KIND =idp)             ::  CONVERGENCE_CRITERIA
 
 INTEGER                     ::  INITIAL_GUESS_FLAG
 
-INTEGER                     ::  OUTPUT_SETUP_TABLE_FLAG   = 0 
+INTEGER                     ::  OUTPUT_SETUP_TABLE_FLAG     = 0
 
-INTEGER                     ::  WRITE_TIMETABLE_FLAG      = 0
-INTEGER                     ::  WRITE_REPORT_FLAG         = 0
-INTEGER                     ::  ITER_REPORT_NUM_SAMPLES   = 20
+INTEGER                     ::  WRITE_TIMETABLE_FLAG        = 0
+INTEGER                     ::  WRITE_REPORT_FLAG           = 0
+INTEGER                     ::  ITER_REPORT_NUM_SAMPLES     = 20
 
-INTEGER                     ::  WRITE_RESULTS_FLAG        = 0
-INTEGER                     ::  WRITE_RESULTS_R_SAMPS     = 1000
-INTEGER                     ::  WRITE_RESULTS_T_SAMPS     = 1
-INTEGER                     ::  WRITE_RESULTS_P_SAMPS     = 1
+INTEGER                     ::  WRITE_RESULTS_FLAG          = 0
+INTEGER                     ::  WRITE_RESULTS_R_SAMPS       = 1000
+INTEGER                     ::  WRITE_RESULTS_T_SAMPS       = 1
+INTEGER                     ::  WRITE_RESULTS_P_SAMPS       = 1
 
+INTEGER                     ::  WRITE_SOURCES_FLAG          = 0
 
 
 INTEGER                     ::  RUN_REPORT_FILE_ID
 INTEGER                     ::  ITER_REPORT_FILE_ID
 INTEGER                     ::  FRAME_REPORT_FILE_ID
 
-INTEGER                     ::  OUTPUT_MATRIX_FLAG
-INTEGER                     ::  OUTPUT_RHS_VECTOR_FLAG
+INTEGER                     ::  OUTPUT_MATRIX_FLAG          = 0
+INTEGER                     ::  OUTPUT_RHS_VECTOR_FLAG      = 0
+INTEGER                     ::  OUTPUT_UPDATE_VECTOR_FLAG   = 0
 
 INTEGER                     ::  NEW_PETSC_SOLVER_FLAG
+INTEGER                     ::  Solver_Type_Flag            = 1 ! 1 = Regular N-R (Default), 2 = Jacobian-Free GMRES
+
+LOGICAL                     ::  POSEIDON_INITIALIZED_FLAG   = .FALSE.
+
+INTEGER                     ::  Ratio_T_BNDLperBLCK
+INTEGER                     ::  Ratio_P_BNDLperBLCK
+INTEGER                     ::  Ratio_BNDLperBLCK
 
 
 END MODULE Poseidon_Parameters

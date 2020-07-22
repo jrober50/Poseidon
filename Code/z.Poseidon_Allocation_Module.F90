@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Allocate_Variables_Module                                                    !##!
+MODULE Poseidon_Allocation_Module                                                   !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -66,6 +66,9 @@ USE Poseidon_Variables_Module, &
                     rlocs,                      &
                     tlocs,                      &
                     plocs,                      &
+                    drlocs,                     &
+                    dtlocs,                     &
+                    dplocs,                     &
                     RHS_Vector,                 &
                     Coefficient_Vector,         &
                     Source_Term_Coefficients,   &
@@ -108,7 +111,9 @@ USE Poseidon_Variables_Module, &
                     STF_MAT,                    &
                     STF_ELEM_VAL,               &
                     STF_COL_PTR,                &
-                    STF_ROW_IND
+                    STF_ROW_IND,                &
+                    NEWTON_POT_VEC,             &
+                    NEWTON_SHIFT_VEC
 
 
 
@@ -134,6 +139,10 @@ SUBROUTINE Allocate_Poseidon_CFA_Variables()
 ALLOCATE(rlocs(0:NUM_R_ELEMENTS))
 ALLOCATE(tlocs(0:NUM_T_ELEMENTS))
 ALLOCATE(plocs(0:NUM_P_ELEMENTS))
+
+ALLOCATE(drlocs(0:NUM_R_ELEMENTS-1))
+ALLOCATE(dtlocs(0:NUM_T_ELEMENTS-1))
+ALLOCATE(dplocs(0:NUM_P_ELEMENTS-1))
 
 
 !ALLOCATE( RHS_Vector( 0:PROB_DIM-1 ) )
@@ -184,12 +193,6 @@ ALLOCATE( M_VALUES(0:L_LIMIT) )
 
 
 
-!ALLOCATE( Ylm_Table_Block(  -L_LIMIT:L_LIMIT, -1:L_LIMIT,               &
-!                            1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,   &
-!                            0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)     )
-
-
-
 ALLOCATE( Ylm_Values(       0:LM_Length-1,                                          &
                             1:NUM_TP_QUAD_POINTS,                                   &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
@@ -236,6 +239,9 @@ RUN_TIME_TABLE = 0.0_idp
 ALLOCATE( FRAME_CONVERGENCE_TABLE(1:MAX_ITERATIONS))
 ALLOCATE( Iteration_Histogram(1:MAX_ITERATIONS) )
 Iteration_Histogram = 0
+
+ALLOCATE( NEWTON_SHIFT_VEC(1:NUM_R_ELEMS_PER_BLOCK) )
+ALLOCATE( NEWTON_POT_VEC( 1:NUM_R_QUAD_POINTS,1:NUM_R_ELEMS_PER_BLOCK) )
 
 END SUBROUTINE Allocate_Poseidon_CFA_Variables
 
@@ -449,4 +455,4 @@ END SUBROUTINE Deallocate_Poseidon_Newtonian_Variables
 
 
 
-END MODULE Allocate_Variables_Module
+END MODULE Poseidon_Allocation_Module

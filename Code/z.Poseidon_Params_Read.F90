@@ -62,6 +62,7 @@ USE Poseidon_Parameters, &
                     CONVERGENCE_CRITERIA,       &
                     OUTPUT_MATRIX_FLAG,         &
                     OUTPUT_RHS_VECTOR_FLAG,     &
+                    OUTPUT_UPDATE_VECTOR_FLAG,  &
                     WRITE_TIMETABLE_FLAG,       &
                     WRITE_REPORT_FLAG,          &
                     ITER_REPORT_NUM_SAMPLES,    &
@@ -70,7 +71,9 @@ USE Poseidon_Parameters, &
                     WRITE_RESULTS_R_SAMPS,      &
                     WRITE_RESULTS_T_SAMPS,      &
                     WRITE_RESULTS_P_SAMPS,      &
-                    NEW_PETSC_SOLVER_FLAG
+                    WRITE_SOURCES_FLAG,         &
+                    NEW_PETSC_SOLVER_FLAG,      &
+                    SOLVER_TYPE_FLAG
 
 
 USE Poseidon_Variables_Module, &
@@ -106,7 +109,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE     :: REAL_PARAMS
 
 
 
-NUM_INT_PARAMS  = 31
+NUM_INT_PARAMS  = 34
 NUM_REAL_PARAMS = 1
 
 ALLOCATE( INT_PARAMS(1:NUM_INT_PARAMS) )
@@ -189,9 +192,17 @@ END IF
 
 NEW_PETSC_SOLVER_FLAG           = INT_PARAMS(25)
 
+IF ( INT_PARAMS(26) .NE. -1 ) THEN
+    OUTPUT_MATRIX_FLAG          = INT_PARAMS(26)
+END IF
+IF ( INT_PARAMS(27) .NE. -1 ) THEN
+    OUTPUT_RHS_VECTOR_FLAG      = INT_PARAMS(27)
+END IF
+IF ( INT_PARAMS(33) .NE. -1 ) THEN
+    OUTPUT_UPDATE_VECTOR_FLAG   = INT_PARAMS(33)
+END IF
 
-OUTPUT_MATRIX_FLAG              = INT_PARAMS(26)
-OUTPUT_RHS_VECTOR_FLAG          = INT_PARAMS(27)
+
 
 WRITE_RESULTS_R_SAMPS           = INT_PARAMS(28)
 WRITE_RESULTS_T_SAMPS           = INT_PARAMS(29)
@@ -201,9 +212,14 @@ IF ( INT_PARAMS(31) .NE. -1 ) THEN
     OUTPUT_SETUP_TABLE_FLAG     = INT_PARAMS(31)    ! Default = 0, Off
 END IF
 
+IF ( INT_PARAMS(32) .NE. -1 ) THEN
+    WRITE_SOURCES_FLAG         = INT_PARAMS(32)    ! Deafult = 0, Off
+END IF
+
 CONVERGENCE_CRITERIA            = REAL_PARAMS(1)
 
 
+SOLVER_TYPE_FLAG                = INT_PARAMS(34)
 
 
 NUM_QUAD_DOF    = NUM_R_QUAD_POINTS   &
@@ -270,16 +286,19 @@ READ(nreadp,101,END=5000) line
 Param_type = line(1:6)
 Param_name = line(40:60)
 
+! DOMAIN_DIM
 IF ( Param_type == 'DIM' ) THEN
     READ (line, 111) INT_PARAMS(1)
     CYCLE
 END IF
 
+! DEGREE
 IF ( Param_type == 'DEGREE' ) THEN
     READ (line, 111) INT_PARAMS(2)
     CYCLE
 END IF
 
+! L_LIMIT
 IF ( Param_type == 'LLIMIT' ) THEN
     READ (line, 111) INT_PARAMS(3)
     CYCLE
@@ -334,21 +353,25 @@ END IF
 
 
 
-
+! Number of RE per Shell
 IF ( Param_type == 'NREPS ' ) THEN
     READ (line, 111) INT_PARAMS(5)
     CYCLE
 END IF
 
+! Number of RE per Subshell
 IF ( Param_type == 'NREPSS' ) THEN
     READ (line, 111) INT_PARAMS(6)
     CYCLE
 END IF
+
+! Number of TE per Block
 IF ( Param_type == 'NTEPB ' ) THEN
     READ (line, 111) INT_PARAMS(12)
     CYCLE
 END IF
 
+! Number of PE per Block
 IF ( Param_type == 'NPEPB ' ) THEN
     READ (line, 111) INT_PARAMS(13)
     CYCLE
@@ -390,7 +413,7 @@ IF ( Param_type == 'PCF   ' ) THEN
     CYCLE
 END IF
 
-
+!   Maximum Iterations
 IF ( Param_type == 'MI    ' ) THEN
     READ (line, 111) INT_PARAMS(20)
     CYCLE
@@ -398,29 +421,32 @@ END IF
 
 
 
-
+! Write Timetable Report Flag
 IF ( Param_type == 'WRTTT' ) THEN
     READ (line, 111) INT_PARAMS(21)
     CYCLE
 END IF
 
+! Write Iteration Report Flage
 IF ( Param_type == 'WRTIR' ) THEN
     READ (line, 111) INT_PARAMS(22)
     CYCLE
 END IF
 
+! Number of Samples in each Iteration Report
 IF ( Param_type == 'IRNS ' ) THEN
     READ (line, 111) INT_PARAMS(23)
     CYCLE
 END IF
 
+! Write Results to File Flag
 IF ( Param_type == 'WRTRS' ) THEN
     READ (line, 111) INT_PARAMS(24)
     CYCLE
 END IF
 
 
-
+! Convergence Critera
 IF ( Param_type == 'CC    ' ) THEN
     READ (line, 131) REAL_PARAMS(1)
     CYCLE
@@ -432,15 +458,24 @@ IF ( Param_type == 'NPS   ' ) THEN
     CYCLE
 END IF
 
+! Write Jacobian to file
 IF ( Param_type == 'OMF   ' ) THEN
     READ (line, 111) INT_PARAMS(26)
     CYCLE
 END IF
 
+! Write RHS Vector to file
 IF ( Param_type == 'ORF   ' ) THEN
     READ (line, 111) INT_PARAMS(27)
     CYCLE
 END IF
+
+! Write Update Vector to file
+IF ( Param_type == 'OUF   ' ) THEN
+    READ (line, 111) INT_PARAMS(33)
+    CYCLE
+END IF
+
 
 
 ! WRITE_RESULTS_R_SAMPS
@@ -460,6 +495,25 @@ IF ( Param_type == 'PSMPS ' ) THEN
     READ (line, 111) INT_PARAMS(30)
     CYCLE
 END IF
+
+! WRITE_SOURCES_FLAG
+IF ( Param_type == 'WRTSC ' ) THEN
+    READ (line, 111) INT_PARAMS(32)
+    CYCLE
+END IF
+
+! WRITE_SOURCES_FLAG
+IF ( Param_type == 'OSTF ' ) THEN
+    READ (line, 111) INT_PARAMS(31)
+    CYCLE
+END IF
+
+! SOLVER_TYPE_FLAG
+IF ( Param_type == 'STF  ' ) THEN
+    READ (line, 111) INT_PARAMS(34)
+    CYCLE
+END IF
+
 
 
 END DO READ

@@ -51,7 +51,7 @@ USE Poseidon_Variables_Module, &
 USE Poseidon_Mapping_Functions_Module, &
                                 ONLY :  CFA_ALL_Matrix_Map
 
-USE Poseidon_Additional_Functions_Module, &
+USE Poseidon_Quadrature_Module, &
                         ONLY :  Initialize_LGL_Quadrature_Locations
 
 IMPLICIT NONE
@@ -62,7 +62,7 @@ CONTAINS
 
 !+101+###########################################################################!
 !                                                                                !
-!           Jacobi_Type_A_PC                                                     !
+!           Jacobi_Type_A_PC    - 1/r                                                 !
 !                                                                                !
 !################################################################################!
 SUBROUTINE Jacobi_Type_A_PC()
@@ -114,6 +114,8 @@ DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
                 Start  = (d*ULM_LENGTH + (F-1)*LM_LENGTH + lm_loc)*ELEM_PROB_DIM
                 Finish = Start + ELEM_PROB_DIM-1
                 Here = CFA_ALL_Matrix_Map(F, lm_loc, re, d)
+
+                PRINT*,"Start: ",start," Finish: ",Finish," Here : ",Here
                 BLOCK_ELEM_STF_MATVEC(Start:Finish,re) = BLOCK_ELEM_STF_MATVEC(Start:Finish,re) &
                                                        * Modifier(Here)
 
@@ -129,7 +131,7 @@ END SUBROUTINE Jacobi_Type_A_PC
 
 !+102+###########################################################################!
 !                                                                                !
-!           Jacobi_Type_B_PC                                                     !
+!           Jacobi_Type_B_PC  - Diagonal                                                   !
 !                                                                                !
 !################################################################################!
 SUBROUTINE Jacobi_Type_B_PC()
@@ -154,12 +156,12 @@ DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
         Start = re*(ELEM_PROB_DIM-ULM_LENGTH) + i
         Here = i*ELEM_PROB_DIM + i
-        Modifier(Start) = Modifier(Start)                               &
-                        + 1.0_idp/Block_Elem_STF_MATVEC(Here, re)
+        Modifier(Start) = 1.0_idp/Block_Elem_STF_MATVEC(Here, re)
 
     END DO
 END DO
-
+!PRINT*,Modifier
+!PRINT*,"++++++++++++++++++++++++++++++"
 
 ! Modify RHS
 Block_RHS_Vector(:) = Block_RHS_Vector(:)*Modifier(:)
@@ -175,9 +177,13 @@ DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
                 Start  = (d*ULM_LENGTH + (F-1)*LM_LENGTH + lm_loc)*ELEM_PROB_DIM
                 Finish = Start + ELEM_PROB_DIM-1
                 Here = CFA_ALL_Matrix_Map(F, lm_loc, re, d)
+!                PRINT*,"Start: ",start," Finish: ",Finish," Here : ",Here
+!                PRINT*,"Before"
+!                PRINT*,BLOCK_ELEM_STF_MATVEC(Start:Finish,re)
                 BLOCK_ELEM_STF_MATVEC(Start:Finish,re) = BLOCK_ELEM_STF_MATVEC(Start:Finish,re) &
                                                        * Modifier(Here)
-
+!                PRINT*,"After"
+!                PRINT*,BLOCK_ELEM_STF_MATVEC(Start:Finish,re)
             END DO ! lm_loc
         END DO ! F
     END DO  ! d

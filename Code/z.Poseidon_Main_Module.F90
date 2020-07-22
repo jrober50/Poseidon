@@ -34,137 +34,71 @@ MODULE Poseidon_Main_Module                                                     
 !                                   !
 !===================================!
 USE Poseidon_Constants_Module, &
-            ONLY :  idp, pi, fdp
+            ONLY :  idp, pi
 
 USE Units_Module, &
-            ONLY :  Grav_Constant_G,            &
-                    C_Square
+            ONLY :  Set_Units
 
 USE Poseidon_Parameters, &
-            ONLY :  DOMAIN_DIM,                 &
-                    DEGREE,                     &
+            ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
-                    DATA_DIST_MODE,             &
                     NUM_CFA_VARS,               &
-                    NUM_R_ELEMS_PER_SHELL,      &
-                    NUM_R_ELEMS_PER_SUBSHELL,   &
-                    NUM_SHELLS,                 &
-                    NUM_SUBSHELLS,              &
-                    NUM_SUBSHELLS_PER_SHELL,    &
-                    NUM_BLOCKS,                 &
-                    NUM_BLOCKS_PER_SHELL,       &
-                    NUM_BLOCK_THETA_ROWS,       &
-                    NUM_BLOCK_PHI_COLUMNS,      &
-                    nPROCS_POSEIDON,            &
-                    STF_MAPPING_FLAG,           &
-                    NUM_R_ELEMS_PER_BLOCK,      &
-                    NUM_T_ELEMS_PER_BLOCK,      &
-                    NUM_P_ELEMS_PER_BLOCK,      &
-                    R_COARSEN_FACTOR,           &
-                    T_COARSEN_FACTOR,           &
-                    P_COARSEN_FACTOR,           &
+                    POSEIDON_INITIALIZED_FLAG,  &
                     NUM_R_QUAD_POINTS,          &
                     NUM_T_QUAD_POINTS,          &
                     NUM_P_QUAD_POINTS,          &
-                    CUR_ITERATION,              &
-                    MAX_ITERATIONS,             &
-                    CONVERGENCE_CRITERIA,       &
-                    CONVERGENCE_FLAG,           &
-                    ITER_REPORT_NUM_SAMPLES,    &
-                    WRITE_REPORT_FLAG,          &
-                    RUN_REPORT_FILE_ID
-
+                    Poseidon_Frame,             &
+                    SOLVER_TYPE_FLAG
 
 
 USE Poseidon_Variables_Module, &
             ONLY :  R_INNER, R_OUTER,                               &
                     NUM_R_ELEMENTS, NUM_T_ELEMENTS, NUM_P_ELEMENTS, &
-                    NUM_R_NODES,                                    &
-                    BLOCK_NUM_R_NODES,                              &
-                    SUBSHELL_NUM_R_NODES,                           &
                     rlocs, tlocs, plocs,                            &
-                    RHS_Vector,                                     &
-                    Coefficient_Vector,                             &
-                    Source_Term_Coefficients,                       &
                     Test_Space_Allocated_Flag,                      &
                     Stiffness_Matrix_Initialized_Flag,              &
                     FirstCall_Flag,                                 &
-                    INNER_BC_SET_FLAG, OUTER_BC_SET_FLAG,           &
-                    INNER_BC_TYPE, OUTER_BC_TYPE,                   &
-                    INNER_DIR_BC_INPUT, INNER_NEU_BC_INPUT,         &
-                    OUTER_DIR_BC_INPUT, OUTER_NEU_BC_INPUT,         &
-                    INNER_UNIFORM_DIR_BC_FLAG,                      &
-                    OUTER_UNIFORM_DIR_BC_FLAG,                      &
+                    INNER_BC_SET_FLAG,                              &
+                    OUTER_BC_SET_FLAG,                              &
                     RADIAL_MESH_SET_FLAG,                           &
                     THETA_MESH_SET_FLAG,                            &
                     PHI_MESH_SET_FLAG,                              &
-                    INT_R_LOCATIONS,                                &
-                    INT_R_WEIGHTS,                                  &
-                    INT_T_LOCATIONS,                                &
-                    INT_T_WEIGHTS,                                  &
-                    INT_P_LOCATIONS,                                &
-                    INT_P_WEIGHTS,                                  &
-                    LOCAL_NODE_LOCATIONS,                           &
-                    ierr,                                           &
-                    myID_Poseidon,                                  &
                     PHYSICS_TYPE,                                   &
                     VAR_DIM,                                        &
-                    ELEM_VAR_DIM,                                   &
-                    BLOCK_VAR_DIM,                                  &
-                    SUBSHELL_VAR_DIM,                               &
                     PROB_DIM,                                       &
-                    ELEM_PROB_DIM,                                  &
-                    ELEM_PROB_DIM_SQR,                              &
-                    BLOCK_PROB_DIM,                                 &
-                    SUBSHELL_PROB_DIM,                              &
                     INNER_CFA_BC_VALUES,                            &
                     OUTER_CFA_BC_VALUES,                            &
                     INNER_CFA_BC_TYPE,                              &
                     OUTER_CFA_BC_TYPE,                              &
                     LM_LENGTH,                                      &
-                    ULM_LENGTH,                                     &
-                    M_VALUES,                                       &
-                    Matrix_Location,                                &
-                    LM_Location,                                    &
-                    POSEIDON_COMM_WORLD,                            &
-                    RUN_TIME_TABLE
+                    Block_Source_E,             &
+                    Block_Source_S,             &
+                    Block_Source_Si,            &
+                    INT_R_LOCATIONS,            &
+                    INT_T_LOCATIONS,            &
+                    INT_P_LOCATIONS
+
+USE Poseidon_Initialization_Module,                                 &
+            ONLY :  Poseidon_Initialize_1D,                         &
+                    Poseidon_Initialize_3D
 
 
+USE Poseidon_Mesh_Module, &
+            ONLY :  Generate_Defined_Mesh
+                    
 
+USE Poseidon_Allocation_Module, &
+            ONLY :  Deallocate_Poseidon_CFA_Variables
 
-
-
-USE Poseidon_Additional_Functions_Module, &
-            ONLY :  Spherical_Harmonic,                             &
-                    Map_To_X_Space, Map_From_X_Space,               &
-                    Initialize_LG_Quadrature,                       &
-                    Initialize_LG_Quadrature_Locations,             &
-                    Generate_Defined_Mesh,                          &
-                    Generate_Defined_Coarse_Mesh
-
-
-USE Allocate_Variables_Module, &
-            ONLY :  Allocate_Poseidon_CFA_Variables,                &
-                    Deallocate_Poseidon_CFA_Variables
-
-
-USE Jacobian_Internal_Functions_Module,  &
-            ONLY :  Initialize_Guess_Values,                        &
-                    Initialize_Ylm_Tables,                          &
-                    Initialize_Lagrange_Poly_Tables
 
 USE CFA_Newton_Raphson_3D_Module, &
             ONLY :  CFA_Newton_Raphson_3D
 
-USE Poseidon_MPI_Module, &
-            ONLY :  CREATE_POSEIDON_COMMUNICATORS
+USE Poseidon_IO_Module, &
+            ONLY :  OUTPUT_POSEIDON_SOURCES_1D
 
-USE Poseidon_Parameter_Read_Module, &
-            ONLY :  UNPACK_POSEIDON_PARAMETERS
-
-USE Poseidon_Additional_Functions_Module, &
-                        ONLY :  Calc_3D_Values_At_Location
-
+USE CFA_GMRES_Module, &
+            ONLY :  CFA_GMRES
 
 USE mpi
 
@@ -184,7 +118,79 @@ CONTAINS
 
 
 
+!+102+#######################################################################################!
+!                                                                                           !
+!       Poseidon_Initialize                                                                 !
+!                                                                                           !
+!                                                                                           !
+!###########################################################################################!
+SUBROUTINE Poseidon_Initialize( Units,                                                                  &
+                                Dimensions,                                                             &
+                                FEM_Degree_Input, L_Limit_Input,                                        &
+                                Inner_Radius, Outer_Radius,                                             &
+                                R_Elements_Input, T_Elements_Input, P_Elements_Input,                   &
+                                Local_R_Elements_Input, Local_T_Elements_Input, Local_P_Elements_Input, &
+                                Num_R_Quad_Input, Num_T_Quad_Input, Num_P_Quad_Input,                   &
+                                Input_Delta_R_Vector, Input_Delta_T_Vector, Input_Delta_P_Vector        )
 
+
+
+                                         !                          !
+                                        !!      Input Variables     !!
+                                         !
+
+INTEGER, INTENT(IN)                                                             ::  Dimensions,             &
+                                                                                    FEM_Degree_Input,       &
+                                                                                    L_Limit_Input,          &
+                                                                                    R_Elements_Input,       &
+                                                                                    T_Elements_Input,       &
+                                                                                    P_Elements_Input,       &
+                                                                                    Local_R_Elements_Input, &
+                                                                                    Local_T_Elements_Input, &
+                                                                                    Local_P_Elements_Input, &
+                                                                                    Num_R_Quad_Input,       &
+                                                                                    Num_T_Quad_Input,       &
+                                                                                    Num_P_Quad_Input
+
+REAL(KIND = idp), INTENT(IN)                                                    ::  Inner_Radius,           &
+                                                                                    Outer_Radius
+CHARACTER(LEN = 1), INTENT(IN)                                                  ::  Units
+
+REAL(KIND = idp), DIMENSION(1:R_Elements_Input),    OPTIONAL,   INTENT(IN)      ::  Input_Delta_R_Vector
+REAL(KIND = idp), DIMENSION(1:T_Elements_Input),    OPTIONAL,   INTENT(IN)      ::  Input_Delta_T_Vector
+REAL(KIND = idp), DIMENSION(1:P_Elements_Input),    OPTIONAL,   INTENT(IN)      ::  Input_Delta_P_Vector
+
+
+
+CALL Set_Units(Units)
+
+IF ( POSEIDON_INITIALIZED_FLAG .EQV. .FALSE. ) THEN
+
+
+    IF ( Dimensions == 1 ) THEN
+        CALL Poseidon_Initialize_1D( FEM_Degree_Input, L_Limit_Input,                                        &
+                                     Inner_Radius, Outer_Radius,                                             &
+                                     R_Elements_Input, T_Elements_Input, P_Elements_Input,                   &
+                                     Local_R_Elements_Input, Local_T_Elements_Input, Local_P_Elements_Input, &
+                                     Num_R_Quad_Input, Num_T_Quad_Input, Num_P_Quad_Input,                   &
+                                     Input_Delta_R_Vector, Input_Delta_T_Vector, Input_Delta_P_Vector        )
+
+    ELSE
+
+        CALL Poseidon_Initialize_3D( FEM_Degree_Input, L_Limit_Input,                                        &
+                                     Inner_Radius, Outer_Radius,                                             &
+                                     R_Elements_Input, T_Elements_Input, P_Elements_Input,                   &
+                                     Local_R_Elements_Input, Local_T_Elements_Input, Local_P_Elements_Input, &
+                                     Num_R_Quad_Input, Num_T_Quad_Input, Num_P_Quad_Input,                   &
+                                     Input_Delta_R_Vector, Input_Delta_T_Vector, Input_Delta_P_Vector        )
+
+    END IF
+
+    POSEIDON_INITIALIZED_FLAG = .TRUE.
+
+END IF
+
+END SUBROUTINE Poseidon_Initialize
 
 
 
@@ -205,24 +211,43 @@ CONTAINS
 SUBROUTINE Poseidon_Run()
 
 LOGICAL                                             ::  Readiness_Flag
+INTEGER, DIMENSION(1:5)                             ::  Eq_Flag_Array
 
 
 
-
+!CALL OUTPUT_POSEIDON_SOURCES_1D(Block_Source_E, Block_Source_S, Block_Source_Si,            &
+!                                NUM_R_ELEMENTS, NUM_T_ELEMENTS, NUM_P_ELEMENTS,             &
+!                                NUM_R_QUAD_POINTS, NUM_R_QUAD_POINTS, NUM_R_QUAD_POINTS,    &
+!                                INT_R_LOCATIONS, INT_T_LOCATIONS, INT_P_LOCATIONS,          &
+!                                -1.0_idp, +1.0_idp                                          )
+    
 
 
 !CALL Poseidon_Readiness_Check(Readiness_Flag)
 Readiness_Flag = .TRUE.
 
 IF ( Readiness_Flag ) THEN
+    IF ( SOLVER_TYPE_FLAG == 1 ) THEN
 
-    CALL CFA_Newton_Raphson_3D()
+        CALL CFA_Newton_Raphson_3D()
+    
+    ELSE IF ( SOLVER_TYPE_FLAG == 2 ) THEN
+
+        Eq_Flag_Array = [ 1, 1, 1, 1, 1]
+        CALL CFA_GMRES(Eq_Flag_Array)
+
+    ELSE
+
+        PRINT*,"ERROR IN POSEIDON : Solver Type Flag has invalid value. "
+
+    END IF
+
 ELSE
 
     PRINT*, "ERROR IN POSEIDON : There was an error in setting up Poseidon, therefore it did not run."
 
 END IF
-
+Poseidon_Frame = Poseidon_Frame + 1
 
 
 

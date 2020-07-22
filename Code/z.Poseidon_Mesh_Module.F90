@@ -474,5 +474,90 @@ END SUBROUTINE Create_Split_1D_Mesh
 
 
 
+!+701+##################################################################################!
+!                                                                                       !
+!       GENERATE_DEFINED_MESH - Generate the values for the mesh sent in using          !
+!                                predefined values for the width of each element.       !
+!                                                                                       !
+!---------------------------------------------------------------------------------------!
+!                                                                                       !
+!   Input:  Mesh_Start - Single Real number defining inner boundary location.           !
+!                                                                                       !
+!           Number_of_Elements - Single Integer value defining the number of elements   !
+!                                   in the mesh.                                        !
+!                                                                                       !
+!           Element_Width_Vector - Real valued vector of length(1:Number_of_Elements)   !
+!                                       containing Real numbers defining the width of   !
+!                                        each element.                                  !
+!                                                                                       !
+!---------------------------------------------------------------------------------------!
+!                                                                                       !
+!   Output: Mesh - Real Vector,length(0:Number_of_Elements) that on output contains     !
+!                       values describing the element edge locations.                   !
+!                                                                                       !
+!#######################################################################################!
+SUBROUTINE Generate_Defined_Mesh(Number_of_Elements, Mesh_Start, Element_Width_Vector, Mesh)
+
+
+INTEGER, INTENT(IN)                                                 ::  Number_of_Elements
+REAL(KIND = idp), INTENT(IN)                                        ::  Mesh_Start
+REAL(KIND = idp), DIMENSION(1:Number_of_Elements), INTENT(IN)       ::  Element_Width_Vector
+
+REAL(KIND = idp), DIMENSION(0:Number_of_Elements), INTENT(OUT)      ::  Mesh
+
+INTEGER                                                             ::  i
+
+
+mesh(0) = Mesh_Start
+DO i = 1,Number_of_Elements
+
+
+    mesh(i) = mesh(i-1) + Element_Width_Vector(i)
+
+
+END DO
+
+
+END SUBROUTINE Generate_Defined_Mesh
+
+
+
+
+
+
+!+802+##################################################################################!
+!                                                                                       !
+!       GENERATE_DEFINED_COARSE_MESH                                                    !
+!                                                                                       !
+!#######################################################################################!
+SUBROUTINE Generate_Defined_Coarse_Mesh(Input_Number_of_Elements, Output_Number_of_Elements,    &
+                                        Coarsen_Factor, Mesh_Start, Element_Width_Vector, Mesh, dMesh )
+
+
+INTEGER, INTENT(IN)                                                     ::  Input_Number_of_Elements
+INTEGER, INTENT(IN)                                                     ::  Output_Number_of_Elements
+INTEGER, INTENT(IN)                                                     ::  Coarsen_Factor
+REAL(KIND = idp), INTENT(IN)                                            ::  Mesh_Start
+REAL(KIND = idp), DIMENSION(1:Input_Number_of_Elements), INTENT(IN)     ::  Element_Width_Vector
+
+REAL(KIND = idp), DIMENSION(0:Output_Number_of_Elements), INTENT(OUT)   ::  Mesh
+REAL(KIND = idp), DIMENSION(0:Output_Number_of_Elements-1), INTENT(OUT) ::  dMesh
+
+INTEGER                                                                 ::  i
+REAL(KIND = idp)                                                        ::  tmp
+
+mesh(0) = Mesh_Start
+DO i = 1,Output_Number_of_Elements
+
+    tmp = SUM(Element_Width_Vector((i-1)*Coarsen_Factor+1:i*Coarsen_Factor))
+    dMesh(i-1) = tmp
+    mesh(i) = mesh(i-1) + tmp
+         
+
+END DO
+
+
+END SUBROUTINE Generate_Defined_Coarse_Mesh
+
 
 END MODULE Poseidon_Mesh_Module

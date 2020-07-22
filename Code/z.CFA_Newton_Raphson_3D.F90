@@ -48,7 +48,7 @@ USE Poseidon_Constants_Module, &
                         ONLY : idp, pi, speed_of_light, C_Square
 
 USE DRIVER_Parameters, &
-                        ONLY :  Analytic_Solution,          &
+                        ONLY :  Potential_Solution,          &
                                 DRIVER_FRAME,               &
                                 FRAME_REPORT_FLAG
 
@@ -69,9 +69,11 @@ USE Poseidon_Parameters, &
                                 WRITE_REPORT_FLAG,          &
                                 OUTPUT_MATRIX_FLAG,         &
                                 OUTPUT_RHS_VECTOR_FLAG,     &
+                                OUTPUT_UPDATE_VECTOR_FLAG,  &
                                 ITER_REPORT_NUM_SAMPLES,    &
                                 ITER_REPORT_FILE_ID,        &
-                                FRAME_REPORT_FILE_ID
+                                FRAME_REPORT_FILE_ID,       &
+                                WRITE_RESULTS_FLAG
 
 USE Poseidon_Variables_Module, &
                         ONLY :  NUM_R_ELEMENTS,             &
@@ -108,22 +110,24 @@ USE Poseidon_Variables_Module, &
 USE CFA_3D_Master_Build_Module, &
                         ONLY :  CFA_3D_Master_Build
 
-USE Poseidon_Additional_Functions_Module, &
+USE Poseidon_Calculate_Results_Module, &
                         ONLY :  Calc_3D_Values_At_Location
 
-USE Jacobian_Internal_Functions_Module,  &
+USE Poseidon_Guess_Module,  &
                         ONLY :  Initialize_Guess_Values,        &
                                 Initialize_Special_Guess_Values
 
-USE IO_Functions_Module, &
-                        ONLY :  Clock_In,                   &
-                                OPEN_ITER_REPORT_FILE,      &
-                                CLOSE_ITER_REPORT_FILE,     &
-                                OUTPUT_JACOBIAN_MATRIX,     &
-                                OUTPUT_RHS_VECTOR,          &
-                                READ_COEFFICIENT_VECTOR,    &
+USE Poseidon_IO_Module, &
+                        ONLY :  Clock_In,                           &
+                                OPEN_ITER_REPORT_FILE,              &
+                                CLOSE_ITER_REPORT_FILE,             &
+                                OUTPUT_JACOBIAN_MATRIX,             &
+                                OUTPUT_RHS_VECTOR,                  &
+                                OUTPUT_UPDATE_VECTOR,               &
+                                READ_COEFFICIENT_VECTOR,            &
                                 OUTPUT_COEFFICIENT_VECTOR_MATLAB,   &
-                                OUTPUT_COEFFICIENT_VECTOR_FORTRAN
+                                OUTPUT_COEFFICIENT_VECTOR_FORTRAN,  &
+                                OUTPUT_FINAL_RESULTS
 
 USE Poseidon_Petsc_Solver, &
                         ONLY : PETSC_Distributed_Solve
@@ -166,9 +170,10 @@ timeb = 0.0_idp
 timec = 0.0_idp
 
 
-IF (myID_Poseidon == 0 ) THEN
-    CALL OUTPUT_GUESS(0, 0)
-END IF
+
+!IF (myID_Poseidon == 0 ) THEN
+!    CALL OUTPUT_GUESS(0, 0)
+!END IF
 
 Cur_Iteration = 0
 CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
@@ -176,7 +181,9 @@ CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
 Cur_Iteration = 1
 CONVERGED = .FALSE.
 DO WHILE ( CONVERGED .EQV. .FALSE. )
-    PRINT*,"Begining of Iter ",Cur_Iteration
+!    PRINT*,"Begining of Iter ",Cur_Iteration
+
+
     IF (myID_Poseidon == 0 ) THEN
         CALL OPEN_ITER_REPORT_FILE(Cur_Iteration, myID_Poseidon)
     END IF
@@ -188,7 +195,6 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     !*!
     Block_RHS_Vector = 0.0_idp
     BLOCK_ELEM_STF_MATVEC = 0.0_idp
-
 
 
     !*!
@@ -204,7 +210,6 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     END IF
 
 
-
     !*!
     !*! Solve the System
     !*!
@@ -214,6 +219,11 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     CALL Clock_In(timec-timeb, 14)
 
 
+    IF ( OUTPUT_UPDATE_VECTOR_FLAG == 1 ) THEN
+        CALL OUTPUT_UPDATE_VECTOR()
+    END IF
+    
+
     !*!
     !*! Update Coefficient_Vector
     !*!
@@ -222,16 +232,13 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     timec = MPI_Wtime()
     CALL Clock_In(timec-timeb, 16)
 
-
     !*!
     !*!  Share Coefficient Vector
     !*!
     timeb = MPI_Wtime()
-    CALL CFA_Update_Modifier( )
     CALL CFA_Coefficient_Update_All
     timec = MPI_Wtime()
     CALL Clock_In(timec-timeb, 15)
-
 
     !*!
     !*! Check for convergence
@@ -240,7 +247,6 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     CALL CONVERGENCE_CHECK(CONVERGED, Cur_Iteration)
     timec = MPI_Wtime()
     CALL Clock_In(timec-timeb, 17)
-
 
 
     !*!
@@ -254,15 +260,16 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     !*!
     !*! Output Iteration Report
     !*!
-    IF ( myID_Poseidon == 0 ) THEN
+    IF ( myID_Poseidon == 01 ) THEN
         CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
         CALL CLOSE_ITER_REPORT_FILE()
+        CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
+        
     END IF
 
+    
 
-    CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
-
-    WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
+!    WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
 
 
 
@@ -272,6 +279,18 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
 END DO
 Iteration_Histogram(Cur_Iteration-1) = Iteration_Histogram(Cur_Iteration-1) + 1
 
+
+
+
+
+
+
+
+IF ( WRITE_RESULTS_FLAG == 1 ) THEN
+
+    CALL OUTPUT_FINAL_RESULTS()
+
+END IF
 
 
 
@@ -319,19 +338,7 @@ END SUBROUTINE CFA_Newton_Raphson_3D
 SUBROUTINE CFA_Solve()
 
 
-CHARACTER(LEN = 1)                                  :: TRANS
-
-INTEGER                                             :: M, N, NRHS, LDA, LDB, INFO
-
-INTEGER, DIMENSION(:), ALLOCATABLE                  :: IPIV
-
-
-
-
-
 IF ( DOMAIN_DIM == 1 ) THEN
-
-
 
 
 ELSE IF ( ( DOMAIN_DIM == 2 ) .OR. ( DOMAIN_DIM == 3 ) ) THEN
@@ -343,12 +350,12 @@ ELSE IF ( ( DOMAIN_DIM == 2 ) .OR. ( DOMAIN_DIM == 3 ) ) THEN
 END IF
 
 
-
-
-
-
-
 END SUBROUTINE CFA_Solve
+
+
+
+
+
 
 
 
@@ -782,7 +789,7 @@ END IF
 
 
 
-
+PRINT*,"In OUTPUT_ITERATION_REPORT, Before Value Calc"
 deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
 DO i = 0,ITER_REPORT_NUM_SAMPLES
 
@@ -796,7 +803,7 @@ DO i = 0,ITER_REPORT_NUM_SAMPLES
                                     Return_Beta1, Return_Beta2, Return_Beta3    )
 
     ! Determine the Newtonian Potential at the location r, theta, phi
-    Analytic_Val = Analytic_Solution(r,theta,phi)
+    Analytic_Val = Potential_Solution(r,theta,phi)
 
 
     ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
@@ -889,7 +896,7 @@ DO i = 0,ITER_REPORT_NUM_SAMPLES
                                     Return_Beta1, Return_Beta2, Return_Beta3    )
 
     ! Determine the Newtonian Potential at the location r, theta, phi
-    Analytic_Val = Analytic_Solution(r,theta,phi)
+    Analytic_Val = Potential_Solution(r,theta,phi)
 
 
     ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)

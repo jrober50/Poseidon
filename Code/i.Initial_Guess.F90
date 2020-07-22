@@ -7,9 +7,6 @@ MODULE Initial_Guess_Module                                                     
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
-!##!        Contains the functions used to calculate the components of the          !##!
-!##!    extended Jacobian matrix as well as the derivative coefficients. These      !##!
-!##!    are used to construct the stiffness matrix.                                 !##!
 !##!                                                                                !##!
 !##!================================================================================!##!
 !##!                                                                                !##!
@@ -45,8 +42,10 @@ USE Poseidon_Parameters, &
 
 USE DRIVER_Parameters, &
                         ONLY :  myID,                   &
-                                Analytic_Solution,      &
-                                Shift_Solution
+                                Potential_Solution,     &
+                                Shift_Solution,         &
+                                Potential_Sol_Flag,     &
+                                Shift_Sol_Flag
 
 USE Poseidon_Variables_Module, &
                         ONLY :  NUM_R_ELEMENTS,         &
@@ -58,7 +57,7 @@ USE Driver_Additional_Functions_Module, &
                         ONLY :  Map_From_X_Space,                       &
                                 Initialize_LGL_Quadrature_Locations
 
-USE IO_Functions_Module, &
+USE Poseidon_IO_Module, &
                         ONLY :  OPEN_EXISTING_FILE
 
 
@@ -204,14 +203,14 @@ DO re = 0,NUM_R_ELEMENTS - 1
         CUR_PSI_LOC = Matrix_Location( 1, 0, 0, re, d )
         Coefficient_Vector(CUR_PSI_LOC) = 2.0_idp * sqrt(pi)                                        &
                                         * ( 1.0_idp - 0.5_idp                                       &
-                                            * Analytic_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
+                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
 
 
 
         CUR_ALPHPSI_LOC = Matrix_Location( 2, 0, 0, re, d )
         Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)                                    &
                                         * ( 1.0_idp + 0.5_idp                                       &
-                                            * Analytic_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
+                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
 
 
         CUR_SHIFT_LOC = Matrix_Location( 3, 0, 0, re, d )
@@ -275,6 +274,33 @@ CLOSE(FILE_ID)
 END SUBROUTINE Load_Initial_Guess_From_File
 
 
+
+
+
+
+
+
+
+
+!+401+###########################################################################!
+!                                                                                !
+!                  CALC_SHIFT_BC_VALUE                                           !
+!                                                                                !
+!################################################################################!
+SUBROUTINE CALC_SHIFT_BC_VALUE()
+
+
+
+IF ( Shift_Sol_Flag .eqv. .FALSE. ) THEN
+    IF ( Potential_Sol_Flag .eqv. .FALSE. ) THEN
+
+        
+
+
+    END IF
+END IF
+
+END SUBROUTINE CALC_SHIFT_BC_VALUE
 
 
 

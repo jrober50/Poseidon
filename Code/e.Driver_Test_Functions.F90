@@ -58,7 +58,7 @@ USE DRIVER_Parameters, &
                         myID_Phi,                               &
                         POWER_A,                                &
                         RHO_O,                                  &
-                        Analytic_Solution,                      &
+                        Potential_Solution,                      &
                         Shift_Solution,                         &
                         SELFSIM_T,                              &
                         SELFSIM_KAPPA,                          &
@@ -262,7 +262,7 @@ IF (Test_Number .EQ. 1) THEN
     Input_Si = 0.0_idp
 
 
-    Analytic_Solution => Test_Spherical_Symmetry_No_Surface
+    Potential_Solution => Test_Spherical_Symmetry_No_Surface
 
 
 
@@ -275,7 +275,7 @@ ELSE IF (Test_Number == 2) THEN
 
 
 
-    Analytic_Solution => Test_Chimera_Simulated_Potential
+    Potential_Solution => Test_Chimera_Simulated_Potential
     Shift_Solution => Test_Chimera_Simulated_Shift
 
     Input_E = DRIVER_E
@@ -297,7 +297,7 @@ ELSE IF ( Test_Number == 3) THEN
 
 
 
-    Analytic_Solution => SELFSIM_NEWT_SOL
+    Potential_Solution => SELFSIM_NEWT_SOL
     Shift_Solution => SELFSIM_SHIFT_SOL
 
 

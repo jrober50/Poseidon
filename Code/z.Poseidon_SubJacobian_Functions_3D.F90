@@ -294,21 +294,18 @@ END SUBROUTINE Calc_EQ1_SubJacobian
 !                                                                                !
 !################################################################################!
 SUBROUTINE Calc_EQ2_SubJacobian( SubJacobian_EQ2_Term,                              &
-                                 SubJacobian_EQ1_Term,                              &
                                  re, te, pe,                                        &
                                  td, pd, tpd, rd,                                   &
                                  CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
                                  SIN_SQUARE, CSC_SQUARE,                            &
                                  PSI_POWER, ALPHAPSI_POWER,                         &
+                                 CUR_VAL_BETA, CUR_DRV_BETA,                        &
                                  JCBN_BIGK_VALUE                                    )
+
 
 REAL(KIND = idp), INTENT(INOUT), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
                                             1:NUM_R_QUAD_POINTS,    &
                                             1:14                    )   ::  SubJacobian_EQ2_Term
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(    1:NUM_TP_QUAD_POINTS,   &
-                                            1:NUM_R_QUAD_POINTS,    &
-                                            1:14                    )   ::  SubJacobian_EQ1_Term
 
 INTEGER, INTENT(IN)                                                     ::  re, te, pe
 INTEGER, INTENT(IN)                                                     ::  td, pd, tpd, rd
@@ -327,15 +324,22 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_T_QUAD_POINTS)            ::  SIN_
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:11)                           ::  PSI_POWER
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:4)                            ::  ALPHAPSI_POWER
 
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
+                                         1:NUM_R_QUAD_POINTS,   &
+                                         1:3                    )       ::  CUR_VAL_BETA
+
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
+                                         1:NUM_R_QUAD_POINTS,   &
+                                         1:3, 1:3               )       ::  CUR_DRV_BETA
 
 
 REAL(KIND = idp), INTENT(IN)                                            ::  JCBN_BIGK_VALUE
 
 
 
+REAL(KIND = idp)                                                        ::  REUSED_VALUE
 
-
-
+REUSED_VALUE = (-7.0_idp* PSI_POWER(6))/(16.0_idp* ALPHAPSI_POWER(1) )
 
 
 
@@ -358,18 +362,92 @@ SubJacobian_EQ2_Term(tpd, rd, 2) = -TwoPi * PSI_POWER(4)                        
                                         * PSI_POWER(5)/ALPHAPSI_POWER(2)                        &
                                         * JCBN_BIGK_VALUE
 
+
+
+
+! d F_2 / d u_3
+! Reused_Value * kappa_{10}
+SubJacobian_EQ2_Term( tpd, rd, 3) = REUSED_VALUE * FourThirds                               &
+                        * ( 2.0_idp / R_SQUARE(rd)           * CUR_VAL_BETA(tpd, rd, 1 )      &
+                        + COTAN_VAL(td) /CUR_R_LOCS(rd)      * CUR_VAL_BETA(tpd, rd, 2 )      &
+                        - 2.0_idp/CUR_R_LOCS(rd)             * CUR_DRV_BETA(tpd, rd, 1,1 )    &
+                        + 1.0_idp/CUR_R_LOCS(rd)             * CUR_DRV_BETA(tpd, rd, 2,2 )    &
+                        + 1.0_idp/CUR_R_LOCS(rd)             * CUR_DRV_BETA(tpd, rd, 3,3 )    )
 !  F_2 / d u_3
-SubJacobian_EQ2_Term(tpd, rd, 3:6) = -7.0_idp * ( ALPHAPSI_POWER(1)/PSI_POWER(1) )              &
-                                        * SubJacobian_EQ1_Term(tpd, rd, 3:6)
+! Reused_Value * kappa_{11}
+SubJacobian_EQ2_Term( tpd, rd, 4) = REUSED_VALUE * FourThirds                              &
+                        * ( - 2.0_idp /CUR_R_LOCS(rd)       * CUR_VAL_BETA(tpd, rd, 1 )      &
+                        - COTAN_VAL(td)                     * CUR_VAL_BETA(tpd, rd, 2 )      &
+                        + 2.0_idp                           * CUR_DRV_BETA(tpd, rd, 1,1 )    &
+                        - 1.0_idp                           * CUR_DRV_BETA(tpd, rd, 2,2 )    &
+                        - 1.0_idp                           * CUR_DRV_BETA(tpd, rd, 3,3 )    )
+!  F_2 / d u_3
+! Reused_Value * kappa_{12}
+SubJacobian_EQ2_Term( tpd, rd, 5) = REUSED_VALUE                                           &
+                        * ( 2.0_idp / R_SQUARE(rd)      * CUR_DRV_BETA(tpd, rd, 2,1 )        &
+                        + 2.0_idp                       * CUR_DRV_BETA(tpd, rd, 1,2 )    )
+!  F_2 / d u_3
+! Reused_Value * kappa_{13}
+SubJacobian_EQ2_Term( tpd, rd, 6) = REUSED_VALUE                                           &
+                        * ( 2.0_idp/RSIN_SQUARE(td, rd)      * CUR_DRV_BETA(tpd, rd, 3,1 )    &
+                        + 2.0_idp                           * CUR_DRV_BETA(tpd, rd, 1,3 )    )
 
 
+
+
+
+!  F_2 / d u_4
+! Reused_Value * kappa_{20}
+SubJacobian_EQ2_Term( tpd, rd, 7) = REUSED_VALUE * FourThirds * COTAN_VAL(td)                      &
+                                    * ( 1.0_idp / CUR_R_LOCS(rd)    * CUR_VAL_BETA(tpd, rd, 1 )      &
+                                      + 2.0_idp                     * CUR_VAL_BETA(tpd, rd, 2 )      &
+                                      - 1.0_idp                     * CUR_DRV_BETA(tpd, rd, 2,2 )    &
+                                      + 2.0_idp                     * CUR_DRV_BETA(tpd, rd, 3,3 )    )
 ! F_2 / d u_4
-SubJacobian_EQ2_Term(tpd, rd, 7:10) = -7.0_idp * ( ALPHAPSI_POWER(1)/PSI_POWER(1) )             &
-                                        * SubJacobian_EQ1_Term(tpd, rd, 7:10)
+! Reused_Value * kappa_{21}
+SubJacobian_EQ2_Term( tpd, rd, 8) = REUSED_VALUE                                                   &
+                                    * ( 2.0_idp * R_SQUARE(rd)      * CUR_DRV_BETA(tpd, rd, 1,2 )    &
+                                        + 2.0_idp                   * CUR_DRV_BETA(tpd, rd, 2,1 )    )
+! F_2 / d u_4
+! Reused_Value * kappa_{22}
+SubJacobian_EQ2_Term( tpd, rd, 9) = REUSED_VALUE * FourThirds                                      &
+                                * ( 1.0_idp /CUR_R_LOCS(rd)         * CUR_VAL_BETA(tpd, rd, 1 )      &
+                                    - COTAN_VAL(td)                 * CUR_VAL_BETA(tpd, rd, 2 )      &
+                                    - 1.0_idp                       * CUR_DRV_BETA(tpd, rd, 1,1 )    &
+                                    + 2.0_idp                       * CUR_DRV_BETA(tpd, rd, 2,2 )    &
+                                    - 1.0_idp                       * CUR_DRV_BETA(tpd, rd, 3,3 )    )
+! F_2 / d u_4
+! Reused_Value * kappa_{23}
+SubJacobian_EQ2_Term( tpd, rd, 10) = REUSED_VALUE                                                   &
+                                    * ( 2.0_idp * CSC_SQUARE(td)    * CUR_DRV_BETA(tpd, rd, 3,2 )    &
+                                        + 2.0_idp                   * CUR_DRV_BETA(tpd, rd, 2,3 )    )
+
+
 
 ! F_2 / d u_5
-SubJacobian_EQ2_Term(tpd, rd, 11:14) = -7.0_idp * ( ALPHAPSI_POWER(1)/PSI_POWER(1) )            &
-                                        * SubJacobian_EQ1_Term(tpd, rd, 11:14)
+! Reused_Value * kappa_{30}
+SubJacobian_EQ2_Term( tpd, rd, 11) = 0.0_idp
+
+! F_2 / d u_5
+! Reused_Value * kappa_{31}
+SubJacobian_EQ2_Term( tpd, rd, 12) = REUSED_VALUE                                           &
+                        * ( 2.0_idp * RSIN_SQUARE(td, rd)   * CUR_DRV_BETA(tpd, rd, 1,3 )    &
+                            + 2.0_idp                       * CUR_DRV_BETA(tpd, rd, 3,1 )    )
+
+! F_2 / d u_5
+! Reused_Value * kappa_{32}
+SubJacobian_EQ2_Term( tpd, rd, 13) = REUSED_VALUE                                           &
+                        * ( 2.0_idp * SIN_SQUARE(td)    * CUR_DRV_BETA(tpd, rd, 2,3 )        &
+                            + 2.0_idp                   * CUR_DRV_BETA(tpd, rd, 3,2 )        )
+
+! F_2 / d u_5
+! Reused_Value * kappa_{33}
+SubJacobian_EQ2_Term( tpd, rd, 14) = REUSED_VALUE * FourThirds                              &
+                        * ( 1.0_idp /CUR_R_LOCS(rd)         * CUR_VAL_BETA(tpd, rd, 1 )      &
+                            + 2.0_idp * COTAN_VAL(td)       * CUR_VAL_BETA(tpd, rd, 2 )      &
+                            - 1.0_idp                       * CUR_DRV_BETA(tpd, rd, 1,1 )    &
+                            - 1.0_idp                       * CUR_DRV_BETA(tpd, rd, 2,2 )    &
+                            + 2.0_idp                       * CUR_DRV_BETA(tpd, rd, 3,3 )    )
 
 
 

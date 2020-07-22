@@ -34,8 +34,7 @@ USE DRIVER_PARAMETERS,  &
                     SELFSIM_R_VALS,     &
                     SELFSIM_POT_VALS,   &
                     SELFSIM_SHIFT_VALs, &
-                    SELFSIM_V_SWITCH,   &
-                    Analytic_Solution
+                    SELFSIM_V_SWITCH
 
 
 IMPLICIT NONE
@@ -192,7 +191,7 @@ Enclosed_Mass = kappa**(1.50_idp)                                   &
 
 
 
-IF ( .TRUE. ) THEN
+IF ( .FALSE. ) THEN
 
     PRINT*,"Using Yahil self-similar profile with following parameters."
     PRINT*,"Time = ",t," s"
@@ -257,209 +256,6 @@ END SUBROUTINE UNPACK_SELF_SIMILAR
 
 
 
-
-
-
-
-
-!+201+###########################################################################!
-!                                                                                !
-!                  CONVERT_SELF_SIMILAR                                          !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CONVERT_SELF_SIMILAR( t, kappa, gamma, ecc,                      &
-                                 Num_Nodes, NUM_LINES,                      &
-                                 INPUT_R_QUAD, INPUT_T_QUAD,                &
-                                 NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,        &
-                                 Delta_R, r_locs, t_locs,                   &
-                                 Input_R, Input_D, Input_V,                 &
-                                 Input_E, Input_S, Input_Si                 )
-
-
-REAL(KIND = idp),               INTENT(IN)                                  ::  t, kappa, gamma, ecc
-INTEGER,    DIMENSION(1:3),     INTENT(IN)                                  ::  Num_Nodes
-INTEGER,    INTENT(IN)                                                      ::  Num_LINES
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(2)),INTENT(IN)                      ::  INPUT_T_QUAD
-
-INTEGER,                        INTENT(IN)                                  ::  NUM_R_ELEM
-INTEGER,                        INTENT(IN)                                  ::  NUM_T_ELEM
-INTEGER,                        INTENT(IN)                                  ::  NUM_P_ELEM
-
-REAL(KIND = idp), DIMENSION(NUM_R_ELEM), INTENT(IN)                         ::  Delta_R
-REAL(KIND = idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
-REAL(KIND = idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                       ::  t_locs
-
-
-REAL(KIND = idp), DIMENSION(1:NUM_LINES), INTENT(IN)                                    ::  Input_R,    &
-                                                                                            Input_D,    &
-                                                                                            Input_V
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),               &
-                            0:NUM_R_ELEM-1, 0:NUM_T_ELEM-1, 0:NUM_P_ELEM-1    ),    &
-                            INTENT(INOUT)                                               ::  Input_E
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),               &
-                            0:NUM_R_ELEM-1, 0:NUM_T_ELEM-1, 0:NUM_P_ELEM-1    ),    &
-                            INTENT(INOUT)                                               ::  Input_S
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),               &
-                            0:NUM_R_ELEM-1, 0:NUM_T_ELEM-1, 0:NUM_P_ELEM-1,         &
-                            1:3 ),  INTENT(INOUT)                                       ::  Input_Si
-
-
-
-INTEGER                                                                     ::  re, te, pe, &
-                                                                                rd, td, pd
-
-
-
-INTEGER                                                                     ::  nd, line, line_min
-REAL(KIND = idp), DIMENSION(0:1)                                            ::  xlocs
-REAL(KIND = idp)                                                            ::  x
-REAL(KIND = idp)                                                            ::  Density, Velocity
-
-REAL(KIND = idp)                                                            ::  Pressure, Energy
-REAL(KIND = idp)                                                            ::  vsqr, LF_sqr
-REAL(KIND = idp)                                                            ::  E, Si, S
-
-REAL(KIND = idp), DIMENSION(0:1)                                            :: LagPoly_Vals
-REAL(KIND = idp), DIMENSION(0:NUM_NODES(1)-1)                               :: CUR_R_LOCS
-REAL(KIND = idp)                                                            :: deltar_overtwo
-
-REAL(KIND = idp)                                                            :: D_FACTOR, V_FACTOR
-REAL(KIND = idp)                                                            :: r_Cur
-
-
-REAL(KIND = idp)                                                            :: csqr
-REAL(KIND = idp)                                                            :: Specific_Enthalpy
-
-110 FORMAT (11X,A1,24X,A2,22X,A2,20X,A7,14X,A17,11X,A8,16X,A6)
-111 FORMAT (11X,A1,24X,A1,22X,A2,22X,A1,22X,A3)
-112 FORMAT (11X,A1,23X,A3,17X,A8)
-
-113 FORMAT (E22.15,3X,E22.15,3X,E22.15,3X,E22.15,3X,E22.15,3X,E22.15,3X,E22.15)
-114 FORMAT (E22.15,3x,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
-115 FORMAT (E22.15,3X,ES22.15,3X,ES22.15)
-
-xlocs(0) = -1.0_idp
-xlocs(1) = 1.0_idp
-
-csqr = Speed_Of_Light*Speed_Of_Light
-
-D_FACTOR = 1.0_idp /(Grav_Constant_G*t*t )
-
-V_FACTOR = SQRT(kappa)                          &
-         * Grav_Constant_G**((1.0_idp-gamma)/2)  &
-         * t**(1.0_idp - gamma)
-
-!PRINT*,"D_FACTOR",D_FACTOR,"V_FACTOR",V_FACTOR
-
-r_cur = 0.0_idp
-line_min = 1
-
-
-OPEN( UNIT = 42, file = 'OUTPUT/Sources.out')
-OPEN( UNIT = 43, file = 'OUTPUT/Base_Sources.out')
-
-
-!WRITE(*,110)"r","Si","S","Density","Specific Enthalpy","Velocity","% of c%"
-WRITE(42,111)"r","E","Si","S","v/c"
-WRITE(43,112)"r","rho","velocity"
-
-
-DO re = 0,NUM_R_ELEM-1
-
-    deltar_overtwo = Delta_R(Re+1)/2.0_idp
-    CUR_R_LOCS(:) = deltar_overtwo * (INPUT_R_QUAD(:)+1.0_idp) + r_cur
-    r_cur = r_cur + Delta_R(re+1)
-
-    DO rd = 0, NUM_NODES(1)-1
-        DO line = line_min,NUM_LINES-1
-
-
-            IF ( ( CUR_R_LOCS(rd) > Input_R(Line) ) .AND. ( CUR_R_LOCS(rd) <= Input_R(Line + 1) ) ) THEN
-
-
-                line_min = line
-                x = MAP_TO_X_SPACE(Input_R(Line),Input_R(Line+1),CUR_R_LOCS(rd))
-
-                LagPoly_Vals = Lagrange_Poly(x, 1, xlocs)
-
-                ! Interpolate Self-Similar Values to Input locations
-                Density = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
-                Velocity = (Input_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
-!                Velocity = 0.0_idp
-!                PRINT*,"Velocity Zeroed"
-
-                ! Calculate Usable Quantities
-                Pressure = kappa * Density**gamma
-                Energy = Pressure/(gamma - 1.0_idp)
-                Specific_Enthalpy = csqr + (Energy + Pressure)/Density
-
-                vsqr = Velocity*Velocity
-                LF_sqr = 1.0_idp/(1.0_idp - vsqr/csqr)
-
-
-                PRINT*,Density,Specific_Enthalpy,LF_sqr, Pressure
-                !  Calculate CFA Input Values
-                E  = Density*Specific_Enthalpy*LF_sqr - Pressure
-                Si = Density*Specific_Enthalpy*LF_sqr*Velocity/csqr
-                S  = Density*Specific_Enthalpy*LF_sqr*vsqr/(csqr) + 3.0_idp * Pressure
-
-
-
-!                Si = 0.0_idp
-!                S  = 0.0_idp  
-!                PRINT*,"*****************  S,Si Zeroed  ********************"
-
-!                WRITE(*,113)CUR_R_LOCS(0),Si, S, Density, Specific_Enthalpy,Velocity,Velocity/Speed_of_Light
-                WRITE(42,114)CUR_R_LOCS(rd),E,Si, S,Velocity/Speed_of_Light
-                WRITE(43,115)CUR_R_LOCS(rd),Density,Velocity
-
-                DO te = 0,NUM_T_ELEM-1
-                    DO pe = 0,NUM_P_ELEM-1
-
-                        DO td = 0,NUM_NODES(2)-1
-                            DO pd = 0,NUM_NODES(3)-1
-
-                                nd = pd*NUM_NODES(2)*NUM_NODES(1)   &
-                                   + td*NUM_NODES(1)                &
-                                   + rd + 1
-
-                                Input_E(nd, re,te,pe) = E
-                                Input_Si(nd, re, te, pe, 1) = Si
-                                Input_Si(nd, re, te, pe, 2) = 0.0_idp
-                                Input_Si(nd, re, te, pe, 3) = 0.0_idp
-                                Input_S(nd, re, te, pe) = S
-
-                            END DO ! pd
-                        END DO ! td
-
-                    END DO ! pe
-                END DO ! te
-
-
-            END IF
-        END DO ! Line
-    END DO ! rd
-END DO ! re
-
-
-!PRINT*,"Input_D"
-!PRINT*,Input_D
-!PRINT*," "
-!PRINT*," "
-!PRINT*,"Input_E"
-!PRINT*,Input_E
-!PRINT*," "
-!PRINT*," "
-!PRINT*,"Input_Si"
-!PRINT*,Input_Si(:,:,:,:,1)
-
-
-
-END SUBROUTINE CONVERT_SELF_SIMILAR
 
 
 
@@ -668,9 +464,6 @@ DO re = 0,NUM_R_ELEM-1
 
             IF ( (rij_Locs(j,i) > r_locs(reb)) .AND. (rij_Locs(j,i) .LE. r_locs(reb+1)) ) THEN
 
-!               Sr_New(j,i) = 1.0_idp/(r_locs(reb+1) - r_locs(reb))               &
-!                           * ( Sr(1,reb,0,0,1)*(r_locs(reb+1) - rij_locs(j,i))   &
-!                              +Sr(1,reb+1,0,0,1)*(rij_locs(j,i) - r_locs(reb))   )
 
                 Sr_New(j,i) = Sr(1,reb,0,0,1)
 
@@ -698,15 +491,13 @@ DO re = 0,NUM_R_ELEM-1
                   * Sr_New(j,i)                               &
                   * wi(j)
 
-!                  PRINT*,"PSI_10",PSI_10(j,i),"Sr_New",Sr_New(j,i),"ri_locs(i)",ri_locs(i)
 
       END DO ! j Loop
 
-!      PRINT*,"Inner Int",Inner_Int*( ri_locs(i) - 0.0_idp)/2.0_idp
 
       Outer_Int = Outer_Int                                       &
                 + AlphaPsi(i)                                     &
-                / (ri_locs(i)*ri_locs(i)*ri_locs(i)*ri_locs(i))   &    ! *** Changed
+                / (ri_locs(i)*ri_locs(i)*ri_locs(i)*ri_locs(i))   &
                 * Inner_Int                                       &
                 * ( ri_locs(i) - 0.0_idp)/2.0_idp                 &
                 * wi(i)
@@ -1053,21 +844,21 @@ CHARACTER(len = 42)                                                         ::  
 
 
 
-File_ID = (/ (i,i=1001,1005) /)
+!File_ID = (/ (i,i=1001,1005) /)
 
 
-WRITE(Density_Filename,'(A35,I5.5,A4)')'OUTPUT/Yahil_Results/Yahil_Density_',Frame_Number,'.out'
-WRITE(RadVel_Filename,'(A34,I5.5,A4)') 'OUTPUT/Yahil_Results/Yahil_RadVel_', Frame_Number,'.out'
-WRITE(Rlocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_rlocs_',  Frame_Number,'.out'
-WRITE(Tlocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_tlocs_',  Frame_Number,'.out'
-WRITE(Plocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_plocs_',  Frame_Number,'.out'
-
-
-OPEN( UNIT = File_ID(1), FILE=Density_Filename   )
-OPEN( UNIT = File_ID(2), FILE=RadVel_Filename    )
-OPEN( UNIT = File_ID(3), FILE=Rlocs_Filename     )
-OPEN( UNIT = File_ID(4), FILE=Tlocs_Filename     )
-OPEN( UNIT = File_ID(5), FILE=Plocs_Filename     )
+!WRITE(Density_Filename,'(A35,I5.5,A4)')'OUTPUT/Yahil_Results/Yahil_Density_',Frame_Number,'.out'
+!WRITE(RadVel_Filename,'(A34,I5.5,A4)') 'OUTPUT/Yahil_Results/Yahil_RadVel_', Frame_Number,'.out'
+!WRITE(Rlocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_rlocs_',  Frame_Number,'.out'
+!WRITE(Tlocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_tlocs_',  Frame_Number,'.out'
+!WRITE(Plocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_plocs_',  Frame_Number,'.out'
+!
+!
+!OPEN( UNIT = File_ID(1), FILE=Density_Filename   )
+!OPEN( UNIT = File_ID(2), FILE=RadVel_Filename    )
+!OPEN( UNIT = File_ID(3), FILE=Rlocs_Filename     )
+!OPEN( UNIT = File_ID(4), FILE=Tlocs_Filename     )
+!OPEN( UNIT = File_ID(5), FILE=Plocs_Filename     )
 
 
 Num_Radial_Points = NUM_R_ELEM*NUM_NODES(1)
@@ -1109,7 +900,6 @@ DO pe = 0,NUM_P_ELEM-1
 
             DO td = 0,NUM_NODES(2)-1
 
-                cos_sqr = COS(CUR_T_LOCS(td))*COS(CUR_T_LOCS(td))
                 sin_sqr = SIN(CUR_T_LOCS(td))*SIN(CUR_T_LOCS(td))
                 line_min = 1
                 DO re = 0,NUM_R_ELEM-1
@@ -1158,7 +948,8 @@ DO pe = 0,NUM_P_ELEM-1
 
                                 !  Calculate CFA Input Values
                                 E  = Density*Specific_Enthalpy*LF_sqr - Pressure
-                                Si = Density*Specific_Enthalpy*LF_sqr*Velocity/csqr
+                                Si = Density*Specific_Enthalpy*LF_sqr*Velocity/Speed_of_Light
+                               ! Si = Density*Specific_Enthalpy*LF_sqr*Velocity/csqr
                                 S  = Density*Specific_Enthalpy*LF_sqr*vsqr/(csqr) + 3.0_idp * Pressure
 
 
@@ -1178,8 +969,8 @@ DO pe = 0,NUM_P_ELEM-1
                     END DO ! rd
                 END DO ! re
 
-                WRITE(File_ID(1),*)Density_Holder
-                WRITE(File_ID(2),*)Velocity_Holder
+!                WRITE(File_ID(1),*)Density_Holder
+!                WRITE(File_ID(2),*)Velocity_Holder
 
 
             END DO ! td
@@ -1187,9 +978,9 @@ DO pe = 0,NUM_P_ELEM-1
     END DO ! pd
 END DO ! pe
 
-WRITE(File_ID(3),*)Radial_Locations
-WRITE(File_ID(4),*)Theta_Locations
-WRITE(File_ID(5),*)pi/2.0_idp
+!WRITE(File_ID(3),*)Radial_Locations
+!WRITE(File_ID(4),*)Theta_Locations
+!WRITE(File_ID(5),*)pi/2.0_idp
 
 END SUBROUTINE CONVERT_SELF_SIMILAR_3D
 

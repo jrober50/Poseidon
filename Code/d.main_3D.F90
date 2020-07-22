@@ -130,7 +130,8 @@ USE Driver_Additional_Functions_Module, &
             ONLY :  Map_From_X_Space,                       &
                     Initialize_LG_Quadrature_Locations
 
-
+USE Poseidon_Parameters, &
+            ONLY :  Poseidon_Frame
 
 
 USE MPI
@@ -476,7 +477,7 @@ ELSE IF ( Problem_Dimension .EQ. 3 ) THEN
     CALL MPI_COMM_SPLIT(MPI_COMM_WORLD, k_block_row, myid_CHIMERA, MPI_COMM_XY, ierr)
     CALL MPI_COMM_RANK(MPI_COMM_XY, myid_theta, ierr)
     CALL MPI_COMM_SIZE(MPI_COMM_XY, num_y_procs, ierr)
-
+    PRINT*,"In Driver, myID_Theta",myID_Theta
 
     CALL MPI_COMM_SPLIT(MPI_COMM_WORLD, j_block_col, myid_CHIMERA, MPI_COMM_XZ, ierr)
     CALL MPI_COMM_RANK(MPI_COMM_XZ, myid_phi, ierr)
@@ -563,7 +564,7 @@ ALLOCATE( Iteration_History(1:DRIVER_TOTAL_FRAMES) )
 
 
 DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
-
+    Poseidon_Frame = Driver_Frame
     CALL OPEN_FRAME_REPORT_FILE(DRIVER_FRAME)
 
 
@@ -573,6 +574,9 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
         SELFSIM_T = (DRIVER_FRAME - 1 )*SELFSIM_DELTA_T + SELFSIM_START_T
         WRITE(*,'(A13,ES17.10,A4)')"Yahil Time = ",SELFSIM_T," ms."
     END IF
+
+
+
 
 
     IF ( TEST_NUM == 2 ) THEN
@@ -605,9 +609,6 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
                              y_e(0:ny), y_c(1:ny), dy_c(1:ny),             &
                              z_e(0:nz), z_c(1:nz), dz_c(1:nz)              )
 
-        OPEN( UNIT = 42, file = 'OUTPUT/R_Mesh.out')
-        WRITE(42,*) x_e
-        CLOSE( UNIT = 42)
 
     END IF
 

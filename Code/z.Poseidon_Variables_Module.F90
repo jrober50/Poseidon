@@ -38,7 +38,9 @@ INTEGER                                     :: NUM_R_ELEMENTS   !! # of Radial E
 INTEGER                                     :: NUM_T_ELEMENTS   !! # of Theta Elements
 INTEGER                                     :: NUM_P_ELEMENTS   !! # of Phi Elements
 
-
+INTEGER                                     :: NUM_LOC_R_ELEMENTS   !! # of Radial Elements
+INTEGER                                     :: NUM_LOC_T_ELEMENTS   !! # of Theta Elements
+INTEGER                                     :: NUM_LOC_P_ELEMENTS   !! # of Phi Elements
 
 CHARACTER(LEN = 3)                          :: PHYSICS_TYPE = 'CFA'     ! NEW - Newton , CFA - CFA
 
@@ -163,6 +165,9 @@ REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  rlocs
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  tlocs
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  plocs
 
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  drlocs
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  dtlocs
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)         ::  dplocs
 
 LOGICAL                                             ::  RADIAL_MESH_SET_FLAG = .FALSE.
 LOGICAL                                             ::  THETA_MESH_SET_FLAG = .FALSE.
@@ -229,6 +234,14 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)  :: Block_RHS_Vector
 
 
 
+
+!===================================================================!
+!                                                                   !
+!   GUESS/BC Variables                                              !
+!                                                                   !
+!===================================================================!
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)     :: NEWTON_SHIFT_VEC
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:,:)   :: NEWTON_POT_VEC
 
 
 
@@ -321,18 +334,12 @@ CHARACTER(LEN = 4)                              :: INNER_BC_TYPE
 LOGICAL                                         :: INNER_BC_SET_FLAG = .FALSE.
 LOGICAL                                         :: INNER_UNIFORM_DIR_BC_FLAG
 
-COMPLEX(KIND = idp)                             :: INNER_DIR_BC_INPUT
-COMPLEX(KIND = idp)                             :: INNER_NEU_BC_INPUT
 
 
 !!! OUTER !!!
 CHARACTER(LEN = 4)                              :: OUTER_BC_TYPE
 LOGICAL                                         :: OUTER_BC_SET_FLAG = .FALSE.
 LOGICAL                                         :: OUTER_UNIFORM_DIR_BC_FLAG
-
-COMPLEX(KIND = idp)                             :: OUTER_DIR_BC_INPUT
-COMPLEX(KIND = idp)                             :: OUTER_NEU_BC_INPUT
-
 
 
 

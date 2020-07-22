@@ -25,7 +25,7 @@ USE Units_Module, &
 
 
 USE DRIVER_Parameters,  &
-            ONLY :  Analytic_Solution,                                  &
+            ONLY :  Potential_Solution,                                  &
                     Shift_Solution,                                     &
                     Enclosed_Mass,                                      &
                     DRIVER_R_LOCS,                                      &
@@ -33,9 +33,6 @@ USE DRIVER_Parameters,  &
                     myID,                                               &
                     myID_Theta,                                         &
                     myID_Phi,                                           &
-                    Ratio_T_BNDLperBLCK,                                &
-                    Ratio_P_BNDLperBLCK,                                &
-                    Ratio_BNDLperBLCK,                                  &
                     NUM_ENTRIES,                                        &
                     SELFSIM_R_VALS,                                     &
                     SELFSIM_T,                                          &
@@ -67,6 +64,9 @@ USE Poseidon_Parameters, &
                     R_COARSEN_FACTOR,                                   &
                     T_COARSEN_FACTOR,                                   &
                     P_COARSEN_FACTOR,                                   &
+                    Ratio_T_BNDLperBLCK,                                &
+                    Ratio_P_BNDLperBLCK,                                &
+                    Ratio_BNDLperBLCK,                                  &
                     SOL_DIST_SCHEME,                                    &
                     WRITE_TIMETABLE_FLAG,                               &
                     WRITE_REPORT_FLAG,                                  &
@@ -104,17 +104,17 @@ USE Poseidon_Variables_Module, &
 
 
 USE Poseidon_Main_Module, &
-            ONLY :  Poseidon_Run,                                       &
+            ONLY :  Poseidon_Initialize,                                &
+                    Poseidon_Run,                                       &
                     Poseidon_Close,                                     &
                     Poseidon_Set_Mesh,                                  &
                     Poseidon_CFA_Set_Uniform_Boundary_Conditions
 
 USE Poseidon_Initialization_Module, &
-            ONLY :  Poseidon_Initialize,                                &
-                    Poseidon_Initialize_From_File
+            ONLY :  Poseidon_Initialize_From_File
 
 
-USE Poseidon_Additional_Functions_Module, &
+USE Poseidon_Calculate_Results_Module, &
             ONLY :  Calc_3D_Values_At_Location
 
 
@@ -127,22 +127,20 @@ USE Driver_Additional_Functions_Module, &
                     Initialize_LG_Quadrature_Locations
 
 
-USE IO_Functions_Module, &
+USE Poseidon_IO_Module, &
             ONLY :  Clock_In,                                           &
                     OUTPUT_ITER_TIMETABLE,                              &
-                    OUTPUT_FINAL_RESULTS
+                    OUTPUT_FINAL_RESULTS,                               &
+                    Write_Shift_1D
 
 USE Poseidon_Parameter_Read_Module, &
             ONLY :  WRITE_CFA_COEFFICIENTS,                             &
                     READ_CFA_COEFFICIENTS 
 
 
-
-USE Jacobian_Internal_Functions_Module, &
-            ONLY :  Calc_Shift_BC_1D,                                   &
-                    Calc_Shift_1D,                                      &
-                    Write_Shift_1D,                                     &
-                    Initialize_Special_Guess_Values
+USE Poseidon_Guess_Module, &
+            ONLY :  Initialize_Special_Guess_Values,                    &
+                    Calc_Shift_1D
 
 
 USE Mesh_Module, &
@@ -150,14 +148,18 @@ USE Mesh_Module, &
                     Create_Logarithmic_1D_Mesh,                         &
                     Create_Split_1D_Mesh
 
+USE Poseidon_BC_Module, &
+            ONLY :  Calc_Shift_BC_1D
 
 
-USE Poseidon_Internal_Communication_Module,                             &
-            ONLY :  Poseidon_CFA_Block_Share,                           &
-                    Poseidon_Distribute_Solution
+USE Poseidon_Source_Module, &
+            ONLY :   Poseidon_Input_Sources
+
+USE Poseidon_Internal_Communication_Module, &
+            ONLY :  Poseidon_Distribute_Solution
 
 
-USE Initial_Guess_Module,                                               &
+USE Initial_Guess_Module, &
             ONLY :  Initialize_Flat_Space_Guess_Values,                 &
                     Initialize_Calculated_Guess_Values,                 &
                     Load_Initial_Guess_From_File
@@ -408,16 +410,13 @@ END IF
 timea = MPI_Wtime()
 
 
-! Poseidon_CFA_Block_Share takes source data and redistributes it into Poseidon's preferred decomposition.
-CALL Poseidon_CFA_Block_Share(  myID, myID_Theta, myID_Phi,                               &
-                                Local_E, Local_S, Local_Si,                               &
-                                nx, ij_ray_dim, ik_ray_dim,                               &
-                                Num_Input_Nodes(1),Num_Input_Nodes(2),Num_Input_Nodes(3), &
-                                Input_R_Quad, Input_T_Quad, Input_P_Quad,                 &
-                                Left_Limit, Right_Limit,                                  &
-                                nx, ny, nz,                                               &
-                                dx_c, dy_c(1:ny), dz_c(1:nz),                             &
-                                Block_Source_E, Block_Source_S, Block_Source_Si           )
+CALL Poseidon_Input_Sources( myID, myID_Theta, myID_Phi,                                &
+                             Local_E, Local_S, Local_Si,                                &
+                             nx, ij_ray_dim, ik_ray_dim,                                &
+                             Num_Input_Nodes(1),Num_Input_Nodes(2),Num_Input_Nodes(3),  &
+                             Input_R_Quad, Input_T_Quad, Input_P_Quad,                  &
+                             Left_Limit, Right_Limit                                    )
+
 
 
 
@@ -449,8 +448,8 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
                            Local_Si, rlocs          )
 
     ! Calculate the Dirichlet Outer Boundary Value for the Lapse Function and Conformal Factor
-    Inner_Potential = Analytic_Solution(rlocs(0), 0.0_idp, 0.0_idp)
-    Outer_Potential = Analytic_Solution(rlocs(NUM_R_ELEMENTS), 0.0_idp, 0.0_idp)
+    Inner_Potential = Potential_Solution(rlocs(0), 0.0_idp, 0.0_idp)
+    Outer_Potential = Potential_Solution(rlocs(NUM_R_ELEMENTS), 0.0_idp, 0.0_idp)
 
 
 
@@ -561,7 +560,7 @@ CALL Clock_In(timea-timeb, 19)
         !!                                       !!
         !                                         !
 IF ( myID == 0 ) THEN
-    CALL Output_Final_Results()
+    
     CALL WRITE_CFA_COEFFICIENTS()
 END IF
 
@@ -880,8 +879,8 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     timea = MPI_Wtime()
 
 
-    Inner_Potential = Analytic_Solution(rlocs(0), 0.0_idp, 0.0_idp)
-    Outer_Potential = Analytic_Solution(rlocs(NUM_R_ELEMENTS), 0.0_idp, 0.0_idp)
+    Inner_Potential = Potential_Solution(rlocs(0), 0.0_idp, 0.0_idp)
+    Outer_Potential = Potential_Solution(rlocs(NUM_R_ELEMENTS), 0.0_idp, 0.0_idp)
 
 !    Inner_Potential = 0.0_idp
 !    Outer_Potential = Grav_Constant_G *Enclosed_Mass(NUM_R_ELEMENTS)            &

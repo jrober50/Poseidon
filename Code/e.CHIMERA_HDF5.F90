@@ -800,7 +800,7 @@ INTEGER                                             ::  File_IDd = 75
 INTEGER                                             ::  File_IDe = 76
 INTEGER                                             ::  File_IDf = 77
 INTEGER                                             ::  File_IDg = 78
-
+INTEGER                                             ::  File_IDh = 79
 
 CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namea
 CHARACTER(LEN = :), ALLOCATABLE                     ::  file_nameb
@@ -809,7 +809,7 @@ CHARACTER(LEN = :), ALLOCATABLE                     ::  file_named
 CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namee
 CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namef
 CHARACTER(LEN = :), ALLOCATABLE                     ::  file_nameg
-
+CHARACTER(LEN = :), ALLOCATABLE                     ::  file_nameh
 
 LOGICAL                                             ::  exist
 INTEGER                                             ::  i, j, k
@@ -824,14 +824,14 @@ INTEGER                                             ::  i, j, k
 
 IF ( SOURCE_OUTPUT_FLAG == 1 ) THEN
 
-    ALLOCATE( character(len=46) :: file_namea )
+    ALLOCATE( character(len=50) :: file_namea )
     ALLOCATE( character(len=48) :: file_nameb )
     ALLOCATE( character(len=49) :: file_namec )
     ALLOCATE( character(len=46) :: file_named )
     ALLOCATE( character(len=46) :: file_namee )
     ALLOCATE( character(len=46) :: file_namef )
     ALLOCATE( character(len=50) :: file_nameg )
-
+    ALLOCATE( character(len=50) :: file_nameh )
 
     WRITE(file_namea,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Lapse_',file_number,'.out'
     WRITE(file_nameb,'(A39,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Density_',file_number,'.out'
@@ -909,18 +909,19 @@ END IF
 
 
 
-WRITE(file_namea,'(A45)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Frame_Time.out'
-inquire(file = file_namea, exist=exist)
 
-IF (( exist ) .AND. (file_number .NE. 1 )) THEN
-    OPEN(unit = file_ida,file = file_namea,status="old",position="append", action="write" )
-    WRITE(file_ida,'(I5.5,E22.15)') file_number, time
-    CLOSE(unit=file_ida)
-ELSE
-    OPEN(unit = file_ida,file = file_namea)
-    WRITE(file_ida,'(I5.5,E22.15)') file_number, time
-    CLOSE(unit=file_ida)
-END IF
+!WRITE(file_nameh,'(A)') 'OUTPUT/Poseidon_Results/Frame_Time.out'
+!inquire(file = file_nameh, exist=exist)
+!
+!IF (( exist ) .AND. (file_number .NE. 1 )) THEN
+!    OPEN(unit = file_idh,file = file_nameh,status="old",position="append", action="write" )
+!    WRITE(file_idh,'(I5.5,E22.15)') file_number, time
+!    CLOSE(unit=file_idh)
+!ELSE
+!    OPEN(unit = file_idh,file = file_nameh)
+!    WRITE(file_idh,'(I5.5,E22.15)') file_number, time
+!    CLOSE(unit=file_idh)
+!END IF
 
 END SUBROUTINE WRITE_CHIMERA_OUTPUT
 

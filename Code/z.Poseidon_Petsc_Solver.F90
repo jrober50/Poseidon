@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Poseidon_Petsc_Solver                                                        !##!
+MODULE Poseidon_PETSc_Solver                                                        !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -82,8 +82,9 @@ USE Poseidon_Variables_Module, &
                                         myShell,                    &
                                         Update_Vector
 
-USE IO_Functions_Module,    &
-                                ONLY :  OUTPUT_PETSC_REPORT
+USE Poseidon_IO_Module,    &
+                                ONLY :  OUTPUT_PETSC_REPORT,        &
+                                        OPEN_NEW_FILE
 
 #include <petsc/finclude/petscsys.h>
 #include <petsc/finclude/petscksp.h>
@@ -139,14 +140,16 @@ PetscScalar                     ::   Petsc_MatValues(0:ELEM_PROB_DIM-1)
 PetscScalar                     ::   Petsc_SourceValues(0:Local_Length-1)
 
 PetscScalar                     ::   Sol_Vec(0:Local_Length-1)
+PetscScalar                     ::   Test_Vec(0:Local_Length-1)
 PetscInt                        ::   ncols
 
-Vec                             ::   Source, Solution
+Vec                             ::   Source, Solution, Test
 Mat                             ::   Stiffness
 KSP                             ::   ksp
 PC                              ::   pc
 
 PetscErrorCode                  ::   jerr
+INTEGER                         ::   ierr
 
 INTEGER                         ::   Block_Re, Global_re
 INTEGER                         ::   Gm, Gn, Lm, Ln, SRC_G, SRC_L, SOL_G, SOL_L
@@ -159,17 +162,27 @@ INTEGER                         ::   Start_Here_b, End_Here_b
 INTEGER                         ::   Local_Length_RHS
 
 
+
+INTEGER                         ::  q
+CHARACTER(LEN = 40)             ::  fmt
+CHARACTER(LEN = 57)             ::  FILE_NAME
+INTEGER                         ::  FILE_ID
+
+
+LOGICAL                         :: MPI_FLAG
+
+
+
+
+
 IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
-
     CALL MPI_COMM_DUP(POSEIDON_COMM_PETSC, PETSC_COMM_WORLD, jerr)
-
 
     CALL PetscInitialize(PETSC_NULL_CHARACTER, jerr)
     IF (jerr .ne. 0 ) THEN
         PRINT*,"Unable to Initialize PETSc"
     END IF
-
 
 
 !
@@ -184,11 +197,9 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 !       Local_Length = SUBSHELL_PROB_DIM - ULM_LENGTH
 !    END IF
 
-
     ALLOCATE( Index_Array_Sol(0:Local_Length-1) )
     ALLOCATE( on_diag_nnz(0:Local_Length-1), off_diag_nnz(0:Local_Length-1) )
     ALLOCATE( Index_Array_RHS(0:Local_Length_RHS-1) )
-
 
 
     !
@@ -197,7 +208,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     CALL VecCreateMPI(POSEIDON_COMM_PETSC, Local_Length, PROB_DIM, Source, jerr)
     CALL VecSetFromOptions( Source, jerr)
     CALL VecDuplicate(Source, Solution, jerr)
-
+    CALL VecDuplicate(Source, Test, jerr)
 
 
     ! Crete Index_Array specifying where values go in the PETSc Vector
@@ -210,13 +221,11 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     end_here=start_here + Local_Length_RHS - 1
 
 
-
     CALL VecSetValues(Source, Local_Length_RHS, Index_Array_RHS,              &
                       Block_RHS_VECTOR(START_HERE:END_HERE), ADD_VALUES, jerr)
 
     CALL VecAssemblyBegin(Source, jerr)
     CALL VecAssemblyEnd(Source, jerr)
-
 
 
 
@@ -318,7 +327,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
 
-
     IF (nPROCS_PETSC == 1 ) THEN
 
         CALL MatSeqAIJSetPreallocation(Stiffness, 0, on_diag_nnz(0:Local_Length-1), jerr)
@@ -328,7 +336,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
         CALL MatMPIAIJSetPreallocation(Stiffness, 0, on_diag_nnz(0:Local_Length-1),       &
                                                   0, off_diag_nnz(0:Local_Length-1), jerr)
     END IF 
-
 
 
 
@@ -372,7 +379,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
     matset_time =timeb-timea
-
 
 
 
@@ -445,7 +451,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
 
-
     !   Create Solver
     !
     CALL KSPCreate(POSEIDON_COMM_PETSC,ksp, jerr)
@@ -459,7 +464,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 !    CALL KSPSetType(ksp, KSPPREONLY, jerr)
 
     CALL KSPSetFromOptions(ksp, jerr)
-
 
 
 
@@ -478,19 +482,33 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
 
-
     IF ( myID_Poseidon == 0 ) THEN
-
+        
         CALL OUTPUT_PETSC_REPORT(matset_time, solve_time, Iter_Count,   &
                                  rtol, abstol, dtol, maxits             )
 
     END IF
 
 
-
-
-
-
+!    !
+!    !   Test Results
+!    !
+!    IF ( .FALSE. ) THEN
+!
+!        CALL MatMult(Stiffness,Solution, Test, jerr)
+!        Start_Here = myID_PETSc*Length_Val_a*NUM_R_ELEMS_PER_SUBSHELL
+!        End_Here = Start_Here + Local_Length-1
+!        Index_Array_Sol = (/ (i, i=Start_Here,End_Here,1)/)
+!
+!        CALL VecGetValues(Test, Local_Length, Index_Array_Sol, Test_Vec, jerr )
+!        WRITE(FILE_NAME,'(A)')"OUTPUT/Poseidon_Objects/Linear_System/Petsc_Check.out"
+!        CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+!
+!        fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!        DO q = 0,Local_Length-1
+!            WRITE(FILE_ID,fmt) Test_Vec(q)
+!        END DO
+!    END IF
     !
     !   Retrieve Solution
     !
@@ -504,7 +522,6 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     ! Put Solution into Update Vector
     Update_Vector = 0.0_idp
     Update_Vector(Start_Here:End_Here) = Sol_Vec
-
 
 
 
@@ -545,4 +562,4 @@ END SUBROUTINE PETSC_Distributed_Solve
 
 
 
-END MODULE Poseidon_Petsc_Solver
+END MODULE Poseidon_PETSc_Solver

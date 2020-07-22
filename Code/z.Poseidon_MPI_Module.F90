@@ -55,6 +55,9 @@ USE Poseidon_Variables_Module,            &
                     NUM_R_ELEMENTS,             &
                     NUM_T_ELEMENTS,             &
                     NUM_P_ELEMENTS,             &
+                    NUM_LOC_R_ELEMENTS,         &
+                    NUM_LOC_T_ELEMENTS,         &
+                    NUM_LOC_P_ELEMENTS,         &
                     POSEIDON_COMM_WORLD,        &
                     POSEIDON_COMM_DIST,         &
                     POSEIDON_COMM_SHELL,        &
@@ -115,8 +118,6 @@ INTEGER                                             ::  here
 ALLOCATE(   Block_Array(0:NUM_BLOCKS_PER_SHELL-1)   )
 ALLOCATE(   Shell_Array(0:NUM_SUBSHELLS-1)             )
 ALLOCATE(   Workers_Array(0:nPROCS_POSEIDON-1)      )
-
-
 
 
 myID_Poseidon = -1
@@ -235,8 +236,7 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
         CALL MPI_COMM_SIZE(POSEIDON_COMM_SHELL, nPROCS_SHELL, ierr)
 
 
-        PRINT*,myID_Poseidon, myID_Shell
-
+   
 
         !
         !   Create Communicator for Distributed Solver

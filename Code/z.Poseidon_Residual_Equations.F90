@@ -127,17 +127,9 @@ USE Poseidon_Variables_Module, &
 
 
 USE DRIVER_Parameters,  &
-                    ONLY :  Analytic_Solution,                              &
-                            Shift_Solution,                                 &
-                            myID,                                           &
-                            SOURCE_OUTPUT_FLAG,                             &
-                            RESULTS_OUTPUT_FLAG,                            &
-                            RUN_REPORT_FLAG,                                &
-                            FRAME_REPORT_FLAG,                              &
-                            DRIVER_TEST_NUMBER,                             &
-                            DRIVER_FRAME
+                    ONLY :  DRIVER_FRAME
 
-USE IO_Functions_Module, &
+USE Poseidon_IO_Module, &
                     ONLY :  OPEN_NEW_FILE
 
 USE Poseidon_Mapping_Functions_Module, &
@@ -957,15 +949,15 @@ COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Local_Coeffi
 !$OMP PARALLEL DEFAULT(none)                                            &
 !$OMP PRIVATE( tpd, rd, l, m, d, ui,                                    &
 !$OMP           TMP_U_Value, Tmp_U_R_DRV_Value, Tmp_U_T_DRV_Value,      &
-!$OMP           Tmp_U_P_DRV_Value, Tmp_U_RR_DDRV_Value,                 &
+!$OMP           Tmp_U_P_DRV_Value,                                      &
 !$OMP           local_coefficients,                                     &
-!$OMP           lm_loc, Current_Location                            )   &
+!$OMP           Here, There,                                            &
+!$OMP           lm_loc                                              )   &
 !$OMP SHARED( re, te, pe,                                               &
 !$OMP           DEGREE,                                                 &
-!$OMP           NUM_P_QUAD_POINTS, NUM_T_QUAD_POINTS, NUM_R_QUAD_POINTS,&
+!$OMP           NUM_TP_QUAD_POINTS, NUM_R_QUAD_POINTS,                  &
 !$OMP           CUR_VAL_PSI, CUR_VAL_ALPHAPSI, CUR_VAL_BETA,            &
 !$OMP           CUR_DRV_PSI, CUR_DRV_ALPHAPSI, CUR_DRV_BETA,            &
-!$OMP           CUR_DDRV_BETA,                                          &
 !$OMP           CUR_R_LOCS, CUR_T_LOCS, CUR_P_LOCS,                     &
 !$OMP           R_SQUARE,                                               &
 !$OMP           SIN_VAL,                                                &

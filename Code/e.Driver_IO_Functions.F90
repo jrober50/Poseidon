@@ -39,7 +39,7 @@ USE Driver_Parameters,  &
                 DRIVER_INNER_RADIUS,                            &
                 DRIVER_OUTER_RADIUS,                            &
                 DRIVER_TOTAL_FRAMES,                            &
-                Analytic_Solution,                              &
+                Potential_Solution,                              &
                 myID,                                           &
                 Iteration_History
 
@@ -109,6 +109,14 @@ USE Poseidon_Variables_Module, &
 USE Mesh_Module, &
                         ONLY  : Create_Logarithmic_1D_Mesh
 
+USE Poseidon_IO_Parameters, &
+                    ONLY :  Poseidon_Reports_Dir,                           &
+                            Poseidon_IterReports_Dir,                       &
+                            Poseidon_Objects_Dir,                           &
+                            Poseidon_LinSys_Dir,                            &
+                            Poseidon_Results_Dir,                           &
+                            Poseidon_Sources_Dir
+
 IMPLICIT NONE
 
 CONTAINS
@@ -120,13 +128,13 @@ CONTAINS
  !#################################################################################!
 SUBROUTINE OPEN_RUN_REPORT_FILE()
 
-CHARACTER(LEN = 22)                                     ::  FILE_NAME
+CHARACTER(LEN = 39)                                     ::  FILE_NAME
 INTEGER                                                 ::  istat
 LOGICAL                                                 ::  FLAG, OK
 
 
 IF ( RUN_REPORT_FLAG == 1 ) THEN
-    WRITE(FILE_NAME,'(A)')"OUTPUT/Run_Report.out"
+    WRITE(FILE_NAME,'(A,A)') Poseidon_Reports_Dir,"Run_Report.out"
     CALL OPEN_NEW_FILE( FILE_NAME, RUN_REPORT_FILE_ID )
 END IF
 
@@ -359,7 +367,7 @@ SUBROUTINE OPEN_FRAME_REPORT_FILE(Frame)
 
 INTEGER, INTENT(IN)                                     ::  Frame
 
-CHARACTER(LEN = 53)                                     ::  FILE_NAME
+CHARACTER(LEN = 70)                                     ::  FILE_NAME
 INTEGER                                                 ::  istat
 LOGICAL                                                 ::  FLAG, OK
 
@@ -370,7 +378,7 @@ LOGICAL                                                 ::  FLAG, OK
 IF ( myID == 0 ) THEN
     IF ( FRAME_REPORT_FLAG == 1 ) THEN
 
-        WRITE(FILE_NAME,'(A)')"OUTPUT/Iteration_Reports/Frame_Report_SCRATCH.out"
+        WRITE(FILE_NAME,'(A,A)') Poseidon_IterReports_Dir,"Frame_Report_SCRATCH.out"
         CALL OPEN_NEW_FILE( FILE_NAME, FRAME_REPORT_FILE_ID )
 
     END IF ! WRITE_REPORT_FLAGS
@@ -403,7 +411,7 @@ REAL(KIND = idp)                                        ::  Return_Psi, Return_A
 REAL(KIND = idp)                                        ::  Return_Beta1, Return_Beta2, Return_Beta3
 REAL(KIND = idp)                                        ::  PsiPot_Val, AlphaPsiPot_Val
 
-CHARACTER(LEN = 53)                                     ::  FILE_NAME
+CHARACTER(LEN = 70)                                     ::  FILE_NAME
 
 CHARACTER(LEN = 300)                                    ::  Line
 INTEGER                                                 ::  io_stat
@@ -412,9 +420,9 @@ INTEGER                                                 ::  ITER_REPORT_NUM_SAMP
 REAL(KIND = idp), DIMENSION(1:25)                       ::  Time_Table
 
 
-120 FORMAT (12X,A61)
+120 FORMAT (12X,A)
 121 FORMAT (A1)
-122 FORMAT (A41,I2.2)
+122 FORMAT (A,I2.2)
 123 FORMAT (12X,A38,ES22.15)
 
 109 FORMAT (A,I2.2,A,I2.2)
@@ -422,7 +430,7 @@ REAL(KIND = idp), DIMENSION(1:25)                       ::  Time_Table
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
-132 FORMAT (A38,I2.2,A4)
+132 FORMAT (A,A,I2.2,A)
 
 142 FORMAT (16X,A,10X,A)
 143 FORMAT (19X,I2.2,15X,ES22.15)
@@ -431,7 +439,7 @@ REAL(KIND = idp), DIMENSION(1:25)                       ::  Time_Table
 
 CALL PQ_TIMETABLE_FRAME( Time_Table )
 
-WRITE(FILE_NAME,132)"OUTPUT/Iteration_Reports/Frame_Report_",Frame,".out"
+WRITE(FILE_NAME,132)Poseidon_IterReports_Dir,"Frame_Report_",Frame,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
 
@@ -534,7 +542,7 @@ IF ( myID == 0 ) THEN
                                             Return_Beta1, Return_Beta2, Return_Beta3    )
 
             ! Determine the Newtonian Potential at the location r, theta, phi
-            Analytic_Val = Analytic_Solution(r,theta,phi)
+            Analytic_Val = Potential_Solution(r,theta,phi)
 
 
             ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
@@ -684,12 +692,12 @@ SUBROUTINE OUTPUT_ITERATION_HISTORY()
 
 INTEGER                                         ::  i
 INTEGER                                         ::  FILE_ID
-CHARACTER(LEN = 30)                             ::  FILE_NAME
+CHARACTER(LEN = 65)                             ::  FILE_NAME
 
 
 
 
-WRITE(FILE_NAME,'(A30)')"OUTPUT/Iteration_Histogram.out"
+WRITE(FILE_NAME,'(A,A)')Poseidon_IterReports_Dir,"Iteration_Histogram.out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
 DO i = 1,DRIVER_TOTAL_FRAMES

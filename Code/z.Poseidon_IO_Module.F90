@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE IO_Functions_Module                                                          !##!
+MODULE Poseidon_IO_Module                                                           !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -16,9 +16,6 @@ MODULE IO_Functions_Module                                                      
 !##!    +102+   OUTPUT_ITER_TIMETABLE                                               !##!
 !##!    +103+   CLOSE_ITER_REPORT_FILE                                              !##!
 !##!                                                                                !##!
-!##!    +201+   OPEN_RUN_REPORT_FILE                                                !##!
-!##!    +202+   OUTPUT_RUN_REPORT                                                   !##!
-!##!    +203+   CLOSE_RUN_REPORT_FILE                                               !##!
 !##!                                                                                !##!
 !##!    +301+   OPEN_FRAME_REPORT_FILE                                              !##!
 !##!    +302+   OUTPUT_FRAME_REPORT                                                 !##!
@@ -30,6 +27,8 @@ MODULE IO_Functions_Module                                                      
 !##!                                                                                !##!
 !##!    +501+   CLOCK_IN                                                            !##!
 !##!    +502+   OPEN_NEW_FILE                                                       !##!
+!##!                                                                                !##!
+!##!    +601+   OUTPUT_POSEIDON_SOURCES                                             !##!
 !##!                                                                                !##!
 !######################################################################################!
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
@@ -67,10 +66,12 @@ USE Poseidon_Parameters, &
                             ITER_REPORT_FILE_ID,                            &
                             FRAME_REPORT_FILE_ID,                           &
                             WRITE_REPORT_FLAG,                              &
-                            OUTPUT_RHS_VECTOR_FLAG
+                            WRITE_SOURCES_FLAG,                             &
+                            OUTPUT_RHS_VECTOR_FLAG,                         &
+                            Poseidon_Frame
 
 USE DRIVER_Parameters,  &
-                    ONLY :  Analytic_Solution,                              &
+                    ONLY :  Potential_Solution,                              &
                             Shift_Solution,                                 &
                             myID,                                           &
                             SOURCE_OUTPUT_FLAG,                             &
@@ -78,13 +79,14 @@ USE DRIVER_Parameters,  &
                             RUN_REPORT_FLAG,                                &
                             FRAME_REPORT_FLAG,                              &
                             DRIVER_TEST_NUMBER,                             &
-                            DRIVER_FRAME
+                            Driver_Frame
 
 USE Poseidon_Variables_Module, &
                     ONLY :  NUM_R_NODES,                                    &
                             NUM_R_ELEMENTS,                                 &
                             RHS_Vector,                                     &
                             Coefficient_Vector,                             &
+                            Update_Vector,                                  &
                             rlocs, tlocs, plocs,                            &
                             R_INNER, R_OUTER,                               &
                             INT_R_LOCATIONS,                                &
@@ -103,16 +105,16 @@ USE Poseidon_Variables_Module, &
                             FRAME_TIME_TABLE,                               &
                             FRAME_CONVERGENCE_TABLE,                        &
                             Iteration_Histogram,                            &
-                            RUN_TIME_TABLE
+                            RUN_TIME_TABLE,                                 &
+                            BLOCK_STF_MAT
  
 
-USE Poseidon_Additional_Functions_Module, &
-                    ONLY :  Map_From_x_Space,                               &
-                            Initialize_LGL_Quadrature_Locations,            &
-                            Lagrange_Poly,                                  &
-                            Lagrange_Poly_Deriv,                            &
-                            Lagrange_Second_Deriv,                          &
-                            Calc_3D_Values_At_Location
+
+USE Poseidon_Math_Functions_Module, &
+                    ONLY :  Lagrange_Poly
+
+USE Poseidon_Calculate_Results_Module, &
+                    ONLY :  Calc_3D_Values_At_Location
 
 
 USE Poseidon_Mesh_Module, &
@@ -120,8 +122,22 @@ USE Poseidon_Mesh_Module, &
                             Create_Logarithmic_1D_Mesh,                     &
                             Create_Split_1D_Mesh
 
+USE Poseidon_IO_Parameters, &
+                    ONLY :  Poseidon_Reports_Dir,                           &
+                            Poseidon_IterReports_Dir,                       &
+                            Poseidon_Objects_Dir,                           &
+                            Poseidon_LinSys_Dir,                            &
+                            Poseidon_Results_Dir,                           &
+                            Poseidon_Sources_Dir
+
+
+
 
 IMPLICIT NONE
+
+
+CHARACTER(LEN = 20), PARAMETER    :: Filename_Format_A = "(A,A)"
+CHARACTER(LEN = 20), PARAMETER    :: Filename_Format_B = "(A,A,I2.2,A,I2.2,A)"
 
 
 !*F&S*==========================================!
@@ -142,19 +158,17 @@ SUBROUTINE OPEN_ITER_REPORT_FILE(Iteration, Rank)
 
 INTEGER, INTENT(IN)                                     ::  Iteration, Rank
 
-CHARACTER(LEN = 53)                                     ::  FILE_NAME
+CHARACTER(LEN = 70)                                     ::  FILE_NAME
 INTEGER                                                 ::  istat
 LOGICAL                                                 ::  FLAG, OK
 
 109 FORMAT (A,I2.2,A,I2.2)
-112 FORMAT (A43,I2.2,A2,I2.2,A4)
-
+112 FORMAT (A,I2.2,A,I2.2,A)
+113 FORMAT (A,A,I2.2,A,I2.2,A)
 
 IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
 
-
-
-    WRITE(FILE_NAME,112)"OUTPUT/Iteration_Reports/Iteration_Report_P",Rank,"_I",Iteration,".out"
+    WRITE(FILE_NAME,113) Poseidon_IterReports_Dir,"Iteration_Report_P",Rank,"_I",Iteration,".out"
     CALL OPEN_NEW_FILE( FILE_NAME, ITER_REPORT_FILE_ID )
 
 
@@ -199,6 +213,7 @@ INTEGER                         ::  FILE_ID
 111 FORMAT (A1)
 112 FORMAT (A41,I2.2)
 113 FORMAT (A38,ES22.15)
+
 
 IF (( WRITE_TIMETABLE_FLAG == 1 ) .OR. ( WRITE_TIMETABLE_FLAG == 3 ) ) THEN
 
@@ -298,6 +313,58 @@ END SUBROUTINE CLOSE_ITER_REPORT_FILE
 
 
 
+! !+103+############################################################################!
+!!                                                                                   !
+!!                    OUTPUT_ITERATION_RESULTS                                          !
+!!                                                                                   !
+! !#################################################################################!
+!SUBROUTINE OUTPUT_ITERATION_RESULTS()
+!
+!
+!
+!deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+!DO i = 0,ITER_REPORT_NUM_SAMPLES
+!
+!    r = i*deltar + R_INNER
+!    theta = pi/2.0_idp
+!    phi = pi/2.0_idp
+!
+!
+!    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+!                                    Return_Psi, Return_AlphaPsi,                &
+!                                    Return_Beta1, Return_Beta2, Return_Beta3    )
+!
+!    ! Determine the Newtonian Potential at the location r, theta, phi
+!    Analytic_Val = Potential_Solution(r,theta,phi)
+!
+!
+!    ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
+!    ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
+!
+!    ! Calculate Conformal Factor value from Newtonian Potential
+!    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+!
+!    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
+!    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
+!
+!
+!    ! Write Results to Screen
+!    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+!        IF ( Rank == 0 ) THEN
+!            WRITE(*,111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+!        END IF
+!    END IF
+!
+!    ! Write Results to File
+!    DO j = 0,1
+!        IF ( FILE_ID(j) .NE. -1 ) THEN
+!            WRITE(FILE_ID(j),111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+!        END IF
+!    END DO ! j Loop
+!
+!END DO  ! i Loop
+!
+!END SUBROUTINE OUTPUT_ITERATION_RESULTS()
 
 
 
@@ -316,7 +383,7 @@ SUBROUTINE OUTPUT_FINAL_RESULTS()
 INTEGER                                                     ::  NUM_SAMPLES
 
 
-CHARACTER(LEN = 50), DIMENSION(:), ALLOCATABLE              ::  Filenames
+CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
 INTEGER                                                     ::  Num_Files
 
@@ -378,7 +445,9 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
 114 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)    !!! Output for Results file
 115 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)                                     !!! Output for Analytic Solution file
 
-116 FORMAT (A,I5.5,A4)
+116 FORMAT (A,A,I5.5,A4)
+117 FORMAT (A,A)
+
 
 IF ( WRITE_RESULTS_FLAG == 1 ) THEN
     NUM_SAMPLES = 1000
@@ -392,13 +461,13 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
         ALLOCATE( Output_dr(1:NUM_SAMPLES) )
         ! Open Results File
         file_ida = 42
-        filenamea = "OUTPUT/Results.out"
+        WRITE(filenamea,117) Poseidon_Results_Dir,"Results.out"
         CALL OPEN_NEW_FILE( filenamea, file_ida)
         WRITE(file_ida,111)"r","Psi","AlphaPsi","Beta1 Value","Beta2 Value","Beta3 Value"
 
         ! Open Solution File
         file_idb = 43
-        filenameb = "OUTPUT/Solution.out"
+        WRITE(filenameb,117) Poseidon_Results_Dir,"Solution.out"
         CALL OPEN_NEW_FILE( filenameb, file_idb)
         WRITE(file_idb,112)"r","Analytic Potential","Beta1 Solution"
 
@@ -418,7 +487,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
                                              Return_Psi, Return_AlphaPsi,                &
                                              Return_Beta1, Return_Beta2, Return_Beta3    )
 
-            Analytic_Val = Analytic_Solution(output_rc(i),theta,phi)
+            Analytic_Val = Potential_Solution(output_rc(i),theta,phi)
             Solver_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
             Solver_Valb = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
             Error_Val = ABS((Analytic_Val - Solver_Val)/Analytic_Val)
@@ -445,13 +514,13 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
         ! Open Results File
         file_ida = 42
-        WRITE(filenamea,'(A31,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/Results_",DRIVER_FRAME,".out"
+        WRITE(filenamea,'(A,A,I5.5,A4)')Poseidon_Results_Dir,"Results_",Poseidon_Frame,".out"
         CALL OPEN_NEW_FILE( filenamea, file_ida)
         WRITE(file_ida,111)"r","Psi","AlphaPsi","Beta1 Value","Beta2 Value","Beta3 Value"
 
         ! Open Solution File
         file_idb = 43
-        WRITE(filenameb,'(A32,I5.5,A4)')"OUTPUT/CHIMERA_RESULTS/Solution_",DRIVER_FRAME,".out"
+        WRITE(filenameb,'(A,A,I5.5,A4)')Poseidon_Results_Dir,"Solution_",Poseidon_Frame,".out"
         CALL OPEN_NEW_FILE( filenameb, file_idb)
         WRITE(file_idb,112)"r","Analytic Potential","Beta1 Solution"
 
@@ -471,7 +540,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
                                              Return_Psi, Return_AlphaPsi,                &
                                              Return_Beta1, Return_Beta2, Return_Beta3    )
 
-            Analytic_Val = Analytic_Solution(output_rc(i),theta,phi)
+            Analytic_Val = Potential_Solution(output_rc(i),theta,phi)
             Solver_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
             Solver_Valb = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
             Error_Val = ABS((Analytic_Val - Solver_Val)/Analytic_Val)
@@ -496,21 +565,22 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
 
     ELSE
+    
 
         Num_Files = 9
 
         ALLOCATE( Filenames(1:Num_Files) )
         ALLOCATE( File_IDs(1:Num_Files) )
 
-        WRITE(Filenames(1),116)"OUTPUT/CHIMERA_RESULTS/Results_Lapse_",DRIVER_FRAME,".out"
-        WRITE(Filenames(2),116)"OUTPUT/CHIMERA_RESULTS/Results_ConFactor_",DRIVER_FRAME,".out"
-        WRITE(Filenames(3),116)"OUTPUT/CHIMERA_RESULTS/Results_Beta1_",DRIVER_FRAME,".out"
-        WRITE(Filenames(4),116)"OUTPUT/CHIMERA_RESULTS/Results_Beta2_",DRIVER_FRAME,".out"
-        WRITE(Filenames(5),116)"OUTPUT/CHIMERA_RESULTS/Results_Beta3_",DRIVER_FRAME,".out"
-        WRITE(Filenames(6),'(A)')"OUTPUT/CHIMERA_RESULTS/Results_Dimensions.out"
-        WRITE(Filenames(7),116)"OUTPUT/CHIMERA_RESULTS/R_VALUES_",DRIVER_FRAME,".out"
-        WRITE(Filenames(8),116)"OUTPUT/CHIMERA_RESULTS/T_VALUES_",DRIVER_FRAME,".out"
-        WRITE(Filenames(9),116)"OUTPUT/CHIMERA_RESULTS/P_VALUES_",DRIVER_FRAME,".out"
+        WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Lapse_",Poseidon_Frame,".out"
+        WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_ConFactor_",Poseidon_Frame,".out"
+        WRITE(Filenames(3),116) Poseidon_Results_Dir,"Results_Beta1_",Poseidon_Frame,".out"
+        WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Beta2_",Poseidon_Frame,".out"
+        WRITE(Filenames(5),116) Poseidon_Results_Dir,"Results_Beta3_",Poseidon_Frame,".out"
+        WRITE(Filenames(6),'(A,A)') Poseidon_Results_Dir,"Results_Dimensions.out"
+        WRITE(Filenames(7),116) Poseidon_Results_Dir,"Results_Radial_Locs_",Poseidon_Frame,".out"
+        WRITE(Filenames(8),116) Poseidon_Results_Dir,"Results_Theta_Locs_",Poseidon_Frame,".out"
+        WRITE(Filenames(9),116) Poseidon_Results_Dir,"Results_Phi_Locs_",Poseidon_Frame,".out"
 
 
         File_IDs = [(141 + i, i=1,Num_Files)]
@@ -662,7 +732,7 @@ DO i = 0,1
         WRITE(FILE_ID(i),'(A)')"Solver Type : KSPPREONLY, PCILU"
         WRITE(FILE_ID(i),'(A,ES22.15)')"Solve Time ",solve_time
         WRITE(FILE_ID(i),'(A,I2.2)')"Solve Iterations :",Iter_Count
-        WRITE(FILE_ID(i),'(A,ES22.15,ES22.15,ES22.15,I2.2)')"Solve Tolerances :",rtol, abstol, dtol, maxits
+        WRITE(FILE_ID(i),'(A,ES22.15,ES22.15,ES22.15,I6.5)')"Solve Tolerances :",rtol, abstol, dtol, maxits
         WRITE(FILE_ID(i),'(A)')" "
         WRITE(FILE_ID(i),'(A)')" "
         WRITE(FILE_ID(i),'(A)')" "
@@ -673,7 +743,46 @@ END DO
 
 END SUBROUTINE OUTPUT_PETSC_REPORT
 
+!+403+###########################################################################!
+!                                                                                !
+!                   OUTPUT_JACOBIAN_MATRIX                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE OUTPUT_LAPLACE_MATRIX()
 
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 61)                                     ::  FILE_NAMEb
+CHARACTER(LEN = 40)                                     ::  fmt
+
+
+INTEGER                                                 ::  FILE_ID
+INTEGEr                                                 ::  re,e
+
+100 FORMAT (A,A,I2.2,A,I2.2,A)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+
+
+WRITE(FILE_NAMEb,100) Poseidon_LinSys_Dir,"LAP_MAT_DIM_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
+CALL OPEN_NEW_FILE( FILE_NAMEb, FILE_ID )
+WRITE(FILE_ID,*) NUM_R_ELEMS_PER_BLOCK,NUM_OFF_DIAGONALS, DEGREE, L_LIMIT
+CLOSE(FILE_ID)
+
+
+WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"LAP_MAT_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+
+
+
+DO re = 0,SUBSHELL_PROB_DIM-1
+    DO e = 0,2*NUM_OFF_DIAGONALS
+        WRITE(FILE_ID,fmt) BLOCK_STF_MAT(e,re)
+    END DO
+END DO
+
+
+
+END SUBROUTINE OUTPUT_LAPLACE_MATRIX
 
 
 !+403+###########################################################################!
@@ -691,18 +800,18 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGEr                                                 ::  re,e
 
-100 FORMAT (A,I2.2,A,I2.2,A)
+100 FORMAT (A,A,I2.2,A,I2.2,A)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 
 
-WRITE(FILE_NAMEb,100)"OUTPUT/Poseidon_Objects/Linear_System/STF_MAT_DIM_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+WRITE(FILE_NAMEb,100) Poseidon_LinSys_Dir,"STF_MAT_DIM_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAMEb, FILE_ID )
 WRITE(FILE_ID,*) NUM_R_ELEMS_PER_BLOCK,DEGREE,L_LIMIT
 CLOSE(FILE_ID)
 
 
-WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/Linear_System/STF_MAT_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"STF_MAT_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
 
@@ -736,14 +845,14 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
-100 FORMAT (A,I2.2,A,I2.2,A)
+100 FORMAT (A,A,I2.2,A,I2.2,A)
 101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'
 
 
-WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/Linear_System/RHS_VEC_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"RHS_VEC_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
 
@@ -776,14 +885,14 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
-100 FORMAT (A,I2.2,A,I2.2,A)
+100 FORMAT (A,A,I2.2,A,I2.2,A)
 101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'
 
 
-WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/Linear_System/RHS_LAP_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"RHS_LAP_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
 
@@ -793,7 +902,7 @@ DO i = 0,Block_PROB_DIM-1
 END DO
 
 
-WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/Linear_System/RHS_SRC_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"RHS_SRC_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
 
@@ -809,7 +918,36 @@ END DO
 END SUBROUTINE OUTPUT_RHS_VECTOR_Parts
 
 
+!+404+###########################################################################!
+!                                                                                !
+!                   OUTPUT_RHS_VECTOR                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE OUTPUT_UPDATE_VECTOR()
 
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+CHARACTER(LEN = 40)                                     ::  fmt
+
+INTEGER                                                 ::  FILE_ID
+INTEGER                                                 ::  i
+
+100 FORMAT (A,A,I2.2,A,I2.2,A)
+101 FORMAT (I5.5," ",I2.2," ",I2.2)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!fmt = '(F16.10,SP,F16.10,"i")'
+
+
+WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"UPD_VEC_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+
+
+WRITE(FILE_ID, 101)NUM_R_ELEMENTS,DEGREE,L_LIMIT
+DO i = 0,Block_PROB_DIM-1
+    WRITE(FILE_ID,TRIM(fmt)) Update_Vector(i)
+END DO
+
+END SUBROUTINE OUTPUT_UPDATE_VECTOR
 
 
 !+404+###########################################################################!
@@ -825,14 +963,14 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
-100 FORMAT (A,I2.2,A,I2.2,A)
+100 FORMAT (A,A,I2.2,A,I2.2,A)
 101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'
 
 
-WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/COEFF_VEC_MATLAB_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
+WRITE(FILE_NAME,Filename_Format_B) Poseidon_Objects_Dir,"COEFF_VEC_MATLAB_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
 
@@ -859,21 +997,23 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
-100 FORMAT (A,I2.2,A,I2.2,A)
+100 FORMAT (A,A,I2.2,A,I2.2,A)
 101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'
 
+IF ( .FALSE. ) THEN
 
-WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/COEFF_VEC_F",DRIVER_FRAME,"_I",CUR_ITERATION,".out"
-CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+    WRITE(FILE_NAME,Filename_Format_B) Poseidon_Objects_Dir,"COEFF_VEC_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
+    CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
-WRITE(FILE_ID,*)Coefficient_Vector
+    WRITE(FILE_ID,*)Coefficient_Vector
 
 
-CLOSE(FILE_ID)
+    CLOSE(FILE_ID)
 
+END IF
 
 END SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_FORTRAN
 
@@ -907,7 +1047,7 @@ REAL(KIND = idp)                                        ::  REAL_NUM
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'
 
-WRITE(FILE_NAME,100)"OUTPUT/Poseidon_Objects/COEFF_VEC_F",Frame_Num,"_I",Iter_Num,".out"
+WRITE(FILE_NAME,Filename_Format_B)"OUTPUT/Poseidon_Objects/COEFF_VEC_F",Frame_Num,"_I",Iter_Num,".out"
 CALL OPEN_EXISTING_FILE( FILE_NAME, FILE_ID, istat )
 
 READ(FILE_ID,*)Test
@@ -953,7 +1093,7 @@ END IF
 ! Add Times to the Frame Time Table
 IF (( Ident <= 3 ) .OR. (Ident == 19) ) THEN
     ! The 3 first events and last event only happen once per Frame !
-    RUN_TIME_TABLE(Ident) = (RUN_TIME_TABLE(ident)*(DRIVER_FRAME-1) + Time)/DRIVER_FRAME
+    RUN_TIME_TABLE(Ident) = (RUN_TIME_TABLE(ident)*(Poseidon_Frame-1) + Time)/Poseidon_Frame
 ELSE
     ! Add This Iterations Time to Running Average for the Run
     RUN_TIME_TABLE(Ident) = (RUN_TIME_TABLE(ident)*(Total_Run_Iters-1) + Time)/Total_Run_Iters
@@ -977,7 +1117,7 @@ CHARACTER(LEN = *), INTENT(IN)                          ::  File_Name
 INTEGER,            INTENT(INOUT)                       ::  File_Number
 
 INTEGER                                                 ::  Temp_Number
-INTEGER                                                 ::  istat
+INTEGER                                                 ::  istat = 0
 LOGICAL                                                 ::  FLAG, OP, EX
 LOGICAL                                                 ::  UNIT_FLAG, NAME_FLAG
 
@@ -1022,7 +1162,7 @@ IF ( UNIT_FLAG  ) THEN
     OPEN( Unit = File_Number, File = File_Name, IOSTAT = istat )
     IF ( istat .NE. 0 ) THEN
 
-        PRINT*,"WARNING: Could not open file at ", File_Name
+        PRINT*,"WARNING: Could not open file at ", File_Name, istat
 
     END IF
 END IF
@@ -1107,4 +1247,200 @@ END SUBROUTINE OPEN_EXISTING_FILE
 
 
 
-END MODULE IO_Functions_Module
+
+
+
+
+
+
+ !+601+############################################################################!
+!                                                                                   !
+!                     OUTPUT_POSIEDON_SOURCES                                       !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE OUTPUT_POSEIDON_SOURCES_1D( Local_E, Local_S, Local_Si,                         &
+                                    Local_RE_Dim, Local_TE_Dim, Local_PE_Dim,           &
+                                    Local_RQ_Dim, Local_TQ_Dim, Local_PQ_Dim,           &
+                                    Input_R_Quad, Input_T_Quad, Input_P_Quad,           &
+                                    Left_Limit, Right_Limit                             )
+
+
+REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Local_RQ_Dim*Local_TQ_Dim*Local_PQ_Dim,       &
+                                            0:Local_RE_Dim-1,                               &
+                                            0:Local_TE_Dim-1,                               &
+                                            0:Local_PE_Dim-1  )             ::  Local_E,    &
+                                                                                Local_S
+
+REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Local_RQ_Dim*Local_TQ_Dim*Local_PQ_Dim,       &
+                                            0:Local_RE_Dim-1,                               &
+                                            0:Local_TE_Dim-1,                               &
+                                            0:Local_PE_Dim-1,                               &
+                                            1:DOMAIN_DIM                )   :: Local_Si
+
+
+
+
+
+INTEGER, INTENT(IN)                                                     ::  Local_RE_Dim,   &
+                                                                            Local_TE_Dim,   &
+                                                                            Local_PE_Dim,   &
+                                                                            Local_RQ_Dim,   &
+                                                                            Local_TQ_Dim,   &
+                                                                            Local_PQ_Dim
+
+
+REAL(KIND = idp), DIMENSION(1:Local_RQ_Dim), INTENT(IN)                 ::  Input_R_Quad
+REAL(KIND = idp), DIMENSION(1:Local_TQ_Dim), INTENT(IN)                 ::  Input_T_Quad
+REAL(KIND = idp), DIMENSION(1:Local_PQ_Dim), INTENT(IN)                 ::  Input_P_Quad
+
+REAL(KIND = idp), DIMENSION(1:Local_RQ_Dim)                             ::  CUR_R_LOCS
+
+REAL(KIND = idp), INTENT(IN)                                            ::  Left_Limit,     &
+                                                                            Right_Limit
+
+INTEGER                                                                 ::  i, re, te, pe, rd, td, pd
+
+CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE                         ::  Filenames
+INTEGER, DIMENSION(:), ALLOCATABLE                                      ::  File_IDs
+INTEGER                                                                 ::  Num_Files
+
+REAL(KIND = idp)                                                        ::  Delta_X, Dr_Over_Dx
+
+116 FORMAT (A,A,I5.5,A)
+
+
+
+IF ( WRITE_SOURCES_FLAG == 1 ) THEN
+    Num_Files = 5
+
+    ALLOCATE( Filenames(1:Num_Files) )
+    ALLOCATE( File_IDs(1:Num_Files) )
+
+    WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_E_",Poseidon_Frame,".out"
+    WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_S_",Poseidon_Frame,".out"
+    WRITE(Filenames(3),116) Poseidon_Sources_Dir,"Sources_S1_",Poseidon_Frame,".out"
+    WRITE(Filenames(4),'(A,A)') Poseidon_Sources_Dir,"Sources_Dimensions.out"
+    WRITE(Filenames(5),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",Poseidon_Frame,".out"
+    !WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Theta_Locs_",Poseidon_Frame,".out"
+    !WRITE(Filenames(7),116) Poseidon_Sources_Dir,"Sources_Phi_Locs_",Poseidon_Frame,".out"
+
+
+
+    File_IDs = [(161 + i, i=1,Num_Files)]
+    DO i = 1,Num_Files
+        CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i) )
+    END DO
+
+
+
+    WRITE(File_IDs(4),* )Local_RE_Dim, Local_TE_Dim, Local_PE_DIM
+    WRITE(File_IDs(4),* )Local_RQ_Dim, Local_TQ_Dim, Local_PQ_DIM
+
+
+
+    Delta_X = Right_Limit - Left_Limit
+
+
+
+    DO re = 0,NUM_R_ELEMENTS-1
+
+        Dr_Over_Dx = (rlocs(re+1) - rlocs(re))/Delta_X
+        CUR_R_LOCS(:) = Dr_Over_Dx * (INPUT_R_QUAD(:)-Left_Limit) + rlocs(re)
+
+
+        DO rd = 1,Local_RQ_Dim
+            WRITE(File_IDs(5),*) CUR_R_LOCS(rd)
+            WRITE(File_IDs(1),*) Local_E(rd,re,0,0)
+            WRITE(File_IDs(2),*) Local_S(rd,re,0,0)
+            WRITE(File_IDs(3),*) Local_Si(rd,re,0,0,1)
+        END DO
+    END DO
+
+
+
+
+
+
+
+    ! Close Files
+    DO i = 1,Num_Files
+        CLOSE( Unit = File_IDs(i))
+    END DO
+
+END IF
+
+END SUBROUTINE OUTPUT_POSEIDON_SOURCES_1D
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!+401+###########################################################################!
+!                                                                                !
+!              Calc_Shift_1D                                                  !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Write_Shift_1D( Shift_Vector, NUM_R_ELEM, R_LOCS, SelfSim_T )
+
+REAL(KIND = idp), DIMENSION( 0:NUM_R_ELEM ),INTENT( IN )          ::  Shift_Vector
+
+INTEGER,               INTENT( IN )                               ::  NUM_R_ELEM
+
+REAL(KIND = idp), DIMENSION( 0:NUM_R_ELEM ),  INTENT(IN)          ::  r_locs
+REAL(KIND = idp)                                                  ::  SelfSim_T
+
+
+INTEGER                                                           ::  re
+
+INTEGER                                                           ::  File_id
+
+CHARACTER( LEN = 43 )                                             ::  FileName
+
+CHARACTER( LEN = 20 )                                             ::  FileDir
+CHARACTER( LEN = 13 )                                             ::  FilePre
+CHARACTER( LEN = 4 )                                              ::  FileExt
+
+
+FileDir = "Shift_Vector_Output/"
+FilePre = "Shift_Vector_"
+FileExt = ".out"
+
+WRITE( FileName, '(A,A,F6.4,A)' ) FileDir,FilePre,SelfSim_T,FileExt
+
+
+PRINT*,Filename
+
+File_id = 42
+
+OPEN(Unit = File_id, file = FileName)
+
+DO re = 0,NUM_R_ELEM
+
+   WRITE(File_id,'(ES22.15,1X,ES22.15)') r_locs(re), Shift_Vector(re)
+
+END DO
+
+
+CLOSE(Unit = File_id)
+
+END SUBROUTINE Write_Shift_1D
+
+
+
+
+
+
+
+
+
+END MODULE Poseidon_IO_Module
