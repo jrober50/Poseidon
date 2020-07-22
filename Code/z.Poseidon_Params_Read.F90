@@ -218,9 +218,9 @@ END IF
 
 CONVERGENCE_CRITERIA            = REAL_PARAMS(1)
 
-
-SOLVER_TYPE_FLAG                = INT_PARAMS(34)
-
+IF ( INT_PARAMS(34) .NE. -1 ) THEN
+    SOLVER_TYPE_FLAG                = INT_PARAMS(34)
+END IF
 
 NUM_QUAD_DOF    = NUM_R_QUAD_POINTS   &
                 * NUM_T_QUAD_POINTS   &
