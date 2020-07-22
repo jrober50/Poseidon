@@ -77,8 +77,6 @@ include makefile_dictionary
 
 
 
-
-
 #---------------------------- Compilation Rules ------------------------------------#
 
 
@@ -97,7 +95,7 @@ replot: $(CODE_com) $(CODE_par) $(CODE_o) $(CODE_ext) $(CODE_itf)
 
 
 
-PoseidonLib: $(CODE_com) $(CODE_o)
+PoseidonLib: $(CODE_com) $(CODE_par) $(CODE_o) $(CODE_ext) $(CODE_itf)
 	ar crv $(OBJ)/Poseidon.a $(OBJ)/*.o
 
 
@@ -139,7 +137,6 @@ run_replot:
 #------------------------------- Clean Up Rule  ------------------------------------#
 
 clean:
-
 	rm -f $(OBJ)/com.*.o	
 	rm -f $(OBJ)/z.*.o
 	rm -f $(OBJ)/d.*.o
@@ -152,9 +149,10 @@ clean:
 
 clean_output:
 	rm -f $(OUT)/*.out
-	rm -f $(OUT)/Iteration_Reports/*.out
-	rm -f $(OUT)/CHIMERA_RESULTS/*.out
-	rm -f $(OUT)/Yahil_RESULTS/*.out
-	rm -f $(OUT)/Poseidon_Objects/*.out
-	rm -f $(OUT)/Poseidon_Objects/Linear_System/*.out
-	rm -f $(OUT)/Poseidon_Objects/Residual/*.out
+	rm -f $(OUT)/Results/*.out
+	rm -f $(OUT)/Reports/*.out
+	rm -f $(OUT)/Reports/Iteration_Reports/*.out
+	rm -f $(OUT)/Objects/*.out
+	rm -f $(OUT)/Objects/Sources/*.out
+	rm -f $(OUT)/Objects/Linear_System/*.out
+	rm -f $(OUT)/Objects/Residual/*.out

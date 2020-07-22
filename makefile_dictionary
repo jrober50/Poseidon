@@ -10,7 +10,7 @@
 SRC	= ./Code
 OBJ	= ./Obj
 BIN	= ./Bin
-OUT     = ./OUTPUT
+OUT     = ./Poseidon_Output
 EXT	= F90
 
 
@@ -66,12 +66,12 @@ PETSC_Rhea_OFF		=
 
 PETSC_NicksMacBook_DIR       = /usr/local/petsc/petsc-3.10.4
 PETSC_NicksMacBook_ARCH      = /usr/local/petsc/petsc-3.10.4/arch-darwin-c-debug
-PETSC_NicksMacBook_ON        = -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
+PETSC_NicksMacBook_ON        = -I$(PETSC_NicksMacBook_DIR)/include -I$(PETSC_NicksMacBook_ARCH)/include -L$(PETSC_NicksMacBook_DIR)/lib -L$(PETSC_NicksMacBook_ARCH)/lib -lpetsc
 PETSC_NicksMacBook_Off       =
 
 
 PETSC_MacBook_DIR       = /usr/local/petsc/petsc-3.10.4
-PETSC_MacBook_ARCH      = /usr/local/petsc/petsc-3.10.4/arch-darwin-c-debug
+PETSC_MacBook_ARCH      = arch-darwin-c-debug
 PETSC_MacBook_ON	= -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
 PETSC_MacBook_Off	=
 
@@ -79,7 +79,7 @@ PETSC_BlueWaters_ON	=
 PETSC_BlueWaters_OFF	= 
 
 
-
+include ${PETSC_MacBook_DIR}/lib/petsc/conf/variables
 
 #### HDF5
 
