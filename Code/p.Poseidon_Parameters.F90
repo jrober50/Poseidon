@@ -102,7 +102,7 @@ INTEGER                     ::  OUTPUT_RHS_VECTOR_FLAG      = 0
 INTEGER                     ::  OUTPUT_UPDATE_VECTOR_FLAG   = 0
 
 INTEGER                     ::  NEW_PETSC_SOLVER_FLAG
-INTEGER                     ::  Solver_Type_Flag            = 1 ! 1 = Regular N-R (Default), 2 = Jacobian-Free GMRES
+INTEGER                     ::  SOLVER_TYPE_FLAG            = 1 ! 1 = Regular N-R (Default), 2 = Jacobian-Free GMRES
 
 LOGICAL                     ::  POSEIDON_INITIALIZED_FLAG   = .FALSE.
 

@@ -949,7 +949,6 @@ DO pe = 0,NUM_P_ELEM-1
                                 !  Calculate CFA Input Values
                                 E  = Density*Specific_Enthalpy*LF_sqr - Pressure
                                 Si = Density*Specific_Enthalpy*LF_sqr*Velocity/Speed_of_Light
-                               ! Si = Density*Specific_Enthalpy*LF_sqr*Velocity/csqr
                                 S  = Density*Specific_Enthalpy*LF_sqr*vsqr/(csqr) + 3.0_idp * Pressure
 
 
