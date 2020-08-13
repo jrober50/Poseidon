@@ -60,6 +60,7 @@ CODE_o  = z.Poseidon_Variables_Module.o          \
           z.Poseidon_Internal_Communication.o    \
           z.Jacobian_Internal_Functions.o        \
           z.Poseidon_IO_Module.o                 \
+          z.Poseidon_LinSys_IO_Module.o          \
           z.Poseidon_BC_Module.o                 \
           z.Poseidon_SubJacobian_Functions_3D.o  \
           z.Poseidon_Preconditioners.o           \
