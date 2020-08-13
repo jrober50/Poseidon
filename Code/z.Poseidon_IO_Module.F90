@@ -90,7 +90,8 @@ USE DRIVER_Parameters,  &
                             FRAME_REPORT_FLAG,                              &
                             DRIVER_TEST_NUMBER,                             &
                             Driver_Frame,                                   &
-                            SELFSIM_T
+                            SELFSIM_T,                                      &
+                            DRIVER_R_INPUT_NODES
 
 USE Poseidon_Variables_Module, &
                     ONLY :  NUM_R_NODES,                                    &
@@ -614,7 +615,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
             CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,  &
                                              output_re, output_rc, output_dr        )
         ELSE
-            ORD = 2
+            ORD = Driver_R_Input_Nodes
             NUM_RADIAL_SAMPLES = NUM_R_ELEMENTS*ORD
             ALLOCATE( Output_rc(1:NUM_RADIAL_SAMPLES) )
             ALLOCATE(xlocs(1:ORD))
