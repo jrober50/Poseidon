@@ -25,16 +25,26 @@ MODULE SelfSimilar_Module                                                       
 USE Poseidon_Constants_Module, &
             ONLY :  idp,                &
                     eps,                &
-                    pi,                 &
-                    Grav_Constant_G,    &
-                    Speed_of_Light
+                    pi
+
+USE Units_Module, &
+            ONLY :  Grav_Constant_G,    &
+                    Speed_of_Light,     &
+                    C_Square,           &
+                    GR_Source_Scalar,   &
+                    Centimeter,         &
+                    Second,             &
+                    Milisecond,         &
+                    Erg,                &
+                    Gram
 
 USE DRIVER_PARAMETERS,  &
             ONLY :  NUM_ENTRIES,        &
                     SELFSIM_R_VALS,     &
                     SELFSIM_POT_VALS,   &
                     SELFSIM_SHIFT_VALs, &
-                    SELFSIM_V_SWITCH
+                    SELFSIM_V_SWITCH,   &
+                    DRIVER_OUTER_RADIUS
 
 
 IMPLICIT NONE
@@ -90,6 +100,8 @@ REAL(KIND = idp), DIMENSION(:),ALLOCATABLE                                      
                                                                                             Input_M
 
 REAL(KIND = idp)                                                                        ::  V_Factor,R_Factor
+REAL(KIND = idp)                                                                        ::  Kappa_wUnits
+
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                             ::  Enclosed_Mass
 REAL(KIND = idp), DIMENSION(:),ALLOCATABLE                                              ::  Input_R
@@ -123,16 +135,14 @@ END IF
 REWIND(nread)
 NUM_LINES = 0
 DO
-
-    READ(nread, 101, IOSTAT=istat) line
+    READ(nread, *, IOSTAT=istat) line
     IF ( istat .NE. 0 ) EXIT
     NUM_LINES = NUM_LINES + 1
-
 END DO
-
-
-
 NUM_LINES = NUM_LINES -1
+
+
+
 
 ALLOCATE( Input_X(1:NUM_LINES), Input_D(1:NUM_LINES), Input_V(1:NUM_LINES) )
 ALLOCATE( Input_R(1:NUM_LINES) )
@@ -156,35 +166,45 @@ END IF
 
 REWIND(nread)
 CUR_LINE = 1
+READ(nread,*)
 DO
 
     READ(nread, 101, IOSTAT=istat) line
     IF ( istat .NE. 0 ) EXIT
 
-    IF ( line(1:3) == '#  ' ) CYCLE
 
-    READ( line, 111) Input_X(CUR_LINE)
-    READ( line, 121) Input_D(CUR_LINE)
-    READ( line, 131) Input_V(CUR_LINE)
-    READ( line, 141) Input_M(CUR_LINE)
+    READ(line,*) Input_X(CUR_LINE), Input_D(CUR_LINE), Input_V(CUR_LINE), Input_M(CUR_LINE)
+!    READ( line, 111) Input_X(CUR_LINE)
+!    READ( line, 121) Input_D(CUR_LINE)
+!    READ( line, 131) Input_V(CUR_LINE)
+!    READ( line, 141) Input_M(CUR_LINE)
 
-!    PRINT*,"Input_X",CUR_LINE,Input_X(Cur_Line)
     CUR_LINE = CUR_LINE + 1
 
 END DO
 
+
+
+
 CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
 
-t = t_in/1000.0_idp
+t = t_in*Milisecond
 
-R_Factor = SQRT(kappa)                                &
+
+Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
+Kappa_wUnits = 18.394097187796024_idp
+PRINT*,"Kappa_wUnits over wrote."
+
+
+R_Factor = SQRT(Kappa_wUnits)                                &
         *(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))       &
         *((t)**(2.0_idp-gamma))
+
 
 Input_R = R_Factor*Input_X
 
 
-Enclosed_Mass = kappa**(1.50_idp)                                   &
+Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)  &
               * (t**(4.0_idp - 3.0_idp*gamma))                      &
               * Input_M
@@ -195,7 +215,7 @@ IF ( .FALSE. ) THEN
 
     PRINT*,"Using Yahil self-similar profile with following parameters."
     PRINT*,"Time = ",t," s"
-    PRINT*,"Kappa = ",Kappa
+    PRINT*,"Kappa = ",Kappa_wUnits
     PRINT*,"Gamma = ",Gamma
     PRINT*,"Eccentricty = ",ecc
 
@@ -203,7 +223,7 @@ END IF
 
 IF (.FALSE.) THEN
 
-    PRINT*,"sqrt(kappa)",SQRT(kappa),"kappa**(1.50_idp)",kappa**(1.50_idp)
+    PRINT*,"sqrt(kappa)",SQRT(Kappa_wUnits),"kappa**(1.50_idp)",Kappa_wUnits**(1.50_idp)
     PRINT*,"(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))",(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))
     PRINT*,"Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)",Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)
     PRINT*,"((t)**(2.0_idp-gamma))",((t)**(2.0_idp-gamma))
@@ -222,12 +242,21 @@ END IF
 !print*,"r_locs"
 !print*,r_locs
 
-CALL CONVERT_SELF_SIMILAR_3D(  t, kappa, gamma, ecc,                   &
+!CALL CONVERT_SELF_SIMILAR_3D(  t, Kappa_wUnits, gamma, ecc,                   &
+!                            Num_Nodes, NUM_LINES,                   &
+!                            INPUT_R_QUAD, INPUT_T_QUAD,             &
+!                            NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
+!                            Delta_R, r_locs, t_locs,                &
+!                            Input_R, Input_D, Input_V, Input_X,             &
+!                            Input_E, Input_S, Input_Si              )
+
+
+CALL CONVERT_SELF_SIMILAR_3Db(  t, Kappa_wUnits, gamma, ecc,                   &
                             Num_Nodes, NUM_LINES,                   &
                             INPUT_R_QUAD, INPUT_T_QUAD,             &
                             NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
                             Delta_R, r_locs, t_locs,                &
-                            Input_R, Input_D, Input_V,              &
+                            Input_D, Input_V, Input_X,             &
                             Input_E, Input_S, Input_Si              )
 
 
@@ -258,7 +287,444 @@ END SUBROUTINE UNPACK_SELF_SIMILAR
 
 
 
+!+201+###########################################################################!
+!                                                                                !
+!                  CONVERT_SELF_SIMILAR_3D                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE CONVERT_SELF_SIMILAR_3D( t, kappa, gamma, ecc,                   &
+                                    Num_Nodes, NUM_LINES,                   &
+                                    INPUT_R_QUAD, INPUT_T_QUAD,             &
+                                    NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
+                                    Delta_R, r_locs, t_locs,                &
+                                    Input_R, Input_D, Input_V, Input_X,             &
+                                    Input_E, Input_S, Input_Si              )
 
+
+REAL(KIND = idp),               INTENT(IN)                                  ::  t, kappa, gamma, ecc
+INTEGER,    DIMENSION(1:3),     INTENT(IN)                                  ::  Num_Nodes
+INTEGER,    INTENT(IN)                                                      ::  Num_LINES
+REAL(KIND = idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
+REAL(KIND = idp), DIMENSION(1:NUM_NODES(2)),INTENT(IN)                      ::  INPUT_T_QUAD
+
+INTEGER,                        INTENT(IN)                                  ::  NUM_R_ELEM
+INTEGER,                        INTENT(IN)                                  ::  NUM_T_ELEM
+INTEGER,                        INTENT(IN)                                  ::  NUM_P_ELEM
+
+REAL(KIND = idp), DIMENSION(NUM_R_ELEM), INTENT(IN)                         ::  Delta_R
+REAL(KIND = idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
+REAL(KIND = idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                       ::  t_locs
+
+
+REAL(KIND = idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_R,    &
+                                                                                Input_D,    &
+                                                                                Input_V, Input_X
+
+REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+                            0:NUM_R_ELEM-1,                                 &
+                            0:NUM_T_ELEM-1,                                 &
+                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Input_E
+
+REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+                            0:NUM_R_ELEM-1,                                 &
+                            0:NUM_T_ELEM-1,                                 &
+                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Input_S
+
+REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+                            0:NUM_R_ELEM-1,                                 &
+                            0:NUM_T_ELEM-1,                                 &
+                            0:NUM_P_ELEM-1, 1:3 ),  INTENT(INOUT)           ::  Input_Si
+
+
+INTEGER                                                                     ::  Frame_Number = 1
+INTEGER                                                                     ::  i
+INTEGER                                                                     ::  re, te, pe, &
+                                                                                rd, td, pd
+
+
+
+INTEGER                                                                     ::  nd, line, line_min
+REAL(KIND = idp), DIMENSION(0:1)                                            ::  xlocs
+REAL(KIND = idp)                                                            ::  x
+REAL(KIND = idp)                                                            ::  Density, Velocity
+
+REAL(KIND = idp)                                                            ::  Pressure, Energy
+REAL(KIND = idp)                                                            ::  vsqr, LF_sqr
+REAL(KIND = idp)                                                            ::  E, Si, S
+
+REAL(KIND = idp), DIMENSION(0:1)                                            ::  LagPoly_Vals
+REAL(KIND = idp), DIMENSION(0:NUM_NODES(1)-1)                               ::  CUR_R_LOCS
+REAL(KIND = idp), DIMENSION(0:NUM_NODES(2)-1)                               ::  CUR_T_LOCS
+
+REAL(KIND = idp), DIMENSION(0:NUM_NODES(1)-1)                               ::  r_eff
+
+REAL(KIND = idp)                                                            ::  r_sqr
+REAL(KIND = idp)                                                            ::  deltar_overtwo
+
+REAL(KIND = idp)                                                            ::  D_FACTOR, V_FACTOR, R_Factor
+
+REAL(KIND = idp)                                                            ::  ecc_sqr, ooomes, cos_sqr, sin_sqr
+REAL(KIND = idp)                                                            ::  Specific_Enthalpy
+
+INTEGER                                                                     ::  Num_Radial_Points
+INTEGER                                                                     ::  Num_Theta_Points
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  Density_Holder,         &
+                                                                                Velocity_Holder,        &
+                                                                                Radial_Locations,       &
+                                                                                Theta_Locations
+
+INTEGER                                                                     ::  Here, There
+
+
+INTEGER, DIMENSION(1:5)                                                     ::  File_ID
+CHARACTER(len = 44)                                                         ::  Density_Filename
+CHARACTER(len = 43)                                                         ::  RadVel_Filename
+CHARACTER(len = 42)                                                         ::  Rlocs_Filename
+CHARACTER(len = 42)                                                         ::  Tlocs_Filename
+CHARACTER(len = 42)                                                         ::  Plocs_Filename
+
+
+
+Num_Radial_Points = NUM_R_ELEM*NUM_NODES(1)
+Num_Theta_Points = NUM_T_ELEM*NUM_NODES(2)
+ALLOCATE( Density_Holder(1:Num_Radial_Points) )
+ALLOCATE( Velocity_Holder(1:Num_Radial_Points) )
+ALLOCATE( Radial_Locations(1:Num_Radial_Points) )
+ALLOCATE( Theta_Locations(1:Num_Theta_Points) )
+
+
+
+xlocs(0) = -1.0_idp
+xlocs(1) = 1.0_idp
+
+ecc_sqr = ecc*ecc
+ooomes = 1.0_idp/(1.0_idp - ecc_sqr)
+
+
+
+D_FACTOR = 1.0_idp /(Grav_Constant_G*t*t )
+
+V_FACTOR = SQRT(kappa)                          &
+         * Grav_Constant_G**((1.0_idp-gamma)/2)  &
+         * t**(1.0_idp - gamma)
+
+R_Factor = SQRT(Kappa)                                &
+        *(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))       &
+        *((t)**(2.0_idp-gamma))
+
+
+DO pe = 0,NUM_P_ELEM-1
+    DO pd = 0,NUM_NODES(3)-1
+        DO te = 0,NUM_T_ELEM-1
+            CUR_T_LOCS(:) = ((t_locs(te+1)-t_locs(te))/2.0_idp)*(Input_T_Quad(:) + 1.0_idp ) + t_locs(te)
+
+            Here = te*Num_Nodes(2) + 1
+            There = Here + Num_Nodes(2) - 1
+            Theta_Locations(Here:There) = CUR_T_LOCS
+
+
+            DO td = 0,NUM_NODES(2)-1
+
+                sin_sqr = SIN(CUR_T_LOCS(td))*SIN(CUR_T_LOCS(td))
+                line_min = 1
+
+
+                DO re = 0,NUM_R_ELEM-1
+
+                    deltar_overtwo = Delta_R(Re+1)/2.0_idp
+                    CUR_R_LOCS(:) = deltar_overtwo * (INPUT_R_QUAD(:)+1.0_idp) + r_locs(re)
+
+                    Here = re*Num_Nodes(1)+1
+                    There = Here + Num_Nodes(1) - 1
+                    Radial_Locations(Here:There) = CUR_R_LOCS(:)
+
+
+
+                    DO rd = 0, NUM_NODES(1)-1
+                        DO line = line_min,NUM_LINES-1
+
+                            r_sqr = CUR_R_LOCS(rd)*CUR_R_LOCS(rd)
+                            r_eff(rd) = sqrt(ooomes*r_sqr - ooomes*r_sqr*ecc_sqr*sin_sqr)
+
+                            IF ( r_eff(rd) <= Input_R(1) ) THEN
+
+                                line_min = 1
+                                
+                                ! Interpolate Self-Similar Values to Input locations
+                                Density = INPUT_D(line+1)*D_FACTOR
+                                Velocity = INPUT_V(line+1)*V_FACTOR
+                                EXIT
+
+                            ELSE IF ( ( r_eff(rd) > Input_R(Line) ) .AND. ( r_eff(rd) <= Input_R(Line + 1) ) ) THEN
+
+                                line_min = line
+                                x = MAP_TO_X_SPACE(Input_R(Line),Input_R(Line+1),r_eff(rd))
+
+                                LagPoly_Vals = Lagrange_Poly(x, 1, xlocs)
+
+                                ! Interpolate Self-Similar Values to Input locations
+                                Density = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
+                                Velocity = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
+
+
+                                EXIT
+
+                            ELSE IF ( r_eff(rd) > Input_R(NUM_LINES) ) THEN
+                                line_min = NUM_LINES - 1
+
+                                x = MAP_TO_X_SPACE(Input_R(Line),DRIVER_OUTER_RADIUS,r_eff(rd))
+
+                                LagPoly_Vals = Lagrange_Poly(x, 1, xlocs)
+
+                                ! Interpolate Self-Similar Values to Input locations
+                                Density = (INPUT_D(line)*LagPoly_Vals(0) + 0.0_idp*LagPoly_Vals(1))*D_FACTOR
+                                Velocity = (Input_V(line)*LagPoly_Vals(0) + 0.0_idp*LagPoly_Vals(1))*V_FACTOR
+
+                                EXIT
+                            END IF
+
+                        END DO ! Line
+
+                        ! Calculate Usable Quantities
+                        Pressure = kappa * Density**gamma
+                        Energy = Pressure/(gamma - 1.0_idp)
+                        Specific_Enthalpy = C_Square + (Energy + Pressure)/Density
+
+                        vsqr = Velocity*Velocity
+                        LF_sqr = 1.0_idp/(1.0_idp - vsqr/C_Square)
+
+
+                        !  Calculate CFA Input Values
+                        E  = Density*Specific_Enthalpy*LF_sqr - Pressure
+                        Si = Density*Specific_Enthalpy*LF_sqr*Velocity/C_Square
+                        S  = Density*Specific_Enthalpy*LF_sqr*vsqr/C_Square + 3.0_idp * Pressure
+
+
+
+
+                        nd = pd*NUM_NODES(2)*NUM_NODES(1)   &
+                           + td*NUM_NODES(1)                &
+                           + rd + 1
+
+                        Input_E(nd, re,te,pe) = E
+                        Input_Si(nd, re, te, pe, 1) = Si
+                        Input_Si(nd, re, te, pe, 2) = 0.0_idp
+                        Input_Si(nd, re, te, pe, 3) = 0.0_idp
+                        Input_S(nd, re, te, pe) = S
+
+
+                    END DO ! rd
+                END DO ! re
+
+
+            END DO ! td
+        END DO ! te
+    END DO ! pd
+END DO ! pe
+
+
+
+END SUBROUTINE CONVERT_SELF_SIMILAR_3D
+
+
+
+
+
+
+
+!+201+###########################################################################!
+!                                                                                !
+!                  CONVERT_SELF_SIMILAR_3D                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE CONVERT_SELF_SIMILAR_3Db( t, kappa, gamma, ecc,                  &
+                                    Num_Nodes, NUM_LINES,                   &
+                                    INPUT_R_QUAD, INPUT_T_QUAD,             &
+                                    NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
+                                    Delta_R, r_locs, t_locs,                &
+                                    Input_D, Input_V, Input_X,              &
+                                    Input_E, Input_S, Input_Si              )
+
+
+REAL(KIND = idp),               INTENT(IN)                                  ::  t, kappa, gamma, ecc
+INTEGER,    DIMENSION(1:3),     INTENT(IN)                                  ::  Num_Nodes
+INTEGER,    INTENT(IN)                                                      ::  Num_LINES
+REAL(KIND = idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
+REAL(KIND = idp), DIMENSION(1:NUM_NODES(2)),INTENT(IN)                      ::  INPUT_T_QUAD
+
+INTEGER,                        INTENT(IN)                                  ::  NUM_R_ELEM
+INTEGER,                        INTENT(IN)                                  ::  NUM_T_ELEM
+INTEGER,                        INTENT(IN)                                  ::  NUM_P_ELEM
+
+REAL(KIND = idp), DIMENSION(NUM_R_ELEM), INTENT(IN)                         ::  Delta_R
+REAL(KIND = idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
+REAL(KIND = idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                       ::  t_locs
+
+
+REAL(KIND = idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_D,    &
+                                                                                Input_V,    &
+                                                                                Input_X
+
+REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+                            0:NUM_R_ELEM-1,                                 &
+                            0:NUM_T_ELEM-1,                                 &
+                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Input_E
+
+REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+                            0:NUM_R_ELEM-1,                                 &
+                            0:NUM_T_ELEM-1,                                 &
+                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Input_S
+
+REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+                            0:NUM_R_ELEM-1,                                 &
+                            0:NUM_T_ELEM-1,                                 &
+                            0:NUM_P_ELEM-1, 1:3 ),  INTENT(INOUT)           ::  Input_Si
+
+
+INTEGER                                                                     ::  Frame_Number = 1
+INTEGER                                                                     ::  i
+INTEGER                                                                     ::  re, te, pe, &
+                                                                                rd, td, pd
+
+
+
+INTEGER                                                                     ::  nd, line, line_min
+REAL(KIND = idp), DIMENSION(0:1)                                            ::  xlocs
+REAL(KIND = idp)                                                            ::  x
+REAL(KIND = idp)                                                            ::  Density, Velocity
+
+REAL(KIND = idp)                                                            ::  Pressure, Energy
+REAL(KIND = idp)                                                            ::  vsqr, LF_sqr
+REAL(KIND = idp)                                                            ::  E, Si, S
+
+REAL(KIND = idp), DIMENSION(0:1)                                            ::  LagPoly_Vals
+REAL(KIND = idp), DIMENSION(1:NUM_NODES(1))                                 ::  CUR_R_LOCS
+
+
+REAL(KIND = idp)                                                            ::  r_sqr
+REAL(KIND = idp)                                                            ::  deltar_overtwo
+
+REAL(KIND = idp)                                                            ::  D_FACTOR, V_FACTOR, X_Factor
+
+REAL(KIND = idp)                                                            ::  ecc_sqr, ooomes, cos_sqr, sin_sqr
+REAL(KIND = idp)                                                            ::  Specific_Enthalpy
+
+INTEGER                                                                     ::  Num_Radial_Points
+INTEGER                                                                     ::  Num_Theta_Points
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  Density_Holder,         &
+                                                                                Velocity_Holder,        &
+                                                                                Radial_Locations,       &
+                                                                                Theta_Locations
+
+INTEGER                                                                     ::  Here, There
+REAL(KIND = idp)                                                            ::  xloc
+REAL(KIND = idp)                                                            ::  E_Units
+
+
+INTEGER, DIMENSION(1:5)                                                     ::  File_ID
+CHARACTER(len = 44)                                                         ::  Density_Filename
+CHARACTER(len = 43)                                                         ::  RadVel_Filename
+CHARACTER(len = 42)                                                         ::  Rlocs_Filename
+CHARACTER(len = 42)                                                         ::  Tlocs_Filename
+CHARACTER(len = 42)                                                         ::  Plocs_Filename
+
+
+
+Num_Radial_Points = NUM_R_ELEM*NUM_NODES(1)
+Num_Theta_Points = NUM_T_ELEM*NUM_NODES(2)
+ALLOCATE( Density_Holder(1:Num_Radial_Points) )
+ALLOCATE( Velocity_Holder(1:Num_Radial_Points) )
+ALLOCATE( Theta_Locations(1:Num_Theta_Points) )
+
+E_Units = Erg/Centimeter**3
+
+xlocs(0) = -1.0_idp
+xlocs(1) = 1.0_idp
+
+ecc_sqr = ecc*ecc
+ooomes = 1.0_idp/(1.0_idp - ecc_sqr)
+
+
+
+D_FACTOR = 1.0_idp /(Grav_Constant_G*t*t )
+
+V_FACTOR = SQRT(kappa)                          &
+         * Grav_Constant_G**((1.0_idp-gamma)/2.0_idp)  &
+         * t**(1.0_idp - gamma)
+
+X_Factor = kappa**(-0.5_idp)                               &
+        *(Grav_Constant_G**((gamma-1.0_idp)/2.0_idp))       &
+        *((t)**(gamma-2.0_idp))
+
+
+
+
+DO pe = 0,NUM_P_ELEM-1
+DO te = 0,NUM_T_ELEM-1
+
+    line_min = 1
+    DO re = 0,NUM_R_ELEM-1
+        CUR_R_LOCS(:) = Delta_R(Re+1) * (INPUT_R_QUAD(:)+0.5_idp) + r_locs(re)
+
+
+        DO rd = 1,NUM_NODES(1)
+            xloc = CUR_R_LOCS(rd)*X_Factor
+            line = Find_Line(xloc, Input_X, NUM_LINES)
+
+            x = MAP_TO_X_SPACE(Input_X(Line),Input_X(Line+1),xloc)
+            LagPoly_Vals = Lagrange_Poly(x, 1, xlocs)
+            
+
+            ! Interpolate Self-Similar Values to Input locations
+            Density  = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
+            Velocity = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
+
+            
+
+            ! Calculate Usable Quantities
+            Pressure = kappa * Density**gamma
+            Energy = Pressure/(gamma - 1.0_idp)
+            Specific_Enthalpy = C_Square + (Energy + Pressure)/Density
+
+            
+            
+
+            vsqr = Velocity*Velocity
+            LF_sqr = 1.0_idp/(1.0_idp - vsqr/C_Square)
+
+            !  Calculate CFA Input Values
+            E  = Density*Specific_Enthalpy*LF_sqr - Pressure
+            Si = Density*Specific_Enthalpy*LF_sqr*Velocity/C_Square
+            S  = Density*Specific_Enthalpy*LF_sqr*vsqr/C_Square + 3.0_idp * Pressure
+
+            PRINT*,re,E,S,Si
+!            PRINT*,re,Velocity
+
+            DO pd = 0,NUM_NODES(3)-1
+            DO td = 0,NUM_NODES(2)-1
+
+                nd = pd*NUM_NODES(2)*NUM_NODES(1)   &
+                   + td*NUM_NODES(1)                &
+                   + rd
+
+                Input_E(nd, re,te,pe) = E
+                Input_Si(nd, re, te, pe, 1) = Si
+                Input_Si(nd, re, te, pe, 2) = 0.0_idp
+                Input_Si(nd, re, te, pe, 3) = 0.0_idp
+                Input_S(nd, re, te, pe) = S
+
+            END DO ! td
+            END DO ! pd
+        END DO ! rd
+    END DO ! re
+END DO ! te
+END DO ! pe
+
+PRINT*,"Stop in CONVERT_SELF_SIMILAR_3Db"
+STOP
+END SUBROUTINE CONVERT_SELF_SIMILAR_3Db
 
 
 
@@ -307,8 +773,12 @@ SELFSIM_POT_VALS(0) = SELFSIM_POT_VALS(1) - 3*Grav_Constant_G*Enclosed_Mass(1)  
 !PRINT*,Enclosed_Mass
 !PRINT*," "
 !PRINT*,"SELFSIM_POT_VALS"
-!PRINT*,SELFSIM_POT_VALS
+!DO i = 1,Line_Count
+!    PRINT*,SELFSIM_POT_VALS(i)
+!END DO
 !PRINT*," "
+
+
 
 !CALL SELFSIM_NEWT_SUB( SELFSIM_R_VALS(100) + (SELFSIM_R_VALS(101)-SELFSIM_R_VALS(100))/2.0_idp)
 
@@ -397,7 +867,6 @@ INTEGER                                                           ::  Ord,      
 INTEGER                                                           ::  i, j, l, m, d, re, reb
 
 
-REAL(KIND = idp)                                                  :: csqr
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: x_locs,     &
                                                                      ri_locs,    &
@@ -415,8 +884,6 @@ REAL(KIND = idp)                                                  :: Inner_Int
 REAL(KIND = idp)                                                  :: x_tmp
 Ord = 6
 
-
-csqr = Speed_of_Light*Speed_of_Light
 
 
 ALLOCATE( x_locs(1:Ord) )
@@ -439,7 +906,7 @@ DO re = 0,NUM_R_ELEM-1
 
    ! Calculate the Alpha Psi values at each of the Outer Integral's Quadrature Points !
    DO i = 1,Ord
-      AlphaPsi(i) =  1.0_idp + 0.5_idp*SELFSIM_NEWT_SOL(ri_locs(i),0.0_idp,0.0_idp)/csqr
+      AlphaPsi(i) =  1.0_idp + 0.5_idp*SELFSIM_NEWT_SOL(ri_locs(i),0.0_idp,0.0_idp)/C_Square
    END DO 
 
 
@@ -452,7 +919,7 @@ DO re = 0,NUM_R_ELEM-1
       ! Calculate Psi^10 values at each of the Inner Quadrature Points
       DO j = 1,Ord
 
-           Psi = 1.0_idp - 0.5_idp*SELFSIM_NEWT_SOL(rij_locs(j,i),0.0_idp,0.0_idp)/csqr
+           Psi = 1.0_idp - 0.5_idp*SELFSIM_NEWT_SOL(rij_locs(j,i),0.0_idp,0.0_idp)/C_Square
            Psi_10(j,i) = Psi**10
 
       END DO 
@@ -508,27 +975,26 @@ DO re = 0,NUM_R_ELEM-1
 
    IF ( re == 0 ) THEN
 
-      SELFSIM_SHIFT_VALS(re+1) = (3.0_idp/2.0_idp)                        &
-                               * 8.0_idp*pi* Grav_Constant_G/(csqr*csqr)  &
-                               * r_locs(re+1)                             &
-                               * ( r_locs(re+1) - R_locs(re))/2.0_idp     &
+      SELFSIM_SHIFT_VALS(re+1) = (3.0_idp/2.0_idp)                      &
+                               * 8.0_idp*pi* GR_Source_Scalar           &
+                               * r_locs(re+1)                           &
+                               * ( r_locs(re+1) - R_locs(re))/2.0_idp   &
                                * Outer_Int
 
    ELSE
 
-      SELFSIM_SHIFT_VALS(re+1) = r_locs(re+1)/r_locs(re)                  &
-                               * SELFSIM_SHIFT_VALS(re)                   &
-                               + (3.0_idp/2.0_idp)                        &
-                               * 8.0_idp*pi* Grav_Constant_G/(csqr*csqr)  &
-                               * r_locs(re+1)                             &
-                               * ( r_locs(re+1) - r_locs(re))/2.0_idp     &
+      SELFSIM_SHIFT_VALS(re+1) = r_locs(re+1)/r_locs(re)                &
+                               * SELFSIM_SHIFT_VALS(re)                 &
+                               + (3.0_idp/2.0_idp)                      &
+                               * 8.0_idp*pi*GR_Source_Scalar            &
+                               * r_locs(re+1)                           &
+                               * ( r_locs(re+1) - r_locs(re))/2.0_idp   &
                                * Outer_Int
 
    END IF
 
 
 END DO ! re loop
-
 
 
 
@@ -743,248 +1209,33 @@ END SUBROUTINE Initialize_LG_Quadrature
 
 
 
-
-!+201+###########################################################################!
-!                                                                                !
-!                  CONVERT_SELF_SIMILAR_3D                                       !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CONVERT_SELF_SIMILAR_3D( t, kappa, gamma, ecc,                   &
-                                    Num_Nodes, NUM_LINES,                   &
-                                    INPUT_R_QUAD, INPUT_T_QUAD,             &
-                                    NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
-                                    Delta_R, r_locs, t_locs,                &
-                                    Input_R, Input_D, Input_V,              &
-                                    Input_E, Input_S, Input_Si              )
-
-
-REAL(KIND = idp),               INTENT(IN)                                  ::  t, kappa, gamma, ecc
-INTEGER,    DIMENSION(1:3),     INTENT(IN)                                  ::  Num_Nodes
-INTEGER,    INTENT(IN)                                                      ::  Num_LINES
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(2)),INTENT(IN)                      ::  INPUT_T_QUAD
-
-INTEGER,                        INTENT(IN)                                  ::  NUM_R_ELEM
-INTEGER,                        INTENT(IN)                                  ::  NUM_T_ELEM
-INTEGER,                        INTENT(IN)                                  ::  NUM_P_ELEM
-
-REAL(KIND = idp), DIMENSION(NUM_R_ELEM), INTENT(IN)                         ::  Delta_R
-REAL(KIND = idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
-REAL(KIND = idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                       ::  t_locs
-
-
-REAL(KIND = idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_R,    &
-                                                                                Input_D,    &
-                                                                                Input_V
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
-                            0:NUM_R_ELEM-1,                                 &
-                            0:NUM_T_ELEM-1,                                 &
-                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Input_E
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
-                            0:NUM_R_ELEM-1,                                 &
-                            0:NUM_T_ELEM-1,                                 &
-                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Input_S
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
-                            0:NUM_R_ELEM-1,                                 &
-                            0:NUM_T_ELEM-1,                                 &
-                            0:NUM_P_ELEM-1, 1:3 ),  INTENT(INOUT)           ::  Input_Si
-
-
-INTEGER                                                                     ::  Frame_Number = 1
-INTEGER                                                                     ::  i
-INTEGER                                                                     ::  re, te, pe, &
-                                                                                rd, td, pd
-
-
-
-INTEGER                                                                     ::  nd, line, line_min
-REAL(KIND = idp), DIMENSION(0:1)                                            ::  xlocs
-REAL(KIND = idp)                                                            ::  x
-REAL(KIND = idp)                                                            ::  Density, Velocity
-
-REAL(KIND = idp)                                                            ::  Pressure, Energy
-REAL(KIND = idp)                                                            ::  vsqr, LF_sqr
-REAL(KIND = idp)                                                            ::  E, Si, S
-
-REAL(KIND = idp), DIMENSION(0:1)                                            ::  LagPoly_Vals
-REAL(KIND = idp), DIMENSION(0:NUM_NODES(1)-1)                               ::  CUR_R_LOCS
-REAL(KIND = idp), DIMENSION(0:NUM_NODES(2)-1)                               ::  CUR_T_LOCS
-
-REAL(KIND = idp), DIMENSION(0:NUM_NODES(1)-1)                               ::  r_eff
-
-REAL(KIND = idp)                                                            ::  r_sqr
-REAL(KIND = idp)                                                            ::  deltar_overtwo
-
-REAL(KIND = idp)                                                            ::  D_FACTOR, V_FACTOR
-
-REAL(KIND = idp)                                                            ::  ecc_sqr, ooomes, cos_sqr, sin_sqr
-REAL(KIND = idp)                                                            ::  csqr
-REAL(KIND = idp)                                                            ::  Specific_Enthalpy
-
-INTEGER                                                                     ::  Num_Radial_Points
-INTEGER                                                                     ::  Num_Theta_Points
-
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  Density_Holder,         &
-                                                                                Velocity_Holder,        &
-                                                                                Radial_Locations,       &
-                                                                                Theta_Locations
-
-INTEGER                                                                     ::  Here, There
-
-
-INTEGER, DIMENSION(1:5)                                                     ::  File_ID
-CHARACTER(len = 44)                                                         ::  Density_Filename
-CHARACTER(len = 43)                                                         ::  RadVel_Filename
-CHARACTER(len = 42)                                                         ::  Rlocs_Filename
-CHARACTER(len = 42)                                                         ::  Tlocs_Filename
-CHARACTER(len = 42)                                                         ::  Plocs_Filename
-
-
-
-!File_ID = (/ (i,i=1001,1005) /)
-
-
-!WRITE(Density_Filename,'(A35,I5.5,A4)')'OUTPUT/Yahil_Results/Yahil_Density_',Frame_Number,'.out'
-!WRITE(RadVel_Filename,'(A34,I5.5,A4)') 'OUTPUT/Yahil_Results/Yahil_RadVel_', Frame_Number,'.out'
-!WRITE(Rlocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_rlocs_',  Frame_Number,'.out'
-!WRITE(Tlocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_tlocs_',  Frame_Number,'.out'
-!WRITE(Plocs_Filename,'(A33,I5.5,A4)')  'OUTPUT/Yahil_Results/Yahil_plocs_',  Frame_Number,'.out'
-!
-!
-!OPEN( UNIT = File_ID(1), FILE=Density_Filename   )
-!OPEN( UNIT = File_ID(2), FILE=RadVel_Filename    )
-!OPEN( UNIT = File_ID(3), FILE=Rlocs_Filename     )
-!OPEN( UNIT = File_ID(4), FILE=Tlocs_Filename     )
-!OPEN( UNIT = File_ID(5), FILE=Plocs_Filename     )
-
-
-Num_Radial_Points = NUM_R_ELEM*NUM_NODES(1)
-Num_Theta_Points = NUM_T_ELEM*NUM_NODES(2)
-ALLOCATE( Density_Holder(1:Num_Radial_Points) )
-ALLOCATE( Velocity_Holder(1:Num_Radial_Points) )
-ALLOCATE( Radial_Locations(1:Num_Radial_Points) )
-ALLOCATE( Theta_Locations(1:Num_Theta_Points) )
-
-
-
-xlocs(0) = -1.0_idp
-xlocs(1) = 1.0_idp
-
-ecc_sqr = ecc*ecc
-ooomes = 1.0_idp/(1.0_idp - ecc_sqr)
-
-csqr = Speed_Of_Light*Speed_Of_Light
-
-D_FACTOR = 1.0_idp /(Grav_Constant_G*t*t )
-
-V_FACTOR = SQRT(kappa)                          &
-         * Grav_Constant_G**((1.0_idp-gamma)/2)  &
-         * t**(1.0_idp - gamma)
-
-
-
-
-
-DO pe = 0,NUM_P_ELEM-1
-    DO pd = 0,NUM_NODES(3)-1
-        DO te = 0,NUM_T_ELEM-1
-            CUR_T_LOCS(:) = ((t_locs(te+1)-t_locs(te))/2.0_idp)*(Input_T_Quad(:) + 1.0_idp ) + t_locs(te)
-
-            Here = te*Num_Nodes(2) + 1
-            There = Here + Num_Nodes(2) - 1
-            Theta_Locations(Here:There) = CUR_T_LOCS
-
-
-            DO td = 0,NUM_NODES(2)-1
-
-                sin_sqr = SIN(CUR_T_LOCS(td))*SIN(CUR_T_LOCS(td))
-                line_min = 1
-                DO re = 0,NUM_R_ELEM-1
-
-                    deltar_overtwo = Delta_R(Re+1)/2.0_idp
-                    CUR_R_LOCS(:) = deltar_overtwo * (INPUT_R_QUAD(:)+1.0_idp) + r_locs(re)
-
-                    Here = re*Num_Nodes(1)+1
-                    There = Here + Num_Nodes(1) - 1
-                    Radial_Locations(Here:There) = CUR_R_LOCS(:)
-
-
-
-                    DO rd = 0, NUM_NODES(1)-1
-                        DO line = line_min,NUM_LINES-1
-
-                            r_sqr = CUR_R_LOCS(rd)*CUR_R_LOCS(rd)
-                            r_eff(rd) = sqrt(ooomes*r_sqr - ooomes*r_sqr*ecc_sqr*sin_sqr)
-
-
-                            IF ( ( r_eff(rd) > Input_R(Line) ) .AND. ( r_eff(rd) <= Input_R(Line + 1) ) ) THEN
-
-                                line_min = line
-                                x = MAP_TO_X_SPACE(Input_R(Line),Input_R(Line+1),r_eff(rd))
-
-                                LagPoly_Vals = Lagrange_Poly(x, 1, xlocs)
-
-                                ! Interpolate Self-Similar Values to Input locations
-                                Density = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
-                                Velocity = (Input_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
-
-
-
-                                Here = re*Num_Nodes(1)+rd+1
-                                Density_Holder(Here) = Density
-                                Velocity_Holder(Here) = Velocity
-
-                                ! Calculate Usable Quantities
-                                Pressure = kappa * Density**gamma
-                                Energy = Pressure/(gamma - 1.0_idp)
-                                Specific_Enthalpy = csqr + (Energy + Pressure)/Density
-
-                                vsqr = Velocity*Velocity
-                                LF_sqr = 1.0_idp/(1.0_idp - vsqr/csqr)
-
-
-                                !  Calculate CFA Input Values
-                                E  = Density*Specific_Enthalpy*LF_sqr - Pressure
-                                Si = Density*Specific_Enthalpy*LF_sqr*Velocity/Speed_of_Light
-                                S  = Density*Specific_Enthalpy*LF_sqr*vsqr/(csqr) + 3.0_idp * Pressure
-
-
-                                nd = pd*NUM_NODES(2)*NUM_NODES(1)   &
-                                   + td*NUM_NODES(1)                &
-                                   + rd + 1
-
-                                Input_E(nd, re,te,pe) = E
-                                Input_Si(nd, re, te, pe, 1) = Si
-                                Input_Si(nd, re, te, pe, 2) = 0.0_idp
-                                Input_Si(nd, re, te, pe, 3) = 0.0_idp
-                                Input_S(nd, re, te, pe) = S
-
-
-                            END IF
-                        END DO ! Line
-                    END DO ! rd
-                END DO ! re
-
-!                WRITE(File_ID(1),*)Density_Holder
-!                WRITE(File_ID(2),*)Velocity_Holder
-
-
-            END DO ! td
-        END DO ! te
-    END DO ! pd
-END DO ! pe
-
-!WRITE(File_ID(3),*)Radial_Locations
-!WRITE(File_ID(4),*)Theta_Locations
-!WRITE(File_ID(5),*)pi/2.0_idp
-
-END SUBROUTINE CONVERT_SELF_SIMILAR_3D
-
-
-
+PURE INTEGER FUNCTION Find_Line( x, x_list, list_len )
+
+REAL(KIND = idp), INTENT(IN)            :: x, x_list(list_len)
+INTEGER, INTENT(IN)                     :: list_len
+
+INTEGER                                 :: up, down, mid
+
+up = list_len
+down = 1
+DO WHILE (up - down > 1)
+    mid = (up + down)/2
+    IF ( (x_list(list_len)>=x_list(1)).eqv.(x>=x_list(mid)) ) THEN
+        down = mid
+    ELSE
+        up = mid
+    END IF
+END DO
+
+IF ( x == x_list(1) ) THEN
+    Find_Line = 1
+ELSEIF ( x == x_list(list_len) ) THEN
+    Find_Line = list_len - 1
+ELSE
+    Find_Line = down
+END IF
+
+END FUNCTION Find_Line
 
 
 
