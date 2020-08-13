@@ -14,7 +14,7 @@ MODULE Poseidon_Source_Module                                                   
 
 
 USE Poseidon_Constants_Module, &
-            ONLY :  idp, pi,speed_of_light
+            ONLY :  idp
 
 USE Poseidon_Internal_Communication_Module, &
             ONLY :  Poseidon_CFA_Block_Share

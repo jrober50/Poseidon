@@ -106,8 +106,10 @@ USE Poseidon_Mapping_Functions_Module, &
                         CFA_ALL_Matrix_Map
 
 USE Poseidon_IO_Module, &
-                ONLY :  Clock_In,                       &
-                        OUTPUT_RHS_VECTOR_Parts
+                ONLY :  Clock_In
+
+USE Poseidon_LinSys_IO_Module, &
+                ONLY :  OUTPUT_RHS_VECTOR_Parts
 
 USE SubJacobian_Functions_Module_3D, &
                 ONLY :  Calc_RHS_Terms

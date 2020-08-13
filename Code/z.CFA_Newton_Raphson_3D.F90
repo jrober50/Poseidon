@@ -45,12 +45,21 @@ MODULE CFA_Newton_Raphson_3D_Module                                             
 
 
 USE Poseidon_Constants_Module, &
-                        ONLY : idp, pi, speed_of_light, C_Square
+                        ONLY : idp, pi
+
+USE Units_Module, &
+                        ONLY :  C_Square,                   &
+                                Centimeter,                 &
+                                Meter,                      &
+                                Second,                     &
+                                GravPot_Units,              &
+                                Shift_Units
 
 USE DRIVER_Parameters, &
                         ONLY :  Potential_Solution,          &
                                 DRIVER_FRAME,               &
-                                FRAME_REPORT_FLAG
+                                FRAME_REPORT_FLAG,          &
+                                Driver_Test_Number
 
 USE Poseidon_Parameters, &
                         ONLY :  DOMAIN_DIM,                 &
@@ -121,13 +130,15 @@ USE Poseidon_IO_Module, &
                         ONLY :  Clock_In,                           &
                                 OPEN_ITER_REPORT_FILE,              &
                                 CLOSE_ITER_REPORT_FILE,             &
-                                OUTPUT_JACOBIAN_MATRIX,             &
+                                OUTPUT_FINAL_RESULTS
+
+USE Poseidon_LinSys_IO_Module, &
+                        ONLY :  OUTPUT_JACOBIAN_MATRIX,             &
                                 OUTPUT_RHS_VECTOR,                  &
                                 OUTPUT_UPDATE_VECTOR,               &
                                 READ_COEFFICIENT_VECTOR,            &
                                 OUTPUT_COEFFICIENT_VECTOR_MATLAB,   &
-                                OUTPUT_COEFFICIENT_VECTOR_FORTRAN,  &
-                                OUTPUT_FINAL_RESULTS
+                                OUTPUT_COEFFICIENT_VECTOR_FORTRAN
 
 USE Poseidon_Petsc_Solver, &
                         ONLY : PETSC_Distributed_Solve
@@ -260,11 +271,10 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     !*!
     !*! Output Iteration Report
     !*!
-    IF ( myID_Poseidon == 01 ) THEN
-        CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
+    IF ( myID_Poseidon == 0 ) THEN
+        !CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
         CALL CLOSE_ITER_REPORT_FILE()
-        CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
-        
+        !CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
     END IF
 
     
@@ -707,6 +717,7 @@ REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
 REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
 REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
+
 120 FORMAT (A61)
 121 FORMAT (A1)
 122 FORMAT (A41,I2.2)
@@ -716,6 +727,8 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 112 FORMAT (A43,I2.2,A2,I2.2,A4)
+
+
 
 
 
@@ -779,58 +792,134 @@ END DO
 
 
 
-! Write Results Table Header to Screen
-IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    IF ( Rank == 0 ) THEN
-        PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
-        WRITE(*,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
-    END IF
-END IF
 
+IF ( Driver_Test_Number .NE. -1 ) THEN
 
-
-PRINT*,"In OUTPUT_ITERATION_REPORT, Before Value Calc"
-deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
-DO i = 0,ITER_REPORT_NUM_SAMPLES
-
-    r = i*deltar + R_INNER
-    theta = pi/2.0_idp
-    phi = pi/2.0_idp
-
-
-    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
-                                    Return_Psi, Return_AlphaPsi,                &
-                                    Return_Beta1, Return_Beta2, Return_Beta3    )
-
-    ! Determine the Newtonian Potential at the location r, theta, phi
-    Analytic_Val = Potential_Solution(r,theta,phi)
-
-
-    ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
-    ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
-
-    ! Calculate Conformal Factor value from Newtonian Potential
-    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
-
-    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
-
-
-    ! Write Results to Screen
+    ! Write Results Table Header to Screen
     IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
         IF ( Rank == 0 ) THEN
-            WRITE(*,111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+            PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
+            WRITE(*,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
         END IF
     END IF
 
-    ! Write Results to File
-    DO j = 0,1
-        IF ( FILE_ID(j) .NE. -1 ) THEN
-            WRITE(FILE_ID(j),111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
-        END IF
-    END DO ! j Loop
+    deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+    DO i = 0,ITER_REPORT_NUM_SAMPLES
 
-END DO  ! i Loop
+        r = i*deltar + R_INNER
+        theta = pi/2.0_idp
+        phi = pi/2.0_idp
+
+
+        CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+                                        Return_Psi, Return_AlphaPsi,                &
+                                        Return_Beta1, Return_Beta2, Return_Beta3    )
+
+        ! Determine the Newtonian Potential at the location r, theta, phi
+        Analytic_Val = Potential_Solution(r,theta,phi)/GravPot_Units
+
+
+        ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
+        ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
+
+        ! Calculate Conformal Factor value from Newtonian Potential
+        PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
+
+        ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
+        AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
+
+
+        ! Write Results to Screen
+        IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+            IF ( Rank == 0 ) THEN
+                WRITE(*,111) r/Centimeter,              &
+                             Analytic_Val,              &
+                             PsiPot_Val,                &
+                             AlphaPsiPot_Val,           &
+                             Return_Beta1/Shift_Units,  &
+                             Return_Beta2,              &
+                             Return_Beta3
+            END IF
+        END IF
+
+        ! Write Results to File
+        DO j = 0,1
+            IF ( FILE_ID(j) .NE. -1 ) THEN
+                WRITE(FILE_ID(j),111) r/Centimeter,              &
+                                      Analytic_Val,              &
+                                      PsiPot_Val,                &
+                                      AlphaPsiPot_Val,           &
+                                      Return_Beta1/Shift_Units,  &
+                                      Return_Beta2,              &
+                                      Return_Beta3
+            END IF
+        END DO ! j Loop
+
+    END DO  ! i Loop
+
+ELSE
+
+    ! Write Results Table Header to Screen
+    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        IF ( Rank == 0 ) THEN
+            PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
+            WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+        END IF
+    END IF
+
+    deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+    DO i = 0,ITER_REPORT_NUM_SAMPLES
+
+        r = i*deltar + R_INNER
+        theta = pi/2.0_idp
+        phi = pi/2.0_idp
+
+
+        CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+                                        Return_Psi, Return_AlphaPsi,                &
+                                        Return_Beta1, Return_Beta2, Return_Beta3    )
+
+        ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
+        ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
+
+        ! Calculate Conformal Factor value from Newtonian Potential
+        PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
+
+        ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
+        AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
+
+
+        ! Write Results to Screen
+        IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+            IF ( Rank == 0 ) THEN
+                WRITE(*,111) r/Centimeter,              &
+                             PsiPot_Val,                &
+                             AlphaPsiPot_Val,           &
+                             Return_Beta1/Shift_Units,  &
+                             Return_Beta2,              &
+                             Return_Beta3
+            END IF
+        END IF
+
+        ! Write Results to File
+        DO j = 0,1
+            IF ( FILE_ID(j) .NE. -1 ) THEN
+                WRITE(FILE_ID(j),111) r/Centimeter,              &
+                                      PsiPot_Val,                &
+                                      AlphaPsiPot_Val,           &
+                                      Return_Beta1/Shift_Units,  &
+                                      Return_Beta2,              &
+                                      Return_Beta3
+            END IF
+        END DO ! j Loop
+
+    END DO  ! i Loop
+
+
+
+
+END IF
+
 
 
 WRITE( FRAME_REPORT_FILE_ID, '(4/)')
@@ -879,7 +968,7 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
     IF ( Rank == 0 ) THEN
         PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
-        WRITE(*,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+        WRITE(*,110)"r (cm)","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
     END IF
 END IF
 
@@ -896,23 +985,29 @@ DO i = 0,ITER_REPORT_NUM_SAMPLES
                                     Return_Beta1, Return_Beta2, Return_Beta3    )
 
     ! Determine the Newtonian Potential at the location r, theta, phi
-    Analytic_Val = Potential_Solution(r,theta,phi)
+    Analytic_Val = Potential_Solution(r,theta,phi)/GravPot_Units
 
 
     ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
     ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
 
     ! Calculate Conformal Factor value from Newtonian Potential
-    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
 
     ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
+    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
 
 
     ! Write Results to Screen
     IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
         IF ( Rank == 0 ) THEN
-            WRITE(*,111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+            WRITE(*,111) r/Centimeter,              &
+                          Analytic_Val,              &
+                          PsiPot_Val,                &
+                          AlphaPsiPot_Val,           &
+                          Return_Beta1/Shift_Units,  &
+                          Return_Beta2,              &
+                          Return_Beta3
         END IF
     END IF
 
@@ -952,7 +1047,9 @@ IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
     FILE_ID(1) = ITER_REPORT_FILE_ID
 END IF
 
-
+!DO i = 0,PROB_DIM-1
+!    PRINT*,Coefficient_Vector(i),Update_Vector(i)
+!END DO
 
 IF (myID_Poseidon == 0) THEN
 

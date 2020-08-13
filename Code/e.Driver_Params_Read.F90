@@ -47,6 +47,7 @@ USE DRIVER_Parameters, &
                     DRIVER_y_PROCS,             &
                     DRIVER_z_PROCS,             &
                     DRIVER_MESH_TYPE,           &
+                    DRIVER_Zoom,                &
                     DRIVER_SOLVER_TYPE,         &
                     RESULTS_OUTPUT_FLAG,        &
                     SOURCE_OUTPUT_FLAG,         &
@@ -78,17 +79,23 @@ CONTAINS
  !#################################################################################!
 SUBROUTINE UNPACK_DRIVER_PARAMETERS()
 
-INTEGER                                     ::  DRIVER_read
+INTEGER                                             ::  DRIVER_read
 
 
-INTEGER                                     ::  iskipp
-INTEGER                                     ::  istat
+INTEGER                                             ::  iskipp
+INTEGER                                             ::  istat
 
-INTEGER,            DIMENSION(1:24)         ::  Int_Params
-REAL(KIND = idp),   DIMENSION(1:11)         ::  Real_Params
-INTEGER,            DIMENSION(1:11)         ::  Real_Params_Flags
+INTEGER                                             ::  Num_Int_Params  = 24
+INTEGER                                             ::  Num_Real_Params = 12
+
+INTEGER,            DIMENSION(:), ALLOCATABLE     ::  Int_Params
+REAL(KIND = idp),   DIMENSION(:), ALLOCATABLE    ::  Real_Params
+INTEGER,            DIMENSION(:), ALLOCATABLE    ::  Real_Params_Flags
 
 
+ALLOCATE( Int_Params(1:Num_Int_Params) )
+ALLOCATE( Real_Params(1:Num_Real_Params) )
+ALLOCATE( Real_Params_Flags(1:Num_Real_Params) )
 
 DRIVER_read = 42
 
@@ -102,10 +109,12 @@ END IF
 Int_Params = -1
 Real_Params_Flags = -1
 
-CALL READ_DRIVER_PARAMETERS( DRIVER_read,         &
+CALL READ_DRIVER_PARAMETERS( DRIVER_read,           &
                               Int_Params,           &
                               Real_Params,          &
-                              Real_Params_Flags     )
+                              Real_Params_Flags,    &
+                              Num_Int_Params,       &
+                              Num_Real_Params       )
 
 CLOSE(UNIT=DRIVER_read,STATUS='keep',IOSTAT=istat)
 
@@ -166,7 +175,9 @@ SELFSIM_END_T               = Real_Params(8)    !   YET
 SELFSIM_KAPPA               = Real_Params(9)    !   SSK
 SELFSIM_GAMMA               = Real_Params(10)   !   SSG
 SELFSIM_ECC                 = Real_Params(11)   !   SSE
+DRIVER_Zoom                 = Real_Params(12)   !   GZ
 
+PRINT*,"Driver_Zoom",Driver_Zoom
 
 END SUBROUTINE UNPACK_DRIVER_PARAMETERS
 
@@ -183,13 +194,18 @@ END SUBROUTINE UNPACK_DRIVER_PARAMETERS
 SUBROUTINE READ_DRIVER_PARAMETERS( nreadp,                     &
                                     Int_Params,                 &
                                     Real_Params,                &
-                                    Real_Params_Flags           )
+                                    Real_Params_Flags,          &
+                                    Num_Int_Params,             &
+                                    Num_Real_Params             )
 
 INTEGER, INTENT(IN)                                 ::  nreadp
 
-INTEGER,            DIMENSION(1:24), INTENT(INOUT)   ::  Int_Params
-REAL(KIND = idp),   DIMENSION(1:11), INTENT(INOUT)   ::  Real_Params
-INTEGER,            DIMENSION(1:11), INTENT(INOUT)   ::  Real_Params_Flags
+INTEGER, INTENT(IN)                                 ::  Num_Int_Params
+INTEGER, INTENT(IN)                                 ::  Num_Real_Params
+
+INTEGER,            DIMENSION(1:Num_Int_Params), INTENT(INOUT)  ::  Int_Params
+REAL(KIND = idp),   DIMENSION(1:Num_Real_Params), INTENT(INOUT) ::  Real_Params
+INTEGER,            DIMENSION(1:Num_Real_Params), INTENT(INOUT) ::  Real_Params_Flags
 
 
 INTEGER                             :: iskipp
@@ -207,7 +223,7 @@ CHARACTER(LEN=128)                  :: line
 111 FORMAT (10x,i10)
 121 FORMAT (10x,F9.5)
 131 FORMAT (10x,E14.0)
-
+141 FORMAT (6x,F17.16)
 
 
 REWIND(nreadp)
@@ -437,6 +453,10 @@ IF ( Param_type == 'SGF   ' ) THEN
     CYCLE
 END IF
 
+IF ( Param_type == 'GZ    ' ) THEN
+    READ (line, 141) REAL_PARAMS(12)
+    CYCLE
+END IF
 
 END DO READ
 

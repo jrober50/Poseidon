@@ -144,8 +144,10 @@ USE Jacobian_Internal_Functions_Module, &
 
 
 USE Poseidon_IO_Module, &
-                                ONLY :  Clock_In,                       &
-                                        OUTPUT_RHS_VECTOR_Parts,        &
+                                ONLY :  Clock_In
+
+USE Poseidon_LinSys_IO_Module, &
+                                ONLY :  OUTPUT_RHS_VECTOR_Parts,        &
                                         OUTPUT_LAPLACE_MATRIX
 
 USE Poseidon_BC_Module, &

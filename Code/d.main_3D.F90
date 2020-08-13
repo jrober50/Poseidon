@@ -98,7 +98,8 @@ USE Mesh_Module, &
 
 
 USE Units_Module, &
-            ONLY :  Set_Units, Grav_Constant_G, Speed_of_Light
+            ONLY :  Set_Units, Grav_Constant_G, Speed_of_Light,     &
+                    Centimeter
 
 
 
@@ -115,6 +116,8 @@ USE Driver_IO_Functions_Module, &
                     Close_Frame_Report_File,                        &
                     Output_Iteration_History
 
+USE Poseidon_IO_Module, &
+            ONLY :  OPEN_FILE_INQUISITION
 
 
 USE Poseidon_Interface, &
@@ -233,6 +236,7 @@ INTEGER                                                     ::  Problem_Dimensio
 
 INTEGER                                                     :: mode, modeb, imin, imax
 
+CHARACTER(LEN = 1)                                          ::  Units
 
 
 
@@ -281,7 +285,6 @@ INTEGER                         :: CHIMERA_FRAME
 REAL(KIND = idp)                :: SELFSIM_TIME
 REAL(KIND = idp)                :: SELFSIM_DELTA_T
 
-INTEGER                         :: file_number=00001
 INTEGER                         :: stride=1
 
 LOGICAL                         :: frame_flag=.TRUE.
@@ -340,8 +343,8 @@ ALLOCATE( Driver_Run_Time_Table(1:25) )
 
 
 !RUN_POSEIDON_FLAG = .FALSE.
-
-CALL Set_Units( "C" )
+Units = "G"
+CALL Set_Units( Units )
 
 
 
@@ -356,9 +359,9 @@ Num_Procs           = DRIVER_PROCS
 Num_y_Procs         = DRIVER_y_PROCS
 Num_z_Procs         = DRIVER_z_PROCS
 Problem_Dimension   = DRIVER_DIMENSION
-Inner_Radius        = DRIVER_INNER_RADIUS
-Core_Radius         = DRIVER_CORE_RADIUS
-Outer_Radius        = DRIVER_OUTER_RADIUS
+Inner_Radius        = DRIVER_INNER_RADIUS*Centimeter
+Core_Radius         = DRIVER_CORE_RADIUS*Centimeter
+Outer_Radius        = DRIVER_OUTER_RADIUS*Centimeter
 nx                  = DRIVER_R_ELEMS
 nc                  = DRIVER_C_ELEMS
 ny                  = DRIVER_T_ELEMS
@@ -600,7 +603,7 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
 
 
     ELSE
-
+        PRINT*,"Mesh_Type",Mesh_Type
         ! Other Test, Create Mesh
         CALL Create_3D_Mesh( Mesh_Type,                                    &
                              Inner_Radius, Core_Radius, Outer_Radius,      &
@@ -637,7 +640,6 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
     Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
     Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
     Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
-
 
 
 
@@ -688,7 +690,7 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
         modeb = 1
     END IF
 
-    CALL Poseidon_CFA_3D(   mode, modeb, imin, imax, nx,                    &
+    CALL Poseidon_CFA_3D(   mode, modeb, Units, imin, imax, nx,             &
                             ij_ray_dim, ik_ray_dim, ny, nz,                 &
                             x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,      &
                             Num_Input_Nodes,                                &
@@ -704,6 +706,8 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
     CALL OUTPUT_FRAME_REPORT(DRIVER_FRAME)
     CALL CLOSE_FRAME_REPORT_FILE()
     FIRST_FRAME_FLAG = 0
+
+
 END DO ! Frame Loop
 
 
@@ -717,7 +721,6 @@ CALL MPI_Finalize(ierr)
 
 
 WRITE(*,'(//A18//)')"DING! You're Done!"
-
 
 
 

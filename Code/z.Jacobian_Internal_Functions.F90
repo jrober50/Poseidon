@@ -39,10 +39,7 @@ MODULE Jacobian_Internal_Functions_Module                                       
 USE Poseidon_Constants_Module, &
                         ONLY : idp, pi,                 &
                                TwoThirds,               &
-                               FourThirds,              &
-                               Speed_of_Light,          &
-                               C_Square,                &
-                               GR_Source_Scalar
+                               FourThirds
 
 
 USE Poseidon_Parameters, &

@@ -35,7 +35,11 @@ MODULE Driver_Test_Functions_Module                                             
 !                                   !
 !===================================!
 USE Poseidon_Constants_Module, &
-                ONLY :  idp, pi, Speed_of_Light,Grav_Constant_G
+                ONLY :  idp, pi
+
+USE Units_Module, &
+                ONLY :  C_Square,           &
+                        Grav_Constant_G
 
 
 USE DRIVER_Parameters, &
@@ -224,14 +228,6 @@ REAL(KIND = idp)                                            ::  rho_c, rho_here,
 
 
 
-REAL(KIND = idp)    :: csqr
-
-
-
-
-csqr = Speed_of_Light*Speed_of_Light
-
-
 QUAD_NUMBERS(1) = NUM_LOCS(1)
 QUAD_NUMBERS(2) = NUM_LOCS(2)
 QUAD_NUMBERS(3) = NUM_LOCS(3)
@@ -257,7 +253,7 @@ IF (Test_Number .EQ. 1) THEN
         END DO
     END DO
 
-    Input_E = (Grav_Constant_G/csqr) * rho
+    Input_E = (Grav_Constant_G/C_Square) * rho
     Input_S = 0.0_idp
     Input_Si = 0.0_idp
 
@@ -299,6 +295,7 @@ ELSE IF ( Test_Number == 3) THEN
 
     Potential_Solution => SELFSIM_NEWT_SOL
     Shift_Solution => SELFSIM_SHIFT_SOL
+
 
 
 END IF

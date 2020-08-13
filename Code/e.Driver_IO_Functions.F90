@@ -26,7 +26,16 @@ MODULE Driver_IO_Functions_Module                                               
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
    !################################################################################!
 USE Poseidon_Constants_Module, &
-        ONLY :  idp, pi, fdp, C_Square
+        ONLY :  idp, pi, fdp
+
+USE Units_Module, &
+        ONLY :  C_Square,       &
+                Centimeter,     &
+                Meter,          &
+                Kilometer,      &
+                Second,         &
+                GravPot_Units,  &
+                Shift_Units
 
 USE Driver_Parameters,  &
         ONLY  : Iteration_History,          &
@@ -161,6 +170,7 @@ REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
 REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
 REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
+
 INTEGER                                         ::  Max_Iters
 INTEGER, DIMENSION(:), ALLOCATABLE              ::  Hist_Iters
 
@@ -286,11 +296,12 @@ END IF
 Call Create_Logarithmic_1D_Mesh( DRIVER_INNER_RADIUS, DRIVER_OUTER_RADIUS, ITER_REPORT_NUM_SAMPLES,     &
                                  x_e, x_c, dx_c )
 
+
 !deltar = ( DRIVER_OUTER_RADIUS - DRIVER_INNER_RADIUS )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
 DO i = 0,ITER_REPORT_NUM_SAMPLES
 
 !    r = i*deltar + DRIVER_INNER_RADIUS
-    r = x_e(i)
+    r = x_e(i)*Centimeter
     theta = pi/8.0_idp
     phi = pi/2.0_idp
     
@@ -300,22 +311,31 @@ DO i = 0,ITER_REPORT_NUM_SAMPLES
                                     Return_Beta1, Return_Beta2, Return_Beta3    )
 
 
-
     ! Calculate Conformal Factor value from Newtonian Potential
-    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
 
     ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
+    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
 
 
     ! Write Results to Screen
     IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-        WRITE(*,111) r,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+        WRITE(*,111) r/Centimeter,              &
+                     PsiPot_Val,                &
+                     AlphaPsiPot_Val,           &
+                     Return_Beta1/Shift_Units,  &
+                     Return_Beta2,              &
+                     Return_Beta3
     END IF
 
     ! Write Results to File
     IF ( RUN_REPORT_FLAG == 1 ) THEN
-        WRITE(FILE_ID,111) r,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+        WRITE(FILE_ID,111) r/Centimeter,              &
+                           PsiPot_Val,                &
+                           AlphaPsiPot_Val,           &
+                           Return_Beta1/Shift_Units,  &
+                           Return_Beta2,              &
+                           Return_Beta3
     END IF
 
 END DO
@@ -531,8 +551,8 @@ IF ( myID == 0 ) THEN
 
         DO i = 0,ITER_REPORT_NUM_SAMPLES
 
- !           r = i*deltar + DRIVER_OUTER_RADIUS
-            r = x_e(i)
+ !          r = i*deltar + DRIVER_OUTER_RADIUS
+            r = x_e(i)*Centimeter
             theta = pi/2.0_idp
             phi = pi/2.0_idp
 
@@ -542,20 +562,26 @@ IF ( myID == 0 ) THEN
                                             Return_Beta1, Return_Beta2, Return_Beta3    )
 
             ! Determine the Newtonian Potential at the location r, theta, phi
-            Analytic_Val = Potential_Solution(r,theta,phi)
+            Analytic_Val = Potential_Solution(r,theta,phi)/GravPot_Units
 
 
             ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
             ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
 
             ! Calculate Conformal Factor value from Newtonian Potential
-            PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+            PsiPot_Val = 2.0_idp*C_Square*(Return_Psi - 1.0_idp)/GravPot_Units
 
             ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-            AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)
+            AlphaPsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_AlphaPsi)/GravPot_Units
 
             ! Write Results to File
-            WRITE(FILE_ID,111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
+            WRITE(FILE_ID,111)  r/Centimeter,               &
+                                Analytic_Val,               &
+                                PsiPot_Val,                 &
+                                AlphaPsiPot_Val,            &
+                                Return_Beta1/Shift_Units,   &
+                                Return_Beta2,               &
+                                Return_Beta3
 
         END DO
         WRITE( FILE_ID, '(4/)')
@@ -706,7 +732,7 @@ DO i = 1,DRIVER_TOTAL_FRAMES
 
 END DO
 
-
+CLOSE( FILE_ID )
 
 END SUBROUTINE OUTPUT_ITERATION_HISTORY
 

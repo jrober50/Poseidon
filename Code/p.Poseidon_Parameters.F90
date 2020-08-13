@@ -72,7 +72,7 @@ INTEGER                     ::  NUM_SUBSHELLS
 
 INTEGER                     ::  POSEIDON_FRAME           = 0
 INTEGER                     ::  CUR_ITERATION
-INTEGER                     ::  MAX_ITERATIONS      = 3
+INTEGER                     ::  MAX_ITERATIONS      = 5
 INTEGER                     ::  CONVERGENCE_FLAG    = 0
 
 REAL(KIND =idp)             ::  CONVERGENCE_CRITERIA

@@ -31,10 +31,10 @@ MODULE Initial_Guess_Module                                                     
 USE Poseidon_Constants_Module, &
                         ONLY :  idp, pi,                &
                                 TwoThirds,              &
-                                FourThirds,             &
-                                Speed_of_Light,         &
-                                C_Square,               &
-                                GR_Source_Scalar
+                                FourThirds
+
+USE Units_Module, &
+                        ONLY :  C_Square
 
 USE Poseidon_Parameters, &
                         ONLY :  DOMAIN_DIM,             &
@@ -175,9 +175,9 @@ INTEGER                                                         ::  CUR_PSI_LOC,
                                                                     CUR_ALPHPSI_LOC,&
                                                                     CUR_SHIFT_LOC
 
-REAL(KIND = idp)  :: csqr
 
 
+Print*,"Initialize_Calculated_Guess_Values"
 
 
 Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
@@ -187,7 +187,6 @@ Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 !   Empty Space Initial Guess
 !
 Coefficient_Vector = 0.0_idp
-csqr = Speed_of_Light*Speed_of_Light
 
 
 
@@ -203,14 +202,14 @@ DO re = 0,NUM_R_ELEMENTS - 1
         CUR_PSI_LOC = Matrix_Location( 1, 0, 0, re, d )
         Coefficient_Vector(CUR_PSI_LOC) = 2.0_idp * sqrt(pi)                                        &
                                         * ( 1.0_idp - 0.5_idp                                       &
-                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
+                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
 
 
 
         CUR_ALPHPSI_LOC = Matrix_Location( 2, 0, 0, re, d )
         Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)                                    &
                                         * ( 1.0_idp + 0.5_idp                                       &
-                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
+                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
 
 
         CUR_SHIFT_LOC = Matrix_Location( 3, 0, 0, re, d )

@@ -17,11 +17,13 @@ MODULE Poseidon_Interface                                                       
 
 
 USE Poseidon_Constants_Module, &
-            ONLY :  idp, pi,speed_of_light
+            ONLY :  idp, pi
 
 
 USE Units_Module, &
-            ONLY :  Set_Units, Grav_Constant_G
+            ONLY :  Set_Units,          &
+                    C_Square,           &
+                    Grav_Constant_G
 
 
 USE DRIVER_Parameters,  &
@@ -186,7 +188,8 @@ CONTAINS
 
 
 
-SUBROUTINE Poseidon_CFA_3D(mode, modeb, imin, imax, nx, ij_ray_dim, ik_ray_dim,         &
+SUBROUTINE Poseidon_CFA_3D(mode, modeb, units,                                          &
+                            imin, imax, nx, ij_ray_dim, ik_ray_dim,                     &
                             ny, nz, x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,          &
                             Num_Input_Nodes,                                            &
                             Input_R_Quad, Input_T_Quad, Input_P_Quad,                   &
@@ -250,6 +253,8 @@ IMPLICIT none
 
 INTEGER, INTENT(IN)                                             :: mode
 INTEGER, INTENT(IN)                                             :: modeb
+CHARACTER(LEN = 1), INTENT(IN)                                  ::  Units
+
 INTEGER, INTENT(IN)                                             :: imin       ! minimum x-array index
 INTEGER, INTENT(IN)                                             :: imax       ! maximum x-array index
 INTEGER, INTENT(IN)                                             :: nx         ! x-array extent
@@ -327,7 +332,6 @@ REAL(KIND = idp)                                            ::  Outer_Potential,
 
 
 
-REAL(KIND = idp)                                            ::  csqr
 INTEGER                                                     ::  ierr
 
 REAL(KIND = idp)                                            ::  ratio, q, pastloc
@@ -350,7 +354,7 @@ IF (( MODE == 0 ) .OR. ( MODE == 3 )) THEN
 
     timea = MPI_Wtime()
 
-    CALL Set_Units( "C" )
+    CALL Set_Units( Units )
     FEM_Degree = 1
     SH_Limit = 0
     CALL Poseidon_Initialize_From_File(   mode,                           & ! mode
@@ -446,6 +450,8 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
                            NUM_Input_Nodes(1), NUM_Input_Nodes(2), NUM_Input_Nodes(3),      &
                            NUM_R_ELEMENTS, ij_ray_dim, ik_ray_dim, DOMAIN_DIM,              &
                            Local_Si, rlocs          )
+!    Shift_Vector_BC = 0.0_idp
+
 
     ! Calculate the Dirichlet Outer Boundary Value for the Lapse Function and Conformal Factor
     Inner_Potential = Potential_Solution(rlocs(0), 0.0_idp, 0.0_idp)
@@ -457,8 +463,8 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
     !PRINT*,"ALPHAPSI BC set to one"
     !Pot_to_AlphaPsi = 1.0_idp
-    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/(Speed_of_Light*Speed_of_Light)
-    Pot_to_Psi      = 1.0_idp - 0.5_idp*Outer_Potential/(Speed_of_Light*Speed_of_Light)
+    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/C_Square
+    Pot_to_Psi      = 1.0_idp - 0.5_idp*Outer_Potential/C_Square
 
 
 
@@ -472,11 +478,14 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     INNER_BC_TYPES = (/"N", "N","D","D","D"/)
     OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 
+
+
+
     ! Set BC Values
     INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
-    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
-!    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, 0.0_idp, 0.0_idp, 0.0_idp /)
-!    OUTER_BC_VALUES = (/1.0_idp, 1.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
+!    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
+!    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_Alphapsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
+    OUTER_BC_VALUES = (/1.0_idp, 1.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 
 !    PRINT*,"FRAME = ",DRIVER_FRAME," Shift BC = ",Shift_Vector_BC
     
@@ -763,7 +772,6 @@ REAL(KIND = idp)                                            ::  Return_Psi,     
                                                                 Return_Beta3
 
 
-REAL(KIND = idp)                                            ::  csqr
 INTEGER                                                     ::  ierr
 
 REAL(KIND = idp)                                            ::  ratio, q, pastloc
@@ -887,31 +895,19 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 !                    / DRIVER_R_LOCS(NUM_R_ELEMENTS)
 
 
-
-    csqr = Speed_of_Light*Speed_of_Light
-
-    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/csqr
-    Pot_to_Psi = 1.0_idp - 0.5_idp*Outer_Potential/csqr
+    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/C_Square
+    Pot_to_Psi = 1.0_idp - 0.5_idp*Outer_Potential/C_Square
 
 
     INNER_BC_TYPES = (/"N", "N","N","N","N"/)
-
     OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 
 
-    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Inner_Potential/csqr
-
-
     INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
-
-    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/csqr
-
     OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
 
-
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
-
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
 
 

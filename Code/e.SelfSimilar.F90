@@ -699,7 +699,7 @@ DO te = 0,NUM_T_ELEM-1
             Si = Density*Specific_Enthalpy*LF_sqr*Velocity/C_Square
             S  = Density*Specific_Enthalpy*LF_sqr*vsqr/C_Square + 3.0_idp * Pressure
 
-            PRINT*,re,E,S,Si
+!            PRINT*,re,E,S,Si
 !            PRINT*,re,Velocity
 
             DO pd = 0,NUM_NODES(3)-1
@@ -722,8 +722,7 @@ DO te = 0,NUM_T_ELEM-1
 END DO ! te
 END DO ! pe
 
-PRINT*,"Stop in CONVERT_SELF_SIMILAR_3Db"
-STOP
+
 END SUBROUTINE CONVERT_SELF_SIMILAR_3Db
 
 

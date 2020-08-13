@@ -26,7 +26,7 @@ MODULE Poseidon_Info_Module                                                     
 
 
 USE Poseidon_Constants_Module, &
-                    ONLY : idp, pi, C_Square
+                    ONLY : idp
 
 USE Poseidon_Parameters, &
                     ONLY :  CUR_ITERATION,                                  &

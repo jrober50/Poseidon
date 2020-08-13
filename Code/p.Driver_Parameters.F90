@@ -29,7 +29,7 @@ IMPLICIT NONE
 !   DRIVER Set-up Variables
 !
 INTEGER                     ::  DRIVER_DIMENSION   =   3   ! Default = 3
-INTEGER                     ::  DRIVER_TEST_NUMBER =   3
+INTEGER                     ::  DRIVER_TEST_NUMBER =   -1
 
 INTEGER                     ::  DRIVER_R_ELEMS
 INTEGER                     ::  DRIVER_C_ELEMS
@@ -52,6 +52,7 @@ REAL(KIND=idp)              ::  DRIVER_OUTER_RADIUS
 
 ! Mesh Type
 INTEGER                     ::  DRIVER_Mesh_Type
+REAL(KIND=idp)              ::  DRIVER_Zoom
 
 ! MPI variables
 INTEGER                     ::  DRIVER_PROCS

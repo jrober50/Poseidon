@@ -40,8 +40,10 @@ USE Poseidon_Constants_Module, &
                                 OneThird,           &
                                 TwoThirds,          &
                                 FourThirds,         &
-                                OneThirtySecond,    &
-                                C_Square,           &
+                                OneThirtySecond
+
+USE Units_Module, &
+                        ONLY :  C_Square,           &
                                 GR_Source_Scalar
 
 USE DRIVER_Parameters, &

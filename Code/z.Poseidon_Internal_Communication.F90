@@ -25,11 +25,11 @@ MODULE Poseidon_Internal_Communication_Module                                   
 
 
 USE Poseidon_Constants_Module, &
-            ONLY :  idp, pi,speed_of_light
+            ONLY :  idp
 
 
 USE Units_Module, &
-            ONLY :  Set_Units, Grav_Constant_G
+            ONLY :  Set_Units
 
 
 USE Poseidon_Parameters, &

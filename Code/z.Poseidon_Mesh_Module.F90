@@ -400,13 +400,51 @@ END DO
 END SUBROUTINE Create_Logarithmic_1D_Mesh
 
 
-
-
-
-
-
-
 !+303+##############################################################################!
+!                                                                                   !
+!           Create_Geometric_1D_Mesh                                              !
+!                                                                                   !
+!-----------------------------------------------------------------------------------!
+!                                                                                   !
+!                                                                                   !
+!###################################################################################!
+SUBROUTINE Create_Geometric_1D_Mesh(  Inner_Edge, Outer_Edge, Zoom,                   &
+                                        nx, x_e, x_c, dx_c                          )
+
+REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Edge,           &
+                                                            Outer_Edge
+REAL(KIND = idp),   INTENT(IN)                          ::  Zoom
+
+INTEGER,            INTENT(IN)                          ::  nx
+
+REAL(KIND = idp), DIMENSION(0:nx),  INTENT(OUT)         ::  x_e
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  x_c
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
+
+INTEGER                                                 ::  i
+
+
+
+dx_c(1) = (Outer_Edge - Inner_Edge)*(Zoom - 1.0_idp)/(Zoom**nx - 1.0_idp)
+x_e(0)  = Inner_Edge
+x_c(1)  = Inner_Edge + 0.5_idp*dx_c(1)
+x_e(1)  = x_e(0) + dx_c(1)
+DO i = 2,nx
+    dx_c(i) = dx_c(i-1)*Zoom
+    x_e(i)  = x_e(i-1) + dx_c(i)
+    x_c(i)  = 0.5_idp*(x_e(i) + x_e(i-1))
+END DO
+
+
+
+
+END SUBROUTINE Create_Geometric_1D_Mesh
+
+
+
+
+
+!+304+##############################################################################!
 !                                                                                   !
 !           Create_Split_1D_Mesh                                                    !
 !                                                                                   !
@@ -558,6 +596,16 @@ END DO
 
 
 END SUBROUTINE Generate_Defined_Coarse_Mesh
+
+
+
+
+
+
+
+
+
+
 
 
 END MODULE Poseidon_Mesh_Module

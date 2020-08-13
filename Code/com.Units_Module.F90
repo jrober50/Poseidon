@@ -26,15 +26,7 @@ MODULE Units_Module                                                             
                             !                                   !
                             !===================================!
 USE Poseidon_Constants_Module, &
-            ONLY :  idp, pi,            &
-                    Grav_Constant_G,    &
-                    Speed_of_Light,     &
-                    C_Square,           &
-                    GR_Source_Scalar,   &
-                    Meter,              &
-                    Gram,               &
-                    Kilogram,           &
-                    Second
+            ONLY :  idp
 
 
 
@@ -43,9 +35,18 @@ USE Poseidon_Constants_Module, &
 
 IMPLICIT NONE
 
+REAL(KIND = idp)             :: Speed_of_Light_MKS  = 2.99792458e8_idp
+REAL(KIND = idp)             :: Grav_Constant_MKS   = 6.673e-11_idp
 
-
-
+REAL(KIND = idp)             :: Grav_Constant_G
+REAL(KIND = idp)             :: Speed_of_Light
+REAL(KIND = idp)             :: C_Square
+REAL(KIND = idp)             :: GR_Source_Scalar
+REAL(KIND = idp)             :: Meter, Kilometer, Centimeter
+REAL(KIND = idp)             :: Gram, Kilogram, SolarMass
+REAL(KIND = idp)             :: Second, Milisecond
+REAL(KIND = idp)             :: Joule, Erg, Newton
+REAL(KIND = idp)             :: GravPot_Units, Shift_Units
 
                         !*F&S*==========================================!
                         !                                               !
@@ -61,8 +62,6 @@ SUBROUTINE Set_Units( Units_Flag )
 CHARACTER(LEN = 1)                          :: Units_Flag
 
 
-Second = 1.0_idp
-
 
 IF ( Units_Flag == "C" ) THEN
 !   CGS (centimeter-gram-second ) system
@@ -74,19 +73,27 @@ IF ( Units_Flag == "C" ) THEN
 !   c = 2.99792458e10 cm / s
 !   G = 6.67428e-8    cm^3 / ( g s^2 )
 
+    PRINT*,"Setting CGS Units"
+    ! Length
+    Centimeter  = 1.0_idp
+    Meter       = 1.0E+2_idp * Centimeter
+    Kilometer   = 1.0E+5_idp * Centimeter
 
-    Meter = 100.0_idp     ! centimeters
+    ! Mass
+    Gram        = 1.0_idp
+    Kilogram    = 1.0E+3_idp * Gram
+    SolarMass   = 1.98892E30_idp * Kilogram
 
-    Gram = 1.0_idp        ! gram
-    Kilogram = 1000_idp   ! grams
+    ! Time
+    Second      = 1.0_idp
+    Milisecond  = 1.0E-3_idp * Second
 
 
-    !Potential_Units = "cm/s^2"
+    Grav_Constant_G = Grav_Constant_MKS * (Meter*Meter*Meter)/(Kilogram * Second * Second)
+    Speed_of_Light  = Speed_of_Light_MKS * (Meter / Second )
+    
+    
 
-    Grav_Constant_G = 6.67408E-11 * (Meter*Meter*Meter)/(Kilogram * Second * Second)
-
-    Speed_of_Light = 2.99792458E8 * (Meter / Second )
-  
 
 ELSE IF ( Units_Flag == "S" ) THEN
     !   SI Units / MKS
@@ -98,18 +105,22 @@ ELSE IF ( Units_Flag == "S" ) THEN
     !   c = 2.99792458e8    m / s
     !   G = 6.67408e-11     m^2 / ( kg s^2 )
 
+    ! Length
+    Meter       = 1.0_idp
+    Centimeter  = 1.0E-2_idp * Meter
+    Kilometer   = 1.0E+3_idp * Meter
 
-    Meter = 1.0_idp       ! meter
+    ! Mass
+    Kilogram    = 1.0_idp
+    Gram        = 1.0E-3_idp * Kilogram
+    SolarMass   = 1.98892E30_idp * Kilogram
 
-    Gram = .0010_idp      ! kilograms
-    Kilogram = 1.0_idp    ! kilogram
+    ! Time
+    Second      = 1.0_idp
+    Milisecond  = 1.0E-3_idp * Second
 
-
-    !Potential_Units = "m/s^2"
-
-    Grav_Constant_G = 6.67408E-11 * (Meter*Meter*Meter)/(Kilogram * Second * Second)
-
-    Speed_of_Light = 2.99792458E8 * (Meter / Second )
+    Grav_Constant_G = Grav_Constant_MKS * (Meter*Meter*Meter)/(Kilogram * Second * Second)
+    Speed_of_Light  = Speed_of_Light_MKS * (Meter / Second )
 
 
 
@@ -124,14 +135,26 @@ ELSE IF ( Units_Flag == "G" ) THEN
     !   c = 1
     !   G = 1
 
-    Meter = 1.0_idp       ! meter
-
-    Gram = 1.0_idp        ! gram
-    Kilogram = 1000.0_idp ! grams
-
+    PRINT*,"Setting Geometrized Units"
 
     Grav_Constant_G = 1.0_idp
     Speed_of_Light = 1.0_idp
+
+    ! Length
+    Meter       = 1.0_idp
+    Centimeter  = 1.0E-2_idp * Meter
+    Kilometer   = 1.0E+3_idp * Meter
+
+    ! Time
+    Second      = (Speed_of_Light_MKS/Speed_of_Light) * Meter
+    Milisecond  = 1.0E-3_idp * Second
+
+    ! Mass
+    Kilogram    = (Grav_Constant_MKS/Grav_Constant_G) * Meter**3/Second**2
+    Gram        = 1.0E-3_idp * Kilogram
+    SolarMass   = 1.98892E30_idp * Kilogram
+
+
 
 
 
@@ -142,7 +165,13 @@ END IF
 C_Square = Speed_of_Light*Speed_of_Light
 GR_Source_Scalar = Grav_Constant_G/(C_SQUARE*C_SQUARE)
 
+Joule           = Kilogram * (Meter/Second)**2
+Erg             = Gram * ( Centimeter / Second )**2
+Newton          = Joule / Meter
+GravPot_Units   = (Meter*Meter)/(Second*Second)
+Shift_Units     = Centimeter/Second
 
+PRINT*,"E_Units",Erg/Centimeter**3
 
 END SUBROUTINE Set_Units
 

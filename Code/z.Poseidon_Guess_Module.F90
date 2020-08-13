@@ -29,12 +29,13 @@ MODULE Poseidon_Guess_Module                                                    
 !                                   !
 !===================================!
 USE Poseidon_Constants_Module, &
-                        ONLY : idp, pi,                 &
-                               TwoThirds,               &
-                               FourThirds,              &
-                               Speed_of_Light,          &
-                               C_Square,                &
-                               GR_Source_Scalar
+                        ONLY :  idp, pi,                 &
+                                TwoThirds,               &
+                                FourThirds
+
+USE Units_Module, &
+                        ONLY :  Speed_of_Light,          &
+                                C_Square
 
 
 USE Poseidon_Parameters, &
@@ -219,7 +220,6 @@ INTEGER                                                         ::  CUR_PSI_LOC,
 
 INTEGER          :: Matrix_Map
 
-REAL(KIND = idp)  :: csqr
 
 Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 
@@ -230,7 +230,6 @@ Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 Coefficient_Vector = 0.0_idp
 
 
-csqr = Speed_of_Light*Speed_of_Light
 
 
 !PRINT*,"ALPHA_PSI initial guess set to one"
@@ -249,7 +248,7 @@ DO re = 0,NUM_R_ELEMENTS - 1
 
         Coefficient_Vector(CUR_PSI_LOC) = 2.0_idp * sqrt(pi)                                        &
                                         * ( 1.0_idp - 0.5_idp                                       &
-                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
+                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
 
 
 
@@ -257,7 +256,7 @@ DO re = 0,NUM_R_ELEMENTS - 1
 !        Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)
         Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)                                    &
                                         * ( 1.0_idp + 0.5_idp                                       &
-                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/csqr  )
+                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
 
 
 
