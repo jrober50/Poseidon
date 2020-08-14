@@ -13,6 +13,7 @@ NPROCS=1
 ## Select Machine
 
 MACHINE_NAME    =NicksMacBook
+#MACHINE_NAME = sjdunham
 #MACHINE_NAME	=MacBook
 #MACHINE_NAME	=Rhea
 #MACHINE_NAME	=BlueWaters
@@ -55,8 +56,8 @@ MPI_MODE        =ON
 #-------------------------------- Code Objects ---------------------------------#
 
 #
-#	Contains the list of object files that define the operations of the 
-#	Poseidon code. 
+#	Contains the list of object files that define the operations of the
+#	Poseidon code.
 #
 include makefile_objects
 
@@ -68,8 +69,8 @@ include makefile_objects
 #-------------------------------- Code Dictionary -----------------------------#
 
 #
-#	Contains the definitions of terms used below in the compilation of 
-#	the Poseidon code. 
+#	Contains the definitions of terms used below in the compilation of
+#	the Poseidon code.
 #
 include makefile_dictionary
 
@@ -121,8 +122,8 @@ $(CODE_itf):%.o: $(SRC)/%.$(EXT)
 #-------------------------- Execution Rule ------------------------------------#
 
 
-run: 
-	$(BIN)/main_$(DIMENSION).x 
+run:
+	$(BIN)/main_$(DIMENSION).x
 
 run_yahil:
 	mpirun  -np $(NPROCS) ./$(BIN)/main_$(DIMENSION).x
@@ -137,7 +138,7 @@ run_replot:
 #------------------------------- Clean Up Rule  ------------------------------------#
 
 clean:
-	rm -f $(OBJ)/com.*.o	
+	rm -f $(OBJ)/com.*.o
 	rm -f $(OBJ)/z.*.o
 	rm -f $(OBJ)/d.*.o
 	rm -f $(OBJ)/p.*.o
