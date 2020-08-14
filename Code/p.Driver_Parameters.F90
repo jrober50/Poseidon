@@ -81,6 +81,7 @@ INTEGER                     ::  FRAME_REPORT_FLAG
 INTEGER                     ::  DRIVER_FIRST_GUESS_FLAG
 INTEGER                     ::  DRIVER_SUBSEQUENT_GUESS_FLAG
 
+INTEGER                     ::  OUTPUT_PRIMATIVES_FLAG
 
 INTEGER                     ::  DRIVER_FRAME = 1
 INTEGER                     ::  DRIVER_START_FRAME

@@ -125,7 +125,8 @@ USE Poseidon_Math_Functions_Module, &
                     ONLY :  Lagrange_Poly
 
 USE Poseidon_Calculate_Results_Module, &
-                    ONLY :  Calc_3D_Values_At_Location
+                    ONLY :  Calc_3D_Values_At_Location,                     &
+                            Calc_1D_CFA_Values
 
 USE Poseidon_Quadrature_Module, &
                     ONLY :  Initialize_LG_Quadrature_Locations
@@ -614,104 +615,143 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
             ALLOCATE( Output_re(0:NUM_RADIAL_SAMPLES) )
             CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,  &
                                              output_re, output_rc, output_dr        )
+
+
+            ! Create Output Spacing
+            ! Pull Number of Samples From Parameters !
+
+            NUM_THETA_RAYS = WRITE_RESULTS_T_SAMPS
+            NUM_PHI_RAYS = WRITE_RESULTS_P_SAMPS
+
+            !  Create Phi Spacing !
+            IF ( NUM_PHI_RAYS == 1 ) THEN
+                DELTA_PHI = pi/2.0_idp
+    !            DELTA_PHI = 0.0_idp
+            ELSE
+                DELTA_PHI = 2.0_idp*pi/(NUM_PHI_RAYS-1)
+            END IF
+
+            ! Create Theta Spacing
+            IF ( NUM_THETA_RAYS == 1 ) THEN
+                DELTA_THETA = pi
+    !            DELTA_PHI = 0.0_idp
+            ELSE
+                DELTA_THETA = pi/(NUM_THETA_RAYS-1)
+            END IF
+
+            ! Allocate Data Holders !
+            ALLOCATE( Lapse_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
+            ALLOCATE( ConForm_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
+            ALLOCATE( Shift_Holder(1:3,1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
+            ALLOCATE( R_Holder(1:NUM_RADIAL_SAMPLES) )
+            ALLOCATE( T_Holder(1:NUM_THETA_RAYS) )
+            ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
+
+            ! Calculate Output
+            DO k = 1,NUM_PHI_RAYS
+                DO j = 1,NUM_THETA_RAYS
+                    DO i = 1,NUM_RADIAL_SAMPLES
+
+                        PHI_VAL = k*DELTA_PHI
+                        THETA_VAL = (j-1)*DELTA_THETA
+
+                        CALL Calc_3D_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,                   &
+                                                         Return_Psi, Return_AlphaPsi,                &
+                                                         Return_Beta1, Return_Beta2, Return_Beta3    )
+
+                        Lapse_Holder(k,j,i) = Return_AlphaPsi/Return_Psi
+                        ConForm_Holder(k,j,i) = Return_Psi
+                        Shift_Holder(1:3,k,j,i) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
+
+                        R_Holder(i) = output_rc(i)
+                        T_Holder(j) = THETA_VAL
+                        P_Holder(k) = PHI_VAL
+
+
+                    END DO ! i Loop
+                END DO ! j Loop
+            END DO ! k Loop
+
+
+            ! Write Output Location Files
+            WRITE(File_IDs(7),*)R_Holder/Centimeter
+            WRITE(File_IDs(8),*)T_Holder
+            WRITE(File_IDs(9),*)P_Holder
+
+
+            ! Write Output Value Files
+            DO k = 1,NUM_PHI_RAYS
+                DO j = 1,NUM_THETA_RAYS
+
+
+                    WRITE(File_IDs(1),*)Lapse_Holder(k,j,:)
+                    WRITE(File_IDs(2),*)ConForm_Holder(k,j,:)
+                    WRITE(File_IDs(3),*)Shift_Holder(1,k,j,:)/Shift_Units
+                    WRITE(File_IDs(4),*)Shift_Holder(2,k,j,:)
+                    WRITE(File_IDs(5),*)Shift_Holder(3,k,j,:)
+
+                END DO ! j Loop
+            END DO ! k Loop
+
+
+
         ELSE
+
             ORD = Driver_R_Input_Nodes
             NUM_RADIAL_SAMPLES = NUM_R_ELEMENTS*ORD
+    
+            ! Allocate Data Holders !
+            ALLOCATE( Lapse_Holder(1:NUM_RADIAL_SAMPLES, 1, 1) )
+            ALLOCATE( ConForm_Holder(1:NUM_RADIAL_SAMPLES, 1, 1) )
+            ALLOCATE( Shift_Holder(1:NUM_RADIAL_SAMPLES, 1, 1,1) )
+            ALLOCATE( R_Holder(1:NUM_RADIAL_SAMPLES) )
+            ALLOCATE( T_Holder(1) )
+            ALLOCATE( P_Holder(1) )
+
+
+
             ALLOCATE( Output_rc(1:NUM_RADIAL_SAMPLES) )
             ALLOCATE(xlocs(1:ORD))
             ALLOCATE(cur_r_locs(1:ORD))
             xlocs =  Initialize_LG_Quadrature_Locations(ORD)
+
+
             DO k = 1,NUM_R_ELEMENTS
                 deltar_overtwo = (rlocs(k) - rlocs(k-1))/2.0_idp
                 cur_r_locs(:) = deltar_overtwo*(xlocs(:) + 1.0_idp) + rlocs(k-1)
                 DO j = 1,ORD
                     here = (k-1)*ord + j
-                    Output_rc(here) = cur_r_locs(j)
+                    R_Holder(here) = cur_r_locs(j)
                 END DO
             END DO
 
-        END IF
 
 
-        ! Create Output Spacing
-        ! Pull Number of Samples From Parameters !
+            PRINT*,"Check Limits on LG Quadrature Poseidon_IO_Module"
+            CALL Calc_1D_CFA_Values(  NUM_R_ELEMENTS, Driver_R_Input_Nodes, xlocs,   &
+                                      -1.0_idp, 1.0_idp,                &
+                                      Lapse_Holder, ConForm_Holder, Shift_Holder     )
 
-        NUM_THETA_RAYS = WRITE_RESULTS_T_SAMPS
-        NUM_PHI_RAYS = WRITE_RESULTS_P_SAMPS
 
-        !  Create Phi Spacing !
-        IF ( NUM_PHI_RAYS == 1 ) THEN
-            DELTA_PHI = pi/2.0_idp
-!            DELTA_PHI = 0.0_idp
-        ELSE
-            DELTA_PHI = 2.0_idp*pi/(NUM_PHI_RAYS-1)
-        END IF
+            ! Write Output Location Files
+            WRITE(File_IDs(7),*)R_Holder/Centimeter
+            WRITE(File_IDs(8),*)T_Holder
+            WRITE(File_IDs(9),*)P_Holder
 
-        ! Create Theta Spacing
-        IF ( NUM_THETA_RAYS == 1 ) THEN
-            DELTA_THETA = pi
-!            DELTA_PHI = 0.0_idp
-        ELSE
-            DELTA_THETA = pi/(NUM_THETA_RAYS-1)
+
+            WRITE(File_IDs(1),*)Lapse_Holder(:,:,:)
+            WRITE(File_IDs(2),*)ConForm_Holder(:,:,:)
+            WRITE(File_IDs(3),*)Shift_Holder(:,:,:,:)/Shift_Units
+
+
         END IF
 
 
 
 
-        ! Allocate Data Holders !
-        ALLOCATE( Lapse_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
-        ALLOCATE( ConForm_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
-        ALLOCATE( Shift_Holder(1:3,1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
-        ALLOCATE( R_Holder(1:NUM_RADIAL_SAMPLES) )
-        ALLOCATE( T_Holder(1:NUM_THETA_RAYS) )
-        ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
 
 
-        ! Calculate Output
-        DO k = 1,NUM_PHI_RAYS
-            DO j = 1,NUM_THETA_RAYS
-                DO i = 1,NUM_RADIAL_SAMPLES
 
-                    PHI_VAL = k*DELTA_PHI
-                    THETA_VAL = (j-1)*DELTA_THETA
-
-                    CALL Calc_3D_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,                   &
-                                                     Return_Psi, Return_AlphaPsi,                &
-                                                     Return_Beta1, Return_Beta2, Return_Beta3    )
-
-                    Lapse_Holder(k,j,i) = Return_AlphaPsi/Return_Psi
-                    ConForm_Holder(k,j,i) = Return_Psi
-                    Shift_Holder(1:3,k,j,i) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
-
-                    R_Holder(i) = output_rc(i)
-                    T_Holder(j) = THETA_VAL
-                    P_Holder(k) = PHI_VAL
-
-
-                END DO ! i Loop
-            END DO ! j Loop
-        END DO ! k Loop
-
-
-        ! Write Output Location Files
-        WRITE(File_IDs(7),*)R_Holder/Centimeter
-        WRITE(File_IDs(8),*)T_Holder
-        WRITE(File_IDs(9),*)P_Holder
-
-
-        ! Write Output Value Files
-        DO k = 1,NUM_PHI_RAYS
-            DO j = 1,NUM_THETA_RAYS
-
-
-                WRITE(File_IDs(1),*)Lapse_Holder(k,j,:)
-                WRITE(File_IDs(2),*)ConForm_Holder(k,j,:)
-                WRITE(File_IDs(3),*)Shift_Holder(1,k,j,:)/Shift_Units
-                WRITE(File_IDs(4),*)Shift_Holder(2,k,j,:)
-                WRITE(File_IDs(5),*)Shift_Holder(3,k,j,:)
-
-            END DO ! j Loop
-        END DO ! k Loop
 
 
 
@@ -987,10 +1027,10 @@ END SUBROUTINE OPEN_EXISTING_FILE
 !                                                                                   !
  !#################################################################################!
 SUBROUTINE OUTPUT_POSEIDON_SOURCES_1D( Local_E, Local_S, Local_Si,                         &
-                                    Local_RE_Dim, Local_TE_Dim, Local_PE_Dim,           &
-                                    Local_RQ_Dim, Local_TQ_Dim, Local_PQ_Dim,           &
-                                    Input_R_Quad, Input_T_Quad, Input_P_Quad,           &
-                                    Left_Limit, Right_Limit                             )
+                                       Local_RE_Dim, Local_TE_Dim, Local_PE_Dim,           &
+                                       Local_RQ_Dim, Local_TQ_Dim, Local_PQ_Dim,           &
+                                       Input_R_Quad, Input_T_Quad, Input_P_Quad,           &
+                                       Left_Limit, Right_Limit                             )
 
 
 REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Local_RQ_Dim*Local_TQ_Dim*Local_PQ_Dim,       &
@@ -1045,7 +1085,7 @@ Si_Units = Gram/(Second*Centimeter**2)
 116 FORMAT (A,A,I5.5,A)
 
 
-
+PRINT*,"WRITE_SOURCES_FLAG",WRITE_SOURCES_FLAG
 IF ( WRITE_SOURCES_FLAG == 1 ) THEN
     Num_Files = 6
 

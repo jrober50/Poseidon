@@ -167,6 +167,7 @@ REAL(KIND = idp), INTENT(IN)                                            ::  JCBN
 REAL(KIND = idp)                                                        ::  REUSED_VALUE
 
 
+!PRINT*,"Calc_EQ1_SubJacobian Has been altered"
 
 REUSED_VALUE = PSI_POWER(7)/(16.0_idp* ALPHAPSI_POWER(2) )
 
@@ -512,7 +513,7 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:3)                            ::  JCBN
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  JCBN_kappa_Array
 
 
-
+INTEGER                                                                 ::  testa, testb
 
 
 
@@ -576,6 +577,11 @@ SubJacobian_EQ3_Term( tpd, rd, 18) = -JCBN_n_ARRAY(3)
 SubJacobian_EQ3_Term( tpd, rd, 19) = 0.0_idp
 SubJacobian_EQ3_Term( tpd, rd, 20) = -2.0_idp/CUR_R_LOCS(rd) - TwoThirds * JCBN_n_ARRAY(1)
 
+
+!testa = 1
+!testb = 1
+!SubJacobian_EQ3_Term( tpd, rd, 1:testa)  = 0.0_idp
+!SubJacobian_EQ3_Term( tpd, rd, testb:20) = 0.0_idp
 
 
 END SUBROUTINE Calc_EQ3_SubJacobian
@@ -890,6 +896,9 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  JCBN
 
 REAL(KIND = idp)                                                        ::  Beta_Source_Prefix
 
+
+
+!PRINT*,"Calc_RHS_Terms has been altered"
 
 Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
 

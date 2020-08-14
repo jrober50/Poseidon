@@ -115,6 +115,9 @@ USE Poseidon_Main_Module, &
 USE Poseidon_Initialization_Module, &
             ONLY :  Poseidon_Initialize_From_File
 
+USE Poseidon_Main_Module, &
+            ONLY :  Poseidon_Initialize
+
 
 USE Poseidon_Calculate_Results_Module, &
             ONLY :  Calc_3D_Values_At_Location
@@ -357,18 +360,41 @@ IF (( MODE == 0 ) .OR. ( MODE == 3 )) THEN
     CALL Set_Units( Units )
     FEM_Degree = 1
     SH_Limit = 0
-    CALL Poseidon_Initialize_From_File(   mode,                           & ! mode
-                                x_e(1),                         & ! Inner_Radius
-                                x_e(nx+1),                      & ! Outer_Radius
-                                nx,                             & ! NUM_R_ELEMENTS
-                                ny,                             & ! NUM_T_ELEMENTS
-                                nz,                             & ! NUM_P_ELEMENTS
-                                nx,                             & ! NUM_LOC_R_ELEMENTS
-                                ij_ray_dim,                     & ! NUM_LOC_T_ELEMENTS
-                                ik_ray_dim,                     & ! NUM_LOC_P_ELEMENTS
-                                dx_c,                           & ! Delta_R_Vector
-                                dy_c(1:ny),                     & ! Delta_T_Vector
-                                dz_c(1:nz)                      ) ! Delta_P_Vector)
+!    CALL Poseidon_Initialize_From_File(   mode,                           & ! mode
+!                                x_e(1),                         & ! Inner_Radius
+!                                x_e(nx+1),                      & ! Outer_Radius
+!                                nx,                             & ! NUM_R_ELEMENTS
+!                                ny,                             & ! NUM_T_ELEMENTS
+!                                nz,                             & ! NUM_P_ELEMENTS
+!                                nx,                             & ! NUM_LOC_R_ELEMENTS
+!                                ij_ray_dim,                     & ! NUM_LOC_T_ELEMENTS
+!                                ik_ray_dim,                     & ! NUM_LOC_P_ELEMENTS
+!                                dx_c,                           & ! Delta_R_Vector
+!                                dy_c(1:ny),                     & ! Delta_T_Vector
+!                                dz_c(1:nz)                      ) ! Delta_P_Vector)
+
+
+
+
+
+
+    CALL Poseidon_Initialize &
+         ( Units                  = "G",                  &
+           Dimensions             = 1,                    &
+           FEM_Degree_Input       = 1, &
+           L_Limit_Input          = 0,                    &
+           Inner_Radius           = 0.0_idp,                &
+           Outer_Radius           = 1.0E8_idp,                &
+           R_Elements_Input       = 256,                &
+           T_Elements_Input       = 1,                &
+           P_Elements_Input       = 1,                &
+           Local_R_Elements_Input = 256,                &
+           Local_T_Elements_Input = 1,                &
+           Local_P_Elements_Input = 1,                &
+           Num_R_Quad_Input       = 1,               &
+           Num_T_Quad_Input       = 1,                    &
+           Num_P_Quad_Input       = 1,                    &
+           Input_Delta_R_Vector   = dx_c )
 
     timeb = MPI_Wtime()
 

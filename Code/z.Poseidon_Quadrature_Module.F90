@@ -303,8 +303,8 @@ DO i = 1,m
     Initialize_LG_Quadrature_Locations(i) = -z
     Initialize_LG_Quadrature_Locations(Ord-i+1) = +z
 
-
 END DO
+
 
 !PRINT*,"!!!!!!!!!!!!!!!"
 !PRINT*,xloc

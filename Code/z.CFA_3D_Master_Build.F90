@@ -50,7 +50,7 @@ USE MPI
 USE OMP_LIB
 
 USE Units_Module, &
-                                ONLY :  GR_Source_Scalar
+                                ONLY :  GR_Source_Scalar, Speed_of_Light
 
 
 USE Poseidon_Constants_Module, &
@@ -144,8 +144,10 @@ USE Jacobian_Internal_Functions_Module, &
 
 
 USE Poseidon_IO_Module, &
-                                ONLY :  Clock_In,                       &
-                                        OUTPUT_RHS_VECTOR_Parts,        &
+                                ONLY :  Clock_In
+                                        
+USE Poseidon_LinSys_IO_Module, &
+                                ONLY :  OUTPUT_RHS_VECTOR_Parts,        &
                                         OUTPUT_LAPLACE_MATRIX
 
 USE Poseidon_BC_Module, &
@@ -929,6 +931,7 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                               RSIN_SQUARE(td, rd), COTAN_VAL(td)                              )
 
 
+
         JCBN_kappa_Array = JCBN_kappa_FUNCTION_3D_ALL(  rd, tpd,                                        &
                                                         CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
                                                         RSIN_SQUARE(td, rd),                            &
@@ -1078,7 +1081,7 @@ REAL(KIND = idp)                                                        ::  Comb
 COMPLEX(KIND = idp)                                                     ::  Inner, Middle
 
 
-
+!PRINT*,"CREATE_3D_RHS_VECTOR has been altered, u = 1,1"
 
 !$OMP PARALLEL DEFAULT(none)                                            &
 !$OMP PRIVATE( pd, td, rd, d, l, m, tpd, u,                             &
@@ -1138,31 +1141,31 @@ DO d = 0,DEGREE
 
 
 
-!            RHS_TMP(4) =  RHS_TMP(4)                                            &
-!                            + SUM( RHS_TERMS( :, rd, 4 )                        &
-!                                    * Ylm_CC_Values( :, lm_loc, te, pe)         &
-!                                    * TP_Int_Weights(:)                     )   &
-!                            * Lagrange_Poly_Table(d, rd, 0)                     &
-!                            * R_Int_Weights(rd)                                 &
-!                            + OneThird * SUM( Beta_DRV_Trace(:,rd)              &
-!                                * Ylm_CC_dt_Values( :, lm_loc, te, pe)          &
-!                                * TP_Int_Weights(:)                         )   &
-!                            * Lagrange_Poly_Table(d, rd, 0 )                    &
-!                            * R_Int_Weights(rd)/ R_SQUARE(rd)
-!
-!
-!
-!            RHS_TMP(5) =  RHS_TMP(5)                                                    &
-!                            + SUM( RHS_TERMS( :, rd, 5 )                                &
-!                                    * Ylm_CC_Values( :, lm_loc, te, pe)                 &
-!                                    * TP_Int_Weights(:)                     )           &
-!                            * Lagrange_Poly_Table(d, rd, 0)                             &
-!                            * R_Int_Weights(rd)                                         &
-!                            + OneThird * SUM( Beta_DRV_Trace(:,rd)                      &
-!                                * Ylm_CC_dp_Values( :, lm_loc, te, pe)                  &
-!                                * TP_Int_Weights(:)/(R_SQUARE(rd)*TP_SIN_SQUARE(:) ) )  &
-!                            * Lagrange_Poly_Table(d, rd, 0 )                            &
-!                            * R_Int_Weights(rd)
+            RHS_TMP(4) =  RHS_TMP(4)                                            &
+                            + SUM( RHS_TERMS( :, rd, 4 )                        &
+                                    * Ylm_CC_Values( :, lm_loc, te, pe)         &
+                                    * TP_Int_Weights(:)                     )   &
+                            * Lagrange_Poly_Table(d, rd, 0)                     &
+                            * R_Int_Weights(rd)                                 &
+                            + OneThird * SUM( Beta_DRV_Trace(:,rd)              &
+                                * Ylm_CC_dt_Values( :, lm_loc, te, pe)          &
+                                * TP_Int_Weights(:)                         )   &
+                            * Lagrange_Poly_Table(d, rd, 0 )                    &
+                            * R_Int_Weights(rd)/ R_SQUARE(rd)
+
+
+
+            RHS_TMP(5) =  RHS_TMP(5)                                                    &
+                            + SUM( RHS_TERMS( :, rd, 5 )                                &
+                                    * Ylm_CC_Values( :, lm_loc, te, pe)                 &
+                                    * TP_Int_Weights(:)                     )           &
+                            * Lagrange_Poly_Table(d, rd, 0)                             &
+                            * R_Int_Weights(rd)                                         &
+                            + OneThird * SUM( Beta_DRV_Trace(:,rd)                      &
+                                * Ylm_CC_dp_Values( :, lm_loc, te, pe)                  &
+                                * TP_Int_Weights(:)/(R_SQUARE(rd)*TP_SIN_SQUARE(:) ) )  &
+                            * Lagrange_Poly_Table(d, rd, 0 )                            &
+                            * R_Int_Weights(rd)
 
 
         END DO  ! rd Loop
@@ -1279,7 +1282,7 @@ INTEGER                                                                 ::  i, i
 REAL(KIND = idp)                                                        ::  time_a, time_b
 
 
-
+!PRINT*,"CREATE_3D_JCBN_MATRIX Altered, F = 1,1"
 
 
 ! dp, F, and lpmp_loc choose the row
@@ -1707,6 +1710,8 @@ INTEGER                                                         ::  ierr
 INTEGER :: i,j
 
 
+!PRINT*,"FINISH_3D_RHS_VECTOR has been altered, ui = 1,1"
+
 IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
     Block_STF_MAT = 0.0_idp
@@ -1818,7 +1823,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
                 CMPLX(1.0_idp,0.0_idp,KIND = idp),          &   ! ALPHA
                 Block_STF_MAT(:,:),                         &   ! A
                 2*NUM_OFF_DIAGONALS+1,                      &   ! LDA
-                -Coefficient_Vector(Start_Here:End_Here),   &   ! X
+                -Coefficient_Vector(Start_Here:End_Here),    &   ! X
                 1,                                          &   ! INCX
                 CMPLX(0.0_idp,0.0_idp,KIND = idp),          &   ! BETA
                 TMP_VECTOR(:),                              &   ! Y
@@ -1840,6 +1845,9 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
     END IF
 
+!    DO i = Start_Here,End_Here
+!        PRINT*,TMP_VECTOR(i),Block_RHS_Vector(i)
+!    END DO
 
     Block_RHS_Vector(Start_Here:End_Here) = Block_RHS_Vector(Start_Here:End_Here)   &
                                           + TMP_VECTOR(0:SUBSHELL_PROB_DIM-1)
@@ -2335,39 +2343,39 @@ IF ( F == 1 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 1/ d u_4
         u = 4
-!        DO l = 0,LM_LENGTH-1
-!            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
-!            DO rd = 1,NUM_R_QUAD_POINTS
-!                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
-!                               + SUM( SubJacobian_EQ1_Term(:, rd, 7) * TP_TP_Factor( :, l, lp ) )    &
-!                                     * RR_Factor( rd, d, dp)                                         &
-!                               + SUM( SubJacobian_EQ1_Term(:, rd, 8) * TP_TP_Factor( :, l, lp ) )    &
-!                                     * DRR_Factor( rd, d, dp)                                        &
-!                               + SUM( SubJacobian_EQ1_Term(:, rd, 9) * dTP_TP_Factor( :, l, lp ) )   &
-!                                     * RR_Factor( rd, d, dp)                                         &
-!                               + SUM( SubJacobian_EQ1_Term(:, rd, 10) * TdP_TP_Factor( :, l, lp ) )  &
-!                                     * RR_Factor( rd, d, dp)
-!            END DO
-!        END DO
+        DO l = 0,LM_LENGTH-1
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+            DO rd = 1,NUM_R_QUAD_POINTS
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
+                               + SUM( SubJacobian_EQ1_Term(:, rd, 7) * TP_TP_Factor( :, l, lp ) )    &
+                                     * RR_Factor( rd, d, dp)                                         &
+                               + SUM( SubJacobian_EQ1_Term(:, rd, 8) * TP_TP_Factor( :, l, lp ) )    &
+                                     * DRR_Factor( rd, d, dp)                                        &
+                               + SUM( SubJacobian_EQ1_Term(:, rd, 9) * dTP_TP_Factor( :, l, lp ) )   &
+                                     * RR_Factor( rd, d, dp)                                         &
+                               + SUM( SubJacobian_EQ1_Term(:, rd, 10) * TdP_TP_Factor( :, l, lp ) )  &
+                                     * RR_Factor( rd, d, dp)
+            END DO
+        END DO
 
 
 
         ! Jacobian Term corresponding to d Eq. 1/ d u_5
         u = 5
-!        DO l = 0,LM_LENGTH-1
-!            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
-!            DO rd = 1,NUM_R_QUAD_POINTS
-!                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
-!                               + SUM( SubJacobian_EQ1_Term(:, rd, 11) * TP_TP_Factor( :, l, lp ) )   &
-!                                     * RR_Factor( rd, d, dp)                                         &
-!                               + SUM( SubJacobian_EQ1_Term(:, rd, 12) * TP_TP_Factor( :, l, lp ) )   &
-!                                     * DRR_Factor( rd, d, dp)                                        &
-!                               + SUM( SubJacobian_EQ1_Term(:, rd, 13) * dTP_TP_Factor( :, l, lp ) )  &
-!                                     * RR_Factor( rd, d, dp)                                         &
-!                               + SUM( SubJacobian_EQ1_Term(:, rd, 14) * TdP_TP_Factor( :, l, lp ) )  &
-!                                     * RR_Factor( rd, d, dp)
-!            END DO
-!        END DO
+        DO l = 0,LM_LENGTH-1
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+            DO rd = 1,NUM_R_QUAD_POINTS
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
+                               + SUM( SubJacobian_EQ1_Term(:, rd, 11) * TP_TP_Factor( :, l, lp ) )   &
+                                     * RR_Factor( rd, d, dp)                                         &
+                               + SUM( SubJacobian_EQ1_Term(:, rd, 12) * TP_TP_Factor( :, l, lp ) )   &
+                                     * DRR_Factor( rd, d, dp)                                        &
+                               + SUM( SubJacobian_EQ1_Term(:, rd, 13) * dTP_TP_Factor( :, l, lp ) )  &
+                                     * RR_Factor( rd, d, dp)                                         &
+                               + SUM( SubJacobian_EQ1_Term(:, rd, 14) * TdP_TP_Factor( :, l, lp ) )  &
+                                     * RR_Factor( rd, d, dp)
+            END DO
+        END DO
 
     END DO ! d Loop
 
@@ -2416,39 +2424,39 @@ ELSE IF ( F == 2 ) THEN
     END DO ! l
     
     ! Jacobian Term corresponding to d Eq. 2/ d u_4
-!    u = 4
-!    DO l = 0,LM_LENGTH-1
-!        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
-!        DO rd = 1,NUM_R_QUAD_POINTS
-!            Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
-!                          + SUM( SubJacobian_EQ2_Term(:, rd, 7) * TP_TP_Factor( :, l, lp ) )    &
-!                                * RR_Factor( rd, d, dp)                                         &
-!                          + SUM( SubJacobian_EQ2_Term(:, rd, 8) * TP_TP_Factor( :, l, lp ) )    &
-!                                * DRR_Factor( rd, d, dp)                                        &
-!                          + SUM( SubJacobian_EQ2_Term(:, rd, 9) * dTP_TP_Factor( :, l, lp ) )   &
-!                                * RR_Factor( rd, d, dp)                                         &
-!                          + SUM( SubJacobian_EQ2_Term(:, rd, 10) * TdP_TP_Factor( :, l, lp ) )  &
-!                                * RR_Factor( rd, d, dp)
-!        END DO ! rd Loop
-!    END DO ! l Loop
+    u = 4
+    DO l = 0,LM_LENGTH-1
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO rd = 1,NUM_R_QUAD_POINTS
+            Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
+                          + SUM( SubJacobian_EQ2_Term(:, rd, 7) * TP_TP_Factor( :, l, lp ) )    &
+                                * RR_Factor( rd, d, dp)                                         &
+                          + SUM( SubJacobian_EQ2_Term(:, rd, 8) * TP_TP_Factor( :, l, lp ) )    &
+                                * DRR_Factor( rd, d, dp)                                        &
+                          + SUM( SubJacobian_EQ2_Term(:, rd, 9) * dTP_TP_Factor( :, l, lp ) )   &
+                                * RR_Factor( rd, d, dp)                                         &
+                          + SUM( SubJacobian_EQ2_Term(:, rd, 10) * TdP_TP_Factor( :, l, lp ) )  &
+                                * RR_Factor( rd, d, dp)
+        END DO ! rd Loop
+    END DO ! l Loop
 
 
 !    ! Jacobian Term corresponding to d Eq. 2/ d u_5
-!    u = 5
-!    DO l = 0,LM_LENGTH-1
-!        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
-!        DO rd = 1,NUM_R_QUAD_POINTS
-!            Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
-!                          + SUM( SubJacobian_EQ2_Term(:, rd, 11) * TP_TP_Factor( :, l, lp ) )   &
-!                                * RR_Factor( rd, d, dp)                                         &
-!                          + SUM( SubJacobian_EQ2_Term(:, rd, 12) * TP_TP_Factor( :, l, lp ) )   &
-!                                * DRR_Factor( rd, d, dp)                                        &
-!                          + SUM( SubJacobian_EQ2_Term(:, rd, 13) * dTP_TP_Factor( :, l, lp ) )  &
-!                                * RR_Factor( rd, d, dp)                                         &
-!                          + SUM( SubJacobian_EQ2_Term(:, rd, 14) * TdP_TP_Factor( :, l, lp ) )  &
-!                                * RR_Factor( rd, d, dp)
-!        END DO ! rd Loop
-!    END DO ! l Loop
+    u = 5
+    DO l = 0,LM_LENGTH-1
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO rd = 1,NUM_R_QUAD_POINTS
+            Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
+                          + SUM( SubJacobian_EQ2_Term(:, rd, 11) * TP_TP_Factor( :, l, lp ) )   &
+                                * RR_Factor( rd, d, dp)                                         &
+                          + SUM( SubJacobian_EQ2_Term(:, rd, 12) * TP_TP_Factor( :, l, lp ) )   &
+                                * DRR_Factor( rd, d, dp)                                        &
+                          + SUM( SubJacobian_EQ2_Term(:, rd, 13) * dTP_TP_Factor( :, l, lp ) )  &
+                                * RR_Factor( rd, d, dp)                                         &
+                          + SUM( SubJacobian_EQ2_Term(:, rd, 14) * TdP_TP_Factor( :, l, lp ) )  &
+                                * RR_Factor( rd, d, dp)
+        END DO ! rd Loop
+    END DO ! l Loop
 
     END DO ! d Loop
 
@@ -2513,39 +2521,39 @@ ELSE IF ( F == 3 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 3/ d u_4
         u = 4
-!        DO l = 0,LM_LENGTH-1
-!            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
-!            DO rd = 1,NUM_R_QUAD_POINTS
-!                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
-!                              + SUM( SubJacobian_EQ3_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
-!                                    * RR_Factor( rd, d, dp)                                         &
-!                              + SUM( SubJacobian_EQ3_Term(:, rd, 14) * TP_TP_Factor( :, l, lp ) )   &
-!                                    * DRR_Factor( rd, d, dp)                                        &
-!                              + SUM( SubJacobian_EQ3_Term(:, rd, 15) * dTP_TP_Factor( :, l, lp ) )  &
-!                                    * RR_Factor( rd, d, dp)                                         &
-!                              + SUM( SubJacobian_EQ3_Term(:, rd, 16) * TdP_TP_Factor( :, l, lp ) )  &
-!                                    * RR_Factor( rd, d, dp)                                         &
-!                              + OneThird * SUM( dTP_TP_Factor(:,l,lp) * RDR_Factor( rd, d, dp) )
-!            END DO ! rd Loop
-!        END DO ! l Loop
+        DO l = 0,LM_LENGTH-1
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+            DO rd = 1,NUM_R_QUAD_POINTS
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
+                              + SUM( SubJacobian_EQ3_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
+                                    * RR_Factor( rd, d, dp)                                         &
+                              + SUM( SubJacobian_EQ3_Term(:, rd, 14) * TP_TP_Factor( :, l, lp ) )   &
+                                    * DRR_Factor( rd, d, dp)                                        &
+                              + SUM( SubJacobian_EQ3_Term(:, rd, 15) * dTP_TP_Factor( :, l, lp ) )  &
+                                    * RR_Factor( rd, d, dp)                                         &
+                              + SUM( SubJacobian_EQ3_Term(:, rd, 16) * TdP_TP_Factor( :, l, lp ) )  &
+                                    * RR_Factor( rd, d, dp)                                         &
+                              + OneThird * SUM( dTP_TP_Factor(:,l,lp) * RDR_Factor( rd, d, dp) )
+            END DO ! rd Loop
+        END DO ! l Loop
 
         ! Jacobian Term corresponding to d Eq. 3/ d u_5
-!        u = 5
-!        DO l = 0,LM_LENGTH-1
-!            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
-!            DO rd = 1,NUM_R_QUAD_POINTS
-!                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
-!                              + SUM( SubJacobian_EQ3_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
-!                                    * RR_Factor( rd, d, dp)                                         &
-!                              + SUM( SubJacobian_EQ3_Term(:, rd, 18) * TP_TP_Factor( :, l, lp ) )   &
-!                                    * DRR_Factor( rd, d, dp)                                        &
-!                              + SUM( SubJacobian_EQ3_Term(:, rd, 19) * dTP_TP_Factor( :, l, lp ) )  &
-!                                    * RR_Factor( rd, d, dp)                                         &
-!                              + SUM( SubJacobian_EQ3_Term(:, rd, 20) * TdP_TP_Factor( :, l, lp ) )  &
-!                                    * RR_Factor( rd, d, dp)                                         &
-!                              + OneThird * SUM( TdP_TP_Factor(:,l,lp) * RDR_Factor( rd, d, dp) )
-!            END DO ! rd Loop
-!        END DO ! l Loop
+        u = 5
+        DO l = 0,LM_LENGTH-1
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+            DO rd = 1,NUM_R_QUAD_POINTS
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
+                              + SUM( SubJacobian_EQ3_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
+                                    * RR_Factor( rd, d, dp)                                         &
+                              + SUM( SubJacobian_EQ3_Term(:, rd, 18) * TP_TP_Factor( :, l, lp ) )   &
+                                    * DRR_Factor( rd, d, dp)                                        &
+                              + SUM( SubJacobian_EQ3_Term(:, rd, 19) * dTP_TP_Factor( :, l, lp ) )  &
+                                    * RR_Factor( rd, d, dp)                                         &
+                              + SUM( SubJacobian_EQ3_Term(:, rd, 20) * TdP_TP_Factor( :, l, lp ) )  &
+                                    * RR_Factor( rd, d, dp)                                         &
+                              + OneThird * SUM( TdP_TP_Factor(:,l,lp) * RDR_Factor( rd, d, dp) )
+            END DO ! rd Loop
+        END DO ! l Loop
 
     END DO ! d Loop
 

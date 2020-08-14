@@ -44,7 +44,11 @@ USE DRIVER_PARAMETERS,  &
                     SELFSIM_POT_VALS,   &
                     SELFSIM_SHIFT_VALs, &
                     SELFSIM_V_SWITCH,   &
-                    DRIVER_OUTER_RADIUS
+                    DRIVER_OUTER_RADIUS,&
+                    OUTPUT_PRIMATIVES_FLAG
+
+USE Driver_IO_Functions_Module, &
+            ONLY :  OUTPUT_PRIMATIVES
 
 
 IMPLICIT NONE
@@ -605,7 +609,10 @@ REAL(KIND = idp), DIMENSION(1:NUM_NODES(1))                                 ::  
 REAL(KIND = idp)                                                            ::  r_sqr
 REAL(KIND = idp)                                                            ::  deltar_overtwo
 
-REAL(KIND = idp)                                                            ::  D_FACTOR, V_FACTOR, X_Factor
+REAL(KIND = idp)                                                            ::  D_FACTOR,               &
+                                                                                V_FACTOR,               &
+                                                                                X_Factor,               &
+                                                                                M_FACTOR
 
 REAL(KIND = idp)                                                            ::  ecc_sqr, ooomes, cos_sqr, sin_sqr
 REAL(KIND = idp)                                                            ::  Specific_Enthalpy
@@ -658,7 +665,9 @@ X_Factor = kappa**(-0.5_idp)                               &
         *(Grav_Constant_G**((gamma-1.0_idp)/2.0_idp))       &
         *((t)**(gamma-2.0_idp))
 
-
+M_FACTOR = kappa**(3.0_idp/2.0_idp)                             &
+         * Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)   &
+         * t**(4.0_idp - 3.0_idp * gamma )
 
 
 DO pe = 0,NUM_P_ELEM-1
@@ -681,6 +690,9 @@ DO te = 0,NUM_T_ELEM-1
             Density  = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
             Velocity = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
 
+            PRINT*,
+            Density_Holder(re*NUM_NODES(1)+rd)  = Density
+            Velocity_Holder(re*NUM_NODES(1)+rd) = Velocity
             
 
             ! Calculate Usable Quantities
@@ -721,6 +733,15 @@ DO te = 0,NUM_T_ELEM-1
     END DO ! re
 END DO ! te
 END DO ! pe
+
+
+IF ( OUTPUT_PRIMATIVES_FLAG == 1 ) THEN
+
+    CALL OUTPUT_PRIMATIVES( Density_Holder, Velocity_Holder, Num_Radial_Points)
+
+END IF
+
+
 
 
 END SUBROUTINE CONVERT_SELF_SIMILAR_3Db

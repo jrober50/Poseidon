@@ -30,6 +30,7 @@ USE Poseidon_Constants_Module, &
 
 USE Units_Module, &
         ONLY :  C_Square,       &
+                Gram,           &
                 Centimeter,     &
                 Meter,          &
                 Kilometer,      &
@@ -51,6 +52,12 @@ USE Driver_Parameters,  &
                 Potential_Solution,                              &
                 myID,                                           &
                 Iteration_History
+
+USE Poseidon_IO_Parameters, &
+        ONLY :  Poseidon_Sources_Dir
+
+USE Poseidon_Parameters, &
+        ONLY :  Poseidon_Frame
 
 USE Poseidon_Info_Module,   &
         ONLY  : PQ_ITERATIONS_MAX,  &
@@ -723,6 +730,7 @@ CHARACTER(LEN = 65)                             ::  FILE_NAME
 
 
 
+
 WRITE(FILE_NAME,'(A,A)')Poseidon_IterReports_Dir,"Iteration_Histogram.out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
@@ -740,6 +748,47 @@ END SUBROUTINE OUTPUT_ITERATION_HISTORY
 
 
 
+
+
+SUBROUTINE OUTPUT_PRIMATIVES( Density, Velocity, Num_Entries )
+
+REAL(KIND = idp), DIMENSION(1:Num_Entries), INTENT(IN)  :: Density
+REAL(KIND = idp), DIMENSION(1:Num_Entries), INTENT(IN)  :: Velocity
+INTEGER,                                    INTENT(IN)  :: Num_Entries
+
+CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
+INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
+INTEGER                                                     ::  Num_Files = 2
+INTEGER                                                     ::  i
+
+116 FORMAT (A,A,I5.5,A)
+
+ALLOCATE( Filenames(1:Num_Files) )
+ALLOCATE( File_IDs(1:Num_Files) )
+
+WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_Density_",Poseidon_Frame,".out"
+WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_Velocity_",Poseidon_Frame,".out"
+
+! Open Files
+File_IDs = [(161 + i, i =1,Num_Files)]
+DO i = 1,Num_Files
+    CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i) )
+END DO
+
+! Write to Files
+DO i = 1,Num_Entries
+    WRITE(File_IDs(1),*)Density(i) /(Gram/Centimeter**3)
+    WRITE(FILE_IDs(2),*)Velocity(i)/(Centimeter/Second)
+END DO
+
+! Close Files
+DO i = 1,Num_Files
+    CLOSE( Unit = File_IDs(i))
+END DO
+
+
+
+END SUBROUTINE OUTPUT_PRIMATIVES
 
 
 

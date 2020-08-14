@@ -981,7 +981,7 @@ NUM_P_ELEMS_PER_BLOCK       = 1
 NUM_R_ELEMS_PER_SHELL       = NUM_R_ELEMENTS
 NUM_R_ELEMS_PER_SUBSHELL    = NUM_R_ELEMENTS
 
-
+CONVERGENCE_CRITERIA = 1.0E8_idp
 !
 !   *_NUM_R_NODES - Number of total radial nodes in total, per block, per subshell
 !
@@ -1116,7 +1116,7 @@ CALL Initialize_Ylm_Tables()
 
 
 
-!CALL OUTPUT_SETUP_TABLE( nPROCS, R_Elements_Input, T_Elements_Input, P_Elements_Input )
+CALL OUTPUT_SETUP_TABLE( nPROCS, R_Elements_Input, T_Elements_Input, P_Elements_Input )
 
 
 

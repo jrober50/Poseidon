@@ -63,7 +63,8 @@ USE DRIVER_Parameters, &
                     SELFSIM_ECC,                &
                     SELFSIM_V_SWITCH,           &
                     CHIMERA_START_FRAME,        &
-                    CHIMERA_END_FRAME
+                    CHIMERA_END_FRAME,          &
+                    OUTPUT_PRIMATIVES_FLAG
 
 
 IMPLICIT NONE
@@ -85,7 +86,7 @@ INTEGER                                             ::  DRIVER_read
 INTEGER                                             ::  iskipp
 INTEGER                                             ::  istat
 
-INTEGER                                             ::  Num_Int_Params  = 24
+INTEGER                                             ::  Num_Int_Params  = 25
 INTEGER                                             ::  Num_Real_Params = 12
 
 INTEGER,            DIMENSION(:), ALLOCATABLE     ::  Int_Params
@@ -177,7 +178,9 @@ SELFSIM_GAMMA               = Real_Params(10)   !   SSG
 SELFSIM_ECC                 = Real_Params(11)   !   SSE
 DRIVER_Zoom                 = Real_Params(12)   !   GZ
 
-PRINT*,"Driver_Zoom",Driver_Zoom
+OUTPUT_PRIMATIVES_FLAG       = Int_Params(25)    !   OPF
+
+
 
 END SUBROUTINE UNPACK_DRIVER_PARAMETERS
 
@@ -455,6 +458,12 @@ END IF
 
 IF ( Param_type == 'GZ    ' ) THEN
     READ (line, 141) REAL_PARAMS(12)
+    CYCLE
+END IF
+
+
+IF ( Param_type == 'OPF   ' ) THEN
+    READ (line, 111) INT_PARAMS(25)
     CYCLE
 END IF
 

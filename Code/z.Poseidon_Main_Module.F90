@@ -94,8 +94,6 @@ USE Poseidon_Allocation_Module, &
 USE CFA_Newton_Raphson_3D_Module, &
             ONLY :  CFA_Newton_Raphson_3D
 
-USE Poseidon_IO_Module, &
-            ONLY :  OUTPUT_POSEIDON_SOURCES_1D
 
 USE CFA_GMRES_Module, &
             ONLY :  CFA_GMRES
@@ -215,13 +213,7 @@ INTEGER, DIMENSION(1:5)                             ::  Eq_Flag_Array
 
 
 
-!CALL OUTPUT_POSEIDON_SOURCES_1D(Block_Source_E, Block_Source_S, Block_Source_Si,            &
-!                                NUM_R_ELEMENTS, NUM_T_ELEMENTS, NUM_P_ELEMENTS,             &
-!                                NUM_R_QUAD_POINTS, NUM_R_QUAD_POINTS, NUM_R_QUAD_POINTS,    &
-!                                INT_R_LOCATIONS, INT_T_LOCATIONS, INT_P_LOCATIONS,          &
-!                                -1.0_idp, +1.0_idp                                          )
-    
-
+PRINT*,"Quad",NUM_R_QUAD_POINTS,NUM_T_QUAD_POINTS,NUM_P_QUAD_POINTS
 
 !CALL Poseidon_Readiness_Check(Readiness_Flag)
 Readiness_Flag = .TRUE.

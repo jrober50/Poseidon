@@ -79,18 +79,18 @@ REAL(KIND =idp)             ::  CONVERGENCE_CRITERIA
 
 INTEGER                     ::  INITIAL_GUESS_FLAG
 
-INTEGER                     ::  OUTPUT_SETUP_TABLE_FLAG     = 0
+INTEGER                     ::  OUTPUT_SETUP_TABLE_FLAG     = 1
 
 INTEGER                     ::  WRITE_TIMETABLE_FLAG        = 0
 INTEGER                     ::  WRITE_REPORT_FLAG           = 0
 INTEGER                     ::  ITER_REPORT_NUM_SAMPLES     = 20
 
-INTEGER                     ::  WRITE_RESULTS_FLAG          = 0
+INTEGER                     ::  WRITE_RESULTS_FLAG          = 1
 INTEGER                     ::  WRITE_RESULTS_R_SAMPS       = 1000
 INTEGER                     ::  WRITE_RESULTS_T_SAMPS       = 1
 INTEGER                     ::  WRITE_RESULTS_P_SAMPS       = 1
 
-INTEGER                     ::  WRITE_SOURCES_FLAG          = 0
+INTEGER                     ::  WRITE_SOURCES_FLAG          = 1
 
 
 INTEGER                     ::  RUN_REPORT_FILE_ID
