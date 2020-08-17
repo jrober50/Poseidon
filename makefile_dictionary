@@ -79,7 +79,6 @@ PETSC_BlueWaters_ON	=
 PETSC_BlueWaters_OFF	= 
 
 
-include ${PETSC_MacBook_DIR}/lib/petsc/conf/variables
 
 #### HDF5
 
