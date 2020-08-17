@@ -454,7 +454,7 @@ DO pe = 0,NUM_P_ELEM-1
                             IF ( r_eff(rd) <= Input_R(1) ) THEN
 
                                 line_min = 1
-                                
+
                                 ! Interpolate Self-Similar Values to Input locations
                                 Density = INPUT_D(line+1)*D_FACTOR
                                 Velocity = INPUT_V(line+1)*V_FACTOR
@@ -684,24 +684,24 @@ DO te = 0,NUM_T_ELEM-1
 
             x = MAP_TO_X_SPACE(Input_X(Line),Input_X(Line+1),xloc)
             LagPoly_Vals = Lagrange_Poly(x, 1, xlocs)
-            
+
 
             ! Interpolate Self-Similar Values to Input locations
             Density  = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
             Velocity = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
 
-            PRINT*,
+            PRINT*
             Density_Holder(re*NUM_NODES(1)+rd)  = Density
             Velocity_Holder(re*NUM_NODES(1)+rd) = Velocity
-            
+
 
             ! Calculate Usable Quantities
             Pressure = kappa * Density**gamma
             Energy = Pressure/(gamma - 1.0_idp)
             Specific_Enthalpy = C_Square + (Energy + Pressure)/Density
 
-            
-            
+
+
 
             vsqr = Velocity*Velocity
             LF_sqr = 1.0_idp/(1.0_idp - vsqr/C_Square)
@@ -829,13 +829,13 @@ DO i = 0,NUM_ENTRIES-1
 
        cur_entry = 0
 
-   
+
    ELSE IF (( r > SELFSIM_R_VALS(i) ) .AND. ( r <= SELFSIM_R_VALS(i+1) ) ) THEN
 
        cur_entry = i
 
    END IF
- 
+
 END DO
 
 
@@ -927,7 +927,7 @@ DO re = 0,NUM_R_ELEM-1
    ! Calculate the Alpha Psi values at each of the Outer Integral's Quadrature Points !
    DO i = 1,Ord
       AlphaPsi(i) =  1.0_idp + 0.5_idp*SELFSIM_NEWT_SOL(ri_locs(i),0.0_idp,0.0_idp)/C_Square
-   END DO 
+   END DO
 
 
    DO i = 1,Ord
@@ -942,12 +942,12 @@ DO re = 0,NUM_R_ELEM-1
            Psi = 1.0_idp - 0.5_idp*SELFSIM_NEWT_SOL(rij_locs(j,i),0.0_idp,0.0_idp)/C_Square
            Psi_10(j,i) = Psi**10
 
-      END DO 
+      END DO
 
       ! Calculate Sr values at each quadrature Point.
       DO j = 1,Ord
          DO reb = 0,NUM_R_ELEM - 1
-            
+
 
             IF ( (rij_Locs(j,i) > r_locs(reb)) .AND. (rij_Locs(j,i) .LE. r_locs(reb+1)) ) THEN
 
