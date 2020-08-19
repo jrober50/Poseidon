@@ -12,3 +12,7 @@ Tests/.DS_Store
 *.out
 *.png
 ~$ConditionNumber.xlsx
+
+# Object files
+*.o
+*.mod
