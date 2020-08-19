@@ -101,20 +101,20 @@ PoseidonLib: $(CODE_com) $(CODE_par) $(CODE_o) $(CODE_ext) $(CODE_itf)
 
 
 
-$(CODE_com):%.o: $(SRC)/%.$(EXT)
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
+$(CODE_com):$(OBJ)/%.o: $(SRC)/%.$(EXT)
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
-$(CODE_par):%.o: $(SRC)/%.$(EXT)
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
+$(CODE_par):$(OBJ)/%.o: $(SRC)/%.$(EXT)
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
-$(CODE_o):%.o:  $(SRC)/%.$(EXT)
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
+$(CODE_o):$(OBJ)/%.o:  $(SRC)/%.$(EXT)
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
-$(CODE_ext):%.o: $(SRC)/%.$(EXT)
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
+$(CODE_ext):$(OBJ)/%.o: $(SRC)/%.$(EXT)
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
-$(CODE_itf):%.o: $(SRC)/%.$(EXT)
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
+$(CODE_itf):$(OBJ)/%.o: $(SRC)/%.$(EXT)
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
 
 

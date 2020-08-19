@@ -151,5 +151,10 @@ DRIVER_OBJ	=$(OBJ)/d.main_$(DIMENSION).o
 
 
 
+CODE_com = ${LIST_com:%.o=$(OBJ)/%.o}
+CODE_par = ${LIST_par:%.o=$(OBJ)/%.o}
+CODE_o   = ${LIST_o:%.o=$(OBJ)/%.o}
+CODE_ext = ${LIST_ext:%.o=$(OBJ)/%.o}
+CODE_itf = ${LIST_itf:%.o=$(OBJ)/%.o}
 
 

@@ -12,7 +12,7 @@ CODE_drv = d.main_3D.o
 #
 #       External Code Files - Used by Driver Code only
 #
-CODE_ext = e.Driver_Params_Read.o               \
+LIST_ext = e.Driver_Params_Read.o               \
            e.Driver_Additional_Functions.o      \
            e.Mesh_Module.o                      \
            e.Driver_IO_Functions.o              \
@@ -25,21 +25,21 @@ CODE_ext = e.Driver_Params_Read.o               \
 #
 #	Interface Code - Used to Link Poseidon with other projects
 #
-CODE_itf = i.Initial_Guess.o               \
+LIST_itf = i.Initial_Guess.o               \
            i.Poseidon_Interface.o	  
 
 
 #
 #	Common Code Files - Used to define physcial constants and units
 #
-CODE_com = com.Poseidon_Constants.o              \
+LIST_com = com.Poseidon_Constants.o              \
            com.Units_Module.o                    
 
 
 #
 #	Parameters File - Used to define set Parameters for the code
 #
-CODE_par = p.Poseidon_Parameters.o               \
+LIST_par = p.Poseidon_Parameters.o               \
            p.Poseidon_IO_Parameters.o            \
            p.Driver_Parameters.o
 
@@ -47,7 +47,7 @@ CODE_par = p.Poseidon_Parameters.o               \
 #
 #	Poseidon Code Files - Used to define the operations used in Poseidon
 #
-CODE_o  = z.Poseidon_Variables_Module.o          \
+LIST_o  = z.Poseidon_Variables_Module.o          \
           z.Poseidon_Allocation_Module.o         \
           z.Poseidon_Info.o                      \
           z.Poseidon_Quadrature_Module.o         \
