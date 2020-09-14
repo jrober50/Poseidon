@@ -171,7 +171,7 @@ Newton          = Joule / Meter
 GravPot_Units   = (Meter*Meter)/(Second*Second)
 Shift_Units     = Centimeter/Second
 
-PRINT*,"E_Units",Erg/Centimeter**3
+
 
 END SUBROUTINE Set_Units
 

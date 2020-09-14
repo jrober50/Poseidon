@@ -89,6 +89,7 @@ INTEGER                                     :: re, rd
 
 
 
+PRINT*,"Initializing Flat Space Guess"
 !
 !   Empty Space Initial Guess
 !
@@ -120,13 +121,13 @@ DO re = 0,NUM_R_ELEMENTS - 1
 
 
         CUR_PSI_LOC = Matrix_Location( 1, 0, 0, re, rd )
-        Coefficient_Vector(CUR_PSI_LOC) = 0.9_idp * 2.0_idp * sqrt(pi)
+        Coefficient_Vector(CUR_PSI_LOC) = 1.0_idp * 2.0_idp * sqrt(pi)
 
 
 
 
         CUR_ALPHPSI_LOC = Matrix_Location( 2, 0, 0, re, rd )
-        Coefficient_Vector(CUR_ALPHPSI_LOC) = 0.9_idp * 2.0_idp * sqrt(pi)
+        Coefficient_Vector(CUR_ALPHPSI_LOC) = 1.0_idp * 2.0_idp * sqrt(pi)
 
 
         DO beta_i = 1,DOMAIN_DIM-1
@@ -300,6 +301,97 @@ IF ( Shift_Sol_Flag .eqv. .FALSE. ) THEN
 END IF
 
 END SUBROUTINE CALC_SHIFT_BC_VALUE
+
+
+
+
+
+
+
+
+
+!!+401+###########################################################################!
+!!                                                                                !
+!!                  Inital_Guess_1D_Shift_Vector_1D                               !
+!!                                                                                !
+!!################################################################################!
+!SUBROUTINE Inital_Guess_1D_Shift_Vector_1D( Num_RE, Num_TE, Num_PE,   &
+!                                            Num_Nodes,                &
+!                                            Mesh_Width, Mesh_Center, Node_Locs,    &
+!                                            Psi, Alpha, Sr,           &
+!                                            Shift                     )
+!
+!INTEGER, INTENT(IN)                                                                 ::  Num_RE, &
+!                                                                                        Num_TE, &
+!                                                                                        Num_PE
+!INTEGER, INTENT(IN)                                                                 ::  Num_Nodes
+!
+!REAL(KIND = idp), DIMENSION(1:Num_RE), INTENT(IN)                                   ::  Mesh_Width
+!REAL(KIND = idp), DIMENSION(1:Num_RE), INTENT(IN)                                   ::  Mesh_Center
+!REAL(KIND = idp), DIMESNION(1:Num_Nodes), INTENT(IN)                                ::  Node_Locs
+!
+!REAL(KIND = idp), DIMENSION(1:Num_Nodes, 1:Num_RE, 1:Num_TE, 1:Num_PE), INTENT(IN)  ::  Psi
+!REAL(KIND = idp), DIMENSION(1:Num_Nodes, 1:Num_RE, 1:Num_TE, 1:Num_PE), INTENT(IN)  ::  Alpha
+!REAL(KIND = idp), DIMENSION(1:Num_Nodes, 1:Num_RE, 1:Num_TE, 1:Num_PE), INTENT(IN)  ::  Sr
+!
+!REAL(KIND = idp), DIMENSION(1:Num_Nodes, 1:Num_RE, 1:Num_TE, 1:Num_PE), INTENT(OUT) ::  Shift
+!
+!
+!
+!
+!INTEGER                                                           ::  Ord
+!INTEGER                                                           ::  i, j, l, m, d, re, reb
+!
+!
+!
+!REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: x_locs,     &
+!                                                                     ri_locs,    &
+!                                                                     wi
+!
+!REAL(KIND = idp), DIMENSION(:,:), ALLOCATABLE                     :: rij_locs,    &
+!                                                                     PSI_10,     &
+!                                                                     Sr_New
+!
+!REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: AlphaPsi
+!REAL(KIND = idp)                                                  :: Psi
+!REAL(KIND = idp)                                                  :: Outer_Int
+!REAL(KIND = idp)                                                  :: Inner_Int
+!
+!Ord = 6
+!
+!ALLOCATE( x_locs(1:Ord) )
+!ALLOCATE( ri_locs(1:Ord) )
+!ALLOCATE( wi(1:Ord)  )
+!ALLOCATE( AlphaPsi(1:Ord) )
+!
+!ALLOCATE( rij_locs(1:Ord,1:Ord) )
+!ALLOCATE( PSI_10(1:Ord,1:Ord)  )
+!ALLOCATE( Sr_New(1:Ord,1:Ord)  )
+!
+!
+!CALL Initialize_LG_Quadrature( Ord, x_locs, wi )
+!
+!
+!
+!DO re = 1,Num_RE
+!
+!    ! Calculate the r locations for the Outer Integral's Quadrature Points !
+!    ri_locs(:) = Mesh_Width(re)*(x_locs(:)/2.0_idp)  + Mesh_Center(re)
+!
+!
+!
+!
+!END DO
+!
+!
+!
+!
+!
+!
+!
+!END SUBROUTINE Inital_Guess_1D_Shift_Vector_1D
+
+
 
 
 

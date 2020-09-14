@@ -749,7 +749,11 @@ END SUBROUTINE OUTPUT_ITERATION_HISTORY
 
 
 
-
+ !+701+############################################################################!
+!                                                                                   !
+!                     OUTPUT_PRIMATIVES                                      !
+!                                                                                   !
+ !#################################################################################!
 SUBROUTINE OUTPUT_PRIMATIVES( Density, Velocity, Num_Entries )
 
 REAL(KIND = idp), DIMENSION(1:Num_Entries), INTENT(IN)  :: Density
@@ -793,5 +797,51 @@ END SUBROUTINE OUTPUT_PRIMATIVES
 
 
 
+
+
+ !+701+############################################################################!
+!                                                                                   !
+!                     OUTPUT_YAHIL_PRIMATIVES                                      !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE OUTPUT_YAHIL_PRIMATIVES( Density, Velocity, Num_Entries )
+
+REAL(KIND = idp), DIMENSION(1:Num_Entries), INTENT(IN)  :: Density
+REAL(KIND = idp), DIMENSION(1:Num_Entries), INTENT(IN)  :: Velocity
+INTEGER,                                    INTENT(IN)  :: Num_Entries
+
+CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
+INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
+INTEGER                                                     ::  Num_Files = 2
+INTEGER                                                     ::  i
+
+116 FORMAT (A,A,I5.5,A)
+
+ALLOCATE( Filenames(1:Num_Files) )
+ALLOCATE( File_IDs(1:Num_Files) )
+
+WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_DX_",Poseidon_Frame,".out"
+WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_VX_",Poseidon_Frame,".out"
+
+! Open Files
+File_IDs = [(161 + i, i =1,Num_Files)]
+DO i = 1,Num_Files
+    CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i) )
+END DO
+
+! Write to Files
+DO i = 1,Num_Entries
+    WRITE(File_IDs(1),*)Density(i) /(Gram/Centimeter**3)
+    WRITE(FILE_IDs(2),*)Velocity(i)/(Centimeter/Second)
+END DO
+
+! Close Files
+DO i = 1,Num_Files
+    CLOSE( Unit = File_IDs(i))
+END DO
+
+
+
+END SUBROUTINE OUTPUT_YAHIL_PRIMATIVES
 
 END MODULE Driver_IO_Functions_Module

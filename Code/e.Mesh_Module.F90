@@ -481,11 +481,10 @@ REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
 INTEGER                                                 ::  i
 
 
-PRINT*,"Zoom", Zoom
 
 dx_c(1) = (Outer_Edge - Inner_Edge)*(Zoom - 1.0_idp)/(Zoom**nx - 1.0_idp)
 
-PRINT*,"dx_c(1)",dx_c(1)
+
 x_e(0)  = Inner_Edge
 x_c(1)  = Inner_Edge + 0.5_idp*dx_c(1)
 x_e(1)  = x_e(0) + dx_c(1)

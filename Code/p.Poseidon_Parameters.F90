@@ -70,12 +70,12 @@ INTEGER                     ::  NUM_BLOCKS
 INTEGER                     ::  NUM_SUBSHELLS
 
 
-INTEGER                     ::  POSEIDON_FRAME           = 0
+INTEGER                     ::  POSEIDON_FRAME      = 0
 INTEGER                     ::  CUR_ITERATION
 INTEGER                     ::  MAX_ITERATIONS      = 5
 INTEGER                     ::  CONVERGENCE_FLAG    = 0
 
-REAL(KIND =idp)             ::  CONVERGENCE_CRITERIA
+REAL(KIND =idp)             ::  CONVERGENCE_CRITERIA = 1.0E-8_idp
 
 INTEGER                     ::  INITIAL_GUESS_FLAG
 
