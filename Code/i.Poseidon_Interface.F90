@@ -31,6 +31,12 @@ USE DRIVER_Parameters,  &
                     Shift_Solution,                                     &
                     Enclosed_Mass,                                      &
                     DRIVER_R_LOCS,                                      &
+                    DRIVER_R_ELEMS,                                     &
+                    DRIVER_T_ELEMS,                                     &
+                    DRIVER_P_ELEMS,                                     &
+                    DRIVER_R_INPUT_NODES,                               &
+                    DRIVER_T_INPUT_NODES,                               &
+                    DRIVER_P_INPUT_NODES,                               &
                     nPROCS,                                             &
                     myID,                                               &
                     myID_Theta,                                         &
@@ -119,10 +125,6 @@ USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Initialize
 
 
-USE Poseidon_Calculate_Results_Module, &
-            ONLY :  Calc_3D_Values_At_Location
-
-
 USE Driver_Additional_Functions_Module, &
             ONLY :  Lagrange_Poly,                                      &
                     Spherical_Harmonic,                                 &
@@ -135,7 +137,6 @@ USE Driver_Additional_Functions_Module, &
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In,                                           &
                     OUTPUT_ITER_TIMETABLE,                              &
-                    OUTPUT_FINAL_RESULTS,                               &
                     Write_Shift_1D
 
 USE Poseidon_Parameter_Read_Module, &
@@ -377,23 +378,22 @@ IF (( MODE == 0 ) .OR. ( MODE == 3 )) THEN
 
 
 
-
     CALL Poseidon_Initialize &
          ( Units                  = "G",                  &
            Dimensions             = 1,                    &
-           FEM_Degree_Input       = 1, &
+           FEM_Degree_Input       = 1,                    &
            L_Limit_Input          = 0,                    &
-           Inner_Radius           = 0.0_idp,                &
-           Outer_Radius           = 1.0E8_idp,                &
-           R_Elements_Input       = 256,                &
-           T_Elements_Input       = 1,                &
-           P_Elements_Input       = 1,                &
-           Local_R_Elements_Input = 256,                &
-           Local_T_Elements_Input = 1,                &
-           Local_P_Elements_Input = 1,                &
-           Num_R_Quad_Input       = 1,               &
-           Num_T_Quad_Input       = 1,                    &
-           Num_P_Quad_Input       = 1,                    &
+           Inner_Radius           = 0.0_idp,              &
+           Outer_Radius           = 1.0E8_idp,            &
+           R_Elements_Input       = DRIVER_R_ELEMS,       &
+           T_Elements_Input       = DRIVER_T_ELEMS,       &
+           P_Elements_Input       = DRIVER_P_ELEMS,       &
+           Local_R_Elements_Input = DRIVER_R_ELEMS,       &
+           Local_T_Elements_Input = DRIVER_T_ELEMS,       &
+           Local_P_Elements_Input = DRIVER_P_ELEMS,       &
+           Num_R_Quad_Input       = DRIVER_R_INPUT_NODES, &
+           Num_T_Quad_Input       = DRIVER_T_INPUT_NODES, &
+           Num_P_Quad_Input       = DRIVER_P_INPUT_NODES, &
            Input_Delta_R_Vector   = dx_c )
 
     timeb = MPI_Wtime()
@@ -449,7 +449,6 @@ CALL Poseidon_Input_Sources( myID, myID_Theta, myID_Phi,                        
 
 
 
-
 timeb = MPI_Wtime()
 CALL Clock_In(timeb-timea, 2)
 
@@ -486,7 +485,6 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
 
 
-
     !PRINT*,"ALPHAPSI BC set to one"
     !Pot_to_AlphaPsi = 1.0_idp
     Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/C_Square
@@ -501,7 +499,7 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     !                                         !
 
     ! Set BC type, N = Neumann, D = Dirichlet
-    INNER_BC_TYPES = (/"N", "N","D","D","D"/)
+    INNER_BC_TYPES = (/"N", "N","N","N","N"/)
     OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 
 
@@ -509,9 +507,8 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
     ! Set BC Values
     INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
-!    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
-!    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_Alphapsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
-    OUTER_BC_VALUES = (/1.0_idp, 1.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
+    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
+!    OUTER_BC_VALUES = (/1.0_idp, 1.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 
 !    PRINT*,"FRAME = ",DRIVER_FRAME," Shift BC = ",Shift_Vector_BC
     
@@ -576,7 +573,6 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
 
     END IF
 
-
 END IF
 
 timeb = MPI_Wtime()
@@ -610,383 +606,6 @@ END SUBROUTINE Poseidon_CFA_3D
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-SUBROUTINE Poseidon_Newt_3D(mode, modeb, imin, imax, nx, ij_ray_dim, ik_ray_dim,         &
-                            ny, nz, x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,          &
-                            Num_Input_Nodes,                                            &
-                            Input_R_Quad, Input_T_Quad, Input_P_Quad,                   &
-                            Left_Limit, Right_Limit,                        &
-                            Local_E, Local_S, Local_Si                                  )
-!-----------------------------------------------------------------------
-!
-!
-!     Potential values are calculated at zone interfaces and
-!     stored in array POT(1:imax+1,1:jmax+1).
-!
-!     POT(i,1):      0     1     2     3  ...
-!     zone:          |--1--|--2--|--3--|  ...
-!
-!
-!     MODE = 1  ==>  Initialized the Poseidon.
-!                    Must be used in the first call to this subroutine.
-!                    Else  MODE = 0
-!
-!     INPUT            rho_c(nx,ij_ray_dim,ik_ray_dim)    density [g cm^{-3}]
-!                      x_e(nx+1)              radius (in cm) of left zone interface
-!                      y_e(ny+1)              angle (in radians) of left zone interface
-!                      z_e(nz+1)              angle (in radians) of left zone interface
-!
-!     OUTPUT           grav_x_c(ii,ij_ray_dim,ik_ray_dim)   zone-centered acceleration in x direction [dynes g^{-1} = cm s^{-2}]
-!                      grav_y_c(ii,ij_ray_dim,ik_ray_dim)   zone-centered acceleration in y direction [dynes g^{-1} = cm s^{-2}]
-!                      grav_z_c(ii,ij_ray_dim,ik_ray_dim)   zone-centered acceleration in z direction [dynes g^{-1} = cm s^{-2}]
-!                      grav_pot_c(ii,ij_ray_dim,ik_ray_dim) zone-centered potential
-!                      grav_x_e(ii,ij_ray_dim,ik_ray_dim)   zone-edged acceleration in x direction [dynes g^{-1} = cm s^{-2}]
-!                      grav_y_e(ii,ij_ray_dim,ik_ray_dim)   zone-edged acceleration in y direction [dynes g^{-1} = cm s^{-2}]
-!                      grav_z_e(ii,ij_ray_dim,ik_ray_dim)   zone-edged acceleration in z direction [dynes g^{-1} = cm s^{-2}]
-!                      grav_pot_e(ii,ij_ray_dim,ik_ray_dim) zone-edged potential
-!
-!    Input arguments:
-!  imin             : lower x-array index
-!  imax             : upper x-array index
-!  nx               : x-array extent
-!  ij_ray_dim       : number of y-zones on a processor before swapping
-!  ik_ray_dim       : number of z-zones on a processor before swapping
-!  ny               : y-array extent
-!  nz               : z-array extent
-!  x_e              : x grid zone faces
-!  x_c              ! x grid zone centers
-!  dx_c             : x_e(i+1) - x_e(i)
-!  y_e              : y grid zone left interfaces
-!  y_c              ! y grid zone centers
-!  dy_c             : y_e(i+1) - y_e(i)
-!  z_e              : z grid zone left interfaces
-!  dz_c             : z_e(i+1) - z_e(i)
-!
-!
-!    Output arguments:
-!
-!-----------------------------------------------------------------------
-
-IMPLICIT none
-
-!-----------------------------------------------------------------------
-!        Input variables
-!-----------------------------------------------------------------------
-
-INTEGER, INTENT(IN)                                             :: mode
-INTEGER, INTENT(IN)                                             :: modeb
-INTEGER, INTENT(IN)                                             :: imin       ! minimum x-array index
-INTEGER, INTENT(IN)                                             :: imax       ! maximum x-array index
-INTEGER, INTENT(IN)                                             :: nx         ! x-array extent
-INTEGER, INTENT(IN)                                             :: ny         ! y-array extent
-INTEGER, INTENT(IN)                                             :: nz         ! y-array extent
-INTEGER, INTENT(IN)                                             :: ij_ray_dim ! number of y-zones on a processor before swapping
-INTEGER, INTENT(IN)                                             :: ik_ray_dim ! number of z-zones on a processor before swapping
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(nx+1)                   :: x_e        ! x grid zone left interfaces [cm]
-REAL(KIND = idp), INTENT(IN), DIMENSION(nx)                     :: x_c        ! x grid zone centers [cm]
-REAL(KIND = idp), INTENT(IN), DIMENSION(nx)                     :: dx_c       ! x_e(i+1) - x_e(i) [cm]
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(-5:ny+7)                :: y_e        ! y grid zone left interfaces
-REAL(KIND = idp), INTENT(IN), DIMENSION(-5:ny+6)                :: y_c        ! y grid zone centers
-REAL(KIND = idp), INTENT(IN), DIMENSION(-5:ny+6)                :: dy_c       ! y_e(j+1) - y_e(j)
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(-5:nz+7)                :: z_e        ! z grid zone left interfaces
-REAL(KIND = idp), INTENT(IN), DIMENSION(-5:nz+6)                :: dz_c       ! z_e(k+1) - z_e(k)
-
-INTEGER, INTENT(IN), DIMENSION(1:3)                             ::  Num_Input_Nodes
-
-
-REAL(KIND = idp), DIMENSION(1:Num_Input_Nodes(1)), INTENT(IN)   ::  Input_R_Quad
-REAL(KIND = idp), DIMENSION(1:Num_Input_Nodes(2)), INTENT(IN)   ::  Input_T_Quad
-REAL(KIND = idp), DIMENSION(1:Num_Input_Nodes(3)), INTENT(IN)   ::  Input_P_Quad
-
-
-REAL(KIND = idp), INTENT(IN)                                    ::  Left_Limit,                 &
-                                                                    Right_Limit
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Num_Input_Nodes(1)*Num_Input_Nodes(2)*Num_Input_Nodes(3),  &
-                                            0:nx-1,                         &
-                                            0:ij_ray_dim-1,                 &
-                                            0:ik_ray_dim-1              )   ::  Local_E,       &
-                                                                                Local_S
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Num_Input_Nodes(1)*Num_Input_Nodes(2)*Num_Input_Nodes(3),  &
-                                            0:nx-1,                         &
-                                            0:ij_ray_dim-1,                 &
-                                            0:ik_ray_dim-1,                 &
-                                            1:DOMAIN_DIM                )   ::  Local_Si
-
-
-
-
-!                             !
-!!                           !!
-!!!     Local Variables     !!!
-!!                           !!
-!                             !
-
-
-
-
-
-INTEGER                                                     ::  i
-
-
-
-
-
-
-REAL(KIND = idp), DIMENSION(1)                              ::  Input_Quad
-
-
-
-
-INTEGER, DIMENSION(1:3)                                     ::  Num_Output_Nodes
-REAL(KIND = idp), DIMENSION(1:2)                            ::  Output_Quad
-
-
-
-REAL(KIND = idp)                                            ::  timea, timeb, tottime
-
-
-
-CHARACTER(LEN=1), DIMENSION(1:5)                            ::  INNER_BC_TYPES, OUTER_BC_TYPES
-
-REAL(KIND = idp), DIMENSION(1:5)                            ::  INNER_BC_VALUES, OUTER_BC_VALUES
-
-REAL(KIND = idp)                                            ::  Outer_Potential,    &
-                                                                Inner_Potential,    &
-                                                                Pot_to_Alphapsi,    &
-                                                                Pot_to_Psi
-
-
-
-REAL(KIND = idp)                                            ::  deltar, r,          &
-                                                                theta, phi,         &
-                                                                Analytic_Val,       &
-                                                                Solver_Val,         &
-                                                                Solver_Valb,        &
-                                                                Error_Val
-
-
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,          &
-                                                                Output_rc,          &
-                                                                Output_dr
-
-
-
-INTEGER                                                     ::  NUM_SAMPLES
-
-
-REAL(KIND = idp)                                            ::  Return_Psi,         &
-                                                                Return_AlphaPsi,    &
-                                                                Return_Beta1,       &
-                                                                Return_Beta2,       &
-                                                                Return_Beta3
-
-
-INTEGER                                                     ::  ierr
-
-REAL(KIND = idp)                                            ::  ratio, q, pastloc
-
-
-real(KIND = idp)                                            ::  Shift_Vector_BC
-
-REAL(KIND = idp), DIMENSION(0:nx)                           ::  Shift_Vector
-
-LOGICAL                        ::  Output_to_File
-CHARACTER(LEN = 19)            ::  filenamea,filenameb
-INTEGER                        ::  file_ida, file_idb
-
-
-
-
-110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A10)                     !!! Output Header
-
-111 FORMAT (11X,A1,18X,A13,10X,A18,10X,A11,14X,A11,14X,A11)             !!! Output Header for Results file
-112 FORMAT (11X,A1,16X,A18,9x,A14)                                     !!! Output Header for Analytic Solution file
-
-113 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)               !!! Output
-114 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)    !!! Output for Results file
-115 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)                                     !!! Output for Analytic Solution file
-
-
-!                                         !
-!!                                       !!
-!!!         Initialize Poseidon         !!!
-!!                                       !!
-!                                         !
-
-IF (MODE == 1) THEN
-
-
-    !                                         !
-    !!                                       !!
-    !!!         Initialize Poseidon         !!!
-    !!                                       !!
-    !                                         !
-
-    timea = MPI_Wtime()
-
-    CALL Set_Units( "C" )
-
-
-
-    CALL Poseidon_Initialize_From_File(   mode,                           & ! mode
-                                x_e(1),                         & ! Inner_Radius
-                                x_e(nx+1),                      & ! Outer_Radius
-                                nx,                             & ! NUM_R_ELEMENTS
-                                ny,                             & ! NUM_T_ELEMENTS
-                                nz,                             & ! NUM_P_ELEMENTS
-                                nx,                             & ! NUM_LOC_R_ELEMENTS
-                                ij_ray_dim,                     & ! NUM_LOC_T_ELEMENTS
-                                ik_ray_dim,                     & ! NUM_LOC_P_ELEMENTS
-                                dx_c,                           & ! Delta_R_Vector
-                                dy_c(1:ny),                     & ! Delta_T_Vector
-                                dz_c(1:nz)                      ) ! Delta_P_Vector)
-
-    timeb = MPI_Wtime()
-
-!    PRINT*,"               Initialize Time :", timeb-timea, myID
-    CALL Clock_In(timeb-timea, 1)
-
-
-
-
-
-END IF
-
-
-
-
-
-
-
-
-
-
-IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
-
-
-    !                                         !
-    !!                                       !!
-    !!!       Set Boundary Conditions       !!!
-    !!                                       !!
-    !                                         !
-
-    CALL Initialize_Special_Guess_Values()
-
-
-!    CALL Calc_Shift_1D( Shift_Vector,                                    &
-!                           NUM_Input_Nodes(1), NUM_Input_Nodes(2), NUM_Input_Nodes(3),     &
-!                           NUM_R_ELEMENTS, ij_ray_dim, ik_ray_dim, DOMAIN_DIM,             &
-!                           Local_Si, rlocs          )
-
-
-!    CALL Write_Shift_1D( Shift_Vector,                                                     &
-!                         NUM_R_ELEMENTS,                                                   &
-!                         rlocs,                                                            &
-!                         SELFSIM_T                  )
-
-    CALL Calc_Shift_BC_1D( Shift_Vector_BC,                       &
-                           NUM_Input_Nodes(1), NUM_Input_Nodes(2), NUM_Input_Nodes(3),     &
-                           NUM_R_ELEMENTS, ij_ray_dim, ik_ray_dim, DOMAIN_DIM,             &
-                           Local_Si, rlocs          )
-
-
-
-
-
-    timea = MPI_Wtime()
-
-
-    Inner_Potential = Potential_Solution(rlocs(0), 0.0_idp, 0.0_idp)
-    Outer_Potential = Potential_Solution(rlocs(NUM_R_ELEMENTS), 0.0_idp, 0.0_idp)
-
-!    Inner_Potential = 0.0_idp
-!    Outer_Potential = Grav_Constant_G *Enclosed_Mass(NUM_R_ELEMENTS)            &
-!                    / DRIVER_R_LOCS(NUM_R_ELEMENTS)
-
-
-    Pot_to_Alphapsi = 1.0_idp + 0.5_idp*Outer_Potential/C_Square
-    Pot_to_Psi = 1.0_idp - 0.5_idp*Outer_Potential/C_Square
-
-
-    INNER_BC_TYPES = (/"N", "N","N","N","N"/)
-    OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
-
-
-    INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
-    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
-
-
-    CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
-    CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
-
-
-    timeb = MPI_Wtime()
-    CALL Clock_In(timeb-timea, 3)
-
-
-
-
-
-
-
-        !                                         !
-        !!                                       !!
-        !!!             Run Poseidon            !!!
-        !!                                       !!
-        !                                         !
-    CALL Poseidon_Run()
-
-
-END IF
-
-
-
-
-
-        !                                         !
-        !!                                       !!
-        !!!         Output Coefficients         !!!
-        !!                                       !!
-        !                                         !
-IF ( myID == 0) THEN
-
-    CALL WRITE_CFA_COEFFICIENTS()
-
-    CALL READ_CFA_COEFFICIENTS()
-
-END IF
-
-
-
-
-
-IF ( myID_PETSC == 0) THEN
-
-   CALL Output_Iter_TimeTable(0)
-
-END IF
-
-
-
-
-END SUBROUTINE Poseidon_Newt_3D
 
 
 

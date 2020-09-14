@@ -406,7 +406,9 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 !    DO i = 0,NUM_SUBSHELLS-1
 !       IF ( myID_PETSC == 0) THEN
 !           PRINT*,"Get RHS_Vector (PETSC)",i,Start_Here,End_Here
-!           PRINT*,Petsc_SourceValues
+!            DO j = 0,Local_Length_RHS-1
+!                PRINT*,Petsc_SourceValues(j)
+!            END DO
 !           PRINT*," "
 !       END IF
 !       CALL SLEEP(1)

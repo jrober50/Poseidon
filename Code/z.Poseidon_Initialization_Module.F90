@@ -981,7 +981,8 @@ NUM_P_ELEMS_PER_BLOCK       = 1
 NUM_R_ELEMS_PER_SHELL       = NUM_R_ELEMENTS
 NUM_R_ELEMS_PER_SUBSHELL    = NUM_R_ELEMENTS
 
-CONVERGENCE_CRITERIA = 1.0E8_idp
+CONVERGENCE_CRITERIA = 1.0E-8_idp
+MAX_ITERATIONS       = 2
 !
 !   *_NUM_R_NODES - Number of total radial nodes in total, per block, per subshell
 !

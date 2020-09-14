@@ -348,7 +348,7 @@ REUSED_VALUE = (-7.0_idp* PSI_POWER(6))/(16.0_idp* ALPHAPSI_POWER(1) )
 SubJacobian_EQ2_Term(tpd, rd, 1) = -8.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3)             &
                                     * GR_Source_Scalar                                          &
                                     * ( Block_Source_E(rd, td, pd, re, te, pe)                  &
-                                        + 2 * Block_Source_S(rd, td, pd, re, te, pe) )          &
+                                        + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe) )    &
                                     - (42.0_idp / 16.0_idp )                                    &
                                         * PSI_POWER(5)/ALPHAPSI_POWER(1)                        &
                                         * JCBN_BIGK_VALUE
@@ -360,7 +360,7 @@ SubJacobian_EQ2_Term(tpd, rd, 2) = -TwoPi * PSI_POWER(4)                        
                                     *( Block_Source_E(rd, td, pd, re, te, pe)                   &
                                         + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe) )    &
                                     + (7.0_idp / 16.0_idp)                                      &
-                                        * PSI_POWER(5)/ALPHAPSI_POWER(2)                        &
+                                        * PSI_POWER(6)/ALPHAPSI_POWER(2)                        &
                                         * JCBN_BIGK_VALUE
 
 
@@ -517,8 +517,23 @@ INTEGER                                                                 ::  test
 
 
 
+!! d F_3 / d u_1 Non-Derivative Term
+!SubJacobian_EQ3_Term( tpd, rd, 1) = (-7.0_idp / PSI_POWER(2) )                                       &
+!                                        * ( CUR_DRV_PSI(tpd, rd, 1 )*JCBN_kappa_ARRAY(1,1)       &
+!                                          + CUR_DRV_PSI(tpd, rd, 2 )*JCBN_kappa_ARRAY(2,1)       &
+!                                          + CUR_DRV_PSI(tpd, rd, 3 )*JCBN_kappa_ARRAY(3,1) )     &
+!                                    - 48.0_idp * pi                                                 &
+!                                        * GR_Source_Scalar                                          &
+!                                        * Block_Source_Si(rd, td, pd, re, te, pe, 1)                &
+!                                        * ALPHAPSI_POWER(1)                                         &
+!                                        * PSI_POWER(2)
+!
+!
+!! d F_3 / d u_1 Derivative Terms
+!SubJacobian_EQ3_Term( tpd, rd, 2:4)= (7.0_idp/ PSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,1)
+
 ! d F_3 / d u_1 Non-Derivative Term
-SubJacobian_EQ3_Term( tpd, rd, 1) = (-7.0_idp / PSI_POWER(2) )                                       &
+SubJacobian_EQ3_Term( tpd, rd, 1) = (- 1.0_idp / PSI_POWER(2) )                                     &
                                         * ( CUR_DRV_PSI(tpd, rd, 1 )*JCBN_kappa_ARRAY(1,1)       &
                                           + CUR_DRV_PSI(tpd, rd, 2 )*JCBN_kappa_ARRAY(2,1)       &
                                           + CUR_DRV_PSI(tpd, rd, 3 )*JCBN_kappa_ARRAY(3,1) )     &
@@ -530,15 +545,31 @@ SubJacobian_EQ3_Term( tpd, rd, 1) = (-7.0_idp / PSI_POWER(2) )                  
 
 
 ! d F_3 / d u_1 Derivative Terms
-SubJacobian_EQ3_Term( tpd, rd, 2:4)= (7.0_idp/ PSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,1)
+SubJacobian_EQ3_Term( tpd, rd, 2:4)= JCBN_kappa_ARRAY(1:3,1)/ PSI_POWER(1)
 
+
+
+
+!! d F_3 / d u_2 Non-Derivative Term
+!SubJacobian_EQ3_Term( tpd, rd, 5) = ( CUR_DRV_ALPHAPSI(tpd, rd, 1 )*JCBN_kappa_Array(1,1)       &
+!                                        + CUR_DRV_ALPHAPSI(tpd, rd, 2 )*JCBN_kappa_Array(2,1)       &
+!                                        + CUR_DRV_ALPHAPSI(tpd, rd, 3 )*JCBN_kappa_Array(3,1)   )   &
+!                                        /ALPHAPSI_POWER(2)                                          &
+!                                        -16.0_idp * pi                                              &
+!                                            * GR_Source_Scalar                                      &
+!                                            * Block_Source_Si(rd,td,pd,re,te,pe,1)                  &
+!                                            * PSI_POWER(3)
+!
+!
+!! d F_3 / d u_2 Derivative Terms
+!SubJacobian_EQ3_Term( tpd, rd, 6:8 ) = (-1.0_idp/ALPHAPSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,1)
 
 
 ! d F_3 / d u_2 Non-Derivative Term
-SubJacobian_EQ3_Term( tpd, rd, 5) = ( CUR_DRV_ALPHAPSI(tpd, rd, 1 )*JCBN_kappa_Array(1,1)       &
+SubJacobian_EQ3_Term( tpd, rd, 5) = (- 2.0_idp /ALPHAPSI_POWER(2))                                  &
+                                      * ( CUR_DRV_ALPHAPSI(tpd, rd, 1 )*JCBN_kappa_Array(1,1)       &
                                         + CUR_DRV_ALPHAPSI(tpd, rd, 2 )*JCBN_kappa_Array(2,1)       &
                                         + CUR_DRV_ALPHAPSI(tpd, rd, 3 )*JCBN_kappa_Array(3,1)   )   &
-                                        /ALPHAPSI_POWER(2)                                          &
                                         -16.0_idp * pi                                              &
                                             * GR_Source_Scalar                                      &
                                             * Block_Source_Si(rd,td,pd,re,te,pe,1)                  &
@@ -546,7 +577,8 @@ SubJacobian_EQ3_Term( tpd, rd, 5) = ( CUR_DRV_ALPHAPSI(tpd, rd, 1 )*JCBN_kappa_A
 
 
 ! d F_3 / d u_2 Derivative Terms
-SubJacobian_EQ3_Term( tpd, rd, 6:8 ) = (-1.0_idp/ALPHAPSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,1)
+SubJacobian_EQ3_Term( tpd, rd, 6:8 ) = (1.0_idp/ALPHAPSI_POWER(1) )*JCBN_kappa_ARRAY(1:3,1)
+
 
 
 
@@ -914,6 +946,28 @@ RHS_Terms(tpd, rd, 2) = TwoPi * ALPHAPSI_POWER(1) * PSI_POWER(4)                
 
 
 
+!RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 1)             &
+!                      + ( 8.0_idp/(3.0_idp * R_SQUARE(rd) )                                         &
+!                            - 4.0_idp* JCBN_n_ARRAY(1)/(3.0_idp * CUR_R_LOCS(rd)) )                 &
+!                        * CUR_VAL_BETA(tpd, rd, 1)                                                  &
+!                      + ( 2.0_idp * COTAN_VAL(td)/CUR_R_LOCS(rd)                                    &
+!                          - TwoThirds * JCBN_n_ARRAY(1)*COTAN_VAL(td)  )                            &
+!                        * CUR_VAL_BETA(tpd, rd, 2 )                                                 &
+!                      + ( FourThirds * JCBN_n_ARRAY(1) )                                            &
+!                        * CUR_DRV_BETA(tpd, rd, 1, 1 )                                              &
+!                      + ( JCBN_n_ARRAY(2)/R_SQUARE(rd) )                                            &
+!                        * CUR_DRV_BETA(tpd, rd, 2, 1 )                                              &
+!                      + ( JCBN_n_ARRAY(3)/RSIN_SQUARE(td,rd) )                                      &
+!                        * CUR_DRV_BETA(tpd, rd, 3, 1 )                                              &
+!                      + ( JCBN_n_ARRAY(2) - COTAN_VAL(td)/3.0_idp )                                 &
+!                        * CUR_DRV_BETA(tpd, rd, 1, 2 )                                              &
+!                      + ( 2.0_idp * FourThirds / CUR_R_LOCS(rd) - TwoThirds * JCBN_n_ARRAY(1) )    &
+!                        * CUR_DRV_BETA(tpd, rd, 2, 2 )                                              &
+!                      + ( JCBN_n_ARRAY(3)  )                                                        &
+!                        * CUR_DRV_BETA(tpd, rd, 1, 3 )                                              &
+!                      + ( 2.0_idp * FourThirds / CUR_R_LOCS(rd) - TwoThirds * JCBN_n_Array(1) )     &
+!                        * CUR_DRV_BETA(tpd, rd, 3, 3 )
+
 RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 1)             &
                       + ( 8.0_idp/(3.0_idp * R_SQUARE(rd) )                                         &
                             - 4.0_idp* JCBN_n_ARRAY(1)/(3.0_idp * CUR_R_LOCS(rd)) )                 &
@@ -935,7 +989,6 @@ RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te,
                         * CUR_DRV_BETA(tpd, rd, 1, 3 )                                              &
                       + ( 2.0_idp * FourThirds / CUR_R_LOCS(rd) - TwoThirds * JCBN_n_Array(1) )     &
                         * CUR_DRV_BETA(tpd, rd, 3, 3 )
-
 
 
 

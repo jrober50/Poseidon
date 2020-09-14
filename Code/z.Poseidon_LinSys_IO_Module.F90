@@ -31,6 +31,15 @@ MODULE Poseidon_LinSys_IO_Module                                                
 USE Poseidon_Constants_Module, &
                     ONLY : idp, pi
 
+USE Units_Module, &
+                    ONLY :  C_Square,       &
+                            Gram,           &
+                            Centimeter,     &
+                            Kilometer,      &
+                            Erg,            &
+                            Second,         &
+                            GravPot_Units,  &
+                            Shift_Units
 
 USE Poseidon_IO_Parameters, &
                     ONLY :  Poseidon_LinSys_Dir,    &
@@ -50,6 +59,7 @@ USE Poseidon_Variables_Module, &
                             Elem_Prob_Dim_sqr,      &
                             NUM_OFF_DIAGONALS,      &
                             Coefficient_Vector,     &
+                            rlocs,                  &
                             RHS_Vector,             &
                             Block_RHS_Vector,       &
                             Update_Vector,          &
@@ -59,6 +69,9 @@ USE Poseidon_Variables_Module, &
 USE Poseidon_IO_Module, &
                     ONLY :  Open_Existing_File,     &
                             Open_New_File
+
+USE Poseidon_Quadrature_Module, &
+                    ONLY :  Initialize_LGL_Quadrature_Locations
 
 
 IMPLICIT NONE
@@ -199,7 +212,7 @@ END SUBROUTINE OUTPUT_RHS_VECTOR
 
 !+404+###########################################################################!
 !                                                                                !
-!                   OUTPUT_RHS_VECTOR                                       !
+!                   OUTPUT_RHS_VECTOR_Parts                                      !
 !                                                                                !
 !################################################################################!
 SUBROUTINE OUTPUT_RHS_VECTOR_Parts(Laplace, Source)
@@ -220,6 +233,7 @@ INTEGER                                                 ::  i
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'
 
+CALL OUTPUT_NODE_MESH()
 
 WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"RHS_LAP_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 600 )
@@ -233,9 +247,6 @@ END DO
 CLOSE(FILE_ID)
 
 
-
-
-
 WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"RHS_SRC_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 600 )
 
@@ -247,12 +258,18 @@ END DO
 CLOSE(FILE_ID)
 
 
+
+
 END SUBROUTINE OUTPUT_RHS_VECTOR_Parts
+
+
+
+
 
 
 !+404+###########################################################################!
 !                                                                                !
-!                   OUTPUT_RHS_VECTOR                                       !
+!                   OUTPUT_UPDATE_VECTOR                                         !
 !                                                                                !
 !################################################################################!
 SUBROUTINE OUTPUT_UPDATE_VECTOR()
@@ -286,7 +303,7 @@ END SUBROUTINE OUTPUT_UPDATE_VECTOR
 
 !+404+###########################################################################!
 !                                                                                !
-!                   OUTPUT_RHS_VECTOR                                       !
+!                   OUTPUT_COEFFICIENT_VECTOR_MATLAB                             !
 !                                                                                !
 !################################################################################!
 SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_MATLAB()
@@ -320,7 +337,7 @@ END SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_MATLAB
 
 !+404+###########################################################################!
 !                                                                                !
-!                   OUTPUT_RHS_VECTOR                                       !
+!                   OUTPUT_COEFFICIENT_VECTOR_FORTRAN                            !
 !                                                                                !
 !################################################################################!
 SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
@@ -355,7 +372,7 @@ END SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_FORTRAN
 
 !+404+###########################################################################!
 !                                                                                !
-!                   OUTPUT_RHS_VECTOR                                       !
+!                   READ_COEFFICIENT_VECTOR                                      !
 !                                                                                !
 !################################################################################!
 SUBROUTINE READ_COEFFICIENT_VECTOR(Frame_Num, Iter_Num)
@@ -390,6 +407,63 @@ READ(FILE_ID,*)Test
 CLOSE(FILE_ID)
 
 END SUBROUTINE READ_COEFFICIENT_VECTOR
+
+
+
+
+
+
+
+
+
+!+404+###########################################################################!
+!                                                                                !
+!                   OUTPUT_NODE_MESH                                             !
+!                                                                                !
+!################################################################################!
+SUBROUTINE OUTPUT_NODE_MESH()
+
+CHARACTER(LEN = 57)                                     ::  FILE_NAME
+
+
+
+INTEGER                                                 ::  FILE_ID
+INTEGER                                                 ::  re, rd
+
+REAL(KIND = idp), DIMENSION(0:DEGREE)                   ::  Local_Locations
+REAL(KIND = idp), DIMENSION(0:DEGREE)                   ::  CUR_R_LOCS
+REAL(KIND = idp)                                        ::  deltar_overtwo
+
+Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
+
+
+WRITE(FILE_NAME,'(A,A)') Poseidon_LinSys_Dir,"Nodal_Mesh.out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 300 )
+
+
+deltar_overtwo = (rlocs(1) - rlocs(0))/2.0_idp
+CUR_R_LOCS(:) = deltar_overtwo * (Local_Locations(:)+1.0_idp) + rlocs(0)
+
+
+WRITE(FILE_ID, '(ES24.16E3)') CUR_R_LOCS(0)/centimeter
+DO re = 0,NUM_R_ELEMENTS-1
+
+    deltar_overtwo = (rlocs(re + 1) - rlocs(re))/2.0_idp
+    CUR_R_LOCS(:) = deltar_overtwo * (Local_Locations(:)+1.0_idp) + rlocs(re)
+
+    DO rd = 1,DEGREE
+
+        WRITE(FILE_ID,'(ES24.16E3)' ) CUR_R_LOCS(rd)/centimeter
+
+    END DO
+END DO
+
+
+CLOSE(FILE_ID)
+
+END SUBROUTINE OUTPUT_NODE_MESH
+
+
 
 
 

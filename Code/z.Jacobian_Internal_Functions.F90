@@ -148,19 +148,20 @@ REAL(KIND = idp)                    ::  Beta_Drv_Trace
 
 
 
-Beta_Drv_Trace = CUR_DRV_BETA( tpd, rd, 1, 1 )    &
-               + CUR_DRV_BETA( tpd, rd, 2, 2 )    &
-               + CUR_DRV_BETA( tpd, rd, 3, 3 )
+!Beta_Drv_Trace = CUR_DRV_BETA( tpd, rd, 1, 1 )    &
+!               + CUR_DRV_BETA( tpd, rd, 2, 2 )    &
+!               + CUR_DRV_BETA( tpd, rd, 3, 3 )
 
 
 
 
 
 
-JCBN_kappa_FUNCTION_3D_ALL(1,1) = 2.0_idp                   * CUR_DRV_BETA( tpd, rd, 1, 1 )       &
+JCBN_kappa_FUNCTION_3D_ALL(1,1) = FourThirds                * CUR_DRV_BETA( tpd, rd, 1, 1 )       &
                                 - FourThirds/r              * CUR_VAL_BETA( tpd, rd, 1 )          &
                                 - TwoThirds * COTAN_VAL     * CUR_VAL_BETA( tpd, rd, 2 )          &
-                                - TwoThirds                 * Beta_Drv_Trace
+                                - TwoThirds                 * CUR_DRV_BETA( tpd, rd, 2, 2 )       &
+                                - TwoThirds                 * CUR_DRV_BETA( tpd, rd, 3, 3 )
 
 JCBN_kappa_FUNCTION_3D_ALL(2,1) =  CUR_DRV_BETA( tpd, rd, 1, 2 )                                     &
                                 +  CUR_DRV_BETA( tpd, rd, 2, 1 )/R_SQUARE
@@ -176,8 +177,9 @@ JCBN_kappa_FUNCTION_3D_ALL(1,2) = JCBN_kappa_FUNCTION_3D_ALL(2,1)
 
 JCBN_kappa_FUNCTION_3D_ALL(2,2) = TwoThirds / R_CUBED              * CUR_VAL_BETA( tpd, rd, 1 )      &
                                 - (TwoThirds/R_SQUARE)*COTAN_VAL   * CUR_VAL_BETA( tpd, rd, 2 )      &
-                                + 2.0_idp / R_SQUARE               * CUR_DRV_BETA( tpd, rd, 2, 2 )   &
-                                - TwoThirds / R_SQUARE             * Beta_Drv_Trace
+                                + FourThirds / R_SQUARE            * CUR_DRV_BETA( tpd, rd, 2, 2 )   &
+                                - TwoThirds / R_SQUARE             * CUR_DRV_BETA( tpd, rd, 1, 1 )   &
+                                - TwoThirds / R_SQUARE             * CUR_DRV_BETA( tpd, rd, 3, 3 )
 
 JCBN_kappa_FUNCTION_3D_ALL(3,2) = CUR_DRV_BETA( tpd, rd, 2, 3 )/R_SQUARE                             &
                                 + CUR_DRV_BETA( tpd, rd, 3, 2 )/RSIN_SQUARE
@@ -189,9 +191,10 @@ JCBN_kappa_FUNCTION_3D_ALL(1,3) = JCBN_kappa_FUNCTION_3D_ALL(3,1)
 JCBN_kappa_FUNCTION_3D_ALL(2,3) = JCBN_kappa_FUNCTION_3D_ALL(3,2)
 
 JCBN_kappa_FUNCTION_3D_ALL(3,3) = TwoThirds/( r * RSIN_SQUARE)          * CUR_VAL_BETA( tpd, rd, 1 )      &
-                                +  FourThirds * COTAN_VAL/RSIN_SQUARE   * CUR_VAL_BETA( tpd, rd, 2 )      &
-                                + 2.0_idp / RSIN_SQUARE                 * CUR_DRV_BETA( tpd, rd, 3, 3 )   &
-                                - TwoThirds / RSIN_SQUARE               * Beta_Drv_Trace
+                                + FourThirds * COTAN_VAL/RSIN_SQUARE    * CUR_VAL_BETA( tpd, rd, 2 )      &
+                                + FourThirds / RSIN_SQUARE              * CUR_DRV_BETA( tpd, rd, 3, 3 )   &
+                                - TwoThirds / RSIN_SQUARE               * CUR_DRV_BETA( tpd, rd, 1, 1 )   &
+                                - TwoThirds / RSIN_SQUARE               * CUR_DRV_BETA( tpd, rd, 2, 2 )
 
 
 END FUNCTION JCBN_kappa_FUNCTION_3D_ALL

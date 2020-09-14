@@ -188,6 +188,7 @@ IF ( POSEIDON_INITIALIZED_FLAG .EQV. .FALSE. ) THEN
 
 END IF
 
+
 END SUBROUTINE Poseidon_Initialize
 
 
@@ -213,7 +214,6 @@ INTEGER, DIMENSION(1:5)                             ::  Eq_Flag_Array
 
 
 
-PRINT*,"Quad",NUM_R_QUAD_POINTS,NUM_T_QUAD_POINTS,NUM_P_QUAD_POINTS
 
 !CALL Poseidon_Readiness_Check(Readiness_Flag)
 Readiness_Flag = .TRUE.

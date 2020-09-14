@@ -79,6 +79,7 @@ USE Poseidon_Parameters, &
                             WRITE_SOURCES_FLAG,                             &
                             OUTPUT_RHS_VECTOR_FLAG,                         &
                             Poseidon_Frame
+                            
 
 USE DRIVER_Parameters,  &
                     ONLY :  Potential_Solution,                              &
@@ -106,6 +107,7 @@ USE Poseidon_Variables_Module, &
                             INT_P_LOCATIONS,                                &
                             VAR_DIM,                                        &
                             NUM_OFF_DIAGONALS,                              &
+                            PROB_DIM,                                       &
                             SUBSHELL_PROB_DIM,                              &
                             Block_PROB_DIM,                                 &
                             BLOCK_RHS_VECTOR,                               &
@@ -598,6 +600,11 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
         WRITE(Filenames(9),116) Poseidon_Results_Dir,"Results_Phi_Locs_",Poseidon_Frame,".out"
 
 
+!        DO i = 0,PROB_DIM-1
+!            PRINT*,Coefficient_Vector(i)
+!        END DO
+
+
         File_IDs = [(141 + i, i=1,Num_Files)]
         DO i = 1,Num_Files
             CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i), 200 )
@@ -1085,7 +1092,6 @@ Si_Units = Gram/(Second*Centimeter**2)
 116 FORMAT (A,A,I5.5,A)
 
 
-PRINT*,"WRITE_SOURCES_FLAG",WRITE_SOURCES_FLAG
 IF ( WRITE_SOURCES_FLAG == 1 ) THEN
     Num_Files = 6
 
@@ -1118,7 +1124,7 @@ IF ( WRITE_SOURCES_FLAG == 1 ) THEN
 
 
     Delta_X = Right_Limit - Left_Limit
-
+    
     DO re = 0,NUM_R_ELEMENTS-1
 
         Dr_Over_Dx = (rlocs(re+1) - rlocs(re))/Delta_X

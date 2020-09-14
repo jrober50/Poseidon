@@ -62,7 +62,8 @@ LIST_o  = z.Poseidon_Variables_Module.o          \
           z.Poseidon_IO_Module.o                 \
           z.Poseidon_LinSys_IO_Module.o          \
           z.Poseidon_BC_Module.o                 \
-          z.Poseidon_SubJacobian_Functions_3D.o  \
+	  z.Poseidon_SubJacobian_Functions_1D.o  \
+	  z.Poseidon_SubJacobian_Functions_3D.o  \
           z.Poseidon_Preconditioners.o           \
           z.CFA_3D_Master_Build.o                \
           z.Poseidon_PETSc_Solver.o		 \
