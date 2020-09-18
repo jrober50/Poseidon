@@ -343,7 +343,7 @@ CALL CHECK_SETUP(R_Elements_Input, T_Elements_Input, P_Elements_Input, TmpID )
 !   Associate the Correct Map Functions, and Set Spherical Harmonic Length
 !
 IF ( DOMAIN_DIM == 1 ) THEN
-
+    NUM_CFA_VARS = 3
     LM_LENGTH = 1
     Matrix_Location => CFA_1D_Matrix_Map
     LM_Location => CFA_1D_LM_Map

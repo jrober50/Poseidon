@@ -226,6 +226,7 @@ END DO
 
 
 
+
 DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
 
      !                                                          !
@@ -233,7 +234,6 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
      !                                                          !
     Global_pe = Block_P_Begin + pe
     P_Locations = Map_From_X_Space(plocs(Global_pe), plocs(Global_pe + 1), INT_P_LOCATIONS)
-
 
     DO te = 0,NUM_T_ELEMS_PER_BLOCK-1
 
@@ -249,8 +249,6 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
 
 
 
-
-
         DO pd = 1,NUM_P_QUAD_POINTS
 
             DO td = 1,NUM_T_QUAD_POINTS
@@ -262,8 +260,6 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
                     DO m = -M_VALUES(l),M_VALUES(l)
 
 
-
-                        
                         tpd_loc = (td-1)*NUM_P_QUAD_POINTS + pd
                         lm_loc = LM_Location(l,m)
                         Norm_Storage = Norm_Factor(l,m)

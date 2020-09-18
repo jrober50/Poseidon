@@ -219,11 +219,17 @@ INTEGER, DIMENSION(1:5)                             ::  Eq_Flag_Array
 Readiness_Flag = .TRUE.
 
 IF ( Readiness_Flag ) THEN
+    
     IF ( SOLVER_TYPE_FLAG == 1 ) THEN
 
         CALL CFA_Newton_Raphson_3D()
+
+    ELSE IF ( Solver_TYPE_FLAG == 2 ) THEN
+
+        PRINT*,"Trying to Run Fixed Point Solver"
+
     
-    ELSE IF ( SOLVER_TYPE_FLAG == 2 ) THEN
+    ELSE IF ( SOLVER_TYPE_FLAG == 3 ) THEN
 
         Eq_Flag_Array = [ 1, 1, 1, 1, 1]
         CALL CFA_GMRES(Eq_Flag_Array)

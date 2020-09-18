@@ -136,8 +136,10 @@ INTEGER                                     :: CFA_1D_Matrix_Map
 INTEGER, INTENT(IN)                         :: ui, l, m, re, d
 
 
-CFA_1D_Matrix_Map = NUM_CFA_VARS*(re*DEGREE + d)            &
+CFA_1D_Matrix_Map = (re*DEGREE + d)*NUM_CFA_VARS                &
                   + (ui - 1)
+
+
 
 
 END FUNCTION CFA_1D_Matrix_Map

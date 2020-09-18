@@ -49,6 +49,8 @@ USE DRIVER_Parameters, &
                     DRIVER_MESH_TYPE,           &
                     DRIVER_Zoom,                &
                     DRIVER_SOLVER_TYPE,         &
+                    SOLVER_MODE,                &
+                    CFA_EQs_Flag_Vector,        &
                     RESULTS_OUTPUT_FLAG,        &
                     SOURCE_OUTPUT_FLAG,         &
                     RUN_REPORT_FLAG,            &
@@ -86,7 +88,7 @@ INTEGER                                             ::  DRIVER_read
 INTEGER                                             ::  iskipp
 INTEGER                                             ::  istat
 
-INTEGER                                             ::  Num_Int_Params  = 25
+INTEGER                                             ::  Num_Int_Params  = 31
 INTEGER                                             ::  Num_Real_Params = 12
 
 INTEGER,            DIMENSION(:), ALLOCATABLE     ::  Int_Params
@@ -179,6 +181,14 @@ SELFSIM_ECC                 = Real_Params(11)   !   SSE
 DRIVER_Zoom                 = Real_Params(12)   !   GZ
 
 OUTPUT_PRIMATIVES_FLAG       = Int_Params(25)    !   OPF
+
+SOLVER_MODE                 = Int_Params(26)    !  DSM
+
+CFA_EQS_Flag_Vector(1)       = Int_Params(27)    !  EQF1
+CFA_EQS_Flag_Vector(2)       = Int_Params(28)    !  EQF2
+CFA_EQS_Flag_Vector(3)       = Int_Params(29)    !  EQF3
+CFA_EQS_Flag_Vector(4)       = Int_Params(30)    !  EQF4
+CFA_EQS_Flag_Vector(5)       = Int_Params(31)    !  EQF5
 
 
 
@@ -466,6 +476,38 @@ IF ( Param_type == 'OPF   ' ) THEN
     READ (line, 111) INT_PARAMS(25)
     CYCLE
 END IF
+
+
+IF ( Param_type == 'DSM   ' ) THEN
+    READ ( line,111) INT_PARAMS(26)
+    CYCLE
+ENDIF
+
+IF ( Param_type == 'EQF1  ' ) THEN
+    READ ( line,111) INT_PARAMS(27)
+    CYCLE
+ENDIF
+
+IF ( Param_type == 'EQF2  ' ) THEN
+    READ ( line,111) INT_PARAMS(28)
+    CYCLE
+ENDIF
+
+IF ( Param_type == 'EQF3  ' ) THEN
+    READ ( line,111) INT_PARAMS(29)
+    CYCLE
+ENDIF
+
+IF ( Param_type == 'EQF4  ' ) THEN
+    READ ( line,111) INT_PARAMS(30)
+    CYCLE
+ENDIF
+
+IF ( Param_type == 'EQF5  ' ) THEN
+    READ ( line,111) INT_PARAMS(31)
+    CYCLE
+ENDIF
+
 
 END DO READ
 

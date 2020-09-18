@@ -83,7 +83,9 @@ USE DRIVER_Parameters, &
                     CHIMERA_END_FRAME,      &
                     Iteration_History,      &
                     DRIVER_RUN_TIME_TABLE,  &
-                    DRIVER_FRAME_TIME_TABLE
+                    DRIVER_FRAME_TIME_TABLE,&
+                    SOLVER_MODE,            &
+                    CFA_EQS_Flag_Vector
 
 USE Driver_Params_Read_Module, &
             ONLY :  Unpack_Driver_Parameters
@@ -480,7 +482,6 @@ ELSE IF ( Problem_Dimension .EQ. 3 ) THEN
     CALL MPI_COMM_SPLIT(MPI_COMM_WORLD, k_block_row, myid_CHIMERA, MPI_COMM_XY, ierr)
     CALL MPI_COMM_RANK(MPI_COMM_XY, myid_theta, ierr)
     CALL MPI_COMM_SIZE(MPI_COMM_XY, num_y_procs, ierr)
-    PRINT*,"In Driver, myID_Theta",myID_Theta
 
     CALL MPI_COMM_SPLIT(MPI_COMM_WORLD, j_block_col, myid_CHIMERA, MPI_COMM_XZ, ierr)
     CALL MPI_COMM_RANK(MPI_COMM_XZ, myid_phi, ierr)
@@ -689,8 +690,10 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
         mode = 1
         modeb = 1
     END IF
-
-    CALL Poseidon_CFA_3D(   mode, modeb, Units, imin, imax, nx,             &
+    
+    CALL Poseidon_CFA_3D(   mode, modeb, Units,                             &
+                            Solver_Mode, CFA_EQs_Flag_Vector,               &
+                            imin, imax, nx,                                 &
                             ij_ray_dim, ik_ray_dim, ny, nz,                 &
                             x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,      &
                             Num_Input_Nodes,                                &
@@ -703,7 +706,8 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
 
     CALL PQ_ITERATIONS_USED( Iteration_History(DRIVER_FRAME) )
 
-    CALL OUTPUT_FRAME_REPORT(DRIVER_FRAME)
+!    PRINT*,"Before OUTPUT_FRAME_REPORT"
+!    CALL OUTPUT_FRAME_REPORT(DRIVER_FRAME)
     CALL CLOSE_FRAME_REPORT_FILE()
     FIRST_FRAME_FLAG = 0
 
@@ -712,7 +716,8 @@ END DO ! Frame Loop
 
 
 IF ( myID == 0 ) THEN
-    CALL OUTPUT_RUN_REPORT()
+!    PRINT*,"Before OUTPUT_RUN_REPORT"
+!    CALL OUTPUT_RUN_REPORT()
     CALL OUTPUT_ITERATION_HISTORY()
     CALL CLOSE_RUN_REPORT_FILE()
 END IF

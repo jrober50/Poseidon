@@ -38,14 +38,16 @@ USE Units_Module, &
 
 USE Poseidon_Parameters, &
                         ONLY :  DOMAIN_DIM,             &
-                                DEGREE
+                                DEGREE,                 &
+                                NUM_CFA_VARS
 
 USE DRIVER_Parameters, &
                         ONLY :  myID,                   &
                                 Potential_Solution,     &
                                 Shift_Solution,         &
                                 Potential_Sol_Flag,     &
-                                Shift_Sol_Flag
+                                Shift_Sol_Flag,         &
+                                Solver_Mode
 
 USE Poseidon_Variables_Module, &
                         ONLY :  NUM_R_ELEMENTS,         &
@@ -59,6 +61,12 @@ USE Driver_Additional_Functions_Module, &
 
 USE Poseidon_IO_Module, &
                         ONLY :  OPEN_EXISTING_FILE
+
+USE Poseidon_FP_Mapping_Functions_Module,   &
+                        ONLY :  FP_Vector_Map
+
+USE Poseidon_FP_Variables_Module, &
+                        ONLY :  FP_Coeff_Vector
 
 
 IMPLICIT NONE
@@ -85,7 +93,7 @@ INTEGER                                     ::  CUR_PSI_LOC,        &
                                                 CUR_BETA_LOC
 
 
-INTEGER                                     :: re, rd
+INTEGER                                     :: re, rd, Here
 
 
 
@@ -107,43 +115,63 @@ delta_Beta = 0.0_idp
 
 
 
+IF ( SOLVER_MODE == 2 ) THEN
+
+    FP_Coeff_Vector = 0.0_idp
+    DO re = 0,NUM_R_ELEMENTS - 1
+
+        DO rd = 0, Degree
+            ! 2 sqrt(pi) is Ylm normalization factor
+
+            Here = FP_Vector_Map(re, rd)
+
+            FP_Coeff_Vector(Here,0,1) = 1.0_idp * 2.0_idp * sqrt(pi)
+            FP_Coeff_Vector(Here,0,2) = 1.0_idp * 2.0_idp * sqrt(pi)
+            FP_Coeff_Vector(Here,0,3) = Beta_Start - delta_Beta*(re*DEGREE+rd)
+    !        Coefficient_Vector(Cur_Shift_Loc) = 0.0_idp
+            
+        END DO
+    END DO
+
+    
+
+ELSE
+
+
+
+    DO re = 0,NUM_R_ELEMENTS - 1
+
+
+        DO rd = 0,DEGREE
+
+
+            ! 2 sqrt(pi) is Ylm normalization factor
+
+
+            CUR_PSI_LOC = Matrix_Location( 1, 0, 0, re, rd )
+            Coefficient_Vector(CUR_PSI_LOC) = 1.0_idp * 2.0_idp * sqrt(pi)
 
 
 
 
-DO re = 0,NUM_R_ELEMENTS - 1
+            CUR_ALPHPSI_LOC = Matrix_Location( 2, 0, 0, re, rd )
+            Coefficient_Vector(CUR_ALPHPSI_LOC) = 1.0_idp * 2.0_idp * sqrt(pi)
 
 
-    DO rd = 0,DEGREE
+            DO beta_i = 1,DOMAIN_DIM-1
 
+                CUR_BETA_LOC = Matrix_Location( 2+beta_i, 0, 0, re, rd )
+                Coefficient_Vector(CUR_BETA_LOC) = Beta_Start - delta_Beta*(re*DEGREE+rd)
 
-        ! 2 sqrt(pi) is Ylm normalization factor
+            END DO
 
-
-        CUR_PSI_LOC = Matrix_Location( 1, 0, 0, re, rd )
-        Coefficient_Vector(CUR_PSI_LOC) = 1.0_idp * 2.0_idp * sqrt(pi)
-
-
-
-
-        CUR_ALPHPSI_LOC = Matrix_Location( 2, 0, 0, re, rd )
-        Coefficient_Vector(CUR_ALPHPSI_LOC) = 1.0_idp * 2.0_idp * sqrt(pi)
-
-
-        DO beta_i = 1,DOMAIN_DIM-1
-
-            CUR_BETA_LOC = Matrix_Location( 2+beta_i, 0, 0, re, rd )
-            Coefficient_Vector(CUR_BETA_LOC) = Beta_Start - delta_Beta*(re*DEGREE+rd)
 
         END DO
 
 
     END DO
 
-
-END DO
-
-
+END IF
 
 
 END SUBROUTINE Initialize_Flat_Space_Guess_Values
@@ -188,38 +216,66 @@ Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 !   Empty Space Initial Guess
 !
 Coefficient_Vector = 0.0_idp
+IF ( SOLVER_MODE == 2 ) THEN
 
+    FP_Coeff_Vector = 0.0_idp
 
+    DO re = 0,NUM_R_ELEMENTS - 1
 
+        R_Values = Map_From_X_Space(rlocs(re), rlocs(re + 1), Local_Locations)
 
-DO re = 0,NUM_R_ELEMENTS - 1
+        DO d = 0,DEGREE
+     
+            ! 2 sqrt(pi) is Ylm normalization factor
 
-    R_Values = Map_From_X_Space(rlocs(re), rlocs(re + 1), Local_Locations)
+            Here = FP_Vector_Map(re, d)
 
-    DO d = 0,DEGREE
- 
-        ! 2 sqrt(pi) is Ylm normalization factor
+            FP_Coeff_Vector(Here,0,1) = 2.0_idp * sqrt(pi)                                          &
+                                            * ( 1.0_idp - 0.5_idp                                       &
+                                                * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
 
-        CUR_PSI_LOC = Matrix_Location( 1, 0, 0, re, d )
-        Coefficient_Vector(CUR_PSI_LOC) = 2.0_idp * sqrt(pi)                                        &
-                                        * ( 1.0_idp - 0.5_idp                                       &
-                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
+            FP_Coeff_Vector(Here,0,2) = 2.0_idp * sqrt(pi)                                          &
+                                            * ( 1.0_idp + 0.5_idp                                       &
+                                                * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
 
-
-
-        CUR_ALPHPSI_LOC = Matrix_Location( 2, 0, 0, re, d )
-        Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)                                    &
-                                        * ( 1.0_idp + 0.5_idp                                       &
-                                            * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
-
-
-        CUR_SHIFT_LOC = Matrix_Location( 3, 0, 0, re, d )
-        Coefficient_Vector(Cur_Shift_Loc) = 2.0_idp*sqrt(pi)*Shift_Solution(R_Values(d),rlocs,NUM_R_ELEMENTS)
-!        Coefficient_Vector(Cur_Shift_Loc) = 0.0_idp
-        
+            FP_Coeff_Vector(Here,0,3) = 2.0_idp*sqrt(pi)*Shift_Solution(R_Values(d),rlocs,NUM_R_ELEMENTS)
+    !        Coefficient_Vector(Cur_Shift_Loc) = 0.0_idp
+            
+        END DO
     END DO
-END DO
 
+
+
+ELSE
+    DO re = 0,NUM_R_ELEMENTS - 1
+
+        R_Values = Map_From_X_Space(rlocs(re), rlocs(re + 1), Local_Locations)
+
+        DO d = 0,DEGREE
+     
+            ! 2 sqrt(pi) is Ylm normalization factor
+
+            CUR_PSI_LOC = Matrix_Location( 1, 0, 0, re, d )
+            Coefficient_Vector(CUR_PSI_LOC) = 2.0_idp * sqrt(pi)                                        &
+                                            * ( 1.0_idp - 0.5_idp                                       &
+                                                * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
+
+
+
+            CUR_ALPHPSI_LOC = Matrix_Location( 2, 0, 0, re, d )
+            
+            Coefficient_Vector(CUR_ALPHPSI_LOC) = 2.0_idp * sqrt(pi)                                    &
+                                            * ( 1.0_idp + 0.5_idp                                       &
+                                                * Potential_Solution(R_Values(d),0.0_idp,0.0_idp)/C_Square  )
+
+
+            CUR_SHIFT_LOC = Matrix_Location( 3, 0, 0, re, d )
+            Coefficient_Vector(Cur_Shift_Loc) = 2.0_idp*sqrt(pi)*Shift_Solution(R_Values(d),rlocs,NUM_R_ELEMENTS)
+    !        Coefficient_Vector(Cur_Shift_Loc) = 0.0_idp
+            
+        END DO
+    END DO
+END IF
 
 
 END SUBROUTINE Initialize_Calculated_Guess_Values
@@ -312,10 +368,10 @@ END SUBROUTINE CALC_SHIFT_BC_VALUE
 
 !!+401+###########################################################################!
 !!                                                                                !
-!!                  Inital_Guess_1D_Shift_Vector_1D                               !
+!!                  Inital_Guess_Shift_Vector_1D                               !
 !!                                                                                !
 !!################################################################################!
-!SUBROUTINE Inital_Guess_1D_Shift_Vector_1D( Num_RE, Num_TE, Num_PE,   &
+!SUBROUTINE Inital_Guess_Shift_Vector_1D( Num_RE, Num_TE, Num_PE,   &
 !                                            Num_Nodes,                &
 !                                            Mesh_Width, Mesh_Center, Node_Locs,    &
 !                                            Psi, Alpha, Sr,           &
@@ -389,7 +445,7 @@ END SUBROUTINE CALC_SHIFT_BC_VALUE
 !
 !
 !
-!END SUBROUTINE Inital_Guess_1D_Shift_Vector_1D
+!END SUBROUTINE Inital_Guess_Shift_Vector_1D
 
 
 

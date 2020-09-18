@@ -261,8 +261,8 @@ DO re = 0,NUM_R_ELEMENTS - 1
 
 
         CUR_SHIFT_LOC = Matrix_Location( 3, 0, 0, re, d )
-        Coefficient_Vector(Cur_Shift_Loc) = 2.0_idp*sqrt(pi)*Shift_Solution(R_Values(d),rlocs,NUM_R_ELEMENTS)
-
+        !Coefficient_Vector(Cur_Shift_Loc) = 2.0_idp*sqrt(pi)*Shift_Solution(R_Values(d),rlocs,NUM_R_ELEMENTS)
+        Coefficient_Vector(Cur_Shift_Loc) = 0.0_idp
     END DO
 END DO
 

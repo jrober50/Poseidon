@@ -49,6 +49,8 @@ REAL(KIND=idp)              ::  DRIVER_INNER_RADIUS
 REAL(KIND=idp)              ::  DRIVER_CORE_RADIUS
 REAL(KIND=idp)              ::  DRIVER_OUTER_RADIUS
 
+INTEGER                     ::  SOLVER_MODE             ! 1 = NR, 2 = FP
+INTEGER, DIMENSION(1:5)     ::  CFA_EQs_Flag_Vector
 
 ! Mesh Type
 INTEGER                     ::  DRIVER_Mesh_Type
