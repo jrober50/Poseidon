@@ -84,12 +84,14 @@ USE Poseidon_Variables_Module, &
                     drlocs,                     &
                     dtlocs,                     &
                     dplocs,                     &
-                    LM_Location
+                    LM_Location,                &
+                    Calc_3D_Values_At_Location
 
 
 USE Poseidon_FP_Variables_Module, &
             ONLY :  CFA_EQ_Flags,               &
                     CFA_EQ_Map,                 &
+                    CFA_Mat_Map,                &
                     Laplace_NNZ,                &
                     Num_Matrices
 
@@ -130,6 +132,9 @@ USE Poseidon_IO_Parameters, &
 
 USE Poseidon_FP_Laplace_Matrix_Module, &
             ONLY : Initialize_Laplace_Matrices
+
+USE Poseidon_FP_Calculate_Results_Module,   &
+            ONLY : Calc_FP_Values_At_Location
 
 USE mpi
 
@@ -294,6 +299,33 @@ END DO
 
 
 
+IF ( ( CFA_EQ_Flags(1) == 1 ) .OR. ( CFA_EQ_Flags(2) == 1 ) ) THEN
+    IF ( CFA_EQ_Flags(1) == 1 ) THEN
+        CFA_Mat_Map(1) = 1
+    END IF
+    IF ( CFA_EQ_Flags(2) == 1 ) THEN
+        CFA_Mat_Map(2) = 1
+    END IF
+    j = 2
+    DO i = 3,5
+        IF ( CFA_EQ_Flags(i) == 1 ) THEN
+            CFA_Mat_Map(i) = j
+            j = j + 1
+        END IF
+    END DO
+ELSE
+
+    j = 1
+    DO i = 3,5
+        IF ( CFA_EQ_Flags(i) == 1 ) THEN
+            CFA_Mat_Map(i) = j
+            j = j + 1
+        END IF
+    END DO
+END IF
+!PRINT*,"CFA_MAT_MAP"
+!PRINT*,CFA_MAT_MAP
+!STOP
 
 !
 !   Associate the Correct Map Functions, and Set Spherical Harmonic Length
@@ -408,6 +440,7 @@ CALL Initialize_Ylm_Tables()
 CALL Initialize_Laplace_Matrices()
 
 
+Calc_3D_Values_At_Location => Calc_FP_Values_At_Location
 
 !CALL OUTPUT_SETUP_TABLE( nPROCS, R_Elements_Input, T_Elements_Input, P_Elements_Input )
 

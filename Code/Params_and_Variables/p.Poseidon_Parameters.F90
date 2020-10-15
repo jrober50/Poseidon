@@ -32,7 +32,8 @@ INTEGER                     ::  L_LIMIT
 
 INTEGER                     ::  nPROCS_POSEIDON
 
-INTEGER, PARAMETER          ::  NUM_CFA_VARS = 5
+INTEGER                     ::  NUM_CFA_VARS = 5
+INTEGER                     ::  NUM_CFA_EQs
 
 INTEGER, PARAMETER          ::  DATA_DIST_MODE = 4
 INTEGER, PARAMETER          ::  SOL_DIST_SCHEME = 2
@@ -110,5 +111,6 @@ INTEGER                     ::  Ratio_T_BNDLperBLCK
 INTEGER                     ::  Ratio_P_BNDLperBLCK
 INTEGER                     ::  Ratio_BNDLperBLCK
 
+CHARACTER(LEN = 32)         ::  Solver_Name
 
 END MODULE Poseidon_Parameters

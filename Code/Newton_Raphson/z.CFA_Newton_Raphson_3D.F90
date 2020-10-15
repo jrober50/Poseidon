@@ -112,15 +112,18 @@ USE Poseidon_Variables_Module, &
                                 R_INNER, R_OUTER,           &
                                 Total_Run_Iters,            &
                                 ITER_TIME_TABLE,            &
-                                FRAME_CONVERGENCE_TABLE,    &
+                                Frame_Update_Table,         &
+                                Frame_Residual_Table,       &
                                 Iteration_Histogram,        &
-                                Matrix_Location
+                                Matrix_Location,            &
+                                Calc_3D_Values_At_Location
+
+USE CFA_1D_Master_Build_Module, &
+                        ONLY :  CFA_1D_Master_Build
 
 USE CFA_3D_Master_Build_Module, &
                         ONLY :  CFA_3D_Master_Build
 
-USE Poseidon_Calculate_Results_Module, &
-                        ONLY :  Calc_3D_Values_At_Location
 
 USE Poseidon_Guess_Module,  &
                         ONLY :  Initialize_Guess_Values,        &
@@ -146,6 +149,9 @@ USE Poseidon_Petsc_Solver, &
 USE Poseidon_Residual_Equations_Module, &
                         ONLY :  Output_Residual,            &
                                 Output_Final_Residual
+
+USE Poseidon_Mapping_Functions_Module, &
+                        ONLY :  CFA_ALL_Matrix_Map
 
 
 USE MPI
@@ -182,9 +188,9 @@ timec = 0.0_idp
 
 
 
-!IF (myID_Poseidon == 0 ) THEN
-!    CALL OUTPUT_GUESS(0, 0)
-!END IF
+IF (myID_Poseidon == 0 ) THEN
+    CALL OUTPUT_GUESS(0, 0)
+END IF
 
 Cur_Iteration = 0
 CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
@@ -211,7 +217,13 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     !*!
     !*! Create the System
     !*!
-    CALL CFA_3D_Master_Build()
+    IF ( DOMAIN_DIM == 1 ) THEN
+        PRINT*,"Before CFA_1D_Master_Build"
+        CALL CFA_1D_Master_Build()
+        PRINT*,"After CFA_1D_Master_Build"
+    ELSEIF ( DOMAIN_DIM .NE. 1 ) THEN
+        CALL CFA_3D_Master_Build()
+    END IF
 
     IF ( OUTPUT_MATRIX_FLAG == 1 ) THEN
         CALL OUTPUT_JACOBIAN_MATRIX()
@@ -272,14 +284,14 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     !*! Output Iteration Report
     !*!
     IF ( myID_Poseidon == 0 ) THEN
-        !CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
+        CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
         CALL CLOSE_ITER_REPORT_FILE()
         !CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
     END IF
 
     
 
-!    WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
+    WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
 
 
 
@@ -316,7 +328,12 @@ IF ( OUTPUT_RHS_VECTOR_FLAG == 1 ) THEN
     !*!
     !*! Create the System
     !*!
-    CALL CFA_3D_Master_Build()
+    IF ( DOMAIN_DIM == 1 ) THEN
+        CALL CFA_1D_Master_Build()
+    ELSE IF ( DOMAIN_DIM .NE. 1 ) THEN
+        CALL CFA_3D_Master_Build()
+    END IF
+
 
     CALL OUTPUT_RHS_VECTOR()
 END IF
@@ -378,9 +395,22 @@ END SUBROUTINE CFA_Solve
 !###############################################################################!
 SUBROUTINE CFA_Coefficient_Update_All( )
 
-!CALL CFA_Update_Modifier()
+INTEGER :: i
+
+
+CALL CFA_Update_Modifier()
 
 Coefficient_Vector = Coefficient_Vector + Update_Vector
+
+!PRINT*,"Update Vector is being output in CFA_Coefficient_Update_All,z.CFA_Newton_Raphson_3D.F90"
+!DO i = 0,PROB_DIM-1
+!    IF ( Coefficient_Vector(i) .NE. 0.0_idp ) THEN
+!        PRINT*, Update_Vector(i), Update_Vector(i)/Coefficient_Vector(i)
+!    ELSE
+!        PRINT*,Update_Vector(i)
+!    END IF
+!END DO
+
 
 END SUBROUTINE CFA_Coefficient_Update_All
 
@@ -394,24 +424,22 @@ SUBROUTINE CFA_Update_Modifier( )
 
 INTEGER                                             :: re, d, lm_loc, ui, Here
 
+IF ( DOMAIN_DIM .NE. 1 ) THEN
+    PRINT*,"The Update Vector is Modified, in CFA_Update_Modifier, z.CFA_Newton_Raphon.F90"
+    DO re = 0,NUM_R_ELEMENTS - 1
+        DO d = 0,DEGREE
+            DO ui = 4,5
+                DO lm_loc = 0,LM_LENGTH-1
 
-PRINT*,"The Update Vector is Modified, in CFA_Update_Modifier, z.CFA_Newton_Raphon.F90"
-DO re = 0,NUM_R_ELEMENTS - 1
-    DO d = 0,DEGREE
-        DO ui = 4,5
-            DO lm_loc = 0,LM_LENGTH - 1
+                    Here = CFA_ALL_Matrix_Map(ui, lm_loc, re, d)
 
-                Here = (re*DEGREE + D)*ULM_LENGTH       &
-                                        + (ui - 1)*LM_LENGTH              &
-                                        + lm_loc
+                    Update_Vector(Here) = 0.0_idp
 
-                Update_Vector(Here) = 0.0_idp
-
+                END DO
             END DO
         END DO
     END DO
-END DO
-
+END IF
 
 END SUBROUTINE CFA_Update_Modifier
 
@@ -1038,6 +1066,10 @@ INTEGER                                                 ::  i
 COMPLEX(KIND = idp)                                     ::  RMS_VALUE
 COMPLEX(KIND = idp)                                     ::  Euclidean
 
+REAL(KIND = idp)                                        ::  MaxA, MaxB
+INTEGER                                                 ::  MaxA_Loc
+REAL(KIND = idp)                                        ::  Ratio_Real, Ratio_Imag
+
 FILE_ID = -1
 IF ( FRAME_REPORT_FLAG == 1 ) THEN
     FILE_ID(0) = FRAME_REPORT_FILE_ID
@@ -1047,16 +1079,34 @@ IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
     FILE_ID(1) = ITER_REPORT_FILE_ID
 END IF
 
-!DO i = 0,PROB_DIM-1
-!    PRINT*,Coefficient_Vector(i),Update_Vector(i)
-!END DO
+
+MaxA = 0.0_idp
+PRINT*,"In CONVERGENCE_CHECK"
+DO i = 0,PROB_DIM-1
+
+    if ( Coefficient_Vector(i) .NE. 0.0_idp ) THEN
+    PRINT*,Coefficient_Vector(i),Update_Vector(i),Update_Vector(i)/Coefficient_Vector(i)
+    Ratio_Real = REAL( Update_Vector(i)/Coefficient_Vector(i) , KIND = idp)
+    Ratio_Imag = REAL(IMAG(  Update_Vector(i)/Coefficient_Vector(i) ), KIND = idp)
+
+
+        IF (  abs(Ratio_Real) > MaxA  .OR. abs(Ratio_Imag) > MaxA   ) THEN
+            MaxA = abs(Update_Vector(i)/Coefficient_Vector(i))
+            MaxA_Loc = i
+        END IF
+    END IF
+END DO
+
+PRINT*,"Max Ratio",MaxA, MaxA_Loc
+
+
+
+
 
 IF (myID_Poseidon == 0) THEN
 
     RMS_VALUE = SQRT( SUM(Update_Vector**2)/size(Update_Vector) )
     Euclidean = SQRT( SUM(ABS(Update_Vector)**2) )
-
-
 
 
     IF ( MAXVAL(ABS(Update_Vector)) .LE. Convergence_Criteria ) THEN
@@ -1075,7 +1125,7 @@ IF (myID_Poseidon == 0) THEN
 !    PRINT*,"RMS ",RMS_VALUE," Euclidean ",Euclidean," MAXVAL ",MAXVAL(ABS(Update_Vector))
 
 !   Add the current iteration's convergence check value to the frame table
-    Frame_Convergence_Table(Iteration) =    MAXVAL(ABS(Update_Vector))
+    Frame_Update_Table(Iteration) =    MAXVAL(ABS(Update_Vector))
 
 !   Output data to files
     DO i = 0,1

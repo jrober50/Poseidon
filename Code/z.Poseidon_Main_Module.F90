@@ -98,6 +98,9 @@ USE CFA_Newton_Raphson_3D_Module, &
 USE CFA_GMRES_Module, &
             ONLY :  CFA_GMRES
 
+USE Poseidon_FP_Method_Module,  &
+            ONLY :  Fixed_Point_Method
+
 USE mpi
 
 
@@ -226,12 +229,11 @@ IF ( Readiness_Flag ) THEN
 
     ELSE IF ( Solver_TYPE_FLAG == 2 ) THEN
 
-        PRINT*,"Trying to Run Fixed Point Solver"
+        Call Fixed_Point_Method()
 
-    
     ELSE IF ( SOLVER_TYPE_FLAG == 3 ) THEN
 
-        Eq_Flag_Array = [ 1, 1, 1, 1, 1]
+        Eq_Flag_Array = [ 1, 0, 0, 0, 0]
         CALL CFA_GMRES(Eq_Flag_Array)
 
     ELSE

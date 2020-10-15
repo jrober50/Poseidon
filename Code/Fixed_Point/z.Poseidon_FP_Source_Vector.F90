@@ -33,7 +33,9 @@ USE Poseidon_Parameters, &
                     L_LIMIT,                    &
                     NUM_R_QUAD_POINTS,          &
                     NUM_T_QUAD_POINTS,          &
-                    NUM_P_QUAD_POINTS
+                    NUM_P_QUAD_POINTS,          &
+                    NUM_CFA_EQs,                &
+                    NUM_CFA_VARs
 
 USE Poseidon_Variables_Module, &
             ONLY :  NUM_R_ELEMENTS,             &
@@ -52,7 +54,15 @@ USE Poseidon_Variables_Module, &
                     Block_Source_E,             &
                     Block_Source_S,             &
                     Block_Source_Si,            &
-                    LM_LENGTH
+                    LM_LENGTH,                  &
+                    Ylm_Values,                 &
+                    Ylm_CC_Values,              &
+                    Lagrange_Poly_Table
+
+USE Poseidon_FP_Variables_Module, &
+            ONLY :  FP_Coeff_Vector,            &
+                    FP_Source_Vector,           &
+                    CFA_EQ_Map
 
 USE Jacobian_Internal_Functions_Module, &
             ONLY :  JCBN_kappa_FUNCTION_3D_ALL,     &
@@ -64,12 +74,20 @@ USE Poseidon_IO_Module, &
 USE Poseidon_Mapping_Functions_Module, &
                                 ONLY :  Map_To_X_Space
 
+USE Poseidon_FP_Mapping_Functions_Module, &
+                                ONLY :  FP_Vector_Map
+
 USE SubJacobian_Functions_Module_3D, &
                                 ONLY :  Calc_RHS_Terms
 
 USE SubJacobian_Functions_Module_1D, &
                                 ONLY :  Calc_RHS_Terms_1D
 
+USE SubJacobian_Functions_Module_3D, &
+                                ONLY :  Calc_RHS_Terms
+
+USE SubJacobian_Functions_Module_1D, &
+                                ONLY :  Calc_RHS_Terms_1D
 
 
 
@@ -85,6 +103,7 @@ REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: CUR_P_LOCS
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: R_SQUARE
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: R_CUBED
 
+REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: SIN_VAL_B
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: SIN_VAL
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: SIN_SQUARE
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: TP_SIN_SQUARE
@@ -143,6 +162,7 @@ REAL(KIND = idp), DIMENSION(1:3)                                ::  JCBN_n_ARRAY
 REAL(KIND = idp)                                                ::  JCBN_BIGK_VALUE
 
 Timer = 0.0_idp
+FP_Source_Vector = 0.0_idp
 
 DO pe = 0,NUM_P_ELEMENTS-1
     deltap_overtwo = 0.5_idp * (plocs(pe + 1)-plocs(pe))
@@ -169,6 +189,7 @@ DO pe = 0,NUM_P_ELEMENTS-1
         DO td = 1,NUM_T_QUAD_POINTS
             DO pd = 1,NUM_P_QUAD_POINTS
                 tpd = (td-1)*NUM_P_QUAD_POINTS + pd
+                SIN_VAL_B(tpd) =   SIN_VAL(td)
                 TP_SIN_SQUARE(tpd) = SIN_SQUARE(td)
             END DO
         END DO
@@ -181,20 +202,22 @@ DO pe = 0,NUM_P_ELEMENTS-1
 
 
             R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
+            R_CUBED(:) = R_SQUARE(:)*CUR_R_LOCS(:)
             DO rd = 1,NUM_R_QUAD_POINTS
 
                 RSIN_SQUARE(:,rd) = R_SQUARE(rd)*SIN_SQUARE(:)
 
             END DO
 
+!            PRINT*,"Before Calc_FP_Current_Values"
+            CALL Calc_FP_Current_Values(re, te, pe,               &
+                                        DELTAR_OVERTWO, DELTAT_OVERTWO, DELTAP_OVERTWO  )
 
-!            CALL Calc_FP_Current_Values(Global_re , Local_te  , Local_pe,               &
-!                                        DELTAR_OVERTWO, DELTAT_OVERTWO, DELTAP_OVERTWO  )
+!            PRINT*,"Before Calc_FP_Source_Terms"
+            CALL Calc_FP_Source_Terms( re, te, pe )
 
-
-!            CALL Calc_FP_Source_Terms( Local_re, Local_te, Local_pe )
-
-!            CALL CREATE_FP_Source_Vector( Local_re, Local_te, Local_pe, DELTAR_OVERTWO )
+!            PRINT*,"Before Create_FP_Source_Vector"
+            CALL Create_FP_Source_Vector( re, te, pe, DELTAR_OVERTWO, SIN_VAL_B )
 
 
         END DO ! re Loop
@@ -238,7 +261,7 @@ COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Tmp_U_Value,
 
 
 INTEGER                                                         ::  tpd, td, pd, rd,    &
-                                                                    lm, d
+                                                                    lm, d, Here, ui
 
 
 
@@ -259,22 +282,64 @@ END DO
 
 
 
+DO rd = 1,NUM_R_QUAD_POINTS
+    DO tpd = 1,NUM_TP_QUAD_POINTS
 
-
+        Tmp_U_Value = 0.0_idp
+        Tmp_U_R_DRV_Value = 0.0_idp
+        Tmp_U_T_DRV_Value = 0.0_idp
+        Tmp_U_P_DRV_Value = 0.0_idp
+        DO d = 0,DEGREE
+            DO ui = 1,NUM_CFA_VARS
+                Here = FP_Vector_Map(re,d)
     
-DO lm = 0,LM_LENGTH
-    DO d = 0,DEGREE
+                TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
+                                        + SUM( FP_Coeff_Vector( Here, :, ui )      &
+                                        * Ylm_Values( :, tpd, te, pe )       )      &
+                                        * Lagrange_Poly_Table( d, rd, 0 )
 
-        DO tpd = 1,NUM_TP_QUAD_POINTS
-            DO rd = 1,NUM_R_QUAD_POINTS
+                TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
+                                        + SUM( FP_Coeff_Vector( Here, :, ui )     &
+                                        * Ylm_Values( :, tpd, te, pe )       )      &
+                                        * Lagrange_Poly_Table( d, rd, 1 )           &
+                                        / DELTAR_OVERTWO
 
-!                CUR_PSI_VALUE(tpd,rd) = SUM( FP_C)
 
-            END DO ! rd
-        END DO ! tpd
-    END DO ! d
-END DO ! lm
 
+            END DO
+        END DO ! d
+
+        CUR_VAL_PSI( tpd, rd )         = REAL(Tmp_U_Value(1), KIND = idp)
+        CUR_DRV_PSI( tpd, rd, 1 )      = REAL(Tmp_U_R_DRV_Value(1), KIND = idp)
+        CUR_DRV_PSI( tpd, rd, 2 )      = 0.0_idp
+        CUR_DRV_PSI( tpd, rd, 3 )      = 0.0_idp
+
+
+        CUR_VAL_ALPHAPSI( tpd, rd )    = REAL(Tmp_U_Value(2), KIND = idp)
+        CUR_DRV_ALPHAPSI( tpd, rd, 1 ) = REAL(Tmp_U_R_DRV_Value(2), KIND = idp)
+        CUR_DRV_ALPHAPSI( tpd, rd, 2 ) = 0.0_idp
+        CUR_DRV_ALPHAPSI( tpd, rd, 3 ) = 0.0_idp
+
+
+        CUR_VAL_BETA( tpd, rd, 1 )     = REAL(Tmp_U_Value(3), KIND = idp)
+        CUR_VAL_BETA( tpd, rd, 2 )     = 0.0_idp
+        CUR_VAL_BETA( tpd, rd, 3 )     = 0.0_idp
+
+
+        CUR_DRV_BETA( tpd, rd, 1, 1 )  = REAL(Tmp_U_R_DRV_Value(3), KIND = idp)
+        CUR_DRV_BETA( tpd, rd, 2, 1 )  = 0.0_idp
+        CUR_DRV_BETA( tpd, rd, 3, 1 )  = 0.0_idp
+        CUR_DRV_BETA( tpd, rd, 1, 2 )  = 0.0_idp
+        CUR_DRV_BETA( tpd, rd, 2, 2 )  = 0.0_idp
+        CUR_DRV_BETA( tpd, rd, 3, 2 )  = 0.0_idp
+        CUR_DRV_BETA( tpd, rd, 1, 3 )  = 0.0_idp
+        CUR_DRV_BETA( tpd, rd, 2, 3 )  = 0.0_idp
+        CUR_DRV_BETA( tpd, rd, 3, 3 )  = 0.0_idp
+
+        Beta_DRV_Trace( tpd, rd )      = 0.0_idp
+
+    END DO ! tpd
+END DO ! rd
 
 
 END SUBROUTINE Calc_FP_Current_Values
@@ -283,8 +348,180 @@ END SUBROUTINE Calc_FP_Current_Values
 
 
 
+!+202+###########################################################################!
+!                                                                                !
+!                  Calc_FP_Source_Terms          !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Calc_FP_Source_Terms( re, te, pe )
+
+INTEGER, INTENT(IN)                                                     ::  re, te, pe
+
+REAL(KIND = idp)                                                        ::  REUSED_VALUE
+
+INTEGER                                                                 ::  pd, td, rd,     &
+                                                                            i, tpd
 
 
+REAL(KIND = idp), DIMENSION(1:11)                                       ::  PSI_POWER
+REAL(KIND = idp), DIMENSION(1:4)                                        ::  ALPHAPSI_POWER
+
+
+REAL(KIND = idp), DIMENSION(1:3,1:3)                                    ::  JCBN_kappa_Array
+REAL(KIND = idp), DIMENSION(1:3)                                        ::  JCBN_n_ARRAY
+
+REAL(KIND = idp)                                                        ::  JCBN_BIGK_VALUE
+
+
+JCBN_Kappa_Array = 0.0_idp
+JCBN_n_Array     = 0.0_idp
+JCBN_BIGK_Value  = 0.0_idp
+
+
+DO rd = 1,NUM_R_QUAD_POINTS
+DO td = 1,NUM_T_QUAD_POINTS
+DO pd = 1,NUM_P_QUAD_POINTS
+
+    tpd = (td-1)*NUM_P_QUAD_POINTS + pd
+
+
+    PSI_POWER(1) = CUR_VAL_PSI( tpd, rd)
+    DO i = 2,11
+        PSI_POWER(i) = PSI_POWER(i-1)*PSI_POWER(1)
+    END DO
+
+
+    ALPHAPSI_POWER(1) = CUR_VAL_ALPHAPSI( tpd, rd)
+    DO i = 2,4
+        ALPHAPSI_POWER(i) = ALPHAPSI_POWER(i-1)*ALPHAPSI_POWER(1)
+    END DO
+
+    ! K_{ij}K^{ij} = Psi^{14}/AlphaPsi^{2} * BIGK
+    !        PRINT*,"Before JCBN_BIGK_VALUE"
+    JCBN_BIGK_VALUE = JCBN_BIGK_FUNCTION( rd, tpd,                                                        &
+                                          CUR_VAL_BETA, CUR_DRV_BETA,                                     &
+                                          CUR_R_LOCS(rd), R_SQUARE(rd), SIN_SQUARE(td), CSC_SQUARE(td),   &
+                                          RSIN_SQUARE(td, rd), COTAN_VAL(td)                              )
+
+
+
+    !        PRINT*,"Before  JCBN_kappa_Array"
+    JCBN_kappa_Array = JCBN_kappa_FUNCTION_3D_ALL(  rd, tpd,                                        &
+                                                    CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
+                                                    RSIN_SQUARE(td, rd),                            &
+                                                    SIN_VAL(td), SIN_SQUARE(td), CSC_SQUARE(td),    &
+                                                    COS_VAL(td), COTAN_VAL(td),                     &
+                                                    CUR_VAL_BETA, CUR_DRV_BETA                      )
+
+
+    !        PRINT*,"Before JCBN_n_ARRAY"
+    JCBN_n_ARRAY(:) = CUR_DRV_ALPHAPSI( tpd, rd, : ) / ALPHAPSI_POWER(1)   &
+                        - 7.0_idp * CUR_DRV_PSI( tpd, rd, : )/ PSI_POWER(1)
+
+    JCBN_n_ARRAY(:) = CUR_DRV_ALPHAPSI( tpd, rd, : ) / ALPHAPSI_POWER(1)   &
+                        - CUR_DRV_PSI( tpd, rd, : )/ PSI_POWER(1)
+
+
+    !        PRINT*,"Before Calc_RHS_Terms"
+    IF ( .FALSE. ) THEN
+        CALL Calc_RHS_Terms( Source_Terms,                                      &
+                             re, te, pe,                                        &
+                             td, pd, tpd, rd,                                   &
+                             CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                             SIN_SQUARE, CSC_SQUARE,                            &
+                             PSI_POWER, ALPHAPSI_POWER,                         &
+                             CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                             JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+    ELSE
+        CALL Calc_RHS_Terms_1D( Source_Terms,                                   &
+                                re, te, pe,                                     &
+                                td, pd, tpd, rd,                                &
+                                CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,   &
+                                SIN_SQUARE, CSC_SQUARE,                         &
+                                PSI_POWER, ALPHAPSI_POWER,                      &
+                                CUR_VAL_BETA, CUR_DRV_BETA,                     &
+                                JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array )
+
+    END IF
+
+
+
+
+END DO ! pd loop
+END DO  ! td loop
+END DO  ! rd loop
+
+
+
+
+
+END SUBROUTINE Calc_FP_Source_Terms
+
+
+
+
+!+204+###########################################################################!
+!                                                                                !
+!                  CREATE_3D_RHS_VECTOR                                          !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Create_FP_Source_Vector( re, te, pe, DELTAR_OVERTWO, SIN_VAL )
+
+
+
+INTEGER, INTENT(IN)                                                     ::  re, te, pe
+
+REAL(KIND = idp), INTENT(IN)                                            ::  DELTAR_OVERTWO
+REAL(KIND = idp), DIMENSION(1:NUM_TP_QUAD_POINTS), INTENT(IN)           ::  SIN_VAL
+
+INTEGER                                                                 ::  pd, td, rd, tpd,     &
+                                                                            l, m, d,        &
+                                                                            lm_loc, u,ui
+
+INTEGER                                                                 ::  Current_i_Location
+
+COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_TMP
+COMPLEX(KIND = idp)                                                     :: Test
+COMPLEX(KIND = idp)                                                     ::  Common_Basis
+REAL(KIND = idp)                                                        ::  Combined_Weights
+
+COMPLEX(KIND = idp)                                                     ::  Inner, Middle
+
+
+DO ui = 1,NUM_CFA_EQs
+DO d = 0,DEGREE
+DO lm_loc = 0,LM_LENGTH-1
+
+    RHS_TMP = 0.0_idp
+
+
+    DO rd = 1,NUM_R_QUAD_POINTS
+
+
+        RHS_TMP(ui) =  RHS_TMP(ui)                                          &
+                        + SUM( Source_Terms( :, rd, CFA_EQ_Map(ui) )        &
+                                * Ylm_CC_Values( :, lm_loc, te, pe)         &
+                                * TP_Int_Weights(:)                     )   &
+                        * Lagrange_Poly_Table(d, rd, 0)                     &
+                        * R_Int_Weights(rd)
+
+
+    END DO  ! rd Loop
+
+    Current_i_Location = FP_Vector_Map(re,d)
+    FP_Source_Vector(Current_i_Location,lm_loc,ui)                &
+        = FP_Source_Vector(Current_i_Location,lm_loc,ui)          &
+        + RHS_TMP(ui)
+
+END DO  ! lm_loc Loop
+END DO  ! d Loop
+END DO ! ui
+
+
+
+
+END SUBROUTINE Create_FP_Source_Vector
 
 
 
@@ -308,6 +545,7 @@ ALLOCATE( CUR_P_LOCS(1:NUM_P_QUAD_POINTS) )
 ALLOCATE( R_SQUARE(1:NUM_R_QUAD_POINTS) )
 ALLOCATE( R_CUBED(1:NUM_R_QUAD_POINTS) )
 
+ALLOCATE( SIN_VAL_B( 1:NUM_TP_QUAD_POINTS ) )
 ALLOCATE( SIN_VAL( 1:NUM_T_QUAD_POINTS ) )
 ALLOCATE( SIN_SQUARE( 1:NUM_T_QUAD_POINTS ) )
 ALLOCATE( TP_SIN_SQUARE( 1:NUM_TP_QUAD_POINTS ) )

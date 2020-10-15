@@ -69,6 +69,7 @@ REAL(KIND = idp)                            :: R_OUTER
 !###############################################################################################!
 
 INTEGER                                     :: NUM_R_NODES
+INTEGER                                     :: NUM_R_NODESp1
 INTEGER                                     :: BLOCK_NUM_R_NODES
 INTEGER                                     :: SUBSHELL_NUM_R_NODES
 
@@ -119,6 +120,25 @@ END INTERFACE
 
 PROCEDURE(LM_Location_Pointer), POINTER                     ::   LM_Location => NULL()
 
+
+
+ABSTRACT INTERFACE
+    SUBROUTINE Calc_At_Location_Pointer(r, theta, phi,                          &
+                                        Return_Psi, Return_AlphaPsi,            &
+                                        Return_Beta1, Return_Beta2, Return_Beta3 )
+        REAL(KIND = KIND(1.D0)), INTENT(IN)            ::  r
+        REAL(KIND = KIND(1.D0)), INTENT(IN)            ::  theta
+        REAL(KIND = KIND(1.D0)), INTENT(IN)            ::  phi
+        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_Psi
+        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_AlphaPsi
+        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_Beta1
+        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_Beta2
+        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_Beta3
+
+    END SUBROUTINE Calc_At_Location_Pointer
+END INTERFACE
+
+PROCEDURE(Calc_At_Location_Pointer), POINTER    ::   Calc_3D_Values_At_Location => NULL()
 
 
 
@@ -413,7 +433,8 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Run_Time_Table
 
 INTEGER                                                     ::  Total_Run_Iters=1
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Convergence_Table
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Update_Table
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Residual_Table
 
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  Iteration_Histogram
 

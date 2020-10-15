@@ -48,12 +48,18 @@ LIST_par = p.Poseidon_Parameters.o               \
 #	Poseidon Code Files - Used to define the operations used in Poseidon
 #
 LIST_o  = z.Poseidon_Variables_Module.o          \
+          z.Poseidon_FP_Variables.o              \
+          z.Poseidon_FP_Allocation_Module.o      \
           z.Poseidon_Allocation_Module.o         \
           z.Poseidon_Info.o                      \
+          z.Poseidon_Matrix_Functions.o          \
+          z.Poseidon_Linear_Solvers.o            \
           z.Poseidon_Quadrature_Module.o         \
+          z.Poseidon_FP_Mapping_Functions.o      \
           z.Poseidon_Mapping_Functions.o         \
           z.Poseidon_Math_Functions.o            \
           z.Poseidon_Calculate_Results.o         \
+          z.Poseidon_Cholesky_Module.o           \
           z.Poseidon_Guess_Module.o              \
           z.Poseidon_Tables_Module.o             \
           z.Poseidon_Mesh_Module.o               \
@@ -65,18 +71,25 @@ LIST_o  = z.Poseidon_Variables_Module.o          \
 	  z.Poseidon_SubJacobian_Functions_1D.o  \
 	  z.Poseidon_SubJacobian_Functions_3D.o  \
           z.Poseidon_Preconditioners.o           \
+          z.CFA_1D_Master_Build.o                \
           z.CFA_3D_Master_Build.o                \
+          z.Poseidon_FP_Calculate_Results.o      \
+          z.Poseidon_FP_Source_Vector.o          \
           z.Poseidon_PETSc_Solver.o		 \
           z.Poseidon_Residual_Equations.o        \
           z.Poseidon_Source_Module.o             \
+          z.Poseidon_FP_BC_Module.o              \
           z.CFA_Newton_Raphson_3D.o              \
+          z.Poseidon_FP_Method.o                 \
           z.Poseidon_GMRES_Functions.o           \
           z.GMRES_Master_Build.o                 \
           z.Poseidon_GMRES_MultJV.o              \
           z.CFA_GMRES.o                          \
           z.Poseidon_MPI_Module.o                \
           z.Poseidon_Params_Read.o               \
+          z.Poseidon_FP_Laplace_Matrix.o         \
           z.Poseidon_Initialization_Module.o     \
+          z.Poseidon_FP_Initialization.o         \
           z.Poseidon_Main_Module.o               
 
 

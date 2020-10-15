@@ -32,11 +32,13 @@ USE Poseidon_Constants_Module, &
 USE Poseidon_Parameters, &
             ONLY :  DOMAIN_DIM,                 &
                     DEGREE,                     &
-                    L_LIMIT
+                    L_LIMIT,                    &
+                    NUM_R_QUAD_POINTS
 
 
 USE Poseidon_Variables_Module, &
             ONLY :  NUM_R_ELEMENTS,             &
+                    NUM_R_NODES,                &
                     rlocs,                      &
                     LM_LENGTH,                  &
                     LPT_LPT
@@ -52,7 +54,10 @@ USE Poseidon_FP_Variables_Module, &
                     Laplace_Matrix_COL,         &
                     Laplace_Factored_VAL,       &
                     Laplace_Factored_ROW,       &
-                    Laplace_Factored_COL
+                    Laplace_Factored_COL,       &
+                    CFA_EQ_Flags,               &
+                    CFA_EQ_Map,                 &
+                    CFA_Mat_Map
 
 
 IMPLICIT NONE
@@ -67,17 +72,27 @@ CONTAINS
 !################################################################################!
 SUBROUTINE Initialize_Laplace_Matrices()
 
+LOGICAL                                 :: Success_Flag
+
+Success_Flag = .FALSE.
 IF ( Matrix_Format == 'Full' ) THEN
     
     CALL Initialize_Laplace_Matrices_Full()
-
+    PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
+    Success_Flag = .TRUE.
 ELSEIF ( Matrix_Format == 'CCS' ) THEN
 
     CALL Initialize_Laplace_Matrices_CCS()
-
+    PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
+    Success_Flag = .TRUE.
 END IF
 
-PRINT*,"Poseidon Initialized the Laplace Matrices."
+IF ( Success_Flag .EQV. .FALSE.) THEN
+    PRINT*,"WARNING: Poseidon did not initalize the Laplace matrices."
+    PRINT*,"         Matrix_Format = ",Matrix_Format
+    STOP
+END IF
+
 
 END SUBROUTINE Initialize_Laplace_Matrices
 
@@ -98,13 +113,15 @@ INTEGER                                                 ::  i, j
 REAL(KIND = idp)                                        ::  deltar, TODR
 REAL(KIND = idp)                                        ::  L_Lp1
 
+INTEGER                                                 ::  Mat_Loc
+
 INTEGER                                                 ::  Int_Degree
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  CUR_R_LOCS
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  R_SQUARE
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Int_Locs
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Int_Weights
 
-Int_Degree = 10
+Int_Degree = NUM_R_QUAD_POINTS
 
 Laplace_Matrix_Full = 0.0_idp
 
@@ -127,8 +144,8 @@ DO l = 0,L_LIMIT
 
         DO dp = 0,DEGREE
             DO d = 0,DEGREE
-                i = re*DEGREE+d
-                j = re*DEGREE+dp
+                i = re*DEGREE+d+1
+                j = re*DEGREE+dp+1
 
 !                Laplace_Matrix_Full(i, j, l) = Laplace_Matrix_Full(i, j, l)           &
 !                                             + SUM( R_SQUARE(:) * LPT_LPT(:,d,dp,1,1) &
@@ -140,16 +157,49 @@ DO l = 0,L_LIMIT
 
                     
                     Laplace_Matrix_Full(i, j, l,:) = Laplace_Matrix_Full(i, j, l,:) &
-                                        + R_SQUARE(rd) * LPT_LPT(rd,d,dp,1,1)       &
+                                        - R_SQUARE(rd) * LPT_LPT(rd,d,dp,1,1)       &
                                             * TODR * Int_Weights(rd)                &
-                                        - L_Lp1 * LPT_LPT(rd,d,dp,0,0)              &
+                                        + L_Lp1 * LPT_LPT(rd,d,dp,0,0)              &
                                             * Int_Weights(rd)
-                                            
+                    
                 END DO  ! rd Loop
+
             END DO  ! dp Loop
         END DO  ! d Loop
     END DO  ! re Loop
 END DO  ! l Loop
+
+
+IF ( CFA_EQ_Flags(3) == 1 ) THEN
+
+    Mat_Loc = CFA_Mat_Map(3)
+    DO l = 0,L_LIMIT
+        DO re = 0,NUM_R_ELEMENTS-1
+
+            DO dp = 0,DEGREE
+                DO d = 0,DEGREE
+                    i = re*DEGREE+d+1
+                    j = re*DEGREE+dp+1
+
+                    DO rd = 1,Int_Degree
+
+
+                        
+                        Laplace_Matrix_Full(i, j, l,Mat_Loc)             &
+                                            = Laplace_Matrix_Full(i, j, l,Mat_Loc)    &
+                                            - 2 * LPT_LPT(rd,d,dp,0,0)                  &
+                                                / TODR * Int_Weights(rd)
+                        
+                    END DO  ! rd Loop
+
+                END DO  ! dp Loop
+            END DO  ! d Loop
+        END DO  ! re Loop
+    END DO  ! l Loop
+
+
+   
+END IF
 
 
 

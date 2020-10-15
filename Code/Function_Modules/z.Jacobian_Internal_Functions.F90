@@ -200,13 +200,18 @@ JCBN_kappa_FUNCTION_3D_ALL(3,3) = TwoThirds/( r * RSIN_SQUARE)          * CUR_VA
 END FUNCTION JCBN_kappa_FUNCTION_3D_ALL
 
 
+
+
+
+
+
 !+302+###########################################################################!
 !                                                                                !
 !                                                                                !
 !################################################################################!
-PURE FUNCTION JCBN_kappa_FUNCTION_1D(rd, r, CUR_VAL_BETA, CUR_DRV_BETA          )
+PURE FUNCTION JCBN_kappa_FUNCTION_1D_ALL(rd, r, CUR_VAL_BETA, CUR_DRV_BETA          )
 
-REAL(KIND = idp)                                                    ::  JCBN_kappa_FUNCTION_1D
+REAL(KIND = idp), DIMENSION(1:3,1:3)                                ::  JCBN_kappa_FUNCTION_1D_ALL
 
 INTEGER, INTENT(IN)                                                 ::  rd
 REAL(KIND = idp), INTENT(IN)                                        ::  r
@@ -217,11 +222,11 @@ REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_R_QUAD_POINTS )      ::  CUR_DRV_
 
 
 
-JCBN_kappa_FUNCTION_1D = FourThirds     * CUR_DRV_BETA( rd )       &
-                       - FourThirds/r   * CUR_VAL_BETA( rd )
+JCBN_kappa_FUNCTION_1D_ALL = FourThirds     * CUR_DRV_BETA( rd )       &
+                           - FourThirds/r   * CUR_VAL_BETA( rd )
 
 
-END FUNCTION JCBN_kappa_FUNCTION_1D
+END FUNCTION JCBN_kappa_FUNCTION_1D_ALL
 
 
 
@@ -316,7 +321,7 @@ END FUNCTION JCBN_BIGK_FUNCTION
 !                                                                                !
 !################################################################################!
 PURE FUNCTION JCBN_BIGK_FUNCTION_1D( rd, CUR_VAL_BETA, CUR_DRV_BETA,        &
-                                    R_VAL, R_SQUARE                         )
+                                     R_VAL, R_SQUARE                         )
 
 REAL(KIND = idp)                    ::  JCBN_BIGK_FUNCTION_1D
 

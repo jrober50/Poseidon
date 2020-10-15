@@ -65,8 +65,8 @@ USE Poseidon_Info_Module,   &
                 PQ_TIMETABLE_FRAME, &
                 PQ_TIMETABLE_RUN
 
-USE Driver_Additional_Functions_Module, &
-        ONLY  : Calc_3D_Values_At_Location
+!USE Driver_Additional_Functions_Module, &
+!        ONLY  : Calc_3D_Values_At_Location
 
 
 USE Poseidon_Parameters, &
@@ -118,9 +118,11 @@ USE Poseidon_Variables_Module, &
                                 R_INNER, R_OUTER,           &
                                 Total_Run_Iters,            &
                                 ITER_TIME_TABLE,            &
-                                FRAME_CONVERGENCE_TABLE,    &
+                                Frame_Update_Table,         &
+                                Frame_Residual_Table,       &
                                 Iteration_Histogram,        &
-                                Matrix_Location
+                                Matrix_Location,            &
+                                Calc_3D_Values_At_Location
 
 USE Mesh_Module, &
                         ONLY  : Create_Logarithmic_1D_Mesh
@@ -194,6 +196,7 @@ REAL(KIND = idp), DIMENSION(1:25)               ::  Time_Table
 112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
 FILE_ID = RUN_REPORT_FILE_ID
+
 
 
 CALL PQ_ITERATIONS_MAX( Max_Iters )
@@ -295,57 +298,61 @@ END IF
 
 ! Write Results Table Header to Screen
 IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    PRINT*,"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
+    WRITE(*,'(A)')"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
     WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
-END IF
+
+    IF ( RUN_REPORT_FLAG == 1 ) THEN
+        WRITE(FILE_ID,'(A)')"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
+        WRITE(FILE_ID,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+    END IF
+
+    Call Create_Logarithmic_1D_Mesh( DRIVER_INNER_RADIUS, DRIVER_OUTER_RADIUS, ITER_REPORT_NUM_SAMPLES,     &
+                                     x_e, x_c, dx_c )
 
 
-Call Create_Logarithmic_1D_Mesh( DRIVER_INNER_RADIUS, DRIVER_OUTER_RADIUS, ITER_REPORT_NUM_SAMPLES,     &
-                                 x_e, x_c, dx_c )
+    !deltar = ( DRIVER_OUTER_RADIUS - DRIVER_INNER_RADIUS )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+    DO i = 0,ITER_REPORT_NUM_SAMPLES
+
+    !    r = i*deltar + DRIVER_INNER_RADIUS
+        r = x_e(i)*Centimeter
+        theta = pi/8.0_idp
+        phi = pi/2.0_idp
+        
+        CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+                                        Return_Psi, Return_AlphaPsi,                &
+                                        Return_Beta1, Return_Beta2, Return_Beta3    )
 
 
-!deltar = ( DRIVER_OUTER_RADIUS - DRIVER_INNER_RADIUS )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
-DO i = 0,ITER_REPORT_NUM_SAMPLES
+        ! Calculate Conformal Factor value from Newtonian Potential
+        PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
 
-!    r = i*deltar + DRIVER_INNER_RADIUS
-    r = x_e(i)*Centimeter
-    theta = pi/8.0_idp
-    phi = pi/2.0_idp
-    
-
-    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
-                                    Return_Psi, Return_AlphaPsi,                &
-                                    Return_Beta1, Return_Beta2, Return_Beta3    )
+        ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
+        AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
 
 
-    ! Calculate Conformal Factor value from Newtonian Potential
-    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
-
-    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
-
-
-    ! Write Results to Screen
-    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        ! Write Results to Screen
         WRITE(*,111) r/Centimeter,              &
                      PsiPot_Val,                &
                      AlphaPsiPot_Val,           &
                      Return_Beta1/Shift_Units,  &
-                     Return_Beta2,              &
+                     Return_Beta1,              &
                      Return_Beta3
-    END IF
 
-    ! Write Results to File
-    IF ( RUN_REPORT_FLAG == 1 ) THEN
-        WRITE(FILE_ID,111) r/Centimeter,              &
-                           PsiPot_Val,                &
-                           AlphaPsiPot_Val,           &
-                           Return_Beta1/Shift_Units,  &
-                           Return_Beta2,              &
-                           Return_Beta3
-    END IF
+        ! Write Results to File
+        IF ( RUN_REPORT_FLAG == 1 ) THEN
+            WRITE(FILE_ID,111) r/Centimeter,              &
+                               PsiPot_Val,                &
+                               AlphaPsiPot_Val,           &
+                               Return_Beta1/Shift_Units,  &
+                               Return_Beta2,              &
+                               Return_Beta3
+        END IF
 
-END DO
+    END DO
+
+END IF
+
+
 
 
 DEALLOCATE( Hist_Iters )
@@ -459,8 +466,8 @@ REAL(KIND = idp), DIMENSION(1:25)                       ::  Time_Table
 
 132 FORMAT (A,A,I2.2,A)
 
-142 FORMAT (16X,A,10X,A)
-143 FORMAT (19X,I2.2,15X,ES22.15)
+142 FORMAT (16X,A,10X,A,15X,A)
+143 FORMAT (19X,I2.2,15X,ES22.15,10X,ES22.15)
 
 
 
@@ -536,9 +543,9 @@ IF ( myID == 0 ) THEN
         WRITE(FILE_ID,'(A)')"                                  Frame's Convergence"
         WRITE(FILE_ID,'(A)')"            ============================================================="
         WRITE(FILE_ID,'(A)')" "
-        WRITE(FILE_ID,142)"Iteration","MAXVAL(ABS(Update_Vector))"
+        WRITE(FILE_ID,142)"Iteration","MAXVAL(ABS(Update_Vector))","Residual"
         DO i = 1,CUR_ITERATION-1
-            WRITE(FILE_ID,143)i,FRAME_CONVERGENCE_TABLE(i)
+            WRITE(FILE_ID,143)i,Frame_Update_Table(i),Frame_Residual_Table(i)
         END DO
         WRITE(FILE_ID,'(2/)')
 
@@ -843,5 +850,43 @@ END DO
 
 
 END SUBROUTINE OUTPUT_YAHIL_PRIMATIVES
+
+
+
+
+
+
+!+902+##########################################################################!
+!                                                                               !
+!                   SUBROUTINE OUTPUT_CONVERGENCE_DATA                          !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE OUTPUT_CONVERGENCE_DATA(FRAME)
+
+INTEGER, INTENT(IN)                                         :: FRAME
+
+INTEGER                                                     ::  i
+INTEGER                                                     ::  FILE_ID
+CHARACTER(LEN = 100)                                        ::  FILE_NAME
+
+132 FORMAT (A,A,I2.2,A,I2.2,A,I2.2,A)
+143 FORMAT (19X,I2.2,15X,ES22.15,10X,ES22.15)
+
+
+
+WRITE(FILE_NAME,132)Poseidon_IterReports_Dir,"Frame_Convergence_Report_F",Frame,"_D",DEGREE,"_L",L_LIMIT,".out"
+CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+
+DO i = 1,CUR_ITERATION-1
+    WRITE(FILE_ID,143)i,Frame_Update_Table(i),Frame_Residual_Table(i)
+END DO
+
+
+CLOSE(File_ID)
+
+END SUBROUTINE OUTPUT_CONVERGENCE_DATA
+
+
+
 
 END MODULE Driver_IO_Functions_Module

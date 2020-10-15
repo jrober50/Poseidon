@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Poseidon_Calculate_Results_Module                                            !##!
+MODULE Poseidon_FP_Calculate_Results_Module                                         !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -44,6 +44,9 @@ USE Poseidon_Variables_Module,    &
                     rlocs,                  &
                     Matrix_Location
 
+USE Poseidon_FP_Variables_Module,           &
+            ONLY :  FP_Coeff_Vector
+
 USE Poseidon_Mapping_Functions_Module,    &
             ONLY :  Map_To_X_Space
 
@@ -54,6 +57,10 @@ USE Poseidon_Quadrature_Module, &
 USE Poseidon_Math_Functions_Module, &
             ONLY :  Lagrange_Poly,          &
                     Spherical_Harmonic
+
+USE Poseidon_FP_Mapping_Functions_Module, &
+            ONLY :  FP_Vector_Map,  &
+                    FP_LM_Map
 
 IMPLICIT NONE
 
@@ -70,7 +77,7 @@ CONTAINS
 !                  Calc_3D_Values_At_Location          !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_NR_Values_At_Location( r, theta, phi, Return_Psi, Return_AlphaPsi,  &
+SUBROUTINE Calc_FP_Values_At_Location( r, theta, phi, Return_Psi, Return_AlphaPsi,  &
                                         Return_Beta1, Return_Beta2, Return_Beta3    )
 
 
@@ -93,7 +100,7 @@ INTEGER                                                         ::  re, l, m, d,
 
 
 INTEGER                                                         :: Current_Location
-
+INTEGER                                                         :: Loc_RED, Loc_LM
 
 
 COMPLEX(KIND = idp)                                             ::  TMP_VALUE_A
@@ -110,10 +117,11 @@ IF ( r == rlocs(0) ) THEN
             DO m = -M_VALUES(l),M_VALUES(l)
         
 
-
-                TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
-                Current_Location =  Matrix_Location( u, l, m, 0, 0 )
-                Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector(Current_Location) * TMP_VALUE_A
+                Loc_RED = FP_Vector_Map(0,0)
+                LOC_LM  = FP_LM_Map(l,m)
+                Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                                + FP_Coeff_Vector(Loc_RED,LOC_LM,u)     &
+                                * Spherical_Harmonic(l,m,theta,phi)
                 
                 
             END DO ! m Loop
@@ -139,10 +147,12 @@ ELSE
                         DO d = 0,DEGREE
 
 
-                            TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi) * LagP(d)
-                            Current_Location = Matrix_Location( u, l, m, re, d )
-                            
-                            Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector( Current_Location ) * TMP_VALUE_A
+                            Loc_RED = FP_Vector_Map(re,d)
+                            LOC_LM  = FP_LM_Map(l,m)
+                            Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                                            + FP_Coeff_Vector(Loc_RED,LOC_LM,u)     &
+                                            * Spherical_Harmonic(l,m,theta,phi)     &
+                                            * LagP(d)
 
                         END DO  !   d Loop
                     END DO  !   m Loop
@@ -160,10 +170,11 @@ ELSE
             DO l = 0,L_Limit
                 DO m = -M_VALUES(l),M_VALUES(l)
 
-
-                    Current_Location = Matrix_Location( u, l, m, NUM_R_ELEMENTS-1, DEGREE )
-                    TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
-                    Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector( Current_Location ) * TMP_VALUE_A
+                    Loc_RED = FP_Vector_Map(NUM_R_ELEMENTS-1,DEGREE)
+                    LOC_LM  = FP_LM_Map(l,m)
+                    Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                                    + FP_Coeff_Vector(Loc_RED,LOC_LM,u)     &
+                                    * Spherical_Harmonic(l,m,theta,phi)
 
 
                 END DO  !   m Loop
@@ -185,80 +196,12 @@ Return_Beta3    = REAL(Tmp_U_Value(5), KIND = idp)
 
 
 
-END SUBROUTINE Calc_NR_Values_At_Location
+END SUBROUTINE Calc_FP_Values_At_Location
 
 
 
 
 
-!+102+###########################################################################!
-!                                                                                !
-!                  Calc_1D_CFA_Values          !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Calc_1D_CFA_Values(  Num_RE_Input, Num_RQ_Input, RQ_Input,   &
-                                Left_Limit, Right_Limit,                &
-                                CFA_Lapse, CFA_ConFactor, CFA_Shift     )
 
+END MODULE Poseidon_FP_Calculate_Results_Module
 
-
-INTEGER, INTENT(IN)                                         ::  Num_RE_Input,   &
-                                                                Num_RQ_Input
-
-REAL(KIND = idp), DIMENSION(1:Num_RQ_Input), INTENT(IN)     ::  RQ_Input
-REAL(KIND = idp), INTENT(IN)                                ::  Left_Limit,     &
-                                                                Right_Limit
-
-
-REAL(KIND = idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Lapse
-REAL(KIND = idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_ConFactor
-REAL(KIND = idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Shift
-
-
-
-INTEGER                                                         ::  re, x, u, d
-
-REAL(KIND = idp)                                                ::  Quad_Span
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  Local_Locations
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
-REAL(KIND = idp), DIMENSION(1:Num_RQ_Input)                     ::  CUR_X_LOCS
-COMPLEX(KIND = idp), DIMENSION(1:3)                             ::  TMP_U_Value
-INTEGER                                                         ::  Current_Location
-
-Quad_Span = Right_Limit - Left_Limit
-Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
-
-DO re = 0,NUM_R_ELEMENTS-1
-
-    CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
-
-    DO x = 1,Num_RQ_Input
-    
-        LagP = Lagrange_Poly(CUR_X_LOCS(x),DEGREE,Local_Locations)
-        Tmp_U_Value = 0.0_idp
-
-        DO u = 1,3
-            DO d = 0,DEGREE
-
-                Current_Location = Matrix_Location(u,0,0,re,d)
-                Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector(Current_Location)  &
-                                                * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
- 
-            END DO ! d Loop
-        END DO ! u Loop
-
-        CFA_ConFactor(x,re+1,1,1) = REAL(Tmp_U_Value(1), KIND = idp)
-        CFA_Lapse(x,re+1,1,1)     = REAL(Tmp_U_Value(2), KIND = idp)        &
-                                  / REAL(Tmp_U_Value(1), KIND = idp)
-        CFA_Shift(x,re+1,1,1)     = REAL(Tmp_U_Value(3), KIND = idp)
-    END DO ! x Loop
-END DO ! re Loop
-
-
-END SUBROUTINE Calc_1D_CFA_Values
-
-
-
-
-
-END MODULE Poseidon_Calculate_Results_Module

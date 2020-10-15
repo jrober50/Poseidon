@@ -121,6 +121,9 @@ USE Poseidon_Main_Module, &
 USE Poseidon_Initialization_Module, &
             ONLY :  Poseidon_Initialize_From_File
 
+USE Poseidon_FP_Initialization_Module, &
+            ONLY :  Poseidon_FP_Init_From_File
+
 USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Initialize
 
@@ -193,6 +196,7 @@ CONTAINS
 
 
 SUBROUTINE Poseidon_CFA_3D(mode, modeb, units,                                          &
+                            Solver_Mode, CFA_Eqs_Flag_Vector,                           &
                             imin, imax, nx, ij_ray_dim, ik_ray_dim,                     &
                             ny, nz, x_e, x_c, dx_c, y_e, y_c, dy_c, z_e, dz_c,          &
                             Num_Input_Nodes,                                            &
@@ -257,6 +261,8 @@ IMPLICIT none
 
 INTEGER, INTENT(IN)                                             :: mode
 INTEGER, INTENT(IN)                                             :: modeb
+INTEGER, INTENT(IN)                                             :: Solver_Mode
+INTEGER, DIMENSION(1:5), INTENT(IN)                             :: CFA_EQs_Flag_Vector
 CHARACTER(LEN = 1), INTENT(IN)                                  ::  Units
 
 INTEGER, INTENT(IN)                                             :: imin       ! minimum x-array index
@@ -361,40 +367,63 @@ IF (( MODE == 0 ) .OR. ( MODE == 3 )) THEN
     CALL Set_Units( Units )
     FEM_Degree = 1
     SH_Limit = 0
-!    CALL Poseidon_Initialize_From_File(   mode,                           & ! mode
-!                                x_e(1),                         & ! Inner_Radius
-!                                x_e(nx+1),                      & ! Outer_Radius
-!                                nx,                             & ! NUM_R_ELEMENTS
-!                                ny,                             & ! NUM_T_ELEMENTS
-!                                nz,                             & ! NUM_P_ELEMENTS
-!                                nx,                             & ! NUM_LOC_R_ELEMENTS
-!                                ij_ray_dim,                     & ! NUM_LOC_T_ELEMENTS
-!                                ik_ray_dim,                     & ! NUM_LOC_P_ELEMENTS
-!                                dx_c,                           & ! Delta_R_Vector
-!                                dy_c(1:ny),                     & ! Delta_T_Vector
-!                                dz_c(1:nz)                      ) ! Delta_P_Vector)
+    IF ( Solver_Mode == 1 ) THEN
+        CALL Poseidon_Initialize_From_File(   mode,                           & ! mode
+                                    x_e(1),                         & ! Inner_Radius
+                                    x_e(nx+1),                      & ! Outer_Radius
+                                    nx,                             & ! NUM_R_ELEMENTS
+                                    ny,                             & ! NUM_T_ELEMENTS
+                                    nz,                             & ! NUM_P_ELEMENTS
+                                    nx,                             & ! NUM_LOC_R_ELEMENTS
+                                    ij_ray_dim,                     & ! NUM_LOC_T_ELEMENTS
+                                    ik_ray_dim,                     & ! NUM_LOC_P_ELEMENTS
+                                    dx_c,                           & ! Delta_R_Vector
+                                    dy_c(1:ny),                     & ! Delta_T_Vector
+                                    dz_c(1:nz)                      ) ! Delta_P_Vector)
 
 
 
 
 
-    CALL Poseidon_Initialize &
-         ( Units                  = "G",                  &
-           Dimensions             = 1,                    &
-           FEM_Degree_Input       = 1,                    &
-           L_Limit_Input          = 0,                    &
-           Inner_Radius           = 0.0_idp,              &
-           Outer_Radius           = 1.0E8_idp,            &
-           R_Elements_Input       = DRIVER_R_ELEMS,       &
-           T_Elements_Input       = DRIVER_T_ELEMS,       &
-           P_Elements_Input       = DRIVER_P_ELEMS,       &
-           Local_R_Elements_Input = DRIVER_R_ELEMS,       &
-           Local_T_Elements_Input = DRIVER_T_ELEMS,       &
-           Local_P_Elements_Input = DRIVER_P_ELEMS,       &
-           Num_R_Quad_Input       = DRIVER_R_INPUT_NODES, &
-           Num_T_Quad_Input       = DRIVER_T_INPUT_NODES, &
-           Num_P_Quad_Input       = DRIVER_P_INPUT_NODES, &
-           Input_Delta_R_Vector   = dx_c )
+!    CALL Poseidon_Initialize &
+!         ( Units                  = "G",                  &
+!           Dimensions             = 1,                    &
+!           FEM_Degree_Input       = 1,                    &
+!           L_Limit_Input          = 0,                    &
+!           Inner_Radius           = 0.0_idp,              &
+!           Outer_Radius           = 1.0E8_idp,            &
+!           R_Elements_Input       = DRIVER_R_ELEMS,       &
+!           T_Elements_Input       = DRIVER_T_ELEMS,       &
+!           P_Elements_Input       = DRIVER_P_ELEMS,       &
+!           Local_R_Elements_Input = DRIVER_R_ELEMS,       &
+!           Local_T_Elements_Input = DRIVER_T_ELEMS,       &
+!           Local_P_Elements_Input = DRIVER_P_ELEMS,       &
+!           Num_R_Quad_Input       = DRIVER_R_INPUT_NODES, &
+!           Num_T_Quad_Input       = DRIVER_T_INPUT_NODES, &
+!           Num_P_Quad_Input       = DRIVER_P_INPUT_NODES, &
+!           Input_Delta_R_Vector   = dx_c )
+
+    ELSEIF ( Solver_Mode == 2 ) THEN
+
+                CALL Poseidon_FP_Init_From_File( mode,                  & ! mode
+                                                CFA_EQs_Flag_Vector,    & ! CFA_EQ_Flags
+                                                x_e(1),                 & ! Inner_Radius
+                                                x_e(nx+1),              & ! Outer_Radius
+                                                nx,                     & ! NUM_R_ELEMENTS
+                                                ny,                     & ! NUM_T_ELEMENTS
+                                                nz,                     & ! NUM_P_ELEMENTS
+                                                nx,                     & ! NUM_LOC_R_ELEMENTS
+                                                ij_ray_dim,             & ! NUM_LOC_T_ELEMENTS
+                                                ik_ray_dim,             & ! NUM_LOC_P_ELEMENTS
+                                                dx_c,                   & ! Delta_R_Vector
+                                                dy_c(1:ny),             & ! Delta_T_Vector
+                                                dz_c(1:nz)              ) ! Delta_P_Vector)
+
+
+    END IF
+
+
+
 
     timeb = MPI_Wtime()
 
@@ -508,7 +537,12 @@ IF ( POSEIDON_COMM_WORLD .NE. MPI_COMM_NULL ) THEN
     ! Set BC Values
     INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
     OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
+!    OUTER_BC_VALUES = (/Pot_to_Psi, Pot_to_AlphaPsi, 0.0_idp, 0.0_idp, 0.0_idp /)
 !    OUTER_BC_VALUES = (/1.0_idp, 1.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
+
+!    Shift_Vector_BC = -1.0E2_idp
+!    OUTER_BC_VALUES = (/0.0_idp, 0.0_idp, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
+
 
 !    PRINT*,"FRAME = ",DRIVER_FRAME," Shift BC = ",Shift_Vector_BC
     
@@ -590,11 +624,10 @@ CALL Clock_In(timea-timeb, 19)
         !!!            Output Results           !!!
         !!                                       !!
         !                                         !
-IF ( myID == 0 ) THEN
-    
-    CALL WRITE_CFA_COEFFICIENTS()
-END IF
-
+!IF ( myID == 0 ) THEN
+!    
+!    CALL WRITE_CFA_COEFFICIENTS()
+!END IF
 
 
 

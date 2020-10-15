@@ -103,7 +103,8 @@ USE Poseidon_Variables_Module, &
                     Block_Prob_Dim,             &
                     Iter_Time_Table,            &
                     Frame_Time_Table,           &
-                    Frame_Convergence_Table,    &
+                    Frame_Update_Table,         &
+                    Frame_Residual_Table,       &
                     Iteration_Histogram,        &
                     Run_Time_Table,             &
                     Num_Timer_Calls,            &
@@ -236,7 +237,8 @@ ITER_TIME_TABLE = 0.0_idp
 FRAME_TIME_TABLE = 0.0_idp
 RUN_TIME_TABLE = 0.0_idp
 
-ALLOCATE( FRAME_CONVERGENCE_TABLE(1:MAX_ITERATIONS))
+ALLOCATE( Frame_Update_Table(1:MAX_ITERATIONS) )
+ALLOCATE( Frame_Residual_Table(1:MAX_ITERATIONS) )
 ALLOCATE( Iteration_Histogram(1:MAX_ITERATIONS) )
 Iteration_Histogram = 0
 
@@ -302,8 +304,8 @@ DEALLOCATE( Ylm_dp_Values)
 DEALLOCATE( ITER_TIME_TABLE )
 DEALLOCATE( RUN_TIME_TABLE  )
 
-
-
+DEALLOCATE( Frame_Update_Table )
+DEALLOCATE( Frame_Residual_Table )
 DEALLOCATE( ITERATION_HISTOGRAM )
 
 

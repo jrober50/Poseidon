@@ -38,6 +38,17 @@ CHARACTER(LEN = 33), PARAMETER        :: Poseidon_Residual_Dir  = "Poseidon_Outp
 CHARACTER(LEN = 38), PARAMETER        :: Poseidon_LinSys_Dir    = "Poseidon_Output/Objects/Linear_System/"
 
 
-INTEGER                               :: Test
+
+CHARACTER(LEN = 32),DIMENSION(1:5), PARAMETER   :: &
+CFA_Var_Names = ['Conformal Factor                  ', &
+                 'Lapse Function                    ', &
+                 'Radial Shift Component            ', &
+                 'Theta Shift Component             ', &
+                 'Phi Shift Component               ' ]
+
+CHARACTER(LEN = 32),DIMENSION(1:3), PARAMETER   :: &
+Solver_Names = ['Newton-Raphson                  ', &
+                'Fixed Point Iteration           ', &
+                'Jacobian Free GMRES             ' ]
 
 END MODULE Poseidon_IO_Parameters

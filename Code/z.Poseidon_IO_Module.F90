@@ -18,7 +18,6 @@ MODULE Poseidon_IO_Module                                                       
 !##!                                                                                !##!
 !##!                                                                                !##!
 !##!    +301+   OPEN_FRAME_REPORT_FILE                                              !##!
-!##!    +302+   OUTPUT_FRAME_REPORT                                                 !##!
 !##!    +303+   CLOSE_FRAME_REPORT_FILE                                             !##!
 !##!                                                                                !##!
 !##!    +401+   OUTPUT_FINAL_RESULTS                                                !##!
@@ -117,9 +116,9 @@ USE Poseidon_Variables_Module, &
                             Num_Timer_Calls,                                &
                             ITER_TIME_TABLE,                                &
                             FRAME_TIME_TABLE,                               &
-                            FRAME_CONVERGENCE_TABLE,                        &
                             RUN_TIME_TABLE,                                 &
-                            BLOCK_STF_MAT
+                            BLOCK_STF_MAT,                                  &
+                            Calc_3D_Values_At_Location
  
 
 
@@ -127,8 +126,7 @@ USE Poseidon_Math_Functions_Module, &
                     ONLY :  Lagrange_Poly
 
 USE Poseidon_Calculate_Results_Module, &
-                    ONLY :  Calc_3D_Values_At_Location,                     &
-                            Calc_1D_CFA_Values
+                    ONLY :  Calc_1D_CFA_Values
 
 USE Poseidon_Quadrature_Module, &
                     ONLY :  Initialize_LG_Quadrature_Locations
@@ -613,7 +611,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
 
 
-        IF ( .FALSE. ) THEN
+        IF ( .TRUE. ) THEN
             NUM_RADIAL_SAMPLES = WRITE_RESULTS_R_SAMPS
 
             ! Create Radial Spacing !
@@ -666,7 +664,11 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
                                                          Return_Psi, Return_AlphaPsi,                &
                                                          Return_Beta1, Return_Beta2, Return_Beta3    )
 
-                        Lapse_Holder(k,j,i) = Return_AlphaPsi/Return_Psi
+                        IF ( Return_Psi == 0.0_idp ) THEN
+                            Lapse_Holder(k,j,i) = 0.0_idp
+                        ELSE
+                            Lapse_Holder(k,j,i) = Return_AlphaPsi/Return_Psi
+                        END IF
                         ConForm_Holder(k,j,i) = Return_Psi
                         Shift_Holder(1:3,k,j,i) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
 
@@ -686,6 +688,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
             WRITE(File_IDs(9),*)P_Holder
 
 
+            PRINT*,"OUTPUT_FINAL_RESULTS Modified in z.Poseidon_IO_Module.F90"
             ! Write Output Value Files
             DO k = 1,NUM_PHI_RAYS
                 DO j = 1,NUM_THETA_RAYS
@@ -694,7 +697,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
                     WRITE(File_IDs(1),*)Lapse_Holder(k,j,:)
                     WRITE(File_IDs(2),*)ConForm_Holder(k,j,:)
                     WRITE(File_IDs(3),*)Shift_Holder(1,k,j,:)/Shift_Units
-                    WRITE(File_IDs(4),*)Shift_Holder(2,k,j,:)
+                    WRITE(File_IDs(4),*)Shift_Holder(1,k,j,:)
                     WRITE(File_IDs(5),*)Shift_Holder(3,k,j,:)
 
                 END DO ! j Loop

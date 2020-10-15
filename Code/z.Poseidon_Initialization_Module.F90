@@ -132,7 +132,8 @@ USE Poseidon_Variables_Module, &
                     Matrix_Location,                                &
                     LM_Location,                                    &
                     POSEIDON_COMM_WORLD,                            &
-                    RUN_TIME_TABLE
+                    RUN_TIME_TABLE,                                 &
+                    Calc_3D_Values_At_Location
 
 
 
@@ -154,7 +155,7 @@ USE Poseidon_Allocation_Module, &
 
 
 USE Poseidon_Calculate_Results_Module, &
-            ONLY :  Calc_3D_Values_At_Location
+            ONLY :  Calc_NR_Values_At_Location
 
 USE Poseidon_MPI_Module, &
             ONLY :  CREATE_POSEIDON_COMMUNICATORS
@@ -489,7 +490,7 @@ CALL CREATE_POSEIDON_COMMUNICATORS( DATA_DIST_MODE )
 
 CALL Initialize_Ylm_Tables()
 
-
+Calc_3D_Values_At_Location => Calc_NR_Values_At_Location
 
 CALL OUTPUT_SETUP_TABLE( nPROCS, R_Elements_Input, T_Elements_Input, P_Elements_Input )
 

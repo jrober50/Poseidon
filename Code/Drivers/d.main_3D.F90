@@ -115,6 +115,7 @@ USE Driver_IO_Functions_Module, &
                     Close_Run_Report_File,                          &
                     Open_Frame_Report_File,                         &
                     Output_Frame_Report,                            &
+                    Output_Convergence_Data,                        &
                     Close_Frame_Report_File,                        &
                     Output_Iteration_History
 
@@ -707,7 +708,8 @@ DO DRIVER_FRAME = DRIVER_START_FRAME,DRIVER_END_FRAME
     CALL PQ_ITERATIONS_USED( Iteration_History(DRIVER_FRAME) )
 
 !    PRINT*,"Before OUTPUT_FRAME_REPORT"
-!    CALL OUTPUT_FRAME_REPORT(DRIVER_FRAME)
+    CALL OUTPUT_FRAME_REPORT(DRIVER_FRAME)
+    CALL OUTPUT_CONVERGENCE_DATA(DRIVER_FRAME)
     CALL CLOSE_FRAME_REPORT_FILE()
     FIRST_FRAME_FLAG = 0
 
@@ -717,7 +719,7 @@ END DO ! Frame Loop
 
 IF ( myID == 0 ) THEN
 !    PRINT*,"Before OUTPUT_RUN_REPORT"
-!    CALL OUTPUT_RUN_REPORT()
+    CALL OUTPUT_RUN_REPORT()
     CALL OUTPUT_ITERATION_HISTORY()
     CALL CLOSE_RUN_REPORT_FILE()
 END IF

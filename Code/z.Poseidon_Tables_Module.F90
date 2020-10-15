@@ -144,6 +144,7 @@ ALLOCATE( Ylm_Table(-L_LIMIT:L_LIMIT, -1:L_LIMIT,                           &
 
 
 
+
 Block_T_Begin = MOD(myID_Shell,NUM_BLOCK_THETA_ROWS)*NUM_T_ELEMS_PER_BLOCK
 Block_P_Begin = (myID_Shell/NUM_BLOCK_THETA_ROWS)*NUM_P_ELEMS_PER_BLOCK
 
@@ -156,7 +157,6 @@ IF ( L_LIMIT > 0 ) THEN
 
         M_POWER_TABLE(m) = -1.0_idp*M_POWER_TABLE(m-1)
         M_POWER_TABLE(-m) = -1.0_idp*M_POWER_TABLE(m-1)
-
     END DO
 END IF
 
@@ -170,10 +170,8 @@ DO l = 1,L_LIMIT
 
         Sqrt_Term(LM_Location(l,m)) = SQRT((2*REAL_L + 1)/(2*REAL_L - 1)* REAL( (l-m)*(l+m), idp) )
 
-
-    END DO
-
-END DO
+    END DO ! m Loop
+END DO ! l Loop
 
 
 Ylm_Table = 0.0_idp
@@ -197,32 +195,24 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
 
 
         DO pd = 1,NUM_P_QUAD_POINTS
+        DO td = 1,NUM_T_QUAD_POINTS
+        DO l = 0,L_LIMIT
+        DO m = -M_VALUES(l),M_VALUES(l)
 
-            DO td = 1,NUM_T_QUAD_POINTS
+            Norm_Storage = Norm_Factor(l,m)
+            Legendre_Poly_Value = Legendre_Poly(l, m, 1, T_Locations(td))
 
-                DO l = 0,L_LIMIT
-
-                    DO m = -M_VALUES(l),M_VALUES(l)
-
-                        Norm_Storage = Norm_Factor(l,m)
-                        Legendre_Poly_Value = Legendre_Poly(l, m, 1, T_Locations(td))
-
-                        Ylm_Table(m, l, td, pd, te, pe) = Norm_Storage                            &   ! Normalization Factor
-                                                        * Legendre_Poly_Value(1)                  &   ! Legendre Polynomial
-                                                        * CDEXP(CMPLX(0.0_idp,m*P_Locations(pd),idp))   ! exp(im phi)
+            Ylm_Table(m, l, td, pd, te, pe) = Norm_Storage                            &   ! Normalization Factor
+                                            * Legendre_Poly_Value(1)                  &   ! Legendre Polynomial
+                                            * CDEXP(CMPLX(0.0_idp,m*P_Locations(pd),idp))   ! exp(im phi)
 
 
-                    END DO
-
-                END DO
-
-            END DO
-
-        END DO
-
-    END DO
-
-END DO
+        END DO ! m Loop
+        END DO ! l Loop
+        END DO ! td Loop
+        END DO ! pd Loop
+    END DO ! te Loop
+END DO ! pe Loop
 
 
 
@@ -247,59 +237,52 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
         COT_VAL(:) = 1.0_idp/DTAN(T_Locations(:))
 
 
-
-
         DO pd = 1,NUM_P_QUAD_POINTS
+        DO td = 1,NUM_T_QUAD_POINTS
+        DO l = 0,L_LIMIT
 
-            DO td = 1,NUM_T_QUAD_POINTS
+            REAL_L = REAL(l, idp)
 
-                DO l = 0,L_LIMIT
-
-                    REAL_L = REAL(l, idp)
-
-                    DO m = -M_VALUES(l),M_VALUES(l)
+            DO m = -M_VALUES(l),M_VALUES(l)
 
 
-                        tpd_loc = (td-1)*NUM_P_QUAD_POINTS + pd
-                        lm_loc = LM_Location(l,m)
-                        Norm_Storage = Norm_Factor(l,m)
-                        Legendre_Poly_Value = Legendre_Poly(l, m, 1, T_Locations(td))
+                tpd_loc = (td-1)*NUM_P_QUAD_POINTS + pd
+                lm_loc = LM_Location(l,m)
+                Norm_Storage = Norm_Factor(l,m)
+                Legendre_Poly_Value = Legendre_Poly(l, m, 1, T_Locations(td))
 
-                        Ylm_Values(lm_loc, tpd_loc, te, pe) = Ylm_Table(m,l,td, pd, te, pe)
+                Ylm_Values(lm_loc, tpd_loc, te, pe) = Ylm_Table(m,l,td, pd, te, pe)
 
-                        Ylm_dt_Values(lm_loc, tpd_loc, te, pe) = REAL_L*COT_VAL(td)                     &
-                                                                * Ylm_Table(m,l,td, pd, te, pe)         &
-                                                              - SQRT_TERM(lm_loc) * CSC_VAL(td)         &
-                                                                * Ylm_Table(m,l-1,td, pd, te, pe)
+                Ylm_dt_Values(lm_loc, tpd_loc, te, pe) = REAL_L*COT_VAL(td)                     &
+                                                        * Ylm_Table(m,l,td, pd, te, pe)         &
+                                                      - SQRT_TERM(lm_loc) * CSC_VAL(td)         &
+                                                        * Ylm_Table(m,l-1,td, pd, te, pe)
 
-                        Ylm_dp_Values(lm_loc, tpd_loc, te, pe) = CMPLX(0,m,idp)                         &
-                                                                * Ylm_Table(m,l,td, pd, te, pe)
+                Ylm_dp_Values(lm_loc, tpd_loc, te, pe) = CMPLX(0,m,idp)                         &
+                                                        * Ylm_Table(m,l,td, pd, te, pe)
 
 
 
-                        Ylm_CC_Values( tpd_loc, lm_loc, te, pe) = M_POWER_TABLE(m) * Ylm_Table(-m,l,td, pd, te, pe)
+                Ylm_CC_Values( tpd_loc, lm_loc, te, pe) = M_POWER_TABLE(m) * Ylm_Table(-m,l,td, pd, te, pe)
 
-                        Ylm_CC_dp_Values( tpd_loc, lm_loc, te, pe) = CMPLX(0,-m,idp)                      &
-                                                                 * Ylm_CC_Values(tpd_loc, lm_loc, te, pe)
+                Ylm_CC_dp_Values( tpd_loc, lm_loc, te, pe) = CMPLX(0,-m,idp)                      &
+                                                         * Ylm_CC_Values(tpd_loc, lm_loc, te, pe)
 
-                        
-                        Ylm_CC_dt_Values( tpd_loc, lm_loc, te, pe) = REAL_L*COT_VAL(td)                     &
-                                                                   * Ylm_CC_Values( tpd_loc, lm_loc, te, pe)  &
-                                                                 - SQRT_TERM(lm_loc) * CSC_VAL(td)          &
-                                                                   * M_POWER_TABLE(m)                       &  ! Complex Conjugate
-                                                                   * Ylm_Table(-m, l-1, td, pd, te, pe)     ! of Y^{l-1}_{m}
+                
+                Ylm_CC_dt_Values( tpd_loc, lm_loc, te, pe) = REAL_L*COT_VAL(td)                     &
+                                                           * Ylm_CC_Values( tpd_loc, lm_loc, te, pe)  &
+                                                         - SQRT_TERM(lm_loc) * CSC_VAL(td)          &
+                                                           * M_POWER_TABLE(m)                       &  ! Complex Conjugate
+                                                           * Ylm_Table(-m, l-1, td, pd, te, pe)     ! of Y^{l-1}_{m}
 
-                    END DO
 
-                END DO
 
-            END DO
-
-        END DO
-
-    END DO
-
-END DO
+            END DO ! m Loop
+        END DO ! l Loop
+        END DO ! td Loop
+        END DO ! pd Loop
+    END DO ! te Loop
+END DO ! pe Loop
 
 
 

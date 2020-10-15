@@ -48,7 +48,8 @@ USE DRIVER_PARAMETERS,  &
                     OUTPUT_PRIMATIVES_FLAG
 
 USE Driver_IO_Functions_Module, &
-            ONLY :  OUTPUT_PRIMATIVES
+            ONLY :  OUTPUT_PRIMATIVES,  &
+                    OUTPUT_YAHIL_PRIMATIVES
 
 
 IMPLICIT NONE
@@ -194,11 +195,12 @@ CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
 
 t = t_in*Milisecond
 
-
-Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
-Kappa_wUnits = 18.394097187796024_idp
-PRINT*,"Kappa_wUnits over wrote."
-
+IF ( .TRUE. ) THEN
+    Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
+ELSE
+    Kappa_wUnits = 18.394097187796024_idp
+    PRINT*,"Kappa_wUnits over written.",Kappa_wUnits
+END IF
 
 R_Factor = SQRT(Kappa_wUnits)                                &
         *(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))       &
@@ -212,7 +214,6 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)  &
               * (t**(4.0_idp - 3.0_idp*gamma))                      &
               * Input_M
-
 
 
 IF ( .FALSE. ) THEN
@@ -263,7 +264,6 @@ CALL CONVERT_SELF_SIMILAR_3Db(  t, Kappa_wUnits, gamma, ecc,                   &
                             Input_D, Input_V, Input_X,             &
                             Input_E, Input_S, Input_Si              )
 
-
 !PRINT*,"In UNPACK_SELF_SIMILAR"
 !PRINT*,"Input_E"
 !PRINT*,Input_E
@@ -276,10 +276,8 @@ CALL CONVERT_SELF_SIMILAR_3Db(  t, Kappa_wUnits, gamma, ecc,                   &
 !PRINT*," "
 
 
-
 CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
 CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, Input_Si, r_locs )
-
 
 
  5000 RETURN
@@ -638,12 +636,17 @@ CHARACTER(len = 42)                                                         ::  
 CHARACTER(len = 42)                                                         ::  Plocs_Filename
 
 
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  DX_Holder
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  VX_Holder
+
 
 Num_Radial_Points = NUM_R_ELEM*NUM_NODES(1)
 Num_Theta_Points = NUM_T_ELEM*NUM_NODES(2)
 ALLOCATE( Density_Holder(1:Num_Radial_Points) )
 ALLOCATE( Velocity_Holder(1:Num_Radial_Points) )
 ALLOCATE( Theta_Locations(1:Num_Theta_Points) )
+ALLOCATE( DX_Holder(1:Num_Radial_Points) )
+ALLOCATE( VX_Holder(1:Num_Radial_Points) )
 
 E_Units = Erg/Centimeter**3
 
@@ -652,7 +655,6 @@ xlocs(1) = 1.0_idp
 
 ecc_sqr = ecc*ecc
 ooomes = 1.0_idp/(1.0_idp - ecc_sqr)
-
 
 
 D_FACTOR = 1.0_idp /(Grav_Constant_G*t*t )
@@ -680,9 +682,13 @@ DO te = 0,NUM_T_ELEM-1
 
         DO rd = 1,NUM_NODES(1)
             xloc = CUR_R_LOCS(rd)*X_Factor
+!            CALL Find_Line_SUB(xloc, Input_X, NUM_LINES)
             line = Find_Line(xloc, Input_X, NUM_LINES)
 
             x = MAP_TO_X_SPACE(Input_X(Line),Input_X(Line+1),xloc)
+            IF ( x > 1 ) THEN
+                x = 1
+            END IF
             LagPoly_Vals = Lagrange_Poly(x, 1, xlocs)
 
 
@@ -690,7 +696,10 @@ DO te = 0,NUM_T_ELEM-1
             Density  = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
             Velocity = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
 
-            PRINT*
+            DX_Holder(re*Num_Nodes(1)+rd) = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))
+            VX_Holder(re*Num_Nodes(1)+rd) = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))
+
+
             Density_Holder(re*NUM_NODES(1)+rd)  = Density
             Velocity_Holder(re*NUM_NODES(1)+rd) = Velocity
 
@@ -702,9 +711,10 @@ DO te = 0,NUM_T_ELEM-1
 
 
 
-
+            
             vsqr = Velocity*Velocity
             LF_sqr = 1.0_idp/(1.0_idp - vsqr/C_Square)
+            
 
             !  Calculate CFA Input Values
             E  = Density*Specific_Enthalpy*LF_sqr - Pressure
@@ -741,8 +751,9 @@ IF ( OUTPUT_PRIMATIVES_FLAG == 1 ) THEN
 
 END IF
 
-
-
+IF ( .FALSE. ) THEN
+    CALL OUTPUT_YAHIL_PRIMATIVES( DX_Holder, VX_Holder, Num_Radial_Points )
+END IF
 
 END SUBROUTINE CONVERT_SELF_SIMILAR_3Db
 
@@ -837,7 +848,7 @@ DO i = 0,NUM_ENTRIES-1
    END IF
 
 END DO
-
+!PRINT*,r,cur_entry, SelfSim_R_Vals(NUM_ENTRIES)
 
 deltar = SELFSIM_R_VALS(cur_entry+1) - SELFSIM_R_VALS(cur_entry)
 
@@ -1236,7 +1247,7 @@ INTEGER, INTENT(IN)                     :: list_len
 
 INTEGER                                 :: up, down, mid
 
-up = list_len
+up = list_len+1
 down = 1
 DO WHILE (up - down > 1)
     mid = (up + down)/2
@@ -1251,12 +1262,54 @@ IF ( x == x_list(1) ) THEN
     Find_Line = 1
 ELSEIF ( x == x_list(list_len) ) THEN
     Find_Line = list_len - 1
+ELSEIF ( down == List_len ) THEN
+    Find_Line = List_len - 1
 ELSE
     Find_Line = down
 END IF
 
 END FUNCTION Find_Line
 
+
+
+SUBROUTINE Find_Line_SUB( x, x_list, list_len )
+
+REAL(KIND = idp), INTENT(IN)                        :: x
+REAL(KIND = idp), DIMENSION(1:List_Len), INTENT(IN) :: x_list(list_len)
+INTEGER, INTENT(IN)                                 :: list_len
+
+INTEGER                                     :: up, down, mid
+INTEGER                                     :: Find_Line
+
+
+up = list_len+1
+down = 1
+DO WHILE (up - down > 1)
+    mid = (up + down)/2
+    IF ( (x_list(list_len)>=x_list(1)).eqv.(x>=x_list(mid)) ) THEN
+        down = mid
+    ELSE
+        up = mid
+    END IF
+END DO
+
+IF ( x == x_list(1) ) THEN
+    PRINT*,"First in Line"
+    Find_Line = 1
+ELSEIF ( x == x_list(list_len) ) THEN
+    PRINT*,"Last in Line"
+    Find_Line = list_len - 1
+ELSEIF ( down == List_len ) THEN
+    PRINT*,"Capped Out"
+    Find_Line = List_len - 1
+ELSE
+    PRINT*,"Else"
+    Find_Line = down
+END IF
+
+PRINT*,"Find_Line_Sub",Find_Line
+
+END SUBROUTINE Find_Line_SUB
 
 
 

@@ -39,18 +39,23 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              ::  Laplace_Fact
 INTEGER, ALLOCATABLE, DIMENSION(:,:)                            ::  Laplace_Factored_ROW
 INTEGER, ALLOCATABLE, DIMENSION(:,:)                            ::  Laplace_Factored_COL
 
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              ::  First_Column_Storage
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              ::  Last_Column_Storage
 
 INTEGER, DIMENSION(1:5)                                         ::  CFA_EQ_Flags
 INTEGER, DIMENSION(1:5)                                         ::  CFA_EQ_Map
+INTEGER, DIMENSION(1:5)                                         ::  CFA_MAT_Map
 INTEGER                                                         ::  Laplace_NNZ
+INTEGER                                                         ::  Factored_NNZ
 
-CHARACTER(LEN = 4)                                              :: Matrix_Format = 'FULL'
-CHARACTER(LEN = 4)                                              :: Linear_Solver = 'FULL'
+
+CHARACTER(LEN = 4)                                              :: Matrix_Format = 'Full'
+CHARACTER(LEN = 4)                                              :: Linear_Solver = 'Full'
 
 INTEGER                                                         :: Num_Matrices
 
 
-
+INTEGER                                                         ::  MCF_Flag
 
 
 

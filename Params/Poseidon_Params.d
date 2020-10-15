@@ -17,19 +17,19 @@ NBPSHL             1                   NBPSHL     ! Number of Blocks Per Shell, 
 NBTROW             1                   NBTROW     ! Number of Theta Blocks Per Shell
 NBPCOL             1                   NBPCOL     ! Number of Phi Blocks Per Shell
 
-PRQ                8                   PRQ        ! Number of Radial Quadrature Points Per Element
+PRQ               10                   PRQ        ! Number of Radial Quadrature Points Per Element
 PTQ               10                   PTQ        ! Number of Theta Quadrature Points Per Element
-PPQ               10                   PPQ        ! Number of Phi Quadrature Points Per Elements
+PPQ               14                   PPQ        ! Number of Phi Quadrature Points Per Elements
 
-MI                 3                   MI         ! Maximum Newton-Raphson Iterations
-CC           1.00E-8                   CC         ! Convergence Criteria
+MI                30                   MI         ! Maximum Newton-Raphson Iterations
+CC           1.0E-20                   CC         ! Convergence Criteria
 
-OSTF               1                   OSTF       ! Output Setup Table Flag    :  0=Off(Default), 1=On
+OSTF               0                   OSTF       ! Output Setup Table Flag    :  0=Off(Default), 1=On
 OMF                0                   OMF        ! Write Jacobian Matrix to File
-ORF                1                   ORF        ! Write RHS Vector to File
+ORF                0                   ORF        ! Write RHS Vector to File
 OUF                0                   OUF        ! Write Update Vector to File
-WRTTT              1                   WRTTT      ! Write Timetable Flag        : 0=Off, 1=To Screen, 2=To File, 3=Both
-WRTIR              1                   WRTIR      ! Write Iteration Report Flag : 0=Off, 1=To Screen, 2=To File, 3=Both
+WRTTT              0                   WRTTT      ! Write Timetable Flag        : 0=Off, 1=To Screen, 2=To File, 3=Both
+WRTIR              3                   WRTIR      ! Write Iteration Report Flag : 0=Off, 1=To Screen, 2=To File, 3=Both
 IRNS              20                   IRNS       ! Number of Samples in each Iteration Report
 WRTRS              1                   WRTRS      ! Write Results to File Flag  : 0=Off, 1=To File
 

@@ -29,6 +29,10 @@ MODULE CFA_3D_Master_Build_Module                                               
 !##!                                                                                !##!
 !##!    +501+   FINISH_3D_RHS_VECTOR                                                !##!
 !##!                                                                                !##!
+!##!    +601+   CALC_JACOBIAN_3D                                                    !##!
+!##!                                                                                !##!
+!##!    +701+   Allocate_Master_Build_Variables                                     !##!
+!##!    +702+   Deallocate_Master_Build_Variables                                   !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
 !######################################################################################!
@@ -166,6 +170,15 @@ USE SubJacobian_Functions_Module_3D, &
                                         Calc_EQ5_SubJacobian,           &
                                         Calc_RHS_Terms
 
+USE SubJacobian_Functions_Module_1D, &
+                                ONLY :  Calc_EQ1_SubJacobian_1D,        &
+                                        Calc_EQ2_SubJacobian_1D,        &
+                                        Calc_EQ3_SubJacobian_1D,        &
+                                        Calc_EQ4_SubJacobian_1D,        &
+                                        Calc_EQ5_SubJacobian_1D,        &
+                                        Calc_RHS_Terms_1D
+
+
 USE Poseidon_Preconditioner_Module, &
                                 ONLY :  Jacobi_Type_A_PC,               &
                                         Jacobi_Type_B_PC
@@ -295,6 +308,8 @@ IF ( .FALSE. ) THEN
 END IF 
 
 
+
+
 !*!
 !*! Reduce the Non-Laplacian Contributions to Processes involved in the solve
 !*!
@@ -324,7 +339,7 @@ CALL Clock_In(timea-timeb, 12)
 
 
 
-CALL Jacobi_Type_B_PC()
+!CALL Jacobi_Type_B_PC()
 
 
 
@@ -335,7 +350,6 @@ timeb = MPI_Wtime()
 CALL CFA_3D_Apply_BCs_Part2()
 timec = MPI_Wtime()
 CALL Clock_In(timec-timeb, 13)
-
 
 
 
@@ -819,8 +833,8 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                        + REAL(Tmp_U_P_DRV_Value(5), KIND = idp)
         
 !        PRINT*,RE, rd, REAL(Tmp_U_R_DRV_Value(3), KIND = idp)
+    
         
-
     END DO  !   tpd Loop
 
 END DO  !   rd Loop
@@ -931,7 +945,6 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                               RSIN_SQUARE(td, rd), COTAN_VAL(td)                              )
 
 
-
         JCBN_kappa_Array = JCBN_kappa_FUNCTION_3D_ALL(  rd, tpd,                                        &
                                                         CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
                                                         RSIN_SQUARE(td, rd),                            &
@@ -941,75 +954,154 @@ DO rd = 1,NUM_R_QUAD_POINTS
 
 
 
+!        JCBN_n_ARRAY(:) = CUR_DRV_ALPHAPSI( tpd, rd, : ) / ALPHAPSI_POWER(1)   &
+!                            - 7.0_idp * CUR_DRV_PSI( tpd, rd, : )/ PSI_POWER(1)
+
         JCBN_n_ARRAY(:) = CUR_DRV_ALPHAPSI( tpd, rd, : ) / ALPHAPSI_POWER(1)   &
-                            - 7 * CUR_DRV_PSI( tpd, rd, : )/ PSI_POWER(1)
+                            - CUR_DRV_PSI( tpd, rd, : )/ PSI_POWER(1)
 
 
 
+        IF ( .FALSE. ) THEN
+            CALL Calc_RHS_Terms( RHS_Terms,                                         &
+                                 re, te, pe,                                        &
+                                 td, pd, tpd, rd,                                   &
+                                 CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                 SIN_SQUARE, CSC_SQUARE,                            &
+                                 PSI_POWER, ALPHAPSI_POWER,                         &
+                                 CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                                 JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+            
+            !
+            !   Equation 1 ( Conformal Factor ) Subjacobian Terms
+            !
+            CALL Calc_EQ1_SubJacobian( SubJacobian_EQ1_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                       SIN_SQUARE, CSC_SQUARE,                            &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                                       JCBN_BIGK_VALUE                                    )
+
+            CALL Calc_EQ2_SubJacobian( SubJacobian_EQ2_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                       SIN_SQUARE, CSC_SQUARE,                            &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                                       JCBN_BIGK_VALUE                                    )
+
+    !        PRINT*,rd,td,pd
+    !        PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:14)
+    !        PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:14)
+
+            CALL Calc_EQ3_SubJacobian( SubJacobian_EQ3_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                       SIN_SQUARE, CSC_SQUARE,                            &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+!            PRINT*,rd,td,pd
+!            PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:4)
+!            PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:4)
+!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,1:2)
+!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,5:6)
+!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,9:10)
+
+            CALL Calc_EQ4_SubJacobian( SubJacobian_EQ4_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
+                                       COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+            CALL Calc_EQ5_SubJacobian( SubJacobian_EQ5_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
+                                       COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+        ELSE
+            CALL Calc_RHS_Terms_1D( RHS_Terms,                                         &
+                                 re, te, pe,                                        &
+                                 td, pd, tpd, rd,                                   &
+                                 CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                 SIN_SQUARE, CSC_SQUARE,                            &
+                                 PSI_POWER, ALPHAPSI_POWER,                         &
+                                 CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                                 JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+            
+            !
+            !   Equation 1 ( Conformal Factor ) Subjacobian Terms
+            !
+            CALL Calc_EQ1_SubJacobian_1D( SubJacobian_EQ1_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                       SIN_SQUARE, CSC_SQUARE,                            &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                                       JCBN_BIGK_VALUE                                    )
+
+            CALL Calc_EQ2_SubJacobian_1D( SubJacobian_EQ2_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                       SIN_SQUARE, CSC_SQUARE,                            &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                                       JCBN_BIGK_VALUE                                    )
 
 
+            CALL Calc_EQ3_SubJacobian_1D( SubJacobian_EQ3_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                       SIN_SQUARE, CSC_SQUARE,                            &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
 
-        CALL Calc_RHS_Terms( RHS_Terms,                                         &
-                             re, te, pe,                                        &
-                             td, pd, tpd, rd,                                   &
-                             CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                             SIN_SQUARE, CSC_SQUARE,                            &
-                             PSI_POWER, ALPHAPSI_POWER,                         &
-                             CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                             JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+!            PRINT*,rd,td,pd
+!            PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:4)
+!            PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:4)
+!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,1:2)
+!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,5:6)
+!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,9:10)
 
-        
-        !
-        !   Equation 1 ( Conformal Factor ) Subjacobian Terms
-        !
-        CALL Calc_EQ1_SubJacobian( SubJacobian_EQ1_Term,                              &
-                                   re, te, pe,                                        &
-                                   td, pd, tpd, rd,                                   &
-                                   CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                   SIN_SQUARE, CSC_SQUARE,                            &
-                                   PSI_POWER, ALPHAPSI_POWER,                         &
-                                   CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                                   JCBN_BIGK_VALUE                                    )
+            CALL Calc_EQ4_SubJacobian_1D( SubJacobian_EQ4_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
+                                       COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
 
-        CALL Calc_EQ2_SubJacobian( SubJacobian_EQ2_Term,                              &
-                                   re, te, pe,                                        &
-                                   td, pd, tpd, rd,                                   &
-                                   CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                   SIN_SQUARE, CSC_SQUARE,                            &
-                                   PSI_POWER, ALPHAPSI_POWER,                         &
-                                   CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                                   JCBN_BIGK_VALUE                                    )
+            CALL Calc_EQ5_SubJacobian_1D( SubJacobian_EQ5_Term,                              &
+                                       re, te, pe,                                        &
+                                       td, pd, tpd, rd,                                   &
+                                       CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
+                                       COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
+                                       PSI_POWER, ALPHAPSI_POWER,                         &
+                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
 
-!        PRINT*,rd,td,pd
-!        PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:14)
-!        PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:14)
 
-        CALL Calc_EQ3_SubJacobian( SubJacobian_EQ3_Term,                              &
-                                   re, te, pe,                                        &
-                                   td, pd, tpd, rd,                                   &
-                                   CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                   SIN_SQUARE, CSC_SQUARE,                            &
-                                   PSI_POWER, ALPHAPSI_POWER,                         &
-                                   CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                   JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+        END IF
 
-        CALL Calc_EQ4_SubJacobian( SubJacobian_EQ4_Term,                              &
-                                   re, te, pe,                                        &
-                                   td, pd, tpd, rd,                                   &
-                                   CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
-                                   COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
-                                   PSI_POWER, ALPHAPSI_POWER,                         &
-                                   CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                   JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
-
-        CALL Calc_EQ5_SubJacobian( SubJacobian_EQ5_Term,                              &
-                                   re, te, pe,                                        &
-                                   td, pd, tpd, rd,                                   &
-                                   CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
-                                   COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
-                                   PSI_POWER, ALPHAPSI_POWER,                         &
-                                   CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                   JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
 
 
 !        PRINT*,rd,td,pd
@@ -1026,6 +1118,24 @@ DO rd = 1,NUM_R_QUAD_POINTS
         END DO ! rd loop
     END DO  ! td loop
 END DO  ! pd loop
+
+!PRINT*,"SubJacobian_EQ1_Term"
+!PRINT*,SubJacobian_EQ1_Term(:,:,1:4)
+!PRINT*," "
+!PRINT*,"SubJacobian_EQ2_Term"
+!PRINT*,SubJacobian_EQ2_Term(:,:,1:4)
+!PRINT*," "
+!PRINT*,"SubJacobian_EQ3_Term"
+!PRINT*,SubJacobian_EQ3_Term(:,:,1)
+!PRINT*,SubJacobian_EQ3_Term(:,:,2)
+!PRINT*,SubJacobian_EQ3_Term(:,:,5)
+!PRINT*,SubJacobian_EQ3_Term(:,:,6)
+!PRINT*,SubJacobian_EQ3_Term(:,:,9)
+!PRINT*,SubJacobian_EQ3_Term(:,:,10)
+!PRINT*," "
+!PRINT*,"RHS_Terms"
+!PRINT*,RHS_TERMS(:,:,3)
+!PRINT*," "
 
 
 !$OMP END DO
@@ -1119,6 +1229,8 @@ DO d = 0,DEGREE
                             * R_Int_Weights(rd)
 
 
+ 
+
             RHS_TMP(2) =  RHS_TMP(2)                                            &
                             + SUM( RHS_TERMS( :, rd, 2 )                        &
                                     * Ylm_CC_Values( :, lm_loc, te, pe)         &
@@ -1169,6 +1281,8 @@ DO d = 0,DEGREE
 
 
         END DO  ! rd Loop
+        
+       
         Current_i_Location = CFA_ALL_Matrix_Map(1, lm_loc, re, d)
         Block_RHS_Vector(Current_i_Location)                             &
             = Block_RHS_Vector(Current_i_Location)                       &
@@ -1290,8 +1404,9 @@ DO dp = 0,DEGREE
     DO F = 1,NUM_CFA_VARS
         DO lpmp_loc = 0,LM_LENGTH-1
 
+            ! Do Integrations and put values into a buffer
             time_a = MPI_Wtime()
-            CALL CALC_JACOBIAN_B( Jacobian_Buffer, dp, lpmp_loc, F )
+            CALL CALC_JACOBIAN_3D( Jacobian_Buffer, dp, lpmp_loc, F )
             time_b = MPI_Wtime()
             time_J = time_J + (time_b - time_a)
 
@@ -1309,7 +1424,7 @@ DO dp = 0,DEGREE
             time_b = MPI_Wtime()
             time_M = time_M + (time_b - time_a)
 
-!            STOP
+
         END DO ! lpmp_loc Loop
     END DO ! F Loop
 END DO ! dp Loop
@@ -1845,12 +1960,15 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
     END IF
 
+
+!    PRINT*,"RHS Vector output in z.CFA_3D_Master_Build, line 1848"
 !    DO i = Start_Here,End_Here
-!        PRINT*,TMP_VECTOR(i),Block_RHS_Vector(i)
+!        PRINT*,TMP_VECTOR(i),Block_RHS_Vector(i),TMP_VECTOR(i)+Block_RHS_Vector(i)
 !    END DO
 
     Block_RHS_Vector(Start_Here:End_Here) = Block_RHS_Vector(Start_Here:End_Here)   &
                                           + TMP_VECTOR(0:SUBSHELL_PROB_DIM-1)
+
 
 END IF
 
@@ -1864,431 +1982,12 @@ END SUBROUTINE FINISH_3D_RHS_VECTOR
 
 
 
-
-
-
-
-
-
-
-
-!+???+###########################################################################!
+!+601+###########################################################################!
 !                                                                                !
-!                  Jacobian_Term          !
+!                  CALC_JACOBIAN_3D                                               !
 !                                                                                !
 !################################################################################!
-FUNCTION Calc_Jacobian_Term( F, u, l, lp, d, dp,            &
-                            SubJacobian_EQ1_Term,           &
-                            SubJacobian_EQ2_Term,           &
-                            SubJacobian_EQ3_Term,           &
-                            SubJacobian_EQ4_Term,           &
-                            SubJacobian_EQ5_Term            )
-
-
-INTEGER, INTENT(IN)                         :: F, u, l, lp, d, dp
-
-
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
-                                         1:NUM_R_QUAD_POINTS,    &
-                                         1:14                    )           ::  SubJacobian_EQ1_Term
-
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
-                                         1:NUM_R_QUAD_POINTS,    &
-                                         1:14                    )           ::  SubJacobian_EQ2_Term
-
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
-                                         1:NUM_R_QUAD_POINTS,    &
-                                         1:20                    )           ::  SubJacobian_EQ3_Term
-
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
-                                         1:NUM_R_QUAD_POINTS,    &
-                                         1:20                    )           ::  SubJacobian_EQ4_Term
-
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
-                                         1:NUM_R_QUAD_POINTS,    &
-                                         1:20                    )           ::  SubJacobian_EQ5_Term
-
-
-COMPLEX                                     :: Calc_Jacobian_Term, Jacobian_Term
-
-INTEGER                                     :: Case_Number
-INTEGER                                     :: rd, td, pd, tpd
-
-Case_Number = (F-1) * 5 + u-1
-Jacobian_Term = 0.0_idp
-SELECT CASE ( Case_Number )
-    CASE( 0 )
-        ! Jacobian Term corresponding to d Eq. 1/ d u_1
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ1_Term( :, rd, 1 ) * TP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp )
-        END DO
-    CASE( 1 )
-        ! Jacobian Term corresponding to d Eq. 1/ d u_2
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ1_Term( :, rd, 2 ) * TP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp )
-        END DO
-    CASE( 2 )
-        ! Jacobian Term corresponding to d Eq. 1/ d u_3
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 3) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 4) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 5) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 6) * TdP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 3 )
-        ! Jacobian Term corresponding to d Eq. 1/ d u_4
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 7) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 8) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 9) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 10) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 4 )
-        ! Jacobian Term corresponding to d Eq. 1/ d u_5
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 11) * TP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 12) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 13) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ1_Term(:, rd, 14) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 5 )
-        ! Jacobian Term corresponding to d Eq. 2/ d u_1
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ2_Term( :, rd, 1 ) * TP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp )
-        END DO
-    CASE( 6 )
-        ! Jacobian Term corresponding to d Eq. 2/ d u_2
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ2_Term( :, rd, 2 ) * TP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp )
-        END DO
-    CASE( 7 )
-        ! Jacobian Term corresponding to d Eq. 2/ d u_3
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 3) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 4) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 5) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 6) * TdP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 8 )
-        ! Jacobian Term corresponding to d Eq. 2/ d u_4
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 7) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 8) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 9) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 10) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 9 )
-        ! Jacobian Term corresponding to d Eq. 2/ d u_5
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 11) * TP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 12) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 13) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ2_Term(:, rd, 14) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 10 )
-        ! Jacobian Term corresponding to d Eq. 3/ d u_1
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 1) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 2) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 3) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 4) * TdP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 11 )
-        ! Jacobian Term corresponding to d Eq. 3/ d u_2
-       DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 5) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 6) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 7) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 8) * TdP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 12 )
-        ! Jacobian Term corresponding to d Eq. 3/ d u_3
-       DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 9) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 10) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 11) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 12) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( TP_TP_Factor(:,l,lp) * DRDR_Factor( rd, d, dp) )
-        END DO
-    CASE( 13 )
-        ! Jacobian Term corresponding to d Eq. 3/ d u_4
-       DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 14) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 15) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 16) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( dTP_TP_Factor(:,l,lp) * RDR_Factor( rd, d, dp) )
-        END DO
-    CASE( 14 )
-        ! Jacobian Term corresponding to d Eq. 3/ d u_5
-       DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 18) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 19) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ3_Term(:, rd, 20) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( TdP_TP_Factor(:,l,lp) * RDR_Factor( rd, d, dp) )
-        END DO
-    CASE( 15 )
-        ! Jacobian Term corresponding to d Eq. 4/ d u_1
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 1) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 2) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 3) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 4) * TdP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 16 )
-        ! Jacobian Term corresponding to d Eq. 4/ d u_2
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 5) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 6) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 7) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 8) * TdP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 17 )
-        ! Jacobian Term corresponding to d Eq. 4/ d u_3
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 9) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 10) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 11) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 12) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( TP_dTP_Factor(:,l,lp) )                             &
-                                * DRR_Factor( rd, d, dp)/R_SQUARE(rd)
-        END DO
-    CASE( 18 )
-        ! Jacobian Term corresponding to d Eq. 4/ d u_4
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 14) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 15) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 16) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( dTP_dTP_Factor(:,l,lp) )                            &
-                                * RR_Factor( rd, d, dp)/R_SQUARE(rd)
-        END DO
-    CASE( 19 )
-        ! Jacobian Term corresponding to d Eq. 4/ d u_5
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 18) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 19) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ4_Term(:, rd, 20) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( TdP_dTP_Factor(:,l,lp) )                            &
-                                * RR_Factor( rd, d, dp)/R_SQUARE(rd)
-        END DO
-    CASE( 20 )
-        ! Jacobian Term corresponding to d Eq. 5/ d u_1
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 1) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 2) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 3) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 4) * TdP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 21 )
-        ! Jacobian Term corresponding to d Eq. 5/ d u_2
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 5) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 6) * TP_TP_Factor( :, l, lp ) )    &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 7) * dTP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 8) * TdP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 22 )
-        ! Jacobian Term corresponding to d Eq. 5/ d u_3
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 9) * TP_TP_Factor( :, l, lp ) )    &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 10) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 11) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 12) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( TP_TdP_Factor(:,l,lp)/(R_SQUARE(rd)*TP_SIN_SQUARE(:) ) )  &
-                                * DRR_Factor( rd, d, dp)
-        END DO
-    CASE( 23 )
-        ! Jacobian Term corresponding to d Eq. 5/ d u_4
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 14) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 15) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 16) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( dTP_TdP_Factor(:,l,lp)/(R_SQUARE(rd)*TP_SIN_SQUARE(:) ))           &
-                                * RR_Factor( rd, d, dp)
-        END DO
-    CASE( 24 )
-        ! Jacobian Term corresponding to d Eq. 5/ d u_5
-        DO rd = 1,NUM_R_QUAD_POINTS
-            Jacobian_Term = Jacobian_Term                                                       &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
-                                    * RR_Factor( rd, d, dp)                                     &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 18) * TP_TP_Factor( :, l, lp ) )   &
-                                * DRR_Factor( rd, d, dp)                                        &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 19) * dTP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + SUM( SubJacobian_EQ5_Term(:, rd, 20) * TdP_TP_Factor( :, l, lp ) )  &
-                                * RR_Factor( rd, d, dp)                                         &
-                          + OneThird * SUM( TdP_TdP_Factor(:,l,lp)/(R_SQUARE(rd)*TP_SIN_SQUARE(:) ) )          &
-                                * RR_Factor( rd, d, dp)
-        END DO
-END SELECT
-
-
-Calc_Jacobian_Term = Jacobian_Term
-
-END FUNCTION Calc_Jacobian_Term
-
-
-
-
-!+101+###########################################################################!
-!                                                                                !
-!                  CALC_JACOBIAN_A                                               !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CALC_JACOBIAN_A( Jacobian_Buffer, dp, lpmp_loc, F )
-
-COMPLEX(KIND = idp), DIMENSION(0:ELEM_PROB_DIM-1), INTENT(OUT)      :: Jacobian_Buffer
-INTEGER, INTENT(IN)                                                 :: dp, lpmp_loc, F
-
-INTEGER                                                             :: j_loc, d, u, lm_loc
-
-! d, u, and lm_loc pick the column
-DO d = 0,DEGREE
-    DO u = 1,NUM_CFA_VARS
-        DO lm_loc = 0,LM_LENGTH-1
-
-            
-
-            ! column location
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + lm_loc
-
-
-
-            Jacobian_Buffer(j_loc) = Calc_Jacobian_Term( F, u, lm_loc, lpmp_loc, d, dp, &
-                                                        SubJacobian_EQ1_Term,           &
-                                                        SubJacobian_EQ2_Term,           &
-                                                        SubJacobian_EQ3_Term,           &
-                                                        SubJacobian_EQ4_Term,           &
-                                                        SubJacobian_EQ5_Term            )
-
-        END DO ! lm_loc Loop
-    END DO ! u Loop
-END DO ! d Loop
-
-END SUBROUTINE CALC_JACOBIAN_A
-
-
-
-
-!+101+###########################################################################!
-!                                                                                !
-!                  CALC_JACOBIAN_B                                               !
-!                                                                                !
-!################################################################################!
-SUBROUTINE CALC_JACOBIAN_B( Jacobian_Buffer, dp, lp, F )
+SUBROUTINE CALC_JACOBIAN_3D( Jacobian_Buffer, dp, lp, F )
 
 COMPLEX(KIND = idp), DIMENSION(0:ELEM_PROB_DIM-1), INTENT(OUT)    :: Jacobian_Buffer
 INTEGER, INTENT(IN)                                                 :: dp, lp, F
@@ -2305,7 +2004,7 @@ IF ( F == 1 ) THEN
         DO l = 0,LM_LENGTH-1
             j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
             DO rd = 1,NUM_R_QUAD_POINTS
-                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
                                + SUM( SubJacobian_EQ1_Term( :, rd, 1 ) * TP_TP_Factor( :, l, lp ) )  &
                                      * RR_Factor( rd, d, dp )
             END DO
@@ -2316,7 +2015,7 @@ IF ( F == 1 ) THEN
         DO l = 0,LM_LENGTH-1
             j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
             DO rd = 1,NUM_R_QUAD_POINTS
-                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                        &
+                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
                                 + SUM( SubJacobian_EQ1_Term( :, rd, 2 ) * TP_TP_Factor( :, l, lp ) )  &
                                     * RR_Factor( rd, d, dp )
             END DO
@@ -2470,7 +2169,7 @@ ELSE IF ( F == 3 ) THEN
         DO l = 0,LM_LENGTH-1
             j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
             DO rd = 1,NUM_R_QUAD_POINTS
-                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 1) * TP_TP_Factor( :, l, lp ) )    &
                                     * RR_Factor( rd, d, dp)                                         &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 2) * TP_TP_Factor( :, l, lp ) )    &
@@ -2489,7 +2188,7 @@ ELSE IF ( F == 3 ) THEN
         DO l = 0,LM_LENGTH-1
             j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
             DO rd = 1,NUM_R_QUAD_POINTS
-                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 5) * TP_TP_Factor( :, l, lp ) )    &
                                     * RR_Factor( rd, d, dp)                                         &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 6) * TP_TP_Factor( :, l, lp ) )    &
@@ -2506,7 +2205,7 @@ ELSE IF ( F == 3 ) THEN
         DO l = 0,LM_LENGTH-1
             j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
             DO rd = 1,NUM_R_QUAD_POINTS
-                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 9) * TP_TP_Factor( :, l, lp ) )    &
                                     * RR_Factor( rd, d, dp)                                         &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 10) * TP_TP_Factor( :, l, lp ) )   &
@@ -2524,7 +2223,7 @@ ELSE IF ( F == 3 ) THEN
         DO l = 0,LM_LENGTH-1
             j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
             DO rd = 1,NUM_R_QUAD_POINTS
-                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
                                     * RR_Factor( rd, d, dp)                                         &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 14) * TP_TP_Factor( :, l, lp ) )   &
@@ -2542,7 +2241,7 @@ ELSE IF ( F == 3 ) THEN
         DO l = 0,LM_LENGTH-1
             j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
             DO rd = 1,NUM_R_QUAD_POINTS
-                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
+                Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
                                     * RR_Factor( rd, d, dp)                                         &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 18) * TP_TP_Factor( :, l, lp ) )   &
@@ -2557,7 +2256,7 @@ ELSE IF ( F == 3 ) THEN
 
     END DO ! d Loop
 
-ELSE IF ( F == 14 ) THEN
+ELSE IF ( F == 4 ) THEN
 
     DO d = 0,DEGREE
 
@@ -2655,7 +2354,7 @@ ELSE IF ( F == 14 ) THEN
 
     END DO ! d Loop
 
-ELSE IF ( F == 15 ) THEN
+ELSE IF ( F == 5 ) THEN
     DO d = 0,DEGREE
 
         ! Jacobian Term corresponding to d Eq. 5/ d u_1
@@ -2754,7 +2453,7 @@ ELSE IF ( F == 15 ) THEN
     END DO ! d Loop
 END IF
 
-END SUBROUTINE CALC_JACOBIAN_B
+END SUBROUTINE CALC_JACOBIAN_3D
 
 
 
@@ -2763,7 +2462,7 @@ END SUBROUTINE CALC_JACOBIAN_B
 
 
 
-!+601+###########################################################################!
+!+701+###########################################################################!
 !                                                                                !
 !           Allocate_Master_Build_Variables                                      !
 !                                                                                !
@@ -2834,7 +2533,7 @@ END SUBROUTINE Allocate_Master_Build_Variables
 
 
 
-!+602+###########################################################################!
+!+702+###########################################################################!
 !                                                                                !
 !           Deallocate_Master_Build_Variables                                    !
 !                                                                                !

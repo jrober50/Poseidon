@@ -76,6 +76,8 @@ include makefile_dictionary
 
 
 
+include makefile_path
+
 
 
 #---------------------------- Compilation Rules ------------------------------------#
@@ -83,7 +85,7 @@ include makefile_dictionary
 
 yahil : $(CODE_com) $(CODE_par) $(CODE_o) $(CODE_ext) $(CODE_itf)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(SRC)/$(CODE_drv:%.o=%.$(EXT)) -o $(DRIVER_OBJ)
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(DRV)/$(CODE_drv:%.o=%.$(EXT)) -o $(DRIVER_OBJ)
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/main_$(DIMENSION).x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
@@ -101,19 +103,19 @@ PoseidonLib: $(CODE_com) $(CODE_par) $(CODE_o) $(CODE_ext) $(CODE_itf)
 
 
 
-$(CODE_com):$(OBJ)/%.o: $(SRC)/%.$(EXT)
+$(CODE_com):$(OBJ)/%.o: %.$(EXT)
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
-$(CODE_par):$(OBJ)/%.o: $(SRC)/%.$(EXT)
+$(CODE_par):$(OBJ)/%.o: %.$(EXT)
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
-$(CODE_o):$(OBJ)/%.o:  $(SRC)/%.$(EXT)
+$(CODE_o):$(OBJ)/%.o:  %.$(EXT)
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
-$(CODE_ext):$(OBJ)/%.o: $(SRC)/%.$(EXT)
+$(CODE_ext):$(OBJ)/%.o: %.$(EXT)
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
-$(CODE_itf):$(OBJ)/%.o: $(SRC)/%.$(EXT)
+$(CODE_itf):$(OBJ)/%.o: %.$(EXT)
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $@
 
 
