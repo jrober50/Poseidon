@@ -1,0 +1,171 @@
+#================================ Makefile Dictionary ================================#
+#
+# 	Contains the definitions of the terms used to compile the Poseidon code.
+#
+#=====================================================================================#
+
+
+SRC	= ./Code
+OBJ	= ./Obj
+BIN	= ./Bin
+OUT     = ./Poseidon_Output
+DRV     = ./Code/Drivers
+EXT	= F90
+
+
+### Fortran Compiler
+
+FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90
+FORT_sjdunham      = /usr/local/Cellar/mpich/3.3.2_1/bin/mpif90
+FORT_MacBook 	   = /usr/local/openmpi/bin/mpif90
+FORT_Rhea	   = mpifort
+FORT_BlueWaters    = ftn
+
+
+
+#### Debuging Options
+
+STD_DEBUG_NicksMacBook    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
+STD_OPTIMIZE_NicksMacBook = -O2
+
+STD_DEBUG_sjdunham    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
+STD_OPTIMIZE_sjdunham = -O2
+
+STD_DEBUG_MacBook	= -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
+STD_OPTIMIZE_MacBook	= -O2
+
+STD_DEBUG_Rhea          = -O0 -traceback -check all,noarg_temp_created -fpe0 -gen-interfaces -warn interfaces
+STD_OPTIMIZE_Rhea	= -O2
+
+STD_DEBUG_BlueWaters    = -g -G0 -R bcdps
+STD_OPTIMIZE_BlueWaters	= -O2
+
+
+
+
+
+### OpenMP
+
+OPENMP_NicksMacBook_ON               = -fopenmp
+OPENMP_NicksMacBook_OFF              =
+
+OPENMP_sjdunham_ON                   = -fopenmp
+OPENMP_sjdunham_OFF                  =
+
+OPENMP_MacBook_ON		= -fopenmp
+OPENMP_MacBook_OFF		=
+
+OPENMP_Rhea_ON			= -openmp
+OPENMP_Rhea_OFF			=
+
+OPENMP_BlueWaters_ON		=
+OPENMP_BlueWaters_OFF		= -h noomp
+
+
+
+
+
+### PETSc Linkers
+
+PETSC_Rhea_ON		= -cpp -B /sw/rhea/petsc/3.7.2/rhel6.7_gnu4.8.2  -B /sw/rhea/openmpi/1.8.4/rhel6.6_intell4.0.4
+PETSC_Rhea_OFF		=
+
+PETSC_NicksMacBook_DIR       = /usr/local/petsc/petsc-3.10.4
+PETSC_NicksMacBook_ARCH      = /usr/local/petsc/petsc-3.10.4/arch-darwin-c-debug
+PETSC_NicksMacBook_ON        = -I$(PETSC_NicksMacBook_DIR)/include -I$(PETSC_NicksMacBook_ARCH)/include -L$(PETSC_NicksMacBook_DIR)/lib -L$(PETSC_NicksMacBook_ARCH)/lib -lpetsc
+PETSC_NicksMacBook_Off       =
+
+PETSC_sjdunham_DIR  = /Users/dunhamsj/Research/Codes/petsc
+PETSC_sjdunham_ARCH = /Users/dunhamsj/Research/Codes/petsc/arch-darwin-c-debug
+PETSC_sjdunham_ON   = -I$(PETSC_sjdunham_DIR)/include -I$(PETSC_sjdunham_ARCH)/include -L$(PETSC_sjdunham_DIR)/lib -L$(PETSC_sjdunham_ARCH)/lib -lpetsc
+PETSC_sjdunham_Off  =
+
+PETSC_MacBook_DIR       = /usr/local/petsc/petsc-3.10.4
+PETSC_MacBook_ARCH      = arch-darwin-c-debug
+PETSC_MacBook_ON	= -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
+PETSC_MacBook_Off	=
+
+PETSC_BlueWaters_ON	=
+PETSC_BlueWaters_OFF	=
+
+
+#include ${PETSC_MacBook_DIR}/lib/petsc/conf/variables
+
+#### HDF5
+
+HDF5_NicksMacBook_ON         = -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5
+HDF5_NicksMacBook_OFF        =
+HDF5_sjdunham_ON             = -I/usr/local/Cellar/hdf5/1.12.0_1/include -L/usr/local/Cellar/hdf5/1.12.0_1/lib -lhdf5_fortran -lhdf5
+HDF5_sjdunham_OFF            =
+HDF5_MacBook_ON		= -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5
+HDF5_MacBook_OFF 	=
+HDF5_Rhea_ON            =
+HDF5_Rhea_OFF           =
+HDF5_BlueWaters_ON      =
+HDF5_Bluewaters_OFF     =
+
+
+
+
+#### MPI
+
+MPI_NicksMacBook_Lib        = -I/usr/local/openmpi/lib
+MPI_NicksMacBook_Include    = -L/usr/local/openmpi/include
+
+MPI_sjdunham_Lib            = -I/usr/local/Cellar/mpich/3.3.2_1/lib
+MPI_sjdunham_Include        = -L/usr/local/Cellar/mpich/3.3.2_1/include
+
+MPI_MacBook_Lib             = -I/usr/local/openmpi/lib
+MPI_MacBook_Include         = -L/usr/local/openmpi/include
+
+MPI_ON                      = $(MPI_$(MACHINE_NAME)_Lib) $(MPI_$(MACHINE_NAME)_Include)
+MPI_OFF                     =
+
+
+
+
+
+#### LAPACK
+
+LAPACK_NicksMacBook     = -framework Accelerate
+LAPACK_sjdunham         = -framework Accelerate -fallow-argument-mismatch
+LAPACK_MacBook		= -framework Accelerate
+LAPACK_Rhea		= -mkl
+LAPACK_BlueWaters	=
+
+
+
+INCLUDE_LINKER_gfortran	= -I
+INCLUDE_LINKER_ifort	= -I
+INCLUDE_LINKER_ftn	= -I
+
+
+
+OUTPUT_LINKER_gfortran 	= -J
+OUTPUT_LINKER_ifort	= -module
+OUTPUT_LINKER_ftn	= -J
+
+
+
+
+### Legacy, Only Used to Create Variable Names ###
+COMP_NicksMacBook  = gfortran
+COMP_sjdunham      = gfortran
+COMP_MacBook       = gfortran
+COMP_Rhea          = ifort
+COMP_BlueWaters    = ftn
+
+
+STD 		=$(STD_$(CMODE)_$(MACHINE_NAME))
+OPENMP_COMP 	=$(OPENMP_$(MACHINE_NAME)_$(OPENMP_MODE))
+PETSC_COMP	=$(PETSC_$(MACHINE_NAME)_$(PETSC_MODE))
+HDF5_COMP       =$(HDF5_$(MACHINE_NAME)_$(HDF5_MODE))
+MPI_COMP        =$(MPI_$(MPI_MODE))
+FORT		=$(FORT_$(MACHINE_NAME)) $(PETSC_COMP) $(HDF5_COMP) $(OPENMP_COMP) $(MPI_COMP)  $(LAPACK_$(MACHINE_NAME))
+INCLUDE_LINKER	=$(INCLUDE_LINKER_$(COMP_$(MACHINE_NAME)))
+OUTPUT_LINKER	=$(OUTPUT_LINKER_$(COMP_$(MACHINE_NAME)))
+DRIVER_OBJ	=$(OBJ)/d.main_$(DIMENSION).o
+
+
+
+

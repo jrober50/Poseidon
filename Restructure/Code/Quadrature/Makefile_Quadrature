@@ -1,0 +1,6 @@
+QUAD = \
+  Variables_Quadrature.o      \
+  Allocation_Quadrature.o     \
+  Functions_Quadrature.o      \
+  Initialization_Quadrature.o \
+

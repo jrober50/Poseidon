@@ -1,0 +1,14 @@
+include $(POSEIDON_DIR)/Code/Common/Makefile_Common
+include $(POSEIDON_DIR)/Code/Params_and_Variables/Makefile_Variables
+include $(POSEIDON_DIR)/Code/Mesh/Makefile_Mesh
+include $(POSEIDON_DIR)/Code/Quadrature/Makefile_Quadrature
+include $(POSEIDON_DIR)/Code/Function_Modules/Makefile_Functions
+include $(POSEIDON_DIR)/Code/Tables/Makefile_Tables
+include $(POSEIDON_DIR)/Code/MPI/Makefile_MPI
+include $(POSEIDON_DIR)/Code/Linear_Solvers/Makefile_Linear_Solvers
+include $(POSEIDON_DIR)/Code/IO/Makefile_IO
+include $(POSEIDON_DIR)/Code/Newton_Raphson/Makefile_NR
+include $(POSEIDON_DIR)/Code/Fixed_Point/Makefile_FP
+include $(POSEIDON_DIR)/Code/External/Makefile_External
+include $(POSEIDON_DIR)/Code/Interfaces/Makefile_Interfaces
+include $(POSEIDON_DIR)/Code/Initialization/Makefile_Init

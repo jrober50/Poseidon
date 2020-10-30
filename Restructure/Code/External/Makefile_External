@@ -1,0 +1,8 @@
+EXTERNAL = \
+  Chimera_Test_Functions.o       \
+  Initial_Guess.o                \
+  HDF5_IO.o                      \
+  Chimera_HDF5.o                 \
+  SelfSimilar.o                  \
+  Driver_Test_Functions.o        \
+
