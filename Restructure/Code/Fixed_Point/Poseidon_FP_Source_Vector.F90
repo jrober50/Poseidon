@@ -69,7 +69,9 @@ USE Variables_Derived, &
 
 USE Variables_FP, &
             ONLY :  FP_Coeff_Vector,            &
+                    FP_Coeff_Vector_Beta,       &
                     FP_Source_Vector,           &
+                    FP_Source_Vector_Beta,      &
                     CFA_EQ_Map
 
 USE Functions_Jacobian, &
@@ -166,6 +168,7 @@ REAL(KIND = idp)                                                ::  JCBN_BIGK_VA
 
 Timer = 0.0_idp
 FP_Source_Vector = 0.0_idp
+FP_Source_Vector_Beta = 0.0_idp
 
 DO pe = 0,NUM_P_ELEMENTS-1
     deltap_overtwo = 0.5_idp * (plocs(pe + 1)-plocs(pe))

@@ -35,14 +35,15 @@ USE Poseidon_Parameters, &
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points
 
-
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,             &
                     rlocs
 
 USE Variables_Derived, &
             ONLY :  Num_R_Nodes,                &
-                    LM_Length
+                    ULM_Length,                 &
+                    LM_Length,                  &
+                    Var_Dim
 
 USE Variables_Tables, &
             ONLY :  LPT_LPT
@@ -64,6 +65,11 @@ USE Variables_FP, &
                     CFA_Mat_Map
 
 
+USE FP_Functions_Laplace_Beta, &
+            ONLY :  Initialize_Laplace_Matrices_Beta, &
+                    Output_Laplace
+
+
 IMPLICIT NONE
 
 CONTAINS
@@ -82,6 +88,7 @@ Success_Flag = .FALSE.
 IF ( Matrix_Format == 'Full' ) THEN
     
     CALL Initialize_Laplace_Matrices_Full()
+    CALL Initialize_Laplace_Matrices_Beta()
     PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
     Success_Flag = .TRUE.
 ELSEIF ( Matrix_Format == 'CCS' ) THEN
@@ -90,6 +97,10 @@ ELSEIF ( Matrix_Format == 'CCS' ) THEN
     PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
     Success_Flag = .TRUE.
 END IF
+
+
+
+
 
 IF ( Success_Flag .EQV. .FALSE.) THEN
     PRINT*,"WARNING: Poseidon did not initalize the Laplace matrices."
@@ -142,6 +153,7 @@ DO l = 0,L_LIMIT
     DO re = 0,NUM_R_ELEMENTS-1
 
         deltar = rlocs(re+1) - rlocs(re)
+        
         TODR = 2.0_idp/deltar
         CUR_R_LOCS(:) = (deltar/2.0_idp) * (Int_Locs(:)+1.0_idp) + rlocs(re)
         R_SQUARE = CUR_R_LOCS**2
@@ -174,6 +186,9 @@ DO l = 0,L_LIMIT
 END DO  ! l Loop
 
 
+Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "W")
+
+
 IF ( CFA_EQ_Flags(3) == 1 ) THEN
 
     Mat_Loc = CFA_Mat_Map(3)
@@ -193,6 +208,9 @@ IF ( CFA_EQ_Flags(3) == 1 ) THEN
                                             = Laplace_Matrix_Full(i, j, l,Mat_Loc)    &
                                             - 2 * LPT_LPT(rd,d,dp,0,0)                  &
                                                 / TODR * Int_Weights(rd)
+
+!                        PRINT*,LPT_LPT(rd,d,dp,0,0)                  &
+!                        / TODR * Int_Weights(rd),   re, rd, d, dp
                         
                     END DO  ! rd Loop
 
@@ -201,7 +219,7 @@ IF ( CFA_EQ_Flags(3) == 1 ) THEN
         END DO  ! re Loop
     END DO  ! l Loop
 
-
+Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "X")
    
 END IF
 
@@ -347,6 +365,12 @@ Laplace_Factored_COL = Laplace_Matrix_COL
 
 
 END SUBROUTINE Initialize_Laplace_Matrices_CCS
+
+
+
+
+
+
 
 
 

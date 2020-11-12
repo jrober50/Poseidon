@@ -1443,13 +1443,11 @@ IF ( myID_SubShell .NE. -1 ) THEN
 
                     DO m = -M_VALUES(l),M_VALUES(l)
 
-                        ! Fix This !
                        jloc = d*ULM_LENGTH + (u-1)*LM_LENGTH + (l*(l+1) + m)
 
 
                         DO dp = 0,DEGREE
 
-                            ! Fix This !
                             iloc = dp*ULM_LENGTH + (u-1)*LM_LENGTH + (l*(l+1) + m)
 
                             MATVEC_LOC = jloc*ELEM_PROB_DIM + iloc

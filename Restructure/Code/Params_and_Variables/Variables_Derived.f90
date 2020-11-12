@@ -44,5 +44,9 @@ INTEGER, PUBLIC                             :: ULM_LENGTH
 INTEGER, PUBLIC                             :: NUM_OFF_DIAGONALS
 
 
+INTEGER, PUBLIC                             :: Beta_Prob_Dim
+INTEGER, PUBLIC                             :: Beta_Elem_Prob_Dim
+
+
 END MODULE Variables_Derived
 

@@ -4,9 +4,11 @@ FP = \
   Poseidon_FP_Cholesky.o           \
   Poseidon_FP_Mapping_Functions.o  \
   Poseidon_FP_Calculate_Results.o  \
+  Functions_FP.o                   \
   Poseidon_FP_Source_Vector.o      \
   Poseidon_FP_BC_Module.o          \
-  Poseidon_FP_Method.o             \
+  Poseidon_FP_Laplace_Beta.o       \
   Poseidon_FP_Laplace_Matrix.o     \
+  Poseidon_FP_Method.o             \
   Initialization_FP.o     \
 

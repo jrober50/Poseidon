@@ -29,9 +29,10 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              ::  FP_Update_Ve
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              ::  FP_Laplace_Vector
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              ::  FP_Residual_Vector
 
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:)            ::  Laplace_Matrix_Full
-
-
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:)            ::  Laplace_Matrix_Full ! Should these be reals?
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                ::  Laplace_Matrix_Beta
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                  ::  FP_Source_Vector_Beta
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                  ::  FP_Coeff_Vector_Beta
 
 ! CCS Variables
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              ::  Laplace_Matrix_VAL

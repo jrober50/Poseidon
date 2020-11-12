@@ -35,7 +35,11 @@ USE Poseidon_Parameters, &
                         Max_Iterations
 
 USE Variables_IO, &
-                ONLY :  RUN_REPORT_FILE_ID
+                ONLY :  RUN_REPORT_FILE_ID,     &
+                        File_Suffix
+
+USE Variables_Functions, &
+                ONLY :  LM_Location
 
 USE Variables_Quadrature, &
                 ONLY :  Num_R_Quad_Points,      &
@@ -88,9 +92,11 @@ USE Variables_MPI, &
                         Num_SubShells,          &
                         Num_SubShells_Per_Shell
 
+USE Allocation_Core, &
+                ONLY :  Allocate_Poseidon_CFA_Variables
 
 USE Allocation_Mesh, &
-                ONLY : Allocate_Mesh
+                ONLY :  Allocate_Mesh
 
 USE Initialization_Mesh, &
                 ONLY :  Initialize_Mesh
@@ -112,6 +118,9 @@ USE Initialization_FP, &
 
 USE Initialization_NR, &
                 ONLY :  Initialize_NR
+
+USE Functions_Mapping, &
+                ONLY :  CFA_3D_LM_Map
 
 IMPLICIT NONE
 
@@ -139,6 +148,8 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
                                 Solver_Type_Option,                     &
                                 CFA_Eq_Flags_Option,                    &
                                 nProcs_Option,                          &
+                                Suffix_Flag_Option,                     &
+                                Frame_Option,                           &
                                 Verbose_Option                       )
 
 
@@ -168,6 +179,9 @@ REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  dp_Option
 INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL               ::  CFA_EQ_Flags_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  nProcs_Option
 
+CHARACTER(LEN=10),       INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
+INTEGER,                 INTENT(IN), OPTIONAL               ::  Frame_Option
+
 IF ( PRESENT( Verbose_Option ) ) THEN
     Verbose_Flag = Verbose_Option
 ELSE
@@ -177,6 +191,10 @@ END IF
 IF ( Verbose_Flag .EQV. .TRUE. ) THEN
     PRINT*,"Initializing Poseidon..."
 END IF
+
+
+
+
 
 
 IF ( PRESENT( Units_Option ) ) THEN
@@ -306,6 +324,25 @@ END IF
 
 
 
+IF ( PRESENT(Suffix_Flag_Option) ) THEN
+
+
+    IF ( Suffix_Flag_Option == "Params") THEN
+
+        WRITE(File_Suffix,'(A,I4.4,A,I2.2,A,I2.2)')"RE",Num_R_Elements,"_D",Degree,"_L",L_Limit
+
+    ELSEIF ( SUffix_Flag_Option == "Frame") THEN
+        
+        IF ( PRESENT(Frame_Option) ) THEN
+            WRITE(File_Suffix,'(I5.5)') Frame_Option
+        ELSE
+            WRITE(File_Suffix,'(I5.5)') 1
+        END IF
+    END IF
+ELSE
+    WRITE(File_Suffix,'(I5.5)') 1
+END IF
+
 
 
 IF ( PRESENT( Dimensions_Option ) ) THEN
@@ -314,13 +351,13 @@ ELSE
     Domain_Dim = 3
 END IF
 
+LM_Location => CFA_3D_LM_Map
 
-
+CALL Allocate_Poseidon_CFA_Variables()
 CALL Initialize_Derived()
 CALL Initialize_Quadrature()
 CALL Initialize_MPI()
 CALL Initialize_Tables()
-
 
 
 IF ( Solver_Type == 1 ) THEN

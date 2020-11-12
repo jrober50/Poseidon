@@ -28,7 +28,7 @@ INTEGER                     ::  OUTPUT_SETUP_TABLE_FLAG     = 1
 
 
 INTEGER                     ::  WRITE_TIMETABLE_FLAG        = 0     ! 0=Off,1 = Screen, 2 = File, 3 = Both
-INTEGER                     ::  WRITE_REPORT_FLAG           = 0
+INTEGER                     ::  WRITE_REPORT_FLAG           = 1
 INTEGER                     ::  WRITE_RESULTS_FLAG          = 1
 
 
@@ -73,5 +73,6 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Residual_T
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  Iteration_Histogram
 
 
+CHARACTER(LEN=20)                                           ::  File_Suffix
 
 END MODULE Variables_IO

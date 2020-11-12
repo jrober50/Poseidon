@@ -105,7 +105,8 @@ USE Variables_IO, &
                             Iter_Time_Table,        &
                             Frame_Residual_Table,   &
                             Frame_Update_Table,     &
-                            Iteration_Histogram
+                            Iteration_Histogram,    &
+                            File_Suffix
 
 
 USE Variables_Yahil, &
@@ -452,7 +453,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
 114 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)    !!! Output for Results file
 115 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)                                     !!! Output for Analytic Solution file
 
-116 FORMAT (A,A,I5.5,A4)
+116 FORMAT (A,A,A,A)
 117 FORMAT (A,A)
 
 
@@ -575,15 +576,16 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
         ALLOCATE( Filenames(1:Num_Files) )
         ALLOCATE( File_IDs(1:Num_Files) )
 
-        WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Lapse_",Poseidon_Frame,".out"
-        WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_ConFactor_",Poseidon_Frame,".out"
-        WRITE(Filenames(3),116) Poseidon_Results_Dir,"Results_Beta1_",Poseidon_Frame,".out"
-        WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Beta2_",Poseidon_Frame,".out"
-        WRITE(Filenames(5),116) Poseidon_Results_Dir,"Results_Beta3_",Poseidon_Frame,".out"
-        WRITE(Filenames(6),'(A,A)') Poseidon_Results_Dir,"Results_Dimensions.out"
-        WRITE(Filenames(7),116) Poseidon_Results_Dir,"Results_Radial_Locs_",Poseidon_Frame,".out"
-        WRITE(Filenames(8),116) Poseidon_Results_Dir,"Results_Theta_Locs_",Poseidon_Frame,".out"
-        WRITE(Filenames(9),116) Poseidon_Results_Dir,"Results_Phi_Locs_",Poseidon_Frame,".out"
+
+        WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Lapse_",TRIM(File_Suffix),".out"
+        WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_ConFactor_",TRIM(File_Suffix),".out"
+        WRITE(Filenames(3),116) Poseidon_Results_Dir,"Results_Beta1_",TRIM(File_Suffix),".out"
+        WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Beta2_",TRIM(File_Suffix),".out"
+        WRITE(Filenames(5),116) Poseidon_Results_Dir,"Results_Beta3_",TRIM(File_Suffix),".out"
+        WRITE(Filenames(6),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
+        WRITE(Filenames(7),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
+        WRITE(Filenames(8),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
+        WRITE(Filenames(9),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
 
 
 !        DO i = 0,PROB_DIM-1
@@ -676,7 +678,6 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
             WRITE(File_IDs(9),*)P_Holder
 
 
-            PRINT*,"OUTPUT_FINAL_RESULTS Modified in z.Poseidon_IO_Module.F90"
             ! Write Output Value Files
             DO k = 1,NUM_PHI_RAYS
                 DO j = 1,NUM_THETA_RAYS
@@ -685,7 +686,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
                     WRITE(File_IDs(1),*)Lapse_Holder(k,j,:)
                     WRITE(File_IDs(2),*)ConForm_Holder(k,j,:)
                     WRITE(File_IDs(3),*)Shift_Holder(1,k,j,:)/Shift_Units
-                    WRITE(File_IDs(4),*)Shift_Holder(1,k,j,:)
+                    WRITE(File_IDs(4),*)Shift_Holder(2,k,j,:)
                     WRITE(File_IDs(5),*)Shift_Holder(3,k,j,:)
 
                 END DO ! j Loop
@@ -895,7 +896,6 @@ ELSE
     Temp_Number = 1000
 END IF
 
-PRINT*,"Temp",Temp_Number
 
 DO WHILE (FLAG)
     INQUIRE( UNIT = Temp_Number, OPENED = OP )
@@ -1091,13 +1091,13 @@ IF ( WRITE_SOURCES_FLAG == 1 ) THEN
     ALLOCATE( Filenames(1:Num_Files) )
     ALLOCATE( File_IDs(1:Num_Files) )
 
-    WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_E_",Poseidon_Frame,".out"
-    WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_S_",Poseidon_Frame,".out"
-    WRITE(Filenames(3),116) Poseidon_Sources_Dir,"Sources_S1_",Poseidon_Frame,".out"
-    WRITE(Filenames(4),'(A,A)') Poseidon_Sources_Dir,"Sources_Dimensions.out"
-    WRITE(Filenames(5),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",Poseidon_Frame,".out"
+    WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_E_",trim(File_Suffix),".out"
+    WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_S_",trim(File_Suffix),".out"
+    WRITE(Filenames(3),116) Poseidon_Sources_Dir,"Sources_S1_",trim(File_Suffix),".out"
+    WRITE(Filenames(4),116) Poseidon_Sources_Dir,"Sources_Dimensions_",trim(File_Suffix),".out"
+    WRITE(Filenames(5),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",trim(File_Suffix),".out"
     
-    WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Time_",Poseidon_Frame,".out"
+    WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Time_",trim(File_Suffix),".out"
 
     !WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Theta_Locs_",Poseidon_Frame,".out"
     !WRITE(Filenames(7),116) Poseidon_Sources_Dir,"Sources_Phi_Locs_",Poseidon_Frame,".out"
@@ -1526,9 +1526,9 @@ END SUBROUTINE OPEN_FRAME_REPORT_FILE
 !                   OUTPUT_ITERATION_REPORT                                     !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE OUTPUT_FRAME_REPORT(FRAME)
+SUBROUTINE OUTPUT_FRAME_REPORT()
 
-INTEGER, INTENT(IN)                 :: FRAME
+!INTEGER, INTENT(IN)                 :: FRAME
 
 INTEGER                                                 ::  FILE_ID, FILE_IDb
 INTEGER                                                 ::  i
@@ -1542,7 +1542,7 @@ REAL(KIND = idp)                                        ::  Return_Psi, Return_A
 REAL(KIND = idp)                                        ::  Return_Beta1, Return_Beta2, Return_Beta3
 REAL(KIND = idp)                                        ::  PsiPot_Val, AlphaPsiPot_Val
 
-CHARACTER(LEN = 70)                                     ::  FILE_NAME
+CHARACTER(LEN = 300)                                     ::  FILE_NAME
 
 CHARACTER(LEN = 300)                                    ::  Line
 INTEGER                                                 ::  io_stat
@@ -1559,7 +1559,7 @@ INTEGER                                                 ::  ITER_REPORT_NUM_SAMP
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
-132 FORMAT (A,A,I2.2,A)
+132 FORMAT (A,A,A,A)
 
 142 FORMAT (16X,A,10X,A,15X,A)
 143 FORMAT (19X,I2.2,15X,ES22.15,10X,ES22.15)
@@ -1567,15 +1567,14 @@ INTEGER                                                 ::  ITER_REPORT_NUM_SAMP
 
 
 
-WRITE(FILE_NAME,132)Poseidon_IterReports_Dir,"Frame_Report_",Frame,".out"
-CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
-
+WRITE(FILE_NAME,132)Poseidon_IterReports_Dir,"Frame_Report_",trim(File_Suffix),".out"
+CALL OPEN_NEW_FILE( trim(FILE_NAME), FILE_ID )
 
 IF ( myID == 0 ) THEN
     ! Write Title to File
     IF ( FRAME_REPORT_FLAG == 1 ) THEN
 
-        WRITE(FILE_ID,109)"                                Report for Frame ",Frame
+        WRITE(FILE_ID,109)"                                           Frame Report"
         WRITE(FILE_ID,'(A)')"-----------------------------------------------------------------------------------------"
         WRITE(FILE_ID,'(2/)')
 
@@ -1793,13 +1792,13 @@ INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
 INTEGER                                                     ::  Num_Files = 2
 INTEGER                                                     ::  i
 
-116 FORMAT (A,A,I5.5,A)
+116 FORMAT (A,A,A,A)
 
 ALLOCATE( Filenames(1:Num_Files) )
 ALLOCATE( File_IDs(1:Num_Files) )
 
-WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_Density_",Poseidon_Frame,".out"
-WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_Velocity_",Poseidon_Frame,".out"
+WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_Density_",trim(File_Suffix),".out"
+WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_Velocity_",trim(File_Suffix),".out"
 
 ! Open Files
 File_IDs = [(161 + i, i =1,Num_Files)]
@@ -1843,13 +1842,13 @@ INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
 INTEGER                                                     ::  Num_Files = 2
 INTEGER                                                     ::  i
 
-116 FORMAT (A,A,I5.5,A)
+116 FORMAT (A,A,A,A)
 
 ALLOCATE( Filenames(1:Num_Files) )
 ALLOCATE( File_IDs(1:Num_Files) )
 
-WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_DX_",Poseidon_Frame,".out"
-WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_VX_",Poseidon_Frame,".out"
+WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_DX_",trim(File_Suffix),".out"
+WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_VX_",trim(File_Suffix),".out"
 
 ! Open Files
 File_IDs = [(161 + i, i =1,Num_Files)]

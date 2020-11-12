@@ -154,7 +154,26 @@ ELSE IF ( Units_Flag == "G" ) THEN
     Gram        = 1.0E-3_idp * Kilogram
     SolarMass   = 1.98892E30_idp * Kilogram
 
+ELSE IF ( Units_Flag == "U" ) THEN
+    ! Unitless
+    PRINT*,"Setting Unitless Units"
+    
+    Grav_Constant_G = 1.0_idp
+    Speed_of_Light = 1.0_idp
 
+    ! Length
+    Meter       = 1.0_idp
+    Centimeter  = 1.0_idp
+    Kilometer   = 1.0_idp
+
+    ! Time
+    Second      = 1.0_idp
+    Milisecond  = 1.0_idp
+
+    ! Mass
+    Kilogram    = 1.0_idp
+    Gram        = 1.0_idp
+    SolarMass   = 1.0_idp
 
 
 

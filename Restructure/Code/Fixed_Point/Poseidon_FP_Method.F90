@@ -56,7 +56,8 @@ USE Variables_Mesh, &
 
 USE Variables_Derived, &
             ONLY :  LM_Length,                  &
-                    Num_R_Nodes
+                    Num_R_Nodes,                &
+                    Beta_Prob_Dim
 
 USE Variables_IO, &
             ONLY :  Frame_Report_Flag,          &
@@ -101,6 +102,9 @@ USE Variables_FP,  &
                     Laplace_Factored_VAL,       &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
+                    Laplace_Matrix_Beta,        &
+                    FP_Source_Vector_Beta,      &
+                    FP_Coeff_Vector_Beta,       &
                     CFA_Eq_Map,                 &
                     CFA_MAT_Map,                &
                     Laplace_NNZ,                &
@@ -120,8 +124,13 @@ USE FP_Functions_BC,  &
             ONLY :  Dirichlet_BC,                   &
                     Dirichlet_BC_CCS,               &
                     Dirichlet_BC_CHOL,              &
+                    Dirichlet_BC_Beta,              &
                     Neumann_BC,                     &
                     Neumann_BC_CCS
+
+USE FP_Functions_Laplace_Beta, &
+            ONLY :  Output_Laplace_Beta,            &
+                    Output_Laplace
 
 USE Poseidon_Cholesky_Module,   &
             ONLY :  Cholesky_Factorization,         &
@@ -130,7 +139,8 @@ USE Poseidon_Cholesky_Module,   &
 
 USE Linear_Solvers_And_Preconditioners, &
             ONLY :  PRECOND_CONJ_GRAD_CCS,           &
-                    JACOBI_CONDITIONING
+                    JACOBI_CONDITIONING,            &
+                    Jacobi_Conditioning_Beta
 
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In,                           &
@@ -171,6 +181,11 @@ IF (myID_Poseidon == 0 ) THEN
 END IF
 
 PRINT*,"RHS_Terms(:,:,3) = 0.0 in SubJacobian_Functions_1D. Message in FP_Method."
+
+FP_Source_Vector = 0.0_idp
+FP_Coeff_Vector = 0.0_idp
+FP_Laplace_Vector = 0.0_idp
+PRINT*,"FP_Source_Vector, FP_Coeff_Vector, FP_Laplace_Vector Zeroed in Poseidon_FP_Method.f90"
 
 !
 !   Begin Method
@@ -492,21 +507,24 @@ IF (LINEAR_SOLVER =='Full') THEN
                 WORK_MAT = Laplace_Matrix_Full(:,:,l,mat_loc)
                 WORK_VEC = FP_Source_Vector(:,lm_loc,ui)
 
-!                PRINT*,"Before DIRICHLET_BC",ui,l,m
+                PRINT*,"Before DIRICHLET_BC",ui,l,m
 !                PRINT*,WORK_VEC
 
                 CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
 
-
+                Call Output_Laplace(Work_Mat, NUM_R_NODES, NUM_R_NODES, "Y")
 
                 CALL NEUMANN_BC(l, WORK_VEC)
 
 
+                PRINT*,Work_Vec
 
-
-!                PRINT*,"Before JACOBI_CONDITIONING"
+                PRINT*,"Before JACOBI_CONDITIONING"
                 CALL JACOBI_CONDITIONING(WORK_MAT, WORK_VEC)
 
+                PRINT*,Work_Vec
+
+                Call Output_Laplace(Work_Mat, NUM_R_NODES, NUM_R_NODES, "Z")
 
 
                 CALL ZGESV(NUM_R_NODES, 1, WORK_MAT, NUM_R_NODES, IPIV, WORK_VEC, NUM_R_NODES, INFO)
@@ -515,7 +533,8 @@ IF (LINEAR_SOLVER =='Full') THEN
                 END IF
 
 
-
+                PRINT*,"Work_Vec"
+                PRINT*,Work_Vec
 
             !CALL PRECOND_CONJ_GRAD_FULL(WORK_MAT, WORK_VEC)
 
@@ -1051,7 +1070,7 @@ DO i = 0,Num_Samples
     phi = pi/2.0_idp
 
     
-    f = C_One*r*100 + C_Two*(r*100)**(-2)
+    f = C_One*r + C_Two*(r)**(-2)
 
     CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
                                   Return_Psi, Return_AlphaPsi,                &
@@ -1065,6 +1084,121 @@ END DO  ! i Loop
 
 END SUBROUTINE Laplace_Test_Residual
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+!+301+###########################################################################!
+!                                                                                !
+!           Call Solve_FP_System                                                 !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Solve_FP_System_Beta()
+
+INTEGER                                                                     ::  INFO
+INTEGER, DIMENSION(1:Beta_Prob_Dim)                                         ::  IPIV
+
+
+COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim)                             ::  WORK_VEC
+COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim,1:Beta_Prob_Dim)             ::  WORK_MAT
+
+
+INTEGER                                                                     ::  ui, re, d, l
+
+INTEGER                                                                     ::  Here, There
+
+
+
+
+
+
+
+IF (LINEAR_SOLVER =='Full') THEN
+    !####################################!
+    !
+    !           Full Matrix Solver       !
+    !
+    !####################################!
+!    PRINT*,"In Beta Solver"
+
+
+    WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
+    WORK_VEC(:) = FP_Source_Vector_Beta(:)
+
+!    PRINT*,"Before DIRICHLET_BC"
+
+
+
+    CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
+
+
+!    PRINT*,"After Dirichlet_BC"
+    Call Output_Laplace_Beta(Work_Mat, Beta_Prob_Dim, Beta_Prob_Dim, "C")
+!    CALL NEUMANN_BC(l, WORK_VEC)
+
+    
+
+
+!    PRINT*,"Before JACOBI_CONDITIONING"
+    CALL JACOBI_CONDITIONING_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
+    
+
+    Call Output_Laplace_Beta(Work_Mat, Beta_Prob_Dim, Beta_Prob_Dim, "D")
+
+
+!    PRINT*,Work_Vec
+
+!    PRINT*,"Before ZGESV"
+    CALL ZGESV(Beta_Prob_Dim, 1, WORK_MAT, Beta_Prob_Dim, IPIV, WORK_VEC, Beta_Prob_Dim, INFO)
+    IF (INFO > 0) THEN
+        print*,"DGESV has failed with INFO = ",INFO
+    END IF
+
+
+
+    FP_Coeff_Vector_Beta(:) = WORK_VEC(:)
+
+!    PRINT*,"FP_Coeff_Vector_Beta"
+!    PRINT*,FP_Coeff_Vector_Beta
+
+    DO ui = 1,3
+        DO re = 0,Num_R_Elements -1
+            DO d = 0,Degree
+                DO l = 1,LM_Length
+
+                    Here = (re*Degree + d) * 3 * LM_Length  &
+                         + (ui - 1) * LM_Length             &
+                         + l
+
+                    There = (re*Degree + d) + 1
+
+!                    PRINT*,"Here",FP_Coeff_Vector_Beta(Here),Here, There, ui, re, d, l
+!                    FP_Coeff_Vector(There,l-1,ui+2) = FP_Coeff_Vector_Beta(Here)
+                    FP_Coeff_Vector(There,l-1,ui+2) = Work_Vec(Here)
+
+                END DO  ! l
+            END DO ! d
+        END DO ! re
+    END DO ! ui
+
+
+
+END IF
+
+
+
+
+
+END SUBROUTINE Solve_FP_System_Beta
 
 
 

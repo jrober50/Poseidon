@@ -50,7 +50,9 @@ USE Variables_Derived, &
                             Elem_Prob_Dim_Sqr,      &
                             Block_Prob_Dim,         &
                             SubShell_Prob_Dim,      &
-                            Num_Off_Diagonals
+                            Num_Off_Diagonals,      &
+                            Beta_Prob_Dim,          &
+                            Beta_Elem_Prob_Dim
                             
 USE Variables_Functions, &
                     ONLY :  Matrix_Location,            &
@@ -121,6 +123,10 @@ ELEM_PROB_DIM_SQR   = ELEM_PROB_DIM*ELEM_PROB_DIM
 BLOCK_PROB_DIM      = NUM_CFA_VARS*BLOCK_VAR_DIM
 SUBSHELL_PROB_DIM   = NUM_CFA_VARS*SUBSHELL_VAR_DIM
 
+
+
+Beta_Prob_Dim       = 3*Var_Dim
+Beta_Elem_Prob_Dim  = 3*Elem_Var_Dim
 
 
 NUM_OFF_DIAGONALS = ULM_LENGTH*(DEGREE + 1) - 1

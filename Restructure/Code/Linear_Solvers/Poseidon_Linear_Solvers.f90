@@ -401,7 +401,7 @@ SUBROUTINE JACOBI_CONDITIONING(A,b)
 
 
 COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1), INTENT(INOUT)                        :: b
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1, 0:NUM_R_NODES-1), INTENT(INOUT)       :: A
+COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1), INTENT(INOUT)       :: A
 
 
 INTEGER                                                                         :: i, j
@@ -415,6 +415,7 @@ One = 1.0_idp
 Zero = 0.0_idp
 
 DO i = 0,NUM_R_NODES-1
+!    PRINT*,"A(i,i)",A(i,i)
     CONDITIONER(i,i) = 1.0_idp/A(i,i)
 END DO
 
@@ -436,6 +437,47 @@ END SUBROUTINE JACOBI_CONDITIONING
 
 
 
+!+202+##########################################################################################!
+!                                                                                               !
+!                                           JACOBI CONDITIONING                                 !
+!                                                                                               !
+!###############################################################################################!
+SUBROUTINE JACOBI_CONDITIONING_Beta(A,b, rows, cols )
+
+COMPLEX(KIND = idp), DIMENSION(1:Rows), INTENT(INOUT)               :: b
+COMPLEX(KIND = idp), DIMENSION(1:Rows, 1:Cols), INTENT(INOUT)       :: A
+
+INTEGER                                 , INTENT(IN)                :: rows, cols
+
+
+INTEGER                                                                         :: i, j
+
+COMPLEX(KIND = idp), DIMENSION(1:cols)                                  :: TMP_VEC
+COMPLEX(KIND = idp), DIMENSION(1:cols, 1:rows)                          :: CONDITIONER, TMP_MAT
+COMPLEX(KIND = idp)                                                     :: One, Zero
+
+CONDITIONER = 0.0_idp
+One = 1.0_idp
+Zero = 0.0_idp
+
+DO i = 1,rows
+    CONDITIONER(i,i) = 1.0_idp/A(i,i)
+END DO
+
+
+CALL ZGEMM('N','N',rows, rows, rows, One, CONDITIONER, rows, &
+                        A, rows, Zero,TMP_MAT, rows )
+
+CALL ZGEMV('N', rows, rows, One, CONDITIONER, rows, b, 1, Zero, TMP_VEC, 1)
+
+
+
+b = TMP_VEC
+A = TMP_MAT
+
+
+
+END SUBROUTINE JACOBI_CONDITIONING_Beta
 
 
 

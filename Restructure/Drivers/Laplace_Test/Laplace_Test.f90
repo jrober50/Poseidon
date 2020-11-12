@@ -32,7 +32,8 @@ USE Poseidon_IO_Module, &
                         Output_Final_Results
 
 USE Poseidon_Main_Module, &
-                ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions
+                ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions,       &
+                        Poseidon_Close
 
 USE FP_Method_Module, &
                 ONLY :  Solve_FP_System
@@ -79,7 +80,7 @@ CALL MPI_INIT(ierr)
 !!   Poseidon Initialization Variables   !!
 !!                                       !!
 
-Units_Input         = "G"
+Units_Input         = "U"
 Solver_Type         = 2
 
 
@@ -91,7 +92,7 @@ Dimension_Input     = 1
 Mesh_Type           = 1
 Domain_Edge(1)      = 1.0_idp   ! Inner Radius
 Domain_Edge(2)      = 2.0_idp   ! Outer Radius
-NE(1)               = 256       ! Number of Radial Elements
+NE(1)               = 64       ! Number of Radial Elements
 NE(2)               = 1         ! Number of Theta Elements
 NE(3)               = 1         ! Number of Phi Elements
 
@@ -169,10 +170,11 @@ CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_
 Call Solve_FP_System()
 
 
-
 IF ( Write_Results_Flag == 1 ) THEN
     CALL Output_Final_Results()
 END IF
+
+CALL Poseidon_Close()
 
 
 END PROGRAM Laplace_Test

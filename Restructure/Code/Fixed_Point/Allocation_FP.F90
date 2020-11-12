@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Allocation                                                                !##!
+MODULE Allocation_FP                                                                !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -41,11 +41,14 @@ USE Poseidon_Parameters, &
 Use Variables_Derived, &
             ONLY :  Num_R_Nodes,            &
                     Num_R_Nodesp1,          &
-                    LM_Length
+                    LM_Length,              &
+                    Var_Dim,                &
+                    Beta_Prob_Dim
 
 
 USE Variables_FP, &
             ONLY :  Laplace_Matrix_Full,    &
+                    Laplace_Matrix_Beta,    &
                     Laplace_Matrix_VAL,     &
                     Laplace_Matrix_ROW,     &
                     Laplace_Matrix_COL,     &
@@ -54,7 +57,9 @@ USE Variables_FP, &
                     Laplace_Factored_COL,   &
                     Laplace_NNZ,            &
                     FP_Source_Vector,       &
+                    FP_Source_Vector_Beta,  &
                     FP_Coeff_Vector,        &
+                    FP_Coeff_Vector_Beta,   &
                     FP_Update_Vector,       &
                     FP_Laplace_Vector,      &
                     FP_Residual_Vector,     &
@@ -78,11 +83,13 @@ CONTAINS
 !                            Allocate_Poseidon_Variables                         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Allocate_FP_Variables()
+SUBROUTINE Allocate_FP()
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
 
     ALLOCATE( Laplace_Matrix_Full(1:NUM_R_NODES,1:NUM_R_NODES,0:L_LIMIT,1:Num_Matrices) )
+    ALLOCATE( Laplace_Matrix_Beta(1:Beta_Prob_Dim,1:Beta_Prob_Dim) )
+
 
 ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 
@@ -98,7 +105,9 @@ END IF
 
 
 ALLOCATE( FP_Source_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:NUM_CFA_EQS)   )
+ALLOCATE( FP_Source_Vector_Beta(1:Beta_Prob_Dim) )
 ALLOCATE( FP_Coeff_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:5)        )
+ALLOCATE( FP_Coeff_Vector_Beta(1:Beta_Prob_Dim) )
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:NUM_CFA_EQS)   )
 ALLOCATE( FP_Laplace_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:NUM_CFA_EQS)  )
 ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:NUM_CFA_EQS) )
@@ -108,7 +117,7 @@ ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)   )
 ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)    )
 
 
-END SUBROUTINE Allocate_FP_Variables
+END SUBROUTINE Allocate_FP
 
 
 
@@ -125,23 +134,31 @@ END SUBROUTINE Allocate_FP_Variables
 !                           Deallocate_Poseidon_Variables                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Deallocate_FP_Variables()
+SUBROUTINE Deallocate_FP()
 
-DEALLOCATE( Laplace_Matrix_Full )
+IF ( MATRIX_FORMAT == 'Full' ) THEN
+    DEALLOCATE( Laplace_Matrix_Full )
+ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
+    DEALLOCATE( Laplace_Matrix_VAL )
+    DEALLOCATE( Laplace_Matrix_ROW )
+    DEALLOCATE( Laplace_Matrix_COL )
 
-DEALLOCATE( Laplace_Matrix_VAL )
-DEALLOCATE( Laplace_Matrix_ROW )
-DEALLOCATE( Laplace_Matrix_COL )
+    DEALLOCATE( Laplace_Factored_VAL )
+    DEALLOCATE( Laplace_Factored_ROW )
+    DEALLOCATE( Laplace_Factored_COL )
+END IF
 
 DEALLOCATE( FP_Source_Vector )
 DEALLOCATE( FP_Coeff_Vector )
 DEALLOCATE( FP_Update_Vector )
+DEALLOCATE( FP_Laplace_Vector )
+DEALLOCATE( FP_Residual_Vector )
 
 DEALLOCATE( First_Column_Storage )
 DEALLOCATE( Last_Column_Storage )
 
 
-END SUBROUTINE Deallocate_FP_Variables
+END SUBROUTINE Deallocate_FP
 
 
 
@@ -149,5 +166,5 @@ END SUBROUTINE Deallocate_FP_Variables
 
 
 
-END MODULE FP_Allocation
+END MODULE Allocation_FP
 

@@ -81,7 +81,7 @@ USE Functions_Mesh, &
             ONLY :  Generate_Defined_Mesh
                     
 
-USE Poseidon_Allocation_Module, &
+USE Allocation_Core, &
             ONLY :  Deallocate_Poseidon_CFA_Variables
 
 
@@ -92,6 +92,20 @@ USE CFA_Newton_Raphson_3D_Module, &
 USE FP_Method_Module,  &
             ONLY :  Fixed_Point_Method
 
+USE Allocation_Mesh, &
+            ONLY : Deallocate_Mesh
+
+USE Allocation_Quadrature, &
+            ONLY : Deallocate_Quadrature
+
+USE Allocation_Tables, &
+            ONLY : Deallocate_Tables
+
+USE Allocation_NR, &
+            ONLY : Deallocate_NR
+
+USE Allocation_FP, &
+            ONLY : Deallocate_FP
 USE mpi
 
 
@@ -183,6 +197,17 @@ SUBROUTINE Poseidon_Close()
 
 !!!!  Deallocate Data Space !!!!
 CALL Deallocate_Poseidon_CFA_Variables
+
+CALL Deallocate_Mesh()
+CALL Deallocate_Quadrature()
+CALL Deallocate_Tables()
+
+IF ( Solver_Type == 1 ) THEN
+    CALL Deallocate_NR
+ELSE IF ( Solver_Type == 2 ) THEN
+    CALL Deallocate_FP
+END IF
+
 
 Test_Space_Allocated_Flag = .FALSE.
 

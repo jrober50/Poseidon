@@ -30,7 +30,8 @@ USE Poseidon_Numbers_Module, &
                     ONLY : pi
 
 USE Poseidon_Parameters, &
-            ONLY :  Degree,                 &
+            ONLY :  Domain_Dim,             &
+                    Degree,                 &
                     L_Limit
 
 USE Variables_MPI, &
@@ -170,15 +171,22 @@ IF ( L_LIMIT > 0 ) THEN
 END IF
 
 
+IF ( DOMAIN_DIM == 1 ) THEN
+     M_VALUES = 0
+ELSE IF ( DOMAIN_DIM == 2 ) THEN
+     M_VALUES = 0
+ELSE IF ( DOMAIN_DIM == 3 ) THEN
+     M_VALUES = (/(l,l=0,L_LIMIT,1)/)
+END IF
+
+
 Sqrt_Term(0) = 0.0_idp
 DO l = 1,L_LIMIT
 
     REAL_L = REAL(l, idp)
 
     DO m = -M_VALUES(l),M_VALUES(l)
-
         Sqrt_Term(LM_Location(l,m)) = SQRT((2*REAL_L + 1)/(2*REAL_L - 1)* REAL( (l-m)*(l+m), idp) )
-
     END DO ! m Loop
 END DO ! l Loop
 

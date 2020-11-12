@@ -47,16 +47,26 @@ MPI_MODE        =ON
 #MPI_MODE       =OFF
 
 
-
 Main : $(POSEIDON)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Driver.f90  -o $(OBJ)/Driver.o
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Laplace_Test.f90  -o $(OBJ)/Laplace_Test.o
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/$(TEST_NAME).x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
+
+Mapping : $(POSEIDON)
+	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Laplace_Mapping.f90  -o $(OBJ)/Laplace_Mapping.o
+	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Mapping.x
+	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
+
+
 
 
 run : 
 	./$(BIN)/$(TEST_NAME).x
+
+run_Mapping : 
+	./$(BIN)/Laplace_Mapping.x
 
 clean:
 	rm -f $(OBJ)/*.o

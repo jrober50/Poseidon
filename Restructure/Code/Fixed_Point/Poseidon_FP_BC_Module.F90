@@ -48,8 +48,8 @@ USE Poseidon_Parameters, &
                     NUM_CFA_EQs
 
 USE Variables_FP, &
-            ONLY :  First_Column_Storage,               &
-                    Last_Column_Storage,                &
+            ONLY :  First_Column_Storage,       &
+                    Last_Column_Storage,        &
                     CFA_EQ_Map
 
 USE Variables_Mesh, &
@@ -58,7 +58,10 @@ USE Variables_Mesh, &
                     R_OUTER
 
 USE Variables_Derived, &
-            ONLY :  Num_R_Nodes
+            ONLY :  Num_R_Nodes,                &
+                    Beta_Prob_Dim,              &
+                    Beta_Elem_Prob_Dim,         &
+                    LM_Length
 
 USE Variables_BC, &
             ONLY :  INNER_CFA_BC_VALUES,        &
@@ -89,7 +92,6 @@ CONTAINS
 !   Input                                                                           !
 !                                                                                   !
  !#################################################################################!
-
 SUBROUTINE DIRICHLET_BC(WORK_MAT, WORK_VEC, L, M, ui)
 
 INTEGER, INTENT(IN)                                                                     :: L, M, ui
@@ -153,6 +155,7 @@ IF (OUTER_CFA_BC_TYPE(uj)  == "D") THEN
 
         WORK_VEC(NUM_R_NODES-i) = WORK_VEC(NUM_R_NODES-i)       &
                                   - WORK_MAT(NUM_R_NODES, NUM_R_NODES-i)*BC_Value
+                                    
 
     END DO
 
@@ -600,6 +603,112 @@ END SUBROUTINE DIRICHLET_BC_CHOL
 
 
 
+
+
+
+
+!+101+############################################################################!
+!                                                                                   !
+!       Dirichlet_BC                                                                !
+!                                                                                   !
+!-----------------------------------------------------------------------------------!
+!                                                                                   !
+!   Input                                                                           !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
+
+COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim), INTENT(INOUT)                  :: WORK_VEC
+
+COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim,1:Beta_Prob_Dim), INTENT(INOUT)  :: WORK_MAT
+
+
+
+
+INTEGER                 :: i, shift, uj, ui, m, l, d, Here
+
+
+COMPLEX(KIND = idp)                                                         :: BC_Value
+
+
+DO ui = 1,3
+    uj = ui + 2
+
+    IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+
+        BC_Value =  2.0_idp*sqrt(pi)*INNER_CFA_BC_VALUES(uj)
+
+
+        WORK_VEC(1) = BC_Value
+        DO i = 2,DEGREE+1
+            WORK_VEC(i) = WORK_VEC(i) - WORK_MAT(1,i)*BC_Value
+        END DO
+
+
+
+
+        WORK_MAT(1,:) = 0.0_idp
+        WORK_MAT(:,1) = 0.0_idp
+        WORK_MAT(1,1) = 1.0_idp
+
+    END IF
+
+
+
+    shift = 0
+    IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
+        shift = 1
+    END IF
+
+    IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
+
+        DO l = 0,L_LIMIT
+            DO m = -l,l
+
+
+                IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN
+                    BC_Value = 2.0_idp*sqrt(pi)*OUTER_CFA_BC_VALUES(uj)
+                ELSE
+                    BC_Value = 0.0_idp
+                END IF
+
+
+                Here = (Num_R_Nodes-1) * 3 * LM_Length  &
+                        + (ui - 1) * LM_Length          &
+                        + 1
+            
+
+                DO i = 0,Beta_Elem_Prob_Dim-1
+                    Work_Vec(Beta_Prob_Dim-i) = Work_Vec(Beta_Prob_Dim-i)       &
+                                              - Work_Mat(Beta_Prob_Dim-i,Here)*BC_Value
+                END DO
+
+
+                ! Set the BC Value in the Coefficient Vector
+                ! l,m = 0  is set to the BC
+                ! l,m != 0 is set to zero.
+                WORK_VEC( Here ) = BC_Value
+                DO i = 1,LM_Length - 1
+                    WORK_VEC(Here + i ) = 0.0_idp
+                END DO
+
+                ! Transform the Stiffness Matrix
+                DO i = 0,LM_Length-1
+                    WORK_MAT(Here+i,:)    = 0.0_idp
+                    WORK_MAT(:,Here+i)    = 0.0_idp
+                    WORK_MAT(Here+i,Here+i) = 1.0_idp
+                END DO
+
+            END DO !
+        END DO ! l Loop
+
+    END IF
+
+
+END DO ! i Loop
+
+
+END SUBROUTINE DIRICHLET_BC_Beta
 
 
 

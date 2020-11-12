@@ -59,8 +59,8 @@ USE Variables_FP, &
                     Laplace_NNZ,                &
                     Num_Matrices
 
-USE FP_Allocation, &
-            ONLY :  Allocate_FP_Variables
+USE Allocation_FP, &
+            ONLY :  Allocate_FP
 
 USE FP_Functions_Mapping, &
             ONLY :  FP_LM_Map
@@ -128,9 +128,7 @@ CALL Create_Eq_Maps()
 Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
 
 
-CALL Allocate_FP_Variables()
-
-LM_Location => FP_LM_Map
+CALL Allocate_FP()
 
 CALL Initialize_Laplace_Matrices()
 

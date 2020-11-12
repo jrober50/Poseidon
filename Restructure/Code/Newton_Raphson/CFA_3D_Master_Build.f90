@@ -495,6 +495,7 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
             DO pd = 1,NUM_P_QUAD_POINTS
                 tpd = (td-1)*NUM_P_QUAD_POINTS + pd
                 TP_SIN_SQUARE(tpd) = SIN_SQUARE(td)
+                
             END DO
         END DO
 

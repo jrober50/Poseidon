@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Poseidon_Allocation_Module                                                   !##!
+MODULE Allocation_Core                                                              !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -158,15 +158,6 @@ END SUBROUTINE Allocate_Poseidon_CFA_Variables
 !################################################################################!
 SUBROUTINE Deallocate_Poseidon_CFA_Variables()
 
-DEALLOCATE( Update_Vector )
-DEALLOCATE( Coefficient_Vector )
-
-
-DEALLOCATE( Block_RHS_Vector )
-DEALLOCATE( Block_STF_Mat )
-DEALLOCATE( Block_ELEM_STF_MATVEC )
-
-
 
 
 
@@ -177,6 +168,7 @@ DEALLOCATE( Block_Source_Si )
 
 
 DEALLOCATE( ITER_TIME_TABLE )
+DEALLOCATE( Frame_TIME_TABLE )
 DEALLOCATE( RUN_TIME_TABLE  )
 
 DEALLOCATE( Frame_Update_Table )
@@ -191,4 +183,4 @@ END SUBROUTINE Deallocate_Poseidon_CFA_Variables
 
 
 
-END MODULE Poseidon_Allocation_Module
+END MODULE Allocation_Core
