@@ -94,7 +94,7 @@ USE Functions_Mesh, &
                 ONLY :  Generate_Defined_Mesh
 
 USE SelfSimilar_Module, &
-            ONLY :  UNPACK_SELF_SIMILAR,                        &
+            ONLY :  Initialize_Yahil_Sources,                        &
                     SELFSIM_NEWT_SOL,                           &
                     SELFSIM_SHIFT_SOL
  
@@ -297,7 +297,7 @@ ELSE IF (Test_Number == 2) THEN
 
 ELSE IF ( Test_Number == 3) THEN
 
-    CALL UNPACK_SELF_SIMILAR( SELFSIM_T, SELFSIM_KAPPA, SELFSIM_GAMMA, SELFSIM_ECC,  &
+    CALL Initialize_Yahil_Sources( SELFSIM_T, SELFSIM_KAPPA, SELFSIM_GAMMA, SELFSIM_ECC,  &
                               Num_Locs, R_Quad, T_QUAD,                 &
                               NUM_LOCAL_R, NUM_LOCAL_T, NUM_LOCAL_P,    &
                               deltar, r_locs, t_locs,                   &

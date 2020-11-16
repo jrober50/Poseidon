@@ -315,7 +315,6 @@ CALL Initialize_Mesh( )
 
 
 
-
 IF ( PRESENT( Solver_Type_Option ) ) THEN
     Solver_Type = Solver_Type_Option
 ELSE
@@ -353,19 +352,18 @@ END IF
 
 LM_Location => CFA_3D_LM_Map
 
+
 CALL Allocate_Poseidon_CFA_Variables()
 CALL Initialize_Derived()
 CALL Initialize_Quadrature()
 CALL Initialize_MPI()
 CALL Initialize_Tables()
 
-
 IF ( Solver_Type == 1 ) THEN
     CALL Initialize_NR()
 ELSE IF ( Solver_Type == 2 ) THEN
     CALL Initialize_FP(CFA_EQ_Flags_Option)
 END IF
-
 
 CALL Output_Setup_Table()
 

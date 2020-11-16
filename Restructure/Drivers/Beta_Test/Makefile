@@ -18,8 +18,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-CMODE   =DEBUG
-#CMODE  =OPTIMIZE
+#CMODE   =DEBUG
+CMODE  =OPTIMIZE
 
 
 ## Compile with Openmp
@@ -55,8 +55,8 @@ Beta    : $(POSEIDON)
 
 Mapping : $(POSEIDON)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Laplace_Mapping.f90  -o $(OBJ)/Laplace_Mapping.o
-	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Mapping.x
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Beta_Mapping.f90  -o $(OBJ)/Beta_Mapping.o
+	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Beta_Mapping.x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 
@@ -75,7 +75,7 @@ run :
 	./$(BIN)/Beta.x
 
 run_Mapping : 
-	./$(BIN)/Laplace_Mapping.x
+	./$(BIN)/Beta_Mapping.x
 
 clean:
 	rm -f $(OBJ)/*.o

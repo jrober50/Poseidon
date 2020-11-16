@@ -186,11 +186,10 @@ DO l = 0,L_LIMIT
 END DO  ! l Loop
 
 
-Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "W")
+!Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "W")
 
 
 IF ( CFA_EQ_Flags(3) == 1 ) THEN
-
     Mat_Loc = CFA_Mat_Map(3)
     DO l = 0,L_LIMIT
         DO re = 0,NUM_R_ELEMENTS-1
@@ -206,11 +205,9 @@ IF ( CFA_EQ_Flags(3) == 1 ) THEN
                         
                         Laplace_Matrix_Full(i, j, l,Mat_Loc)             &
                                             = Laplace_Matrix_Full(i, j, l,Mat_Loc)    &
-                                            - 2 * LPT_LPT(rd,d,dp,0,0)                  &
+                                            - 2.0_idp * LPT_LPT(rd,d,dp,0,0)                  &
                                                 / TODR * Int_Weights(rd)
 
-!                        PRINT*,LPT_LPT(rd,d,dp,0,0)                  &
-!                        / TODR * Int_Weights(rd),   re, rd, d, dp
                         
                     END DO  ! rd Loop
 
@@ -219,7 +216,7 @@ IF ( CFA_EQ_Flags(3) == 1 ) THEN
         END DO  ! re Loop
     END DO  ! l Loop
 
-Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "X")
+!Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "X")
    
 END IF
 

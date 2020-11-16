@@ -25,7 +25,8 @@ USE Variables_MPI, &
                 ONLY :  ierr
 
 USE Variables_FP, &
-                ONLY :  FP_Coeff_Vector_Beta,       &
+                ONLY :  FP_Coeff_Vector,            &
+                        FP_Coeff_Vector_Beta,       &
                         FP_Source_Vector_Beta
 
 USE Functions_Mesh, &
@@ -34,6 +35,9 @@ USE Functions_Mesh, &
 USE Poseidon_IO_Module, &
                 ONLY :  Open_Run_Report_File,       &
                         Output_Final_Results
+
+USE IO_Print_Results, &
+                ONLY :  Print_Results
 
 USE Poseidon_Main_Module, &
                 ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions,       &
@@ -78,6 +82,7 @@ REAL(idp)                                               ::  Shift_Vector_BC
 CHARACTER(LEN=1), DIMENSION(1:5)                        ::  INNER_BC_TYPES, OUTER_BC_TYPES
 REAL(idp), DIMENSION(1:5)                               ::  INNER_BC_VALUES, OUTER_BC_VALUES
 
+CHARACTER(LEN=10)                                       ::  Suffix_Input
 
 CALL MPI_INIT(ierr)
 
@@ -92,25 +97,27 @@ Solver_Type         = 2
 FEM_Degree_Input    = 1
 L_Limit_Input       = 0
 
-Dimension_Input     = 1
+Dimension_Input     = 3
 
 Mesh_Type           = 1
 Domain_Edge(1)      = 1.0_idp   ! Inner Radius
 Domain_Edge(2)      = 2.0_idp   ! Outer Radius
-NE(1)               = 64        ! Number of Radial Elements
+NE(1)               = 256        ! Number of Radial Elements
 NE(2)               = 1         ! Number of Theta Elements
 NE(3)               = 1         ! Number of Phi Elements
 
 NQ(1)               = 10        ! Number of Radial Quadrature Points
 NQ(2)               = 5         ! Number of Theta Quadrature Points
-NQ(3)               = 5         ! Number of Phi Quadrature Points
+NQ(3)               = 5        ! Number of Phi Quadrature Points
 
 Verbose             = .TRUE.    !
+Suffix_Input        = "Params"
 
 CFA_Eqs = [0, 0, 1, 0, 0]
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)
 OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
+
 
 Shift_Vector_BC = -1.0E2_idp
 OUTER_BC_VALUES = (/0.0_idp, 0.0_idp, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
@@ -151,6 +158,7 @@ CALL Initialize_Poseidon &
 !        dr_Option               = dx_c,             &
 !        dt_Option               = dy_c,             &
 !        dp_Option               = dz_c              &
+        Suffix_Flag_Option       = Suffix_Input,    &
         Solver_Type_Option       = Solver_Type,     &
         CFA_Eq_Flags_Option      = CFA_Eqs,         &
         Verbose_Option           = Verbose          )
@@ -169,12 +177,19 @@ FP_Source_Vector_Beta = 0.0_idp
 
 
 ! For this test, the initial guess is zero
+FP_Coeff_Vector       = 0.0_idp
 FP_Coeff_Vector_Beta  = 0.0_idp
 
 
 !Call Solve_FP_System()
 Call Solve_FP_System_Beta()
 
+IF (Verbose .EQV. .TRUE. ) THEN
+    CALL Print_Results()
+END IF
+
+
+Write_Results_Flag = 1
 IF ( Write_Results_Flag == 1 ) THEN
     CALL Output_Final_Results()
 END IF

@@ -512,7 +512,7 @@ IF (LINEAR_SOLVER =='Full') THEN
 
                 CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
 
-                Call Output_Laplace(Work_Mat, NUM_R_NODES, NUM_R_NODES, "Y")
+!                Call Output_Laplace(Work_Mat, NUM_R_NODES, NUM_R_NODES, "Y")
 
                 CALL NEUMANN_BC(l, WORK_VEC)
 
@@ -524,7 +524,7 @@ IF (LINEAR_SOLVER =='Full') THEN
 
                 PRINT*,Work_Vec
 
-                Call Output_Laplace(Work_Mat, NUM_R_NODES, NUM_R_NODES, "Z")
+!                Call Output_Laplace(Work_Mat, NUM_R_NODES, NUM_R_NODES, "Z")
 
 
                 CALL ZGESV(NUM_R_NODES, 1, WORK_MAT, NUM_R_NODES, IPIV, WORK_VEC, NUM_R_NODES, INFO)
@@ -1142,7 +1142,7 @@ IF (LINEAR_SOLVER =='Full') THEN
 
 
 !    PRINT*,"After Dirichlet_BC"
-    Call Output_Laplace_Beta(Work_Mat, Beta_Prob_Dim, Beta_Prob_Dim, "C")
+!    Call Output_Laplace_Beta(Work_Mat, Beta_Prob_Dim, Beta_Prob_Dim, "C")
 !    CALL NEUMANN_BC(l, WORK_VEC)
 
     
@@ -1152,7 +1152,7 @@ IF (LINEAR_SOLVER =='Full') THEN
     CALL JACOBI_CONDITIONING_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
     
 
-    Call Output_Laplace_Beta(Work_Mat, Beta_Prob_Dim, Beta_Prob_Dim, "D")
+!    Call Output_Laplace_Beta(Work_Mat, Beta_Prob_Dim, Beta_Prob_Dim, "D")
 
 
 !    PRINT*,Work_Vec

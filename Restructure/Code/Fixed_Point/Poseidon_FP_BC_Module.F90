@@ -645,8 +645,6 @@ DO ui = 1,3
         END DO
 
 
-
-
         WORK_MAT(1,:) = 0.0_idp
         WORK_MAT(:,1) = 0.0_idp
         WORK_MAT(1,1) = 1.0_idp
@@ -675,29 +673,22 @@ DO ui = 1,3
 
                 Here = (Num_R_Nodes-1) * 3 * LM_Length  &
                         + (ui - 1) * LM_Length          &
-                        + 1
-            
+                        + l*(l+1) + m + 1
 
                 DO i = 0,Beta_Elem_Prob_Dim-1
                     Work_Vec(Beta_Prob_Dim-i) = Work_Vec(Beta_Prob_Dim-i)       &
                                               - Work_Mat(Beta_Prob_Dim-i,Here)*BC_Value
                 END DO
 
-
                 ! Set the BC Value in the Coefficient Vector
                 ! l,m = 0  is set to the BC
                 ! l,m != 0 is set to zero.
                 WORK_VEC( Here ) = BC_Value
-                DO i = 1,LM_Length - 1
-                    WORK_VEC(Here + i ) = 0.0_idp
-                END DO
 
                 ! Transform the Stiffness Matrix
-                DO i = 0,LM_Length-1
-                    WORK_MAT(Here+i,:)    = 0.0_idp
-                    WORK_MAT(:,Here+i)    = 0.0_idp
-                    WORK_MAT(Here+i,Here+i) = 1.0_idp
-                END DO
+                WORK_MAT(Here,:)    = 0.0_idp
+                WORK_MAT(:,Here)    = 0.0_idp
+                WORK_MAT(Here,Here) = 1.0_idp
 
             END DO !
         END DO ! l Loop

@@ -138,6 +138,7 @@ SUBROUTINE Deallocate_FP()
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
     DEALLOCATE( Laplace_Matrix_Full )
+    DEALLOCATE( Laplace_Matrix_Beta )
 ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     DEALLOCATE( Laplace_Matrix_VAL )
     DEALLOCATE( Laplace_Matrix_ROW )
@@ -149,7 +150,9 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 END IF
 
 DEALLOCATE( FP_Source_Vector )
+DEALLOCATE( FP_Source_Vector_Beta )
 DEALLOCATE( FP_Coeff_Vector )
+DEALLOCATE( FP_Coeff_Vector_Beta )
 DEALLOCATE( FP_Update_Vector )
 DEALLOCATE( FP_Laplace_Vector )
 DEALLOCATE( FP_Residual_Vector )

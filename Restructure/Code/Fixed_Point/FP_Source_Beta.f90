@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Source_Vector_Module                                             !##!
+MODULE FP_Source_Beta                                                               !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -498,69 +498,32 @@ COMPLEX(KIND = idp)                                                     ::  Inne
 
 
 DO ui = 1,NUM_CFA_EQs
+DO d = 0,DEGREE
+DO lm_loc = 0,LM_LENGTH-1
 
-    IF ( CFA_EQ_Map(ui) < 3 ) THEN
-        DO d = 0,DEGREE
-        DO lm_loc = 0,LM_LENGTH-1
-
-            RHS_TMP = 0.0_idp
+    RHS_TMP = 0.0_idp
 
 
-            DO rd = 1,NUM_R_QUAD_POINTS
+    DO rd = 1,NUM_R_QUAD_POINTS
 
 
-                RHS_TMP(ui) =  RHS_TMP(ui)                                          &
-                                + SUM( Source_Terms( :, rd, CFA_EQ_Map(ui) )        &
-                                        * Ylm_CC_Values( :, lm_loc, te, pe)         &
-                                        * TP_Int_Weights(:)                     )   &
-                                * Lagrange_Poly_Table(d, rd, 0)                     &
-                                * R_Int_Weights(rd)
+        RHS_TMP(ui) =  RHS_TMP(ui)                                          &
+                        + SUM( Source_Terms( :, rd, CFA_EQ_Map(ui) )        &
+                                * Ylm_CC_Values( :, lm_loc, te, pe)         &
+                                * TP_Int_Weights(:)                     )   &
+                        * Lagrange_Poly_Table(d, rd, 0)                     &
+                        * R_Int_Weights(rd)
 
 
-            END DO  ! rd Loop
+    END DO  ! rd Loop
 
-            Current_i_Location = FP_Vector_Map(re,d)
-            FP_Source_Vector(Current_i_Location,lm_loc,ui)                &
-                = FP_Source_Vector(Current_i_Location,lm_loc,ui)          &
-                + RHS_TMP(ui)
+    Current_i_Location = FP_Vector_Map(re,d)
+    FP_Source_Vector(Current_i_Location,lm_loc,ui)                &
+        = FP_Source_Vector(Current_i_Location,lm_loc,ui)          &
+        + RHS_TMP(ui)
 
-        END DO  ! lm_loc Loop
-        END DO  ! d Loop
-    END IF
-
-    IF( CFA_EQ_Map(ui) > 2 ) THEN
-
-
-        DO d = 0,DEGREE
-        DO lm_loc = 0,LM_LENGTH-1
-
-
-            RHS_TMP = 0.0_idp
-            DO rd = 1,NUM_R_QUAD_POINTS
-
-
-                RHS_TMP(ui) =  RHS_TMP(ui)                                          &
-                                + SUM( Source_Terms( :, rd, CFA_EQ_Map(ui) )        &
-                                        * Ylm_CC_Values( :, lm_loc, te, pe)         &
-                                        * TP_Int_Weights(:)                     )   &
-                                * Lagrange_Poly_Table(d, rd, 0)                     &
-                                * R_Int_Weights(rd)
-
-
-            END DO  ! rd Loop
-
-            Current_i_Location = (re*Degree + d)*LM_Length*3      &
-                                + (ui - 1) * LM_Length            &
-                                + lm_loc + 1
-            FP_Source_Vector_Beta(Current_i_Location)                &
-                = FP_Source_Vector_Beta(Current_i_Location)          &
-                + RHS_TMP(ui)
-
-        END DO  ! lm_loc Loop
-        END DO  ! d Loop
-
-    END IF
-
+END DO  ! lm_loc Loop
+END DO  ! d Loop
 END DO ! ui
 
 
@@ -671,4 +634,4 @@ DEALLOCATE( Source_Terms )
 
 END SUBROUTINE Deallocate_FP_Source_Variables
 
-END MODULE FP_Source_Vector_Module
+END MODULE FP_Source_Beta

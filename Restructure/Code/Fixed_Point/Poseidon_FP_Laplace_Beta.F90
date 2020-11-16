@@ -227,7 +227,7 @@ END DO ! re Loop
 ! Beta components.  To test set up three Poisson/Laplace problems and assign one to each
 ! Beta component.  There is no coupling yet, so this should solve the three independently.
 
-Call Output_Laplace_Beta(Laplace_Matrix_Beta,Beta_Prob_Dim, Beta_Prob_Dim, "A")
+!Call Output_Laplace_Beta(Laplace_Matrix_Beta,Beta_Prob_Dim, Beta_Prob_Dim, "A")
 
 
 DO re = 0,Num_R_Elements-1
@@ -302,7 +302,7 @@ DO re = 0,Num_R_Elements-1
 END DO ! re Loop
 
 
-Call Output_Laplace_Beta(Laplace_Matrix_Beta,Beta_Prob_Dim, Beta_Prob_Dim,"B")
+!Call Output_Laplace_Beta(Laplace_Matrix_Beta,Beta_Prob_Dim, Beta_Prob_Dim,"B")
 
 !PRINT*,"STOPPING at end of Initialize_Laplace_Matrices_Beta"
 !STOP
@@ -618,91 +618,89 @@ INTEGER                                                     :: row, col
 
 
 ui = 1
-Col = (re*Degree + d)* 3 * LM_Length       &
+Row = (re*Degree + d)* 3 * LM_Length       &
         + (ui - 1) * LM_Length             &
         + (l*(l+1) + m ) + 1
 
 
-uj = 1
 DO dp = 0,Degree
-
+uj = 1
 DO lp = 0,L_Limit
 DO mp = -lp,lp
-    Row = (re*Degree + dp) * 3 * LM_Length   &
+    Col = (re*Degree + dp) * 3 * LM_Length   &
         + (uj - 1) * LM_Length              &
         + (lp*(lp+1) + mp ) + 1
 
     DO rd = 1,Num_R_Quad_Points
-        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)           &
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)           &
                                         - 1.0_idp/3.0_idp                       &   ! Term 1
                                             * SUM( TP_TP_Factor(:,l,lp)  )      &
                                             * dRdR_Factor(rd, d, dp)            &
                                         - 8.0_idp/(3.0_idp * R_Square(rd))      &   ! Term 2
                                             * SUM( TP_TP_Factor(:,l,lp)  )      &
                                             * RR_Factor(rd, d, dp)
-
-!        PRINT*, RR_Factor(rd, d, dp),re, rd, d, dp
+    
 
     END DO ! rd Loop
+
+END DO ! lp Loop
+END DO ! mp Loop
+
+
+uj = 2
+
+DO lp = 0,L_Limit
+DO mp = -lp,lp
+
+
+    Col = (re*Degree + dp) * 3 * LM_Length  &
+        + (uj - 1) * LM_Length          &
+        + (lp*(lp+1) + mp ) + 1
+
+
+    DO rd = 1,Num_R_Quad_Points
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)                       &
+                                        - 1.0_idp/3.0_idp                                   &   ! Term 1
+                                            * SUM( TP_dTP_Factor(:,l,lp)  )                 &
+                                            * dRR_Factor(rd, d, dp)                         &
+                                        - 1.0_idp/3.0_idp                                   &   ! Term 2
+                                            * SUM( TP_TP_Factor(:,l,lp) * Cotan_Val(:) )    &
+                                            * dRR_Factor(rd, d, dp)                         &
+                                        - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 3
+                                            * SUM( dTP_TP_Factor(:,l,lp) )                  &
+                                            * RR_Factor(rd, d, dp)                          &
+                                        - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 4
+                                            * SUM( TP_TP_Factor(:,l,lp) * COTAN_VAL(:)  )   &
+                                            * RR_Factor(rd, d, dp)
+
+    END DO ! rd Loop
+
 END DO ! lp Loop
 END DO ! mp Loop
 
 
 
-!uj = 2
-!
-!DO lp = 0,L_Limit
-!DO mp = -lp,lp
-!
-!
-!    Row = (re*Degree + dp) * 3 * LM_Length  &
-!        + (uj - 1) * LM_Length          &
-!        + (lp*(lp+1) + mp ) + 1
-!
-!    DO rd = 1,Num_R_Quad_Points
-!        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)                       &
-!                                        - 1.0_idp/3.0_idp                                   &   ! Term 1
-!                                            * SUM( TP_dTP_Factor(:,l,lp)  )                 &
-!                                            * dRR_Factor(rd, d, dp)                         &
-!                                        - 1.0_idp/3.0_idp                                   &   ! Term 2
-!                                            * SUM( TP_TP_Factor(:,l,lp) * Cotan_Val(:) )    &
-!                                            * dRR_Factor(rd, d, dp)                         &
-!                                        - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 3
-!                                            * SUM( dTP_TP_Factor(:,l,lp) )                  &
-!                                            * RR_Factor(rd, d, dp)                          &
-!                                        - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 4
-!                                            * SUM( TP_TP_Factor(:,l,lp) * COTAN_VAL(:)  )   &
-!                                            * RR_Factor(rd, d, dp)
-!
-!
-!    END DO ! rd Loop
-!END DO ! lp Loop
-!END DO ! mp Loop
+uj = 3 ! beta^phi
+
+DO lp = 0,L_Limit
+DO mp = -lp,lp
+    Col = (re*Degree + dp) * 3 * LM_Length  &
+        + (uj - 1) * LM_Length          &
+        + (lp*(lp+1) + mp ) + 1
 
 
+    DO rd = 1,Num_R_Quad_Points
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)           &
+                                        - 1.0_idp/3.0_idp                       &   ! Term 1
+                                            * SUM( TP_TdP_Factor(:,l,lp) )      &
+                                            * dRR_Factor(rd, d, dp)             &
+                                        - 2.0_idp/CUR_R_LOCS(rd)                &   ! Term 2
+                                            * SUM( TdP_TP_Factor(:,l,lp) )      &
+                                            * RR_Factor(rd, d, dp)
 
-!uj = 3 ! beta^phi
-!
-!DO lp = 0,L_Limit
-!DO mp = -lp,lp
-!    Row = (re*Degree + dp) * 3 * LM_Length  &
-!        + (uj - 1) * LM_Length          &
-!        + (lp*(lp+1) + mp )
-!
-!
-!    DO rd = 1,Num_R_Quad_Points
-!        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)           &
-!                                        - 1.0_idp/3.0_idp                       &   ! Term 1
-!                                            * SUM( TP_TdP_Factor(:,l,lp) )      &
-!                                            * dRR_Factor(rd, d, dp)             &
-!                                        - 2.0_idp/CUR_R_LOCS(rd)                &   ! Term 2
-!                                            * SUM( TdP_TP_Factor(:,l,lp) )      &
-!                                            * RR_Factor(rd, d, dp)
-!
-!
-!    END DO ! rd Loop
-!END DO ! lp Loop
-!END DO ! mp Loop
+    END DO ! rd Loop
+END DO ! lp Loop
+END DO ! mp Loop
 
 END DO ! dp Loop
 
@@ -752,32 +750,35 @@ INTEGER                                                     :: row, col
 
                     ! ui = 1
 ui = 2
-Col = (re*Degree + d)* 3 * LM_Length       &
+Row = (re*Degree + d)* 3 * LM_Length       &
         + (ui - 1) * LM_Length             &
-        + (l*(l+1) + m )
+        + (l*(l+1) + m ) + 1
 
-uj = 1
+
 DO dp = 0,Degree
 
-!DO lp = 0,L_Limit
-!DO mp = -lp,lp
-!    Row = (re*Degree + dp) * 3 * LM_Length      &
-!        + (uj - 1) * LM_Length                  &
-!        + (lp*(lp+1) + mp ) + 1
-!
-!    DO rd = 1,Num_R_Quad_Points
-!        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)               &
-!                                        - 1.0_idp/(3.0_idp*R_Square(rd) )           &           ! Term 1
-!                                            * SUM( dTP_TP_Factor(:,l,lp))           &
-!                                            * RdR_Factor(rd, d, dp)                 &
-!                                        + 8.0_idp/(3.0_idp*R_Square(rd)* Cur_R_Locs(rd))    &   ! Term 2
-!                                            * SUM( dTP_TP_Factor(:,l,lp)  )         &
-!                                            * RR_Factor(rd, d, dp)
-!
-!
-!    END DO ! rd Loop
-!END DO ! lp Loop
-!END DO ! mp Loop
+uj = 1
+
+DO lp = 0,L_Limit
+DO mp = -lp,lp
+    Col = (re*Degree + dp) * 3 * LM_Length      &
+        + (uj - 1) * LM_Length                  &
+        + (lp*(lp+1) + mp ) + 1
+
+    DO rd = 1,Num_R_Quad_Points
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)               &
+                                        - 1.0_idp/(3.0_idp*R_Square(rd) )           &           ! Term 1
+                                            * SUM( dTP_TP_Factor(:,l,lp))           &
+                                            * RdR_Factor(rd, d, dp)                 &
+                                        + 8.0_idp/(3.0_idp*R_Square(rd)* Cur_R_Locs(rd))    &   ! Term 2
+                                            * SUM( dTP_TP_Factor(:,l,lp)  )         &
+                                            * RR_Factor(rd, d, dp)
+
+
+
+    END DO ! rd Loop
+END DO ! lp Loop
+END DO ! mp Loop
 
 
 
@@ -785,12 +786,12 @@ uj = 2
 
 DO lp = 0,L_Limit
 DO mp = -lp,lp
-    Row = (re*Degree + dp) * 3 * LM_Length  &
+    Col = (re*Degree + dp) * 3 * LM_Length  &
         + (uj - 1) * LM_Length          &
         + (lp*(lp+1) + mp ) + 1
 
     DO rd = 1,Num_R_Quad_Points
-        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)           &
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)           &
                                         - 1.0_idp/(R_Square(rd) )               &   ! Term 1
                                             * SUM( dTP_dTP_Factor(:,l,lp) )     &
                                             * RR_Factor(rd, d, dp)              &
@@ -814,26 +815,27 @@ END DO ! mp Loop
 
 
 
-!uj = 3 ! beta^phi
-!
-!DO lp = 0,L_Limit
-!DO mp = -lp,lp
-!    Row = (re*Degree + dp) * 3 * LM_Length  &
-!        + (uj - 1) * LM_Length          &
-!        + (lp*(lp+1) + mp ) + 1
-!
-!    DO rd = 1,Num_R_Quad_Points
-!        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)       &
-!                                        - 1.0_idp/(3.0_idp*R_Square(rd) )   &   ! Term 1
-!                                            * SUM( dTP_TdP_Factor(:,l,lp) ) &
-!                                            * RR_Factor(rd, d, dp)          &
-!                                        - 2.0_idp/R_Square(rd)              &   ! Term 2
-!                                            * SUM( TdP_TP_Factor(:,l,lp) * Cotan_Val(:)   )   &
-!                                            * RR_Factor(rd, d, dp)
-!
-!    END DO ! rd Loop
-!END DO ! lp Loop
-!END DO ! mp Loop
+uj = 3 ! beta^phi
+
+DO lp = 0,L_Limit
+DO mp = -lp,lp
+    Col = (re*Degree + dp) * 3 * LM_Length  &
+        + (uj - 1) * LM_Length          &
+        + (lp*(lp+1) + mp ) + 1
+
+    DO rd = 1,Num_R_Quad_Points
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)       &
+                                        - 1.0_idp/(3.0_idp*R_Square(rd) )   &   ! Term 1
+                                            * SUM( dTP_TdP_Factor(:,l,lp) ) &
+                                            * RR_Factor(rd, d, dp)          &
+                                        - 2.0_idp/R_Square(rd)              &   ! Term 2
+                                            * SUM( TdP_TP_Factor(:,l,lp) * Cotan_Val(:)   )   &
+                                            * RR_Factor(rd, d, dp)
+
+
+    END DO ! rd Loop
+END DO ! lp Loop
+END DO ! mp Loop
 
 END DO ! dp Loop
 
@@ -890,58 +892,60 @@ INTEGER                                                     :: row, col
 
 
 ui = 3
-Col = (re*Degree + d)* 3 * LM_Length       &
+Row = (re*Degree + d)* 3 * LM_Length       &
         + (ui - 1) * LM_Length             &
-        + (l*(l+1) + m )
+        + (l*(l+1) + m ) + 1
 
 
-uj = 1
+
 DO dp = 0,Degree
 
-!DO lp = 0,L_Limit
-!DO mp = -lp,lp
-!    Row = (re*Degree + dp) * 3 * LM_Length      &
-!        + (uj - 1) * LM_Length                  &
-!        + (lp*(lp+1) + mp ) + 1
-!
-!    DO rd = 1,Num_R_Quad_Points
-!        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)               &
-!                                        - 1.0_idp/(3.0_idp * R_Square(rd) )         &
-!                                            * SUM( TdP_TP_Factor(:, l, lp) )        &
-!                                            * RdR_Factor(rd, d, dp)                 &
-!                                        + 8.0_idp/(3.0_idp*Cur_R_Locs(rd) * R_Square(rd) )  & ! Term 1
-!                                            * SUM( TdP_TP_Factor(:,l,lp) / Sin_Square(:)     )   &
-!                                            * RR_Factor(rd, d, dp)
-!
-!
-!
-!    END DO ! rd Loop
-!END DO ! lp Loop
-!END DO ! mp Loop
+uj = 1
+
+DO lp = 0,L_Limit
+DO mp = -lp,lp
+    Col = (re*Degree + dp) * 3 * LM_Length      &
+        + (uj - 1) * LM_Length                  &
+        + (lp*(lp+1) + mp ) + 1
+
+    DO rd = 1,Num_R_Quad_Points
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)               &
+                                        - 1.0_idp/(3.0_idp * R_Square(rd) )         &
+                                            * SUM( TdP_TP_Factor(:, l, lp) )        &
+                                            * RdR_Factor(rd, d, dp)                 &
+                                        + 8.0_idp/(3.0_idp*Cur_R_Locs(rd) * R_Square(rd) )  & ! Term 1
+                                            * SUM( TdP_TP_Factor(:,l,lp) / Sin_Square(:)     )   &
+                                            * RR_Factor(rd, d, dp)
+
+
+    END DO ! rd Loop
+END DO ! lp Loop
+END DO ! mp Loop
 
 
 
-!uj = 2
-!
-!DO lp = 0,L_Limit
-!DO mp = -lp,lp
-!    Row = (re*Degree + dp) * 3 * LM_Length  &
-!        + (uj - 1) * LM_Length          &
-!        + (lp*(lp+1) + mp ) + 1
-!
-!    DO rd = 1,Num_R_Quad_Points
-!        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)       &
-!                                        - 1.0_idp/( 3.0_idp * R_Square(rd) )&
-!                                            * SUM( TdP_dTP_Factor(:,l,lp)/ Sin_Square(:) )   &
-!                                            * RR_Factor(rd, d, dp)          &
-!                                        + 8.0_idp/( 3.0_idp * R_Square(rd) )&   ! Term 2
-!                                            * SUM( TdP_TP_Factor(:,l,lp) * Cotan_Val(:) / Sin_Square(:)     )      &
-!                                            * RR_Factor(rd, d, dp)
-!
-!
-!    END DO ! rd Loop
-!END DO ! lp Loop
-!END DO ! mp Loop
+uj = 2
+
+DO lp = 0,L_Limit
+DO mp = -lp,lp
+    Col = (re*Degree + dp) * 3 * LM_Length  &
+        + (uj - 1) * LM_Length          &
+        + (lp*(lp+1) + mp ) + 1
+
+    DO rd = 1,Num_R_Quad_Points
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)       &
+                                        - 1.0_idp/( 3.0_idp * R_Square(rd) )&
+                                            * SUM( TdP_dTP_Factor(:,l,lp)/ Sin_Square(:) )   &
+                                            * RR_Factor(rd, d, dp)          &
+                                        + 8.0_idp/( 3.0_idp * R_Square(rd) )&   ! Term 2
+                                            * SUM( TdP_TP_Factor(:,l,lp) * Cotan_Val(:) / Sin_Square(:)     )      &
+                                            * RR_Factor(rd, d, dp)
+
+
+
+    END DO ! rd Loop
+END DO ! lp Loop
+END DO ! mp Loop
 
 
 
@@ -949,12 +953,12 @@ uj = 3 ! beta^phi
 
 DO lp = 0,L_Limit
 DO mp = -lp,lp
-    Row = (re*Degree + dp) * 3 * LM_Length  &
+    Col = (re*Degree + dp) * 3 * LM_Length  &
         + (uj - 1) * LM_Length          &
         + (lp*(lp+1) + mp ) + 1
 
     DO rd = 1,Num_R_Quad_Points
-        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Col, Row)       &
+        Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)       &
                                         - 1.0_idp/(3.0_idp * R_Square(rd) ) &  ! Term 1
                                             * SUM( TdP_TdP_Factor(:,l,lp)/Sin_Square(:) )   &
                                             * RR_Factor(rd, d, dp )         &
@@ -964,6 +968,7 @@ DO mp = -lp,lp
                                         + 2.0_idp/( R_Square(rd) )          & ! Term 3
                                             * SUM( dTP_TP_Factor(:,l,lp) * Cotan_Val(:) )    &
                                             * RR_Factor(rd, d, dp)
+
 
     END DO ! rd Loop
 END DO ! lp Loop

@@ -92,7 +92,7 @@ Dimension_Input     = 1
 Mesh_Type           = 1
 Domain_Edge(1)      = 1.0_idp   ! Inner Radius
 Domain_Edge(2)      = 2.0_idp   ! Outer Radius
-NE(1)               = 64       ! Number of Radial Elements
+NE(1)               = 5       ! Number of Radial Elements
 NE(2)               = 1         ! Number of Theta Elements
 NE(3)               = 1         ! Number of Phi Elements
 

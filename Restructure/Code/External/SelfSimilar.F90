@@ -62,14 +62,14 @@ CONTAINS
 
 !+101+###########################################################################!
 !                                                                                !
-!                  UNPACK_SELF_SIMILAR                                           !
+!                  Initialize_Yahil_Sources                                           !
 !                                                                                !
 !################################################################################!
-SUBROUTINE UNPACK_SELF_SIMILAR( t_in, kappa, gamma, ecc,                &
-                                Num_Nodes, INPUT_R_QUAD, INPUT_T_QUAD,  &
-                                NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
-                                Delta_r, r_locs, t_locs,                &
-                                Input_E, Input_S, Input_Si )
+SUBROUTINE Initialize_Yahil_Sources( t_in, kappa, gamma, ecc,                &
+                                    Num_Nodes, INPUT_R_QUAD, INPUT_T_QUAD,  &
+                                    NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
+                                    Delta_r, r_locs, t_locs,                &
+                                    Input_E, Input_S, Input_Si )
 
 
 REAL(KIND = idp),               INTENT(IN)                                              ::  t_in, kappa, gamma, ecc
@@ -134,11 +134,9 @@ INTEGER                             :: istat
 
 nread = 42
 
-OPEN(UNIT=nread, FILE='Input/YahilHomologousCollapse_Gm_130.dat', STATUS='OLD', IOSTAT=istat)
+OPEN(UNIT=nread, FILE='../../Input/YahilHomologousCollapse_Gm_130.dat', STATUS='OLD', IOSTAT=istat)
 IF ( istat .NE. 0 ) THEN
-
     PRINT*,"Could not open 'Input/YahilHomologousCollapse_Gm_130.dat'. "
-
 END IF
 REWIND(nread)
 NUM_LINES = 0
@@ -186,9 +184,9 @@ DO
 !    READ( line, 121) Input_D(CUR_LINE)
 !    READ( line, 131) Input_V(CUR_LINE)
 !    READ( line, 141) Input_M(CUR_LINE)
-
+    PRINT*,Input_X(cur_Line)
     CUR_LINE = CUR_LINE + 1
-
+    
 END DO
 
 
@@ -218,7 +216,7 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * Input_M
 
 
-IF ( .FALSE. ) THEN
+IF ( .TRUE. ) THEN
 
     PRINT*,"Using Yahil self-similar profile with following parameters."
     PRINT*,"Time = ",t," s"
@@ -257,7 +255,7 @@ END IF
 !                            Input_R, Input_D, Input_V, Input_X,             &
 !                            Input_E, Input_S, Input_Si              )
 
-
+PRINT*,"Before CONVERT_SELF_SIMILAR_3Db"
 CALL CONVERT_SELF_SIMILAR_3Db(  t, Kappa_wUnits, gamma, ecc,                   &
                             Num_Nodes, NUM_LINES,                   &
                             INPUT_R_QUAD, INPUT_T_QUAD,             &
@@ -277,12 +275,14 @@ CALL CONVERT_SELF_SIMILAR_3Db(  t, Kappa_wUnits, gamma, ecc,                   &
 !PRINT*,Input_Si
 !PRINT*," "
 
+PRINT*,"Here"
 CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
+PRINT*,"There"
 CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, Input_Si, r_locs )
-
+PRINT*,"Done"
 
  5000 RETURN
-END SUBROUTINE UNPACK_SELF_SIMILAR
+END SUBROUTINE Initialize_Yahil_Sources
 
 
 
@@ -866,7 +866,7 @@ END FUNCTION SELFSIM_NEWT_SOL
 
 !+401+###########################################################################!
 !                                                                                !
-!              CREATE_SELFSIM_SHIFT_SOL                                          !
+!                                                        !
 !                                                                                !
 !################################################################################!
 SUBROUTINE CREATE_SELFSIM_SHIFT_SOL( Num_Nodes,                                  &
