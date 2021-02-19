@@ -143,10 +143,12 @@ INTEGER, DIMENSION(1:NUM_T_QUAD_POINTS)                         ::  here
 
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:,:)        ::  Ylm_Table
 
-REAL(KIND = idp), DIMENSION(0:LM_LENGTH-1)                      ::  Sqrt_Term
+COMPLEX(KIND = idp), DIMENSION(0:LM_LENGTH-1)                      ::  Sqrt_Term
 REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  SIN_VAL, TAN_VAL
 REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  CSC_VAL, COT_VAL
 
+COMPLEX(Kind = idp)                                             ::  Tmp_Value_A
+COMPLEX(Kind = idp)                                             ::  Tmp_Value_B
 
 ALLOCATE( Ylm_Table(-L_LIMIT:L_LIMIT, -1:L_LIMIT,                           &
                     1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
@@ -186,9 +188,16 @@ DO l = 1,L_LIMIT
     REAL_L = REAL(l, idp)
 
     DO m = -M_VALUES(l),M_VALUES(l)
-        Sqrt_Term(LM_Location(l,m)) = SQRT((2*REAL_L + 1)/(2*REAL_L - 1)* REAL( (l-m)*(l+m), idp) )
+
+        Tmp_Value_A = COMPLEX( (2.0_idp * REAL_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp )
+        Tmp_Value_B = COMPLEX( (l-m)*(l+m),0.0_idp )
+
+        Sqrt_Term(LM_Location(l,m)) = zsqrt( Tmp_Value_A)*zsqrt(Tmp_Value_B)
+
     END DO ! m Loop
 END DO ! l Loop
+
+
 
 
 Ylm_Table = 0.0_idp
@@ -274,6 +283,8 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
                                                         * Ylm_Table(m,l,td, pd, te, pe)         &
                                                       - SQRT_TERM(lm_loc) * CSC_VAL(td)         &
                                                         * Ylm_Table(m,l-1,td, pd, te, pe)
+
+!                PRINT*,t_locations(td),P_Locations(pd),lm_loc, Ylm_dt_Values(lm_loc,tpd_loc,te,pe)
 
                 Ylm_dp_Values(lm_loc, tpd_loc, te, pe) = CMPLX(0,m,idp)                         &
                                                         * Ylm_Table(m,l,td, pd, te, pe)

@@ -33,6 +33,7 @@ CHARACTER(LEN = 24), PARAMETER        :: Poseidon_Results_Dir   = "Poseidon_Outp
 
 
 CHARACTER(LEN = 24), PARAMETER        :: Poseidon_Objects_Dir   = "Poseidon_Output/Objects/"
+CHARACTER(LEN = 29), PARAMETER        :: Poseidon_Mesh_Dir      = "Poseidon_Output/Objects/Mesh/"
 CHARACTER(LEN = 32), PARAMETER        :: Poseidon_Sources_Dir   = "Poseidon_Output/Objects/Sources/"
 CHARACTER(LEN = 33), PARAMETER        :: Poseidon_Residual_Dir  = "Poseidon_Output/Objects/Residual/"
 CHARACTER(LEN = 38), PARAMETER        :: Poseidon_LinSys_Dir    = "Poseidon_Output/Objects/Linear_System/"

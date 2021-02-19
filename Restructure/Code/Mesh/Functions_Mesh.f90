@@ -483,7 +483,7 @@ Scale_Factor = (Outer_Edge/tmp_Inner_Edge)**(1.0_idp/REAL(nx,KIND = idp))
 
 
 Scale_Factor_Power = 1.0_idp
-x_e(0) = tmp_Inner_Edge ! * Scale_Factor_Power
+x_e(0) = Inner_Edge ! * Scale_Factor_Power
 
 DO i = 1,nx
 

@@ -47,7 +47,7 @@ USE Poseidon_Main_Module, &
                 ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions,   &
                         Poseidon_Close
 
-USE FP_Method_Module, &
+USE Functions_FP_Solvers, &
                 ONLY :  Solve_FP_System,        &
                         Solve_FP_System_Beta
 
@@ -127,9 +127,9 @@ Degree_Min          = 1
 Degree_Max          = 3
 
 L_Limit_Min         = 0
-L_Limit_Max         = 0
+L_Limit_Max         = 2
 
-Verbose             = .TRUE.    !
+Verbose             = .FALSE.    !
 
 CFA_Eqs = [0, 0, 1, 0, 0]
 
@@ -140,7 +140,7 @@ Shift_Vector_BC = -1.0E2_idp
 OUTER_BC_VALUES = (/0.0_idp, 0.0_idp, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
 NQ(1) = 10        ! Number of Radial Quadrature Points
-NQ(2) = 10         ! Number of Theta Quadrature Points
+NQ(2) = 10        ! Number of Theta Quadrature Points
 NQ(3) = 10        ! Number of Phi Quadrature Points
 
 
@@ -149,6 +149,11 @@ NQ(3) = 10        ! Number of Phi Quadrature Points
 DO RE_Index = RE_Index_Min, RE_Index_Max
     DO FEM_Degree_Input = Degree_Min, Degree_Max
         DO L_Limit_Input = L_Limit_Min, L_Limit_Max
+
+            PRINT*,"Iteration Starting"
+            WRITE(*,'(I4.4,A,I2.2,A,I2.2,A)')RE_Table(RE_Index)," (",RE_Index," of ",RE_Index_Max,")"
+            WRITE(*,'(I2.2,A,I2.2)')FEM_Degree_Input," of ",Degree_Max
+            WRITE(*,'(I2.2,A,I2.2)')L_Limit_Input," of ",L_Limit_Max
 
             NE(1) = RE_Table(RE_Index)      ! Number of Radial Elements
             NE(2) = 1                       ! Number of Theta Elements

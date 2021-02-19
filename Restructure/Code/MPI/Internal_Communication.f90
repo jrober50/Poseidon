@@ -128,7 +128,7 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Local_RD_Dim*Local_TD_Dim*Local_PD
                                             0:Local_RE_Dim-1,           &
                                             0:Local_TE_Dim-1,           &
                                             0:Local_PE_Dim-1,           &
-                                            1:DOMAIN_DIM            )   :: My_Source_Si
+                                            1:3               )   :: My_Source_Si
 
 
 
@@ -178,7 +178,7 @@ REAL(KIND = idp), INTENT(INOUT), DIMENSION( 1:NUM_R_QUAD_POINTS,        &
                                             0:NUM_R_ELEMS_PER_BLOCK-1,  &
                                             0:NUM_T_ELEMS_PER_BLOCK-1,  &
                                             0:NUM_P_ELEMS_PER_BLOCK-1,  &
-                                            1:DOMAIN_DIM            )   ::  Block_Si
+                                            1:3                     )   ::  Block_Si
 
 
 
@@ -344,11 +344,14 @@ Size_of_Send_b = Elems_Per_Block * Num_Input_DOF*NUM_CFA_VARS
 
 Coarsen_Factor = R_Coarsen_Factor*T_Coarsen_Factor*P_Coarsen_Factor
 
+
 Coarse_RD_Dim = R_Coarsen_Factor * Local_RD_Dim
 Coarse_TD_Dim = T_Coarsen_Factor * Local_TD_Dim
 Coarse_PD_Dim = P_Coarsen_Factor * Local_PD_Dim
 
 Num_Coarse_DOF = Coarse_RD_Dim * Coarse_TD_Dim * Coarse_PD_Dim
+
+
 
 Shift_Factor_A = R_Coarsen_Factor*T_Coarsen_Factor*Local_RD_Dim*Local_TD_Dim*Local_PD_Dim
 Shift_Factor_B = R_Coarsen_Factor*Local_RD_Dim*Local_TD_Dim
@@ -356,7 +359,6 @@ Shift_Factor_C = Local_RD_Dim
 Shift_Factor_D = R_Coarsen_Factor*T_Coarsen_Factor*Local_RD_Dim*Local_TD_Dim
 Shift_Factor_E = R_Coarsen_Factor*Local_RD_Dim
 
-PRINT*,"R_L,L_L",Right_Limit, Left_Limit
 Delta_x_Ratio = 2.0_idp/(Right_Limit - Left_Limit)
 
 ALLOCATE(Translation_Matrix(1:Num_Coarse_DOF, 1:Num_Local_DOF))
@@ -536,7 +538,6 @@ DO Shell = 0, NUM_SHELLS - 1
     Send_Message(1) = REAL( Proc_Theta_id,idp)
     Send_Message(2) = REAL( Proc_Phi_id, idp)
 
-    PRINT*,"Ratios",Ratio_T_BNDLperBLCK,Ratio_P_BNDLperBLCK
     block_j = Proc_Theta_id/Ratio_T_BNDLperBLCK
     block_k = Proc_Phi_id/Ratio_P_BNDLperBLCK
 
@@ -575,7 +576,6 @@ DO Shell = 0, NUM_SHELLS - 1
             Input_TE_Begin = TheirID_theta*LOCAL_TE_DIM
             Input_PE_Begin = TheirID_phi*LOCAL_PE_DIM
 
-            PRINT*,"Num_B_T_R",NUM_BLOCK_THETA_ROWS
             Block_RE_Begin = Shell*NUM_R_ELEMS_PER_BLOCK
             Block_TE_Begin = MOD(myID_Shell,NUM_BLOCK_THETA_ROWS)*NUM_T_ELEMS_PER_BLOCK
             Block_PE_Begin = (myID_Shell/NUM_BLOCK_THETA_ROWS)*NUM_P_ELEMS_PER_BLOCK
@@ -594,7 +594,6 @@ DO Shell = 0, NUM_SHELLS - 1
                 DO j = 0,Local_TE_Dim - 1
                     DO i = 0,INPUT_RAD_ELEMS_PER_SHELL - 1
 
-                        PRINT*,"Coarsen",R_COARSEN_FACTOR,T_COARSEN_FACTOR,P_COARSEN_FACTOR
                         Global_Input_R_Loc = Input_Shell_R_Begin + i
                         Block_RE_Loc = i/ R_COARSEN_FACTOR
                         R_Shift_Loc = MOD(i,R_Coarsen_Factor)
@@ -841,7 +840,6 @@ DO Shell = 0, NUM_SHELLS - 1
 
                             Local_Here = ((Local_P-1) * NUM_T_QUAD_POINTS + Local_T-1 )   &
                                              * NUM_R_QUAD_POINTS
-
 
                             Block_E(1:NUM_R_QUAD_POINTS, Local_T, Local_P, i, j, k )      &
                                 = Local_E_Coeffs(Local_Here+1:Local_Here+NUM_R_QUAD_POINTS)

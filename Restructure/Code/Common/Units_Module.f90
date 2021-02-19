@@ -44,7 +44,7 @@ REAL(KIND = idp)             :: C_Square
 REAL(KIND = idp)             :: GR_Source_Scalar
 REAL(KIND = idp)             :: Meter, Kilometer, Centimeter
 REAL(KIND = idp)             :: Gram, Kilogram, SolarMass
-REAL(KIND = idp)             :: Second, Milisecond
+REAL(KIND = idp)             :: Second, Millisecond
 REAL(KIND = idp)             :: Joule, Erg, Newton
 REAL(KIND = idp)             :: GravPot_Units, Shift_Units
 
@@ -73,7 +73,9 @@ IF ( Units_Flag == "C" ) THEN
 !   c = 2.99792458e10 cm / s
 !   G = 6.67428e-8    cm^3 / ( g s^2 )
 
-    PRINT*,"Setting CGS Units"
+!    IF ( Verbose_Flag ) THEN
+!        PRINT*,"Setting CGS Units"
+!    END IF
     ! Length
     Centimeter  = 1.0_idp
     Meter       = 1.0E+2_idp * Centimeter
@@ -86,7 +88,7 @@ IF ( Units_Flag == "C" ) THEN
 
     ! Time
     Second      = 1.0_idp
-    Milisecond  = 1.0E-3_idp * Second
+    Millisecond  = 1.0E-3_idp * Second
 
 
     Grav_Constant_G = Grav_Constant_MKS * (Meter*Meter*Meter)/(Kilogram * Second * Second)
@@ -117,7 +119,7 @@ ELSE IF ( Units_Flag == "S" ) THEN
 
     ! Time
     Second      = 1.0_idp
-    Milisecond  = 1.0E-3_idp * Second
+    Millisecond  = 1.0E-3_idp * Second
 
     Grav_Constant_G = Grav_Constant_MKS * (Meter*Meter*Meter)/(Kilogram * Second * Second)
     Speed_of_Light  = Speed_of_Light_MKS * (Meter / Second )
@@ -135,7 +137,9 @@ ELSE IF ( Units_Flag == "G" ) THEN
     !   c = 1
     !   G = 1
 
-    PRINT*,"Setting Geometrized Units"
+!    IF ( Verbose_Flag ) THEN
+!        PRINT*,"Setting Geometrized Units"
+!    END IF
 
     Grav_Constant_G = 1.0_idp
     Speed_of_Light = 1.0_idp
@@ -147,7 +151,7 @@ ELSE IF ( Units_Flag == "G" ) THEN
 
     ! Time
     Second      = (Speed_of_Light_MKS/Speed_of_Light) * Meter
-    Milisecond  = 1.0E-3_idp * Second
+    Millisecond  = 1.0E-3_idp * Second
 
     ! Mass
     Kilogram    = (Grav_Constant_MKS/Grav_Constant_G) * Meter**3/Second**2
@@ -156,8 +160,10 @@ ELSE IF ( Units_Flag == "G" ) THEN
 
 ELSE IF ( Units_Flag == "U" ) THEN
     ! Unitless
-    PRINT*,"Setting Unitless Units"
-    
+!    IF ( Verbose_Flag ) THEN
+!        PRINT*,"Setting Unitless Units"
+!    END IF
+
     Grav_Constant_G = 1.0_idp
     Speed_of_Light = 1.0_idp
 
@@ -168,7 +174,7 @@ ELSE IF ( Units_Flag == "U" ) THEN
 
     ! Time
     Second      = 1.0_idp
-    Milisecond  = 1.0_idp
+    Millisecond  = 1.0_idp
 
     ! Mass
     Kilogram    = 1.0_idp

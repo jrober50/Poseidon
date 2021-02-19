@@ -24,6 +24,9 @@ USE Variables_IO, &
 USE Variables_MPI, &
                 ONLY :  ierr
 
+USE Variables_Derived, &
+                ONLY :  Beta_Prob_Dim
+
 USE Variables_FP, &
                 ONLY :  FP_Coeff_Vector,            &
                         FP_Coeff_Vector_Beta,       &
@@ -38,6 +41,9 @@ USE Poseidon_IO_Module, &
 
 USE IO_Print_Results, &
                 ONLY :  Print_Results
+
+USE IO_FP_Linear_System, &
+                ONLY :  Output_Coeffs_Beta
 
 USE Poseidon_Main_Module, &
                 ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions,       &
@@ -95,20 +101,20 @@ Solver_Type         = 2
 
 
 FEM_Degree_Input    = 1
-L_Limit_Input       = 0
+L_Limit_Input       = 2
 
 Dimension_Input     = 3
 
 Mesh_Type           = 1
 Domain_Edge(1)      = 1.0_idp   ! Inner Radius
 Domain_Edge(2)      = 2.0_idp   ! Outer Radius
-NE(1)               = 256        ! Number of Radial Elements
+NE(1)               = 64       ! Number of Radial Elements
 NE(2)               = 1         ! Number of Theta Elements
 NE(3)               = 1         ! Number of Phi Elements
 
 NQ(1)               = 10        ! Number of Radial Quadrature Points
-NQ(2)               = 5         ! Number of Theta Quadrature Points
-NQ(3)               = 5        ! Number of Phi Quadrature Points
+NQ(2)               = 10        ! Number of Theta Quadrature Points
+NQ(3)               = 10        ! Number of Phi Quadrature Points
 
 Verbose             = .TRUE.    !
 Suffix_Input        = "Params"
@@ -183,6 +189,11 @@ FP_Coeff_Vector_Beta  = 0.0_idp
 
 !Call Solve_FP_System()
 Call Solve_FP_System_Beta()
+
+PRINT*,"System Solved. "
+
+Call Output_Coeffs_Beta( FP_Coeff_Vector_Beta, Beta_Prob_Dim)
+
 
 IF (Verbose .EQV. .TRUE. ) THEN
     CALL Print_Results()

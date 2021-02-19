@@ -62,7 +62,9 @@ USE Variables_FP, &
                     FP_Coeff_Vector_Beta,   &
                     FP_Update_Vector,       &
                     FP_Laplace_Vector,      &
+                    FP_Laplace_Vector_Beta, &
                     FP_Residual_Vector,     &
+                    FP_Residual_Vector_Beta,&
                     Matrix_Format,          &
                     Num_Matrices,           &
                     First_Column_Storage,   &
@@ -87,7 +89,7 @@ SUBROUTINE Allocate_FP()
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
 
-    ALLOCATE( Laplace_Matrix_Full(1:NUM_R_NODES,1:NUM_R_NODES,0:L_LIMIT,1:Num_Matrices) )
+    ALLOCATE( Laplace_Matrix_Full(1:NUM_R_NODES,1:NUM_R_NODES,0:L_LIMIT) )
     ALLOCATE( Laplace_Matrix_Beta(1:Beta_Prob_Dim,1:Beta_Prob_Dim) )
 
 
@@ -104,13 +106,15 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 END IF
 
 
-ALLOCATE( FP_Source_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:NUM_CFA_EQS)   )
+ALLOCATE( FP_Source_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:2)   )
 ALLOCATE( FP_Source_Vector_Beta(1:Beta_Prob_Dim) )
 ALLOCATE( FP_Coeff_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:5)        )
 ALLOCATE( FP_Coeff_Vector_Beta(1:Beta_Prob_Dim) )
-ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:NUM_CFA_EQS)   )
-ALLOCATE( FP_Laplace_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:NUM_CFA_EQS)  )
-ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:NUM_CFA_EQS) )
+ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:5)   )
+ALLOCATE( FP_Laplace_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:2)  )
+ALLOCATE( FP_Laplace_Vector_Beta(1:Beta_Prob_Dim)  )
+ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:2) )
+ALLOCATE( FP_Residual_Vector_Beta(1:Beta_Prob_Dim)  )
 
 
 ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)   )
@@ -155,7 +159,10 @@ DEALLOCATE( FP_Coeff_Vector )
 DEALLOCATE( FP_Coeff_Vector_Beta )
 DEALLOCATE( FP_Update_Vector )
 DEALLOCATE( FP_Laplace_Vector )
+DEALLOCATE( FP_Laplace_Vector_Beta )
 DEALLOCATE( FP_Residual_Vector )
+DEALLOCATE( FP_Residual_Vector_Beta )
+
 
 DEALLOCATE( First_Column_Storage )
 DEALLOCATE( Last_Column_Storage )

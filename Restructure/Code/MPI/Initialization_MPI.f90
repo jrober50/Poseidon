@@ -26,6 +26,7 @@ USE Variables_Mesh, &
                         Num_P_Elements
 USE Variables_MPI, &
                 ONLY :  Num_R_Elems_Per_Shell,      &
+                        Num_R_Elems_Per_Block,      &
                         Num_T_Elems_Per_Block,      &
                         Num_P_Elems_Per_Block,      &
                         Ratio_BNDLperBLCK,          &
@@ -48,8 +49,11 @@ SUBROUTINE Initialize_MPI()
 
 
 Num_R_Elems_Per_Shell = Num_R_Elements
+Num_R_Elems_Per_Block = Num_R_Elements
 Num_T_Elems_Per_Block = Num_T_Elements
 Num_P_Elems_Per_Block = Num_P_Elements
+
+
 
 Ratio_T_BNDLperBLCK = 1
 Ratio_P_BNDLperBLCK = 1

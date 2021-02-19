@@ -90,7 +90,11 @@ USE CFA_Newton_Raphson_3D_Module, &
 
 
 USE FP_Method_Module,  &
-            ONLY :  Fixed_Point_Method
+            ONLY :  Fixed_Point_Method,     &
+                    Fixed_Point_Accelerated
+
+USE FP_AndersonM_Module, &
+            ONLY : Fixed_Point_AndersonM
 
 USE Allocation_Mesh, &
             ONLY : Deallocate_Mesh
@@ -151,7 +155,8 @@ IF ( Readiness_Flag ) THEN
 
     ELSE IF ( Solver_Type == 2 ) THEN
 
-        Call Fixed_Point_Method()
+!        Call Fixed_Point_Accelerated()
+        Call Fixed_Point_AndersonM()
 
     ELSE
 

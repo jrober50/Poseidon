@@ -14,11 +14,7 @@ MODULE FP_Method_Module                                                         
 !##!                                                                                !##!
 !##!   +101+    Fixed_Point_Method                                                  !##!
 !##!                                                                                !##!
-!##!   +201+    Check_FP_Convergence                                                !##!
-!##!   +202+    Calc_FP_Residual                                                    !##!
 !##!                                                                                !##!
-!##!   +301+    Solve_FP_System                                                     !##!
-!##!   +302+                                                                        !##!
 !##!                                                                                !##!
 !######################################################################################!
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
@@ -79,9 +75,12 @@ USE Poseidon_Parameters, &
                     L_LIMIT,                    &
                     CUR_ITERATION,              &
                     MAX_ITERATIONS,             &
-                    CONVERGENCE_CRITERIA,       &
-                    CONVERGENCE_FLAG,           &
-                    NUM_CFA_EQs
+                    Convergence_Type,           &
+                    Convergence_Type_Names,     &
+                    Convergence_Criteria,       &
+                    Convergence_Flag,           &
+                    NUM_CFA_EQs,                &
+                    Verbose_Flag
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
@@ -95,6 +94,8 @@ USE Variables_FP,  &
                     FP_Update_Vector,           &
                     FP_Laplace_Vector,          &
                     FP_Residual_Vector,         &
+                    FP_Laplace_Vector_Beta,     &
+                    FP_Residual_Vector_Beta,    &
                     Laplace_Matrix_Full,        &
                     Laplace_Matrix_VAL,         &
                     Laplace_Matrix_ROW,         &
@@ -105,15 +106,22 @@ USE Variables_FP,  &
                     Laplace_Matrix_Beta,        &
                     FP_Source_Vector_Beta,      &
                     FP_Coeff_Vector_Beta,       &
+                    CFA_EQ_Flags,               &
                     CFA_Eq_Map,                 &
                     CFA_MAT_Map,                &
                     Laplace_NNZ,                &
                     Num_Matrices,               &
-                    MCF_Flag
+                    MCF_Flag,                   &
+                    FP_Anderson_M
 
 USE Functions_Matrix, &
             ONLY :  MVMULT_FULL,                &
+                    MVMULT_FULL_SUB,            &
                     MVMULT_CCS
+
+USE Functions_Mesh, &
+            ONLY :  Create_Logarithmic_1D_Mesh,     &
+                    Create_Uniform_1D_Mesh
 
 USE FP_Source_Vector_Module, &
             ONLY :  Calc_FP_Source_Vector,          &
@@ -128,7 +136,7 @@ USE FP_Functions_BC,  &
                     Neumann_BC,                     &
                     Neumann_BC_CCS
 
-USE FP_Functions_Laplace_Beta, &
+USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace_Beta,            &
                     Output_Laplace
 
@@ -138,8 +146,9 @@ USE Poseidon_Cholesky_Module,   &
                     CCS_Forward_Substitution
 
 USE Linear_Solvers_And_Preconditioners, &
-            ONLY :  PRECOND_CONJ_GRAD_CCS,           &
+            ONLY :  PRECOND_CONJ_GRAD_CCS,          &
                     JACOBI_CONDITIONING,            &
+                    SSOR_CONDITIONING,              &
                     Jacobi_Conditioning_Beta
 
 USE Poseidon_IO_Module, &
@@ -151,8 +160,20 @@ USE Poseidon_IO_Module, &
 USE FP_Functions_Mapping, &
             ONLY :  FP_LM_Map
 
+USE FP_System_Solvers_Module, &
+            ONLY :  Solve_FP_System,                &
+                    Solve_FP_System_Beta
+
+
+USE FP_Resid_Convergence_Module,    &
+            ONLY :  Check_FP_Convergence
+
 
 IMPLICIT NONE
+
+
+
+
 
 CONTAINS
 
@@ -167,7 +188,7 @@ SUBROUTINE Fixed_Point_Method()
 LOGICAL                                                 ::  CONVERGED
 INTEGER                                                 ::  i
 
-REAL(KIND = idp), DIMENSION(1:3)                        :: timer
+REAL(KIND = idp), DIMENSION(1:4)                        :: timer
 
 
 CALL Allocate_FP_Source_Variables()
@@ -177,65 +198,92 @@ CUR_ITERATION = 1
 CONVERGED = .FALSE.
 
 IF (myID_Poseidon == 0 ) THEN
-    CALL OUTPUT_GUESS(0, 0)
+    IF ( Verbose_Flag .eqv. .TRUE. ) THEN
+        CALL OUTPUT_GUESS(0, 0)
+    END IF
 END IF
 
-PRINT*,"RHS_Terms(:,:,3) = 0.0 in SubJacobian_Functions_1D. Message in FP_Method."
 
-FP_Source_Vector = 0.0_idp
-FP_Coeff_Vector = 0.0_idp
-FP_Laplace_Vector = 0.0_idp
-PRINT*,"FP_Source_Vector, FP_Coeff_Vector, FP_Laplace_Vector Zeroed in Poseidon_FP_Method.f90"
+!PRINT*,"RHS_Terms(:,:,3) = 0.0 in SubJacobian_Functions_1D. Message in FP_Method."
+!
+!FP_Source_Vector = 0.0_idp
+!FP_Coeff_Vector = 0.0_idp
+!FP_Laplace_Vector = 0.0_idp
+!PRINT*,"FP_Source_Vector, FP_Coeff_Vector, FP_Laplace_Vector Zeroed in Poseidon_FP_Method.f90"
 
 !
 !   Begin Method
 !
 
-!PRINT*,"Before First Calc_FP_Source_Vector"
+
+timer(1) = MPI_WTime()
 CALL Calc_FP_Source_Vector()
-!
-!PRINT*,"Stop after first Calc_FP_Source_Vector()"
-!STOP
+timer(2) = MPI_WTime()
+Call Clock_In(timer(2)-timer(1),3)
+
 
 DO WHILE ( CONVERGED .EQV. .FALSE. )
     IF (myID_Poseidon == 0 ) THEN
-        CALL OPEN_ITER_REPORT_FILE(Cur_Iteration, myID_Poseidon)
+!        CALL OPEN_ITER_REPORT_FILE(Cur_Iteration, myID_Poseidon)
     END IF
 
 
-!    PRINT*,"Starting FP Iteration ",Cur_Iteration
+    timer(4) = MPI_Wtime()
+    IF ( ANY( CFA_EQ_Flags(1:2) == 1) ) THEN
+        Call Solve_FP_System()
+    END IF
+    timer(2) = MPI_WTime()
+    IF ( ANY( CFA_EQ_Flags(3:5) == 1) ) THEN
+        Call Solve_FP_System_Beta()
+    END IF
+    timer(3) = MPI_Wtime()
+
+    CALL Clock_In(timer(2)-timer(4),4)
+    CALL Clock_In(timer(3)-timer(2),5)
+
     timer(1) = MPI_Wtime()
-    
-!    PRINT*,"Before Solve_FP_System"
-    Call Solve_FP_System()
-    
-!    PRINT*,"Before Inner Calc_FP_Source_Vector"
     CALL Calc_FP_Source_Vector()
-
-!    PRINT*,"Before Check_FP_Convergence"
+    timer(2) = MPI_Wtime()
     Call Check_FP_Convergence(Converged)
+    timer(3) = MPI_WTime()
 
+    CALL Clock_In(timer(2)-timer(1),6)
+    CALL Clock_In(timer(3)-timer(2),7)
+    
+    timer(2) = MPI_Wtime()
+    Call Clock_In(timer(2)-timer(4),8)
+
+
+!    PRINT*,"Before Outputs"
     IF ( myID_Poseidon == 0 ) THEN
-        CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
-        CALL CLOSE_ITER_REPORT_FILE()
-        !CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
+        IF ( Verbose_Flag .eqv. .TRUE. ) THEN
+            CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
+!            PRINT*,"After OUTPUT_ITERATION_REPORT"
+    !        CALL CLOSE_ITER_REPORT_FILE()
+!            PRINT*,"After CLOSE_ITER_REPORT_FILE"
+            !CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
+        END IF
     END IF
-
-
+    
+    IF ( Verbose_Flag .EQV. .TRUE. ) THEN
+        WRITE(*,'(A,1X,I3.3,/)') "End of Iteration",Cur_Iteration
+    END IF
 
     Cur_Iteration = Cur_Iteration + 1
 END DO ! Converged Loop
-
-
+!PRINT*,"Outside Fixed-Point Iteration loop."
 
 
 IF ( WRITE_RESULTS_FLAG == 1 ) THEN
-    CALL OUTPUT_FINAL_RESULTS()
+!    CALL OUTPUT_FINAL_RESULTS()
 END IF
 
 
 
 CALL Deallocate_FP_Source_Variables()
+
+
+
 
 END SUBROUTINE Fixed_Point_Method
 
@@ -245,473 +293,199 @@ END SUBROUTINE Fixed_Point_Method
 
 
 
-!+201+###########################################################################!
+!+101+###########################################################################!
 !                                                                                !
-!           Check_FP_Convergence                                                 !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Check_FP_Convergence( CONVERGED )
-
-LOGICAL, INTENT(INOUT)                              ::  CONVERGED
-
-REAL(KIND = idp)                                    ::  Convergence_Stat
-
-
-INTEGER                                             ::  ui, l
-
-
-! Test Residual
-CALL Calc_FP_Residual( Convergence_Stat )
-
-Frame_Update_Table(CUR_ITERATION)   =    MAXVAL(ABS(FP_Update_Vector))
-Frame_Residual_Table(CUR_ITERATION) =    Convergence_Stat
-
-
-
-PRINT*,"Convergence Check, Iter ",CUR_ITERATION," - Residual : ",Convergence_Stat," Criteria : ",CONVERGENCE_CRITERIA
-PRINT*,"MAX(ABS(FP_Update_Vector))",MAXVAL(ABS(FP_Update_Vector))
-IF ( Convergence_Stat < CONVERGENCE_CRITERIA) THEN
-    CONVERGED = .TRUE.
-    CONVERGENCE_FLAG = 1
-    PRINT*,"Solver has converged. Residual ",Convergence_Stat," < ",CONVERGENCE_CRITERIA
-
-ELSEIF ( MAXVAL(ABS(FP_Update_Vector)) == 0.0_idp ) THEN
-    CONVERGED = .TRUE.
-    CONVERGENCE_FLAG = 1
-    PRINT*,"Solver has converged. Fixed Point Solution change is zero. "
-
-
-!
-!   Has the Solver taken the max number of iterations allowed?
-!
-ELSEIF ( CUR_ITERATION > MAX_ITERATIONS-1 ) THEN
-    CONVERGED = .TRUE.
-    CONVERGENCE_FLAG = 2
-    PRINT*,"Solver has not converged. Iterations has exceeded maximum, ", Max_Iterations
-
-END IF
-
-
-END SUBROUTINE Check_FP_Convergence
-
-
-
-
-
-
-
-
-
-!+202+##########################################################################!
-!                                                                               !
-!           Calc_FP_Residual                                                    !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE Calc_FP_Residual( Convergence_Stat )
-
-REAL(KIND = idp), INTENT(OUT)                       ::  Convergence_Stat
-
-
-INTEGER                                             ::  Convergence_Type = 1
-
-INTEGER                                             ::  ui, l, m, lm_loc, map_loc
-
-COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES)                               ::  WORK_VEC
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
-
-! Multi Matrices and Coeff Vectors to form Laplace
-IF ( Matrix_Format == 'Full' ) THEN
-
-    ALLOCATE (WORK_MAT(1:NUM_R_NODES, 1:NUM_R_NODES))
-    
-
-    DO ui = 1,NUM_CFA_EQs
-        DO l = 0,L_Limit
-            DO m = -l,l
-                lm_loc = FP_LM_Map(l,m)
-                map_loc = CFA_MAT_Map(CFA_EQ_Map(ui))
-
-                WORK_MAT = Laplace_Matrix_Full(:,:,l,map_loc)
-                WORK_VEC = FP_Source_Vector(:,lm_loc,ui)
-    
-                CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
-
-                FP_Laplace_Vector(:,lm_loc,ui) = MVMULT_FULL( WORK_MAT,             &
-                                                        FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)), &
-                                                        NUM_R_NODES, NUM_R_NODES                   )
-
-
-                FP_Residual_Vector(:,lm_loc,ui) = FP_Laplace_Vector(:,lm_loc,ui) - Work_Vec
-                
-
-
-
-!                PRINT*,"Laplace", lm_loc, ui
-!                PRINT*,FP_Laplace_Vector
-!                PRINT*,"Matrix"
-!                PRINT*,WORK_MAT
-!                PRINT*,"Vector"
-!                PRINT*,FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
-!                PRINT*,"Source"
-!                PRINT*,WORK_VEC
-
-            END DO ! m
-        END DO ! l
-    END DO ! ui
-
-
-ELSE IF ( Matrix_Format == 'CCS' ) THEN
-
-    DO ui = 1,Num_Matrices
-        DO l = 0,LM_LENGTH
-
-            FP_Laplace_Vector(:,l,ui) = MVMULT_CCS( NUM_R_NODES,                                &
-                                                    Laplace_NNZ,                                &
-                                                    Laplace_Matrix_VAL(:,l,ui),                 &
-                                                    Laplace_Matrix_COL(:,l),                    &
-                                                    Laplace_Matrix_ROW(:,l),                    &
-                                                    FP_Coeff_Vector(:,l,CFA_EQ_Map(ui))   )
-
-        END DO ! l
-    END DO ! ui
-
-END IF
-
-
-
-
-CALL Laplace_Test_Residual()
-
-
-
-
-
-
-
-! Check Residual against Criteria
-
-!
-!   Has the Solver achieved convergence
-!
-SELECT CASE (Convergence_Type )
-CASE(1)
-    ! L_Inf Error
-    Convergence_Stat = MAXVAL(ABS(FP_Residual_Vector))
-
-CASE(2)
-    ! L_One Error
-    Convergence_Stat = SUM(ABS(FP_Residual_Vector))
-CASE(3)
-    ! L_Two Error
-
-
-END SELECT
-
-
-END SUBROUTINE Calc_FP_Residual
-
-
-
-
-
-
-
-
-!+301+###########################################################################!
-!                                                                                !
-!           Call Solve_FP_System                                                 !
+!           Fixed_Point_Method                                                   !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Solve_FP_System()
+SUBROUTINE Fixed_Point_Accelerated()
 
-INTEGER                                                                     ::  INFO, LDAB
-INTEGER, DIMENSION(NUM_R_NODES)                                             ::  IPIV
+LOGICAL                                                 ::  CONVERGED
+LOGICAL                                                 ::  CONVERGED_blank
+INTEGER                                                 ::  i, k
 
+INTEGER                                                 ::  M
+INTEGER                                                 ::  LWORK
+INTEGER                                                 ::  mk
+INTEGER                                                 ::  INFO
 
-REAL(KIND = idp)                                                            ::  SCALE_FACTOR
-COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES)                               ::  WORK_VEC
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES)                               ::  WORK_VECB
+REAL(KIND = idp), DIMENSION(1:4)                        :: timer
 
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_ELEM_VAL
-
-INTEGER                                                                     ::  NNZ
-
-CHARACTER(LEN = 70)                                                         ::  FILE_NAME
-INTEGER                                                                     ::  FILE_ID
-
-INTEGER                                                                     ::  l, m, k, lm_loc, ui
-INTEGER                                                                     ::  Guess_Flag
-INTEGER                                                                     ::  Mat_Loc
-
-IF (MATRIX_FORMAT =='FULL') THEN
-
-    ALLOCATE (WORK_MAT(1:NUM_R_NODES, 1:NUM_R_NODES))
-
-ELSE IF (MATRIX_FORMAT == 'CCS' ) THEN
-
-    NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-    ALLOCATE(WORK_ELEM_VAL(0:NNZ-1))
-
-END IF
+COMPLEX(idp), DIMENSION(1:NUM_R_NODES)                  ::  WORK_VEC
+COMPLEX(idp), DIMENSION(1:NUM_R_NODES,1:NUM_R_NODES)    ::  WORK_MAT
 
 
+COMPLEX(idp),DIMENSION(:), ALLOCATABLE                  :: Resid_Vector
+COMPLEX(idp),DIMENSION(:,:), ALLOCATABLE                :: FVector
+COMPLEX(idp),DIMENSION(:,:), ALLOCATABLE                :: GVector
+COMPLEX(idp),DIMENSION(:), ALLOCATABLE                  :: BVector
+COMPLEX(idp),DIMENSION(:), ALLOCATABLE                  :: UVector
+COMPLEX(idp),DIMENSION(:), ALLOCATABLE                  :: GVectorM
+COMPLEX(idp),DIMENSION(:), ALLOCATABLE                  :: FVectorM
+COMPLEX(idp),DIMENSION(:,:), ALLOCATABLE                :: AMatrix
+COMPLEX(idp),DIMENSION(:), ALLOCATABLE                  :: Work
+COMPLEX(idp),DIMENSION(:), ALLOCATABLE                  :: Alpha
 
-WORK_VECB = 0
+
+M = FP_Anderson_M
+LWORK = 2*M
+
+ALLOCATE( Resid_Vector(1:Num_R_Nodes) )
+ALLOCATE( FVector(1:Num_R_Nodes,1:M) )
+ALLOCATE( GVectorM(1:Num_R_Nodes) )
+ALLOCATE( FVectorM(1:Num_R_Nodes) )
+ALLOCATE( BVector(1:Num_R_Nodes) )
+ALLOCATE( GVector(1:Num_R_Nodes,1:M) )
+ALLOCATE( Work(1:LWORK) )
+ALLOCATE( Alpha(1:M) )
+ALLOCATE( AMatrix(1:Num_R_Nodes,1:M))
+ALLOCATE( UVector(1:Num_R_Nodes) )
+
+CALL Allocate_FP_Source_Variables()
+
+timer = 0.0_idp
+CUR_ITERATION = 0
+CONVERGED = .FALSE.
 
 
 
 
-IF (( LINEAR_SOLVER == "CHOL" ) .AND. (MCF_Flag == 0 ) ) THEN
+!
+!   Begin Method
+!
+
+
+!
+!   Calculate Source Vector with u_0
+!
+timer(1) = MPI_WTime()
+CALL Calc_FP_Source_Vector()
+timer(2) = MPI_Wtime()
+Call Clock_In(timer(2)-timer(1),3)
+
+
+DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
+    timer(4) = MPI_Wtime()
+    Cur_Iteration = Cur_Iteration + 1
+
+    mk = MIN(Cur_Iteration, M)
+
+    UVector = FP_Coeff_Vector(:,0,CFA_EQ_Map(1))
+    PRINT*,"UVector"
+    PRINT*,UVector
+
+    !
+    !   Solve Systems
+    !
+    timer(1) = MPI_WTime()
+    IF ( ANY( CFA_EQ_Flags(1:2) == 1) ) THEN
+        Call Solve_FP_System()
+    END IF
+    timer(2) = MPI_WTime()
+    IF ( ANY( CFA_EQ_Flags(3:5) == 1) ) THEN
+        Call Solve_FP_System_Beta()
+    END IF
+    timer(3) = MPI_Wtime()
+
+    CALL Clock_In(timer(2)-timer(1),4)
+    CALL Clock_In(timer(3)-timer(2),5)
+
+
+    GVector(:,mk) = FP_Coeff_Vector(:,0,CFA_EQ_Map(1))
+    FVector(:,mk) = GVector(:,mk) - UVector(:)
+    PRINT*,"FVector"
+    PRINT*,FVector
+
+    IF ( mk == 1 ) THEN
+
+        GVectorM = GVector(:,mk)
+
+    ELSE
+
+        BVector = -FVector(:,mk)
+
+        AMatrix(:,1:mk-1) = FVector(:,1:mk-1) - SPREAD( FVector(:,mk), DIM=2, NCOPIES = mk-1)
+
+        CALL ZGELS('N',Num_R_Nodes,mk-1,1,              &
+                    AMatrix(:,1:mk-1), Num_R_Nodes,     &
+                    BVector,Num_R_Nodes,                &
+                    WORK, LWORK, INFO )
+
+
+        Alpha(1:mk-1) = BVector(1:mk-1)
+        Alpha(mk)     = 1.0_idp - SUM( Alpha(1:mk-1) )
+
+
+        GVectorM = 0.0_idp
+        DO i = 1,mk
+
+            GVectorM = GVectorM + Alpha(i)*GVector(:,i)
     
-    !
-    !   This only needs to be done everytime the radial mesh is defined/redefined.
-    !   This performs Cholesky factorization on the stiffness matrix and overwrites
-    !   the stiffness matrix variables STF_ELEM_VAL, STF_ROW_IND, and STF_COL_PTR to
-    !   represent the factorization matrix, L.  This matrix can then be reused to
-    !   solve the linear system using forward and backward substitution.
-    !
-
-    CALL Cholesky_Factorization()
-    MCF_Flag = 1
-
-
-END IF
-
-
-
-
-
-
-113 FORMAT (A,I2.2,A,I5.5,A)
-
-
-
-
-
-
-
-IF (LINEAR_SOLVER =='Full') THEN
-    !####################################!
-    !
-    !           Full Matrix Solver       !
-    !
-    !####################################!
-    PRINT*,"In Full Solver", NUM_CFA_EQs
-    DO ui = 1,NUM_CFA_EQs
-        DO l = 0,L_LIMIT
-            DO m = -l,l
-
-                lm_loc = FP_LM_Map(l,m)
-                mat_loc = CFA_Mat_Map(CFA_Eq_Map(ui))
-                WORK_MAT = Laplace_Matrix_Full(:,:,l,mat_loc)
-                WORK_VEC = FP_Source_Vector(:,lm_loc,ui)
-
-                PRINT*,"Before DIRICHLET_BC",ui,l,m
-!                PRINT*,WORK_VEC
-
-                CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
-
-!                Call Output_Laplace(Work_Mat, NUM_R_NODES, NUM_R_NODES, "Y")
-
-                CALL NEUMANN_BC(l, WORK_VEC)
-
-
-                PRINT*,Work_Vec
-
-                PRINT*,"Before JACOBI_CONDITIONING"
-                CALL JACOBI_CONDITIONING(WORK_MAT, WORK_VEC)
-
-                PRINT*,Work_Vec
-
-!                Call Output_Laplace(Work_Mat, NUM_R_NODES, NUM_R_NODES, "Z")
-
-
-                CALL ZGESV(NUM_R_NODES, 1, WORK_MAT, NUM_R_NODES, IPIV, WORK_VEC, NUM_R_NODES, INFO)
-                IF (INFO > 0) THEN
-                    print*,"DGESV has failed with INFO = ",INFO
-                END IF
-
-
-                PRINT*,"Work_Vec"
-                PRINT*,Work_Vec
-
-            !CALL PRECOND_CONJ_GRAD_FULL(WORK_MAT, WORK_VEC)
-
-
-
-                lm_loc = FP_LM_Map(l,m)
-                FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
-                FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)) = WORK_VEC(:)
-
-                
-            END DO ! m Loop
-        END DO ! l Loop
-    END DO ! ui Loop
-
-
-ELSE IF (LINEAR_SOLVER == 'CCS') THEN
-            !#######################################################################!
-            !                                                                       !
-            !           CCS Preconditioned Conjugate Gradient Matrix Solver         !
-            !                                                                       !
-            !#######################################################################!
-    PRINT*,"In CCS Solver"
-    DO ui = 1,NUM_CFA_EQs
-        DO l = 0,L_LIMIT
-
-            DO m = -l,l
-
-                Mat_Loc = CFA_MAT_Map(ui)
-                WORK_ELEM_VAL(:) = Laplace_Matrix_VAL(:,l,Mat_Loc)
-                WORK_VEC(:) = FP_Source_Vector(:,m,l)
-
-
-
-                CALL DIRICHLET_BC_CCS(  NUM_R_NODES,                &
-                                        Laplace_NNZ,                &
-                                        l,                          &
-                                        m,                          &
-                                        WORK_ELEM_VAL,              &
-                                        Laplace_Matrix_COL(:,l),    &
-                                        Laplace_Matrix_ROW(:,l),    &
-                                        WORK_VEC                    )
-
-
-
-                CALL NEUMANN_BC_CCS(    NUM_R_NODES,                &
-                                        Laplace_NNZ,                &
-                                        l,                          &
-                                        m,                          &
-                                        WORK_ELEM_VAL,              &
-                                        Laplace_Matrix_COL(:,l),    &
-                                        Laplace_Matrix_ROW(:,l),    &
-                                        WORK_VEC                    )
-
-
-
-
-                GUESS_FLAG = 0  !!! 0 Means no guess, 1 means guess
-
-
-                IF ( 1 == 1) THEN
-
-                    WORK_VECB = WORK_VEC
-
-                    CALL PRECOND_CONJ_GRAD_CCS(NUM_R_NODES,                 &
-                                                Laplace_NNZ,                &
-                                                WORK_ELEM_VAL,              &
-                                                Laplace_Matrix_COL(:,l),    &
-                                                Laplace_Matrix_ROW(:,l),    &
-                                                WORK_VECB,                  &
-                                                GUESS_FLAG,                 &
-                                                WORK_VECB,                  &
-                                                0                           )
-
-
-                    GUESS_FLAG = 1
-
-                END IF
-
-
-
-
-                CALL PRECOND_CONJ_GRAD_CCS( NUM_R_NODES,                &
-                                            Laplace_NNZ,                &
-                                            WORK_ELEM_VAL,              &
-                                            Laplace_Matrix_COL(:,l),     &
-                                            Laplace_Matrix_ROW(:,l),     &
-                                            WORK_VECB,                  &
-                                            GUESS_FLAG,                 &
-                                            WORK_VECB,                  &
-                                            0                           )
-
-                lm_loc = l*(l+1)+ m
-                FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)
-
-            END DO ! m
-        END DO ! l
-    END DO ! ui
-
-
-ELSE IF (LINEAR_SOLVER == "CHOL") THEN
-            !#######################################################################!
-            !                                                                       !
-            !               CCS Cholesky Factorization Matrix Solver                !
-            !                                                                       !
-            !#######################################################################!
-    PRINT*,"In CHOL Solver"
-    DO ui = 1,NUM_CFA_EQs
-        DO l = 0,L_LIMIT
-            DO m = -l,l
-
-                WORK_VEC = FP_Source_Vector(:,m,l)
-
-                CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
-                                        Laplace_NNZ,                &
-                                        l,                          &
-                                        m,                          &
-                                        Laplace_Factored_COL(:,l),  &
-                                        Laplace_Factored_ROW(:,l),  &
-                                        WORK_VEC                    )
-
-                CALL NEUMANN_BC_CCS(    NUM_R_NODES,                &
-                                        Laplace_NNZ,                &
-                                        l,                          &
-                                        m,                          &
-                                        WORK_ELEM_VAL,              &
-                                        Laplace_Factored_COL(:,l),  &
-                                        Laplace_Factored_ROW(:,l),  &
-                                        WORK_VEC                    )
-
-                
-
-                CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
-                                                Laplace_NNZ,                    &
-                                                Laplace_Factored_VAL(:,l,ui),   &
-                                                Laplace_Factored_COL(:,l),      &
-                                                Laplace_Factored_ROW(:,l),      &
-                                                WORK_VEC                        )
-
-
-                CALL CCS_Back_Substitution(     NUM_R_NODES,                    &
-                                                Laplace_NNZ,                    &
-                                                Laplace_Factored_VAL(:,l,ui),   &
-                                                Laplace_Factored_COL(:,l),      &
-                                                Laplace_Factored_ROW(:,l),      &
-                                                WORK_VEC                        )
-
-
-                lm_loc = l*(l+1)+ m
-                FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)
-
-            END DO
         END DO
-    END DO
 
+    END IF
 
-END IF
+    FVectorM = GVectorM - UVector(:)
+    PRINT*,"GVectorM"
+    PRINT*,GVectorM
 
-
-
-
-
-
-
-
-IF (MATRIX_FORMAT =='FULL') THEN
-
-    DEALLOCATE (WORK_MAT)
-
-ELSE IF (MATRIX_FORMAT == 'CCS' ) THEN
-
-    DEALLOCATE(WORK_ELEM_VAL)
-
-END IF
+    FP_Coeff_Vector(:,0,CFA_EQ_Map(1)) = GVectorM
 
 
 
-END SUBROUTINE Solve_FP_System
+
+
+
+
+    IF ( ALL( ABS( FVectorM ) <= Convergence_Criteria*ABS(FP_Coeff_Vector(:,0,CFA_EQ_Map(1))) ) ) THEN
+        PRINT*,"The Method has converged."
+        Converged = .TRUE.
+    END IF
+
+
+    IF ( mk == M .AND. .NOT. Converged ) THEN
+        GVector = CSHIFT( GVector, SHIFT = +1, DIM = 2)
+        FVector = CSHIFT( FVector, SHIFT = +1, DIM = 2)
+    END IF
+
+
+    
+    IF ( Cur_Iteration == Max_Iterations ) THEN
+        PRINT*,"FP_Accelerated has reached the maximum number of allowed iterations. "
+        Converged = .TRUE.
+    END IF
+
+
+    IF ( Verbose_Flag .EQV. .TRUE. ) THEN
+        WRITE(*,'(A,1X,I3.3,/)') "End of Iteration",Cur_Iteration
+    END IF
+    
+
+    !
+    !   Calculate Source Vector with u_k
+    !
+    timer(1) = MPI_Wtime()
+    CALL Calc_FP_Source_Vector()
+    timer(2) = MPI_Wtime()
+    Call Check_FP_Convergence(Converged_Blank)
+    timer(3) = MPI_WTime()
+
+    CALL Clock_In(timer(2)-timer(1),6)
+    CALL Clock_In(timer(3)-timer(2),7)
+    Call Clock_In(timer(3)-timer(4),8)
+
+
+!    STOP
+END DO ! Converged Loop
+
+
+
+CALL Deallocate_FP_Source_Variables()
+
+
+
+
+END SUBROUTINE Fixed_Point_Accelerated
 
 
 
@@ -738,13 +512,17 @@ REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, 
 REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
 
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,          &
+                                                                Output_rc,          &
+                                                                Output_dr
+
 120 FORMAT (A61)
 121 FORMAT (A1)
 122 FORMAT (A41,I2.2)
 123 FORMAT (A38,ES22.15)
 
 109 FORMAT (A,I2.2,A,I2.2)
-110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
+110 FORMAT (11X,A1,24X,A3,19X,A8,15X,A11,14X,A11,14X,A11)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
@@ -815,6 +593,10 @@ END DO
 
 IF ( Driver_Test_Number .NE. -1 ) THEN
 
+    ALLOCATE( Output_re(0:ITER_REPORT_NUM_SAMPLES) )
+    ALLOCATE( Output_rc(1:ITER_REPORT_NUM_SAMPLES) )
+    ALLOCATE( Output_dr(1:ITER_REPORT_NUM_SAMPLES) )
+
     ! Write Results Table Header to Screen
     IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
         IF ( Rank == 0 ) THEN
@@ -823,11 +605,20 @@ IF ( Driver_Test_Number .NE. -1 ) THEN
         END IF
     END IF
 
+
     
-    deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+    IF ( R_OUTER/(R_Inner+1.0_idp) > 1E3 ) THEN
+        CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, ITER_REPORT_NUM_SAMPLES,     &
+                                        output_re, output_rc, output_dr     )
+    ELSE
+        CALL Create_Uniform_1D_Mesh( R_INNER, R_OUTER, ITER_REPORT_NUM_SAMPLES,     &
+                                     output_re, output_rc, output_dr     )
+    END IF
+
+
     DO i = 0,ITER_REPORT_NUM_SAMPLES
 
-        r = i*deltar + R_INNER
+        r = output_re(i)
         theta = pi/2.0_idp
         phi = pi/2.0_idp
 
@@ -859,6 +650,14 @@ IF ( Driver_Test_Number .NE. -1 ) THEN
                              Return_Beta1/Shift_Units,  &
                              Return_Beta2,              &
                              Return_Beta3
+
+                WRITE(*,111) r/Centimeter,              &
+                             Analytic_Val,              &
+                             PsiPot_Val,                &
+                             AlphaPsiPot_Val,           &
+                             Return_Beta1/Shift_Units,  &
+                             Return_Beta2,              &
+                             Return_Beta3
             END IF
         END IF
 
@@ -877,20 +676,38 @@ IF ( Driver_Test_Number .NE. -1 ) THEN
 
     END DO  ! i Loop
 
+
+
+
+
+
+
 ELSE
+
+    ALLOCATE( Output_re(0:ITER_REPORT_NUM_SAMPLES) )
+    ALLOCATE( Output_rc(1:ITER_REPORT_NUM_SAMPLES) )
+    ALLOCATE( Output_dr(1:ITER_REPORT_NUM_SAMPLES) )
 
     ! Write Results Table Header to Screen
     IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
         IF ( Rank == 0 ) THEN
             PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
-            WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+!            WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+            WRITE(*,110)"r","Psi","AlphaPsi","Beta Value1","Beta Value2","Beta Value3"
         END IF
     END IF
 
-    deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+    IF ( R_OUTER/(R_Inner+1.0_idp) > 1E3 ) THEN
+        CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, ITER_REPORT_NUM_SAMPLES,     &
+                                        output_re, output_rc, output_dr     )
+    ELSE
+        CALL Create_Uniform_1D_Mesh( R_INNER, R_OUTER, ITER_REPORT_NUM_SAMPLES,     &
+                                     output_re, output_rc, output_dr     )
+    END IF
+
     DO i = 0,ITER_REPORT_NUM_SAMPLES
 
-        r = i*deltar + R_INNER
+        r = output_re(i)
         theta = pi/2.0_idp
         phi = pi/2.0_idp
 
@@ -912,12 +729,20 @@ ELSE
         ! Write Results to Screen
         IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
             IF ( Rank == 0 ) THEN
-                WRITE(*,111) r/Centimeter,              &
-                             PsiPot_Val,                &
-                             AlphaPsiPot_Val,           &
-                             Return_Beta1/Shift_Units,  &
-                             Return_Beta2,              &
-                             Return_Beta3
+!                WRITE(*,111) r/Centimeter,              &
+!                             PsiPot_Val,                &
+!                             AlphaPsiPot_Val,           &
+!                             Return_Beta1/Shift_Units,  &
+!                             Return_Beta2,              &
+!                             Return_Beta3
+
+
+                WRITE(*,111)  r/Centimeter,              &
+                              Return_Psi,                &
+                              Return_AlphaPsi,           &
+                              Return_Beta1/Shift_Units,  &
+                              Return_Beta2,              &
+                              Return_Beta3
             END IF
         END IF
 
@@ -930,6 +755,13 @@ ELSE
                                       Return_Beta1/Shift_Units,  &
                                       Return_Beta2,              &
                                       Return_Beta3
+
+!                WRITE(FILE_ID(j),111) r/Centimeter,              &
+!                                      Return_Psi,                &
+!                                      Return_AlphaPsi,           &
+!                                      Return_Beta1/Shift_Units,  &
+!                                      Return_Beta2,              &
+!                                      Return_Beta3
             END IF
         END DO ! j Loop
 
@@ -942,7 +774,7 @@ END IF
 
 
 
-WRITE( FRAME_REPORT_FILE_ID, '(4/)')
+!WRITE( FRAME_REPORT_FILE_ID, '(4/)')
 
 END SUBROUTINE OUTPUT_ITERATION_REPORT
 
@@ -964,6 +796,11 @@ REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
 REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
 REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,          &
+                                                                Output_rc,          &
+                                                                Output_dr
+
+
 120 FORMAT (A61)
 121 FORMAT (A1)
 122 FORMAT (A41,I2.2)
@@ -973,59 +810,122 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 112 FORMAT (A43,I2.2,A2,I2.2,A4)
+113 FORMAT (11X,A1,14X,A13,10X,A18,14X,A11,14X,A11,14X,A11)
 
 
-
-
-! Write Results Table Header to Screen
-IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    IF ( Rank == 0 ) THEN
-        PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
-        WRITE(*,110)"r (cm)","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
-    END IF
-END IF
-
-deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
-DO i = 0,ITER_REPORT_NUM_SAMPLES
-
-    r = i*deltar + R_INNER
-    theta = pi/2.0_idp
-    phi = pi/2.0_idp
-
-
-    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
-                                    Return_Psi, Return_AlphaPsi,                &
-                                    Return_Beta1, Return_Beta2, Return_Beta3    )
-
-    ! Determine the Newtonian Potential at the location r, theta, phi
-    Analytic_Val = Potential_Solution(r,theta,phi)/GravPot_Units
-
-
-    ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
-    ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
-
-    ! Calculate Conformal Factor value from Newtonian Potential
-    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
-
-    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
-
-
-    ! Write Results to Screen
+IF ( .FALSE. ) THEN
+    ! Write Results Table Header to Screen
     IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
         IF ( Rank == 0 ) THEN
-            WRITE(*,111) r/Centimeter,              &
-                          Analytic_Val,              &
-                          PsiPot_Val,                &
-                          AlphaPsiPot_Val,           &
-                          Return_Beta1/Shift_Units,  &
-                          Return_Beta2,              &
-                          Return_Beta3
+            PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
+            WRITE(*,110)"r (cm)","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
+        END IF
+    END IF
+
+    deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+    DO i = 0,ITER_REPORT_NUM_SAMPLES
+
+        r = i*deltar + R_INNER
+        theta = pi/2.0_idp
+        phi = pi/2.0_idp
+
+
+        CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+                                        Return_Psi, Return_AlphaPsi,                &
+                                        Return_Beta1, Return_Beta2, Return_Beta3    )
+
+        ! Determine the Newtonian Potential at the location r, theta, phi
+        Analytic_Val = Potential_Solution(r,theta,phi)/GravPot_Units
+
+
+        ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
+        ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
+
+        ! Calculate Conformal Factor value from Newtonian Potential
+        PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
+
+        ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
+        AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
+
+
+        ! Write Results to Screen
+        IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+            IF ( Rank == 0 ) THEN
+                WRITE(*,111) r/Centimeter,              &
+                              Analytic_Val,              &
+                              PsiPot_Val,                &
+                              AlphaPsiPot_Val,           &
+                              Return_Beta1/Shift_Units,  &
+                              Return_Beta2,              &
+                              Return_Beta3
+            END IF
+        END IF
+
+
+    END DO
+
+
+
+
+
+
+
+
+ELSE
+
+    ALLOCATE( Output_re(0:ITER_REPORT_NUM_SAMPLES) )
+    ALLOCATE( Output_rc(1:ITER_REPORT_NUM_SAMPLES) )
+    ALLOCATE( Output_dr(1:ITER_REPORT_NUM_SAMPLES) )
+
+    ! Write Results Table Header to Screen
+    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        IF ( Rank == 0 ) THEN
+            PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
+            WRITE(*,113)"r (cm)","Psi ","AlphaPsi ","Beta Value1","Beta Value2","Beta Value3"
         END IF
     END IF
 
 
-END DO
+    IF ( R_OUTER/(R_Inner+1.0_idp) > 1E3 ) THEN
+        CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, ITER_REPORT_NUM_SAMPLES,     &
+                                        output_re, output_rc, output_dr     )
+    ELSE
+        CALL Create_Uniform_1D_Mesh( R_INNER, R_OUTER, ITER_REPORT_NUM_SAMPLES,     &
+                                     output_re, output_rc, output_dr     )
+    END IF
+
+
+    DO i = 0,ITER_REPORT_NUM_SAMPLES
+
+        r = output_re(i)
+        theta = pi/2.0_idp
+        phi = pi/2.0_idp
+
+
+        CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+                                        Return_Psi, Return_AlphaPsi,                &
+                                        Return_Beta1, Return_Beta2, Return_Beta3    )
+
+
+
+        ! Write Results to Screen
+        IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+            IF ( Rank == 0 ) THEN
+                WRITE(*,111) r/Centimeter,              &
+                              Return_Psi,                &
+                              Return_AlphaPsi,           &
+                              Return_Beta1/Shift_Units,  &
+                              Return_Beta2,              &
+                              Return_Beta3
+            END IF
+        END IF
+
+
+    END DO
+
+
+END IF
+
 
 
 END SUBROUTINE OUTPUT_GUESS
@@ -1039,7 +939,11 @@ END SUBROUTINE OUTPUT_GUESS
 
 
 
-
+!+501+##########################################################################!
+!                                                                               !
+!                   Laplace_Test_Residual                                       !
+!                                                                               !
+!###############################################################################!
 SUBROUTINE Laplace_Test_Residual()
 
 REAL(KIND = idp)                                ::  deltar, r
@@ -1063,13 +967,13 @@ Num_Samples = 30
 
 
 deltar = ( R_OUTER - R_INNER )/ REAL(Num_Samples, KIND = idp)
+
 DO i = 0,Num_Samples
 
     r = i*deltar + R_INNER
     theta = pi/2.0_idp
     phi = pi/2.0_idp
 
-    
     f = C_One*r + C_Two*(r)**(-2)
 
     CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
@@ -1089,116 +993,6 @@ END SUBROUTINE Laplace_Test_Residual
 
 
 
-
-
-
-
-
-
-
-
-!+301+###########################################################################!
-!                                                                                !
-!           Call Solve_FP_System                                                 !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Solve_FP_System_Beta()
-
-INTEGER                                                                     ::  INFO
-INTEGER, DIMENSION(1:Beta_Prob_Dim)                                         ::  IPIV
-
-
-COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim)                             ::  WORK_VEC
-COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim,1:Beta_Prob_Dim)             ::  WORK_MAT
-
-
-INTEGER                                                                     ::  ui, re, d, l
-
-INTEGER                                                                     ::  Here, There
-
-
-
-
-
-
-
-IF (LINEAR_SOLVER =='Full') THEN
-    !####################################!
-    !
-    !           Full Matrix Solver       !
-    !
-    !####################################!
-!    PRINT*,"In Beta Solver"
-
-
-    WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
-    WORK_VEC(:) = FP_Source_Vector_Beta(:)
-
-!    PRINT*,"Before DIRICHLET_BC"
-
-
-
-    CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
-
-
-!    PRINT*,"After Dirichlet_BC"
-!    Call Output_Laplace_Beta(Work_Mat, Beta_Prob_Dim, Beta_Prob_Dim, "C")
-!    CALL NEUMANN_BC(l, WORK_VEC)
-
-    
-
-
-!    PRINT*,"Before JACOBI_CONDITIONING"
-    CALL JACOBI_CONDITIONING_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
-    
-
-!    Call Output_Laplace_Beta(Work_Mat, Beta_Prob_Dim, Beta_Prob_Dim, "D")
-
-
-!    PRINT*,Work_Vec
-
-!    PRINT*,"Before ZGESV"
-    CALL ZGESV(Beta_Prob_Dim, 1, WORK_MAT, Beta_Prob_Dim, IPIV, WORK_VEC, Beta_Prob_Dim, INFO)
-    IF (INFO > 0) THEN
-        print*,"DGESV has failed with INFO = ",INFO
-    END IF
-
-
-
-    FP_Coeff_Vector_Beta(:) = WORK_VEC(:)
-
-!    PRINT*,"FP_Coeff_Vector_Beta"
-!    PRINT*,FP_Coeff_Vector_Beta
-
-    DO ui = 1,3
-        DO re = 0,Num_R_Elements -1
-            DO d = 0,Degree
-                DO l = 1,LM_Length
-
-                    Here = (re*Degree + d) * 3 * LM_Length  &
-                         + (ui - 1) * LM_Length             &
-                         + l
-
-                    There = (re*Degree + d) + 1
-
-!                    PRINT*,"Here",FP_Coeff_Vector_Beta(Here),Here, There, ui, re, d, l
-!                    FP_Coeff_Vector(There,l-1,ui+2) = FP_Coeff_Vector_Beta(Here)
-                    FP_Coeff_Vector(There,l-1,ui+2) = Work_Vec(Here)
-
-                END DO  ! l
-            END DO ! d
-        END DO ! re
-    END DO ! ui
-
-
-
-END IF
-
-
-
-
-
-END SUBROUTINE Solve_FP_System_Beta
 
 
 

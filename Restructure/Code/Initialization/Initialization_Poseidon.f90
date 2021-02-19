@@ -41,6 +41,9 @@ USE Variables_IO, &
 USE Variables_Functions, &
                 ONLY :  LM_Location
 
+USE Variables_FP, &
+                ONLY :  FP_Anderson_M
+
 USE Variables_Quadrature, &
                 ONLY :  Num_R_Quad_Points,      &
                         Num_T_Quad_Points,      &
@@ -122,6 +125,10 @@ USE Initialization_NR, &
 USE Functions_Mapping, &
                 ONLY :  CFA_3D_LM_Map
 
+USE Poseidon_IO_Module, &
+                ONLY :  Output_Mesh,            &
+                        Output_Nodal_Mesh
+
 IMPLICIT NONE
 
 
@@ -149,7 +156,11 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
                                 CFA_Eq_Flags_Option,                    &
                                 nProcs_Option,                          &
                                 Suffix_Flag_Option,                     &
+                                Suffix_Tail_Option,                     &
                                 Frame_Option,                           &
+                                Max_Iterations_Option,                  &
+                                Convergence_Criteria_Option,            &
+                                Anderson_M_Option,                      &
                                 Verbose_Option                       )
 
 
@@ -180,12 +191,18 @@ INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL               ::  CFA_EQ_Flags_Opt
 INTEGER,                 INTENT(IN), OPTIONAL               ::  nProcs_Option
 
 CHARACTER(LEN=10),       INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
+CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Frame_Option
+
+INTEGER,                 INTENT(IN), OPTIONAL               ::  Max_Iterations_Option
+
+REAL(idp),               INTENT(IN), OPTIONAL               ::  Convergence_Criteria_Option
+INTEGER,                 INTENT(IN), OPTIONAL               ::  Anderson_M_Option
 
 IF ( PRESENT( Verbose_Option ) ) THEN
     Verbose_Flag = Verbose_Option
 ELSE
-    Verbose_Flag = .TRUE.
+    Verbose_Flag = .FALSE.
 END IF
 
 IF ( Verbose_Flag .EQV. .TRUE. ) THEN
@@ -193,6 +210,13 @@ IF ( Verbose_Flag .EQV. .TRUE. ) THEN
 END IF
 
 
+IF ( PRESENT( FEM_Degree_Option ) ) THEN
+    Max_Iterations = Max_Iterations_Option
+END IF
+
+IF ( PRESENT( Convergence_Criteria_Option) ) THEN
+    Convergence_Criteria = Convergence_Criteria_Option
+END IF
 
 
 
@@ -214,6 +238,11 @@ IF ( PRESENT( L_Limit_Option ) ) THEN
     L_Limit = L_Limit_Option
 ELSE
     L_Limit = 0
+END IF
+
+
+IF ( PRESENT(Anderson_M_Option) ) THEN
+    FP_Anderson_M = Anderson_M_Option
 END IF
 
 
@@ -315,6 +344,7 @@ CALL Initialize_Mesh( )
 
 
 
+
 IF ( PRESENT( Solver_Type_Option ) ) THEN
     Solver_Type = Solver_Type_Option
 ELSE
@@ -343,6 +373,13 @@ ELSE
 END IF
 
 
+IF ( PRESENT(Suffix_Tail_Option) ) THEN
+    WRITE(File_Suffix,'(A,A,A)') TRIM(File_Suffix),"_",Suffix_Tail_Option
+
+END IF
+
+
+
 
 IF ( PRESENT( Dimensions_Option ) ) THEN
     Domain_Dim = Dimensions_Option
@@ -353,11 +390,15 @@ END IF
 LM_Location => CFA_3D_LM_Map
 
 
+CALL Initialize_MPI()
 CALL Allocate_Poseidon_CFA_Variables()
 CALL Initialize_Derived()
 CALL Initialize_Quadrature()
-CALL Initialize_MPI()
+
+
 CALL Initialize_Tables()
+
+
 
 IF ( Solver_Type == 1 ) THEN
     CALL Initialize_NR()
@@ -365,13 +406,20 @@ ELSE IF ( Solver_Type == 2 ) THEN
     CALL Initialize_FP(CFA_EQ_Flags_Option)
 END IF
 
-CALL Output_Setup_Table()
-
 
 
 IF ( Verbose_Flag ) THEN
+
+    CALL Output_Setup_Table()
+
+
+    PRINT*,"Outputing Radial Mesh to file during initialization."
+    CALL Output_Mesh( rlocs, NUM_R_ELEMENTS+1 )
+    CALL Output_Nodal_Mesh( rlocs, NUM_R_ELEMENTS+1 )
+
     PRINT*,"Poseidon Initialization Complete"
 END IF
+
 
 END SUBROUTINE Initialize_Poseidon
 

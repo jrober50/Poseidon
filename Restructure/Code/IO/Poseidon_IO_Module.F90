@@ -72,8 +72,12 @@ USE Poseidon_Parameters, &
                             Domain_Dim,             &
                             CUR_ITERATION,          &
                             Poseidon_Frame,         &
+                            Convergence_Type,       &
                             Convergence_Flag,       &
                             Max_Iterations
+
+USE Variables_Derived, &
+                    ONLY :  Num_R_Nodes
 
 
 USE Variables_Mesh, &
@@ -119,16 +123,19 @@ USE Variables_Functions, &
                             Calc_1D_CFA_Values
 
 USE Functions_Quadrature, &
-                    ONLY :  Initialize_LG_Quadrature_Locations
+                    ONLY :  Initialize_LG_Quadrature_Locations,     &
+                            Initialize_LGL_Quadrature_Locations
 
 
 USE Functions_Mesh, &
-                    ONLY :  Create_Logarithmic_1D_Mesh
+                    ONLY :  Create_Logarithmic_1D_Mesh,             &
+                            Create_Uniform_1D_Mesh
 
 USE Poseidon_IO_Parameters, &
                     ONLY :  Poseidon_Reports_Dir,                           &
                             Poseidon_IterReports_Dir,                       &
                             Poseidon_Objects_Dir,                           &
+                            Poseidon_Mesh_Dir,                              &
                             Poseidon_LinSys_Dir,                            &
                             Poseidon_Results_Dir,                           &
                             Poseidon_Sources_Dir
@@ -258,7 +265,6 @@ IF (( WRITE_TIMETABLE_FLAG == 2 ) .OR. ( WRITE_TIMETABLE_FLAG == 3 ) ) THEN
      
     WRITE(FILENAME,'(A,I2.2,A)')'OUTPUT/Timetable_',Ident,'.out'
 
-    OPEN(unit = FILE_ID,file = FILENAME)
     CALL OPEN_NEW_FILE( FILENAME, File_ID, 50 )
 
     WRITE(FILE_ID,110)"============================================================="
@@ -310,7 +316,6 @@ SUBROUTINE CLOSE_ITER_REPORT_FILE()
 
 
 CLOSE( UNIT = ITER_REPORT_FILE_ID )
-
 
 END SUBROUTINE CLOSE_ITER_REPORT_FILE
 
@@ -479,12 +484,16 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
 
         ! Set Output locations
-        theta = pi/2.0_idp
-        phi = pi/2.0_idp
+        theta = pi/3.0_idp
+        phi = pi/3.0_idp
 
-        CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_SAMPLES,        &
-                                        output_re, output_rc, output_dr                 )
-
+        IF ( R_OUTER/(R_Inner+1.0_idp) > 1E3 ) THEN
+            CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_SAMPLES,     &
+                                            output_re, output_rc, output_dr     )
+        ELSE
+            CALL Create_Uniform_1D_Mesh( R_INNER, R_OUTER, NUM_SAMPLES,     &
+                                         output_re, output_rc, output_dr     )
+        END IF
 
 
         DO i = 1,NUM_SAMPLES
@@ -586,14 +595,13 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
         WRITE(Filenames(7),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
         WRITE(Filenames(8),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
         WRITE(Filenames(9),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
-
+        
 
 !        DO i = 0,PROB_DIM-1
 !            PRINT*,Coefficient_Vector(i)
 !        END DO
 
 
-        File_IDs = [(141 + i, i=1,Num_Files)]
         DO i = 1,Num_Files
             CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i), 200 )
         END DO
@@ -603,20 +611,25 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
         IF ( .TRUE. ) THEN
             NUM_RADIAL_SAMPLES = WRITE_RESULTS_R_SAMPS
+            NUM_THETA_RAYS = WRITE_RESULTS_T_SAMPS
+            NUM_PHI_RAYS = WRITE_RESULTS_P_SAMPS
 
             ! Create Radial Spacing !
             ALLOCATE( Output_rc(1:NUM_RADIAL_SAMPLES) )
             ALLOCATE( Output_dr(1:NUM_RADIAL_SAMPLES) )
             ALLOCATE( Output_re(0:NUM_RADIAL_SAMPLES) )
-            CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,  &
-                                             output_re, output_rc, output_dr        )
+
+            IF ( R_OUTER/(R_Inner+1.0_idp) > 1E3 ) THEN
+                CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,     &
+                                                output_re, output_rc, output_dr     )
+            ELSE
+                CALL Create_Uniform_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,     &
+                                             output_re, output_rc, output_dr     )
+            END IF
 
 
             ! Create Output Spacing
             ! Pull Number of Samples From Parameters !
-
-            NUM_THETA_RAYS = WRITE_RESULTS_T_SAMPS
-            NUM_PHI_RAYS = WRITE_RESULTS_P_SAMPS
 
             !  Create Phi Spacing !
             IF ( NUM_PHI_RAYS == 1 ) THEN
@@ -694,6 +707,9 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
 
 
+
+            WRITE(File_IDs(6),*)Num_Radial_Samples, Num_Theta_Rays, Num_Phi_Rays
+
         ELSE
 
             ORD = Driver_R_Input_Nodes
@@ -746,16 +762,9 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
 
 
-
-
-
-
-
-
-
         ! Close Files
         DO i = 1,Num_Files
-            CLOSE( Unit = File_IDs(i))
+            CLOSE( Unit = File_IDs(i) )
         END DO
 
 
@@ -839,7 +848,6 @@ INTEGER, INTENT(IN)                          ::   Ident
 ! Add Time to Iteration Time Table
 ITER_TIME_TABLE(Ident) = Time
 
-
 ! Add Times to the Frame Time Table
 IF (( Ident <= 3 ) .OR. (Ident == 19) ) THEN
     ! The 3 first events and last event only happen once !
@@ -848,7 +856,6 @@ ELSE
     ! Add This Iterations Time to Running Average for the Run
     FRAME_TIME_TABLE(Ident) = (FRAME_TIME_TABLE(ident)*(Cur_Iteration-1) + Time)/Cur_Iteration
 END IF
-
 
 
 ! Add Times to the Frame Time Table
@@ -893,7 +900,7 @@ FLAG = .TRUE.
 IF ( Present(Suggested_Number) ) THEN
     Temp_Number = Suggested_Number
 ELSE
-    Temp_Number = 1000
+    Temp_Number = 3000
 END IF
 
 
@@ -1082,7 +1089,7 @@ Si_Units = Gram/(Second*Centimeter**2)
 
 
 
-116 FORMAT (A,A,I5.5,A)
+116 FORMAT (A,A,A,A)
 
 
 IF ( WRITE_SOURCES_FLAG == 1 ) THEN
@@ -1218,7 +1225,11 @@ END SUBROUTINE Write_Shift_1D
 
 
 
-
+ !+201+############################################################################!
+!                                                                                   !
+!                     OPEN_FILE_INQUISITION                                         !
+!                                                                                   !
+ !#################################################################################!
 SUBROUTINE OPEN_FILE_INQUISITION()
 
 
@@ -1229,7 +1240,7 @@ LOGICAL                 :: OP
 CHARACTER(len=150)        :: name_of_file
 
 i_min = 1
-i_max = 1000
+i_max = 3000
 
 DO i = i_min,i_max
     OP = .FALSE.
@@ -1354,6 +1365,7 @@ IF ( RUN_REPORT_FLAG == 1 ) THEN
 END IF
 
 
+
 ! Write Timetable to Screen
 IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
     WRITE(*,'(A)')" "
@@ -1392,8 +1404,8 @@ IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
 END IF
 
 
-
-
+WRITE_REPORT_FLAG = 1
+PRINT*,"WRITE_REPORT_FLAG",WRITE_REPORT_FLAG
 ! Write Results Table Header to Screen
 IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
     WRITE(*,'(A)')"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
@@ -1426,7 +1438,7 @@ IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
 
         ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
         AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
-
+        
 
         ! Write Results to Screen
         WRITE(*,111) r/Centimeter,              &
@@ -1638,7 +1650,7 @@ IF ( myID == 0 ) THEN
         WRITE(FILE_ID,'(A)')" "
         WRITE(FILE_ID,142)"Iteration","MAXVAL(ABS(Update_Vector))","Residual"
         DO i = 1,CUR_ITERATION-1
-            WRITE(FILE_ID,143)i,Frame_Update_Table(i),Frame_Residual_Table(i)
+            WRITE(FILE_ID,143)i,MAXVAL(Frame_Update_Table(i,:)),MAXVAL(Frame_Residual_Table(i,Convergence_Type,:))
         END DO
         WRITE(FILE_ID,'(2/)')
 
@@ -1876,36 +1888,154 @@ END SUBROUTINE OUTPUT_YAHIL_PRIMATIVES
 
 
 
-!+902+##########################################################################!
-!                                                                               !
-!                   SUBROUTINE OUTPUT_CONVERGENCE_DATA                          !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE OUTPUT_CONVERGENCE_DATA(FRAME)
 
-INTEGER, INTENT(IN)                                         :: FRAME
 
-INTEGER                                                     ::  i
+
+
+
+
+!+202+###########################################################################!
+!                                                                                !
+!                   OUTPUT_JACOBIAN_MATRIX                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Output_Mesh( Mesh, row_in, flag )
+
+
+INTEGER,                        INTENT(IN)                  ::  row_in
+REAL(idp), DIMENSION(1:Row_In), INTENT(IN)               ::  Mesh
+
+
+CHARACTER(LEN = 1 ), INTENT(IN), OPTIONAL                   ::  flag
+
+CHARACTER(LEN = 300)                                        ::  FILE_NAME
+CHARACTER(LEN = 300)                                        ::  FILE_NAMEb
+CHARACTER(LEN = 40)                                         ::  fmt
+
+
+INTEGER                                                     ::  rows, cols
+
 INTEGER                                                     ::  FILE_ID
-CHARACTER(LEN = 100)                                        ::  FILE_NAME
+INTEGEr                                                     ::  i
 
-132 FORMAT (A,A,I2.2,A,I2.2,A,I2.2,A)
-143 FORMAT (19X,I2.2,15X,ES22.15,10X,ES22.15)
+CHARACTER(LEN = 29)        :: Poseidon_Mesh_Dir      = "Poseidon_Output/Objects/Mesh/"
+
+100 FORMAT (A,A,A,A,A,A)
+101 FORMAT (A,A,A,A)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+
+
+rows = size( Mesh, 1 )
+
+IF ( present(flag) ) THEN
+    WRITE(FILE_NAMEb,100) Poseidon_Mesh_Dir,"Mesh_Radial_Dim_",trim(File_Suffix),"_",flag,".out"
+ELSE
+    WRITE(FILE_NAMEb,101) Poseidon_Mesh_Dir,"Mesh_Radial_Dim_",trim(File_Suffix),".out"
+END IF
+
+
+CALL OPEN_NEW_FILE( trim(FILE_NAMEb), FILE_ID, 300 )
+WRITE(FILE_ID,*) rows
+CLOSE(FILE_ID)
 
 
 
-WRITE(FILE_NAME,132)Poseidon_IterReports_Dir,"Frame_Convergence_Report_F",Frame,"_D",DEGREE,"_L",L_LIMIT,".out"
-CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
+IF ( present(flag) ) THEN
+    WRITE(FILE_NAME,100) Poseidon_Mesh_Dir,"Mesh_Radial_Loc_",trim(File_Suffix),"_",flag,".out"
+ELSE
+    WRITE(FILE_NAME,100) Poseidon_Mesh_Dir,"Mesh_Radial_Loc_",trim(File_Suffix),".out"
+END IF
 
-DO i = 1,CUR_ITERATION-1
-    WRITE(FILE_ID,143)i,Frame_Update_Table(i),Frame_Residual_Table(i)
+CALL OPEN_NEW_FILE( trim(FILE_NAME), FILE_ID, 300 )
+DO i = 1,rows
+    WRITE(FILE_ID,fmt) Mesh(i)
 END DO
+CLOSE( FILE_ID )
 
 
-CLOSE(File_ID)
 
-END SUBROUTINE OUTPUT_CONVERGENCE_DATA
+END SUBROUTINE Output_Mesh
 
+
+
+
+!+202+###########################################################################!
+!                                                                                !
+!                   Output_Nodal_Mesh                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Output_Nodal_Mesh( Mesh, row_in, flag )
+
+
+INTEGER,                        INTENT(IN)                  ::  row_in
+REAL(idp), DIMENSION(1:Row_In), INTENT(IN)               ::  Mesh
+
+
+CHARACTER(LEN = 1 ), INTENT(IN), OPTIONAL                   ::  flag
+
+CHARACTER(LEN = 300)                                        ::  FILE_NAME
+CHARACTER(LEN = 300)                                        ::  FILE_NAMEb
+CHARACTER(LEN = 40)                                         ::  fmt
+
+REAL(KIND = idp)                                            ::  DROT
+REAL(KIND = idp), DIMENSION(0:Degree)                       ::  Local_Locations
+REAL(KIND = idp), DIMENSION(0:Degree)                       ::  Cur_R_Locs
+
+INTEGER                                                     ::  rows, cols
+
+INTEGER                                                     ::  FILE_ID
+INTEGEr                                                     ::  i, re, d
+
+CHARACTER(LEN = 29)        :: Poseidon_Mesh_Dir      = "Poseidon_Output/Objects/Mesh/"
+
+100 FORMAT (A,A,A,A,A,A)
+101 FORMAT (A,A,A,A)
+
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+
+
+rows = size( Mesh, 1 )
+
+IF ( present(flag) ) THEN
+    WRITE(FILE_NAMEb,100) Poseidon_Mesh_Dir,"Mesh_Nodal_Dim_",trim(File_Suffix),"_",flag,".out"
+ELSE
+    WRITE(FILE_NAMEb,101) Poseidon_Mesh_Dir,"Mesh_Nodal_Dim_",trim(File_Suffix),".out"
+END IF
+
+
+CALL OPEN_NEW_FILE( trim(FILE_NAMEb), FILE_ID, 300 )
+WRITE(FILE_ID,*) Num_R_Nodes
+CLOSE(FILE_ID)
+
+
+
+
+Local_Locations = Initialize_LGL_Quadrature_Locations(Degree)
+
+
+IF ( present(flag) ) THEN
+    WRITE(FILE_NAME,100) Poseidon_Mesh_Dir,"Mesh_Nodal_Loc_",trim(File_Suffix),"_",flag,".out"
+ELSE
+    WRITE(FILE_NAME,100) Poseidon_Mesh_Dir,"Mesh_Nodal_Loc_",trim(File_Suffix),".out"
+END IF
+
+CALL OPEN_NEW_FILE( trim(FILE_NAME), FILE_ID, 300 )
+WRITE(File_ID,fmt) Mesh(1)
+DO re = 1,NUM_R_ELEMENTS
+
+    DROT = 0.50_idp*(Mesh(re+1) - Mesh(re))
+    CUR_R_LOCS(:) = DROT * (Local_Locations(:)+1.0_idp) + Mesh(re)
+
+    DO d = 1,Degree
+        WRITE(FILE_ID,fmt) Cur_R_Locs(d)
+    END DO
+END DO
+CLOSE( FILE_ID )
+
+
+
+END SUBROUTINE Output_Nodal_Mesh
 
 
 

@@ -305,8 +305,8 @@ ELSE IF ( Test_Number == 3) THEN
 
 
 
-    Potential_Solution => SELFSIM_NEWT_SOL
-    Shift_Solution => SELFSIM_SHIFT_SOL
+!    Potential_Solution => SELFSIM_NEWT_SOL
+!    Shift_Solution => SELFSIM_SHIFT_SOL
 
 END IF
 

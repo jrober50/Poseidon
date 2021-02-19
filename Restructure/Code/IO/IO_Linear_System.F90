@@ -108,6 +108,8 @@ INTEGEr                                                 ::  re,e
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 
 
+
+
 WRITE(FILE_NAMEb,100) Poseidon_LinSys_Dir,"LAP_MAT_DIM_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAMEb, FILE_ID, 300 )
 WRITE(FILE_ID,*) NUM_R_ELEMS_PER_BLOCK,NUM_OFF_DIAGONALS, DEGREE, L_LIMIT
@@ -118,6 +120,7 @@ WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"LAP_MAT_F",Poseidon_Fram
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 300 )
 
 
+PRINT*,"Writing Laplace Matrix to file: ", File_Name
 
 
 DO re = 0,SUBSHELL_PROB_DIM-1
@@ -162,6 +165,8 @@ CLOSE(FILE_ID)
 WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"STF_MAT_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 400 )
 
+PRINT*,"Writing Jacobian Matrix to file: ", File_Name
+
 
 DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
     DO e = 0,ELEM_PROB_DIM_SQR-1
@@ -205,6 +210,8 @@ fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 WRITE(FILE_NAME,Filename_Format_B) Poseidon_LinSys_Dir,"RHS_VEC_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 500 )
 
+
+PRINT*,"Writing RHS Vector to file: ", File_Name
 
 WRITE(FILE_ID, 101)NUM_R_ELEMENTS,DEGREE,L_LIMIT
 DO i = 0,Block_PROB_DIM-1

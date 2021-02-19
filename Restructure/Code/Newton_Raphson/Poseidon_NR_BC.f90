@@ -406,7 +406,7 @@ DO re = 0,NUM_R_ELEM-1
    DO i = 1,Ord
       AlphaPsi(i) =  1.0_idp + 0.5_idp*Potential_Solution(ri_locs(i),0.0_idp,0.0_idp)/C_Square
    END DO
-
+    
 
    DO i = 1,Ord
 
@@ -434,7 +434,7 @@ DO re = 0,NUM_R_ELEM-1
 
                 Sr_New(j,i) = Sr(1,reb,0,0,1)
 
-               exit
+                exit
             END IF
          END DO ! reb Loop
 
@@ -449,21 +449,22 @@ DO re = 0,NUM_R_ELEM-1
 
 
      ! Do the Inner Integrals
-     Inner_Int = 0.0_idp
-     DO j = 1,Ord
+        Inner_Int = 0.0_idp
+        DO j = 1,Ord
 
-        Inner_Int = Inner_Int                                 &
-                  + rij_locs(j,i)*rij_locs(j,i)*rij_locs(j,i) &
-                  * PSI_10(j,i)                               &
-                  * Sr_New(j,i)                               &
-                  * wi(j)
+            Inner_Int = Inner_Int                                 &
+                      + rij_locs(j,i)*rij_locs(j,i)*rij_locs(j,i) &
+                      * PSI_10(j,i)                               &
+                      * Sr_New(j,i)                               &
+                      * wi(j)
 
-!                  PRINT*,"PSI_10",PSI_10(j,i),"Sr_New",Sr_New(j,i),"ri_locs(i)",ri_locs(i)
+!            PRINT*,"PSI_10",PSI_10(j,i),"Sr_New",Sr_New(j,i),"ri_locs(i)",ri_locs(i)
 
-      END DO ! j Loop
+        END DO ! j Loop
 
+    
 !      PRINT*,"Inner Int",Inner_Int*( ri_locs(i) - 0.0_idp)/2.0_idp
-      Outer_Int = Outer_Int                                       &
+    Outer_Int = Outer_Int                                       &
                 + AlphaPsi(i)                                     &
                 / (ri_locs(i)*ri_locs(i)*ri_locs(i)*ri_locs(i))   &    ! *** Changed
                 * Inner_Int                                       &
@@ -472,7 +473,7 @@ DO re = 0,NUM_R_ELEM-1
 
    END DO ! i Loop
 
-
+    
 
 
 

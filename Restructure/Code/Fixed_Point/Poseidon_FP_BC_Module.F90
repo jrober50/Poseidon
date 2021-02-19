@@ -631,7 +631,7 @@ INTEGER                 :: i, shift, uj, ui, m, l, d, Here
 COMPLEX(KIND = idp)                                                         :: BC_Value
 
 
-DO ui = 1,3
+DO ui = 3,1,-1
     uj = ui + 2
 
     IF (INNER_CFA_BC_TYPE(ui) == "D") THEN

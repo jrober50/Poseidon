@@ -28,6 +28,9 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                         ONLY :  pi, eps
 
+USE VPRINT_Module,  &
+            ONLY :  VPRINT
+
 USE Units_Module, &
             ONLY :  Grav_Constant_G,    &
                     Speed_of_Light,     &
@@ -35,7 +38,7 @@ USE Units_Module, &
                     GR_Source_Scalar,   &
                     Centimeter,         &
                     Second,             &
-                    Milisecond,         &
+                    Millisecond,         &
                     Erg,                &
                     Gram
 
@@ -45,6 +48,11 @@ USE Variables_Yahil, &
                     SELFSIM_POT_VALS,   &
                     SELFSIM_SHIFT_VALs, &
                     SELFSIM_V_SWITCH
+
+
+USE Variables_Functions, &
+                ONLY :  Potential_Solution,                      &
+                        Shift_Solution
 
 USE DRIVER_PARAMETERS,  &
             ONLY :  DRIVER_OUTER_RADIUS,&
@@ -149,7 +157,6 @@ NUM_LINES = NUM_LINES -1
 
 
 
-
 ALLOCATE( Input_X(1:NUM_LINES), Input_D(1:NUM_LINES), Input_V(1:NUM_LINES) )
 ALLOCATE( Input_R(1:NUM_LINES) )
 ALLOCATE( Input_M(1:NUM_LINES) )
@@ -169,7 +176,6 @@ END IF
 
 
 
-
 REWIND(nread)
 CUR_LINE = 1
 READ(nread,*)
@@ -180,27 +186,26 @@ DO
 
 
     READ(line,*) Input_X(CUR_LINE), Input_D(CUR_LINE), Input_V(CUR_LINE), Input_M(CUR_LINE)
-!    READ( line, 111) Input_X(CUR_LINE)
-!    READ( line, 121) Input_D(CUR_LINE)
-!    READ( line, 131) Input_V(CUR_LINE)
-!    READ( line, 141) Input_M(CUR_LINE)
-    PRINT*,Input_X(cur_Line)
     CUR_LINE = CUR_LINE + 1
     
 END DO
 
-
-
 CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
 
-t = t_in*Milisecond
 
-IF ( .TRUE. ) THEN
+
+
+
+t = t_in*Millisecond
+PRINT*,t_in, t
+
+IF ( .FALSE. ) THEN
     Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
 ELSE
     Kappa_wUnits = 18.394097187796024_idp
     PRINT*,"Kappa_wUnits over written.",Kappa_wUnits
 END IF
+
 
 R_Factor = SQRT(Kappa_wUnits)                                &
         *(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))       &
@@ -223,6 +228,8 @@ IF ( .TRUE. ) THEN
     PRINT*,"Kappa = ",Kappa_wUnits
     PRINT*,"Gamma = ",Gamma
     PRINT*,"Eccentricty = ",ecc
+    PRINT*,"R_Factor = ", R_Factor
+!    PRINT*,"Enclosed_Mass = ", Enclosed_Mass
 
 END IF
 
@@ -236,7 +243,7 @@ IF (.FALSE.) THEN
 END IF
 
 
-IF ( SELFSIM_V_SWITCH == 0 ) THEN
+IF ( SELFSIM_V_SWITCH == 1 ) THEN
     PRINT*,"Input_V Zeroed"
     Input_V = 0.0_idp
 END IF
@@ -255,7 +262,8 @@ END IF
 !                            Input_R, Input_D, Input_V, Input_X,             &
 !                            Input_E, Input_S, Input_Si              )
 
-PRINT*,"Before CONVERT_SELF_SIMILAR_3Db"
+
+
 CALL CONVERT_SELF_SIMILAR_3Db(  t, Kappa_wUnits, gamma, ecc,                   &
                             Num_Nodes, NUM_LINES,                   &
                             INPUT_R_QUAD, INPUT_T_QUAD,             &
@@ -275,11 +283,13 @@ CALL CONVERT_SELF_SIMILAR_3Db(  t, Kappa_wUnits, gamma, ecc,                   &
 !PRINT*,Input_Si
 !PRINT*," "
 
-PRINT*,"Here"
+
+
 CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
-PRINT*,"There"
 CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, Input_Si, r_locs )
-PRINT*,"Done"
+
+Potential_Solution => SELFSIM_NEWT_SOL
+Shift_Solution => SELFSIM_SHIFT_SOL
 
  5000 RETURN
 END SUBROUTINE Initialize_Yahil_Sources
@@ -560,7 +570,7 @@ INTEGER,                        INTENT(IN)                                  ::  
 INTEGER,                        INTENT(IN)                                  ::  NUM_T_ELEM
 INTEGER,                        INTENT(IN)                                  ::  NUM_P_ELEM
 
-REAL(KIND = idp), DIMENSION(NUM_R_ELEM), INTENT(IN)                         ::  Delta_R
+REAL(KIND = idp), DIMENSION(NUM_R_ELEM),   INTENT(IN)                       ::  Delta_R
 REAL(KIND = idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
 REAL(KIND = idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                       ::  t_locs
 
@@ -620,9 +630,7 @@ INTEGER                                                                     ::  
 INTEGER                                                                     ::  Num_Theta_Points
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  Density_Holder,         &
-                                                                                Velocity_Holder,        &
-                                                                                Radial_Locations,       &
-                                                                                Theta_Locations
+                                                                                Velocity_Holder
 
 INTEGER                                                                     ::  Here, There
 REAL(KIND = idp)                                                            ::  xloc
@@ -645,7 +653,6 @@ Num_Radial_Points = NUM_R_ELEM*NUM_NODES(1)
 Num_Theta_Points = NUM_T_ELEM*NUM_NODES(2)
 ALLOCATE( Density_Holder(1:Num_Radial_Points) )
 ALLOCATE( Velocity_Holder(1:Num_Radial_Points) )
-ALLOCATE( Theta_Locations(1:Num_Theta_Points) )
 ALLOCATE( DX_Holder(1:Num_Radial_Points) )
 ALLOCATE( VX_Holder(1:Num_Radial_Points) )
 
@@ -672,6 +679,7 @@ M_FACTOR = kappa**(3.0_idp/2.0_idp)                             &
          * Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)   &
          * t**(4.0_idp - 3.0_idp * gamma )
 
+PRINT*,"V_Factor",V_Factor
 
 DO pe = 0,NUM_P_ELEM-1
 DO te = 0,NUM_T_ELEM-1
@@ -700,7 +708,6 @@ DO te = 0,NUM_T_ELEM-1
             DX_Holder(re*Num_Nodes(1)+rd) = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))
             VX_Holder(re*Num_Nodes(1)+rd) = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))
 
-
             Density_Holder(re*NUM_NODES(1)+rd)  = Density
             Velocity_Holder(re*NUM_NODES(1)+rd) = Velocity
 
@@ -725,11 +732,11 @@ DO te = 0,NUM_T_ELEM-1
 !            PRINT*,re,E,S,Si
 !            PRINT*,re,Velocity
 
-            DO pd = 0,NUM_NODES(3)-1
-            DO td = 0,NUM_NODES(2)-1
+            DO pd = 1,NUM_NODES(3)
+            DO td = 1,NUM_NODES(2)
 
-                nd = pd*NUM_NODES(2)*NUM_NODES(1)   &
-                   + td*NUM_NODES(1)                &
+                nd = (pd-1)*NUM_NODES(2)*NUM_NODES(1)   &
+                   + (td-1)*NUM_NODES(1)                &
                    + rd
 
                 Input_E(nd, re,te,pe) = E
@@ -745,7 +752,6 @@ DO te = 0,NUM_T_ELEM-1
 END DO ! te
 END DO ! pe
 
-
 IF ( OUTPUT_PRIMATIVES_FLAG == 1 ) THEN
 
     CALL OUTPUT_PRIMATIVES( Density_Holder, Velocity_Holder, Num_Radial_Points)
@@ -755,6 +761,14 @@ END IF
 IF ( .FALSE. ) THEN
     CALL OUTPUT_YAHIL_PRIMATIVES( DX_Holder, VX_Holder, Num_Radial_Points )
 END IF
+
+
+
+DEALLOCATE( Density_Holder  )
+DEALLOCATE( Velocity_Holder )
+DEALLOCATE( DX_Holder       )
+DEALLOCATE( VX_Holder       )
+
 
 END SUBROUTINE CONVERT_SELF_SIMILAR_3Db
 

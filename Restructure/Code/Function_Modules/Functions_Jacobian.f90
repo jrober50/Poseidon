@@ -151,6 +151,124 @@ END FUNCTION JCBN_kappa_FUNCTION_3D_ALL
 
 
 
+!+301+###########################################################################!
+!                                                                                !
+!                                                                                !
+!################################################################################!
+SUBROUTINE JCBN_Kappa_Array_3D( Kappa_Array,                                &
+                                NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINTS,      &
+                                Cur_R_Locs, R_SQUARE, R_CUBED, RSIN_SQUARE, &
+                                SIN_VAL, SIN_SQUARE, CSC_SQUARE,            &
+                                COS_VAL, COTAN_VAL,                         &
+                                CUR_VAL_BETA, CUR_DRV_BETA                  )
+
+REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points, 1:Num_R_Quad_Points, 1:3,1:3), INTENT(OUT) ::  Kappa_Array
+
+INTEGER, INTENT(IN)                     ::  NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINTS
+
+REAL(KIND = idp), DIMENSION(1:Num_R_Quad_Points), INTENT(IN)        ::  Cur_R_Locs
+REAL(KIND = idp), DIMENSION(1:Num_R_Quad_Points), INTENT(IN)        ::  R_SQUARE
+REAL(KIND = idp), DIMENSION(1:Num_R_Quad_Points), INTENT(IN)        ::  R_CUBED
+
+REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  SIN_VAL
+REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  SIN_SQUARE
+REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  CSC_SQUARE
+REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  COS_VAL
+REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  COTAN_VAL
+
+REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points, 1:Num_R_Quad_Points), INTENT(IN)  ::  RSIN_SQUARE
+
+
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
+                                         1:NUM_R_QUAD_POINTS,   &
+                                         1:3                    )          ::  CUR_VAL_BETA
+
+
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
+                                         1:NUM_R_QUAD_POINTS,   &
+                                         1:3, 1:3               )          ::  CUR_DRV_BETA
+
+
+INTEGER                                                                     ::  rd, tpd
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+    
+        Kappa_Array(tpd, rd, 1,1) = FourThirds                  * CUR_DRV_BETA( tpd, rd, 1, 1 )       &
+                                  - FourThirds/ Cur_R_Locs(rd)  * CUR_VAL_BETA( tpd, rd, 1 )          &
+                                  - TwoThirds * COTAN_VAL(tpd)  * CUR_VAL_BETA( tpd, rd, 2 )          &
+                                  - TwoThirds                   * CUR_DRV_BETA( tpd, rd, 2, 2 )       &
+                                  - TwoThirds                   * CUR_DRV_BETA( tpd, rd, 3, 3 )
+
+END DO
+END DO
+
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+
+    Kappa_Array(tpd, rd, 2, 1) =  CUR_DRV_BETA( tpd, rd, 1, 2 )                                     &
+                                +  CUR_DRV_BETA( tpd, rd, 2, 1 )/R_SQUARE(rd)
+
+END DO
+END DO
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+
+    Kappa_Array(tpd, rd, 3, 1) =  CUR_DRV_BETA( tpd, rd, 1, 3 )                                     &
+                                +  CUR_DRV_BETA( tpd, rd, 3, 1 )/RSIN_SQUARE(tpd,rd)
+END DO
+END DO
+
+
+
+
+Kappa_Array(:,:,1,2) = Kappa_Array(:,:,2,1)
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+    Kappa_Array(tpd, rd, 2, 2) = TwoThirds / R_CUBED(rd)                   * CUR_VAL_BETA( tpd, rd, 1 )      &
+                                - (TwoThirds/ R_SQUARE(rd))*COTAN_VAL(tpd)  * CUR_VAL_BETA( tpd, rd, 2 )      &
+                                + FourThirds/ R_SQUARE(rd)                  * CUR_DRV_BETA( tpd, rd, 2, 2 )   &
+                                - TwoThirds / R_SQUARE(rd)                  * CUR_DRV_BETA( tpd, rd, 1, 1 )   &
+                                - TwoThirds / R_SQUARE(rd)                  * CUR_DRV_BETA( tpd, rd, 3, 3 )
+END DO
+END DO
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+    Kappa_Array(tpd, rd, 3, 2) = CUR_DRV_BETA( tpd, rd, 2, 3 )/R_SQUARE(rd)                             &
+                                + CUR_DRV_BETA( tpd, rd, 3, 2 )/RSIN_SQUARE(tpd,rd)
+END DO
+END DO
+
+
+Kappa_Array(:,:,1,3) = Kappa_Array(:,:,3,1)
+Kappa_Array(:,:,2,3) = Kappa_Array(:,:,3,2)
+
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+    Kappa_Array(tpd, rd, 3, 3) = TwoThirds/( Cur_R_Locs(rd) * RSIN_SQUARE(tpd,rd))                 &
+                                                                    * CUR_VAL_BETA( tpd, rd, 1 )    &
+                                + FourThirds * COTAN_VAL(tpd)/RSIN_SQUARE(tpd,rd)                   &
+                                                                    * CUR_VAL_BETA( tpd, rd, 2 )    &
+                                + FourThirds / RSIN_SQUARE(tpd,rd)  * CUR_DRV_BETA( tpd, rd, 3, 3 ) &
+                                - TwoThirds / RSIN_SQUARE(tpd,rd)   * CUR_DRV_BETA( tpd, rd, 1, 1 ) &
+                                - TwoThirds / RSIN_SQUARE(tpd,rd)   * CUR_DRV_BETA( tpd, rd, 2, 2 )
+END DO
+END DO
+
+END SUBROUTINE JCBN_Kappa_Array_3D
+
+
+
 
 !+302+###########################################################################!
 !                                                                                !

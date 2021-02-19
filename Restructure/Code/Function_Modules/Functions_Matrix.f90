@@ -115,6 +115,41 @@ END FUNCTION MVMULT_FULL
 
 
 
+!+402+############################################################!
+!
+!     MVMULT_FULL: Multiply a vector by a matrix in CCS format
+!
+!#################################################################!
+SUBROUTINE MVMULT_FULL_SUB(A, V, N, M)
+
+
+INTEGER, INTENT(IN)                                         :: N, M
+COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:M)             :: V
+COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:N,1:M)         :: A
+
+
+REAL(KIND = idp), DIMENSION(1:N)                            :: Sol
+
+INTEGER                                                     :: i,j
+
+
+
+Do i = 1,N
+
+    Sol(i) = 0.D0
+
+    Do j = 1,M
+        PRINT*,i,j,REAL(A(i,j),idp),REAL(V(j),idp),REAL(A(i,j)*V(j),idp),REAL(Sol(i) + A(i,j)*V(j),idp)
+        Sol(i) = Sol(i) + A(i,j)*V(j)
+    
+    END DO
+
+END DO
+
+
+END SUBROUTINE MVMULT_FULL_SUB
+
+
 
 
 

@@ -42,12 +42,14 @@ INTEGER, PUBLIC, PARAMETER          ::  STF_MAPPING_FLAG = 2
 
 
 
-INTEGER, PUBLIC                     ::  POSEIDON_FRAME      = 0
+INTEGER, PUBLIC                     ::  POSEIDON_FRAME      = 1
 INTEGER, PUBLIC                     ::  CUR_ITERATION
-INTEGER, PUBLIC                     ::  MAX_ITERATIONS      = 5
-INTEGER, PUBLIC                     ::  CONVERGENCE_FLAG    = 0
+INTEGER, PUBLIC                     ::  MAX_ITERATIONS      = 10
 
+INTEGER, PUBLIC                     ::  CONVERGENCE_FLAG     = 0
+INTEGER, PUBLIC                     ::  Convergence_Type     = 2
 REAL(KIND =idp), PUBLIC             ::  CONVERGENCE_CRITERIA = 1.0E-8_idp
+
 
 INTEGER, PUBLIC                     ::  INITIAL_GUESS_FLAG
 
@@ -65,6 +67,14 @@ INTEGER, PUBLIC                     ::  Ratio_P_BNDLperBLCK
 INTEGER, PUBLIC                     ::  Ratio_BNDLperBLCK
 
 
-Logical, PUBLIC                     ::  Verbose_Flag
+Logical, PUBLIC                     ::  Verbose_Flag = .FALSE.
+
+
+
+
+CHARACTER(17), DIMENSION(3), PUBLIC, PARAMETER        ::  &
+Convergence_Type_Names = ['L_One Error Norm ',     &
+                          'L_Two Error Norm ',     &
+                          'L_Inf Error Norm '      ]
 
 END MODULE Poseidon_Parameters

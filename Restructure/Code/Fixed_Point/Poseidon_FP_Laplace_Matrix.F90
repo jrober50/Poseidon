@@ -30,7 +30,8 @@ USE Poseidon_Kinds_Module, &
 
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
-                    L_LIMIT
+                    L_LIMIT,                    &
+                    Verbose_Flag
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points
@@ -69,6 +70,10 @@ USE FP_Functions_Laplace_Beta, &
             ONLY :  Initialize_Laplace_Matrices_Beta, &
                     Output_Laplace
 
+USE Poseidon_IO_Module, &
+            ONLY :  Clock_In
+
+USE MPI
 
 IMPLICIT NONE
 
@@ -82,19 +87,40 @@ CONTAINS
 !################################################################################!
 SUBROUTINE Initialize_Laplace_Matrices()
 
-LOGICAL                                 :: Success_Flag
+LOGICAL                                 ::  Success_Flag
+REAL(idp), DIMENSION(1:3)               ::  Timer
+
 
 Success_Flag = .FALSE.
 IF ( Matrix_Format == 'Full' ) THEN
     
-    CALL Initialize_Laplace_Matrices_Full()
-    CALL Initialize_Laplace_Matrices_Beta()
-    PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
+    
+    IF ( ANY(CFA_EQ_Flags(1:2) == 1 ) ) THEN
+        timer(1) = MPI_WTime()
+        CALL Initialize_Laplace_Matrices_Full()
+        timer(2) = MPI_Wtime()
+        Call Clock_In(timer(2)-timer(1),1)
+    END IF
+    IF ( ANY(CFA_EQ_Flags(3:5) == 1) ) THEN
+        timer(1) = MPI_WTime()
+        CALL Initialize_Laplace_Matrices_Beta()
+        timer(2) = MPI_Wtime()
+        Call Clock_In(timer(2)-timer(1),2)
+    END IF
+
+
+    IF ( Verbose_Flag ) THEN
+        PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
+    END IF
     Success_Flag = .TRUE.
+
+
 ELSEIF ( Matrix_Format == 'CCS' ) THEN
 
     CALL Initialize_Laplace_Matrices_CCS()
-    PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
+    IF ( Verbose_Flag ) THEN
+        PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
+    END IF
     Success_Flag = .TRUE.
 END IF
 
@@ -145,6 +171,7 @@ ALLOCATE( R_SQUARE(1:Int_Degree)    )
 ALLOCATE( Int_Locs(1:Int_Degree)    )
 ALLOCATE( Int_Weights(1:Int_Degree) )
 
+
 CALL Initialize_LG_Quadrature(Int_Degree, Int_Locs, Int_Weights )
 
 
@@ -172,7 +199,7 @@ DO l = 0,L_LIMIT
 
 
                     
-                    Laplace_Matrix_Full(i, j, l,:) = Laplace_Matrix_Full(i, j, l,:) &
+                    Laplace_Matrix_Full(i, j, l) = Laplace_Matrix_Full(i, j, l) &
                                         - R_SQUARE(rd) * LPT_LPT(rd,d,dp,1,1)       &
                                             * TODR * Int_Weights(rd)                &
                                         + L_Lp1 * LPT_LPT(rd,d,dp,0,0)              &
@@ -187,38 +214,6 @@ END DO  ! l Loop
 
 
 !Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "W")
-
-
-IF ( CFA_EQ_Flags(3) == 1 ) THEN
-    Mat_Loc = CFA_Mat_Map(3)
-    DO l = 0,L_LIMIT
-        DO re = 0,NUM_R_ELEMENTS-1
-
-            DO dp = 0,DEGREE
-                DO d = 0,DEGREE
-                    i = re*DEGREE+d+1
-                    j = re*DEGREE+dp+1
-
-                    DO rd = 1,Int_Degree
-
-
-                        
-                        Laplace_Matrix_Full(i, j, l,Mat_Loc)             &
-                                            = Laplace_Matrix_Full(i, j, l,Mat_Loc)    &
-                                            - 2.0_idp * LPT_LPT(rd,d,dp,0,0)                  &
-                                                / TODR * Int_Weights(rd)
-
-                        
-                    END DO  ! rd Loop
-
-                END DO  ! dp Loop
-            END DO  ! d Loop
-        END DO  ! re Loop
-    END DO  ! l Loop
-
-!Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "X")
-   
-END IF
 
 
 

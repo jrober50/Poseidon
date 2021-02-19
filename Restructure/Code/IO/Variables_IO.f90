@@ -34,8 +34,8 @@ INTEGER                     ::  WRITE_RESULTS_FLAG          = 1
 
 INTEGER                     ::  ITER_REPORT_NUM_SAMPLES     = 20
 
-INTEGER                     ::  WRITE_RESULTS_R_SAMPS       = 1000
-INTEGER                     ::  WRITE_RESULTS_T_SAMPS       = 1
+INTEGER                     ::  WRITE_RESULTS_R_SAMPS       = 256
+INTEGER                     ::  WRITE_RESULTS_T_SAMPS       = 256
 INTEGER                     ::  WRITE_RESULTS_P_SAMPS       = 1
 
 INTEGER                     ::  WRITE_SOURCES_FLAG          = 1
@@ -67,12 +67,12 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Run_Time_Table
 
 INTEGER                                                     ::  Total_Run_Iters=1
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Update_Table
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Frame_Residual_Table
+REAL(KIND = idp), DIMENSION(:,:), ALLOCATABLE               ::  Frame_Update_Table
+REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE             ::  Frame_Residual_Table
 
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  Iteration_Histogram
 
 
-CHARACTER(LEN=20)                                           ::  File_Suffix
+CHARACTER(LEN=40)                                           ::  File_Suffix
 
 END MODULE Variables_IO

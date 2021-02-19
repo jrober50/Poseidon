@@ -98,24 +98,28 @@ Call Create_Logarithmic_1D_Mesh( R_Inner,           &
                                  Num_Samples,       &
                                  x_e, x_c, dx_c     )
 
+theta = pi/3.0_idp
+phi = pi/2.0_idp
+
+
+WRITE(*,'(A,F4.2,A,F4.2,A)')"Results taken along ray, theta = ",theta/pi," Pi Radians, Phi = ",phi/pi," Pi Radians"
 WRITE(*,110)"r","Psi","AlphaPsi","Beta1 Value","Beta2 Value","Beta3 Value"
 
 
 DO i = 0,Num_Samples
 
-    r = x_e(i)*Centimeter
-    theta = pi/2.0_idp
-    phi = pi/2.0_idp
+    r = x_e(i)
+
 
 
     CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
                                     Return_Psi, Return_AlphaPsi,                &
                                     Return_Beta1, Return_Beta2, Return_Beta3    )
 
-    WRITE(*,111) r,                         &
+    WRITE(*,111) r/Centimeter,              &
                  Return_Psi,                &
                  Return_AlphaPsi,           &
-                 Return_Beta1*Shift_Units,  &
+                 Return_Beta1/Shift_Units,  &
                  Return_Beta2,              &
                  Return_Beta3
 

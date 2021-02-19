@@ -71,13 +71,11 @@ USE Variables_IO, &
                             Frame_Report_File_ID,   &
                             Run_Report_File_ID,     &
                             Write_Report_Flag,      &
-                            Frame_Report_Flag,      &
                             Write_Results_Flag,     &
                             Write_Timetable_Flag,   &
                             Write_Sources_Flag,     &
                             Run_Report_Flag,        &
                             Results_Output_Flag,    &
-                            Frame_Report_Flag,      &
                             Iter_Time_Table,        &
                             Frame_Time_Table,       &
                             Run_Time_Table,         &
@@ -87,8 +85,6 @@ USE Variables_IO, &
                             Total_Run_Iters,        &
                             Iter_Report_Num_Samples,&
                             Iter_Time_Table,        &
-                            Frame_Residual_Table,   &
-                            Frame_Update_Table,     &
                             Iteration_Histogram
 
 

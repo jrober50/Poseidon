@@ -114,7 +114,7 @@ REAL(KIND = idp), DIMENSION(    1:Local_RQ_Dim*Local_TQ_Dim*Local_PQ_Dim,       
 !Tmp_Si = 0.0_idp
 !PRINT*,"Si zeroed in Poseidon_Input_Sources, z.Poseidon_Source_Module.F90"
 
-PRINT*,"Before OUTPUT_POSEIDON_SOURCES_1D"
+!PRINT*,"Before OUTPUT_POSEIDON_SOURCES_1D"
 
 CALL OUTPUT_POSEIDON_SOURCES_1D(Local_E, Local_S, Local_Si,                         &
                                 Local_RE_Dim, Local_TE_Dim, Local_PE_Dim,           &
@@ -126,7 +126,7 @@ CALL OUTPUT_POSEIDON_SOURCES_1D(Local_E, Local_S, Local_Si,                     
 
 ! Poseidon_CFA_Block_Share takes source data and redistributes it into Poseidon's preferred decomposition.
 
-PRINT*,"Before Poseidon_CFA_Block_Share"
+!PRINT*,"Before Poseidon_CFA_Block_Share"
 CALL Poseidon_CFA_Block_Share(  ProcID, ProcID_Theta, ProcID_Phi,                   &
                                 Local_E, Local_S, Local_Si,                         &
                                 Local_RE_Dim, Local_TE_Dim, Local_PE_Dim,           &
@@ -137,7 +137,7 @@ CALL Poseidon_CFA_Block_Share(  ProcID, ProcID_Theta, ProcID_Phi,               
                                 drlocs, dtlocs, dplocs,                             &
                                 Block_Source_E, Block_Source_S, Block_Source_Si     )
 
-
+!PRINT*,"After Poseidon_CFA_Block_Share"
 
 END SUBROUTINE Poseidon_Input_Sources
 
