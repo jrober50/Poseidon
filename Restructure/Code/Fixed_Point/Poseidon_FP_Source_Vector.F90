@@ -95,7 +95,7 @@ USE Functions_Mapping, &
 USE FP_Functions_Mapping, &
             ONLY :  FP_Vector_Map
 
-
+USE MPI
 
 
 
@@ -153,7 +153,7 @@ CONTAINS
 SUBROUTINE Calc_FP_Source_Vector()
 
 
-REAL(KIND = idp),DIMENSION(1:3)                             ::  Timer
+REAL(KIND = idp),DIMENSION(1:4)                             ::  Timer
 
 INTEGER                                                     ::  re, te, pe,     &
                                                                 d, lm,          &
@@ -219,14 +219,22 @@ DO pe = 0,NUM_P_ELEMENTS-1
             END DO
 
 !            PRINT*,"Before Calc_FP_Current_Values"
+!            timer(4) = MPI_WTime()
             CALL Calc_FP_Current_Values(re, te, pe,               &
                                         DELTAR_OVERTWO, DELTAT_OVERTWO, DELTAP_OVERTWO  )
 
+!            timer(3) = MPI_WTime()
 !            PRINT*,"Before Calc_FP_Source_Terms"
             CALL Calc_FP_Source_Terms( re, te, pe )
 
+!            timer(2) = MPI_WTime()
 !            PRINT*,"Before Create_FP_Source_Vector"
             CALL Create_FP_Source_Vector( re, te, pe, DELTAR_OVERTWO, SIN_VAL_B )
+!            timer(1) = MPI_WTime()
+        
+!            CALL Clock_In(timer(3)-timer(4),10)
+!            CALL Clock_In(timer(2)-timer(3),11)
+!            CALL Clock_In(timer(2)-timer(1),12)
 
 
         END DO ! re Loop
@@ -501,29 +509,6 @@ DO ui = 1,2
                                     * R_Int_Weights(rd)
                 END DO
 
-
-
-!                    PRINT*, re,rd,tpd,                                         &
-!                            Source_Terms( tpd, rd, CFA_EQ_Map(ui) ),           &
-!                            Ylm_CC_Values( tpd, lm_loc, te, pe),               &
-!                            TP_Int_Weights(tpd),                               &
-!                            Lagrange_Poly_Table(d, rd, 0),                     &
-!                            R_Int_Weights(rd)
-
-
-
-!                RHS_TMP(ui) =  RHS_TMP(ui)                                          &
-!                                + SUM( Source_Terms( :, rd, CFA_EQ_Map(ui) )        &
-!                                        * Ylm_CC_Values( :, lm_loc, te, pe)         &
-!                                        * TP_Int_Weights(:)                     )   &
-!                                * Lagrange_Poly_Table(d, rd, 0)                     &
-!                                * R_Int_Weights(rd)
-
-
-!                PRINT*,re,rd,lm_loc,RHS_TMP(ui),                                        &
-!                        SUM( Source_Terms( :, rd, CFA_EQ_Map(ui) )              &
-!                                * Ylm_CC_Values( :, lm_loc, te, pe)             &
-!                                * TP_Int_Weights(:)                     )
 
             END DO  ! rd Loop
 

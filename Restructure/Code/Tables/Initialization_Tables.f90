@@ -32,7 +32,8 @@ USE Poseidon_Numbers_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
                     Degree,                 &
-                    L_Limit
+                    L_Limit,                &
+                    Verbose_Flag
 
 USE Variables_MPI, &
             ONLY :  Num_Block_Theta_Rows,   &
@@ -99,6 +100,11 @@ CONTAINS
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Initialize_Tables()
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Basis Function Tables. "
+END IF
+
 
 CALL Allocate_Tables()
 

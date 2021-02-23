@@ -95,13 +95,18 @@ IF ( MATRIX_FORMAT == 'Full' ) THEN
 
 ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 
-    ALLOCATE( Laplace_Matrix_VAL(1:Laplace_NNZ, 0:L_LIMIT,1:Num_Matrices) )
-    ALLOCATE( Laplace_Matrix_ROW(1:Laplace_NNZ, 0:L_LIMIT) )
-    ALLOCATE( Laplace_Matrix_COL(1:NUM_R_NODESp1, 0:L_LIMIT) )
+    PRINT*,"Num_Matrices",Num_Matrices,Num_R_Nodes, L_LIMIT
 
-    ALLOCATE( Laplace_Factored_VAL(1:Laplace_NNZ, 0:L_LIMIT,1:Num_Matrices) )
-    ALLOCATE( Laplace_Factored_ROW(1:Laplace_NNZ, 0:L_LIMIT) )
-    ALLOCATE( Laplace_Factored_COL(1:NUM_R_NODESp1, 0:L_LIMIT) )
+    ALLOCATE( Laplace_Matrix_VAL(0:Laplace_NNZ-1, 0:L_LIMIT,1:Num_Matrices) )
+    ALLOCATE( Laplace_Matrix_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
+    ALLOCATE( Laplace_Matrix_COL(0:NUM_R_NODES, 0:L_LIMIT) )
+
+    ALLOCATE( Laplace_Factored_VAL(0:Laplace_NNZ-1, 0:L_LIMIT,1:Num_Matrices) )
+    ALLOCATE( Laplace_Factored_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
+    ALLOCATE( Laplace_Factored_COL(0:NUM_R_NODES, 0:L_LIMIT) )
+
+    ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)   )
+    ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)    )
 
 END IF
 
@@ -117,8 +122,7 @@ ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,0:LM_LENGTH-1,1:2) )
 ALLOCATE( FP_Residual_Vector_Beta(1:Beta_Prob_Dim)  )
 
 
-ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)   )
-ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)    )
+
 
 
 END SUBROUTINE Allocate_FP
@@ -151,6 +155,10 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     DEALLOCATE( Laplace_Factored_VAL )
     DEALLOCATE( Laplace_Factored_ROW )
     DEALLOCATE( Laplace_Factored_COL )
+
+    DEALLOCATE( First_Column_Storage )
+    DEALLOCATE( Last_Column_Storage )
+    
 END IF
 
 DEALLOCATE( FP_Source_Vector )
@@ -164,8 +172,7 @@ DEALLOCATE( FP_Residual_Vector )
 DEALLOCATE( FP_Residual_Vector_Beta )
 
 
-DEALLOCATE( First_Column_Storage )
-DEALLOCATE( Last_Column_Storage )
+
 
 
 END SUBROUTINE Deallocate_FP

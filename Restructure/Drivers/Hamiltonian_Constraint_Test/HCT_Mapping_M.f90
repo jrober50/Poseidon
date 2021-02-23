@@ -200,21 +200,21 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "G"
 Solver_Type         = 2
 
-RE_Table         = (/ 40, 80, 160, 240, 320, 400, 600, 800, 1000 /)
+RE_Table         = (/ 3, 80, 160, 240, 320, 400, 600, 800, 1000 /)
 !RE_Table         = (/  (i, i=240,270, 1) /)
 Anderson_M_Values = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 
-M_Index_Min         = 1
-M_Index_Max         = 5
+M_Index_Min         = 3
+M_Index_Max         = 3
 
 RE_Index_Min        =  4
 RE_Index_Max        =  4
 
-Degree_Min          =  1
-Degree_Max          =  3
+Degree_Min          =  2
+Degree_Max          =  2
 
 L_Limit_Min         =  0
-L_Limit_Max         =  2
+L_Limit_Max         =  0
 
 Guess_Type          =  3            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
@@ -227,7 +227,7 @@ Star_Radius         =  1.0E+9_idp               ! (cm)
 
 Dimension_Input     = 3
 
-Max_Iterations      = 1000
+Max_Iterations      = 300
 CC_Option           = 1.0E-12_idp
 
 Mesh_Type           = 1
@@ -244,8 +244,8 @@ NQ(2)               = 10                         ! Number of Theta Quadrature Po
 NQ(3)               = 10                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .FALSE.
-!Verbose             = .TRUE.
+!Verbose             = .FALSE.
+Verbose             = .TRUE.
 Suffix_Input        = "Params"
 
 CFA_Eqs = (/ 1, 0, 0, 0, 0 /)

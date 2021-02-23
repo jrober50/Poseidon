@@ -180,10 +180,10 @@ ALLOCATE( TdP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
 ALLOCATE( TdP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"Initializing Beta Matrix..."
-END IF
 
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Modified Vector Laplacian Matrix, Full. "
+END IF
 
 
 DO re = 0,NUM_R_ELEMENTS-1

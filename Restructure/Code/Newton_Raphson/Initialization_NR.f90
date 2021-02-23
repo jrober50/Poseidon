@@ -28,6 +28,10 @@ MODULE Initialization_NR                                                        
 !           Dependencies            !
 !                                   !
 !===================================!
+USE Poseidon_Parameters, &
+            ONLY :  Verbose_Flag
+
+
 USE Variables_Functions, &
             ONLY :  Calc_3D_Values_At_Location,    &
                     Calc_1D_CFA_Values
@@ -75,6 +79,10 @@ CONTAINS
 SUBROUTINE Initialize_NR( )
 
 
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Newton-Raphson Method variables. "
+END IF
 
 CALL Allocate_NR()
 

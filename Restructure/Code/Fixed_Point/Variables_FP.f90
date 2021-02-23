@@ -63,6 +63,9 @@ INTEGER                                                         ::  Factored_NNZ
 CHARACTER(LEN = 4)                                              :: Matrix_Format = 'Full'
 CHARACTER(LEN = 4)                                              :: Linear_Solver = 'Full'
 
+!CHARACTER(LEN = 4)                                              :: Matrix_Format = 'CCS'
+!CHARACTER(LEN = 4)                                              :: Linear_Solver = 'CHOL'
+
 INTEGER                                                         :: Num_Matrices
 
 ! Cholesky Factorizatio Flag

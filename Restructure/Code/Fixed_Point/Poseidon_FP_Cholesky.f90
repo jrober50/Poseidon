@@ -42,7 +42,8 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Parameters, &
         ONLY :  DEGREE,             &
                 L_LIMIT,            &
-                NUM_CFA_EQs
+                NUM_CFA_EQs,        &
+                Verbose_Flag
 
 
 USE Variables_Derived, &
@@ -107,15 +108,15 @@ INTEGER                                                             ::  shift, O
 
 INTEGER(KIND = 1), ALLOCATABLE, DIMENSION(:,:,:)                      :: LogMap
 
-INTEGER, ALLOCATABLE, DIMENSION(:,:)                                  :: NEW_ROW_IND
+INTEGER, ALLOCATABLE, DIMENSION(:,:,:)                                  :: NEW_ROW_IND
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)                       :: NEW_ELEM_VAL
-
-
 
 REAL(KIND = idp), DIMENSION(0:NUM_R_NODES-1,0:NUM_R_NODES-1)        :: Orig, Recon, Diff, Lower
 
 
-
+IF ( Verbose_Flag ) THEN
+    PRINT*,"In Cholesky_Factorization."
+END IF
 
 
 
@@ -123,10 +124,6 @@ REAL(KIND = idp), DIMENSION(0:NUM_R_NODES-1,0:NUM_R_NODES-1)        :: Orig, Rec
 !   Determine the number of non-zero elements in the origional stiffness matrix
 !
 OLD_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-
-
-
-
 
 
 
@@ -146,11 +143,11 @@ DO ui = 1,NUM_CFA_EQS
     IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
 
-
         !
         !   This is part of imposing a Dirichlet BC on the FEM system
         !
         Laplace_Factored_VAL(0,:,ui) = 1.0_idp
+
 
         !
         !   Save the needed values first.
@@ -178,13 +175,17 @@ DO ui = 1,NUM_CFA_EQS
     IF (OUTER_CFA_BC_TYPE(ui) == "D") THEN
 
 
+        !
+        ! Save the needed values first
+        !
+        DO l = 0,L_LIMIT
+            DO i = 0,Degree
+                Last_Column_Storage(i,l,ui) = Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES,l) - 1 - i, l,ui)
+            END DO
+        END DO
+
+
         DO i = 1, DEGREE
-
-            !
-            ! Save the needed values first
-            !
-            Last_Column_Storage(i,:,ui) = Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES,l) - 1 - i, :,ui)
-
 
             !
             !   Now its safe to modify the matrix
@@ -198,9 +199,10 @@ DO ui = 1,NUM_CFA_EQS
 
         Laplace_Factored_VAL(Laplace_NNZ-1,:,ui) = 1.0_idp
 
-
     END IF
 END DO
+
+
 
 
 
@@ -253,11 +255,11 @@ END DO
 
 
 
-
 !
 !   Now create space to store the factorized stiffness matrix.
 !
-ALLOCATE( NEW_ROW_IND(0:NEW_NNZ-1,1:Num_Matrices), NEW_ELEM_VAL(0:NEW_NNZ-1,0:L_LIMIT,1:Num_Matrices))
+ALLOCATE( NEW_ROW_IND(0:NEW_NNZ-1,0:L_LIMIT,1:Num_Matrices),   &
+          NEW_ELEM_VAL(0:NEW_NNZ-1,0:L_LIMIT,1:Num_Matrices)    )
 
 
 
@@ -272,17 +274,17 @@ DO ui = 1,Num_Matrices
 
         CALL Sym_Fact_Matrix_Swap(  LogMap(:,:,ui),                 &
                                     NUM_R_NODES,                    &
+                                    OLD_NNZ,                        &
                                     NEW_NNZ,                        &
-                                    Factored_NNZ,                   &
                                     Laplace_Factored_COL(:,l),      &
                                     Laplace_Factored_ROW(:,l),      &
-                                    Laplace_Factored_VAL(:,:,ui),   &
-                                    NEW_ROW_IND(:,ui),              &
-                                    NEW_ELEM_VAL(:,l,ui))
+                                    Laplace_Factored_VAL(:,l,ui),   &
+                                    NEW_ROW_IND(:,l,ui),            &
+                                    NEW_ELEM_VAL(:,l,ui)            )
+
 
     END DO
 END DO
-
 
 
 !
@@ -307,7 +309,6 @@ DEALLOCATE(LogMap)
                              !!                                     !!
                               !                                     !
 
-
 !
 !   Here the actual factorization of the matrix occurs.  The subroutine called
 !   performs Cholesky factorization which produces a lower triangular matrix, L
@@ -321,13 +322,14 @@ DO ui = 1,NUM_MATRICES
     DO l = 0,L_LIMIT
 
 
-        CALL Chol_Factorizer(NUM_R_NODES, NEW_NNZ, Laplace_Factored_COL(:,l), NEW_ROW_IND, NEW_ELEM_VAL(:,l,ui))
+        CALL Chol_Factorizer(NUM_R_NODES, NEW_NNZ, Laplace_Factored_COL(:,l), NEW_ROW_IND(:,L,ui), NEW_ELEM_VAL(:,l,ui))
 
 
     END DO
 END DO
 
-
+!PRINT*,"After Chol_Factorizer"
+!PRINT*,NEW_ELEM_VAL
 
 
 
@@ -345,11 +347,10 @@ END DO
 !
 DEALLOCATE(Laplace_Factored_VAL, Laplace_Factored_ROW)
 
-
 !
 !   Store new number of non-zero values in the global variable Factored_NNZ
 !
-Factored_NNZ =  Laplace_Factored_COL(NUM_R_NODES,ui)
+Factored_NNZ =  New_NNZ
 
 
 !                                                                       !
@@ -364,8 +365,9 @@ ALLOCATE( Laplace_Factored_ROW(0:Factored_NNZ-1, 0:L_LIMIT))
 !
 DO ui = 1,Num_Matrices
     Laplace_Factored_VAL(:,:,ui) = NEW_ELEM_VAL(:,:,ui)
+    Laplace_Factored_ROW(:,:) = NEW_ROW_IND(:,:,ui)
 END DO
-Laplace_Factored_ROW(:,:) = NEW_ROW_IND(:,:)
+
 
 !
 !   Destory the old storage for the new stiffness matrix
@@ -374,6 +376,8 @@ DEALLOCATE(NEW_ELEM_VAL, NEW_ROW_IND)
 
 
 
+!PRINT*,"STOPing at end of CHOLESKY_FACTORIZATION"
+!STOP
 
 END SUBROUTINE CHOLESKY_FACTORIZATION
 
@@ -491,7 +495,6 @@ INTEGER(KIND = 1), DIMENSION(0:N-1,0:N-1), INTENT(INOUT)        :: LogMap
 
 INTEGER                                                         :: i, j
 INTEGER                                                         :: counter, here, fhere
-
 
 
 
@@ -708,8 +711,8 @@ DO j = 0,N-1
 
             IF (ROW_IND(i) .EQ. j) THEN
 
-                CALL Chol_CMOD(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL, i, k)
 
+                CALL Chol_CMOD(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL, i, k)
 
             END IF
 
@@ -791,8 +794,6 @@ END IF
 
 
 
-
-
 END SUBROUTINE Chol_CMOD
 
 
@@ -820,7 +821,6 @@ INTEGER                                                         :: i, here
 
 IF ( ROW_IND(COL_PTR(j)) .EQ. j) THEN  !!! DIAGONAL CHECK !!!
     here = COL_PTR(j)
-
 
 
     ELEM_VAL(here) = SQRT(ELEM_VAL(here))
@@ -974,7 +974,6 @@ DO j = 0,N-2
     END DO
 
 END DO
-
 
 b(N-1) = b(N-1)/ELEM_VAL(NNZ-1)
 

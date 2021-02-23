@@ -531,22 +531,12 @@ DO ui = 1,NUM_CFA_EQs
             WORK_VEC(i) = WORK_VEC(i) - First_Column_Storage(i ,L,ui)*BC_Value
 
         END DO
-
-
-
         !!! MODIFY MATRIX !!!
 
-        !!! ALREADY DONE IN CHOLESKY FACTORIZATION !!!
-
-
+        !!! ALREADY DONE IN CHOLESKY FACTORIZATION !!
 
 
     END IF
-
-
-
-
-
 
 
 
@@ -559,8 +549,11 @@ DO ui = 1,NUM_CFA_EQs
     IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
 
 
-
-        BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+        IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN
+            BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+        ELSE
+            BC_Value = 0.0_idp
+        END IF
 
         !!! MODIFY SRC VECTOR !!!
         WORK_VEC(NUM_R_NODES - 1) = BC_Value

@@ -39,7 +39,8 @@ USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
                     DEGREE,                 &
                     L_LIMIT,                &
-                    Num_CFA_Eqs
+                    Num_CFA_Eqs,            &
+                    Verbose_Flag
 
 USE Variables_Derived, &
             ONLY :  LM_Length
@@ -110,6 +111,12 @@ SUBROUTINE Initialize_FP( CFA_EQ_Flags_Input )
 INTEGER, DIMENSION(5), INTENT(IN), OPTIONAL             ::  CFA_EQ_Flags_Input
 
 INTEGER                                                 ::  i, j
+
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Fixed Point Method variables. "
+END IF
+
 
 !
 !   CFA_EQ_Flags = Turns on/off which equations are solved.

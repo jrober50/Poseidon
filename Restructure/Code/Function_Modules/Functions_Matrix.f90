@@ -55,11 +55,12 @@ INTEGER                                                     :: i, j
 
 MVMULT_CCS = 0.0_idp
 
+print*,Col_PTR
 DO i = 0,N-1
 
-
+    PRINT*,i,COL_PTR(i),COL_PTR(i+1)-1
     DO j = COL_PTR(i),COL_PTR(i+1)-1
-
+        
         MVMULT_CCS(ROW_IND(j)) =  MVMULT_CCS(ROW_IND(j)) + ELEM_VAL(j)*VECT(i)
 
     END DO

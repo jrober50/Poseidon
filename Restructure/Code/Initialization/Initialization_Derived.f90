@@ -24,6 +24,7 @@ USE Poseidon_Parameters, &
                     ONLY :  Domain_Dim,             &
                             Degree,                 &
                             L_Limit,                &
+                            Verbose_Flag,           &
                             Num_CFA_Vars
 
 
@@ -37,6 +38,7 @@ USE Variables_MPI, &
 
 USE Variables_Derived, &
                     ONLY :  Num_R_Nodes,            &
+                            Num_R_Nodesp1,          &
                             Block_Num_R_Nodes,      &
                             SubShell_Num_R_Nodes,   &
                             Var_Dim,                &
@@ -77,6 +79,9 @@ CONTAINS
  !#####################################################################################!
 SUBROUTINE Initialize_Derived()
 
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Derived Quantities. "
+END IF
 
 IF ( DOMAIN_DIM == 1 ) THEN
 
@@ -99,6 +104,7 @@ ELSE IF ( DOMAIN_DIM == 3 ) THEN
 END IF
 
 NUM_R_NODES             = DEGREE*NUM_R_ELEMENTS + 1
+Num_R_Nodesp1           = Num_R_Nodes + 1
 BLOCK_NUM_R_NODES       = DEGREE*NUM_R_ELEMS_PER_BLOCK + 1
 SUBSHELL_NUM_R_NODES    = DEGREE*NUM_R_ELEMS_PER_SUBSHELL + 1
 

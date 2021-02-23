@@ -63,12 +63,15 @@ USE Variables_FP, &
                     Laplace_Factored_COL,       &
                     CFA_EQ_Flags,               &
                     CFA_EQ_Map,                 &
-                    CFA_Mat_Map
+                    CFA_Mat_Map,                &
+                    MCF_Flag
 
 
 USE FP_Functions_Laplace_Beta, &
-            ONLY :  Initialize_Laplace_Matrices_Beta, &
-                    Output_Laplace
+            ONLY :  Initialize_Laplace_Matrices_Beta
+
+USE IO_FP_Linear_System, &
+            ONLY :  Output_Laplace
 
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In
@@ -108,19 +111,13 @@ IF ( Matrix_Format == 'Full' ) THEN
         Call Clock_In(timer(2)-timer(1),2)
     END IF
 
-
-    IF ( Verbose_Flag ) THEN
-        PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
-    END IF
     Success_Flag = .TRUE.
 
 
 ELSEIF ( Matrix_Format == 'CCS' ) THEN
 
     CALL Initialize_Laplace_Matrices_CCS()
-    IF ( Verbose_Flag ) THEN
-        PRINT*,"Poseidon Initialized the Laplace Matrices. Format : ",Matrix_Format
-    END IF
+
     Success_Flag = .TRUE.
 END IF
 
@@ -129,7 +126,7 @@ END IF
 
 
 IF ( Success_Flag .EQV. .FALSE.) THEN
-    PRINT*,"WARNING: Poseidon did not initalize the Laplace matrices."
+    PRINT*,"WARNING: Poseidon failed to initalize the Laplace matrices."
     PRINT*,"         Matrix_Format = ",Matrix_Format
     STOP
 END IF
@@ -161,6 +158,13 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  CUR_R_LOCS
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  R_SQUARE
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Int_Locs
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Int_Weights
+
+
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Laplace Matrix, Full. "
+END IF
+
 
 Int_Degree = NUM_R_QUAD_POINTS
 
@@ -213,8 +217,12 @@ DO l = 0,L_LIMIT
 END DO  ! l Loop
 
 
-!Call Output_Laplace(Laplace_Matrix_Full(:,:, 0,CFA_Mat_Map(3)), Num_R_Nodes, Num_R_Nodes, "W")
+!DO l = 0,L_LIMIT
+!    PRINT*,Laplace_Matrix_Full(:, :, l)
+!    PRINT*," "
+!END DO
 
+Call Output_Laplace(Laplace_Matrix_Full(:,:,0), Num_R_Nodes, Num_R_Nodes, "W")
 
 
 END SUBROUTINE Initialize_Laplace_Matrices_Full
@@ -244,9 +252,13 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  R_SQUARE
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Int_Locs
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Int_Weights
 
-Int_Degree = 10
 
-Laplace_Matrix_Full = 0.0_idp
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Laplace Matrix, CCS. "
+END IF
+
+
+Int_Degree = 10
 
 ALLOCATE( CUR_R_LOCS(1:Int_Degree)  )
 ALLOCATE( R_SQUARE(1:Int_Degree)    )
@@ -256,17 +268,16 @@ ALLOCATE( Int_Weights(1:Int_Degree) )
 CALL Initialize_LG_Quadrature(Int_Degree, Int_Locs, Int_Weights )
 
 
-
 Laplace_Matrix_COL(0,:) = 0
 Laplace_Matrix_COL(1,:) = Laplace_Matrix_COL(0,:) + (DEGREE+1)
 HERE = 2
+
 
 DO re = 1,NUM_R_ELEMENTS-1
     DO d = 1,DEGREE - 1
 
         Laplace_Matrix_COL(Here,:) = Laplace_Matrix_COL(Here - 1,:) +  (DEGREE + 1)
         Here = Here + 1
-
     END DO
 
     Laplace_Matrix_COL(Here,:) = Laplace_Matrix_COL(Here - 1,:) + (2*DEGREE + 1)
@@ -288,13 +299,12 @@ END DO
 !!!    ROW_IND INITIALIZATION   !!!
  !!                             !!
   !                             !
-
 Here = 0
 DO re = 0, NUM_R_ELEMENTS - 1
     DO d = 0,DEGREE - 1
         DO dp = 0, DEGREE
 
-            Laplace_Matrix_ROW(Here,:) = i*DEGREE + dp
+            Laplace_Matrix_ROW(Here,:) = re*DEGREE + dp
             Here = Here + 1
 
         END DO ! dp Loop
@@ -302,7 +312,7 @@ DO re = 0, NUM_R_ELEMENTS - 1
 
     DO d = 0,DEGREE - 1
 
-        Laplace_Matrix_ROW(Here,:) = i*DEGREE + d
+        Laplace_Matrix_ROW(Here,:) = re*DEGREE + d
         Here = Here + 1
 
     END DO ! d Loop
@@ -310,6 +320,8 @@ END DO ! re Loop
 Laplace_Matrix_ROW(Here,:) = DEGREE * NUM_R_ELEMENTS
 
 
+
+Laplace_Matrix_VAL = 0.0_idp
 
 DO l = 0,L_LIMIT
     L_Lp1 = REAL( l*(l+1), idp )
@@ -335,9 +347,9 @@ DO l = 0,L_LIMIT
 
                     
                     Laplace_Matrix_VAL(Here,l,:) = Laplace_Matrix_VAL(Here,l,:) &
-                                        + R_SQUARE(rd) * LPT_LPT(rd,d,dp,1,1)   &
+                                        - R_SQUARE(rd) * LPT_LPT(rd,d,dp,1,1)   &
                                             * TODR * Int_Weights(rd)            &
-                                        - L_Lp1 * LPT_LPT(rd,d,dp,0,0)          &
+                                        + L_Lp1 * LPT_LPT(rd,d,dp,0,0)          &
                                             * Int_Weights(rd)
                                             
                 END DO  ! rd Loop
@@ -351,9 +363,17 @@ DO l = 0,L_LIMIT
 END DO  ! l Loop
 
 
-Laplace_Factored_VAL = Laplace_Matrix_VAL
+!DO l = 0,L_LIMIT
+!    PRINT*,Laplace_Matrix_VAL(:,l,1)
+!    PRINT*," "
+!END DO
+
+MCF_Flag = 0
+Laplace_Factored_VAL = -Laplace_Matrix_VAL
 Laplace_Factored_ROW = Laplace_Matrix_ROW
 Laplace_Factored_COL = Laplace_Matrix_COL
+
+
 
 
 END SUBROUTINE Initialize_Laplace_Matrices_CCS

@@ -114,6 +114,7 @@ USE Variables_FP,  &
                     CFA_Eq_Map,                 &
                     CFA_MAT_Map,                &
                     Laplace_NNZ,                &
+                    Factored_NNZ,               &
                     Num_Matrices,               &
                     MCF_Flag,                   &
                     FP_Anderson_M
@@ -206,24 +207,15 @@ INTEGER                                                                     ::  
 INTEGER                                                                     ::  Guess_Flag
 INTEGER                                                                     ::  Mat_Loc
 REAL(idp)                                                                   ::  omega
-IF (MATRIX_FORMAT =='FULL') THEN
-
-    ALLOCATE (WORK_MAT(1:NUM_R_NODES, 1:NUM_R_NODES))
-
-ELSE IF (MATRIX_FORMAT == 'CCS' ) THEN
-
-    NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-    ALLOCATE(WORK_ELEM_VAL(0:NNZ-1))
-
-END IF
 
 
+REAL(KIND = idp), DIMENSION(1:4)                        :: timer
 
 WORK_VECB = 0
 
 
 
-
+timer(1) = MPI_Wtime()
 IF (( LINEAR_SOLVER == "CHOL" ) .AND. (MCF_Flag == 0 ) ) THEN
     
     !
@@ -242,6 +234,9 @@ END IF
 
 
 
+timer(2) = MPI_Wtime()
+PRINT*,"Cholesky Factorization Time",timer(2)-timer(1)
+
 Omega = 2.0_idp/(1.0_idp + sin( pi/(Num_R_Nodes) ) )
 
 
@@ -259,6 +254,7 @@ IF (LINEAR_SOLVER =='Full') THEN
     !           Full Matrix Solver       !
     !
     !####################################!
+    ALLOCATE (WORK_MAT(1:NUM_R_NODES, 1:NUM_R_NODES))
 !    PRINT*,"In Full Solver"
     DO ui = 1,2
 !        PRINT*,"CFA_EQ_Flags(ui)",CFA_EQ_Flags(ui)
@@ -288,8 +284,15 @@ IF (LINEAR_SOLVER =='Full') THEN
 
                     
                     lm_loc = FP_LM_Map(l,m)
+
+
+!                    PRINT*,lm_Loc
+!                    PRINT*,WORK_VEC
+    
                     FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
                     FP_Coeff_Vector(:,lm_loc,ui) = WORK_VEC(:)
+
+    
 
                     
                 END DO ! m Loop
@@ -304,6 +307,9 @@ ELSE IF (LINEAR_SOLVER == 'CCS') THEN
             !           CCS Preconditioned Conjugate Gradient Matrix Solver         !
             !                                                                       !
             !#######################################################################!
+    NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
+    ALLOCATE(WORK_ELEM_VAL(0:NNZ-1))
+
     PRINT*,"In CCS Solver"
     DO ui = 1,NUM_CFA_EQs
         DO l = 0,L_LIMIT
@@ -388,23 +394,35 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
             !               CCS Cholesky Factorization Matrix Solver                !
             !                                                                       !
             !#######################################################################!
-    PRINT*,"In CHOL Solver"
-    DO ui = 1,NUM_CFA_EQs
+
+    PRINT*,"Factored_NNZ",Factored_NNZ
+    ALLOCATE(WORK_ELEM_VAL(0:Factored_NNZ-1))
+    
+!    PRINT*,"In CHOL Solver"
+    DO ui = 1,2
+
+        IF ( CFA_EQ_Flags(ui) == 1 ) THEN
         DO l = 0,L_LIMIT
             DO m = -l,l
 
-                WORK_VEC = FP_Source_Vector(:,m,l)
 
+                lm_loc = FP_LM_Map(l,m)
+                WORK_VEC = -FP_Source_Vector(:,lm_loc,ui)
+                WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,ui)
+
+               
+!                PRINT*,"Before Dirichelet_BC"
                 CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
-                                        Laplace_NNZ,                &
+                                        Factored_NNZ,               &
                                         l,                          &
                                         m,                          &
                                         Laplace_Factored_COL(:,l),  &
                                         Laplace_Factored_ROW(:,l),  &
                                         WORK_VEC                    )
 
+!                PRINT*,"Before Neumann_BC"
                 CALL NEUMANN_BC_CCS(    NUM_R_NODES,                &
-                                        Laplace_NNZ,                &
+                                        Factored_NNZ,               &
                                         l,                          &
                                         m,                          &
                                         WORK_ELEM_VAL,              &
@@ -413,32 +431,41 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                         WORK_VEC                    )
 
                 
-
+               
+!                PRINT*,"Before Forward Sub"
                 CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
-                                                Laplace_NNZ,                    &
-                                                Laplace_Factored_VAL(:,l,ui),   &
+                                                Factored_NNZ,                   &
+                                                WORK_ELEM_VAL,                  &
                                                 Laplace_Factored_COL(:,l),      &
                                                 Laplace_Factored_ROW(:,l),      &
                                                 WORK_VEC                        )
 
-
+!                PRINT*,"Before Backward Sub"
                 CALL CCS_Back_Substitution(     NUM_R_NODES,                    &
-                                                Laplace_NNZ,                    &
-                                                Laplace_Factored_VAL(:,l,ui),   &
+                                                Factored_NNZ,                   &
+                                                WORK_ELEM_VAL,                  &
                                                 Laplace_Factored_COL(:,l),      &
                                                 Laplace_Factored_ROW(:,l),      &
                                                 WORK_VEC                        )
 
+!                PRINT*,lm_Loc
+!                PRINT*,WORK_VEC
+                
 
                 lm_loc = l*(l+1)+ m
-                FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)
 
-            END DO
-        END DO
-    END DO
+                FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
+                FP_Coeff_Vector(:,lm_loc,ui) = WORK_VEC(:)
+
+
+            END DO  ! m Loop
+        END DO  ! l Loop
+        END IF
+    END DO  ! ui Loop
 
 
 END IF
+
 
 
 

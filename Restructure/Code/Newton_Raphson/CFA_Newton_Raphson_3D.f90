@@ -59,7 +59,7 @@ USE Units_Module, &
                             Shift_Units
 
 USE DRIVER_Parameters, &
-                        ONLY :  Driver_Test_Number
+                    ONLY :  Driver_Test_Number
 
 USE Variables_Functions, &
                     ONLY :  Potential_Solution,         &
@@ -1117,7 +1117,7 @@ IF (myID_Poseidon == 0) THEN
 !    PRINT*,"RMS ",RMS_VALUE," Euclidean ",Euclidean," MAXVAL ",MAXVAL(ABS(Update_Vector))
 
 !   Add the current iteration's convergence check value to the frame table
-    Frame_Update_Table(Iteration) =    MAXVAL(ABS(Update_Vector))
+    Frame_Update_Table(Iteration,1) =    MAXVAL(ABS(Update_Vector))
 
 !   Output data to files
     DO i = 0,1

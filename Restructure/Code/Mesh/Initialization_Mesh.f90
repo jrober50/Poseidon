@@ -20,6 +20,8 @@ MODULE Initialization_Mesh                                                      
 USE Poseidon_Kinds_Module, &
                     ONLY : idp
 
+USE Poseidon_Parameters, &
+                    ONLY :  Verbose_Flag
 
 USE Variables_Mesh, &
                     ONLY :  Num_R_Elements,         &
@@ -62,6 +64,9 @@ CONTAINS
 SUBROUTINE Initialize_Mesh()
 
 
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Mesh. "
+END IF
 
 IF ( ( locs_Set(1) .EQV. .FALSE. ) .AND. ( dlocs_Set(1) .EQV. .FALSE. ) ) THEN
     PRINT*,"!*  Fatal Error in Poseidon   *!"

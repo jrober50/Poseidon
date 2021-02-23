@@ -20,6 +20,9 @@ MODULE Initialization_MPI                                                       
 USE Poseidon_Kinds_Module, &
                 ONLY : idp
 
+USE Poseidon_Parameters, &
+                ONLY :  Verbose_Flag
+
 USE Variables_Mesh, &
                 ONLY :  Num_R_Elements,             &
                         Num_T_Elements,             &
@@ -46,6 +49,11 @@ CONTAINS
 !                                                                                       !
  !#####################################################################################!
 SUBROUTINE Initialize_MPI()
+
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing MPI Variables. "
+END IF
 
 
 Num_R_Elems_Per_Shell = Num_R_Elements

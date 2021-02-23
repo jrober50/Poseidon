@@ -192,28 +192,28 @@ INTEGEr                                                 ::  i,j
 
 100 FORMAT (A,A,A,A,A,A)
 
-!fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
-!
-!cols = size( Laplace_Matrix_Beta, 1 )
-!rows = size( Laplace_Matrix_Beta, 2 )
-!
-!
-!
-!WRITE(FILE_NAMEb,100) Poseidon_LinSys_Dir,"Laplace_Dim_",trim(File_Suffix),"_",flag,".out"
-!CALL OPEN_NEW_FILE( trim(FILE_NAMEb), FILE_ID, 300 )
-!WRITE(FILE_ID,*) Cols, Rows, NUM_R_Elements, DEGREE, L_LIMIT
-!CLOSE(FILE_ID)
-!
-!
-!
-!WRITE(FILE_NAME,100) Poseidon_LinSys_Dir,"Laplace_",trim(File_Suffix),"_",flag,".out"
-!CALL OPEN_NEW_FILE( trim(FILE_NAME), FILE_ID, 300 )
-!DO i = 0,row_in-1
-!    DO j = 0, col_in-1
-!        WRITE(FILE_ID,fmt) Matrix(j,i)
-!    END DO
-!END DO
-!CLOSE( FILE_ID )
+fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+
+cols = size( Matrix, 1 )
+rows = size( Matrix, 2 )
+
+
+
+WRITE(FILE_NAMEb,100) Poseidon_LinSys_Dir,"Laplace_Dim_",trim(File_Suffix),"_",flag,".out"
+CALL OPEN_NEW_FILE( trim(FILE_NAMEb), FILE_ID, 300 )
+WRITE(FILE_ID,*) Cols, Rows, NUM_R_Elements, DEGREE, L_LIMIT
+CLOSE(FILE_ID)
+
+
+
+WRITE(FILE_NAME,100) Poseidon_LinSys_Dir,"Laplace_",trim(File_Suffix),"_",flag,".out"
+CALL OPEN_NEW_FILE( trim(FILE_NAME), FILE_ID, 300 )
+DO i = 0,row_in-1
+    DO j = 0, col_in-1
+        WRITE(FILE_ID,fmt) Matrix(j,i)
+    END DO
+END DO
+CLOSE( FILE_ID )
 
 
 

@@ -23,6 +23,9 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                 ONLY :  pi
 
+USE Poseidon_Parameters, &
+                ONLY :  Verbose_Flag
+
 USE Variables_Quadrature, &
                 ONLY :  Num_R_Quad_Points,      &
                         Num_T_Quad_Points,      &
@@ -54,6 +57,11 @@ CONTAINS
 SUBROUTINE Initialize_Quadrature()
 
 INTEGER                                 :: td, pd
+
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Quadrature variables. "
+END IF
 
 CALL Allocate_Quadrature
 

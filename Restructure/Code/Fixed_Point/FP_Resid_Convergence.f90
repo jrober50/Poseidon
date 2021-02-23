@@ -112,6 +112,7 @@ USE Variables_FP,  &
                     CFA_Eq_Map,                 &
                     CFA_MAT_Map,                &
                     Laplace_NNZ,                &
+                    Factored_NNZ,               &
                     Num_Matrices,               &
                     MCF_Flag,                   &
                     FP_Anderson_M
@@ -191,7 +192,6 @@ CALL Calc_FP_Residual( Resid_Data )
 !PRINT*,"After Calc_FP_Residual"
 
 
-
 DO ui = 1,5
     Frame_Update_Table(CUR_ITERATION,ui)      =  MAXVAL( ABS( FP_Update_Vector(:,:,ui) ) )
     Frame_Residual_Table(1,CUR_ITERATION,ui)  =  MAXVAL(Resid_Data(1,:,ui))
@@ -206,7 +206,7 @@ IF ( Verbose_Flag .EQV. .TRUE. ) THEN
     WRITE(*,'(/,A,I3.3)') "Convergence Check, Iteration ",CUR_ITERATION
 
     WRITE(*,'(A,A)')       "Type     : ",Convergence_Type_Names(Convergence_Type)
-    WRITE(*,'(A,ES22.15)') "Residual : ",Convergence_Stat, MAXLOC(Resid_Data(Convergence_Type,0,:) )
+    WRITE(*,'(A,ES22.15)') "Residual : ", Resid_Data(Convergence_Type,0,1)
     WRITE(*,'(A,ES22.15)') "Criteria : ",Convergence_Criteria
 
     WRITE(*,'(A,ES22.15,/)') "Max Change : ",MAXVAL(ABS(FP_Update_Vector))
@@ -254,6 +254,12 @@ REAL(idp), DIMENSION(1:3,0:LM_LENGTH-1,1:5)                       ::  LOne_Norm
 REAL(idp), DIMENSION(1:3,0:LM_LENGTH-1,1:5)                       ::  LTwo_Norm
 REAL(idp), DIMENSION(1:3,0:LM_LENGTH-1,1:5)                       ::  LInf_Norm
 
+
+LOne_Norm = 0.0_idp
+LTwo_Norm = 0.0_idp
+LInf_Norm = 0.0_idp
+
+
 ! Multi Matrices and Coeff Vectors to form Laplace
 IF ( Matrix_Format == 'Full' ) THEN
 
@@ -264,10 +270,6 @@ IF ( Matrix_Format == 'Full' ) THEN
 
     DO ui = 1,2
         IF ( CFA_EQ_Flags(ui) == 1 ) THEN
-
-            LOne_Norm = 0.0_idp
-            LTwo_Norm = 0.0_idp
-            LInf_Norm = 0.0_idp
 
             DO l = 0,L_Limit
                 DO m = -l,l
@@ -282,7 +284,6 @@ IF ( Matrix_Format == 'Full' ) THEN
                     FP_Laplace_Vector(:,lm_loc,ui) = MVMULT_FULL( WORK_MAT,                             &
                                                             FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)),   &
                                                             NUM_R_NODES, NUM_R_NODES                    )
-
 
 
                     
@@ -305,6 +306,9 @@ IF ( Matrix_Format == 'Full' ) THEN
                     LInf_Norm(1,lm_loc,ui) = MAXVAL( (/ LInf_Norm(1,lm_loc,ui), ABS(FP_Laplace_Vector(:,lm_loc,ui) ) /) )
                     LInf_Norm(2,lm_loc,ui) = MAXVAL( (/ LInf_Norm(2,lm_loc,ui), ABS(Work_Vec ) /) )
                     LInf_Norm(3,lm_loc,ui) = MAXVAL( (/ LInf_Norm(3,lm_loc,ui), ABS(FP_Residual_Vector(:,lm_loc,ui) ) /) )
+
+    
+
 
                 END DO ! m
             END DO ! l
@@ -362,22 +366,72 @@ IF ( Matrix_Format == 'Full' ) THEN
 
 ELSE IF ( Matrix_Format == 'CCS' ) THEN
 
-    DO ui = 1,Num_Matrices
-        DO l = 0,LM_LENGTH
+    DO ui = 1,2
 
-            FP_Laplace_Vector(:,l,ui) = MVMULT_CCS( NUM_R_NODES,                                &
-                                                    Laplace_NNZ,                                &
-                                                    Laplace_Matrix_VAL(:,l,ui),                 &
-                                                    Laplace_Matrix_COL(:,l),                    &
-                                                    Laplace_Matrix_ROW(:,l),                    &
-                                                    FP_Coeff_Vector(:,l,CFA_EQ_Map(ui))   )
+        IF ( CFA_EQ_Flags(ui) == 1 ) THEN
+            DO l = 0,L_Limit
+                DO m = -l,l
 
 
+                    lm_loc = FP_LM_Map(l,m)
+!                PRINT*,"#######",ui
+!                PRINT*,Laplace_Factored_VAL(:,l,ui)
+!                PRINT*,"-------"
+!                PRINT*,Laplace_Factored_COL(:,l)
+!                PRINT*,"======="
+!                PRINT*,Laplace_Factored_ROW(:,l)
+!                PRINT*,"~~~~~~~"
+!                PRINT*,FP_Coeff_Vector(:,l,CFA_EQ_Map(ui))
+                    WORK_VEC = -FP_Source_Vector(:,lm_loc,ui)
 
-        END DO ! l
+                    CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
+                                            Factored_NNZ,               &
+                                            l,                          &
+                                            m,                          &
+                                            Laplace_Factored_COL(:,l),  &
+                                            Laplace_Factored_ROW(:,l),  &
+                                            WORK_VEC                    )
+
+
+                    CALL Calc_CCS_Laplacian_Vector( NUM_R_NODES,                            &
+                                                    Factored_NNZ,                            &
+                                                    Laplace_Factored_VAL(:,l,ui),           &
+                                                    Laplace_Factored_COL(:,l),              &
+                                                    Laplace_Factored_ROW(:,l),              &
+                                                    FP_Coeff_Vector(:,l,CFA_EQ_Map(ui)),    &
+                                                    FP_Laplace_Vector(:,l,ui) )
+
+
+
+                    FP_Residual_Vector(:,lm_loc,ui) = (FP_Laplace_Vector(:,lm_loc,ui) - Work_Vec)
+
+
+                    LOne_Norm(1,lm_loc,ui) = LOne_Norm(1,lm_loc,ui) + SUM(ABS(FP_Laplace_Vector(:,lm_loc,ui) ) )
+                    LOne_Norm(2,lm_loc,ui) = LOne_Norm(2,lm_loc,ui) + SUM(ABS(Work_Vec) )
+                    LOne_Norm(3,lm_loc,ui) = LOne_Norm(3,lm_loc,ui) + SUM(ABS(FP_Residual_Vector(:,lm_loc,ui) ) )
+
+
+                    LTwo_Norm(1,lm_loc,ui) = LTwo_Norm(1,lm_loc,ui)                                             &
+                                 + SQRT(REAL(DOT_PRODUCT(FP_Laplace_Vector(:,lm_loc,ui),         &
+                                                    FP_Laplace_Vector(:,lm_loc,ui) ), idp) )
+                    LTwo_Norm(2,lm_loc,ui) = LTwo_Norm(2,lm_loc,ui) + SQRT(REAL(DOT_PRODUCT(Work_Vec,                &
+                                                                   Work_Vec ), idp) )
+                    LTwo_Norm(3,lm_loc,ui) = LTwo_Norm(3,lm_loc,ui)                                             &
+                                 + SQRT(REAL(DOT_PRODUCT(FP_Residual_Vector(:,lm_loc,ui),        &
+                                                    FP_Residual_Vector(:,lm_loc,ui) ), idp) )
+
+                    LInf_Norm(1,lm_loc,ui) = MAXVAL( (/ LInf_Norm(1,lm_loc,ui), ABS(FP_Laplace_Vector(:,lm_loc,ui) ) /) )
+                    LInf_Norm(2,lm_loc,ui) = MAXVAL( (/ LInf_Norm(2,lm_loc,ui), ABS(Work_Vec ) /) )
+                    LInf_Norm(3,lm_loc,ui) = MAXVAL( (/ LInf_Norm(3,lm_loc,ui), ABS(FP_Residual_Vector(:,lm_loc,ui) ) /) )
+
+
+                END DO ! m
+            END DO ! l
+        END IF
     END DO ! ui
 
 END IF
+
 
 
 ! Convergence Check
@@ -413,11 +467,65 @@ DO ui = 1,5
 END DO
 
 
-
-
-
 END SUBROUTINE Calc_FP_Residual
 
+
+
+
+
+!+202+##########################################################################!
+!                                                                               !
+!           Calc_FP_Residual                                                    !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Calc_CCS_Laplacian_Vector(N, NNZ, ELEM_VAL, COL_PTR, ROW_IND, VECT, Lap)
+
+
+INTEGER, INTENT(IN)                                         :: N, NNZ
+INTEGER, DIMENSION(0:N), INTENT(IN)                         :: COL_PTR
+INTEGER, DIMENSION(0:NNZ - 1),INTENT(IN)                    :: ROW_IND
+
+COMPLEX(KIND = idp), DIMENSION(0:NNZ - 1), INTENT(IN)       :: ELEM_VAL
+COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(IN)           :: VECT
+COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(OUT)          :: Lap
+
+COMPLEX(KIND = idp), DIMENSION(0:N-1)                       :: Laplacian_A
+COMPLEX(KIND = idp), DIMENSION(0:N-1)                       :: Laplacian_B
+
+INTEGER                                                     :: i,j
+
+
+! The Matrix that enters is the L matrix of Factorized matrix A = LL^t.
+
+! To calculate the Laplacian, we need to calculate L*L^t*x = L * (L^t*x)
+
+
+Laplacian_A = 0.0_idp
+Laplacian_B = 0.0_idp
+
+! L^t*x
+DO i = 0,N-1
+    DO j = COL_PTR(i),COL_PTR(i+1)-1
+
+        Laplacian_A(i) = Laplacian_A(i) + ELEM_VAL(j)*Vect(ROW_IND(j))
+
+    END DO ! j Loop
+END DO ! i Loop
+
+
+
+!   L*(L^t*x)
+DO i = 0,N-1
+    DO j = COL_PTR(i),COL_PTR(i+1)-1
+
+        Laplacian_B(ROW_IND(j)) = Laplacian_B(ROW_IND(j)) + ELEM_VAL(j)*Laplacian_A(i)
+    
+    END DO ! j Loop
+END DO ! i Loop
+
+Lap = Laplacian_B
+
+END SUBROUTINE Calc_CCS_Laplacian_Vector
 
 
 

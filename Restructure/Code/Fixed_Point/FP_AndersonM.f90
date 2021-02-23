@@ -225,7 +225,7 @@ CONVERGED = .FALSE.
 
 
 
-PRINT*,"In AndersonM"
+!PRINT*,"In AndersonM"
 !
 !   Begin Method
 !
@@ -234,7 +234,7 @@ PRINT*,"In AndersonM"
 !
 !   Calculate Source Vector with u_0
 !
-PRINT*,"Before Calc_FP_Source_Vector, out of loop"
+!PRINT*,"Before Calc_FP_Source_Vector, out of loop"
 timer(1) = MPI_WTime()
 CALL Calc_FP_Source_Vector()
 timer(2) = MPI_Wtime()
@@ -255,6 +255,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         UVector = GVectorM
     ELSE
         DO lm_loc = 0,LM_Length-1
+!            PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
             here = lm_loc*Num_R_Nodes + 1
             there = (lm_loc+1)*Num_R_Nodes
             UVector(here:there) = FP_Coeff_Vector(:,lm_loc,ui)
@@ -265,18 +266,23 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     !
     !   Solve Systems
     !
-    PRINT*,"Before Solve_Systems",Cur_Iteration
+    timer(1) = MPI_Wtime()
     IF ( ANY( CFA_EQ_Flags(1:2) == 1) ) THEN
         Call Solve_FP_System()
     END IF
+    timer(2) = MPI_WTime()
     IF ( ANY( CFA_EQ_Flags(3:5) == 1) ) THEN
         Call Solve_FP_System_Beta()
     END IF
-    PRINT*,"After Solve_Systems"
+    timer(3) = MPI_Wtime()
+
+    CALL Clock_In(timer(2)-timer(1),4)
+    CALL Clock_In(timer(3)-timer(2),5)
 
 
 
     DO lm_loc = 0,LM_Length-1
+!        PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
         here = lm_loc*Num_R_Nodes + 1
         there = (lm_loc+1)*Num_R_Nodes
         GVector(here:there,mk) = FP_Coeff_Vector(:,lm_loc,ui)
@@ -286,7 +292,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
-    PRINT*,"Before IF "
     IF ( mk == 1 ) THEN
 
         GVectorM = GVector(:,mk)
@@ -355,13 +360,13 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
-    PRINT*,"Before Calc_FP_Source_Vector in loop"
+!    PRINT*,"Before Calc_FP_Source_Vector in loop"
     timer(1) = MPI_Wtime()
     CALL Calc_FP_Source_Vector()
+!    FP_Source_Vector = -FP_Source_Vector
 
 
-
-    PRINT*,"Before Check_FP_Convergence"
+!    PRINT*,"Before Check_FP_Convergence"
     timer(2) = MPI_Wtime()
     Call Check_FP_Convergence(Converged_Residual)
     timer(3) = MPI_WTime()
