@@ -25,7 +25,7 @@ USE Poseidon_Kinds_Module, &
 IMPLICIT NONE
 
 
-CHARACTER(LEN = 24), PARAMETER        :: Poseidon_Reports_Dir   = "Poseidon_Output/Reports/"
+CHARACTER(LEN = 24), PARAMETER        :: Poseidon_Reports_Dir     = "Poseidon_Output/Reports/"
 CHARACTER(LEN = 42), PARAMETER        :: Poseidon_IterReports_Dir = "Poseidon_Output/Reports/Iteration_Reports/"
 
 
@@ -37,7 +37,7 @@ CHARACTER(LEN = 29), PARAMETER        :: Poseidon_Mesh_Dir      = "Poseidon_Outp
 CHARACTER(LEN = 32), PARAMETER        :: Poseidon_Sources_Dir   = "Poseidon_Output/Objects/Sources/"
 CHARACTER(LEN = 33), PARAMETER        :: Poseidon_Residual_Dir  = "Poseidon_Output/Objects/Residual/"
 CHARACTER(LEN = 38), PARAMETER        :: Poseidon_LinSys_Dir    = "Poseidon_Output/Objects/Linear_System/"
-
+CHARACTER(LEN = 37), PARAMETER        :: Poseidon_Coeffs_Dir    = "Poseidon_Output/Objects/Coefficients/"
 
 
 CHARACTER(LEN = 32),DIMENSION(1:5), PARAMETER   :: &

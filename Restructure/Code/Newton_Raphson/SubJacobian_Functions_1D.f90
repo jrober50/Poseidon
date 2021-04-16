@@ -601,6 +601,7 @@ RHS_Terms(tpd, rd, 2) = TwoPi * ALPHAPSI_POWER(1) * PSI_POWER(4)                
 
 
 Beta_Source_Prefix = 12.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
+
 RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix   * Block_Source_Si(rd, td, pd, re, te, pe, 1)           &
                       + JCBN_n_ARRAY(1)                 * CUR_DRV_BETA(tpd, rd, 1, 1)    &
                       - JCBN_n_ARRAY(1)/CUR_R_LOCS(rd)  * CUR_VAL_BETA(tpd, rd, 1)

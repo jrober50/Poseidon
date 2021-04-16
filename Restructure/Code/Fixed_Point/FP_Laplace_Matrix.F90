@@ -67,14 +67,23 @@ USE Variables_FP, &
                     MCF_Flag
 
 
+USE Poseidon_Cholesky_Module,   &
+            ONLY :  Cholesky_Factorization
+
 USE FP_Functions_Laplace_Beta, &
             ONLY :  Initialize_Laplace_Matrices_Beta
+
+USE FP_Beta_Banded, &
+            ONLY :  Initialize_Beta_MVL_Banded
 
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace
 
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In
+
+USE FP_Functions_Mapping, &
+            ONLY :  FP_FEM_Node_Map
 
 USE MPI
 
@@ -114,9 +123,22 @@ IF ( Matrix_Format == 'Full' ) THEN
     Success_Flag = .TRUE.
 
 
+
 ELSEIF ( Matrix_Format == 'CCS' ) THEN
 
-    CALL Initialize_Laplace_Matrices_CCS()
+
+    IF ( ANY(CFA_EQ_Flags(1:2) == 1 ) ) THEN
+        timer(1) = MPI_WTime()
+        CALL Initialize_Laplace_Matrices_CCS()
+        timer(2) = MPI_Wtime()
+        Call Clock_In(timer(2)-timer(1),1)
+    END IF
+    IF ( ANY(CFA_EQ_Flags(3:5) == 1) ) THEN
+        timer(1) = MPI_WTime()
+        CALL Initialize_Beta_MVL_Banded()
+        timer(2) = MPI_Wtime()
+        Call Clock_In(timer(2)-timer(1),2)
+    END IF
 
     Success_Flag = .TRUE.
 END IF
@@ -162,7 +184,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Int_Weights
 
 
 IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Laplace Matrix, Full. "
+    PRINT*,"-Initializing Laplace Matrix.  Format: Full. "
 END IF
 
 
@@ -191,8 +213,8 @@ DO l = 0,L_LIMIT
 
         DO dp = 0,DEGREE
             DO d = 0,DEGREE
-                i = re*DEGREE+d+1
-                j = re*DEGREE+dp+1
+                i = FP_FEM_Node_Map(re,d)
+                j = FP_FEM_Node_Map(re,dp)
 
 !                Laplace_Matrix_Full(i, j, l) = Laplace_Matrix_Full(i, j, l)           &
 !                                             + SUM( R_SQUARE(:) * LPT_LPT(:,d,dp,1,1) &
@@ -222,7 +244,7 @@ END DO  ! l Loop
 !    PRINT*," "
 !END DO
 
-Call Output_Laplace(Laplace_Matrix_Full(:,:,0), Num_R_Nodes, Num_R_Nodes, "W")
+!Call Output_Laplace(Laplace_Matrix_Full(:,:,0), Num_R_Nodes, Num_R_Nodes, "W")
 
 
 END SUBROUTINE Initialize_Laplace_Matrices_Full
@@ -254,7 +276,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  Int_Weights
 
 
 IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Laplace Matrix, CCS. "
+    PRINT*,"-Initializing Laplace Matrix.  Format: CCS. "
 END IF
 
 
@@ -302,12 +324,12 @@ END DO
 Here = 0
 DO re = 0, NUM_R_ELEMENTS - 1
     DO d = 0,DEGREE - 1
-        DO dp = 0, DEGREE
+    DO dp = 0, DEGREE
 
-            Laplace_Matrix_ROW(Here,:) = re*DEGREE + dp
-            Here = Here + 1
+        Laplace_Matrix_ROW(Here,:) = re*DEGREE + dp
+        Here = Here + 1
 
-        END DO ! dp Loop
+    END DO ! dp Loop
     END DO ! d Loop
 
     DO d = 0,DEGREE - 1
@@ -373,6 +395,9 @@ Laplace_Factored_VAL = -Laplace_Matrix_VAL
 Laplace_Factored_ROW = Laplace_Matrix_ROW
 Laplace_Factored_COL = Laplace_Matrix_COL
 
+
+!CALL Cholesky_Factorization()
+!MCF_Flag = 1
 
 
 

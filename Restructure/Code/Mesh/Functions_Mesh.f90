@@ -127,10 +127,12 @@ ELSE IF ( Mesh_Type == 3) THEN
             PRINT*,"   - NOT SPECIFIED "
         END IF
         PRINT*,"!*  POSEIDON STOPPING CODE  *!"
+        STOP
 
     END IF
 
 ELSE IF ( Mesh_Type == 4) THEN
+    
 
     IF ( PRESENT(Zoom) ) THEN
 
@@ -148,6 +150,7 @@ ELSE IF ( Mesh_Type == 4) THEN
         PRINT*,"    Geometric Mesh (Mesh_Type == 4) requires the specification of : "
         PRINT*," - Zoom Factor (Zoom)"
         PRINT*,"!*  POSEIDON STOPPING CODE  *!"
+        STOP
 
     END IF
 
@@ -738,6 +741,51 @@ END SUBROUTINE Generate_Defined_Coarse_Mesh
 
 
 
+
+!+802+##################################################################################!
+!                                                                                       !
+!       Define_Refined_Mesh                                                             !
+!                                                                                       !
+!#######################################################################################!
+SUBROUTINE Define_Refined_Mesh( l, n_l,                 &
+                                radii,                  &
+                                dx_array,               &
+                                n_array                 )
+
+INTEGER,                        INTENT(IN)          ::  l
+INTEGER,                        INTENT(IN)          ::  n_l
+REAL(idp), DIMENSION(1:l+1),    INTENT(INOUT)       ::  radii
+
+REAL(idp), DIMENSION(1:l),      INTENT(OUT)         ::  dx_Array
+INTEGER,   DIMENSION(1:l),      INTENT(OUT)         ::  n_Array
+
+INTEGER                                             ::  i, j
+REAL(idp)                                           ::  a, b
+REAL(idp), DIMENSION(1:l)                           ::  dr_Array
+
+
+PRINT*,l,n_l
+
+dr_Array(l) = radii(l+1) - radii(l)
+n_Array(l) = n_l
+dx_Array(l) = dr_Array(l) / n_array(l)
+
+
+DO  i = l,2,-1
+    dr_Array(i-1) = radii(i) - radii(i-1)
+
+    print*,"dr",i,dr_Array(i),dr_array(i-1),dr_array(i-1)/dr_Array(i)
+    a = 2.0_idp * n_array(i) * dr_Array(i-1) / dr_Array(i)
+    b = 3.0_idp * n_array(i) * dr_Array(i-1) / dr_Array(i)
+
+    print*,a,b, (b-a)/2.0_idp+a
+    n_Array(i-1)  = floor( ( b - a ) / 2.0_idp + a )
+    PRINT*,"n",n_Array(i-1)
+    dx_Array(i-1) = dr_Array(i-1) / n_Array(i-1)
+END DO
+
+
+END SUBROUTINE Define_Refined_Mesh
 
 
 

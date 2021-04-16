@@ -26,6 +26,11 @@ USE Units_Module, &
 USE Initialization_Poseidon, &
                 ONLY :  Initialize_Poseidon
 
+
+USE Poseidon_Parameters, &
+                ONLY :  DEGREE,                     &
+                        L_LIMIT
+
 USE Variables_IO, &
                 ONLY :  Write_Results_Flag,     &
                         Write_Results_R_Samps,  &
@@ -41,10 +46,20 @@ USE Variables_FP, &
                         Laplace_Matrix_Beta,    &
                         Beta_Diagonals,         &
                         Beta_MVL_Banded,        &
-                        Matrix_Format
+                        Beta_Bandwidth,         &
+                        Matrix_Format,          &
+                        Beta_Factorized_Flag
+
+USE FP_Beta_Banded, &
+                ONLY :  Factorize_Beta_Banded,  &
+                        Jacobi_PC_MVL_Banded_Vector, &
+                        Jacobi_PC_MVL_Banded,       &
+                        DIRICHLET_BC_Beta_Banded_Mat
+
 
 USE Variables_Derived,  &
-                ONLY :  Beta_Prob_Dim
+                ONLY :  Beta_Prob_Dim,          &
+                        LM_Length
 
 USE Variables_Functions, &
                 ONLY :  Potential_Solution
@@ -88,6 +103,8 @@ USE Linear_Solvers_And_Preconditioners, &
                         JACOBI_CONDITIONING,            &
                         Jacobi_Conditioning_Beta
 
+USE FP_Functions_Mapping, &
+                ONLY :  FP_Beta_Array_Map
 
 
 USE MPI
@@ -136,10 +153,16 @@ INTEGER                                                 ::  Num_RE
 INTEGER, DIMENSION(1:9)                                 ::  RE_Table
 CHARACTER(LEN=1), DIMENSION(1:7)                        ::  Letter_Table
 
+
 COMPLEX(idp), DIMENSION(:), ALLOCATABLE                 ::  Output
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_Sol
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
+
+
+
+INTEGER                                                 ::  RE, D, ui, LM, here, ldim
+INTEGER                                                 ::  Col, dp, l, lp, row, uj
+
 
 CALL MPI_INIT(ierr)
 
@@ -152,7 +175,7 @@ Solver_Type         = 2
 Suffix_Input        = "Params"
 
 Letter_Table        = (/ "A","B","C","D","E","F","G" /)
-RE_Table            = (/ 5, 80, 160, 240, 320, 400, 600, 800, 1000 /)
+RE_Table            = (/ 3, 80, 160, 240, 320, 400, 600, 800, 1000 /)
 
 Dimension_Input     = 3
 
@@ -166,8 +189,8 @@ RE_Index_Max        = 1
 Degree_Min          = 1
 Degree_Max          = 1
 
-L_Limit_Min         = 0
-L_Limit_Max         = 0
+L_Limit_Min         = 5
+L_Limit_Max         = 5
 
 !Verbose             = .FALSE.
 Verbose             = .TRUE.
@@ -175,7 +198,7 @@ CFA_Eqs             = [0, 0, 1, 0, 0]
 
 NQ(1) = 10        ! Number of Radial Quadrature Points
 NQ(2) = 15        ! Number of Theta Quadrature Points
-NQ(3) = 15        ! Number of Phi Quadrature Points
+NQ(3) = 15       ! Number of Phi Quadrature Points
 
 
 Write_Results_R_Samps = 256
@@ -256,37 +279,58 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
             CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
             CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
 
-
-            ! For the Laplace Test the source vector is zero
-            FP_Source_Vector_Beta = 0.0_idp
-
-
-            ! For this test, the initial guess is zero
-            FP_Coeff_Vector       = 0.0_idp
-            FP_Coeff_Vector_Beta  = 0.0_idp
-
             
-            !Call Solve_FP_System()
-            Call Solve_FP_System_Beta()
-    
-
-
-            CALL Output_FP_Coeffs()
 
 
             ALLOCATE( Output(1:Beta_Prob_Dim) )
             Output = 0.0_idp
+    
+            CALL ReadIn_FP_Coeffs( NE(1), FEM_Degree_Input, 0, Suffix_Tail )
 
 
+
+            ! Multiply Shift Matrix and Coeff Vector
             IF ( Matrix_Format == 'CCS' ) THEN
 
+                ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
+                Work_Vec = 0.0_idp
 
+
+!                IF ( .NOT. Beta_Factorized_Flag ) THEN
+!
+!                    CALL Factorize_Beta_Banded()
+!
+!                END IF
+
+                CALL DIRICHLET_BC_Beta_Banded_Mat()
+
+
+                CALL Jacobi_PC_MVL_Banded()
+
+
+
+ 
+                PRINT*,"Work_Vec A"
+                PRINT*,Work_Vec
+                CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
+
+
+                PRINT*,"Work_Vec B"
+                PRINT*,Work_Vec
+
+                CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
+
+
+
+     
+                PRINT*,"Work_Vec C"
+                PRINT*,Work_Vec
 
                 CALL ZGBMV('N',                     &
                             Beta_Prob_Dim,          &
                             Beta_Prob_Dim,          &
-                            Beta_Diagonals,         &
-                            Beta_Diagonals,         &
+                            Beta_Diagonals,       &
+                            2*Beta_Diagonals,         &
                             1.0_idp,                &
                             Beta_MVL_Banded,        &
                             3*Beta_Diagonals+1,     &
@@ -296,47 +340,58 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
                             Output,                 &
                             1                       )
 
+!                PRINT*,Beta_MVL_Banded
+!                PRINT*," "
+!                PRINT*,FP_Coeff_Vector_Beta
+!                PRINT*," "
+!                PRINT*,FP_Source_Vector_Beta(:)
+!                PRINT*," "
 
-!                    PRINT*,Beta_MVL_Banded
-!                    PRINT*," "
-!                    PRINT*,FP_Coeff_Vector_Beta
-!                    PRINT*," "
-!                    PRINT*,FP_Source_Vector_Beta(:)
-!                    PRINT*," "
-!                    PRINT*,Output
+
+                PRINT*,"ZGBMV"
+                PRINT*,Output - Work_Vec
+                PRINT*," "
+
+
+
 
             ELSE IF ( Matrix_Format == 'Full' ) THEN
 
 
+
                 ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
-                ALLOCATE( WORK_SOL( 1:Beta_Prob_Dim ) )
                 ALLOCATE( WORK_MAT( 1:Beta_Prob_Dim, 1:Beta_Prob_Dim ) )
 
                 WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
-                WORK_SOL(:) = FP_Coeff_Vector_Beta(:)
-                WORK_VEC(:) = FP_Source_Vector_Beta(:)
+                WORK_VEC(:)   = 0.0_idp
 
-                PRINT*,"WORK_MAT A"
-                PRINT*,Work_Mat
+!                DO re = 1,Beta_Prob_Dim
+!                DO ui = 1,Beta_Prob_Dim
+!                    PRINT*,ui,re,Work_Mat(ui,re)
+!                END DO
+!                END DO
+
+
+
                 PRINT*,"Work_Vec A"
                 PRINT*,Work_Vec
 
-
                 CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
-                PRINT*,"WORK_MAT B"
-                PRINT*,Work_Mat
+
+
+
                 PRINT*,"Work_Vec B"
                 PRINT*,Work_Vec
 
-
                 CALL JACOBI_CONDITIONING_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
 
-                PRINT*,"WORK_MAT C"
-                PRINT*,Work_Mat
+
+
+
+
                 PRINT*,"Work_Vec C"
                 PRINT*,Work_Vec
-
 
 !                CALL ZGEMV('N',                     &
 !                            Beta_Prob_Dim,          &
@@ -354,52 +409,57 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
 !                PRINT*,Output
 !                PRINT*," "
 
-
-
-                Output = MVMULT_FULL( Work_Mat,             &
-                                      Work_Sol,             &
+                
+                
+                Output = MVMULT_FULL( Work_Mat,            &
+                                      FP_Coeff_Vector_Beta(:),        &
                                       Beta_Prob_Dim, Beta_Prob_Dim    )
-
-                PRINT*,Work_Sol
                 PRINT*,"MVMULT_FULL"
-                PRINT*,Output
-                PRINT*," "
                 PRINT*,Output - Work_Vec
+                PRINT*," "
+                
 
-                DEALLOCATE( Work_Mat, Work_Vec, Work_Sol )
-
-
-            END IF
-            DEALLOCATE( Output )
-
-
-
-
-
-
-
-
-
-            IF (Verbose .EQV. .TRUE. ) THEN
-                CALL Print_Results()
             END IF
 
 
 
 
-            Write_Results_Flag = 1
-            IF ( Write_Results_Flag == 1 ) THEN
-                CALL Output_Final_Results()
-            END IF
+            ! Analyze output
+            PRINT*," "
+
+
+            
+            DO ui = 1,3
+            DO RE = 0,NE(1)-1
+            DO d  = 0,FEM_Degree_Input
+            DO lm = 0,LM_Length-1
+
+                Here = (RE*FEM_Degree_Input + d)*3*LM_Length     &
+                     +  (ui - 1)*LM_Length                       &
+                     +  lm + 1
+
+!                PRINT*,ui, RE+1,d,lm,Here,Output(Here)-Work_Vec(Here)
+!                PRINT*,Here,Output(Here),Work_Vec(Here),Output(Here)-Work_Vec(Here)
+
+
+            END DO ! lm
+            END DO ! ui
+            END DO ! d
+            END DO ! RE
+            PRINT*," "
+            PRINT*,"Maximum value of the output vector is ",MAXVAL(abs(Output)),        &
+                   " at ",maxloc(abs(Output))
+
+
 
             CALL Poseidon_Close()
 
 
-            
+
             DEALLOCATE( x_e, y_e, z_e )
             DEALLOCATE( x_c, y_c, z_c )
             DEALLOCATE( dx_c, dy_c, dz_c )
-
+            DEALLOCATE( Output )
 
         END DO ! L_Limit
     END DO ! Degree
@@ -409,3 +469,4 @@ END DO ! RE_Index
 WRITE(*,'(//A18//)')"DING! You're Done!"
 
 END PROGRAM Beta_Mapping
+

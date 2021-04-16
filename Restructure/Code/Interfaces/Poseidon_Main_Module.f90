@@ -110,6 +110,9 @@ USE Allocation_NR, &
 
 USE Allocation_FP, &
             ONLY : Deallocate_FP
+
+USE Allocation_SelfSimilar, &
+            ONLY : Deallocate_SelfSim
 USE mpi
 
 
@@ -206,6 +209,8 @@ CALL Deallocate_Poseidon_CFA_Variables
 CALL Deallocate_Mesh()
 CALL Deallocate_Quadrature()
 CALL Deallocate_Tables()
+
+CALL Deallocate_SelfSim()
 
 IF ( Solver_Type == 1 ) THEN
     CALL Deallocate_NR

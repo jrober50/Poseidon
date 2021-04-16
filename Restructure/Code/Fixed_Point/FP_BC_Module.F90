@@ -50,6 +50,8 @@ USE Poseidon_Parameters, &
 USE Variables_FP, &
             ONLY :  First_Column_Storage,       &
                     Last_Column_Storage,        &
+                    First_Column_Beta_Storage,  &
+                    Last_Column_Beta_Storage,   &
                     CFA_EQ_Map
 
 USE Variables_Mesh, &
@@ -69,6 +71,8 @@ USE Variables_BC, &
                     INNER_CFA_BC_TYPE,          &
                     OUTER_CFA_BC_TYPE
 
+USE FP_Functions_Mapping, &
+            ONLY :  FP_Beta_Array_Map
 
 
 IMPLICIT NONE
@@ -490,7 +494,7 @@ END SUBROUTINE NEUMANN_BC_CCS
 !   Input                                                                           !
 !                                                                                   !
  !#################################################################################!
-SUBROUTINE DIRICHLET_BC_CHOL(N, NNZ, L, M, COL_PTR, ROW_IND, WORK_VEC)
+SUBROUTINE DIRICHLET_BC_CHOL(N, NNZ, L, M, COL_PTR, ROW_IND, WORK_VEC,ui)
 
 
 INTEGER,                                        INTENT(IN)                  ::  N, NNZ, L, M
@@ -499,90 +503,86 @@ INTEGER, DIMENSION(0:N),                        INTENT(IN)                  ::  
 INTEGER, DIMENSION(0:NNZ-1),                    INTENT(IN)                  ::  ROW_IND
 
 COMPLEX(KIND = idp), DIMENSION(0:N - 1),        INTENT(INOUT)               ::  WORK_VEC
+INTEGER,                                        INTENT(IN)                  ::  ui
 
 
 
-
-INTEGER                                                                     :: i, shift, ui
+INTEGER                                                                     :: i, shift
 COMPLEX(KIND = idp)                                                         :: BC_Value
 
 
 
 
-DO ui = 1,NUM_CFA_EQs
-
-    IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
 
+IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
 
 
-        BC_Value = sqrt(4.0_idp*pi)*INNER_CFA_BC_VALUES(ui)
+
+
+    BC_Value = sqrt(4.0_idp*pi)*INNER_CFA_BC_VALUES(ui)
 
 
 
-        !!! MODIFY SOURCE VECTOR !!!
+    !!! MODIFY SOURCE VECTOR !!!
 
 
-        WORK_VEC(0) = BC_Value
+    WORK_VEC(0) = BC_Value
 
-        DO i = 1,DEGREE
+    DO i = 1,DEGREE
 
-            WORK_VEC(i) = WORK_VEC(i) - First_Column_Storage(i ,L,ui)*BC_Value
+        WORK_VEC(i) = WORK_VEC(i) - First_Column_Storage(i ,L,ui)*BC_Value
 
-        END DO
-        !!! MODIFY MATRIX !!!
+    END DO
+    !!! MODIFY MATRIX !!!
 
-        !!! ALREADY DONE IN CHOLESKY FACTORIZATION !!
+    !!! ALREADY DONE IN CHOLESKY FACTORIZATION !!
 
 
+END IF
+
+
+
+
+shift = 0
+IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
+    shift = 1
+END IF
+
+IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
+
+
+    IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN
+        BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+    ELSE
+        BC_Value = 0.0_idp
     END IF
 
+    !!! MODIFY SRC VECTOR !!!
+    WORK_VEC(NUM_R_NODES - 1) = BC_Value
+
+    DO i = DEGREE-shift,1,-1
+
+        WORK_VEC(NUM_R_NODES - 1 - i) = WORK_VEC(NUM_R_NODES - 1 - i)                           &
+                                        - Last_Column_Storage(i,L,ui)*BC_Value
 
 
 
-    shift = 0
-    IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
-        shift = 1
-    END IF
-
-    IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
-
-
-        IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN
-            BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
-        ELSE
-            BC_Value = 0.0_idp
-        END IF
-
-        !!! MODIFY SRC VECTOR !!!
-        WORK_VEC(NUM_R_NODES - 1) = BC_Value
-
-
-        DO i = DEGREE-shift,1,-1
-
-
-            WORK_VEC(NUM_R_NODES - 1 - i) = WORK_VEC(NUM_R_NODES - 1 - i)                           &
-                                            - Last_Column_Storage(i,L,ui)*BC_Value
-
-
-
-        END DO
+    END DO
 
 
 
 
 
-        !!! MODIFY MATRIX !!!
+    !!! MODIFY MATRIX !!!
 
-        !!! ALREADY DONE IN CHOLESKY FACTORIZATION !!!
-
-
+    !!! ALREADY DONE IN CHOLESKY FACTORIZATION !!!
 
 
-    END IF
 
-END DO
+
+END IF
 
 
 
@@ -646,6 +646,13 @@ DO ui = 3,1,-1
 
 
 
+
+
+
+
+
+
+
     shift = 0
     IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
         shift = 1
@@ -663,14 +670,18 @@ DO ui = 3,1,-1
                     BC_Value = 0.0_idp
                 END IF
 
+                Here = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,l,m)
 
-                Here = (Num_R_Nodes-1) * 3 * LM_Length  &
-                        + (ui - 1) * LM_Length          &
-                        + l*(l+1) + m + 1
 
                 DO i = 0,Beta_Elem_Prob_Dim-1
                     Work_Vec(Beta_Prob_Dim-i) = Work_Vec(Beta_Prob_Dim-i)       &
                                               - Work_Mat(Beta_Prob_Dim-i,Here)*BC_Value
+    
+!                    PRINT*,Beta_Prob_Dim-i,                         &
+!                            Work_Vec(Beta_Prob_Dim-i),              &
+!                            BC_Value,                               &
+!                            Work_Mat(Beta_Prob_Dim-i,Here)
+
                 END DO
 
                 ! Set the BC Value in the Coefficient Vector
@@ -693,6 +704,119 @@ END DO ! i Loop
 
 
 END SUBROUTINE DIRICHLET_BC_Beta
+
+
+
+
+
+
+
+
+
+
+
+
+ !+201+############################################################################!
+!                                                                                   !
+!       Dirichlet_BC_Beta_Banded                                                     !
+!                                                                                   !
+!-----------------------------------------------------------------------------------!
+!                                                                                   !
+!   Input                                                                           !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE DIRICHLET_BC_Beta_Banded( N, WORK_VEC )
+
+
+INTEGER,                                        INTENT(IN)                  ::  N
+COMPLEX(KIND = idp), DIMENSION(1:N),        INTENT(INOUT)               ::  WORK_VEC
+
+COMPLEX(KIND = idp)                                                         :: BC_Value
+
+INTEGER                                                                     :: ui
+INTEGER                                                                     :: i, lm, d, Row
+INTEGER                                                                     :: Shift
+
+
+
+
+DO ui = 3,5
+    
+    IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+
+
+        BC_Value = sqrt(4.0_idp*pi)*Inner_CFA_BC_VALUES(ui)
+
+
+        DO d =  1,DEGREE
+
+            Row = FP_Beta_Array_Map(Num_R_Elements-1, d, ui-2, 0, 0)
+
+            Work_Vec(Row) = Work_Vec(Row) - First_Column_Beta_Storage(0,d,ui-2)*BC_Value
+            
+
+        END DO  ! d
+
+
+        Row = (ui - 3) * LM_Length + 1
+        WORK_VEC(Row) = BC_Value
+
+
+
+
+        !!! MODIFY MATRIX !!!
+
+        !!! ALREADY DONE IN Initalization !!
+
+
+    END IF
+
+
+
+
+
+
+
+    shift = 0
+    IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
+        shift = 1
+    END IF
+
+    IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
+
+        BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+
+!        DO lm = 1,LM_Length
+        DO d = DEGREE-shift,0,-1
+            
+            Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui-2,0,0)
+            
+            Work_Vec(Row) = Work_Vec(Row) - Last_Column_Beta_Storage(1,d,ui-2)*BC_Value
+
+
+!            PRINT*,d,Row,Work_Vec(Row),BC_Value,Last_Column_Beta_Storage(1,d,ui-2)
+
+        END DO  ! d
+!        END DO  ! lm
+        
+        Row = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui-2,0,0)
+
+        WORK_VEC(Row) = BC_Value
+
+        
+
+        !!! MODIFY MATRIX !!!
+
+        !!! ALREADY DONE IN INITIALIZATION !!!
+
+
+    END IF
+
+END DO ! ui Loop
+
+END SUBROUTINE DIRICHLET_BC_Beta_Banded
+
+
 
 
 

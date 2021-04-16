@@ -43,7 +43,7 @@ INTEGER, PUBLIC, PARAMETER          ::  STF_MAPPING_FLAG = 2
 
 
 INTEGER, PUBLIC                     ::  POSEIDON_FRAME      = 1
-INTEGER, PUBLIC                     ::  CUR_ITERATION
+INTEGER, PUBLIC                     ::  CUR_ITERATION       = 1
 INTEGER, PUBLIC                     ::  MAX_ITERATIONS      = 10
 
 INTEGER, PUBLIC                     ::  CONVERGENCE_FLAG     = 0

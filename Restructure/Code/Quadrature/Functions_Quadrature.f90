@@ -300,4 +300,34 @@ END FUNCTION Initialize_LG_Quadrature_Locations
 
 
 
+
+
+
+
+
+
+!+201+##################################################################!
+!                                                                       !
+!   Initialize_Trapezoid_Quadrature - Calculate the Trapezoid Rule      !
+!                              quadrature node locations and weights.   !
+!                                                                       !
+!#######################################################################!
+SUBROUTINE Initialize_Trapezoid_Quadrature(Ord, xloc, weights)
+
+INTEGER, INTENT(IN)                                     ::  Ord
+REAL(KIND = idp), INTENT(INOUT), DIMENSION(1:Ord)       ::  xloc, weights
+
+INTEGER                                                 ::  j
+
+DO j = 0,Ord-1
+    xloc(j+1) = -pi + (2.0_idp*pi/Ord) * j
+END DO
+
+weights(:) = 2.0_idp*pi/Ord
+
+
+
+END SUBROUTINE Initialize_Trapezoid_Quadrature
+
+
 END MODULE Functions_Quadrature

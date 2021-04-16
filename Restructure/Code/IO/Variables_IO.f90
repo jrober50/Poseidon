@@ -38,7 +38,7 @@ INTEGER                     ::  WRITE_RESULTS_R_SAMPS       = 256
 INTEGER                     ::  WRITE_RESULTS_T_SAMPS       = 256
 INTEGER                     ::  WRITE_RESULTS_P_SAMPS       = 1
 
-INTEGER                     ::  WRITE_SOURCES_FLAG          = 1
+INTEGER                     ::  WRITE_SOURCES_FLAG          = 0
 
 
 INTEGER                     ::  SOURCE_OUTPUT_FLAG

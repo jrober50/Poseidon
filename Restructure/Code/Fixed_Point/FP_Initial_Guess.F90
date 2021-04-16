@@ -40,7 +40,8 @@ USE Units_Module, &
 USE Poseidon_Parameters, &
             ONLY :  DOMAIN_DIM,             &
                     DEGREE,                 &
-                    L_LIMIT
+                    L_LIMIT,                &
+                    Verbose_Flag
 
 
 USE Variables_Mesh, &
@@ -55,8 +56,7 @@ USE Variables_FP, &
 
 USE Functions_Mapping, &
             ONLY :  Map_From_X_Space,   &
-                    Map_To_X_Space,     &
-                    FP_Vector_Map
+                    Map_To_X_Space
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
@@ -64,6 +64,8 @@ USE Functions_Quadrature, &
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
+USE FP_Functions_Mapping, &
+            ONLY :  FP_FEM_Node_Map
 
 IMPLICIT NONE
 
@@ -92,8 +94,9 @@ INTEGER                                     ::  CUR_PSI_LOC,        &
 INTEGER                                     :: re, rd, Here, i
 
 
-
-PRINT*,"Initializing Flat Space Guess"
+IF ( Verbose_Flag ) THEN
+    PRINT*,"Initializing Flat Space Guess"
+END IF
 !
 !   Empty Space Initial Guess
 !
@@ -135,7 +138,7 @@ FP_Coeff_Vector(:,:,3:5) = 0.0_idp
 !    DO rd = 0, Degree
 !        ! 2 sqrt(pi) is Ylm normalization factor
 !
-!        Here = FP_Vector_Map(re, rd)
+!        Here = FP_FEM_Node_Map(re, rd)
 !
 !        FP_Coeff_Vector(Here,0,1) = 1.0_idp * 2.0_idp * sqrt(pi)
 !        FP_Coeff_Vector(Here,0,2) = 1.0_idp * 2.0_idp * sqrt(pi)
@@ -175,11 +178,14 @@ INTEGER, INTENT(IN)                                                     ::  RQ, 
 REAL(idp), INTENT(IN), DIMENSION(0:RE)                                  ::  rlocs
 REAL(idp), INTENT(IN), DIMENSION(1:RQ*TQ*PQ, 1:RE, 1:TE, 1:PE, 1:3)     ::  Si
 
+PRINT*,"The subroutine 'Init_FP_Guess_Informed' is incomplete."
+PRINT*,"Please try another subroutine. "
+PRINT*,"Poseidon is STOPing the program. "
+STOP
 
-
-
-PRINT*,"Initializing Informed Guess"
-
+IF ( Verbose_Flag ) THEN
+    PRINT*,"Initializing Informed Guess"
+END IF
 
 
 
@@ -196,7 +202,9 @@ END SUBROUTINE Init_FP_Guess_Informed
 !                  Input_FP_Guess                                                !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Input_FP_Guess(  Guess_Values,                               &
+SUBROUTINE Input_FP_Guess(  Psi_Guess,                                  &
+                            AlphaPsi_Guess,                             &
+                            Beta_Guess,                                 &
                             Input_RE, Input_TE, Input_PE,               &
                             Input_RQ, Input_TQ, Input_PQ,               &
                             Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
@@ -204,7 +212,13 @@ SUBROUTINE Input_FP_Guess(  Guess_Values,                               &
 
 
 REAL(idp), DIMENSION(1:Input_RQ*Input_TQ*Input_PQ,1:Input_RE,1:Input_TE,1:Input_PE),        &
-                                                                        INTENT(IN)  :: Guess_Values
+                                                                        INTENT(IN)  :: Psi_Guess
+
+REAL(idp), DIMENSION(1:Input_RQ*Input_TQ*Input_PQ,1:Input_RE,1:Input_TE,1:Input_PE),        &
+INTENT(IN)  :: AlphaPsi_Guess
+
+REAL(idp), DIMENSION(1:Input_RQ*Input_TQ*Input_PQ,1:Input_RE,1:Input_TE,1:Input_PE,1:3),        &
+INTENT(IN)  :: Beta_Guess
 
 INTEGER, INTENT(IN)                                                                 :: Input_RE
 INTEGER, INTENT(IN)                                                                 :: Input_TE
@@ -228,7 +242,7 @@ INTEGER                                                                         
 
 REAL(KIND = idp), DIMENSION(0:DEGREE)                                               ::  Node_Locs
 REAL(idp), DIMENSION(1:Input_RQ)                                                    ::  Lagrange_Poly_Value
-REAL(idp)                                                                           ::  Tmp_Value
+REAL(idp), DIMENSION(1:5)                                                           ::  Tmp_Value
 INTEGER                                                                             ::  Here
 REAL(idp), DIMENSION(1:Input_RQ)                                                    ::  Mapped_R_Quad
 
@@ -237,7 +251,6 @@ Node_Locs = Initialize_LGL_Quadrature_Locations(DEGREE)
 Num_Input_DOF = Input_RQ*Input_TQ*Input_PQ
 
 
-PRINT*,"Input_FP_Guess only good for 1-D. Work in progress."
 
 Mapped_R_Quad = Map_To_X_Space( Left_Limit, Right_Limit, Input_R_Quad )
 
@@ -249,17 +262,25 @@ DO re = 1,Input_RE
 
         Tmp_Value = 0.0_idp
         DO rq = 1,Input_RQ
-            Tmp_Value = Tmp_Value           &
-                      + Guess_Values(rq,re,1,1)*Lagrange_Poly_Value(rq)
+
+            Here =  (rq - 1)*Input_TQ*Input_PQ
+            
+            Tmp_Value(1) = Tmp_Value(1)          &
+                      + Psi_Guess(rq,re,1,1)*Lagrange_Poly_Value(rq)
+
+            Tmp_Value(2) = Tmp_Value(2)           &
+                      + AlphaPsi_Guess(rq,re,1,1)*Lagrange_Poly_Value(rq)
+
+            Tmp_Value(3) = Tmp_Value(3)         &
+                        + Beta_Guess(rq,re,1,1,1)*Lagrange_Poly_Value(rq)
+
         END DO ! rq
 
         Here = (re-1)*Degree + rqb + 1
-        FP_Coeff_Vector(Here,0,1) = 2.0_idp*Sqrt(pi)*Tmp_Value
+        FP_Coeff_Vector(Here,1,:) = 2.0_idp*Sqrt(pi)*Tmp_Value(:)
+        
     END DO ! rqb
 END DO ! re
-
-
-FP_Coeff_Vector(:,:,2) = 2.0_idp*Sqrt(pi)
 
 FP_Coeff_Vector(:,:,3:5) = 0.0_idp
 FP_Coeff_Vector_Beta = 0.0_idp

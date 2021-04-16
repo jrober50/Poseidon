@@ -18,8 +18,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-#CMODE   =DEBUG
-CMODE  =OPTIMIZE
+CMODE   =DEBUG
+#CMODE  =OPTIMIZE
 
 
 ## Compile with Openmp
@@ -59,6 +59,11 @@ Mapping : $(POSEIDON)
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Beta_Mapping.x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
+Upscale : $(POSEIDON)
+	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Upscale_Coeffs_Test.f90  -o $(OBJ)/Upscale_Coeffs_Test.o
+	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Upscale.x
+	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 
 Main : $(POSEIDON)
@@ -76,6 +81,9 @@ run :
 
 run_Mapping : 
 	./$(BIN)/Beta_Mapping.x
+
+run_Upscale :
+	./$(BIN)/Upscale.x
 
 clean:
 	rm -f $(OBJ)/*.o

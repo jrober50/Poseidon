@@ -43,7 +43,8 @@ USE Poseidon_Parameters, &
                     Verbose_Flag
 
 USE Variables_Derived, &
-            ONLY :  LM_Length
+            ONLY :  LM_Length,              &
+                    Beta_Elem_Prob_Dim
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
@@ -58,6 +59,8 @@ USE Variables_FP, &
                     CFA_EQ_Map,                 &
                     CFA_Mat_Map,                &
                     Laplace_NNZ,                &
+                    Beta_Diagonals,             &
+                    Beta_Bandwidth,             &
                     Num_Matrices
 
 USE Allocation_FP, &
@@ -133,6 +136,8 @@ NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
 CALL Create_Eq_Maps()
 
 Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
+Beta_Diagonals = Beta_Elem_Prob_Dim
+Beta_Bandwidth = 2*Beta_Diagonals+1
 
 
 CALL Allocate_FP()
@@ -173,20 +178,19 @@ DO i = 1,5
 END DO
 
 
+
 !
 !   Calculate the number of matrices to be created and stored.
 !
 ! The Psi and AlphaPsi equations can share the same Lapace Matrix.
 ! Each of the Shift Vector componenets will need its own matrix.
 Num_Matrices = 0
-IF ( (CFA_EQ_Flags(1) == 1) .OR. (CFA_EQ_Flags(2) == 1) ) THEN
-    Num_Matrices = 1
+IF (CFA_EQ_Flags(1) == 1)  THEN
+    Num_Matrices = Num_Matrices + 1
 END IF
-DO i = 3,5
-    IF ( CFA_EQ_Flags(i) == 1 ) THEN
-        Num_Matrices = Num_Matrices + 1
-    END IF
-END DO
+IF (CFA_EQ_Flags(2) == 1)  THEN
+    Num_Matrices = Num_Matrices + 1
+END IF
 
 
 

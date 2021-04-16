@@ -148,7 +148,6 @@ USE Poseidon_Cholesky_Module,   &
 USE Linear_Solvers_And_Preconditioners, &
             ONLY :  PRECOND_CONJ_GRAD_CCS,          &
                     JACOBI_CONDITIONING,            &
-                    SSOR_CONDITIONING,              &
                     Jacobi_Conditioning_Beta
 
 USE Poseidon_IO_Module, &

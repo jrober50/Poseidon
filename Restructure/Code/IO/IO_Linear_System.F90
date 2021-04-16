@@ -491,4 +491,59 @@ END SUBROUTINE OUTPUT_NODE_MESH
 
 
 
+
+
+
+
+
+
+!!+403+###########################################################################!
+!!                                                                                !
+!!                   OUTPUT_Beta_MATRIX                                       !
+!!                                                                                !
+!!################################################################################!
+!SUBROUTINE OUTPUT_Beta_MATRIX( Matrix )
+!
+!COMPLEX(idp), DIMENSION(1:Beta_Prob_Dim, 1:Beta_Prob_Dim), INTENT(IN) :: Matrix
+!
+!CHARACTER(LEN = 57)                                     ::  FILE_NAME
+!CHARACTER(LEN = 61)                                     ::  FILE_NAMEb
+!CHARACTER(LEN = 40)                                     ::  fmt
+!
+!
+!INTEGER                                                 ::  FILE_ID
+!INTEGEr                                                 ::  re,e
+!
+!100 FORMAT (A,A,I2.2,A,I2.2,A)
+!116 FORMAT (A,A,A,A)
+!
+!fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
+!
+!
+!WRITE(File_Nameb,116) Poseidon_LinSys_Dir,"Beta_Mat_DIM_",TRIM(File_Suffix),".out"
+!CALL OPEN_NEW_FILE( FILE_NAMEb, FILE_ID, 400 )
+!WRITE(FILE_ID,*) NUM_R_ELEMS_PER_BLOCK,DEGREE,L_LIMIT
+!CLOSE(FILE_ID)
+!
+!WRITE(File_Name,116) Poseidon_LinSys_Dir,"Beta_Mat_",TRIM(File_Suffix),".out"
+!CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 400 )
+!
+!PRINT*,"Writing Beta Matrix to file: ", File_Name
+!
+!
+!DO e = 0,ELEM_PROB_DIM_SQR-1
+!        WRITE(FILE_ID,fmt) Matrix(:,e)
+!END DO
+!
+!CLOSE(FILE_ID)
+!
+!END SUBROUTINE OUTPUT_Beta_MATRIX
+
+
+
+
+
+
+
+
 END MODULE IO_Linear_System

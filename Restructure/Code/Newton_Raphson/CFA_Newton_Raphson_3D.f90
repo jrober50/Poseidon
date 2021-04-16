@@ -138,8 +138,8 @@ USE IO_Linear_System, &
                             OUTPUT_COEFFICIENT_VECTOR_MATLAB,   &
                             OUTPUT_COEFFICIENT_VECTOR_FORTRAN
 
-USE Poseidon_Petsc_Solver, &
-                    ONLY : PETSC_Distributed_Solve
+!USE Poseidon_Petsc_Solver, &
+!                    ONLY : PETSC_Distributed_Solve
 
 
 USE Functions_Mapping, &
@@ -362,8 +362,9 @@ IF ( DOMAIN_DIM == 1 ) THEN
 
 ELSE IF ( ( DOMAIN_DIM == 2 ) .OR. ( DOMAIN_DIM == 3 ) ) THEN
 
-
-    CALL PETSC_Distributed_Solve( Block_Elem_STF_MatVec, Block_RHS_Vector, Update_Vector)
+    PRINT*,"PETSC_Distributed_Solve is disabled. STOPing in CFA_Solve()"
+    STOP
+!    CALL PETSC_Distributed_Solve( Block_Elem_STF_MatVec, Block_RHS_Vector, Update_Vector)
 
 
 END IF

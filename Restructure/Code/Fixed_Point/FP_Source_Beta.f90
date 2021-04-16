@@ -193,11 +193,11 @@ DO pe = 0,NUM_P_ELEMENTS-1
         CSC_SQUARE(:) = CSC_VAL(:)*CSC_VAL(:)
 
         DO td = 1,NUM_T_QUAD_POINTS
-            DO pd = 1,NUM_P_QUAD_POINTS
-                tpd = (td-1)*NUM_P_QUAD_POINTS + pd
-                SIN_VAL_B(tpd) =   SIN_VAL(td)
-                TP_SIN_SQUARE(tpd) = SIN_SQUARE(td)
-            END DO
+        DO pd = 1,NUM_P_QUAD_POINTS
+            tpd = (td-1)*NUM_P_QUAD_POINTS + pd
+            SIN_VAL_B(tpd) =   SIN_VAL(td)
+            TP_SIN_SQUARE(tpd) = SIN_SQUARE(td)
+        END DO
         END DO
 
         DO re = 0,NUM_R_ELEMENTS-1
@@ -279,72 +279,75 @@ INTEGER                                                         ::  tpd, td, pd,
 R_Int_Weights(:) = DELTAR_OVERTWO * R_SQUARE(:) * INT_R_WEIGHTS(:)
 
 DO td = 1,NUM_T_QUAD_POINTS
-    DO pd = 1,NUM_P_QUAD_POINTS
-        TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = SIN_VAL(td)                           &
-                                                        * DELTAT_OVERTWO * INT_T_WEIGHTS(td)    &
-                                                        * DELTAP_OVERTWO * INT_P_WEIGHTS(pd)
-    END DO
+DO pd = 1,NUM_P_QUAD_POINTS
+    TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = SIN_VAL(td)                           &
+                                                    * DELTAT_OVERTWO * INT_T_WEIGHTS(td)    &
+                                                    * DELTAP_OVERTWO * INT_P_WEIGHTS(pd)
+END DO
 END DO
 
 
 
 DO rd = 1,NUM_R_QUAD_POINTS
-    DO tpd = 1,NUM_TP_QUAD_POINTS
+DO tpd = 1,NUM_TP_QUAD_POINTS
 
-        Tmp_U_Value = 0.0_idp
-        Tmp_U_R_DRV_Value = 0.0_idp
-        Tmp_U_T_DRV_Value = 0.0_idp
-        Tmp_U_P_DRV_Value = 0.0_idp
-        DO d = 0,DEGREE
-            DO ui = 1,NUM_CFA_VARS
-                Here = FP_Vector_Map(re,d)
-    
-                TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
-                                        + SUM( FP_Coeff_Vector( Here, :, ui )      &
-                                        * Ylm_Values( :, tpd, te, pe )       )      &
-                                        * Lagrange_Poly_Table( d, rd, 0 )
-
-                TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
-                                        + SUM( FP_Coeff_Vector( Here, :, ui )     &
-                                        * Ylm_Values( :, tpd, te, pe )       )      &
-                                        * Lagrange_Poly_Table( d, rd, 1 )           &
-                                        / DELTAR_OVERTWO
+    Tmp_U_Value = 0.0_idp
+    Tmp_U_R_DRV_Value = 0.0_idp
+    Tmp_U_T_DRV_Value = 0.0_idp
+    Tmp_U_P_DRV_Value = 0.0_idp
 
 
+    DO d = 0,DEGREE
+    DO ui = 1,NUM_CFA_VARS
+        Here = FP_Vector_Map(re,d)
 
-            END DO
-        END DO ! d
+        TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
+                                + SUM( FP_Coeff_Vector( Here, :, ui )      &
+                                * Ylm_Values( :, tpd, te, pe )       )      &
+                                * Lagrange_Poly_Table( d, rd, 0 )
 
-        CUR_VAL_PSI( tpd, rd )         = REAL(Tmp_U_Value(1), KIND = idp)
-        CUR_DRV_PSI( tpd, rd, 1 )      = REAL(Tmp_U_R_DRV_Value(1), KIND = idp)
-        CUR_DRV_PSI( tpd, rd, 2 )      = 0.0_idp
-        CUR_DRV_PSI( tpd, rd, 3 )      = 0.0_idp
-
-
-        CUR_VAL_ALPHAPSI( tpd, rd )    = REAL(Tmp_U_Value(2), KIND = idp)
-        CUR_DRV_ALPHAPSI( tpd, rd, 1 ) = REAL(Tmp_U_R_DRV_Value(2), KIND = idp)
-        CUR_DRV_ALPHAPSI( tpd, rd, 2 ) = 0.0_idp
-        CUR_DRV_ALPHAPSI( tpd, rd, 3 ) = 0.0_idp
-
-
-        CUR_VAL_BETA( tpd, rd, 1 )     = REAL(Tmp_U_Value(3), KIND = idp)
-        CUR_VAL_BETA( tpd, rd, 2 )     = 0.0_idp
-        CUR_VAL_BETA( tpd, rd, 3 )     = 0.0_idp
+        TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
+                                + SUM( FP_Coeff_Vector( Here, :, ui )     &
+                                * Ylm_Values( :, tpd, te, pe )       )      &
+                                * Lagrange_Poly_Table( d, rd, 1 )           &
+                                / DELTAR_OVERTWO
 
 
-        CUR_DRV_BETA( tpd, rd, 1, 1 )  = REAL(Tmp_U_R_DRV_Value(3), KIND = idp)
-        CUR_DRV_BETA( tpd, rd, 2, 1 )  = 0.0_idp
-        CUR_DRV_BETA( tpd, rd, 3, 1 )  = 0.0_idp
-        CUR_DRV_BETA( tpd, rd, 1, 2 )  = 0.0_idp
-        CUR_DRV_BETA( tpd, rd, 2, 2 )  = 0.0_idp
-        CUR_DRV_BETA( tpd, rd, 3, 2 )  = 0.0_idp
-        CUR_DRV_BETA( tpd, rd, 1, 3 )  = 0.0_idp
-        CUR_DRV_BETA( tpd, rd, 2, 3 )  = 0.0_idp
-        CUR_DRV_BETA( tpd, rd, 3, 3 )  = 0.0_idp
 
-        Beta_DRV_Trace( tpd, rd )      = 0.0_idp
+    END DO ! ui
+    END DO ! d
 
-    END DO ! tpd
+
+    CUR_VAL_PSI( tpd, rd )         = REAL(Tmp_U_Value(1), KIND = idp)
+    CUR_DRV_PSI( tpd, rd, 1 )      = REAL(Tmp_U_R_DRV_Value(1), KIND = idp)
+    CUR_DRV_PSI( tpd, rd, 2 )      = 0.0_idp
+    CUR_DRV_PSI( tpd, rd, 3 )      = 0.0_idp
+
+
+    CUR_VAL_ALPHAPSI( tpd, rd )    = REAL(Tmp_U_Value(2), KIND = idp)
+    CUR_DRV_ALPHAPSI( tpd, rd, 1 ) = REAL(Tmp_U_R_DRV_Value(2), KIND = idp)
+    CUR_DRV_ALPHAPSI( tpd, rd, 2 ) = 0.0_idp
+    CUR_DRV_ALPHAPSI( tpd, rd, 3 ) = 0.0_idp
+
+
+    CUR_VAL_BETA( tpd, rd, 1 )     = REAL(Tmp_U_Value(3), KIND = idp)
+    CUR_VAL_BETA( tpd, rd, 2 )     = 0.0_idp
+    CUR_VAL_BETA( tpd, rd, 3 )     = 0.0_idp
+
+
+    CUR_DRV_BETA( tpd, rd, 1, 1 )  = REAL(Tmp_U_R_DRV_Value(3), KIND = idp)
+    CUR_DRV_BETA( tpd, rd, 2, 1 )  = 0.0_idp
+    CUR_DRV_BETA( tpd, rd, 3, 1 )  = 0.0_idp
+    CUR_DRV_BETA( tpd, rd, 1, 2 )  = 0.0_idp
+    CUR_DRV_BETA( tpd, rd, 2, 2 )  = 0.0_idp
+    CUR_DRV_BETA( tpd, rd, 3, 2 )  = 0.0_idp
+    CUR_DRV_BETA( tpd, rd, 1, 3 )  = 0.0_idp
+    CUR_DRV_BETA( tpd, rd, 2, 3 )  = 0.0_idp
+    CUR_DRV_BETA( tpd, rd, 3, 3 )  = 0.0_idp
+
+    Beta_DRV_Trace( tpd, rd )      = 0.0_idp
+
+END DO ! tpd
 END DO ! rd
 
 
@@ -499,7 +502,7 @@ COMPLEX(KIND = idp)                                                     ::  Inne
 
 DO ui = 1,NUM_CFA_EQs
 DO d = 0,DEGREE
-DO lm_loc = 0,LM_LENGTH-1
+DO lm_loc = 1,LM_LENGTH
 
     RHS_TMP = 0.0_idp
 

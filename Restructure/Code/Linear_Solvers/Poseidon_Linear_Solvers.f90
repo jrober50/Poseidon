@@ -300,85 +300,85 @@ END SUBROUTINE PRECOND_CONJ_GRAD_CCS
 
 
 
-!+201+##########################################################################################!
-!                                                                                               !
-!                                           SSOR_CONDITIONING                                   !
-!                                                                                               !
-!###############################################################################################!
-SUBROUTINE SSOR_CONDITIONING(A, B, omega)
-
-
-REAL(KIND = idp), INTENT(IN)                                                        :: omega
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1), INTENT(INOUT)                        :: B
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1, 0:NUM_R_NODES-1), INTENT(INOUT)       :: A
-
-
-INTEGER                                                                         :: i,j,k, INFO, LWORK
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)                                     :: WORK
-INTEGER, DIMENSION(0:NUM_R_NODES-1)                                             :: IPIV
-
-REAL(KIND = idp), DIMENSION(0:NUM_R_NODES -1)                                  :: TMP_VEC
-REAL(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                  :: D, L, U, P, C
-
-LWORK = 5*NUM_R_NODES
-ALLOCATE(WORK(1:LWORK))
-
-WORK = 0.0_idp
-IPIV= 0
-
-
-D = 0.0;
-L = 0.0;
-U = 0.0;
-
-
-DO i = 0,NUM_R_NODES-1
-
-
-
-    D(i,i) = 1/A(i,i)
-    L(i,i) = A(i,i)
-    U(i,i) = A(i,i)
-
-    DO j = 1, DEGREE
-
-        IF (i+j <= NUM_R_NODES-1) THEN
-            L(i+j,i) = A(i+j,i)*omega
-            U(i,i+j) = A(i,i+j)*omega
-        END IF
-
-    END DO
-
-
-END DO
-
-
-CALL DGEMM('N','N',NUM_R_NODES, NUM_R_NODES, NUM_R_NODES, 1.0_idp, L, NUM_R_NODES, D, NUM_R_NODES, 0.0_idp, C, NUM_R_NODES )
-
-CALL DGEMM('N','N',NUM_R_NODES, NUM_R_NODES, NUM_R_NODES, 1.0_idp, C, NUM_R_NODES, U, NUM_R_NODES, 0.0_idp, P, NUM_R_NODES )
-
-
-
-
-
-
-CALL DGETRF(NUM_R_NODES, NUM_R_NODES, P, NUM_R_NODES, IPIV, INFO)
-CALL DGETRI(NUM_R_NODES, P, NUM_R_NODES, IPIV, WORK, LWORK, INFO)
-
-
-
-CALL DGEMM('N','N',NUM_R_NODES, NUM_R_NODES, NUM_R_NODES, 1.0_idp, P, NUM_R_NODES, A, NUM_R_NODES, 0.0_idp,C, NUM_R_NODES )
-
-
-CALL DGEMV('N', NUM_R_NODES, NUM_R_NODES, 1.0_idp, P, NUM_R_NODES, B, 1, 0.0_idp, TMP_VEC, 1)
-
-
-B = TMP_VEC
-A = C
-
-
-
-END SUBROUTINE SSOR_CONDITIONING
+!!+201+##########################################################################################!
+!!                                                                                               !
+!!                                           SSOR_CONDITIONING                                   !
+!!                                                                                               !
+!!###############################################################################################!
+!SUBROUTINE SSOR_CONDITIONING(A, B, omega)
+!
+!
+!REAL(KIND = idp), INTENT(IN)                                                        :: omega
+!COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1), INTENT(INOUT)                        :: B
+!COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1, 0:NUM_R_NODES-1), INTENT(INOUT)       :: A
+!
+!
+!INTEGER                                                                         :: i,j,k, INFO, LWORK
+!REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)                                     :: WORK
+!INTEGER, DIMENSION(0:NUM_R_NODES-1)                                             :: IPIV
+!
+!REAL(KIND = idp), DIMENSION(0:NUM_R_NODES -1)                                  :: TMP_VEC
+!REAL(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                  :: D, L, U, P, C
+!
+!LWORK = 5*NUM_R_NODES
+!ALLOCATE(WORK(1:LWORK))
+!
+!WORK = 0.0_idp
+!IPIV= 0
+!
+!
+!D = 0.0;
+!L = 0.0;
+!U = 0.0;
+!
+!
+!DO i = 0,NUM_R_NODES-1
+!
+!
+!
+!    D(i,i) = 1/A(i,i)
+!    L(i,i) = A(i,i)
+!    U(i,i) = A(i,i)
+!
+!    DO j = 1, DEGREE
+!
+!        IF (i+j <= NUM_R_NODES-1) THEN
+!            L(i+j,i) = A(i+j,i)*omega
+!            U(i,i+j) = A(i,i+j)*omega
+!        END IF
+!
+!    END DO
+!
+!
+!END DO
+!
+!
+!CALL ZGEMM('N','N',NUM_R_NODES, NUM_R_NODES, NUM_R_NODES, 1.0_idp, L, NUM_R_NODES, D, NUM_R_NODES, 0.0_idp, C, NUM_R_NODES )
+!
+!CALL ZGEMM('N','N',NUM_R_NODES, NUM_R_NODES, NUM_R_NODES, 1.0_idp, C, NUM_R_NODES, U, NUM_R_NODES, 0.0_idp, P, NUM_R_NODES )
+!
+!
+!
+!
+!
+!
+!CALL ZGETRF(NUM_R_NODES, NUM_R_NODES, P, NUM_R_NODES, IPIV, INFO)
+!CALL ZGETRI(NUM_R_NODES, P, NUM_R_NODES, IPIV, WORK, LWORK, INFO)
+!
+!
+!
+!CALL ZGEMM('N','N',NUM_R_NODES, NUM_R_NODES, NUM_R_NODES, 1.0_idp, P, NUM_R_NODES, A, NUM_R_NODES, 0.0_idp,C, NUM_R_NODES )
+!
+!
+!CALL ZGEMV('N', NUM_R_NODES, NUM_R_NODES, 1.0_idp, P, NUM_R_NODES, B, 1, 0.0_idp, TMP_VEC, 1)
+!
+!
+!B = TMP_VEC
+!A = C
+!
+!
+!
+!END SUBROUTINE SSOR_CONDITIONING
 
 
 

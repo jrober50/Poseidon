@@ -79,28 +79,28 @@ ALLOCATE( M_VALUES(0:L_LIMIT) )
 
 
 
-ALLOCATE( Ylm_Values(       0:LM_Length-1,                                          &
+ALLOCATE( Ylm_Values(       1:LM_Length,                                            &
                             1:NUM_TP_QUAD_POINTS,                                   &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
-ALLOCATE( Ylm_dt_Values(    0:LM_Length-1,                                          &
+ALLOCATE( Ylm_dt_Values(    1:LM_Length,                                            &
                             1:NUM_TP_QUAD_POINTS,                                   &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
-ALLOCATE( Ylm_dp_Values(    0:LM_Length-1,                                          &
+ALLOCATE( Ylm_dp_Values(    1:LM_Length,                                            &
                             1:NUM_TP_QUAD_POINTS,                                   &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
 ALLOCATE( Ylm_CC_Values(    1:NUM_TP_QUAD_POINTS,                                   &
-                            0:LM_Length-1,                                          &
+                            1:LM_Length,                                            &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
 ALLOCATE( Ylm_CC_dt_Values( 1:NUM_TP_QUAD_POINTS,                                   &
-                            0:LM_Length-1,                                          &
+                            1:LM_Length,                                            &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
 ALLOCATE( Ylm_CC_dp_Values( 1:NUM_TP_QUAD_POINTS,                                   &
-                            0:LM_Length-1,                                          &
+                            1:LM_Length,                                            &
                             0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
 
 

@@ -141,7 +141,7 @@ INTEGER                                                         ::  Block_T_Begi
                                                                     Global_TE,          &
                                                                     Global_PE
 
-REAL(KIND = idp), DIMENSION(-L_LIMIT:L_LIMIT)                           :: M_POWER_TABLE
+REAL(KIND = idp), DIMENSION(-L_LIMIT:L_LIMIT)                   :: M_POWER_TABLE
 
 INTEGER                                                         ::  lm_loc, tpd_loc
 
@@ -149,7 +149,7 @@ INTEGER, DIMENSION(1:NUM_T_QUAD_POINTS)                         ::  here
 
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:,:)        ::  Ylm_Table
 
-COMPLEX(KIND = idp), DIMENSION(0:LM_LENGTH-1)                      ::  Sqrt_Term
+COMPLEX(KIND = idp), DIMENSION(1:LM_LENGTH)                     ::  Sqrt_Term
 REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  SIN_VAL, TAN_VAL
 REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  CSC_VAL, COT_VAL
 
@@ -188,7 +188,7 @@ ELSE IF ( DOMAIN_DIM == 3 ) THEN
 END IF
 
 
-Sqrt_Term(0) = 0.0_idp
+Sqrt_Term(1) = 0.0_idp
 DO l = 1,L_LIMIT
 
     REAL_L = REAL(l, idp)

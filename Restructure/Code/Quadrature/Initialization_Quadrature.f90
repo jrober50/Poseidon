@@ -40,7 +40,8 @@ USE Variables_Quadrature, &
                         Int_TP_Weights
 
 USE Functions_Quadrature, &
-                ONLY :  Initialize_LG_Quadrature
+                ONLY :  Initialize_LG_Quadrature,       &
+                        Initialize_Trapezoid_Quadrature
 
 USE Allocation_Quadrature, &
                 ONLY :  Allocate_Quadrature
@@ -69,6 +70,8 @@ CALL Allocate_Quadrature
 CALL Initialize_LG_Quadrature(NUM_R_QUAD_POINTS, INT_R_LOCATIONS, INT_R_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_T_QUAD_POINTS, INT_T_LOCATIONS, INT_T_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
+!CALL Initialize_Trapezoid_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
+
 
 IF ( NUM_T_QUAD_POINTS == 1 ) THEN
     ! 1D Cheat !

@@ -66,7 +66,7 @@ USE Functions_Math, &
                     Spherical_Harmonic
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_Vector_Map,  &
+            ONLY :  FP_FEM_Node_Map,  &
                     FP_LM_Map
 
 IMPLICIT NONE
@@ -109,7 +109,6 @@ INTEGER                                                         ::  re, l, m, d,
 INTEGER                                                         :: Current_Location
 INTEGER                                                         :: Loc_RED, Loc_LM
 
-
 COMPLEX(KIND = idp)                                             ::  TMP_VALUE_A
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  xlocP, weightP
 
@@ -120,19 +119,18 @@ Tmp_U_Value = 0.0_idp
 IF ( r == rlocs(0) ) THEN
 
     DO u = 1,NUM_CFA_VARS
-        DO l = 0,L_Limit
-            DO m = -M_VALUES(l),M_VALUES(l)
-        
+    DO l = 0,L_Limit
+    DO m = -M_VALUES(l),M_VALUES(l)
 
-                Loc_RED = FP_Vector_Map(0,0)
-                LOC_LM  = FP_LM_Map(l,m)
-                Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                                + FP_Coeff_Vector(Loc_RED,LOC_LM,u)     &
-                                * Spherical_Harmonic(l,m,theta,phi)
-                
-                
-            END DO ! m Loop
-        END DO  ! l Loop
+        Loc_RED = FP_FEM_Node_Map(0,0)
+        Loc_LM  = FP_LM_Map(l,m)
+        Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                        + FP_Coeff_Vector(Loc_RED,Loc_LM,u)     &
+                        * Spherical_Harmonic(l,m,theta,phi)
+        
+        
+    END DO ! m Loop
+    END DO  ! l Loop
     END DO  ! u Loop
 
 
@@ -149,23 +147,23 @@ ELSE
             LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
 
             DO u = 1,NUM_CFA_VARS
-                DO l = 0,L_Limit
-                    DO m = -M_VALUES(l),M_VALUES(l)
-                        DO d = 0,DEGREE
+            DO l = 0,L_Limit
+            DO m = -M_VALUES(l),M_VALUES(l)
+            DO d = 0,DEGREE
 
+                Loc_RED = FP_FEM_Node_Map(re,d)
+                Loc_LM  = FP_LM_Map(l,m)
 
-                            Loc_RED = FP_Vector_Map(re,d)
-                            LOC_LM  = FP_LM_Map(l,m)
-                            Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                                            + FP_Coeff_Vector(Loc_RED,LOC_LM,u)     &
-                                            * Spherical_Harmonic(l,m,theta,phi)     &
-                                            * LagP(d)
+                Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                                + FP_Coeff_Vector(Loc_RED,Loc_LM,u)     &
+                                * Spherical_Harmonic(l,m,theta,phi)     &
+                                * LagP(d)
 
-                        END DO  !   d Loop
-                    END DO  !   m Loop
-                END DO  !   l Loop
-            END DO ! u Loop
-
+            END DO  !   d Loop
+            END DO  !   m Loop
+            END DO  !   l Loop
+            END DO  !   u Loop
+ 
             EXIT
         END IF
 
@@ -174,18 +172,19 @@ ELSE
     IF ( r > rlocs(NUM_R_ELEMENTS) ) THEN
 
         DO u = 1,NUM_CFA_VARS
-            DO l = 0,L_Limit
-                DO m = -M_VALUES(l),M_VALUES(l)
+        DO l = 0,L_Limit
+        DO m = -M_VALUES(l),M_VALUES(l)
 
-                    Loc_RED = FP_Vector_Map(NUM_R_ELEMENTS-1,DEGREE)
-                    LOC_LM  = FP_LM_Map(l,m)
-                    Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                                    + FP_Coeff_Vector(Loc_RED,LOC_LM,u)     &
-                                    * Spherical_Harmonic(l,m,theta,phi)
+            
+            Loc_RED = FP_FEM_Node_Map(Num_R_Elements-1,Degree)
+            Loc_LM  = FP_LM_Map(l,m)
+            Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                            + FP_Coeff_Vector(Loc_RED,Loc_LM,u)     &
+                            * Spherical_Harmonic(l,m,theta,phi)
 
 
-                END DO  !   m Loop
-            END DO  !   l Loop
+        END DO  !   m Loop
+        END DO  !   l Loop
         END DO ! u Loop
     END IF
 
@@ -258,8 +257,7 @@ DO re = 0,NUM_R_ELEMENTS-1
             DO d = 0,DEGREE
 
                 Current_Location = Matrix_Location(u,0,0,re,d)
-!                Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector(Current_Location)  &
-!                                                * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
+
  
             END DO ! d Loop
         END DO ! u Loop

@@ -235,7 +235,7 @@ PURE FUNCTION CFA_2D_LM_Map( l , m )
 INTEGER                                     :: CFA_2D_LM_Map
 INTEGER, INTENT(IN)                         :: l, m
 
-CFA_2D_LM_Map = l
+CFA_2D_LM_Map = l + 1
 
 END FUNCTION CFA_2D_LM_Map
 
@@ -251,7 +251,7 @@ PURE FUNCTION CFA_3D_LM_Map( l , m )
 INTEGER                                     :: CFA_3D_LM_Map
 INTEGER, INTENT(IN)                         :: l, m
 
-CFA_3D_LM_Map = l*(l+1) + m
+CFA_3D_LM_Map = l*(l+1) + m + 1
 
 END FUNCTION CFA_3D_LM_Map
 
@@ -282,44 +282,6 @@ END FUNCTION CFA_ALL_Matrix_Map
 
 
 
-!+201+###########################################################################!
-!                                                                                !
-!                  FP_Vector_Map                                                  !
-!                                                                                !
-!################################################################################!
-PURE FUNCTION FP_Vector_Map( re, d )
-
-INTEGER                                     :: FP_Vector_Map
-
-INTEGER, INTENT(IN)                         :: re, d
-
-
-FP_Vector_Map = re*DEGREE + d + 1
-
-
-END FUNCTION FP_Vector_Map
-
-
-
-
-
-
-!+201+###########################################################################!
-!                                                                                !
-!                  FP_Vector_Map                                                  !
-!                                                                                !
-!################################################################################!
-PURE FUNCTION FP_LM_Map( l, m )
-
-INTEGER                                     :: FP_LM_Map
-
-INTEGER, INTENT(IN)                         :: l, m
-
-
-FP_LM_Map = l*(l+1) + m
-
-
-END FUNCTION FP_LM_Map
 
 
 

@@ -35,18 +35,19 @@ USE Poseidon_Kinds_Module, &
 
 IMPLICIT NONE
 
-REAL(KIND = idp)             :: Speed_of_Light_MKS  = 2.99792458e8_idp
-REAL(KIND = idp)             :: Grav_Constant_MKS   = 6.673e-11_idp
+REAL(idp)             :: Speed_of_Light_MKS  = 2.99792458e8_idp
+REAL(idp)             :: Grav_Constant_MKS   = 6.673e-11_idp
 
-REAL(KIND = idp)             :: Grav_Constant_G
-REAL(KIND = idp)             :: Speed_of_Light
-REAL(KIND = idp)             :: C_Square
-REAL(KIND = idp)             :: GR_Source_Scalar
-REAL(KIND = idp)             :: Meter, Kilometer, Centimeter
-REAL(KIND = idp)             :: Gram, Kilogram, SolarMass
-REAL(KIND = idp)             :: Second, Millisecond
-REAL(KIND = idp)             :: Joule, Erg, Newton
-REAL(KIND = idp)             :: GravPot_Units, Shift_Units
+REAL(idp)             :: Grav_Constant_G
+REAL(idp)             :: Speed_of_Light
+REAL(idp)             :: C_Square
+REAL(idp)             :: GR_Source_Scalar
+REAL(idp)             :: Meter, Kilometer, Centimeter
+REAL(idp)             :: Gram, Kilogram, SolarMass
+REAL(idp)             :: Second, Millisecond
+REAL(idp)             :: Joule, Erg, Newton
+REAL(idp)             :: GravPot_Units, Shift_Units
+REAL(idp)             :: E_Units, S_Units, Si_Units
 
                         !*F&S*==========================================!
                         !                                               !
@@ -196,7 +197,9 @@ Newton          = Joule / Meter
 GravPot_Units   = (Meter*Meter)/(Second*Second)
 Shift_Units     = Centimeter/Second
 
-
+E_Units         = Erg/Centimeter**3
+S_Units         = Erg/Centimeter**3
+Si_Units        = Gram/(Second*Centimeter**2)
 
 END SUBROUTINE Set_Units
 

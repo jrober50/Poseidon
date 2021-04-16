@@ -54,6 +54,9 @@ USE Units_Module, &
                             Erg,            &
                             Second,         &
                             GravPot_Units,  &
+                            E_Units,        &
+                            S_Units,        &
+                            Si_Units,       &
                             Shift_Units
 
 
@@ -613,6 +616,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
             NUM_RADIAL_SAMPLES = WRITE_RESULTS_R_SAMPS
             NUM_THETA_RAYS = WRITE_RESULTS_T_SAMPS
             NUM_PHI_RAYS = WRITE_RESULTS_P_SAMPS
+            
 
             ! Create Radial Spacing !
             ALLOCATE( Output_rc(1:NUM_RADIAL_SAMPLES) )
@@ -663,7 +667,7 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
                         PHI_VAL = k*DELTA_PHI
                         THETA_VAL = (j-1)*DELTA_THETA
 
-                        CALL Calc_3D_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,                   &
+                        CALL Calc_3D_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,           &
                                                          Return_Psi, Return_AlphaPsi,                &
                                                          Return_Beta1, Return_Beta2, Return_Beta3    )
 
@@ -844,7 +848,6 @@ SUBROUTINE CLOCK_IN( Time, Ident )
 REAL(KIND = idp), INTENT(IN)                 ::   Time
 INTEGER, INTENT(IN)                          ::   Ident
 
-
 ! Add Time to Iteration Time Table
 ITER_TIME_TABLE(Ident) = Time
 
@@ -1017,6 +1020,8 @@ IF ( UNIT_FLAG  ) THEN
 END IF
 
 
+
+
 END SUBROUTINE OPEN_EXISTING_FILE
 
 
@@ -1081,11 +1086,7 @@ INTEGER                                                                 ::  Num_
 
 REAL(KIND = idp)                                                        ::  Delta_X, Dr_Over_Dx
 
-REAL(KIND = idp)                                                        ::  E_units, S_units, Si_units
 
-E_Units = Erg/Centimeter**3
-S_Units = Erg/Centimeter**3
-Si_Units = Gram/(Second*Centimeter**2)
 
 
 
@@ -1793,15 +1794,16 @@ END SUBROUTINE OUTPUT_ITERATION_HISTORY
 !                     OUTPUT_PRIMATIVES                                      !
 !                                                                                   !
  !#################################################################################!
-SUBROUTINE OUTPUT_PRIMATIVES( Density, Velocity, Num_Entries )
+SUBROUTINE OUTPUT_PRIMATIVES( Density, Velocity, RadLocs, Num_Entries )
 
 REAL(KIND = idp), DIMENSION(1:Num_Entries), INTENT(IN)  :: Density
 REAL(KIND = idp), DIMENSION(1:Num_Entries), INTENT(IN)  :: Velocity
+REAL(KIND = idp), DIMENSION(1:Num_Entries), INTENT(IN)  :: RadLocs
 INTEGER,                                    INTENT(IN)  :: Num_Entries
 
 CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
-INTEGER                                                     ::  Num_Files = 2
+INTEGER                                                     ::  Num_Files = 3
 INTEGER                                                     ::  i
 
 116 FORMAT (A,A,A,A)
@@ -1809,8 +1811,9 @@ INTEGER                                                     ::  i
 ALLOCATE( Filenames(1:Num_Files) )
 ALLOCATE( File_IDs(1:Num_Files) )
 
-WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_Density_",trim(File_Suffix),".out"
-WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_Velocity_",trim(File_Suffix),".out"
+WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Primatives_Density_",trim(File_Suffix),".out"
+WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Primatives_Velocity_",trim(File_Suffix),".out"
+WRITE(Filenames(3),116) Poseidon_Sources_Dir,"Primatives_rlocs_",trim(File_Suffix),".out"
 
 ! Open Files
 File_IDs = [(161 + i, i =1,Num_Files)]
@@ -1822,6 +1825,7 @@ END DO
 DO i = 1,Num_Entries
     WRITE(File_IDs(1),*)Density(i) /(Gram/Centimeter**3)
     WRITE(FILE_IDs(2),*)Velocity(i)/(Centimeter/Second)
+    WRITE(FILE_IDs(3),*)RadLocs(i)/Centimeter
 END DO
 
 ! Close Files

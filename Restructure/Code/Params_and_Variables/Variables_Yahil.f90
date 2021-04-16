@@ -38,6 +38,10 @@ REAL(KIND=idp), PUBLIC, ALLOCATABLE, DIMENSION(:)       :: SELFSIM_SHIFT_VALS
 
 INTEGER, PUBLIC                                         :: SELFSIM_V_SWITCH = 1
 
+LOGICAL, PUBLIC                                         ::  SelfSim_Allocated = .FALSE.
+
+INTEGER                                                 ::  OUTPUT_PRIMATIVES_FLAG = 0
+
 
 END MODULE Variables_Yahil
 

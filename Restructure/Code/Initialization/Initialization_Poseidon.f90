@@ -209,15 +209,13 @@ IF ( Verbose_Flag .EQV. .TRUE. ) THEN
     PRINT*,"Initializing Poseidon..."
 END IF
 
-
-IF ( PRESENT( FEM_Degree_Option ) ) THEN
+IF ( PRESENT( Max_Iterations_Option ) ) THEN
     Max_Iterations = Max_Iterations_Option
 END IF
 
 IF ( PRESENT( Convergence_Criteria_Option) ) THEN
     Convergence_Criteria = Convergence_Criteria_Option
 END IF
-
 
 
 
@@ -296,7 +294,6 @@ END IF
 Num_Loc_R_Elements = Num_R_Elements
 Num_Loc_T_Elements = Num_R_Elements
 Num_Loc_P_Elements = Num_R_Elements
-
 
 
 
@@ -389,15 +386,12 @@ END IF
 
 LM_Location => CFA_3D_LM_Map
 
-
 CALL Initialize_MPI()
 CALL Allocate_Poseidon_CFA_Variables()
 CALL Initialize_Derived()
 CALL Initialize_Quadrature()
 
-
 CALL Initialize_Tables()
-
 
 
 IF ( Solver_Type == 1 ) THEN
@@ -410,14 +404,15 @@ END IF
 
 IF ( Verbose_Flag ) THEN
 
-    CALL Output_Setup_Table()
-
 
     PRINT*,"Outputing Radial Mesh to file during initialization."
     CALL Output_Mesh( rlocs, NUM_R_ELEMENTS+1 )
     CALL Output_Nodal_Mesh( rlocs, NUM_R_ELEMENTS+1 )
 
     PRINT*,"Poseidon Initialization Complete"
+
+    PRINT*,"Poseidon was initialized with the following parameters."
+    CALL Output_Setup_Table()
 END IF
 
 

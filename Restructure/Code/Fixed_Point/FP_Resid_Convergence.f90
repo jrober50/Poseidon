@@ -108,6 +108,8 @@ USE Variables_FP,  &
                     Laplace_Matrix_Beta,        &
                     FP_Source_Vector_Beta,      &
                     FP_Coeff_Vector_Beta,       &
+                    Beta_MVL_Banded,            &
+                    Beta_Diagonals,             &
                     CFA_EQ_Flags,               &
                     CFA_Eq_Map,                 &
                     CFA_MAT_Map,                &
@@ -151,7 +153,6 @@ USE Poseidon_Cholesky_Module,   &
 USE Linear_Solvers_And_Preconditioners, &
             ONLY :  PRECOND_CONJ_GRAD_CCS,          &
                     JACOBI_CONDITIONING,            &
-                    SSOR_CONDITIONING,              &
                     Jacobi_Conditioning_Beta
 
 USE Poseidon_IO_Module, &
@@ -180,7 +181,7 @@ SUBROUTINE Check_FP_Convergence( CONVERGED )
 
 LOGICAL, INTENT(INOUT)                              ::  CONVERGED
 
-REAL(idp), DIMENSION(1:3,0:LM_LENGTH-1, 1:5)        ::  Resid_Data
+REAL(idp), DIMENSION(1:3,1:LM_LENGTH, 1:5)        ::  Resid_Data
 REAL(idp)                                           ::  Convergence_Stat
 
 INTEGER                                             ::  ui, l
@@ -205,17 +206,16 @@ END DO
 IF ( Verbose_Flag .EQV. .TRUE. ) THEN
     WRITE(*,'(/,A,I3.3)') "Convergence Check, Iteration ",CUR_ITERATION
 
-    WRITE(*,'(A,A)')       "Type     : ",Convergence_Type_Names(Convergence_Type)
-    WRITE(*,'(A,ES22.15)') "Residual : ", Resid_Data(Convergence_Type,0,1)
-    WRITE(*,'(A,ES22.15)') "Criteria : ",Convergence_Criteria
-
-    WRITE(*,'(A,ES22.15,/)') "Max Change : ",MAXVAL(ABS(FP_Update_Vector))
+    WRITE(*,'(A,A)')         "Type       :  ",Convergence_Type_Names(Convergence_Type)
+    WRITE(*,'(A,ES22.15)')   "Residual   : ", MAXVAL(Resid_Data(Convergence_Type,:,:))
+    WRITE(*,'(A,ES22.15)')   "Criteria   : ", Convergence_Criteria
+    WRITE(*,'(A,ES22.15,/)') "Max Change : ", MAXVAL(Frame_Update_Table(CUR_ITERATION,:))
 END IF
 
 !
 !   Has the Solver met the convergence criteria?
 !
-IF (  MAXVAL(Resid_Data(Convergence_Type,:,:) ) < CONVERGENCE_CRITERIA ) THEN
+IF (  ALL( Resid_Data(Convergence_Type,:,:)  < CONVERGENCE_CRITERIA ) ) THEN
     CONVERGED = .TRUE.
     CONVERGENCE_FLAG = 1
 ELSE
@@ -240,7 +240,7 @@ END SUBROUTINE Check_FP_Convergence
 !###############################################################################!
 SUBROUTINE Calc_FP_Residual( Convergence_Stat )
 
-REAL(KIND = idp), DIMENSION(1:3,0:LM_LENGTH-1,1:5), INTENT(OUT)       ::  Convergence_Stat
+REAL(KIND = idp), DIMENSION(1:3,1:LM_LENGTH,1:5), INTENT(OUT)       ::  Convergence_Stat
 
 
 INTEGER                                             ::  Convergence_Type = 3
@@ -250,9 +250,9 @@ INTEGER                                             ::  ui, l, m, lm_loc, map_lo
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)    ::  WORK_MAT
 
-REAL(idp), DIMENSION(1:3,0:LM_LENGTH-1,1:5)                       ::  LOne_Norm
-REAL(idp), DIMENSION(1:3,0:LM_LENGTH-1,1:5)                       ::  LTwo_Norm
-REAL(idp), DIMENSION(1:3,0:LM_LENGTH-1,1:5)                       ::  LInf_Norm
+REAL(idp), DIMENSION(1:3,1:LM_LENGTH,1:5)                       ::  LOne_Norm
+REAL(idp), DIMENSION(1:3,1:LM_LENGTH,1:5)                       ::  LTwo_Norm
+REAL(idp), DIMENSION(1:3,1:LM_LENGTH,1:5)                       ::  LInf_Norm
 
 
 LOne_Norm = 0.0_idp
@@ -273,7 +273,7 @@ IF ( Matrix_Format == 'Full' ) THEN
 
             DO l = 0,L_Limit
                 DO m = -l,l
-                    lm_loc = FP_LM_Map(l,m)
+                    lm_loc  = FP_LM_Map(l,m)
                     map_loc = CFA_MAT_Map(CFA_EQ_Map(ui))
 
                     WORK_MAT = Laplace_Matrix_Full(:,:,l)
@@ -328,6 +328,20 @@ IF ( Matrix_Format == 'Full' ) THEN
         WORK_VEC(:) = FP_Source_Vector_Beta(:)
 
         CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
+
+
+        CALL ZGEMV('N',                     &
+                    Beta_Prob_Dim,          &
+                    Beta_Prob_Dim,          &
+                    1.0_idp,                &
+                    Laplace_Matrix_Beta,    &
+                    Beta_Prob_Dim,          &
+                    FP_Coeff_Vector_Beta,   &
+                    1,                      &
+                    0.0_idp,                &
+                    FP_Laplace_Vector_Beta,                 &
+                    1                       )
+
 
         FP_Laplace_Vector_Beta = MVMULT_FULL( WORK_MAT,                 &
                                                 FP_Coeff_Vector_Beta(:),        &
@@ -390,7 +404,8 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                                             m,                          &
                                             Laplace_Factored_COL(:,l),  &
                                             Laplace_Factored_ROW(:,l),  &
-                                            WORK_VEC                    )
+                                            WORK_VEC,                   &
+                                            ui                          )
 
 
                     CALL Calc_CCS_Laplacian_Vector( NUM_R_NODES,                            &
@@ -429,6 +444,46 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
             END DO ! l
         END IF
     END DO ! ui
+
+
+
+
+
+
+    ! Shift Residual
+
+    CALL ZGBMV('N',                     &
+                Beta_Prob_Dim,          &
+                Beta_Prob_Dim,          &
+                Beta_Diagonals,         &
+                Beta_Diagonals,         &
+                1.0_idp,                &
+                Beta_MVL_Banded,        &
+                3*Beta_Diagonals+1,     &
+                FP_Coeff_Vector_Beta,   &
+                1,                      &
+                0.0_idp,                &
+                FP_Laplace_Vector_Beta, &
+                1                       )
+
+
+
+    FP_Residual_Vector_Beta = FP_Laplace_Vector_Beta - FP_Source_Vector_Beta
+
+
+
+    LOne_Norm(1,:,3:5) = SUM( ABS(FP_Laplace_Vector_Beta) )
+    LTwo_Norm(1,:,3:5) = SQRT(REAL(DOT_PRODUCT(FP_Laplace_Vector_Beta,FP_Laplace_Vector_Beta) ) )
+    LInf_Norm(1,:,3:5) = MAXVAL( ABS( FP_Laplace_Vector_Beta ) )
+
+    LOne_Norm(2,:,3:5) = SUM(ABS(WORK_VEC))
+    LTwo_Norm(2,:,3:5) = SQRT(REAL(DOT_PRODUCT(WORK_VEC,WORK_VEC) ) )
+    LInf_Norm(2,:,3:5) = MAXVAL( ABS( WORK_VEC ) )
+
+    LOne_Norm(3,:,3:5) = SUM(ABS(FP_Residual_Vector_Beta))
+    LTwo_Norm(3,:,3:5) = SQRT(REAL(DOT_PRODUCT(FP_Residual_Vector_Beta,FP_Residual_Vector_Beta) ) )
+    LInf_Norm(3,:,3:5) = MAXVAL( ABS( FP_Residual_Vector_Beta ) )
+
 
 END IF
 

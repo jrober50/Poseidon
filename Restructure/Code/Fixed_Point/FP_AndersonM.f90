@@ -128,6 +128,9 @@ USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace_Beta,            &
                     Output_Laplace
 
+USE IO_Print_Results, &
+            ONLY :  Print_Results
+
 USE Poseidon_Cholesky_Module,   &
             ONLY :  Cholesky_Factorization,         &
                     CCS_Back_Substitution,          &
@@ -136,7 +139,6 @@ USE Poseidon_Cholesky_Module,   &
 USE Linear_Solvers_And_Preconditioners, &
             ONLY :  PRECOND_CONJ_GRAD_CCS,          &
                     JACOBI_CONDITIONING,            &
-                    SSOR_CONDITIONING,              &
                     Jacobi_Conditioning_Beta
 
 USE Poseidon_IO_Module, &
@@ -230,11 +232,20 @@ CONVERGED = .FALSE.
 !   Begin Method
 !
 
+IF (Verbose_Flag .EQV. .TRUE. ) THEN
+    PRINT*,"Initial Guess"
+    CALL Print_Results()
+    PRINT*," "
+END IF
+
+
 
 !
 !   Calculate Source Vector with u_0
 !
-!PRINT*,"Before Calc_FP_Source_Vector, out of loop"
+IF ( Verbose_Flag ) THEN
+    PRINT*,"Before Anderson FP loop, Before calculating Source Vector."
+END IF
 timer(1) = MPI_WTime()
 CALL Calc_FP_Source_Vector()
 timer(2) = MPI_Wtime()
@@ -245,6 +256,8 @@ ui = 1
 
 DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
+
+
     Timer(4) = MPI_WTime()
 
     Cur_Iteration = Cur_Iteration+1
@@ -254,10 +267,10 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     IF ( Cur_Iteration .NE. 1 ) THEN
         UVector = GVectorM
     ELSE
-        DO lm_loc = 0,LM_Length-1
+        DO lm_loc = 1,LM_Length
 !            PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
-            here = lm_loc*Num_R_Nodes + 1
-            there = (lm_loc+1)*Num_R_Nodes
+            here = (lm_loc-1)*Num_R_Nodes + 1
+            there = lm_loc*Num_R_Nodes
             UVector(here:there) = FP_Coeff_Vector(:,lm_loc,ui)
         END DO
     END IF
@@ -266,6 +279,9 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     !
     !   Solve Systems
     !
+    IF ( Verbose_Flag ) THEN
+        PRINT*,"In Anderson FP loop, Before System Solves."
+    END IF
     timer(1) = MPI_Wtime()
     IF ( ANY( CFA_EQ_Flags(1:2) == 1) ) THEN
         Call Solve_FP_System()
@@ -279,12 +295,22 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     CALL Clock_In(timer(2)-timer(1),4)
     CALL Clock_In(timer(3)-timer(2),5)
 
+!    DO lm_loc = 1,5
+!        PRINT*,FP_Coeff_Vector(:,:,lm_loc)
+!        PRINT*," "
+!        PRINT*," "
+!    END DO
 
 
-    DO lm_loc = 0,LM_Length-1
+
+    IF ( Verbose_Flag ) THEN
+        PRINT*,"In Anderson FP loop, Before Update."
+    END IF
+
+    DO lm_loc = 1,LM_Length
 !        PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
-        here = lm_loc*Num_R_Nodes + 1
-        there = (lm_loc+1)*Num_R_Nodes
+        here = (lm_loc-1)*Num_R_Nodes + 1
+        there = lm_loc*Num_R_Nodes
         GVector(here:there,mk) = FP_Coeff_Vector(:,lm_loc,ui)
     END DO
 
@@ -297,6 +323,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         GVectorM = GVector(:,mk)
 
     ELSE
+!        PRINT*,"Here",mk,M
 
         BVector = -FVector(:,mk)
 
@@ -326,6 +353,9 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     
 
 
+
+
+
     IF ( ALL( ABS( FVectorM ) <= Convergence_Criteria*ABS( GVectorM ) ) ) THEN
         PRINT*,"The Method has converged. The update is within the tolerance set. "
         Converged = .TRUE.
@@ -352,18 +382,20 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
-    DO lm_loc = 0,LM_Length-1
-        here = lm_loc*Num_R_Nodes + 1
-        there = (lm_loc+1)*Num_R_Nodes
+    DO lm_loc = 1,LM_Length
+        here = (lm_loc-1)*Num_R_Nodes + 1
+        there = lm_loc*Num_R_Nodes
         FP_Coeff_Vector(:,lm_loc,ui) = GVectorM(Here:There)
     END DO
 
 
-
+    IF ( Verbose_Flag ) THEN
+        PRINT*,"In Anderson FP loop, Before calculating Source Vector."
+    END IF
 !    PRINT*,"Before Calc_FP_Source_Vector in loop"
     timer(1) = MPI_Wtime()
     CALL Calc_FP_Source_Vector()
-!    FP_Source_Vector = -FP_Source_Vector
+
 
 
 !    PRINT*,"Before Check_FP_Convergence"
@@ -379,12 +411,19 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     CALL Clock_In(timer(3)-timer(2),7)
     Call Clock_In(timer(3)-timer(4),8)
 
-
+    IF (Verbose_Flag .EQV. .TRUE. ) THEN
+        CALL Print_Results()
+        PRINT*," "
+    END IF
 
     IF ( Verbose_Flag .EQV. .TRUE. ) THEN
         WRITE(*,'(A,1X,I3.3,/)') "End of Iteration",Cur_Iteration
     END IF
 !    STOP
+
+
+
+
 END DO ! Converged Loop
 
 

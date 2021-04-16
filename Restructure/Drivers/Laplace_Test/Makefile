@@ -66,7 +66,7 @@ run :
 	./$(BIN)/$(TEST_NAME).x
 
 run_Mapping : 
-	./$(BIN)/Laplace_Mapping.x
+	./$(BIN)/Mapping.x
 
 clean:
 	rm -f $(OBJ)/*.o

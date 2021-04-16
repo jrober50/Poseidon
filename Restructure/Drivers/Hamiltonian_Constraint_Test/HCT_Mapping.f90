@@ -157,7 +157,9 @@ REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Local_E
 REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Local_S
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Local_Si
 
-REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Test_Solution
+REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Psi_Guess
+REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  AlphaPsi_Guess
+REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Beta_Guess
 
 INTEGER                                                 ::  myID
 
@@ -179,6 +181,10 @@ INTEGER                                                 ::  L_Limit_Input
 INTEGER                                                 ::  L_Limit_Min
 INTEGER                                                 ::  L_Limit_Max
 
+INTEGER                                                 ::  M_Index
+INTEGER                                                 ::  M_Index_Min
+INTEGER                                                 ::  M_Index_Max
+
 INTEGER                                                 ::  Tol_Index
 INTEGER                                                 ::  Tolerance_Index_Min
 INTEGER                                                 ::  Tolerance_Index_Max
@@ -188,6 +194,7 @@ REAL(idp)                                               ::  Perturbation
 INTEGER                                                 ::  HCT_Fileid
 CHARACTER(LEN = 100)                                    ::  HCT_Filename
 
+INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 REAL(idp), DIMENSION(1:7)                               ::  Tolerance_Values
 CHARACTER(LEN=1), DIMENSION(1:7)                        ::  Tolerance_Letters
 
@@ -205,18 +212,21 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "G"
 Solver_Type         = 2
 
-RE_Table         = (/ 8, 16, 32, 64, 128, 256, 512, 1024 /)
-!RE_Table         = (/  (i, i=240,270, 1) /)
-Tolerance_Values = (/ 1E-6, 1E-8, 1E-10, 1E-12, 1E-14, 1E-16, 1E-30 /)
+RE_Table          = (/ 80, 160, 240, 320, 400, 600, 800, 1000 /)
+Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
+Tolerance_Values  = (/ 1E-6, 1E-8, 1E-10, 1E-12, 1E-14, 1E-16, 1E-30 /)
 
 Tolerance_Index_Min = 4
 Tolerance_Index_Max = 4
 
+M_Index_Min         =  3
+M_Index_Max         =  3
+
 RE_Index_Min        =  3
-RE_Index_Max        =  6
+RE_Index_Max        =  3
 
 Degree_Min          =  1
-Degree_Max          =  3
+Degree_Max          =  1
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
@@ -232,7 +242,7 @@ Star_Radius         =  1.0E+9_idp               ! (cm)
 
 Dimension_Input     = 3
 
-Max_Iterations      = 1000
+Max_Iterations      = 3
 
 Mesh_Type           = 1
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
@@ -244,12 +254,12 @@ NE(2)               = 1                         ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
 NQ(1)               = 10                        ! Number of Radial Quadrature Points
-NQ(2)               = 1                         ! Number of Theta Quadrature Points
+NQ(2)               = 2                         ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .FALSE.
-!Verbose             = .TRUE.
+!Verbose             = .FALSE.
+Verbose             = .TRUE.
 Suffix_Input        = "Params"
 
 CFA_Eqs = (/ 1, 0, 0, 0, 0 /)
@@ -275,7 +285,7 @@ if ( Tol_Index == 6 ) then
     cycle
 end if
 
-
+DO M_Index = M_Index_Min, M_Index_Max
 DO RE_Index = RE_Index_Min, RE_Index_Max
 DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
@@ -307,7 +317,9 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     ALLOCATE( Local_S(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
     ALLOCATE( Local_Si(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1, 1:3)  )
 
-    ALLOCATE( Test_Solution(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 ) )
+    ALLOCATE( Psi_Guess(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 ) )
+    ALLOCATE( AlphaPsi_Guess(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 ) )
+    ALLOCATE( Beta_Guess(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1,1:3 ) )
 
     Input_R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
     Input_T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
@@ -371,6 +383,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             CFA_Eq_Flags_Option         = CFA_Eqs,                      &
             Max_Iterations_Option       = Max_Iterations,               &
             Convergence_Criteria_Option = Tolerance_Values(Tol_Index),  &
+            Anderson_M_Option           = Anderson_M_Values(M_Index),   &
             Verbose_Option              = Verbose                       )
 
 
@@ -442,7 +455,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     Psi_BC = HCT_Solution( Domain_Edge(2), Alpha, Beta, C, Star_Radius )
 
-
+    PRINT*,"Psi_BC ",Psi_BC
     INNER_BC_TYPES = (/"N", "N","N","N","N"/)
     OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 
@@ -482,15 +495,18 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             Cur_R_Locs(:) = dx_c(re)*(Input_R_Quad(:) + Left_Limit)+  x_e(re)
             DO rq = 1,NQ(1)
 
-                Test_Solution(rq, re-1, 0, 0) = HCT_Solution( Cur_R_Locs(rq), Alpha, Beta, C, Star_Radius )
+                Psi_Guess(rq, re-1, 0, 0) = HCT_Solution( Cur_R_Locs(rq), Alpha, Beta, C, Star_Radius )
     !            PRINT*,Cur_R_locs(rq),Test_Solution(rq, re-1,0,0)
 
             END DO ! rq
         END DO ! re
 
+        AlphaPsi_Guess = 0.0_idp
+        Beta_Guess = 0.0_idp
 
-
-        CALL Input_FP_Guess( Test_Solution,                             &
+        CALL Input_FP_Guess( Psi_Guess,                                  &
+                             AlphaPsi_Guess,                             &
+                             Beta_Guess,                                 &
                              NE(1), NE(2), NE(3),                       &
                              NQ(1), NQ(2), NQ(3),                       &
                              Input_R_Quad, Input_T_Quad, Input_P_Quad,  &
@@ -507,17 +523,20 @@ IF ( Guess_Type == 3 ) THEN
         Cur_R_Locs(:) = dx_c(re)*(Input_R_Quad(:) + Left_Limit)+  x_e(re)
         DO rq = 1,NQ(1)
 
-            Test_Solution(rq, re-1, 0, 0)                                   &
+            Psi_Guess(rq, re-1, 0, 0)                                   &
                 = HCT_Perturbed_Solution( Cur_R_Locs(rq), Alpha, Beta, C,   &
                                           Star_Radius, Perturbation, Domain_Edge(2)  )
-!            PRINT*,Cur_R_locs(rq),Test_Solution(rq, re-1,0,0)
+!            PRINT*,Cur_R_locs(rq), Psi_Guess(rq, re-1,0,0)
 
         END DO ! rq
     END DO ! re
+    AlphaPsi_Guess = 0.0_idp
+    Beta_Guess = 0.0_idp
 
 
-
-    CALL Input_FP_Guess( Test_Solution,                             &
+    CALL Input_FP_Guess( Psi_Guess,                                  &
+                         AlphaPsi_Guess,                             &
+                         Beta_Guess,                                 &
                          NE(1), NE(2), NE(3),                       &
                          NQ(1), NQ(2), NQ(3),                       &
                          Input_R_Quad, Input_T_Quad, Input_P_Quad,  &
@@ -581,7 +600,9 @@ END IF
 
     DEALLOCATE( Local_E, Local_S, Local_Si )
 
-    DEALLOCATE( Test_Solution )
+    DEALLOCATE( Psi_Guess )
+    DEALLOCATE( AlphaPsi_Guess )
+    DEALLOCATE( Beta_Guess )
 
 
 
@@ -590,7 +611,7 @@ END DO ! L_Limit
 END DO ! Degree_Index
 END DO ! RE_Index
 END DO ! Tol_Index
-
+END DO ! M_Index
 
 
 CONTAINS

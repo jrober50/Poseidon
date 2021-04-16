@@ -88,10 +88,10 @@ COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:M)             :: V
 COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:N,1:M)         :: A
 
 
-REAL(KIND = idp), DIMENSION(1:N)                            :: MVMULT_FULL
+COMPLEX(KIND = idp), DIMENSION(1:N)                            :: MVMULT_FULL
 
 
-REAL(KIND = idp), DIMENSION(1:N)                            :: Sol
+COMPLEX(KIND = idp), DIMENSION(1:N)                            :: Sol
 
 INTEGER                                                     :: i,j
 

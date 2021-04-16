@@ -115,7 +115,7 @@ REAL(KIND = idp), DIMENSION(0:NUM_R_NODES-1,0:NUM_R_NODES-1)        :: Orig, Rec
 
 
 IF ( Verbose_Flag ) THEN
-    PRINT*,"In Cholesky_Factorization."
+    PRINT*,"--In Cholesky_Factorization."
 END IF
 
 
@@ -135,7 +135,7 @@ OLD_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
                      !!                                     !!
                       !                                     !
 
-DO ui = 1,NUM_CFA_EQS
+DO ui = 1,Num_Matrices
     !   Dirichlet BCs modify the stiffness matrix so we modify it now.
     !   But to apply the BCs we will need values from the original matrix,
     !   so those values are stored before we modify the matrix.
