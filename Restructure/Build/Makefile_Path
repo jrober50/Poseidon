@@ -1,0 +1,21 @@
+VPATH += \
+$(OBJ)                                          \
+$(POSEIDON_DIR)/Code:                           \
+$(POSEIDON_DIR)/Code/Common:                    \
+$(POSEIDON_DIR)/Code/Params_and_Variables:      \
+$(POSEIDON_DIR)/Code/VPRINT:                    \
+$(POSEIDON_DIR)/Code/Mesh:                      \
+$(POSEIDON_DIR)/Code/Quadrature                 \
+$(POSEIDON_DIR)/Code/Tables:                    \
+$(POSEIDON_DIR)/Code/IO:                        \
+$(POSEIDON_DIR)/Code/MPI                        \
+$(POSEIDON_DIR)/Code/Linear_Solvers:            \
+$(POSEIDON_DIR)/Code/Drivers:                   \
+$(POSEIDON_DIR)/Code/External:                  \
+$(POSEIDON_DIR)/Code/Fixed_Point:               \
+$(POSEIDON_DIR)/Code/Function_Modules:          \
+$(POSEIDON_DIR)/Code/Initialization:            \
+$(POSEIDON_DIR)/Code/Interfaces:                \
+$(POSEIDON_DIR)/Code/Newton_Raphson:            \
+$(POSEIDON_DIR)/Code/Params_And_Variables:      \
+..

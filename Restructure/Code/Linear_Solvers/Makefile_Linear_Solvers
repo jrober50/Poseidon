@@ -1,0 +1,4 @@
+LINEAR_SOLVERS = \
+   Poseidon_Linear_Solvers.o   \
+   Poseidon_Preconditioners.o  \
+

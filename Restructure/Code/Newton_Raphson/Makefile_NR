@@ -1,0 +1,12 @@
+NR = \
+  Variables_NR.o              \
+  Allocation_NR.o             \
+  IO_NR.o                     \
+  Functions_NR.o              \
+  Initialization_NR.o         \
+  Poseidon_NR_BC.o            \
+  SubJacobian_Functions_1D.o  \
+  SubJacobian_Functions_3D.o  \
+  CFA_1D_Master_Build.o       \
+  CFA_3D_Master_Build.o       \
+  CFA_Newton_Raphson_3D.o     \

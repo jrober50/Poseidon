@@ -1,0 +1,26 @@
+include $(POSEIDON_DIR)/Build/Makefile_Path
+include $(POSEIDON_DIR)/Build/Makefile_Rules
+include $(POSEIDON_DIR)/Build/Makefile_Include
+include $(POSEIDON_DIR)/Build/Makefile_Objects
+include $(POSEIDON_DIR)/Build/Makefile_Dictionary
+
+
+
+
+POSEIDON = \
+  $(COMMON)          \
+  $(VARIABLES)       \
+  $(VPRINT)          \
+  $(MESH)            \
+  $(QUAD)            \
+  $(FUNCTIONS)       \
+  $(MPI)             \
+  $(TABLES)          \
+  $(IO)              \
+  $(LINEAR_SOLVERS)  \
+  $(NR)              \
+  $(FP)              \
+  $(EXTERNAL)        \
+  $(INIT)            \
+  $(INTERFACES)      \
+

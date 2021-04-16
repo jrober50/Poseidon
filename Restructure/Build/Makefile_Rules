@@ -1,0 +1,5 @@
+%.o: %.F90
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
+
+%.o: %.f90
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
