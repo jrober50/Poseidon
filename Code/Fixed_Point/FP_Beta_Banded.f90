@@ -133,7 +133,7 @@ SUBROUTINE Initialize_Beta_MVL_Banded()
 
 
 INTEGER                                                 ::  l, m, lp, mp, lm, lm_loc, lpmp_loc
-INTEGER                                                 ::  re, te, pe
+INTEGER                                                 ::  re, te, pe, rep
 INTEGER                                                 ::  rd, td, pd, tpd
 INTEGER                                                 ::  d, dp
 INTEGER                                                 ::  i, j, ui, uj
@@ -335,6 +335,29 @@ DO re = 0,Num_R_Elements-1
 END DO ! re Loop
 
 
+!    PRINT*,"Work_Mat"
+!    DO ui = 1,3
+!    re = Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO l = 1,LM_Length
+!    DO uj = 1,3
+!    rep = Num_R_Elements-1
+!    DO dp = 0,Degree
+!    DO lp = 1,LM_Length
+!
+!        i = FP_Beta_Array_Map(re,d,ui,l)
+!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!        PRINT*,i,j,Beta_MVL_Banded(Beta_Bandwidth+i-j,j)
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+
+
+
 !Call Output_Laplace_Beta(Beta_MVL_Banded,Beta_Prob_Dim, Beta_Prob_Dim)
 Beta_Factorized_Flag = .FALSE.
 
@@ -423,10 +446,8 @@ DO d = 0,Degree
         END DO ! rd Loop
     END DO ! lpmp_loc Loop
 
-
-
-
-
+    !        PRINT*,lm_loc,lpmp_loc,                                 &
+    !                SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  )
 
 
     uj = 2
@@ -871,10 +892,15 @@ DO td = 1,NUM_T_QUAD_POINTS
 
         Sin_Square(tpd) = DSIN( Cur_T_Locs(td) )*DSIN( Cur_T_Locs(td) )
         Cotan_Val(tpd)  = 1.0_idp/DTAN( CUR_T_LOCS(td) )
+!        TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = DSIN( Cur_T_Locs(td) )                &
+!                                                        * DeltaT_OverTwo * INT_T_WEIGHTS(td)    &
+!                                                        * DeltaP_OverTwo * INT_P_WEIGHTS(pd)
+ 
         TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = DSIN( Cur_T_Locs(td) )                &
                                                         * DeltaT_OverTwo * INT_T_WEIGHTS(td)    &
-                                                        * DeltaP_OverTwo * INT_P_WEIGHTS(pd)
-    END DO
+                                                        * INT_P_WEIGHTS(pd)
+
+END DO
 END DO
 
 
@@ -931,6 +957,7 @@ END DO
 
 
 
+
 END SUBROUTINE CALC_TP_Values
 
 
@@ -942,11 +969,12 @@ END SUBROUTINE CALC_TP_Values
 SUBROUTINE Factorize_Beta_Banded()
 
 
-INTEGER                                                 :: ui, Col, Row
-INTEGER                                                 :: d, lm
+INTEGER                                                 :: Col, Row
+INTEGER                                                 :: lm
 
-INTEGER                                                 ::  i, j, l, uj
-INTEGER                                                 ::  re, dp, lp
+INTEGER                                                 ::  i, j
+INTEGER                                                 ::  re, d, l, ui
+INTEGER                                                 ::  rep, dp, lp, uj
 
 
 INTEGER                                                 :: INFO
@@ -961,6 +989,28 @@ REAL(idp)                                               :: NORM
 !   so those values are stored before we modify the matrix.
 !
 CALL DIRICHLET_BC_Beta_Banded_Mat()
+
+!PRINT*,"Work_Mat"
+!DO ui = 1,3
+!re = Num_R_Elements-1
+!DO d = 0,Degree
+!DO l = 1,LM_Length
+!DO uj = 1,3
+!rep = Num_R_Elements-1
+!DO dp = 0,Degree
+!DO lp = 1,LM_Length
+!
+!    i = FP_Beta_Array_Map(re,d,ui,l)
+!    j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!    PRINT*,i,j,Beta_MVL_Banded(Beta_Bandwidth+i-j,j)
+!END DO
+!END DO
+!END DO
+!END DO
+!END DO
+!END DO
+
 
 
 CALL Jacobi_PC_MVL_Banded()
@@ -1185,6 +1235,8 @@ SUBROUTINE Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
 COMPLEX(idp),   DIMENSION(1:Beta_Prob_Dim),     INTENT(INOUT)       ::  Work_Vec
 
+
+
 ! Multiply diagonal and work vec
 
 Work_Vec(:)  = Work_Vec(:)*Beta_MVL_Diagonal(:)
@@ -1207,11 +1259,12 @@ END SUBROUTINE Jacobi_PC_MVL_Banded_Vector
 SUBROUTINE DIRICHLET_BC_Beta_Banded_Mat()
 
 
-INTEGER                                                 :: ui, Col, Row
-INTEGER                                                 :: d, lm
+INTEGER                                                 :: Col, Row
+INTEGER                                                 :: re, d, ui, lm
+INTEGER                                                 :: rep, dp, uj, lpmp, lp
 
-INTEGER                                                 ::  i, j, l, uj
-INTEGER                                                 ::  re, dp, lp
+INTEGER                                                 ::  i, j
+
 
 
 DO ui = 1,3
@@ -1308,22 +1361,22 @@ DO ui = 1,3
 
 
         ! Clear the Rows
-        DO d = 0,Degree
         DO lm = 1,LM_Length
 
             Row = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,lm) + Beta_Bandwidth
 
+            DO uj = 1,3
             DO dp = 0,Degree
             DO lp = 1,LM_Length
 
-                Col = FP_Beta_Array_Map(Num_R_Elements-1,dp,ui,lp)
+                Col = FP_Beta_Array_Map(Num_R_Elements-1,dp,uj,lp)
 
                 Beta_MVL_Banded(Row-Col,Col) = 0.0_idp
 
             END DO ! lp
             END DO ! dp
+            END DO ! uj
         END DO ! l Loop
-        END DO ! d Loop
 
 
 
@@ -1347,7 +1400,7 @@ DO ui = 1,3
 
             Beta_MVL_Banded(Row-Col,Col) = 1.0_idp
 
-        END DO ! l Loop
+        END DO ! lm Loop
 
 
     END IF

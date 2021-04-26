@@ -784,26 +784,34 @@ DO ui = 3,5
 
     IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
 
-        BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+    
+        DO lm = 1,LM_Length
 
-!        DO lm = 1,LM_Length
-        DO d = DEGREE-shift,0,-1
-            
-            Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui-2,0,0)
-            
-            Work_Vec(Row) = Work_Vec(Row) - Last_Column_Beta_Storage(1,d,ui-2)*BC_Value
+            IF ( lm == 1 ) THEN
+                BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+            ELSE
+                BC_Value = 0.0_idp
+            END IF
 
 
-!            PRINT*,d,Row,Work_Vec(Row),BC_Value,Last_Column_Beta_Storage(1,d,ui-2)
+            DO d = DEGREE-shift,0,-1
+                
+                Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui-2,lm)
+                
+                Work_Vec(Row) = Work_Vec(Row) - Last_Column_Beta_Storage(lm,Degree,ui-2)*BC_Value
 
-        END DO  ! d
-!        END DO  ! lm
+
+    !            PRINT*,d,Row,Work_Vec(Row),BC_Value,Last_Column_Beta_Storage(1,d,ui-2)
+
+            END DO  ! d
+
+
         
-        Row = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui-2,0,0)
-
-        WORK_VEC(Row) = BC_Value
-
         
+            Row = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui-2,lm)
+            WORK_VEC(Row) = BC_Value
+
+        END DO  ! lm
 
         !!! MODIFY MATRIX !!!
 

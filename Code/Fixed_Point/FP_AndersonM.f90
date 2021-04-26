@@ -102,11 +102,6 @@ USE Variables_FP,  &
                     MCF_Flag,                   &
                     FP_Anderson_M
 
-USE Functions_Matrix, &
-            ONLY :  MVMULT_FULL,                &
-                    MVMULT_FULL_SUB,            &
-                    MVMULT_CCS
-
 USE Functions_Mesh, &
             ONLY :  Create_Logarithmic_1D_Mesh,     &
                     Create_Uniform_1D_Mesh
@@ -179,7 +174,7 @@ SUBROUTINE Fixed_Point_AndersonM()
 
 LOGICAL                                                 ::  CONVERGED
 LOGICAL                                                 ::  CONVERGED_Residual
-INTEGER                                                 ::  i, k, lm_loc, ui
+INTEGER                                                 ::  i, k, lm_loc, ui, lm
 INTEGER                                                 ::  here, there
 
 INTEGER                                                 ::  M
@@ -295,17 +290,16 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     CALL Clock_In(timer(2)-timer(1),4)
     CALL Clock_In(timer(3)-timer(2),5)
 
-!    DO lm_loc = 1,5
-!        PRINT*,FP_Coeff_Vector(:,:,lm_loc)
-!        PRINT*," "
-!        PRINT*," "
-!    END DO
+
 
 
 
     IF ( Verbose_Flag ) THEN
         PRINT*,"In Anderson FP loop, Before Update."
     END IF
+
+
+
 
     DO lm_loc = 1,LM_Length
 !        PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
@@ -389,12 +383,16 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     END DO
 
 
+
+
     IF ( Verbose_Flag ) THEN
         PRINT*,"In Anderson FP loop, Before calculating Source Vector."
     END IF
 !    PRINT*,"Before Calc_FP_Source_Vector in loop"
     timer(1) = MPI_Wtime()
     CALL Calc_FP_Source_Vector()
+
+
 
 
 
@@ -415,6 +413,17 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         CALL Print_Results()
         PRINT*," "
     END IF
+
+
+
+!    DO ui= 3,3
+!    DO lm = 1,LM_Length
+!        PRINT*,ui,lm
+!        PRINT*,FP_Coeff_Vector(:,lm,ui)
+!    END DO
+!    END DO
+
+
 
     IF ( Verbose_Flag .EQV. .TRUE. ) THEN
         WRITE(*,'(A,1X,I3.3,/)') "End of Iteration",Cur_Iteration

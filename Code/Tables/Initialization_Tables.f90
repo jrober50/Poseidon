@@ -226,6 +226,8 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
         T_Locations = Map_From_X_Space(tlocs(Global_te), tlocs(Global_te + 1), INT_T_LOCATIONS)
 
 
+        
+
         DO pd = 1,NUM_P_QUAD_POINTS
         DO td = 1,NUM_T_QUAD_POINTS
         DO l = 0,L_LIMIT
@@ -239,12 +241,15 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
                                             * CDEXP(CMPLX(0.0_idp,m*P_Locations(pd),idp))   ! exp(im phi)
 
 
+!            PRINT*,l,m,P_Locations(pd),CDEXP(CMPLX(0.0_idp,m*P_Locations(pd),idp))
+
         END DO ! m Loop
         END DO ! l Loop
         END DO ! td Loop
         END DO ! pd Loop
     END DO ! te Loop
 END DO ! pe Loop
+
 
 
 

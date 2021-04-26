@@ -198,6 +198,7 @@ REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  dz_c
 INTEGER                                                 ::  i
 
 
+
 ! Create Uniform Radial Mesh !
 CALL Create_Uniform_1D_Mesh( Inner_Radius, Outer_Radius, nx, x_e, x_c, dx_c )
 
@@ -206,8 +207,7 @@ CALL Create_Uniform_1D_Mesh( 0.0_idp, pi, ny, y_e, y_c, dy_c )
 
 ! Create Uniform Phi Mesh !
 CALL Create_Uniform_1D_Mesh( 0.0_idp, 2.0_idp*pi, nz, z_e, z_c, dz_c )
-
-
+!CALL Create_Uniform_1D_Mesh( -1.0_idp*pi, 1.0_idp*pi, nz, z_e, z_c, dz_c )
 
 
 END SUBROUTINE Create_Uniform_3D_Mesh

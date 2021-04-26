@@ -117,7 +117,8 @@ USE Variables_FP,  &
                     Factored_NNZ,               &
                     Num_Matrices,               &
                     MCF_Flag,                   &
-                    FP_Anderson_M
+                    FP_Anderson_M,              &
+                    Beta_Bandwidth
 
 USE Functions_Matrix, &
             ONLY :  MVMULT_FULL,                &
@@ -138,8 +139,12 @@ USE FP_Functions_BC,  &
                     Dirichlet_BC_CCS,               &
                     Dirichlet_BC_CHOL,              &
                     Dirichlet_BC_Beta,              &
+                    DIRICHLET_BC_Beta_Banded,       &
                     Neumann_BC,                     &
                     Neumann_BC_CCS
+
+USE FP_Beta_Banded, &
+            ONLY :  Jacobi_PC_MVL_Banded_Vector
 
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace_Beta,            &
@@ -162,7 +167,8 @@ USE Poseidon_IO_Module, &
                     OUTPUT_FINAL_RESULTS
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_LM_Map
+            ONLY :  FP_LM_Map,                          &
+                    FP_Beta_Array_Map
 
 
 
@@ -192,6 +198,12 @@ INTEGER                                             ::  ui, l
 CALL Calc_FP_Residual( Resid_Data )
 !PRINT*,"After Calc_FP_Residual"
 
+
+!DO ui = 1,5
+!DO l = 1,LM_Length
+!    PRINT*,ui, l, Resid_Data(:,l,ui)
+!END DO
+!END DO
 
 DO ui = 1,5
     Frame_Update_Table(CUR_ITERATION,ui)      =  MAXVAL( ABS( FP_Update_Vector(:,:,ui) ) )
@@ -246,6 +258,7 @@ REAL(KIND = idp), DIMENSION(1:3,1:LM_LENGTH,1:5), INTENT(OUT)       ::  Converge
 INTEGER                                             ::  Convergence_Type = 3
 
 INTEGER                                             ::  ui, l, m, lm_loc, map_loc, i
+INTEGER                                             ::  uj, dp, lp, re, rep, j, d
 
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)    ::  WORK_MAT
@@ -330,11 +343,42 @@ IF ( Matrix_Format == 'Full' ) THEN
         CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
 
+        CALL Jacobi_Conditioning_Beta(Work_mat,work_Vec,Beta_Prob_Dim,Beta_Prob_Dim)
+
+
+!        PRINT*,"FP_Coeff_Vector_Beta, Full"
+!        PRINT*,FP_Coeff_Vector_Beta
+!
+!        PRINT*,"Laplace Full"
+!        DO ui = 1,3
+!        DO re = 1,Num_R_Elements-1
+!        DO d = 0,Degree
+!        DO l = 1,LM_Length
+!        DO uj = 1,3
+!        DO rep = 1,Num_R_Elements-1
+!        DO dp = 0,Degree
+!        DO lp = 1,LM_Length
+!
+!            i = FP_Beta_Array_Map(re,d,ui,l)
+!            j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!            PRINT*,i,j,Work_Mat(i,j)
+!        END DO
+!        END DO
+!        END DO
+!        END DO
+!        END DO
+!        END DO
+!        END DO
+!        END DO
+
+
+
         CALL ZGEMV('N',                     &
                     Beta_Prob_Dim,          &
                     Beta_Prob_Dim,          &
                     1.0_idp,                &
-                    Laplace_Matrix_Beta,    &
+                    Work_Mat,    &
                     Beta_Prob_Dim,          &
                     FP_Coeff_Vector_Beta,   &
                     1,                      &
@@ -343,9 +387,9 @@ IF ( Matrix_Format == 'Full' ) THEN
                     1                       )
 
 
-        FP_Laplace_Vector_Beta = MVMULT_FULL( WORK_MAT,                 &
-                                                FP_Coeff_Vector_Beta(:),        &
-                                                Beta_Prob_Dim, Beta_Prob_Dim    )
+!        FP_Laplace_Vector_Beta = MVMULT_FULL( WORK_MAT,                 &
+!                                                FP_Coeff_Vector_Beta(:),        &
+!                                                Beta_Prob_Dim, Beta_Prob_Dim    )
 
 
         FP_Residual_Vector_Beta = (FP_Laplace_Vector_Beta - Work_Vec)
@@ -375,10 +419,12 @@ IF ( Matrix_Format == 'Full' ) THEN
 
 
 
-
 !    PRINT*,"In Calc_FP_Residual, A"
 
 ELSE IF ( Matrix_Format == 'CCS' ) THEN
+
+    ALLOCATE( Work_Vec(Num_R_Nodes) )
+
 
     DO ui = 1,2
 
@@ -388,6 +434,8 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
 
 
                     lm_loc = FP_LM_Map(l,m)
+
+
 !                PRINT*,"#######",ui
 !                PRINT*,Laplace_Factored_VAL(:,l,ui)
 !                PRINT*,"-------"
@@ -408,14 +456,15 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                                             ui                          )
 
 
+
+
                     CALL Calc_CCS_Laplacian_Vector( NUM_R_NODES,                            &
                                                     Factored_NNZ,                            &
                                                     Laplace_Factored_VAL(:,l,ui),           &
                                                     Laplace_Factored_COL(:,l),              &
                                                     Laplace_Factored_ROW(:,l),              &
-                                                    FP_Coeff_Vector(:,l,CFA_EQ_Map(ui)),    &
-                                                    FP_Laplace_Vector(:,l,ui) )
-
+                                                    FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)),    &
+                                                    FP_Laplace_Vector(:,lm_loc,ui) )
 
 
                     FP_Residual_Vector(:,lm_loc,ui) = (FP_Laplace_Vector(:,lm_loc,ui) - Work_Vec)
@@ -450,13 +499,54 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
 
 
 
-    ! Shift Residual
 
+    DEALLOCATE(Work_Vec)
+    ALLOCATE( Work_Vec(1:Beta_Prob_Dim ) )
+    Work_Vec = FP_Source_Vector_Beta
+
+    CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
+
+    CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
+
+
+!    PRINT*,"FP_Coeff_Vector_Beta, Sparse"
+!    PRINT*,FP_Coeff_Vector_Beta
+
+
+
+!    PRINT*,"Work_Mat"
+!    DO ui = 1,3
+!    DO re = 1,Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO l = 1,LM_Length
+!
+!    DO uj = 1,3
+!    DO rep = 1,Num_R_Elements-1
+!    DO dp = 0,Degree
+!    DO lp = 1,LM_Length
+!
+!        i = FP_Beta_Array_Map(re,d,ui,l)
+!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!        PRINT*,i,j,Beta_MVL_Banded(Beta_Bandwidth+i-j,j)
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+
+
+
+    ! Shift Residual
     CALL ZGBMV('N',                     &
                 Beta_Prob_Dim,          &
                 Beta_Prob_Dim,          &
                 Beta_Diagonals,         &
-                Beta_Diagonals,         &
+                2*Beta_Diagonals,       &
                 1.0_idp,                &
                 Beta_MVL_Banded,        &
                 3*Beta_Diagonals+1,     &
@@ -467,10 +557,15 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                 1                       )
 
 
+   
 
-    FP_Residual_Vector_Beta = FP_Laplace_Vector_Beta - FP_Source_Vector_Beta
+!    DO l = 1,Beta_Prob_Dim
+!        PRINT*,l,FP_Laplace_Vector_Beta(l),Work_Vec(l),FP_Laplace_Vector_Beta(l)-Work_Vec(l)
+!    END DO
+!     PRINT*,MAXLOC(abs(FP_Laplace_Vector_Beta(:))),MAXVAL( ABS( FP_Laplace_Vector_Beta ) )
 
-
+    FP_Residual_Vector_Beta = FP_Laplace_Vector_Beta - Work_Vec
+    
 
     LOne_Norm(1,:,3:5) = SUM( ABS(FP_Laplace_Vector_Beta) )
     LTwo_Norm(1,:,3:5) = SQRT(REAL(DOT_PRODUCT(FP_Laplace_Vector_Beta,FP_Laplace_Vector_Beta) ) )
@@ -489,6 +584,10 @@ END IF
 
 
 
+
+
+
+
 ! Convergence Check
 !   Is the relative residual below a tolerance
 !   norm/max(norm(laplace),norm(source)) <? Tolerance
@@ -498,6 +597,15 @@ END IF
 
 Convergence_Stat = 0.0_idp
 DO ui = 1,5
+
+    IF ( ui == 3) THEN
+        PRINT*, LOne_Norm(1,:,ui)
+        PRINT*, " "
+        PRINT*, LOne_norm(2,:,ui)
+        PRINT*," "
+        PRINT*, LOne_Norm(3,:,ui)
+        PRINT*," ------ "
+    END IF
 
     IF ( MAXVAL(LOne_Norm(1:2,:,ui)) .NE. 0.0_idp ) THEN
         Convergence_Stat(1,:, ui) = LOne_Norm(3,:,ui)/MAXVAL(LOne_Norm(1:2,:,ui))
@@ -558,6 +666,7 @@ INTEGER                                                     :: i,j
 Laplacian_A = 0.0_idp
 Laplacian_B = 0.0_idp
 
+
 ! L^t*x
 DO i = 0,N-1
     DO j = COL_PTR(i),COL_PTR(i+1)-1
@@ -577,6 +686,8 @@ DO i = 0,N-1
     
     END DO ! j Loop
 END DO ! i Loop
+
+
 
 Lap = Laplacian_B
 

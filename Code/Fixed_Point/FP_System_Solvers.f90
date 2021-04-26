@@ -124,11 +124,6 @@ USE Variables_FP,  &
                     Beta_MVL_Banded,            &
                     Beta_Factorized_Flag
 
-USE Functions_Matrix, &
-            ONLY :  MVMULT_FULL,                &
-                    MVMULT_FULL_SUB,            &
-                    MVMULT_CCS
-
 USE Functions_Mesh, &
             ONLY :  Create_Logarithmic_1D_Mesh,     &
                     Create_Uniform_1D_Mesh
@@ -453,6 +448,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
             FP_Coeff_Vector( :,lm_loc,ui) = WORK_VEC(:)
 
 
+
+
         END DO  ! m Loop
         END DO  ! l Loop
     END IF
@@ -513,8 +510,10 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
 
 
-INTEGER                                                                     ::  i, j, Col, Row, l, uj
-INTEGER                                                                     ::  ui, re, d, dp, lp
+INTEGER                                                                     ::  i, j, Col, Row
+INTEGER                                                                     ::  ui, re, d, l
+INTEGER                                                                     ::  uj, rep, dp, lp
+
 
 INTEGER                                                                     ::  Here, There
 
@@ -544,14 +543,67 @@ IF (LINEAR_SOLVER =='Full') THEN
     WORK_VEC(:)   = FP_Source_Vector_Beta(:)
 
     
-
+!    PRINT*,"A"
+!    PRINT*,Work_Vec
     CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
+
+
+!    PRINT*,"Work_Mat"
+!    DO ui = 1,3
+!    re = Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO l = 1,LM_Length
+!    DO uj = 1,3
+!    rep = Num_R_Elements-1
+!    DO dp = 0,Degree
+!    DO lp = 1,LM_Length
+!
+!        i = FP_Beta_Array_Map(re,d,ui,l)
+!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!        PRINT*,i,j,Work_Mat(i,j)
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+
+!    PRINT*,"B"
+!    PRINT*,Work_Vec
 
     CALL JACOBI_CONDITIONING_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
     
     
 !    CALL Calc_RCOND_Full( Work_Mat, RCOND )
+
+!    PRINT*,"Work_Vec"
+!    PRINT*,Work_Vec
+!    PRINT*,"Work_Mat"
+!    DO ui = 1,3
+!    re = Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO l = 1,LM_Length
+!    DO uj = 1,3
+!    rep = Num_R_Elements-1
+!    DO dp = 0,Degree
+!    DO lp = 1,LM_Length
+!
+!        i = FP_Beta_Array_Map(re,d,ui,l)
+!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!        PRINT*,i,j,Work_Mat(i,j)
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+
+    
+!    PRINT*,"C"
+!    PRINT*,Work_Vec
 
     CALL ZGESV(Beta_Prob_Dim, 1, WORK_MAT, Beta_Prob_Dim, IPIV, WORK_VEC, Beta_Prob_Dim, INFO)
     IF (INFO .NE. 0) THEN
@@ -605,19 +657,68 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
     ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
-    ALLOCATE( WORK_MAT( 1:(3*Beta_Diagonals+1), 1:Beta_Prob_Dim ) )
+!    ALLOCATE( WORK_MAT( 1:(3*Beta_Diagonals+1), 1:Beta_Prob_Dim ) )
     
     Work_Mat = Beta_MVL_Banded
     Work_Vec = FP_Source_Vector_Beta
 
-
-
+!    PRINT*,"A"
+!    PRINT*,Work_Vec
+    
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
 
+!    PRINT*,"Work_Mat"
+!    DO ui = 1,3
+!    re = Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO l = 1,LM_Length
+!    DO uj = 1,3
+!    rep = Num_R_Elements-1
+!    DO dp = 0,Degree
+!    DO lp = 1,LM_Length
+!
+!        i = FP_Beta_Array_Map(re,d,ui,l)
+!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!        PRINT*,i,j,Work_Mat(Beta_Bandwidth+i,j)
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
 
+!    PRINT*,"B"
+!    PRINT*,Work_Vec
 
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
+!    PRINT*,"Work_Vec"
+!    PRINT*,Work_Vec
+!    PRINT*,"Work_Mat"
+!    DO ui = 1,3
+!    re = Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO l = 1,LM_Length
+!    DO uj = 1,3
+!    rep = Num_R_Elements-1
+!    DO dp = 0,Degree
+!    DO lp = 1,LM_Length
+!
+!        i = FP_Beta_Array_Map(re,d,ui,l)
+!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!        PRINT*,i,j,Work_Mat(Beta_Bandwidth+i-j,j)
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+
+
+!    PRINT*,"C"
+!    PRINT*,Work_Vec
 
 !    PRINT*,"Before ZGBTRS "
     CALL ZGBTRS( 'N',                   &
@@ -625,10 +726,10 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                  Beta_Diagonals,        &
                  Beta_Diagonals,        &
                  1,                     &
-                 Work_Mat,              &
+                 Beta_MVL_Banded,              &
                  3*Beta_Diagonals+1,    &
                  Beta_IPIV,             &
-                 Work_Vec,              &
+                 -Work_Vec,              &
                  Beta_Prob_Dim,         &
                  INFO                   )
 

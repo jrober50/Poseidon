@@ -462,6 +462,7 @@ Zero = 0.0_idp
 
 DO i = 1,rows
     CONDITIONER(i,i) = 1.0_idp/A(i,i)
+!    PRINT*,CONDITIONER(i,i)
 END DO
 
 

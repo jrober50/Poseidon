@@ -300,9 +300,13 @@ R_Int_Weights(:) = DELTAR_OVERTWO * R_SQUARE(:) * INT_R_WEIGHTS(:)
 
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
+!    TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = SIN_VAL(td)                           &
+!                                                    * DELTAT_OVERTWO * INT_T_WEIGHTS(td)    &
+!                                                    * DELTAP_OVERTWO * INT_P_WEIGHTS(pd)
+
     TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = SIN_VAL(td)                           &
                                                     * DELTAT_OVERTWO * INT_T_WEIGHTS(td)    &
-                                                    * DELTAP_OVERTWO * INT_P_WEIGHTS(pd)
+                                                    * INT_P_WEIGHTS(pd)
 END DO
 END DO
 
@@ -587,7 +591,6 @@ DO ui = 3,5
     END IF
 
 END DO ! ui
-
 
 
 

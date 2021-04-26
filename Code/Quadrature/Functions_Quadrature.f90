@@ -320,12 +320,18 @@ REAL(KIND = idp), INTENT(INOUT), DIMENSION(1:Ord)       ::  xloc, weights
 INTEGER                                                 ::  j
 
 DO j = 0,Ord-1
-    xloc(j+1) = -pi + (2.0_idp*pi/Ord) * j
+!    xloc(j+1) = -pi + (2.0_idp*pi/Ord) * j
+    xloc(j+1) = -1.0_idp + REAL(2.0_idp*j,idp)/REAL(Ord,idp)
 END DO
+
+
+!PRINT*,"plocs"
+!PRINT*,xloc
 
 weights(:) = 2.0_idp*pi/Ord
 
-
+!PRINT*,"Weights"
+!print*,weights
 
 END SUBROUTINE Initialize_Trapezoid_Quadrature
 

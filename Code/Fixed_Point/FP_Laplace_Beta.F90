@@ -117,7 +117,7 @@ CONTAINS
 SUBROUTINE Initialize_Laplace_Matrices_Beta()
 
 INTEGER                                                 ::  l, m, lp, mp, lm_loc, lpmp_loc
-INTEGER                                                 ::  re, te, pe
+INTEGER                                                 ::  re, te, pe, rep
 INTEGER                                                 ::  rd, td, pd, tpd
 INTEGER                                                 ::  d, dp
 INTEGER                                                 ::  i, j, ui, uj
@@ -265,7 +265,6 @@ DO re = 0,Num_R_Elements-1
 
             DeltaP_OverTwo = (plocs(pe + 1) - plocs(pe))/2.0_idp
 
-
             CALL Calc_TP_Values( DeltaT_OverTwo, DeltaP_OverTwo, Cur_T_Locs, te, pe,                &
                                  Sin_Square, Cotan_Val,                                             &
                                  TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor, TP_dTP_Factor,         &
@@ -285,21 +284,21 @@ DO re = 0,Num_R_Elements-1
                                             Cur_R_Locs, R_Square, Cotan_Val )
 
                 
-!                    CALL Calc_Beta2_Terms( re, d, l, m,                                         &
-!                                            RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,     &
-!                                            TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,         &
-!                                            TP_dTP_Factor, TP_TdP_Factor, dTP_dTP_Factor,       &
-!                                            dTP_TdP_Factor,                                     &
-!                                            Cur_R_Locs, R_Square, Sin_Square, Cotan_Val )
-!
-!
-!
-!                    CALL Calc_Beta3_Terms( re, d, l, m,                                         &
-!                                            RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,     &
-!                                            TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,         &
-!                                            TP_dTP_Factor, TP_TdP_Factor, TdP_TdP_Factor,       &
-!                                            TdP_dTP_Factor,                                     &
-!                                            Cur_R_Locs, R_Square, Sin_Square, Cotan_Val )
+                    CALL Calc_Beta2_Terms( re, d, l, m,                                         &
+                                            RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,     &
+                                            TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,         &
+                                            TP_dTP_Factor, TP_TdP_Factor, dTP_dTP_Factor,       &
+                                            dTP_TdP_Factor,                                     &
+                                            Cur_R_Locs, R_Square, Sin_Square, Cotan_Val )
+
+
+
+                    CALL Calc_Beta3_Terms( re, d, l, m,                                         &
+                                            RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,     &
+                                            TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,         &
+                                            TP_dTP_Factor, TP_TdP_Factor, TdP_TdP_Factor,       &
+                                            TdP_dTP_Factor,                                     &
+                                            Cur_R_Locs, R_Square, Sin_Square, Cotan_Val )
 
 
 
@@ -309,6 +308,32 @@ DO re = 0,Num_R_Elements-1
         END DO ! pe Loop
     END DO ! te Loop
 END DO ! re Loop
+
+
+
+
+!    PRINT*,"Work_Mat"
+!    DO ui = 1,3
+!    re = Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO l = 1,LM_Length
+!    DO uj = 1,3
+!    rep = Num_R_Elements-1
+!    DO dp = 0,Degree
+!    DO lp = 1,LM_Length
+!
+!        i = FP_Beta_Array_Map(re,d,ui,l)
+!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
+!
+!        PRINT*,i,j, Laplace_Matrix_Beta(i, j)
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+
+
 
 
 !Call Output_Laplace_Beta(Laplace_Matrix_Beta,Beta_Prob_Dim, Beta_Prob_Dim)
@@ -412,7 +437,11 @@ INTEGER                                                                         
 INTEGER                                                                                     :: lm_loc, lpmp_loc
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)                                                 :: TP_Int_Weights
 
-COMPLEX(idp)                                                                                :: Test
+COMPLEX(idp)                                                                            ::  Lone_Norm
+REAL(idp)                                                                                :: Test
+INTEGER                                                                                 ::  Test_loca, test_locb
+TEST = 0.0_idp
+Lone_Norm = 0.0_idp
 
 ALLOCATE( TP_Int_Weights( 1:NUM_TP_QUAD_POINTS) )
 
@@ -424,9 +453,14 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
     Sin_Square(tpd) = DSIN( Cur_T_Locs(td) )*DSIN( Cur_T_Locs(td) )
     Cotan_Val(tpd)  = 1.0_idp/DTAN( CUR_T_LOCS(td) )
+!    TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = DSIN( Cur_T_Locs(td) )                &
+!                                                    * DeltaT_OverTwo * INT_T_WEIGHTS(td)    &
+!                                                    * DeltaP_OverTwo * INT_P_WEIGHTS(pd)
+
     TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = DSIN( Cur_T_Locs(td) )                &
                                                     * DeltaT_OverTwo * INT_T_WEIGHTS(td)    &
-                                                    * DeltaP_OverTwo * INT_P_WEIGHTS(pd)
+                                                    * INT_P_WEIGHTS(pd)
+
 END DO
 END DO
 
@@ -435,7 +469,7 @@ END DO
 DO lm_loc = 1,LM_LENGTH
     DO lpmp_loc = 1,LM_LENGTH
 
-        TP_TP_Factor( :, lm_loc, lpmp_loc )  = Ylm_Values( lm_loc, :, te, pe )              &
+        TP_TP_Factor( :, lm_loc, lpmp_loc )  =  Ylm_Values( lm_loc, :, te, pe )             &
                                                 * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
                                                 * TP_Int_Weights(:)
 
@@ -479,11 +513,28 @@ DO lm_loc = 1,LM_LENGTH
                                                 * TP_Int_Weights(:)
 
 
+
+!        PRINT*,"TP_TP_Factor"
+!        PRINT*,lm_loc,lpmp_loc
+!        PRINT*,Ylm_Values( lm_loc, :, te, pe )
+!        PRINT*,"----"
+!        PRINT*,Ylm_CC_Values( :, lpmp_loc, te, pe)
+!        PRINT*,"+++++++++++++++"
+!        PRINT*,lm_loc,lpmp_loc,SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) )
+!        IF ( lm_loc .NE. Lpmp_loc ) THEN
+!            LONE_norm = Lone_norm+abs( SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) ) )
+!            IF ( abs( SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) ) ) > Test ) THEN
+!                test = abs( SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) ) )
+!                test_loca = lm_loc
+!                test_locb = lpmp_loc
+!            END IF
+!        END IF
+
     END DO
 END DO
 
 
-
+!PRINT*,LONE_Norm,Test,Test_loca,test_locb
 
 END SUBROUTINE CALC_TP_Values
 
@@ -543,75 +594,75 @@ DO d = 0,Degree
 
 
         DO rd = 1,Num_R_Quad_Points
-!            Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)           &
-!                                            - 1.0_idp/3.0_idp                       &   ! Term 1
-!                                                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc)  )      &
-!                                                * dRdR_Factor(rd, d, dp)            &
-!                                            - 8.0_idp/(3.0_idp * R_Square(rd))      &   ! Term 2
-!                                                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc)  )      &
-!                                                * RR_Factor(rd, d, dp)
-
             Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)           &
                                             - 1.0_idp/3.0_idp                       &   ! Term 1
-                                                * DiracD(lm_loc,lpmp_loc)      &
+                                                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc)  )      &
                                                 * dRdR_Factor(rd, d, dp)            &
                                             - 8.0_idp/(3.0_idp * R_Square(rd))      &   ! Term 2
-                                                * DiracD(lm_loc,lpmp_loc)      &
+                                                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc)  )      &
                                                 * RR_Factor(rd, d, dp)
+
+!            Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)           &
+!                                            - 1.0_idp/3.0_idp                       &   ! Term 1
+!                                                * DiracD(lm_loc,lpmp_loc)      &
+!                                                * dRdR_Factor(rd, d, dp)            &
+!                                            - 8.0_idp/(3.0_idp * R_Square(rd))      &   ! Term 2
+!                                                * DiracD(lm_loc,lpmp_loc)      &
+!                                                * RR_Factor(rd, d, dp)
     
 
         END DO ! rd Loop
 
-!         PRINT*,lm_loc,lpmp_loc,SUM( TP_TP_Factor(:,lm_loc,lpmp_loc)  ),DiracD(lm_loc,lpmp_loc)
+!         PRINT*,lm_loc,lpmp_loc,SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) ),Laplace_Matrix_Beta(Row, Col)
 !        print*,lm_loc,lpmp_loc,Laplace_Matrix_Beta(Row, Col)
     END DO ! lpmp_loc Loop
 
 
-!    uj = 2
-!
-!    DO lm_loc = 1,LM_Length
-!
-!        Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
-!
-!
-!        DO rd = 1,Num_R_Quad_Points
-!            Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)                       &
-!                                            - 1.0_idp/3.0_idp                                   &   ! Term 1
-!                                                * SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  )                 &
-!                                                * dRR_Factor(rd, d, dp)                         &
-!                                            - 1.0_idp/3.0_idp                                   &   ! Term 2
-!                                                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )    &
-!                                                * dRR_Factor(rd, d, dp)                         &
-!                                            - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 3
-!                                                * SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) )                  &
-!                                                * RR_Factor(rd, d, dp)                          &
-!                                            - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 4
-!                                                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)  )   &
-!                                                * RR_Factor(rd, d, dp)
-!
-!        END DO ! rd Loop
-!    END DO ! lpmp_loc Loop
+    uj = 2
+
+    DO lm_loc = 1,LM_Length
+
+        Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
+
+
+        DO rd = 1,Num_R_Quad_Points
+            Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)                       &
+                                            - 1.0_idp/3.0_idp                                   &   ! Term 1
+                                                * SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  )                 &
+                                                * dRR_Factor(rd, d, dp)                         &
+                                            - 1.0_idp/3.0_idp                                   &   ! Term 2
+                                                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )    &
+                                                * dRR_Factor(rd, d, dp)                         &
+                                            - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 3
+                                                * SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) )                  &
+                                                * RR_Factor(rd, d, dp)                          &
+                                            - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 4
+                                                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)  )   &
+                                                * RR_Factor(rd, d, dp)
+
+        END DO ! rd Loop
+    END DO ! lpmp_loc Loop
 
 
 
-!    uj = 3 ! beta^phi
-!
-!    DO lm_loc = 1,LM_Length
-!
-!        Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
-!
-!
-!        DO rd = 1,Num_R_Quad_Points
-!            Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)           &
-!                                            - 1.0_idp/3.0_idp                       &   ! Term 1
-!                                                * SUM( TP_TdP_Factor(:,lm_loc,lpmp_loc) )      &
-!                                                * dRR_Factor(rd, d, dp)             &
-!                                            - 2.0_idp/CUR_R_LOCS(rd)                &   ! Term 2
-!                                                * SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) )      &
-!                                                * RR_Factor(rd, d, dp)
-!
-!        END DO ! rd Loop
-!    END DO ! lpmp_loc Loop
+    uj = 3 ! beta^phi
+
+    DO lm_loc = 1,LM_Length
+
+        Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
+
+
+        DO rd = 1,Num_R_Quad_Points
+            Laplace_Matrix_Beta(Row, Col) = Laplace_Matrix_Beta(Row, Col)           &
+                                            - 1.0_idp/3.0_idp                       &   ! Term 1
+                                                * SUM( TP_TdP_Factor(:,lm_loc,lpmp_loc) )      &
+                                                * dRR_Factor(rd, d, dp)             &
+                                            - 2.0_idp/CUR_R_LOCS(rd)                &   ! Term 2
+                                                * SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) )      &
+                                                * RR_Factor(rd, d, dp)
+
+        END DO ! rd Loop
+    END DO ! lpmp_loc Loop
 
 END DO ! dp Loop
 
@@ -878,6 +929,10 @@ END DO ! dp Loop
 
 
 END SUBROUTINE Calc_Beta3_Terms
+
+
+
+
 
 
 
