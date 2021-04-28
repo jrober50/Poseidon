@@ -280,7 +280,7 @@ IF ( Verbose_Flag ) THEN
 END IF
 
 
-Int_Degree = 10
+Int_Degree = NUM_R_QUAD_POINTS
 
 ALLOCATE( CUR_R_LOCS(1:Int_Degree)  )
 ALLOCATE( R_SQUARE(1:Int_Degree)    )

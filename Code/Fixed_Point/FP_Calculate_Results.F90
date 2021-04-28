@@ -29,6 +29,8 @@ MODULE FP_Functions_Results                                                     
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Numbers_Module, &
+            ONLY :  pi
 
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                 &
@@ -329,10 +331,12 @@ Return_Beta2    = REAL(Tmp_U_Value(4), KIND = idp)
 Return_Beta3    = REAL(Tmp_U_Value(5), KIND = idp)
 
 
-
-
-
 END SUBROUTINE Calc_FP_Values_At_Location
+
+
+
+
+
 
 
 
@@ -386,9 +390,9 @@ DO re = 0,NUM_R_ELEMENTS-1
         DO u = 1,3
             DO d = 0,DEGREE
 
-                Current_Location = Matrix_Location(u,0,0,re,d)
-
- 
+                Current_Location = FP_FEM_Node_Map(re,d)
+                Tmp_U_Value(u) = Tmp_U_Value(u) + FP_Coeff_Vector(Current_Location,1,u)  &
+                                                * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
             END DO ! d Loop
         END DO ! u Loop
 
@@ -401,6 +405,12 @@ END DO ! re Loop
 
 
 END SUBROUTINE Calc_1D_CFA_Values_FP
+
+
+
+
+
+
 
 
 
