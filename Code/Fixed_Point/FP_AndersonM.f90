@@ -542,16 +542,19 @@ END IF
 IF ( Verbose_Flag ) THEN
     PRINT*,"Before Anderson FP loop, Before calculating Source Vector."
 END IF
+
+
+
 timer(1) = MPI_WTime()
 CALL Calc_FP_Source_Vector()
 timer(2) = MPI_Wtime()
 Call Clock_In(timer(2)-timer(1),3)
 
 
+
 ui = 1
 
 DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
-
 
 
     Timer(4) = MPI_WTime()
@@ -651,7 +654,9 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 !    PRINT*,MAXVAL(ABS(FVectorM)),Convergence_Criteria
     IF ( ALL( ABS( FVectorM ) <= Convergence_Criteria ) ) THEN
-        PRINT*,"The Method has converged. The absolute update is less than the tolerance set. "
+        IF ( Verbose_Flag ) THEN
+            PRINT*,"The Method has converged. The absolute update is less than the tolerance set. "
+        END IF
         Converged = .TRUE.
     END IF
 !    IF ( ALL( ABS( FVectorM ) <= Convergence_Criteria*ABS( GVectorM ) ) ) THEN
@@ -677,6 +682,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     !   Calculate Source Vector with u_k
     !
 
+
     DO ui = 1,5
     DO lm_loc = 1,LM_Length
 !            PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
@@ -685,6 +691,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         FP_Coeff_Vector(:,lm_loc,ui) = GVectorM(here:there)
     END DO
     END DO
+
 
 
 
