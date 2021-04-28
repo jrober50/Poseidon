@@ -29,6 +29,9 @@ MODULE Functions_FP                                                             
 USE Poseidon_Kinds_Module, &
            ONLY :  idp
 
+USE Poseidon_Numbers_Module, &
+            ONLY :  pi
+
 
 USE Poseidon_Parameters, &
            ONLY :  DEGREE,                 &
@@ -389,9 +392,9 @@ DO re = 0,NUM_R_ELEMENTS-1
        DO u = 1,3
            DO d = 0,DEGREE
 
-               Current_Location = Matrix_Location(u,0,0,re,d)
-!                Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector(Current_Location)  &
-!                                                * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
+               Current_Location = FP_FEM_Node_Map(re,d)
+               Tmp_U_Value(u) = Tmp_U_Value(u) + FP_Coeff_Vector(Current_Location,1,u)  &
+                                               * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
 
            END DO ! d Loop
        END DO ! u Loop

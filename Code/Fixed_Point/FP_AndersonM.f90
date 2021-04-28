@@ -650,9 +650,8 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     END IF
 
     FVectorM = GVectorM - UVector(:)
+    Frame_Update_Table(CUR_Iteration,1) = MAXVAL( ABS( FVectorM ) )
 
-
-!    PRINT*,MAXVAL(ABS(FVectorM)),Convergence_Criteria
     IF ( ALL( ABS( FVectorM ) <= Convergence_Criteria ) ) THEN
         IF ( Verbose_Flag ) THEN
             PRINT*,"The Method has converged. The absolute update is less than the tolerance set. "
@@ -708,7 +707,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 !    PRINT*,"Before Check_FP_Convergence"
 !    timer(2) = MPI_Wtime()
-    Call Check_FP_Convergence(Converged_Residual)
+!    Call Check_FP_Convergence(Converged_Residual)
 !    timer(3) = MPI_WTime()
 !    IF ( Converged_Residual ) THEN
 !        PRINT*,"The Method has converged. The residual is within the tolerance set. "
@@ -719,6 +718,8 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     CALL Clock_In(timer(3)-timer(2),7)
     Call Clock_In(timer(3)-timer(4),8)
 
+
+!    PRINT*,"Before PRint_Results"
     IF (Verbose_Flag .EQV. .TRUE. ) THEN
         CALL Print_Results()
         PRINT*," "

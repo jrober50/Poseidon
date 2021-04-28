@@ -232,6 +232,7 @@ Omega = 2.0_idp/(1.0_idp + sin( pi/(Num_R_Nodes) ) )
 113 FORMAT (A,I2.2,A,I5.5,A)
 
 
+
 timer(1) = MPI_Wtime()
 IF (( LINEAR_SOLVER == "CHOL" ) .AND. (MCF_Flag == 0 ) ) THEN
     
@@ -399,9 +400,13 @@ ELSE IF (LINEAR_SOLVER == 'CCS') THEN
 ELSE IF (LINEAR_SOLVER == "CHOL") THEN
             !#######################################################################!
             !                                                                       !
-            !               CCS Cholesky Factorization Matrix Solver                !
+            !               Cholesky Factorization Matrix Solver                !
             !                                                                       !
             !#######################################################################!
+
+!    PRINT*,"Midway"
+!    PRINT*,FP_Coeff_Vector(:,:,1:2)
+
 
     ALLOCATE(WORK_ELEM_VAL(0:Factored_NNZ-1))
     
@@ -417,7 +422,6 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
 
-           
 !                PRINT*,"Before Dirichelet_BC",ui
             CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                     Factored_NNZ,               &
@@ -427,6 +431,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                     Laplace_Factored_ROW(:,l),  &
                                     WORK_VEC,                   &
                                     ui                          )
+
+
 
 !                PRINT*,"Before Neumann_BC",ui
             CALL NEUMANN_BC_CCS(    NUM_R_NODES,                &
@@ -438,8 +444,9 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                     Laplace_Factored_ROW(:,l),  &
                                     WORK_VEC                    )
 
-            
-           
+!            PRINT*,"Work_Vec C"
+!            PRINT*,Work_Vec
+!
 !                PRINT*,"Before Forward Sub",ui
             CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
                                             Factored_NNZ,                   &
@@ -447,6 +454,10 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                             Laplace_Factored_COL(:,l),      &
                                             Laplace_Factored_ROW(:,l),      &
                                             WORK_VEC                        )
+
+!            PRINT*,"Work_Vec D"
+!            PRINT*,Work_Vec
+
 
 !                PRINT*,"Before Backward Sub",ui
             CALL CCS_Back_Substitution(     NUM_R_NODES,                    &
@@ -456,6 +467,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                             Laplace_Factored_ROW(:,l),      &
                                             WORK_VEC                        )
 
+!            PRINT*,"Work_Vec E"
+!            PRINT*,Work_Vec
 
 
 !            Here  = FP_Array_Map(0,0,ui,l,m)
@@ -475,6 +488,9 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     END IF
     END DO  ! ui Loop
 
+
+!    PRINT*,"After"
+!    PRINT*,FP_Coeff_Vector(:,:,1:2)
 
 END IF
 
@@ -632,9 +648,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
 !    ALLOCATE( WORK_MAT( 1:(3*Beta_Diagonals+1), 1:Beta_Prob_Dim ) )
     
-    Work_Mat = Beta_MVL_Banded
+!    Work_Mat = Beta_MVL_Banded
     Work_Vec = FP_Source_Vector_Beta
-
 
     
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
@@ -699,7 +714,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
     DEALLOCATE( Work_Vec )
-    DEALLOCATE( Work_Mat )
+!    DEALLOCATE( Work_Mat )
 
 
 END IF

@@ -173,9 +173,15 @@ REAL(KIND = idp), DIMENSION(1:3)                                ::  n_Array
 
 REAL(KIND = idp)                                                ::  BigK_Value
 
+
+
+
 Timer = 0.0_idp
 FP_Source_Vector = 0.0_idp
 FP_Source_Vector_Beta = 0.0_idp
+
+
+
 
 DO pe = 0,NUM_P_ELEMENTS-1
     deltap_overtwo = 0.5_idp * (plocs(pe + 1)-plocs(pe))
@@ -239,13 +245,11 @@ DO pe = 0,NUM_P_ELEMENTS-1
 !            CALL Clock_In(timer(3)-timer(4),10)
 !            CALL Clock_In(timer(2)-timer(3),11)
 !            CALL Clock_In(timer(2)-timer(1),12)
-
+!            PRINT*,"After Create_FP_Source_Vector",re,te,pe
 
         END DO ! re Loop
     END DO ! te Loop
 END DO ! pe Loop
-
-
 
 
 
@@ -455,6 +459,9 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     DO ui = 1,5
         Here = FP_FEM_Node_Map(re,d)
 
+    
+
+
         TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
                                 + SUM( FP_Coeff_Vector( Here, :, ui )       &
                                 * Ylm_Values( :, tpd, te, pe )       )      &
@@ -573,6 +580,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
         ALPHAPSI_POWER(i) = ALPHAPSI_POWER(i-1)*ALPHAPSI_POWER(1)
     END DO
 
+
     ! K_{ij}K^{ij} = Psi^{14}/AlphaPsi^{2} * BIGK
 !    PRINT*,"Before BigK_Value"
     BigK_Value = JCBN_BIGK_FUNCTION( rd, tpd,                                                        &
@@ -610,7 +618,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
                             BigK_Value, n_Array, Kappa_Array    )
 
 
-
+    
 
 END DO  ! pd loop
 END DO  ! td loop
@@ -659,9 +667,9 @@ COMPLEX(KIND = idp)                                                     ::  Inne
 
 
 
-FP_Source_Vector = 0.0_idp
 DO ui = 1,2
     IF ( CFA_EQ_Flags(ui) == 1 ) THEN
+
         DO d = 0,DEGREE
         DO lm_loc = 1,LM_LENGTH
 
@@ -670,20 +678,18 @@ DO ui = 1,2
 
             DO rd = 1,NUM_R_QUAD_POINTS
 
-                DO tpd = 1,NUM_TP_QUAD_POINTS
-                    RHS_TMP(ui) =  RHS_TMP(ui)                                          &
-                                    + Source_Terms( tpd, rd, ui )                       &
-                                    * Ylm_CC_Values( tpd, lm_loc, te, pe)               &
-                                    * TP_Int_Weights(tpd)                               &
-                                    * Lagrange_Poly_Table(d, rd, 0)                     &
-                                    * R_Int_Weights(rd)
+                RHS_TMP(ui) =  RHS_TMP(ui)                                          &
+                                 + SUM( Source_Terms( :, rd, ui )                    &
+                                       * Ylm_CC_Values( :, lm_loc, te, pe)         &
+                                       * TP_Int_Weights(:)                     )   &
+                               * Lagrange_Poly_Table(d, rd, 0)                     &
+                               * R_Int_Weights(rd)
 
-                END DO
-            
+
+
 
             END DO  ! rd Loop
-
-!            PRINT*,re,d,lm_loc,RHS_TMP(ui)
+            
 
             Current_i_Location = FP_FEM_Node_Map(re,d)
             FP_Source_Vector(Current_i_Location,lm_loc,ui)                &
@@ -693,7 +699,14 @@ DO ui = 1,2
         END DO  ! lm_loc Loop
         END DO  ! d Loop
     END IF
+
+
 END DO
+
+ 
+
+
+
 
 
 DO ui = 3,5
@@ -730,6 +743,8 @@ DO ui = 3,5
     END IF
 
 END DO ! ui
+
+
 
 
 
@@ -798,7 +813,6 @@ REAL(KIND = idp)                                                        ::  Beta
 
 
 
-
 Source_Terms(tpd, rd, 1) = - TwoPi                                      &
                             * GR_Source_Scalar                          &
                             * Block_Source_E(rd, td, pd, re, te, pe)    &
@@ -807,6 +821,10 @@ Source_Terms(tpd, rd, 1) = - TwoPi                                      &
                             / ( 16.0_idp * ALPHAPSI_POWER(2) )          &
                             * BigK_Value
      
+
+
+!PRINT*,Block_Source_E(rd, td, pd, re, te, pe) ,PSI_POWER(1),ALPHAPSI_POWER(1)
+
 
 
 Source_Terms(tpd, rd, 2) = TwoPi                                                        &

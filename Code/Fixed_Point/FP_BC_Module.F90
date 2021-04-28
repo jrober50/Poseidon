@@ -553,7 +553,7 @@ END IF
 IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
 
 
-    IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN
+    IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN        
         BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
     ELSE
         BC_Value = 0.0_idp
@@ -561,6 +561,7 @@ IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
 
     !!! MODIFY SRC VECTOR !!!
     WORK_VEC(NUM_R_NODES - 1) = BC_Value
+
 
     DO i = DEGREE-shift,1,-1
 
@@ -570,10 +571,6 @@ IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
 
 
     END DO
-
-
-
-
 
     !!! MODIFY MATRIX !!!
 
