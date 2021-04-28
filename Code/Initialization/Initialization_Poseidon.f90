@@ -21,6 +21,9 @@ MODULE Initialization_Poseidon                                                  
 USE Poseidon_Kinds_Module, &
                 ONLY :  idp
 
+USE Poseidon_Numbers_Module, &
+                ONLY :  pi
+
 USE Units_Module, &
                 ONLY :  Set_Units
 
@@ -255,9 +258,9 @@ IF ( PRESENT( NQ_Option ) ) THEN
     Num_T_Quad_Points = NQ_Option(2)
     Num_P_Quad_Points = NQ_Option(3)
 ELSE
-    Num_R_Quad_Points = 1
-    Num_T_Quad_Points = 1
-    Num_P_Quad_Points = 1
+    Num_R_Quad_Points = 10
+    Num_T_Quad_Points = 20
+    Num_P_Quad_Points = 2*L_Limit + 1
 END IF
 Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
 Num_Quad_DOF       = Num_R_Quad_Points*Num_TP_Quad_Points
@@ -321,10 +324,16 @@ IF ( PRESENT( t_Option ) ) THEN
     tlocs = t_Option
     locs_set(2) = .TRUE.
 END IF
+
+
 IF ( PRESENT( dt_Option ) ) THEN
     dtlocs = dt_Option
     dlocs_set(2) = .TRUE.
+ELSE
+    dtlocs = pi/Num_T_Elements
+    dlocs_set(2) = .TRUE.
 END IF
+
 
 IF ( PRESENT( p_Option ) ) THEN
     plocs = p_Option
@@ -332,6 +341,9 @@ IF ( PRESENT( p_Option ) ) THEN
 END IF
 IF ( PRESENT( dp_Option ) ) THEN
     dplocs = dp_Option
+    dlocs_set(3) = .TRUE.
+ELSE
+    dplocs = 2.0_idp*pi/Num_P_Elements
     dlocs_set(3) = .TRUE.
 END IF
 
@@ -384,7 +396,12 @@ ELSE
     Domain_Dim = 3
 END IF
 
+
+
 LM_Location => CFA_3D_LM_Map
+
+
+
 
 CALL Initialize_MPI()
 CALL Allocate_Poseidon_CFA_Variables()

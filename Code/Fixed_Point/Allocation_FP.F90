@@ -131,8 +131,8 @@ ALLOCATE( FP_Laplace_Vector_Beta(1:Beta_Prob_Dim)  )
 ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
 ALLOCATE( FP_Residual_Vector_Beta(1:Beta_Prob_Dim)  )
 
-
-
+!ALLOCATE( FP_Coeff_Vector(1:Prob_Dim) )
+!ALLOCATE( FP_Update_Vector(1:Prob_Dim) )
 
 
 END SUBROUTINE Allocate_FP

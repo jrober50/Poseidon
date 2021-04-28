@@ -20,7 +20,8 @@ USE Poseidon_Kinds_Module, &
 
 IMPLICIT NONE
 
-
+!COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Coeff_Vector
+!COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)        ::  FP_Update_Vector
 
 
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Source_Vector
@@ -70,11 +71,11 @@ INTEGER                                                 ::  Laplace_NNZ
 INTEGER                                                 ::  Factored_NNZ
 
 
-CHARACTER(LEN = 4)                                      :: Matrix_Format = 'Full'
-CHARACTER(LEN = 4)                                      :: Linear_Solver = 'Full'
+!CHARACTER(LEN = 4)                                      :: Matrix_Format = 'Full'
+!CHARACTER(LEN = 4)                                      :: Linear_Solver = 'Full'
 
-!CHARACTER(LEN = 4)                                      :: Matrix_Format = 'CCS'
-!CHARACTER(LEN = 4)                                      :: Linear_Solver = 'CHOL'
+CHARACTER(LEN = 4)                                      :: Matrix_Format = 'CCS'
+CHARACTER(LEN = 4)                                      :: Linear_Solver = 'CHOL'
 
 
 ! Cholesky Factorizatio Flag

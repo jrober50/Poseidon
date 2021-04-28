@@ -57,7 +57,8 @@ USE Variables_Mesh, &
 USE Variables_Derived, &
             ONLY :  LM_Length,                  &
                     Num_R_Nodes,                &
-                    Beta_Prob_Dim
+                    Beta_Prob_Dim,              &
+                    Prob_Dim
 
 USE Variables_IO, &
             ONLY :  Frame_Report_Flag,          &
@@ -209,6 +210,7 @@ INTEGER                                                                     ::  
 CHARACTER(LEN = 70)                                                         ::  FILE_NAME
 INTEGER                                                                     ::  FILE_ID
 
+INTEGER                                                                     ::  Here, There
 INTEGER                                                                     ::  i, j
 INTEGER                                                                     ::  l, m, k, lm_loc, ui
 INTEGER                                                                     ::  Guess_Flag
@@ -284,6 +286,11 @@ IF (LINEAR_SOLVER =='Full') THEN
             END IF
 
         
+
+!            Here  = FP_Array_Map(0,0,ui,l,m)
+!            There = FP_Array_Map(0,0,ui+1,0,0)
+!            FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
+!            FP_Coeff_Vector(Here:There)  = Work_Vec(:)
 
             FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
             FP_Coeff_Vector(:,lm_loc,ui) = WORK_VEC(:)
@@ -379,6 +386,11 @@ ELSE IF (LINEAR_SOLVER == 'CCS') THEN
         lm_loc = FP_LM_Map(l,m)
         FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)
 
+!        Here  = FP_Array_Map(0,0,ui,l,m)
+!        There = FP_Array_Map(0,0,ui+1,0,0)
+!        FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
+!        FP_Coeff_Vector(Here:There)  = Work_Vec(:)
+
     END DO ! m
     END DO ! l
     END DO ! ui
@@ -402,6 +414,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
             lm_loc = FP_LM_Map(l,m)
             WORK_VEC = -FP_Source_Vector(:,lm_loc,ui)
             WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,ui)
+
+
 
            
 !                PRINT*,"Before Dirichelet_BC",ui
@@ -442,6 +456,12 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                             Laplace_Factored_ROW(:,l),      &
                                             WORK_VEC                        )
 
+
+
+!            Here  = FP_Array_Map(0,0,ui,l,m)
+!            There = FP_Array_Map(0,0,ui+1,0,0)
+!            FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
+!            FP_Coeff_Vector(Here:There)  = Work_Vec(:)
 
 
             FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
@@ -543,67 +563,15 @@ IF (LINEAR_SOLVER =='Full') THEN
     WORK_VEC(:)   = FP_Source_Vector_Beta(:)
 
     
-!    PRINT*,"A"
-!    PRINT*,Work_Vec
+
     CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
-
-
-!    PRINT*,"Work_Mat"
-!    DO ui = 1,3
-!    re = Num_R_Elements-1
-!    DO d = 0,Degree
-!    DO l = 1,LM_Length
-!    DO uj = 1,3
-!    rep = Num_R_Elements-1
-!    DO dp = 0,Degree
-!    DO lp = 1,LM_Length
-!
-!        i = FP_Beta_Array_Map(re,d,ui,l)
-!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
-!
-!        PRINT*,i,j,Work_Mat(i,j)
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-
-!    PRINT*,"B"
-!    PRINT*,Work_Vec
 
     CALL JACOBI_CONDITIONING_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
     
     
 !    CALL Calc_RCOND_Full( Work_Mat, RCOND )
 
-!    PRINT*,"Work_Vec"
-!    PRINT*,Work_Vec
-!    PRINT*,"Work_Mat"
-!    DO ui = 1,3
-!    re = Num_R_Elements-1
-!    DO d = 0,Degree
-!    DO l = 1,LM_Length
-!    DO uj = 1,3
-!    rep = Num_R_Elements-1
-!    DO dp = 0,Degree
-!    DO lp = 1,LM_Length
-!
-!        i = FP_Beta_Array_Map(re,d,ui,l)
-!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
-!
-!        PRINT*,i,j,Work_Mat(i,j)
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-
-    
-!    PRINT*,"C"
-!    PRINT*,Work_Vec
 
     CALL ZGESV(Beta_Prob_Dim, 1, WORK_MAT, Beta_Prob_Dim, IPIV, WORK_VEC, Beta_Prob_Dim, INFO)
     IF (INFO .NE. 0) THEN
@@ -611,6 +579,12 @@ IF (LINEAR_SOLVER =='Full') THEN
     END IF
 
     FP_Coeff_Vector_Beta(:) = WORK_VEC(:)
+
+
+!    Here  = FP_Array_Map(0,0,3,0)
+!    There = Prob_Dim
+!    FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
+!    FP_Coeff_Vector(Here:There)  = Work_Vec(:)
 
 
     DO ui = 1,3
@@ -623,7 +597,6 @@ IF (LINEAR_SOLVER =='Full') THEN
 
                     FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector(There,l,ui+2)
                     FP_Coeff_Vector( There,l,ui+2) = Work_Vec(Here)
-
 
     END DO  ! l
     END DO ! d
@@ -662,63 +635,16 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     Work_Mat = Beta_MVL_Banded
     Work_Vec = FP_Source_Vector_Beta
 
-!    PRINT*,"A"
-!    PRINT*,Work_Vec
+
     
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
 
-!    PRINT*,"Work_Mat"
-!    DO ui = 1,3
-!    re = Num_R_Elements-1
-!    DO d = 0,Degree
-!    DO l = 1,LM_Length
-!    DO uj = 1,3
-!    rep = Num_R_Elements-1
-!    DO dp = 0,Degree
-!    DO lp = 1,LM_Length
-!
-!        i = FP_Beta_Array_Map(re,d,ui,l)
-!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
-!
-!        PRINT*,i,j,Work_Mat(Beta_Bandwidth+i,j)
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
 
-!    PRINT*,"B"
-!    PRINT*,Work_Vec
 
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
-!    PRINT*,"Work_Vec"
-!    PRINT*,Work_Vec
-!    PRINT*,"Work_Mat"
-!    DO ui = 1,3
-!    re = Num_R_Elements-1
-!    DO d = 0,Degree
-!    DO l = 1,LM_Length
-!    DO uj = 1,3
-!    rep = Num_R_Elements-1
-!    DO dp = 0,Degree
-!    DO lp = 1,LM_Length
-!
-!        i = FP_Beta_Array_Map(re,d,ui,l)
-!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
-!
-!        PRINT*,i,j,Work_Mat(Beta_Bandwidth+i-j,j)
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
 
 
-!    PRINT*,"C"
-!    PRINT*,Work_Vec
 
 !    PRINT*,"Before ZGBTRS "
     CALL ZGBTRS( 'N',                   &
@@ -739,7 +665,12 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
 
-    FP_Coeff_Vector_Beta(:) = WORK_VEC(:)
+    FP_Coeff_Vector_Beta(:)      = Work_Vec(:)
+
+!    Here  = FP_Array_Map(0,0,3,0)
+!    There = Prob_Dim
+!    FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
+!    FP_Coeff_Vector(Here:There)  = Work_Vec(:)
 
 
 
@@ -761,6 +692,11 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     END DO ! d
     END DO ! re
     END DO ! ui
+
+
+
+
+
 
     DEALLOCATE( Work_Vec )
     DEALLOCATE( Work_Mat )

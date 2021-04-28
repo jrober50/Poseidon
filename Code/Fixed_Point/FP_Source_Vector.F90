@@ -96,7 +96,8 @@ USE Functions_Mapping, &
 
 USE FP_Functions_Mapping, &
             ONLY :  FP_FEM_Node_Map,            &
-                    FP_Beta_Array_Map
+                    FP_Beta_Array_Map,          &
+                    FP_Array_Map
 
 USE MPI
 
@@ -257,6 +258,136 @@ END SUBROUTINE Calc_FP_Source_Vector
 
 
 
+!!+202+###########################################################################!
+!!                                                                                !
+!!                  Calc_Current_Values          !
+!!                                                                                !
+!!################################################################################!
+!SUBROUTINE Calc_FP_Current_Values( re, te, pe,                                  &
+!                                    DELTAR_OVERTWO,                             &
+!                                    DELTAT_OVERTWO,                             &
+!                                    DELTAP_OVERTWO                              )
+!
+!INTEGER, INTENT(IN)                                             ::  re, te, pe
+!
+!
+!REAL(KIND = idp), INTENT(IN)                                    ::  DELTAR_OVERTWO,     &
+!                                                                    DELTAT_OVERTWO,     &
+!                                                                    DELTAP_OVERTWO
+!
+!
+!
+!COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Tmp_U_Value,        &
+!                                                                    Tmp_U_R_DRV_Value,  &
+!                                                                    Tmp_U_T_DRV_Value,  &
+!                                                                    Tmp_U_P_DRV_Value
+!
+!
+!
+!INTEGER                                                         ::  tpd, td, pd, rd,    &
+!                                                                    lm, d, Here, ui
+!
+!
+!
+!                          !                                                 !
+!                         !!                                                 !!
+!                        !!!          Initialize Local Quadratures           !!!
+!                         !!                                                 !!
+!                          !                                                 !
+!R_Int_Weights(:) = DELTAR_OVERTWO * R_SQUARE(:) * INT_R_WEIGHTS(:)
+!
+!DO td = 1,NUM_T_QUAD_POINTS
+!DO pd = 1,NUM_P_QUAD_POINTS
+!!    TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = SIN_VAL(td)                           &
+!!                                                    * DELTAT_OVERTWO * INT_T_WEIGHTS(td)    &
+!!                                                    * DELTAP_OVERTWO * INT_P_WEIGHTS(pd)
+!
+!    TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = SIN_VAL(td)                           &
+!                                                    * DELTAT_OVERTWO * INT_T_WEIGHTS(td)    &
+!                                                    * INT_P_WEIGHTS(pd)
+!END DO
+!END DO
+!
+!
+!
+!DO rd = 1,NUM_R_QUAD_POINTS
+!DO tpd = 1,NUM_TP_QUAD_POINTS
+!
+!    Tmp_U_Value = 0.0_idp
+!    Tmp_U_R_DRV_Value = 0.0_idp
+!    Tmp_U_T_DRV_Value = 0.0_idp
+!    Tmp_U_P_DRV_Value = 0.0_idp
+!
+!    DO d = 0,DEGREE
+!    DO ui = 1,NUM_CFA_VARS
+!    DO lm = 1,LM_Length
+!
+!
+!        Here = FP_Array_Map(re,d,ui,lm)
+!
+!        TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
+!                                + FP_Coeff_Vector( Here )                   &
+!                                * Ylm_Values( lm, tpd, te, pe )              &
+!                                * Lagrange_Poly_Table( d, rd, 0 )
+!
+!        TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
+!                                + FP_Coeff_Vector( Here)                    &
+!                                * Ylm_Values( lm, tpd, te, pe )             &
+!                                * Lagrange_Poly_Table( d, rd, 1 )           &
+!                                / DELTAR_OVERTWO
+!
+!
+!        TMP_U_T_DRV_Value(ui)   = TMP_U_T_DRV_Value(ui)                     &
+!                                + FP_Coeff_Vector( Here )                   &
+!                                * Ylm_dt_Values( lm, tpd, te, pe)           &
+!                                * Lagrange_Poly_Table( d, rd, 0)
+!
+!        TMP_U_P_DRV_Value(ui)   = TMP_U_P_DRV_Value(ui)                     &
+!                                + FP_Coeff_Vector( Here )                   &
+!                                * Ylm_dp_Values( lm, tpd, te, pe)           &
+!                                * Lagrange_Poly_Table( d, rd, 0)
+!
+!
+!
+!    END DO
+!    END DO
+!    END DO ! d
+!
+!    CUR_VAL_PSI( tpd, rd )         = REAL(Tmp_U_Value(1), KIND = idp)
+!    CUR_DRV_PSI( tpd, rd, 1 )      = REAL(Tmp_U_R_DRV_Value(1), KIND = idp)
+!    CUR_DRV_PSI( tpd, rd, 2 )      = REAL(Tmp_U_T_DRV_Value(1), KIND = idp)
+!    CUR_DRV_PSI( tpd, rd, 3 )      = REAL(Tmp_U_P_DRV_Value(1), KIND = idp)
+!
+!
+!    CUR_VAL_ALPHAPSI( tpd, rd )    = REAL(Tmp_U_Value(2), KIND = idp)
+!    CUR_DRV_ALPHAPSI( tpd, rd, 1 ) = REAL(Tmp_U_R_DRV_Value(2), KIND = idp)
+!    CUR_DRV_ALPHAPSI( tpd, rd, 2 ) = REAL(Tmp_U_T_DRV_Value(2), KIND = idp)
+!    CUR_DRV_ALPHAPSI( tpd, rd, 3 ) = REAL(Tmp_U_P_DRV_Value(2), KIND = idp)
+!
+!
+!    CUR_VAL_BETA( tpd, rd, 1 )     = REAL(Tmp_U_Value(3), KIND = idp)
+!    CUR_VAL_BETA( tpd, rd, 2 )     = REAL(Tmp_U_Value(4), KIND = idp)
+!    CUR_VAL_BETA( tpd, rd, 3 )     = REAL(Tmp_U_Value(5), KIND = idp)
+!
+!
+!    CUR_DRV_BETA( tpd, rd, 1, 1 )  = REAL(Tmp_U_R_DRV_Value(3), KIND = idp)
+!    CUR_DRV_BETA( tpd, rd, 2, 1 )  = REAL(Tmp_U_R_DRV_Value(4), KIND = idp)
+!    CUR_DRV_BETA( tpd, rd, 3, 1 )  = REAL(Tmp_U_R_DRV_Value(5), KIND = idp)
+!    CUR_DRV_BETA( tpd, rd, 1, 2 )  = REAL(Tmp_U_T_DRV_Value(3), KIND = idp)
+!    CUR_DRV_BETA( tpd, rd, 2, 2 )  = REAL(Tmp_U_T_DRV_Value(4), KIND = idp)
+!    CUR_DRV_BETA( tpd, rd, 3, 2 )  = REAL(Tmp_U_T_DRV_Value(5), KIND = idp)
+!    CUR_DRV_BETA( tpd, rd, 1, 3 )  = REAL(Tmp_U_P_DRV_Value(3), KIND = idp)
+!    CUR_DRV_BETA( tpd, rd, 2, 3 )  = REAL(Tmp_U_P_DRV_Value(4), KIND = idp)
+!    CUR_DRV_BETA( tpd, rd, 3, 3 )  = REAL(Tmp_U_P_DRV_Value(5), KIND = idp)
+!
+!    Beta_DRV_Trace( tpd, rd )      = 0.0_idp
+!
+!END DO ! tpd
+!END DO ! rd
+!
+!END SUBROUTINE Calc_FP_Current_Values
+
+
 
 
 
@@ -321,13 +452,16 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     Tmp_U_P_DRV_Value = 0.0_idp
 
     DO d = 0,DEGREE
-    DO ui = 1,NUM_CFA_VARS
+    DO ui = 1,5
         Here = FP_FEM_Node_Map(re,d)
 
         TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
                                 + SUM( FP_Coeff_Vector( Here, :, ui )       &
                                 * Ylm_Values( :, tpd, te, pe )       )      &
                                 * Lagrange_Poly_Table( d, rd, 0 )
+
+        
+
 
         TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
                                 + SUM( FP_Coeff_Vector( Here, :, ui )       &
@@ -351,6 +485,8 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
     END DO
     END DO ! d
+
+    
 
     CUR_VAL_PSI( tpd, rd )         = REAL(Tmp_U_Value(1), KIND = idp)
     CUR_DRV_PSI( tpd, rd, 1 )      = REAL(Tmp_U_R_DRV_Value(1), KIND = idp)
@@ -521,6 +657,9 @@ REAL(KIND = idp)                                                        ::  Comb
 COMPLEX(KIND = idp)                                                     ::  Inner, Middle
 
 
+
+
+FP_Source_Vector = 0.0_idp
 DO ui = 1,2
     IF ( CFA_EQ_Flags(ui) == 1 ) THEN
         DO d = 0,DEGREE
@@ -533,13 +672,14 @@ DO ui = 1,2
 
                 DO tpd = 1,NUM_TP_QUAD_POINTS
                     RHS_TMP(ui) =  RHS_TMP(ui)                                          &
-                                    + Source_Terms( tpd, rd, CFA_EQ_Map(ui) )           &
+                                    + Source_Terms( tpd, rd, ui )                       &
                                     * Ylm_CC_Values( tpd, lm_loc, te, pe)               &
                                     * TP_Int_Weights(tpd)                               &
                                     * Lagrange_Poly_Table(d, rd, 0)                     &
                                     * R_Int_Weights(rd)
-                END DO
 
+                END DO
+            
 
             END DO  ! rd Loop
 
@@ -554,7 +694,6 @@ DO ui = 1,2
         END DO  ! d Loop
     END IF
 END DO
-
 
 
 DO ui = 3,5
@@ -681,6 +820,8 @@ Source_Terms(tpd, rd, 2) = TwoPi                                                
                             * PSI_POWER(6)                                              &
                             / ( 16.0_idp * ALPHAPSI_POWER(1) )                          &
                             * BigK_Value
+
+
 
 
 

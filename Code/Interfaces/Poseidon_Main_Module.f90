@@ -94,7 +94,8 @@ USE FP_Method_Module,  &
                     Fixed_Point_Accelerated
 
 USE FP_AndersonM_Module, &
-            ONLY : Fixed_Point_AndersonM
+            ONLY : Fixed_Point_AndersonM,   &
+                   Fixed_Point_AndersonM_B
 
 USE Allocation_Mesh, &
             ONLY : Deallocate_Mesh
@@ -159,7 +160,7 @@ IF ( Readiness_Flag ) THEN
     ELSE IF ( Solver_Type == 2 ) THEN
 
 !        Call Fixed_Point_Accelerated()
-        Call Fixed_Point_AndersonM()
+        Call Fixed_Point_AndersonM_B()
 
     ELSE
 

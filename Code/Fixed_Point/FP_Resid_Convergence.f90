@@ -194,16 +194,9 @@ INTEGER                                             ::  ui, l
 
 
 ! Test Residual
-!PRINT*,"Before Calc_FP_Residual"
-CALL Calc_FP_Residual( Resid_Data )
-!PRINT*,"After Calc_FP_Residual"
 
+! CALL Calc_FP_Residual( Resid_Data )
 
-!DO ui = 1,5
-!DO l = 1,LM_Length
-!    PRINT*,ui, l, Resid_Data(:,l,ui)
-!END DO
-!END DO
 
 DO ui = 1,5
     Frame_Update_Table(CUR_ITERATION,ui)      =  MAXVAL( ABS( FP_Update_Vector(:,:,ui) ) )
@@ -598,14 +591,14 @@ END IF
 Convergence_Stat = 0.0_idp
 DO ui = 1,5
 
-    IF ( ui == 3) THEN
-        PRINT*, LOne_Norm(1,:,ui)
-        PRINT*, " "
-        PRINT*, LOne_norm(2,:,ui)
-        PRINT*," "
-        PRINT*, LOne_Norm(3,:,ui)
-        PRINT*," ------ "
-    END IF
+!    IF ( ui == 3) THEN
+!        PRINT*, LOne_Norm(1,:,ui)
+!        PRINT*, " "
+!        PRINT*, LOne_norm(2,:,ui)
+!        PRINT*," "
+!        PRINT*, LOne_Norm(3,:,ui)
+!        PRINT*," ------ "
+!    END IF
 
     IF ( MAXVAL(LOne_Norm(1:2,:,ui)) .NE. 0.0_idp ) THEN
         Convergence_Stat(1,:, ui) = LOne_Norm(3,:,ui)/MAXVAL(LOne_Norm(1:2,:,ui))
