@@ -52,7 +52,8 @@ USE Variables_FP, &
                     Last_Column_Storage,        &
                     First_Column_Beta_Storage,  &
                     Last_Column_Beta_Storage,   &
-                    CFA_EQ_Map
+                    CFA_EQ_Map,                 &
+                    CFA_Var_Map
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,             &
@@ -532,7 +533,7 @@ IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
     DO i = 1,DEGREE
 
-        WORK_VEC(i) = WORK_VEC(i) - First_Column_Storage(i ,L,ui)*BC_Value
+        WORK_VEC(i) = WORK_VEC(i) - First_Column_Storage(i ,L,CFA_Var_Map(ui))*BC_Value
 
     END DO
     !!! MODIFY MATRIX !!!
@@ -566,7 +567,7 @@ IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
     DO i = DEGREE-shift,1,-1
 
         WORK_VEC(NUM_R_NODES - 1 - i) = WORK_VEC(NUM_R_NODES - 1 - i)                           &
-                                        - Last_Column_Storage(i,L,ui)*BC_Value
+                                        - Last_Column_Storage(i,L,CFA_Var_Map(ui))*BC_Value
 
 
 

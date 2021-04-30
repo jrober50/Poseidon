@@ -113,6 +113,7 @@ USE Variables_FP,  &
                     FP_Coeff_Vector_Beta,       &
                     CFA_EQ_Flags,               &
                     CFA_Eq_Map,                 &
+                    CFA_Var_Map,                &
                     CFA_MAT_Map,                &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
@@ -418,7 +419,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
             lm_loc = FP_LM_Map(l,m)
             WORK_VEC = -FP_Source_Vector(:,lm_loc,ui)
-            WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,ui)
+            WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_MAP(ui))
+
 
 
 
@@ -477,7 +479,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 !            FP_Coeff_Vector(Here:There)  = Work_Vec(:)
 
 
-            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
+            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,ui)
             FP_Coeff_Vector( :,lm_loc,ui) = WORK_VEC(:)
 
 

@@ -57,6 +57,7 @@ USE Variables_Functions, &
 USE Variables_FP, &
             ONLY :  CFA_EQ_Flags,               &
                     CFA_EQ_Map,                 &
+                    CFA_Var_Map,                &
                     CFA_Mat_Map,                &
                     Laplace_NNZ,                &
                     Beta_Diagonals,             &
@@ -176,6 +177,17 @@ DO i = 1,5
         j = j+1
     END IF
 END DO
+
+
+CFA_Var_Map = -1
+j = 1
+DO i = 1,5
+    IF ( CFA_EQ_Flags(i) == 1 ) THEN
+        CFA_Var_Map(i) = j
+        j = j+1
+    END IF
+END DO
+
 
 
 
