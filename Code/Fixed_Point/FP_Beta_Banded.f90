@@ -116,6 +116,8 @@ USE FP_Functions_Mapping, &
 
 IMPLICIT NONE
 
+
+
 CONTAINS
 
 
@@ -163,15 +165,8 @@ REAL(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )       :: DRR_Factor
 REAL(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )       :: RDR_Factor
 REAL(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )       :: DRDR_Factor
 
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_TP_Factor
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: dTP_TP_Factor
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TdP_TP_Factor
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_dTP_Factor
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_TdP_Factor
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: dTP_dTP_Factor
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: dTP_TdP_Factor
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TdP_dTP_Factor
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TdP_TdP_Factor
+
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_TP_Integrals
 
 INTEGER                                                 :: INFO
 
@@ -192,16 +187,7 @@ ALLOCATE( RDR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
 ALLOCATE( DRR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
 ALLOCATE( DRDR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
 
-ALLOCATE( TP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-ALLOCATE( dTP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-ALLOCATE( TdP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-ALLOCATE( TP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-ALLOCATE( TP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-ALLOCATE( dTP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-ALLOCATE( dTP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-ALLOCATE( TdP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-ALLOCATE( TdP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length) )
-
+ALLOCATE( TP_TP_Integrals( 1:LM_Length, 1:LM_Length, 1:16) )
 
 
 IF ( Verbose_Flag ) THEN
@@ -292,9 +278,7 @@ DO re = 0,Num_R_Elements-1
 
             CALL Calc_TP_Values( DeltaT_OverTwo, DeltaP_OverTwo, Cur_T_Locs, te, pe,                &
                                  Sin_Square, Cotan_Val,                                             &
-                                 TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor, TP_dTP_Factor,         &
-                                 dTP_TdP_Factor, TP_TdP_Factor, TdP_TdP_Factor, dTP_dTP_Factor,     &
-                                 TdP_dTP_Factor )
+                                 TP_TP_Integrals            )
 
 
 
@@ -304,26 +288,21 @@ DO re = 0,Num_R_Elements-1
 
                     CALL Calc_Beta1_Terms( re, d, l, m,                                       &
                                             RR_Factor, dRR_Factor, dRdR_Factor,                &
-                                            TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,        &
-                                            TP_dTP_Factor, TP_TdP_Factor,                      &
-                                            Cur_R_Locs, R_Square, Cotan_Val )
+                                            TP_TP_Integrals,                                    &
+                                            Cur_R_Locs, R_Square                                )
 
                 
                     CALL Calc_Beta2_Terms( re, d, l, m,                                         &
                                             RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,     &
-                                            TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,         &
-                                            TP_dTP_Factor, TP_TdP_Factor, dTP_dTP_Factor,       &
-                                            dTP_TdP_Factor,                                     &
-                                            Cur_R_Locs, R_Square, Sin_Square, Cotan_Val )
+                                            TP_TP_Integrals,                                    &
+                                            Cur_R_Locs, R_Square                                )
 
 
 
                     CALL Calc_Beta3_Terms( re, d, l, m,                                         &
                                             RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,     &
-                                            TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,         &
-                                            TP_dTP_Factor, TP_TdP_Factor, TdP_TdP_Factor,       &
-                                            TdP_dTP_Factor,                                     &
-                                            Cur_R_Locs, R_Square, Sin_Square, Cotan_Val )
+                                            TP_TP_Integrals,                                    &
+                                            Cur_R_Locs, R_Square                                )
 
 
 
@@ -387,28 +366,20 @@ END SUBROUTINE Initialize_Beta_MVL_Banded
 !################################################################################!
 SUBROUTINE Calc_Beta1_Terms( re, dp, lp, mp,                                    &
                              RR_Factor, dRR_Factor, dRdR_Factor,                &
-                             TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,        &
-                             TP_dTP_Factor, TP_TdP_Factor,                      &
-                             Cur_R_Locs, R_Square, Cotan_Val )
+                             TP_TP_Integrals,                                   &
+                             Cur_R_Locs, R_Square                               )
 
-INTEGER,                                                                      INTENT(IN)    :: re, dp, lp, mp
+INTEGER,                                                        INTENT(IN)  :: re, dp, lp, mp
 
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: RR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: DRR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: DRDR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRDR_Factor
 
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: dTP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TdP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_dTP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_TdP_Factor
+COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)  :: TP_TP_Integrals
 
 
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                               INTENT(IN)    :: Cur_R_Locs
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                               INTENT(IN)    :: R_Square
-REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),                              INTENT(IN)    :: Cotan_Val
-
-COMPLEX(idp)                                                                                :: tmpA, tmpB, tmpC
+REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: Cur_R_Locs
+REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: R_Square
 
 
 INTEGER                                                     :: d, rd, ui, uj
@@ -434,20 +405,21 @@ DO d = 0,Degree
 
 
         DO rd = 1,Num_R_Quad_Points
-            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)   &
-                                    - 1.0_idp/3.0_idp                       &   ! Term 1
-                                        * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc)  )      &
-                                        * dRdR_Factor(rd, d, dp)            &
-                                    - 8.0_idp/(3.0_idp * R_Square(rd))      &   ! Term 2
-                                        * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc)  )      &
+            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)       &
+                                    - 1.0_idp/3.0_idp                           &   ! Term 1
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 1) &
+                                        * dRdR_Factor(rd, d, dp)                &
+                                    - 8.0_idp/(3.0_idp * R_Square(rd))          &   ! Term 2
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 1) &
                                         * RR_Factor(rd, d, dp)
         
 
         END DO ! rd Loop
     END DO ! lpmp_loc Loop
 
-    !        PRINT*,lm_loc,lpmp_loc,                                 &
-    !                SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  )
+
+
+
 
 
     uj = 2
@@ -456,55 +428,24 @@ DO d = 0,Degree
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
 
-!        tmpA = 0.0_idp
-!        tmpB = 0.0_idp
-!        tmpC = 0.0_idp
         DO rd = 1,Num_R_Quad_Points
-            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
-                                    - 1.0_idp/3.0_idp                                   &   ! Term 1
-                                        * SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  )                 &
-                                        * dRR_Factor(rd, d, dp)                         &
-                                    - 1.0_idp/3.0_idp                                   &   ! Term 2
-                                        * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )    &
-                                        * dRR_Factor(rd, d, dp)                         &
-                                    - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 3
-                                        * SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) )                  &
-                                        * RR_Factor(rd, d, dp)                          &
-                                    - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 4
-                                        * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)  )   &
+            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+                                    - 1.0_idp/3.0_idp                               &   ! Term 1
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 2 )    &
+                                        * dRR_Factor(rd, d, dp)                     &
+                                    - 1.0_idp/3.0_idp                               &   ! Term 2
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )    &
+                                        * dRR_Factor(rd, d, dp)                     &
+                                    - 2.0_idp/CUR_R_LOCS(rd)                        &   ! Term 3
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )    &
+                                        * RR_Factor(rd, d, dp)                      &
+                                    - 2.0_idp/CUR_R_LOCS(rd)                        &   ! Term 4
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )    &
                                         * RR_Factor(rd, d, dp)
 
-!            tmpA = tmpA- 1.0_idp/3.0_idp                                   &   ! Term 2
-!                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )    &
-!                * dRR_Factor(rd, d, dp)
-!
-!            tmpB = tmpB - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 3
-!                * SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) )                  &
-!                * RR_Factor(rd, d, dp)
-!
-!            tmpC = tmpC - 2.0_idp/CUR_R_LOCS(rd)                            &   ! Term 4
-!                * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)  )   &
-!                * RR_Factor(rd, d, dp)
-
         END DO ! rd Loop
-
-!        PRINT*,lm_loc,lpmp_loc,tmpA,tmpB,tmpC
-
-!        PRINT*,re,d,lm_loc,lpmp_loc, Beta_MVL_Banded(Row-Col, Col)
-!        PRINT*,lm_loc,lpmp_loc,                                 &
-!                SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  ),       &
-!                SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) ),  &
-!                SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) )
-
     END DO ! lpmp_loc Loop
     
-!    PRINT*,"Stopping Here"
-!    STOP
-
-
-
-
-
 
 
 
@@ -514,12 +455,12 @@ DO d = 0,Degree
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
         DO rd = 1,Num_R_Quad_Points
-            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)   &
-                                    - 1.0_idp/3.0_idp                       &   ! Term 1
-                                        * SUM( TP_TdP_Factor(:,lm_loc,lpmp_loc) )      &
-                                        * dRR_Factor(rd, d, dp)             &
-                                    - 2.0_idp/CUR_R_LOCS(rd)                &   ! Term 2
-                                        * SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) )      &
+            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+                                    - 1.0_idp/3.0_idp                               &   ! Term 1
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 5 )    &
+                                        * dRR_Factor(rd, d, dp)                     &
+                                    - 2.0_idp/CUR_R_LOCS(rd)                        &   ! Term 2
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 6 )    &
                                         * RR_Factor(rd, d, dp)
 
         END DO ! rd Loop
@@ -543,30 +484,21 @@ END SUBROUTINE Calc_Beta1_Terms
 !################################################################################!
 SUBROUTINE Calc_Beta2_Terms( re, dp, lp, mp,                                    &
                              RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,    &
-                             TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,        &
-                             TP_dTP_Factor, TP_TdP_Factor, dTP_dTP_Factor,      &
-                             dTP_TdP_Factor,                                    &
-                             Cur_R_Locs, R_Square, Sin_Square, Cotan_Val )
+                             TP_TP_Integrals,                                   &
+                             Cur_R_Locs, R_Square                               )
 
-INTEGER,                                                                      INTENT(IN)    :: re, dp, lp, mp
+INTEGER,                                                        INTENT(IN)  :: re, dp, lp, mp
 
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: RR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: DRR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: RdR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: DRDR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RdR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRDR_Factor
 
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: dTP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TdP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_dTP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_TdP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: dTP_dTP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: dTP_TdP_Factor
+COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)  :: TP_TP_Integrals
 
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                               INTENT(IN)    :: Cur_R_Locs
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                               INTENT(IN)    :: R_Square
-REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),                              INTENT(IN)    :: Sin_Square
-REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),                              INTENT(IN)    :: Cotan_Val
+
+REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: Cur_R_Locs
+REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: R_Square
 
 
 INTEGER                                                     :: d, rd, ui, uj
@@ -588,17 +520,16 @@ DO lm_loc = 1,LM_Length
     DO rd = 1,Num_R_Quad_Points
         Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
                                 + 1.0_idp/(3.0_idp*R_Square(rd) )                   &  ! Term 1
-                                    * SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc))        &
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )        &
                                     * RdR_Factor(rd, d, dp)                         &
                                 - 8.0_idp/(3.0_idp*R_Square(rd)* Cur_R_Locs(rd))    &   ! Term 2
-                                    * SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc)  )      &
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )        &
                                     * RR_Factor(rd, d, dp)
 
         
 
     END DO ! rd Loop
-!    PRINT*,row, col, lm_loc, lpmp_loc, SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc))
-!    PRINT*,re,lm_loc, lpmp_loc,SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc)),row, col, Beta_MVL_Banded(Row, Col)
+
 END DO ! lpmp_loc Loop
 
 
@@ -609,21 +540,21 @@ DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
     DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)   &
-                                - 1.0_idp/(3.0_idp*R_Square(rd) )       &   ! Term 1
-                                    * SUM( dTP_dTP_Factor(:,lm_loc,lpmp_loc) )     &
-                                    * RR_Factor(rd, d, dp)              &
-                                - 1.0_idp/(3.0_idp*R_Square(rd) )       &   ! Term 2
-                                    * SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )    &
-                                    * RR_Factor(rd, d, dp)              &
-                                + 2.0_idp/Cur_R_Locs(rd)                &   ! Term 3
-                                    * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc)  )      &
-                                    * dRR_Factor(rd, d, dp)             &
-                                - 1.0_idp/(3.0_idp*R_Square(rd))        &   ! Term 4
-                                    * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:) )     &
-                                    * RR_Factor(rd, d, dp)              &
-                                + 1.0_idp/R_Square(rd)                  &   ! Term 5
-                                    * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * (1-Cotan_Val(:)**2) )     &
+        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+                                - 1.0_idp/(3.0_idp*R_Square(rd) )               &   ! Term 1
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 7 )    &
+                                    * RR_Factor(rd, d, dp)                      &
+                                - 1.0_idp/(3.0_idp*R_Square(rd) )               &   ! Term 2
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 8 )    &
+                                    * RR_Factor(rd, d, dp)                      &
+                                + 2.0_idp/Cur_R_Locs(rd)                        &   ! Term 3
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 1 )    &
+                                    * dRR_Factor(rd, d, dp)                     &
+                                - 1.0_idp/(3.0_idp*R_Square(rd))                &   ! Term 4
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 9 )    &
+                                    * RR_Factor(rd, d, dp)                      &
+                                + 1.0_idp/R_Square(rd)                          &   ! Term 5
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 10 )    &
                                     * RR_Factor(rd, d, dp)
 
 
@@ -637,12 +568,12 @@ DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
     DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)       &
-                                - 1.0_idp/(3.0_idp*R_Square(rd) )       &   ! Term 1
-                                    * SUM( dTP_TdP_Factor(:,lm_loc,lpmp_loc) ) &
-                                    * RR_Factor(rd, d, dp)                  &
-                                - 2.0_idp/R_Square(rd)                  &   ! Term 2
-                                    * SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)   )   &
+        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+                                - 1.0_idp/(3.0_idp*R_Square(rd) )               &   ! Term 1
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 11 )   &
+                                    * RR_Factor(rd, d, dp)                      &
+                                - 2.0_idp/R_Square(rd)                          &   ! Term 2
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 12 )   &
                                     * RR_Factor(rd, d, dp)
 
 
@@ -672,32 +603,23 @@ END SUBROUTINE Calc_Beta2_Terms
 !                   Calc_Beta3_Terms                                       !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Beta3_Terms( re, dp, lp, mp,                                       &
+SUBROUTINE Calc_Beta3_Terms( re, dp, lp, mp,                                    &
                              RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,    &
-                             TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor,        &
-                             TP_dTP_Factor, TP_TdP_Factor, TdP_TdP_Factor,      &
-                             TdP_dTP_Factor,                                    &
-                             Cur_R_Locs, R_Square, Sin_Square, Cotan_Val )
+                             TP_TP_Integrals,                                   &
+                             Cur_R_Locs, R_Square                               )
 
-INTEGER,                                                                      INTENT(IN)    :: re, dp, lp, mp
+INTEGER,                                                        INTENT(IN)    :: re, dp, lp, mp
 
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: RR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: DRR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: RDR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ),               INTENT(IN)    :: DRDR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: RR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: DRR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: RDR_Factor
+REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: DRDR_Factor
 
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: dTP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TdP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_dTP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TP_TdP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TdP_TdP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(IN)    :: TdP_dTP_Factor
+COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)    :: TP_TP_Integrals
 
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                               INTENT(IN)    :: Cur_R_Locs
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                               INTENT(IN)    :: R_Square
-REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),                              INTENT(IN)    :: Cotan_Val
-REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),                              INTENT(IN)    :: Sin_Square
+REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)    :: Cur_R_Locs
+REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)    :: R_Square
+
 
 INTEGER                                                     :: d, rd, ui, uj
 INTEGER                                                     :: row, col
@@ -722,11 +644,11 @@ DO lm_loc = 1,LM_Length
 
     DO rd = 1,Num_R_Quad_Points
         Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
-                                - 1.0_idp/(3.0_idp * R_Square(rd) )         &
-                                    * SUM( TdP_TP_Factor(:, lm_loc, lpmp_loc) )        &
-                                    * RdR_Factor(rd, d, dp)                 &
-                                + 8.0_idp/(3.0_idp*Cur_R_Locs(rd) * R_Square(rd) )  & ! Term 1
-                                    * SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:)     )   &
+                                - 1.0_idp/(3.0_idp * R_Square(rd) )                 & ! Term 1
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 6 )        &
+                                    * RdR_Factor(rd, d, dp)                         &
+                                + 8.0_idp/(3.0_idp*Cur_R_Locs(rd) * R_Square(rd) )  & ! Term 2
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 13 )       &
                                     * RR_Factor(rd, d, dp)
 
 
@@ -741,12 +663,12 @@ DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
     DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)       &
-                                - 1.0_idp/( 3.0_idp * R_Square(rd) )&
-                                    * SUM( TdP_dTP_Factor(:,lm_loc,lpmp_loc)/ Sin_Square(:) )   &
-                                    * RR_Factor(rd, d, dp)          &
-                                + 8.0_idp/( 3.0_idp * R_Square(rd) )&   ! Term 2
-                                    * SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) / Sin_Square(:)     )      &
+        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+                                - 1.0_idp/( 3.0_idp * R_Square(rd) )            &   ! Term 1
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 14 )   &
+                                    * RR_Factor(rd, d, dp)                      &
+                                + 8.0_idp/( 3.0_idp * R_Square(rd) )            &   ! Term 2
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 15 )   &
                                     * RR_Factor(rd, d, dp)
 
 
@@ -761,15 +683,15 @@ DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
     DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)       &
-                                - 1.0_idp/(3.0_idp * R_Square(rd) ) &  ! Term 1
-                                    * SUM( TdP_TdP_Factor(:,lm_loc,lpmp_loc)/Sin_Square(:) )   &
-                                    * RR_Factor(rd, d, dp )         &
-                                + 2.0_idp/(Cur_R_Locs(rd) )         & ! Term 2
-                                    * SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) )   &
-                                    * dRR_Factor(rd, d, dp)         &
-                                + 2.0_idp/( R_Square(rd) )          & ! Term 3
-                                    * SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )    &
+        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+                                - 1.0_idp/(3.0_idp * R_Square(rd) )             &  ! Term 1
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 16 )   &
+                                    * RR_Factor(rd, d, dp )                     &
+                                + 2.0_idp/(Cur_R_Locs(rd) )                     & ! Term 2
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 1)     &
+                                    * dRR_Factor(rd, d, dp)                     &
+                                + 2.0_idp/( R_Square(rd) )                      & ! Term 3
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 7 )   &
                                     * RR_Factor(rd, d, dp)
 
 
@@ -851,9 +773,7 @@ END SUBROUTINE CALC_RR_Values
 !################################################################################!
 SUBROUTINE CALC_TP_Values( DeltaT_OverTwo, DeltaP_OverTwo, Cur_T_Locs, te, pe,                  &
                             Sin_Square, Cotan_Val,                                              &
-                            TP_TP_Factor, dTP_TP_Factor, TdP_TP_Factor, TP_dTP_Factor,          &
-                            dTP_TdP_Factor, TP_TdP_Factor, TdP_TdP_Factor, dTP_dTP_Factor,      &
-                            TdP_dTP_Factor )
+                            TP_TP_Integrals         )
 
 REAL(idp),                                                                    INTENT(IN)    :: DeltaT_OverTwo
 REAL(idp),                                                                    INTENT(IN)    :: DeltaP_OverTwo
@@ -865,15 +785,8 @@ INTEGER,                                                                      IN
 REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),                              INTENT(INOUT) :: Sin_Square
 REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),                              INTENT(INOUT) :: Cotan_Val
 
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: TP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: dTP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: TdP_TP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: TP_dTP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: dTP_TdP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: TP_TdP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: TdP_TdP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: dTP_dTP_Factor
-COMPLEX(idp), DIMENSION( 1:NUM_TP_QUAD_POINTS, 1:LM_Length, 1:LM_Length), INTENT(INOUT) :: TdP_dTP_Factor
+
+COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16), INTENT(INOUT)                 :: TP_TP_Integrals
 
 
 INTEGER                                                                                     :: td, pd, tpd
@@ -905,55 +818,118 @@ END DO
 
 
 
+
+DO lpmp_loc = 1,LM_Length
 DO lm_loc = 1,LM_Length
-    DO lpmp_loc = 1,LM_Length
 
-        TP_TP_Factor( :, lm_loc, lpmp_loc )  = Ylm_Values( lm_loc, :, te, pe )              &
-                                                * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
-                                                * TP_Int_Weights(:)
+!
+    ! Ylm * Y^lpmp
+    IF ( lm_loc == lpmp_loc ) THEN
+        TP_TP_Integrals( lm_loc, lpmp_loc, 1)=1.0_idp
+    ELSE
+        TP_TP_Integrals( lm_loc, lpmp_loc, 1)=0.0_idp
+    END IF
 
-        dTP_TP_Factor( :, lm_loc, lpmp_loc )  = Ylm_dt_Values( lm_loc, :, te, pe )           &
-                                                * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
-                                                * TP_Int_Weights(:)
-        
-
-!        PRINT*,lm_loc,lpmp_loc
-!        DO tpd = 1,Num_TP_Quad_Points
-!            PRINT*,Ylm_dt_Values( lm_loc, tpd, te, pe ),dTP_TP_Factor(tpd, lm_loc, lpmp_loc )
-!        END DO
-!        PRINT*," "
-
-        TdP_TP_Factor( :, lm_loc, lpmp_loc )  = Ylm_dp_Values( lm_loc, :, te, pe )           &
-                                                * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
-                                                * TP_Int_Weights(:)
-
-        TP_dTP_Factor(:, lm_loc, lpmp_loc ) = Ylm_Values( lm_loc, :, te, pe )                &
-                                                * Ylm_CC_dt_Values( :, lpmp_loc, te, pe)    &
-                                                * TP_Int_Weights(:)
-
-        dTP_dTP_Factor(:, lm_loc, lpmp_loc ) = Ylm_dt_Values( lm_loc, :, te, pe )             &
-                                                * Ylm_CC_dt_Values( :, lpmp_loc, te, pe)    &
-                                                * TP_Int_Weights(:)
-
-        TP_TdP_Factor(:, lm_loc, lpmp_loc ) = Ylm_Values( lm_loc, :, te, pe )                &
-                                                * Ylm_CC_dp_Values( :, lpmp_loc, te, pe)    &
-                                                * TP_Int_Weights(:)
-
-        TdP_TdP_Factor(:, lm_loc, lpmp_loc ) = Ylm_dp_Values( lm_loc, :, te, pe )             &
-                                                * Ylm_CC_dp_Values( :, lpmp_loc, te, pe)    &
-                                                * TP_Int_Weights(:)
-
-        dTP_TdP_Factor(:, lm_loc, lpmp_loc ) = Ylm_dt_Values( lm_loc, :, te, pe )             &
-                                                * Ylm_CC_dp_Values( :, lpmp_loc, te, pe)    &
-                                                * TP_Int_Weights(:)
-
-        TdP_dTP_Factor(:, lm_loc, lpmp_loc ) = Ylm_dp_Values( lm_loc, :, te, pe )             &
-                                                * Ylm_CC_dt_Values( :, lpmp_loc, te, pe)    &
-                                                * TP_Int_Weights(:)
+    ! SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 2 ) = SUM( Ylm_Values( lm_loc, :, te, pe )               &
+                                                     * Ylm_CC_dp_Values( :, lpmp_loc, te, pe)   &
+                                                     * TP_Int_Weights(:)                        )
 
 
-    END DO
+    ! Ylm * Y^lpmp * Cotan
+    TP_TP_Integrals( lm_loc, lpmp_loc, 2 ) = SUM( Ylm_Values( lm_loc, :, te, pe )               &
+                                                     * Ylm_CC_Values( :, lpmp_loc, te, pe)      &
+                                                     * TP_Int_Weights(:)                        &
+                                                     * Cotan_Val(:)                             )
+
+    ! d Ylm/dt * Y^lpmp     SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc))
+    TP_TP_Integrals( lm_loc, lpmp_loc, 3 ) = SUM( Ylm_dt_Values( lm_loc, :, te, pe )            &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:)                         )
+
+    ! Ylm * d Y^lpmp/dp
+    TP_TP_Integrals( lm_loc, lpmp_loc, 4 ) = SUM( Ylm_Values( lm_loc, :, te, pe )               &
+                                                    * Ylm_CC_dt_Values( :, lpmp_loc, te, pe)    &
+                                                    * TP_Int_Weights(:)                         )
+
+    ! d Ylm/dp * Y^lpmp
+    TP_TP_Integrals( lm_loc, lpmp_loc, 5 ) = SUM( Ylm_dp_Values( lm_loc, :, te, pe )           &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:) )
+
+    ! SUM( dTP_dTP_Factor(:,lm_loc,lpmp_loc) )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 6 ) = SUM( Ylm_dt_Values( lm_loc, :, te, pe )             &
+                                                    * Ylm_CC_dt_Values( :, lpmp_loc, te, pe)    &
+                                                    * TP_Int_Weights(:) )
+
+    ! SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 7 ) = SUM( Ylm_dt_Values( lm_loc, :, te, pe )           &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:)                         &
+                                                    * Cotan_Val(:) )
+
+    ! SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:) )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 8 ) = SUM( Ylm_Values( lm_loc, :, te, pe )              &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:)                         &
+                                                    / Sin_Square(:) )
+
+    ! SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * (1-Cotan_Val(:)**2) )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 9 ) = SUM( Ylm_Values( lm_loc, :, te, pe )              &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:)                         &
+                                                    * (1-Cotan_Val(:)**2) )
+
+    ! SUM( dTP_TdP_Factor(:,lm_loc,lpmp_loc) )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 10 ) = SUM( Ylm_dt_Values( lm_loc, :, te, pe )             &
+                                                    * Ylm_CC_dp_Values( :, lpmp_loc, te, pe)    &
+                                                    * TP_Int_Weights(:) )
+
+    ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)   )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 11 ) = SUM( Ylm_dp_Values( lm_loc, :, te, pe )           &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:)                         &
+                                                    * Cotan_Val(:)   )
+
+    ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:)     )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 12 ) = SUM( Ylm_dp_Values( lm_loc, :, te, pe )           &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:)                         &
+                                                    / Sin_Square(:)     )
+
+    ! SUM( TdP_dTP_Factor(:,lm_loc,lpmp_loc)/ Sin_Square(:) )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 13 ) = SUM( Ylm_dp_Values( lm_loc, :, te, pe )             &
+                                                    * Ylm_CC_dt_Values( :, lpmp_loc, te, pe)    &
+                                                    * TP_Int_Weights(:)                         &
+                                                    / Sin_Square(:) )
+
+    ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) / Sin_Square(:)     )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 14 ) = SUM( Ylm_dp_Values( lm_loc, :, te, pe )           &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:)                         &
+                                                    * Cotan_Val(:)                              &
+                                                    / Sin_Square(:)     )
+
+    ! SUM( TdP_TdP_Factor(:,lm_loc,lpmp_loc)/Sin_Square(:) )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 15 ) = SUM( Ylm_dp_Values( lm_loc, :, te, pe )             &
+                                                    * Ylm_CC_dp_Values( :, lpmp_loc, te, pe)    &
+                                                    * TP_Int_Weights(:)                         &
+                                                    / Sin_Square(:) )
+
+    ! SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )
+    TP_TP_Integrals( lm_loc, lpmp_loc, 16 ) = SUM( Ylm_dt_Values( lm_loc, :, te, pe )           &
+                                                    * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
+                                                    * TP_Int_Weights(:)                         &
+                                                    * Cotan_Val(:) )
+
+
 END DO
+END DO
+
+
+
+
+
 
 
 
