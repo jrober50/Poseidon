@@ -1160,7 +1160,148 @@ END SUBROUTINE OUTPUT_POSEIDON_SOURCES_1D
 
 
 
+ !+601+############################################################################!
+!                                                                                   !
+!                     OUTPUT_POSIEDON_SOURCES                                       !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE OUTPUT_POSEIDON_SOURCES_3D( Local_E, Local_S, Local_Si,                         &
+                                       Local_RE_Dim, Local_TE_Dim, Local_PE_Dim,           &
+                                       Local_RQ_Dim, Local_TQ_Dim, Local_PQ_Dim,           &
+                                       Input_R_Quad, Input_T_Quad, Input_P_Quad,           &
+                                       Left_Limit, Right_Limit                             )
 
+
+REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Local_RQ_Dim*Local_TQ_Dim*Local_PQ_Dim,       &
+                                            0:Local_RE_Dim-1,                               &
+                                            0:Local_TE_Dim-1,                               &
+                                            0:Local_PE_Dim-1  )             ::  Local_E,    &
+                                                                                Local_S
+
+REAL(KIND = idp), INTENT(IN), DIMENSION(    1:Local_RQ_Dim*Local_TQ_Dim*Local_PQ_Dim,       &
+                                            0:Local_RE_Dim-1,                               &
+                                            0:Local_TE_Dim-1,                               &
+                                            0:Local_PE_Dim-1,                               &
+                                            1:DOMAIN_DIM                )   :: Local_Si
+
+
+
+
+
+INTEGER, INTENT(IN)                                                     ::  Local_RE_Dim,   &
+                                                                            Local_TE_Dim,   &
+                                                                            Local_PE_Dim,   &
+                                                                            Local_RQ_Dim,   &
+                                                                            Local_TQ_Dim,   &
+                                                                            Local_PQ_Dim
+
+
+REAL(KIND = idp), DIMENSION(1:Local_RQ_Dim), INTENT(IN)                 ::  Input_R_Quad
+REAL(KIND = idp), DIMENSION(1:Local_TQ_Dim), INTENT(IN)                 ::  Input_T_Quad
+REAL(KIND = idp), DIMENSION(1:Local_PQ_Dim), INTENT(IN)                 ::  Input_P_Quad
+
+REAL(KIND = idp), DIMENSION(1:Local_RQ_Dim)                             ::  CUR_R_LOCS
+
+REAL(KIND = idp), INTENT(IN)                                            ::  Left_Limit,     &
+                                                                            Right_Limit
+
+INTEGER                                                                 ::  i, re, te, pe,  &
+                                                                            rd, td, pd, tpd
+
+CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE                         ::  Filenames
+INTEGER, DIMENSION(:), ALLOCATABLE                                      ::  File_IDs
+INTEGER                                                                 ::  Num_Files
+
+REAL(KIND = idp)                                                        ::  Delta_X, Dr_Over_Dx
+
+
+
+
+
+116 FORMAT (A,A,A,A)
+
+
+IF ( WRITE_SOURCES_FLAG == 1 ) THEN
+    Num_Files = 8
+
+    ALLOCATE( Filenames(1:Num_Files) )
+    ALLOCATE( File_IDs(1:Num_Files) )
+
+    WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_E_",trim(File_Suffix),".out"
+    WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_S_",trim(File_Suffix),".out"
+    WRITE(Filenames(3),116) Poseidon_Sources_Dir,"Sources_S1_",trim(File_Suffix),".out"
+    WRITE(Filenames(4),116) Poseidon_Sources_Dir,"Sources_Dimensions_",trim(File_Suffix),".out"
+    WRITE(Filenames(5),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",trim(File_Suffix),".out"
+    WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",trim(File_Suffix),".out"
+    WRITE(Filenames(7),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",trim(File_Suffix),".out"
+
+    WRITE(Filenames(8),116) Poseidon_Sources_Dir,"Sources_Time_",trim(File_Suffix),".out"
+
+    !WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Theta_Locs_",Poseidon_Frame,".out"
+    !WRITE(Filenames(7),116) Poseidon_Sources_Dir,"Sources_Phi_Locs_",Poseidon_Frame,".out"
+
+
+
+    File_IDs = [(161 + i, i=1,Num_Files)]
+    DO i = 1,Num_Files
+        CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i) )
+    END DO
+
+    
+
+    WRITE(File_IDs(4),* )Local_RE_Dim, Local_TE_Dim, Local_PE_DIM
+    WRITE(File_IDs(4),* )Local_RQ_Dim, Local_TQ_Dim, Local_PQ_DIM
+    WRITE(File_IDs(8),* )SELFSIM_T
+
+
+    Delta_X = Right_Limit - Left_Limit
+    
+    DO re = 0,Local_RE_Dim-1
+    DO te = 0,Local_TE_Dim-1
+    DO pe = 0,Local_PE_Dim-1
+
+        Dr_Over_Dx = (rlocs(re+1) - rlocs(re))/Delta_X
+        CUR_R_LOCS(:) = Dr_Over_Dx * (INPUT_R_QUAD(:)-Left_Limit) + rlocs(re)
+!        CUR_T_LOCS(:) = (tlocs(te+1)-tlocs(te))/Delta_X
+
+
+        DO rd = 1,Local_RQ_Dim
+        DO td = 1,Local_TQ_Dim
+        DO pd = 1,Local_PQ_Dim
+
+            tpd = (rd-1)*Local_TQ_Dim*Local_PQ_Dim      &
+                + (td-1)*Local_PQ_Dim                   &
+                + pd
+
+!            PRINT*,Local_E(rd,re,0,0),Local_S(rd,re,0,0)
+            WRITE(File_IDs(5),*) CUR_R_LOCS(rd)/Centimeter
+            WRITE(File_IDs(1),*) Local_E(tpd,re,te,pe)/E_Units
+            WRITE(File_IDs(2),*) Local_S(tpd,re,te,pe)/S_Units
+            WRITE(File_IDs(3),*) Local_Si(tpd,re,te,pe,1)/Si_Units
+
+        END DO  ! pd
+        END DO  ! td
+        END DO  ! rd
+
+
+    END DO  ! PE
+    END DO  ! TE
+    END DO  ! RE
+
+
+
+
+
+
+
+    ! Close Files
+    DO i = 1,Num_Files
+        CLOSE( Unit = File_IDs(i))
+    END DO
+
+END IF
+
+END SUBROUTINE OUTPUT_POSEIDON_SOURCES_3D
 
 
 

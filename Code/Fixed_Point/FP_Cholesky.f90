@@ -72,7 +72,10 @@ USE Variables_FP, &
                 Laplace_Factored_COL,   &
                 Num_Matrices
 
+USE Poseidon_IO_Module, &
+        ONLY :  CLOCK_IN
 
+USE MPI
 
 
 IMPLICIT NONE
@@ -113,11 +116,14 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)                       :: NEW_
 
 REAL(KIND = idp), DIMENSION(0:NUM_R_NODES-1,0:NUM_R_NODES-1)        :: Orig, Recon, Diff, Lower
 
+REAL(idp),      DIMENSION(2)                            :: Timer
+
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"--In Cholesky_Factorization."
 END IF
 
+timer(1) = MPI_Wtime()
 
 
 !
@@ -374,7 +380,8 @@ END DO
 !
 DEALLOCATE(NEW_ELEM_VAL, NEW_ROW_IND)
 
-
+timer(2) = MPI_Wtime()
+CALL Clock_In(timer(2)-timer(1),18)
 
 !PRINT*,"STOPing at end of CHOLESKY_FACTORIZATION"
 !STOP

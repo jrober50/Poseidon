@@ -85,7 +85,6 @@ INTEGER                                                     ::  ui,lq,rq
 
 WRITE(FileName,116) Poseidon_Coeffs_Dir,"Coeffs_",TRIM(File_Suffix),".out"
 
-
 CALL OPEN_NEW_FILE( FileName, FileID, 342 )
 
 

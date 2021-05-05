@@ -126,10 +126,9 @@ delta_Beta = 0.0_idp
 !    FP_Coeff_Vector(:,:,1:2) = 1.0_idp
 !END IF
 
-FP_Coeff_Vector(:,:,1:2) = 1.0_idp * 2.0_idp * sqrt(pi)
-FP_Coeff_Vector(:,:,3:5) = 0.0_idp
+FP_Coeff_Vector = 0.0_idp
 
-
+FP_Coeff_Vector(:,1,1:2) = 2.0_idp * sqrt(pi)
 
 
 
@@ -264,7 +263,7 @@ DO re = 1,Input_RE
         DO rq = 1,Input_RQ
 
             Here =  (rq - 1)*Input_TQ*Input_PQ
-            
+
             Tmp_Value(1) = Tmp_Value(1)          &
                       + Psi_Guess(rq,re,1,1)*Lagrange_Poly_Value(rq)
 

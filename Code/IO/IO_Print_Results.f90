@@ -41,7 +41,8 @@ USE Variables_Mesh, &
 
 
 USE Functions_Mesh, &
-                    ONLY :  Create_Logarithmic_1D_Mesh
+                    ONLY :  Create_Logarithmic_1D_Mesh,     &
+                            Create_Uniform_1D_Mesh
 
 
 
@@ -92,11 +93,17 @@ ALLOCATE( x_e(0:Num_Samples) )
 ALLOCATE( x_c(1:Num_Samples) )
 ALLOCATE( dx_c(1:Num_Samples) )
 
+IF ( R_Outer - R_Inner > 1000.0_idp ) THEN
+    Call Create_Logarithmic_1D_Mesh( R_Inner,           &
+                                     R_Outer,           &
+                                     Num_Samples,       &
+                                     x_e, x_c, dx_c     )
+ELSE
 
-Call Create_Logarithmic_1D_Mesh( R_Inner,           &
-                                 R_Outer,           &
-                                 Num_Samples,       &
-                                 x_e, x_c, dx_c     )
+    CALL Create_Uniform_1D_Mesh( R_Inner, R_Outer, Num_Samples, x_e, x_c, dx_c )
+
+END IF
+
 
 theta = pi/3.0_idp
 phi = pi/2.0_idp

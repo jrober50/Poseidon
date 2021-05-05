@@ -95,7 +95,8 @@ USE Variables_FP, &
                     Beta_Factorized_Flag
 
 USE Poseidon_IO_Module, &
-            ONLY :  Open_New_File
+            ONLY :  Open_New_File,              &
+                    CLOCK_IN
 
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace,             &
@@ -113,6 +114,8 @@ USE FP_Functions_Mapping, &
                     FP_FEM_Node_Map,            &
                     FP_LM_Map
 
+
+USE MPI
 
 IMPLICIT NONE
 
@@ -155,6 +158,9 @@ REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: COTAN_VAL
 
 
 COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values
+COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values_b
+
+
 
 REAL(KIND = idp)                                        ::  deltar_overtwo,     &
                                                             deltat_overtwo,     &
@@ -170,8 +176,8 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_TP_Integrals
 
 INTEGER                                                 :: INFO
 
-
-
+REAL(idp), DIMENSION(1:3)                               :: Timer
+REAL(idp), DIMENSION(1:3)                               :: Timer_Tots
 
 Beta_MVL_Banded = 0.0_idp
 
@@ -209,6 +215,7 @@ DO l = 0,L_LIMIT
     R_SQUARE      = CUR_R_LOCS**2
 
 
+
     Reusable_Values = 0.0_idp
     DO dp = 0,DEGREE
         DO rd = 1,Num_R_Quad_Points
@@ -221,6 +228,7 @@ DO l = 0,L_LIMIT
                                     
         END DO  ! rd Loop
     END DO ! dp Loop
+
 
     DO m = -l,l
         j = FP_Beta_Array_Map(re,d,ui,l,m)
@@ -235,10 +243,13 @@ DO l = 0,L_LIMIT
 
         END DO ! dp Loop
     END DO  ! m Loop
+
+
 END DO  ! l Loop
 END DO  ! ui Loop
 END DO  ! d Loop
 END DO ! re Loop
+
 
 
 
@@ -388,7 +399,6 @@ INTEGER                                                     :: lm_loc, lpmp_loc
 
 
 
-
 ui       = 1
 lpmp_loc = FP_LM_Map(lp,mp)
 Row      = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
@@ -404,17 +414,13 @@ DO d = 0,Degree
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
 
-        DO rd = 1,Num_R_Quad_Points
-            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)       &
-                                    - 1.0_idp/3.0_idp                           &   ! Term 1
-                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 1) &
-                                        * dRdR_Factor(rd, d, dp)                &
-                                    - 8.0_idp/(3.0_idp * R_Square(rd))          &   ! Term 2
-                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 1) &
-                                        * RR_Factor(rd, d, dp)
-        
+        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+                                      - SUM( dRdR_Factor(:, d, dp) )/3.0_idp        &
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 1)     &
+                                      - 8.0_idp/3.0_idp * SUM( RR_Factor(:, d, dp)  &
+                                                               / R_Square(:)    )   &
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 1)
 
-        END DO ! rd Loop
     END DO ! lpmp_loc Loop
 
 
@@ -427,23 +433,18 @@ DO d = 0,Degree
     DO lm_loc = 1,LM_Length
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-
-        DO rd = 1,Num_R_Quad_Points
-            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
-                                    - 1.0_idp/3.0_idp                               &   ! Term 1
+        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+                                      - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 2 )    &
-                                        * dRR_Factor(rd, d, dp)                     &
-                                    - 1.0_idp/3.0_idp                               &   ! Term 2
+                                      - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )    &
-                                        * dRR_Factor(rd, d, dp)                     &
-                                    - 2.0_idp/CUR_R_LOCS(rd)                        &   ! Term 3
+                                      - 2.0_idp * SUM( RR_Factor(:, d, dp)          &
+                                                        / CUR_R_LOCS(:)         )   &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )    &
-                                        * RR_Factor(rd, d, dp)                      &
-                                    - 2.0_idp/CUR_R_LOCS(rd)                        &   ! Term 4
-                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )    &
-                                        * RR_Factor(rd, d, dp)
+                                      - 2.0_idp * SUM( RR_Factor(:, d, dp)          &
+                                                        / CUR_R_LOCS(:)         )   &
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
 
-        END DO ! rd Loop
     END DO ! lpmp_loc Loop
     
 
@@ -454,16 +455,14 @@ DO d = 0,Degree
     DO lm_loc = 1,LM_Length
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-        DO rd = 1,Num_R_Quad_Points
-            Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
-                                    - 1.0_idp/3.0_idp                               &   ! Term 1
-                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 5 )    &
-                                        * dRR_Factor(rd, d, dp)                     &
-                                    - 2.0_idp/CUR_R_LOCS(rd)                        &   ! Term 2
-                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 6 )    &
-                                        * RR_Factor(rd, d, dp)
 
-        END DO ! rd Loop
+        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+                                      - SUM( dRR_Factor(:, d, dp)  )/3.0_idp        &
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 5 )    &
+                                      - 2.0_idp * SUM( RR_Factor(:, d, dp)         &
+                                                        / CUR_R_LOCS(:)        )   &
+                                        * TP_TP_Integrals( lm_loc, lpmp_loc, 6 )
+
     END DO ! lpmp_loc Loop
 
 END DO ! dp Loop
@@ -506,6 +505,7 @@ INTEGER                                                     :: row, col
 INTEGER                                                     :: lm_loc, lpmp_loc
 
 
+
 ui       = 2
 lpmp_loc = FP_LM_Map(lp,mp)
 Row      = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
@@ -516,19 +516,15 @@ DO d = 0,Degree
 uj = 1
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
+    
 
-    DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
-                                + 1.0_idp/(3.0_idp*R_Square(rd) )                   &  ! Term 1
-                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )        &
-                                    * RdR_Factor(rd, d, dp)                         &
-                                - 8.0_idp/(3.0_idp*R_Square(rd)* Cur_R_Locs(rd))    &   ! Term 2
-                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )        &
-                                    * RR_Factor(rd, d, dp)
-
-        
-
-    END DO ! rd Loop
+    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+                                  + SUM( RdR_Factor(:, d, dp)                   &
+                                         /(3.0_idp*R_Square(:) )       )        &   ! Term 1
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )    &
+                                  - SUM( 8.0_idp * RR_Factor(:, d, dp)          &   ! Term 2
+                                         /(3.0_idp*R_Square(:)*Cur_R_Locs(:)))  &
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )
 
 END DO ! lpmp_loc Loop
 
@@ -539,27 +535,28 @@ uj = 2
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
-                                - 1.0_idp/(3.0_idp*R_Square(rd) )               &   ! Term 1
+    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+                                  - SUM( RR_Factor(:, d, dp)                    &
+                                         /(3.0_idp*R_Square(:) )       )        &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 7 )    &
-                                    * RR_Factor(rd, d, dp)                      &
-                                - 1.0_idp/(3.0_idp*R_Square(rd) )               &   ! Term 2
+                                  - SUM( RR_Factor(:, d, dp)                    &
+                                         /(3.0_idp*R_Square(:) )           )    &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 8 )    &
-                                    * RR_Factor(rd, d, dp)                      &
-                                + 2.0_idp/Cur_R_Locs(rd)                        &   ! Term 3
+                                  + SUM( 2.0_idp * dRR_Factor(:, d, dp)         &
+                                          /Cur_R_Locs(:)                    )   &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 1 )    &
-                                    * dRR_Factor(rd, d, dp)                     &
-                                - 1.0_idp/(3.0_idp*R_Square(rd))                &   ! Term 4
+                                  - SUM( RR_Factor(:, d, dp)                    &
+                                         / (3.0_idp*R_Square(:) )           )   &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 9 )    &
-                                    * RR_Factor(rd, d, dp)                      &
-                                + 1.0_idp/R_Square(rd)                          &   ! Term 5
-                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 10 )    &
-                                    * RR_Factor(rd, d, dp)
+                                  + SUM( RR_Factor(:, d, dp)                    &
+                                         / R_Square(:)                     )   &
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 10 )
+    
 
-
-    END DO ! rd Loop
 END DO ! lpmp_loc Loop
+
+
+
 
 
 uj = 3 ! beta^phi
@@ -567,17 +564,14 @@ uj = 3 ! beta^phi
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
-                                - 1.0_idp/(3.0_idp*R_Square(rd) )               &   ! Term 1
+    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+                                  - SUM( RR_Factor(:, d, dp)                    &
+                                         / (3.0_idp*R_Square(:) )           )   &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 11 )   &
-                                    * RR_Factor(rd, d, dp)                      &
-                                - 2.0_idp/R_Square(rd)                          &   ! Term 2
-                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 12 )   &
-                                    * RR_Factor(rd, d, dp)
+                                  - SUM ( 2.0_idp * RR_Factor(:, d, dp)         &
+                                          / R_Square(:)                     )   &
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 12 )
 
-
-    END DO ! rd Loop
 END DO ! lpmp_loc Loop
 
 END DO ! dp Loop
@@ -642,18 +636,15 @@ DO lm_loc = 1,LM_Length
 
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
-                                - 1.0_idp/(3.0_idp * R_Square(rd) )                 & ! Term 1
+    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)                   &
+                                  - SUM( RdR_Factor(:, d, dp)                       &   ! Term 1
+                                        /(3.0_idp * R_Square(:) )    )              &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 6 )        &
-                                    * RdR_Factor(rd, d, dp)                         &
-                                + 8.0_idp/(3.0_idp*Cur_R_Locs(rd) * R_Square(rd) )  & ! Term 2
-                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 13 )       &
-                                    * RR_Factor(rd, d, dp)
+                                  + SUM( 8.0_idp * RR_Factor(:, d, dp)              &   ! Term 2
+                                        /(3.0_idp*Cur_R_Locs(:) * R_Square(:) ) )   &
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 13 )
 
-
-    END DO ! rd Loop
-END DO ! lpmp_loc Loop
+END DO ! lm_loc Loop
 
 
 
@@ -661,19 +652,18 @@ uj = 2
 
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
+    
 
-    DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
-                                - 1.0_idp/( 3.0_idp * R_Square(rd) )            &   ! Term 1
+
+
+    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+                                  - SUM( RR_Factor(:, d, dp)                    &   ! Term 1
+                                         /( 3.0_idp * R_Square(:) )   )         &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 14 )   &
-                                    * RR_Factor(rd, d, dp)                      &
-                                + 8.0_idp/( 3.0_idp * R_Square(rd) )            &   ! Term 2
-                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 15 )   &
-                                    * RR_Factor(rd, d, dp)
+                                  + SUM( 8.0_idp * RR_Factor(:, d, dp)          &   ! Term 2
+                                         / ( 3.0_idp * R_Square(:) ) )          &
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 15 )
 
-
-
-    END DO ! rd Loop
 END DO ! lpmp_loc Loop
 
 
@@ -682,20 +672,17 @@ uj = 3 ! beta^phi
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    DO rd = 1,Num_R_Quad_Points
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
-                                - 1.0_idp/(3.0_idp * R_Square(rd) )             &  ! Term 1
+    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+                                  - SUM( RR_Factor(:, d, dp )                   &   ! Term 1
+                                         /(3.0_idp * R_Square(:) )    )         &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 16 )   &
-                                    * RR_Factor(rd, d, dp )                     &
-                                + 2.0_idp/(Cur_R_Locs(rd) )                     & ! Term 2
+                                  + SUM( 2.0_idp * dRR_Factor(:, d, dp)         &   ! Term 2
+                                         / Cur_R_Locs(:)                    )   &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 1)     &
-                                    * dRR_Factor(rd, d, dp)                     &
-                                + 2.0_idp/( R_Square(rd) )                      & ! Term 3
-                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 7 )   &
-                                    * RR_Factor(rd, d, dp)
+                                  + SUM ( 2.0_idp * RR_Factor(:, d, dp)         &   ! Term 3
+                                            / R_Square(:)                   )   &
+                                    * TP_TP_Integrals( lm_loc, lpmp_loc, 7 )
 
-
-    END DO ! rd Loop
 END DO ! lpmp_loc Loop
 
 
@@ -959,6 +946,15 @@ REAL(idp),      DIMENSION(Beta_Prob_Dim)                :: RWORK
 REAL(idp)                                               :: RCOND_One
 REAL(idp)                                               :: NORM
 
+REAL(idp),      DIMENSION(2)                            :: Timer
+
+
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"--In Factorize_Beta_Banded."
+END IF
+
+timer(1) = MPI_Wtime()
 
 !   Dirichlet BCs modify the stiffness matrix so we modify it now.
 !   But to apply the BCs we will need values from the original matrix,
@@ -1044,7 +1040,8 @@ END IF
 !PRINT*,"STOPing in Factorize_Beta_Banded"
 !STOP
 
-
+timer(2) = MPI_Wtime()
+CALL Clock_In(Timer(2)-Timer(1),19)
 
 END SUBROUTINE Factorize_Beta_Banded
 

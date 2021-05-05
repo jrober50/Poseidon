@@ -516,6 +516,9 @@ END IF
 
 
 
+timer(1) = MPI_Wtime()
+CALL Clock_In(timer(1)-timer(2),16)
+
 END SUBROUTINE Solve_FP_System
 
 
@@ -718,6 +721,9 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     DEALLOCATE( Work_Vec )
 !    DEALLOCATE( Work_Mat )
 
+
+    timer(1) = MPI_Wtime()
+    CALL Clock_In(timer(1)-timer(2),17)
 
 END IF
 
