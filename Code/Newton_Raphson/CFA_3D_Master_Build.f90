@@ -958,8 +958,7 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                                         NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINTS,          &
                                                         CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
                                                         RSIN_SQUARE(td, rd),                            &
-                                                        SIN_VAL(td), SIN_SQUARE(td), CSC_SQUARE(td),    &
-                                                        COS_VAL(td), COTAN_VAL(td),                     &
+                                                        COTAN_VAL(td),                     &
                                                         CUR_VAL_BETA, CUR_DRV_BETA                      )
 
 
