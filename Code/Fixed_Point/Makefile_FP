@@ -5,6 +5,7 @@ FP = \
   FP_Mapping_Functions.o  \
   FP_Calculate_Results.o  \
   Functions_FP.o                   \
+  FP_MacLaurin_Integrator.o        \
   FP_Source_Vector.o      \
   FP_BC_Module.o          \
   IO_FP_Linear_System.o            \
@@ -12,6 +13,7 @@ FP = \
   FP_Laplace_Beta.o       \
   FP_Beta_Banded.o                 \
   FP_Laplace_Matrix.o     \
+  FP_Initialize_Matrices.o         \
   FP_Resid_Convergence.o           \
   FP_System_Solvers.o              \
   FP_AndersonM.o                   \

@@ -237,7 +237,6 @@ IF (Verbose_Flag .EQV. .TRUE. ) THEN
 END IF
 
 
-
 !
 !   Calculate Source Vector with u_0
 !
@@ -551,9 +550,6 @@ Call Clock_In(timer(2)-timer(1),3)
 
 
 
-
-ui = 1
-
 DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
@@ -696,8 +692,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         FP_Coeff_Vector(:,lm_loc,ui) = GVectorM(here:there)
     END DO
     END DO
-
-
+    
 
 
     IF ( Verbose_Flag ) THEN

@@ -51,7 +51,9 @@ SUBROUTINE Create_3D_Mesh(  Mesh_Type,                  &
                             x_e, x_c, dx_c,             &
                             y_e, y_c, dy_c,             &
                             z_e, z_c, dz_c,             &
-                            Zoom, nc, Core_Radius   )
+                            Zoom,                       &
+                            nc, Core_Radius,            &
+                            SemiMajor,SemiMinor         )
 
 INTEGER,                            INTENT(IN)              ::  Mesh_Type
 
@@ -75,8 +77,12 @@ REAL(KIND = idp),                   INTENT(IN), OPTIONAL    ::  Zoom
 INTEGER         ,                   INTENT(IN), OPTIONAL    ::  nc
 REAL(KIND = idp),                   INTENT(IN), OPTIONAL    ::  Core_Radius
 
+REAL(KIND = idp),                   INTENT(IN), OPTIONAL    ::  SemiMajor
+REAL(KIND = idp),                   INTENT(IN), OPTIONAL    ::  SemiMinor
 
+INTEGER                                                     ::  ns
 
+INTEGER                                                     ::  Error_Num
 
 
 IF ( Mesh_Type == 1 ) THEN
@@ -153,6 +159,74 @@ ELSE IF ( Mesh_Type == 4) THEN
         STOP
 
     END IF
+
+
+ELSE IF ( Mesh_Type == 5) THEN ! MacLaurin Split
+
+    IF ( PRESENT(SemiMajor) .AND. PRESENT(SemiMinor) ) THEN
+        Error_Num = 000
+    ELSE
+        Error_Num = 500
+    END IF
+
+    IF ( Present(nc) ) THEN
+        IF ( nc < 1 ) THEN
+            Error_Num = 501
+        ELSE IF ( nc > nx-2 ) THEN
+            Error_Num = 502
+        ELSE
+            ns = nc
+        END IF
+    ELSE
+        ns = nx/2
+    END IF
+
+        
+    IF ( Error_Num == 000 ) THEN
+        CALL Create_MacLaurin_3D_Mesh(  Inner_Radius,       &
+                                        SemiMinor,          &
+                                        SemiMajor,          &
+                                        Outer_Radius,       &
+                                        nx, ns, ny, nz,     &
+                                        x_e, x_c, dx_c,     &
+                                        y_e, y_c, dy_c,     &
+                                        z_e, z_c, dz_c      )
+
+
+    ELSE
+
+        PRINT*,"!*  Fatal Error in Poseidon *!"
+        PRINT*," Error in Create_3D_Mesh() "
+
+        IF ( Error_Num == 500 ) THEN
+
+            PRINT*,"    MacLaurin Split Mesh (Mesh_Type == 5) requires the specification of : "
+            IF ( PRESENT(SemiMajor) ) THEN
+                PRINT*," - Semimajor Axis (SemiMajor) - SPECIFIED "
+            ELSE
+                PRINT*," - Semimajor Axis (SemiMajor) - NOT SPECIFIED "
+            END IF
+            IF ( PRESENT(SemiMinor) ) THEN
+                PRINT*," - Semiminor Axis (SemiMinor)   - SPECIFIED "
+            ELSE
+                PRINT*," - Semiminor Axis (SemiMinor)   - NOT SPECIFIED "
+            END IF
+
+
+        ELSE IF ( Error_Num == 501) THEN
+            PRINT*,"    The optional input, nc, to MacLaurin Splet Mesh (Mesh_Type == 5) is in error."
+            PRINT*,"    nc must be greater than zero."
+            PRINT*,"    The input value is ",nc," < 1"
+        ELSE IF ( Error_Num == 501) THEN
+            PRINT*,"    The optional input, nc, to MacLaurin Splet Mesh (Mesh_Type == 5) is in error."
+            PRINT*,"    nc must be less than the total radial elements minus 2."
+            PRINT*,"    The input value is ",nc, " > nx - 2 = ",nx-2
+        END IF
+
+        PRINT*,"!*  POSEIDON STOPPING CODE  *!"
+        STOP
+    END IF
+
 
 
 END IF
@@ -786,6 +860,130 @@ END DO
 
 
 END SUBROUTINE Define_Refined_Mesh
+
+
+
+
+
+
+!+304+##############################################################################!
+!                                                                                   !
+!           Create_MacLaurin_3D_Mesh                                                !
+!                                                                                   !
+!-----------------------------------------------------------------------------------!
+!                                                                                   !
+!   Creates a uniform radial mesh.                                                  !
+!                                                                                   !
+!###################################################################################!
+SUBROUTINE Create_MacLaurin_3D_Mesh( Inner_Edge, SemiMajor, SemiMinor, Outer_Edge,  &
+                                     nx, nc, ny, nz,                                &
+                                     x_e, x_c, dx_c,                                &
+                                     y_e, y_c, dy_c,                                &
+                                     z_e, z_c, dz_c                                 )
+
+REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Edge,             &
+                                                            SemiMajor,              &
+                                                            SemiMinor,              &
+                                                            Outer_Edge
+
+INTEGER,            INTENT(IN)                          ::  nx, nc, ny, nz
+
+REAL(KIND = idp), DIMENSION(0:nx),  INTENT(OUT)         ::  x_e
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  x_c
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
+
+REAL(KIND = idp), DIMENSION(0:ny),  INTENT(OUT)         ::  y_e
+REAL(KIND = idp), DIMENSION(1:ny),  INTENT(OUT)         ::  y_c
+REAL(KIND = idp), DIMENSION(1:ny),  INTENT(OUT)         ::  dy_c
+
+REAL(KIND = idp), DIMENSION(0:nz),  INTENT(OUT)         ::  z_e
+REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  z_c
+REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  dz_c
+
+! Create MacLaurin Split Mesh !
+CALL Create_MacLaurin_1D_Mesh( Inner_Edge, SemiMinor, SemiMajor, Outer_Edge,   &
+                                nx, nc, x_e, x_c, dx_c                          )
+
+
+! Create Uniform Theta Mesh !
+CALL Create_Uniform_1D_Mesh( 0.0_idp, pi, ny, y_e, y_c, dy_c )
+
+! Create Uniform Phi Mesh !
+CALL Create_Uniform_1D_Mesh( 0.0_idp, 2.0_idp*pi, nz, z_e, z_c, dz_c )
+!CALL Create_Uniform_1D_Mesh( -1.0_idp*pi, 1.0_idp*pi, nz, z_e, z_c, dz_c )
+
+
+
+
+END SUBROUTINE Create_MacLaurin_3D_Mesh
+
+
+!+304+##############################################################################!
+!                                                                                   !
+!           Create_Split_1D_Mesh                                                    !
+!                                                                                   !
+!-----------------------------------------------------------------------------------!
+!                                                                                   !
+!   Creates a uniform radial mesh.                                                  !
+!                                                                                   !
+!###################################################################################!
+SUBROUTINE Create_MacLaurin_1D_Mesh( Inner_Edge, SemiMajor, SemiMinor, Outer_Edge,   &
+                                     nx, nc, x_e, x_c, dx_c                          )
+
+REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Edge,         &
+                                                            SemiMajor,          &
+                                                            SemiMinor,          &
+                                                            Outer_Edge
+
+INTEGER,            INTENT(IN)                          ::  nx, nc
+
+REAL(KIND = idp), DIMENSION(0:nx),  INTENT(OUT)         ::  x_e
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  x_c
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
+
+
+INTEGER                                                 ::  i
+REAL(KIND = idp)                                        ::  tmp_Inner_Edge
+REAL(KIND = idp)                                        ::  Scale_Factor
+REAL(KIND = idp)                                        ::  Scale_Factor_Power
+
+
+
+! Create Uniform Radial Core !
+dx_c(1:nc) = (SemiMinor-Inner_Edge)/REAL(nc,KIND = idp)
+
+
+
+x_e(0) = Inner_Edge
+DO i = 1,nc
+
+    x_e(i) = x_e(i-1) + dx_c(i)
+    x_c(i) = x_e(i-1) + dx_c(i)/2.0_idp
+
+END DO
+
+x_e(nc+1) = SemiMajor
+dx_c(nc+1) = (SemiMajor - SemiMinor)
+x_c(nc+1) = SemiMinor + (SemiMajor-SemiMinor)/2.0_idp
+
+
+! Create Logarithmic Outer Shell !
+Scale_Factor = (Outer_Edge/SemiMajor)**(1.0_idp/(nx-nc-1))
+
+Scale_Factor_Power = 1.0_idp
+DO i = nc+2,nx
+    Scale_Factor_Power = Scale_Factor_Power*Scale_Factor
+    x_e(i) = SemiMajor*Scale_Factor_Power
+
+    dx_c(i) = x_e(i) - x_e(i-1)
+    x_c(i) = x_e(i-1) + dx_c(i)/2.0_idp
+
+END DO
+
+
+
+
+END SUBROUTINE Create_MacLaurin_1D_Mesh
 
 
 

@@ -279,7 +279,7 @@ CALL CONVERT_SELF_SIMILAR_3D(  t, Kappa_wUnits, gamma, ecc,                   &
 !PRINT*,Input_Si
 !PRINT*," "
 
-
+!sTOP
 
 
 

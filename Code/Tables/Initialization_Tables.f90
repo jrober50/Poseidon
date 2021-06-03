@@ -355,7 +355,6 @@ INTEGER, INTENT(IN)                         ::  Num_Quad_Points
 REAL(KIND = idp), DIMENSION(0:Ord)          ::  Local_Locations
 REAL(KIND = idp), DIMENSION(0:Ord)          ::  Lagrange_Poly_Values
 REAL(KIND = idp), DIMENSION(0:Ord)          ::  Lagrange_DRV_Values
-REAL(KIND = idp), DIMENSION(0:Ord)          ::  Lagrange_DDRV_Values
 
 INTEGER                                     ::  Eval_Point
 INTEGER                                     ::  rd, d, dp,dd

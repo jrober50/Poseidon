@@ -35,6 +35,7 @@ USE Units_Module, &
 
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
+                    L_LIMIT,                    &
                     NUM_CFA_EQs,                &
                     NUM_CFA_VARs
 
@@ -97,7 +98,11 @@ USE Functions_Mapping, &
 USE FP_Functions_Mapping, &
             ONLY :  FP_FEM_Node_Map,            &
                     FP_Beta_Array_Map,          &
-                    FP_Array_Map
+                    FP_Array_Map,               &
+                    FP_LM_Map
+
+USE FP_MacLaurin_Integrator_Module,             &
+            ONLY :  FP_MacLaurin_Integrator
 
 USE MPI
 
@@ -173,79 +178,103 @@ REAL(KIND = idp)                                                ::  BigK_Value
 
 
 
-
 Timer = 0.0_idp
 FP_Source_Vector = 0.0_idp
 FP_Source_Vector_Beta = 0.0_idp
 
 
+!PRINT*,"**WARNING** Create_FP_Source_Vector hacked, Lm loop limited."
+
+DO re = 0,NUM_R_ELEMENTS-1
+!IF ( RE .NE. 20 ) THEN
+IF ( .TRUE. ) THEN
+
+    DELTAR_OVERTWO = 0.5_idp *(rlocs(re + 1) - rlocs(re))
+    TWOOVER_DELTAR = 1.0_idp/deltar_overtwo
+    CUR_R_LOCS(:) = deltar_overtwo * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(re)
 
 
-DO pe = 0,NUM_P_ELEMENTS-1
-    deltap_overtwo = 0.5_idp * (plocs(pe + 1)-plocs(pe))
-    CUR_P_LOCS(:) = deltap_overtwo * (INT_P_LOCATIONS+1.0_idp) + plocs(pe)
+    R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
+    R_CUBED(:) = R_SQUARE(:)*CUR_R_LOCS(:)
 
 
-    DO te = 0,NUM_T_ELEMENTS-1
 
-        deltat_overtwo = 0.5_idp*(tlocs(te + 1) - tlocs(te))
-        CUR_T_LOCS(:) = deltat_overtwo * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(te)
-        
-
-        COTAN_VAL(:) = 1.0_idp/DTAN(CUR_T_LOCS(:))
-        CSC_VAL(:) = 1.0_idp/DSIN(CUR_T_LOCS(:))
-        SIN_VAL(:) = DSIN(CUR_T_LOCS(:))
-        COS_VAL(:) = DCOS(CUR_T_LOCS(:))
-
-        COS_SQUARE(:) = COS_VAL(:)*COS_VAL(:)
-        SIN_SQUARE(:) = SIN_VAL(:)*SIN_VAL(:)
-        CSC_SQUARE(:) = CSC_VAL(:)*CSC_VAL(:)
-
-        DO td = 1,NUM_T_QUAD_POINTS
-        DO pd = 1,NUM_P_QUAD_POINTS
-            tpd = (td-1)*NUM_P_QUAD_POINTS + pd
-            SIN_VAL_B(tpd) =   SIN_VAL(td)
-            TP_SIN_SQUARE(tpd) = SIN_SQUARE(td)
-        END DO
-        END DO
-
-        DO re = 0,NUM_R_ELEMENTS-1
-
-            DELTAR_OVERTWO = 0.5_idp *(rlocs(re + 1) - rlocs(re))
-            TWOOVER_DELTAR = 1.0_idp/deltar_overtwo
-            CUR_R_LOCS(:) = deltar_overtwo * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(re)
+    DO pe = 0,NUM_P_ELEMENTS-1
+        deltap_overtwo = 0.5_idp * (plocs(pe + 1)-plocs(pe))
+        CUR_P_LOCS(:) = deltap_overtwo * (INT_P_LOCATIONS+1.0_idp) + plocs(pe)
 
 
-            R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
-            R_CUBED(:) = R_SQUARE(:)*CUR_R_LOCS(:)
+        DO te = 0,NUM_T_ELEMENTS-1
+
+!            IF ( re == 64 ) THEN
+!                PRINT*,re,pe,te,FINDLOC(Block_Source_E(:, :, 1, re, te, pe),0.0_idp,2)
+!                PRINT*,Block_Source_E(:, :, 1, re, te, pe)
+!            END IF
+
+            deltat_overtwo = 0.5_idp*(tlocs(te + 1) - tlocs(te))
+            CUR_T_LOCS(:) = deltat_overtwo * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(te)
+            
+
+
+
+            COTAN_VAL(:) = 1.0_idp/DTAN(CUR_T_LOCS(:))
+            CSC_VAL(:) = 1.0_idp/DSIN(CUR_T_LOCS(:))
+            SIN_VAL(:) = DSIN(CUR_T_LOCS(:))
+            COS_VAL(:) = DCOS(CUR_T_LOCS(:))
+
+            COS_SQUARE(:) = COS_VAL(:)*COS_VAL(:)
+            SIN_SQUARE(:) = SIN_VAL(:)*SIN_VAL(:)
+            CSC_SQUARE(:) = CSC_VAL(:)*CSC_VAL(:)
+
+            DO td = 1,NUM_T_QUAD_POINTS
+            DO pd = 1,NUM_P_QUAD_POINTS
+                tpd = (td-1)*NUM_P_QUAD_POINTS + pd
+                SIN_VAL_B(tpd) =   SIN_VAL(td)
+                TP_SIN_SQUARE(tpd) = SIN_SQUARE(td)
+            END DO
+            END DO
+
             DO rd = 1,NUM_R_QUAD_POINTS
 
                 RSIN_SQUARE(:,rd) = R_SQUARE(rd)*SIN_SQUARE(:)
 
             END DO
 
-!            PRINT*,"Before Calc_FP_Current_Values"
-!            timer(4) = MPI_WTime()
-            CALL Calc_FP_Current_Values(re, te, pe,               &
-                                        DELTAR_OVERTWO, DELTAT_OVERTWO, DELTAP_OVERTWO  )
 
-!            timer(3) = MPI_WTime()
-!            PRINT*,"Before Calc_FP_Source_Terms"
-            CALL Calc_FP_Source_Terms( re, te, pe )
 
-!            timer(2) = MPI_WTime()
-!            PRINT*,"Before Create_FP_Source_Vector"
-            CALL Create_FP_Source_Vector( re, te, pe, DELTAR_OVERTWO, SIN_VAL_B )
-!            timer(1) = MPI_WTime()
-        
-!            CALL Clock_In(timer(3)-timer(4),10)
-!            CALL Clock_In(timer(2)-timer(3),11)
-!            CALL Clock_In(timer(2)-timer(1),12)
-!            PRINT*,"After Create_FP_Source_Vector",re,te,pe
 
-        END DO ! re Loop
-    END DO ! te Loop
-END DO ! pe Loop
+            CALL Calc_FP_Current_Values(  re, te, pe,     &
+                                          DELTAR_OVERTWO, &
+                                          DELTAT_OVERTWO, &
+                                          DELTAP_OVERTWO  )
+            CALL Calc_FP_Source_Terms(    re, te, pe )
+            CALL Create_FP_Source_Vector( re, te, pe,       &
+                                          DELTAR_OVERTWO,   &
+                                          SIN_VAL_B         )
+
+
+
+        END DO ! te Loop
+    END DO ! pe Loop
+ELSE
+
+
+    CALL FP_MacLaurin_Integrator( re )
+
+
+
+
+END IF
+
+END DO ! re Loop
+
+
+!PRINT*,"Source Vector"
+!DO lm = 1,LM_LENGTH
+!    PRINT*,"Lm_loc = ",lm
+!    PRINT*,FP_Source_Vector(:,lm,1)
+!END DO
+!STOP
 
 
 
@@ -538,6 +567,9 @@ DO ui = 1,2
 
         
         DO lm_loc = 1,LM_LENGTH
+!
+!        DO l = 0,L_Limit
+!        lm_loc = FP_LM_Map(l,0)
         DO d = 0,DEGREE
 
             RHS_TMP = 0.0_idp
@@ -552,8 +584,17 @@ DO ui = 1,2
                                * Lagrange_Poly_Table(d, rd, 0)                     &
                                * R_Int_Weights(rd)
 
-
-
+!                IF ( ui == 1 ) THEN
+!                IF ( (re >= 119) .and. (re <= 120) ) THEN
+!                PRINT*,re,rd,lm_loc,                                       &
+!                        SUM( Source_Terms( :, rd, ui )                  &
+!                            * Ylm_CC_Values( :, lm_loc, te, pe)         &
+!                            * TP_Int_Weights(:)                     ),  &
+!                        Lagrange_Poly_Table(d, rd, 0)                   &
+!                            * R_Int_Weights(rd),                        &
+!                        RHS_TMP(ui)
+!                END IF
+!                END IF
 
             END DO  ! rd Loop
             
@@ -569,8 +610,6 @@ DO ui = 1,2
 
 
 END DO
-
- 
 
 
 
@@ -676,15 +715,18 @@ REAL(KIND = idp)                                                        ::  Beta
 
 !PRINT*,"Calc_Source_Terms has been altered"
 
-
-
 Source_Terms(tpd, rd, 1) = - TwoPi                                      &
-                            * GR_Source_Scalar                          &
-                            * Block_Source_E(rd, td, pd, re, te, pe)    &
-                            * PSI_POWER(5)                              &
-                         - PSI_POWER(7)                                 &
-                            / ( 16.0_idp * ALPHAPSI_POWER(2) )          &
-                            * BigK_Value
+                           * GR_Source_Scalar                          &
+                           * Block_Source_E(rd, td, pd, re, te, pe)
+
+
+!Source_Terms(tpd, rd, 1) = - TwoPi                                      &
+!                            * GR_Source_Scalar                          &
+!                            * Block_Source_E(rd, td, pd, re, te, pe)    &
+!                            * PSI_POWER(5)                              &
+!                         - PSI_POWER(7)                                 &
+!                            / ( 16.0_idp * ALPHAPSI_POWER(2) )          &
+!                            * BigK_Value
      
 
 

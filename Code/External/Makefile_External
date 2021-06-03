@@ -6,4 +6,4 @@ EXTERNAL = \
   Allocation_SelfSimilar.o       \
   SelfSimilar.o                  \
   Driver_Test_Functions.o        \
-
+  MacLaurin.o                    \

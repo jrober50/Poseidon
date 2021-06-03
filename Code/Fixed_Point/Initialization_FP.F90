@@ -77,6 +77,12 @@ USE FP_Functions_Results,   &
             ONLY :  Calc_FP_Values_At_Location,  &
                     Calc_1D_CFA_Values_FP
 
+USE FP_Intialize_Matrices, &
+            ONLY :  Initialize_FP_Matrices
+
+USE Poseidon_IO_Module, &
+            ONLY :  Clock_In
+
 USE mpi
 
 
@@ -115,6 +121,7 @@ SUBROUTINE Initialize_FP( CFA_EQ_Flags_Input )
 INTEGER, DIMENSION(5), INTENT(IN), OPTIONAL             ::  CFA_EQ_Flags_Input
 
 INTEGER                                                 ::  i, j
+REAL(idp), Dimension(1:2)                               ::  Timer
 
 
 IF ( Verbose_Flag ) THEN
@@ -143,7 +150,12 @@ Beta_Bandwidth = 2*Beta_Diagonals+1
 
 CALL Allocate_FP()
 
-CALL Initialize_Laplace_Matrices()
+timer(1)= MPI_Wtime()
+!CALL Initialize_Laplace_Matrices()
+CALL Initialize_FP_Matrices()
+timer(2) = MPI_Wtime()
+Call Clock_In(timer(2)-timer(1),1)
+
 
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP

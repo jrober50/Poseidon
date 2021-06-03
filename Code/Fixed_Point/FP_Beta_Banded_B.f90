@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Beta_Banded                                                               !##!
+MODULE FP_Beta_Banded_B                                                             !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -35,19 +35,6 @@ USE Poseidon_Parameters, &
 
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_LinSys_Dir
-
-    
-USE Variables_Quadrature, &
-            ONLY :  Num_R_Quad_Points,          &
-                    Num_T_Quad_Points,          &
-                    Num_P_Quad_Points,          &
-                    Num_TP_Quad_Points,         &
-                    Int_R_Locations,            &
-                    Int_T_Locations,            &
-                    Int_P_Locations,            &
-                    Int_R_Weights,              &
-                    Int_T_Weights,              &
-                    Int_P_Weights
 
 
 USE Variables_Mesh, &
@@ -114,18 +101,33 @@ USE FP_Functions_Mapping, &
                     FP_FEM_Node_Map,            &
                     FP_LM_Map
 
+USE Functions_Quadrature, &
+            ONLY :  Initialize_LG_Quadrature,       &
+                    Initialize_Trapezoid_Quadrature
+
 
 USE MPI
 
 IMPLICIT NONE
 
+INTEGER                                                 ::  Int_R_Deg
+INTEGER                                                 ::  Int_T_Deg
+INTEGER                                                 ::  Int_P_Deg
+INTEGER                                                 ::  Int_TP_Deg
+
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Int_R_Locs, Int_R_Weights
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Int_T_Locs, Int_T_Weights
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Int_P_Locs, Int_P_Weights
+
+REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )              :: RR_Factor
+REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )              :: DRR_Factor
+REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )              :: RDR_Factor
+REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )              :: DRDR_Factor
+
+COMPLEX(idp), ALLOCATABLE, DIMENSION( :,:,: )           :: TP_TP_Integrals
 
 
 CONTAINS
-
-
-
-
 
 
 !+101+###########################################################################!
@@ -137,43 +139,39 @@ SUBROUTINE Initialize_Beta_MVL_Banded()
 
 
 
-INTEGER                                                 ::  l, m, lp, mp, lm, lm_loc, lpmp_loc
+INTEGER                                                 ::  l, m, lm_loc
+INTEGER                                                 ::  lp, mp, lpmp_loc
+
 INTEGER                                                 ::  re, te, pe, rep
 INTEGER                                                 ::  rd, td, pd, tpd
 INTEGER                                                 ::  d, dp
 INTEGER                                                 ::  i, j, ui, uj
 INTEGER                                                 ::  row, col
 
-REAL(idp)                                        ::  deltar, TODR
-REAL(idp)                                        ::  L_Lp1
+REAL(idp)                                               ::  deltar, TODR
+REAL(idp)                                               ::  L_Lp1
 
 INTEGER                                                 ::  Mat_Loc
 
-REAL(idp), ALLOCATABLE, DIMENSION(:)             ::  CUR_R_LOCS
-REAL(idp), ALLOCATABLE, DIMENSION(:)             ::  CUR_T_LOCS
-REAL(idp), ALLOCATABLE, DIMENSION(:)             ::  R_SQUARE
 
-REAL(idp), ALLOCATABLE, DIMENSION(:)             :: SIN_SQUARE
-REAL(idp), ALLOCATABLE, DIMENSION(:)             :: COTAN_VAL
+
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Cur_R_Locs
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Cur_T_Locs
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  R_Square
+
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Sin_Square
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Cotan_Val
 
 
 COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values
-COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values_b
 
 
 
-REAL(idp)                                        ::  deltar_overtwo,     &
+REAL(idp)                                               ::  deltar_overtwo,     &
                                                             deltat_overtwo,     &
                                                             deltap_overtwo
 
-REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )       :: RR_Factor
-REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )       :: DRR_Factor
-REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )       :: RDR_Factor
-REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )       :: DRDR_Factor
 
-
-COMPLEX(idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_TP_Integrals
-COMPLEX(idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_TP_Integrals_store
 
 INTEGER                                                 :: INFO
 
@@ -182,24 +180,51 @@ REAL(idp), DIMENSION(1:3)                               :: Timer_Tots
 
 Beta_MVL_Banded = 0.0_idp
 
-ALLOCATE( CUR_R_LOCS(1:Num_R_Quad_Points) )
-ALLOCATE( CUR_T_LOCS(1:Num_T_Quad_Points) )
-ALLOCATE( R_SQUARE(1:Num_R_Quad_Points)   )
 
-ALLOCATE( SIN_SQUARE( 1:NUM_TP_QUAD_POINTS ) )
-ALLOCATE( COTAN_VAL( 1:NUM_TP_QUAD_POINTS ) )
+! Set number of quadrature points for different dimensions
+!
+! Radial : Using Gaussian Quadrature. 2n-1 points for exact integration of Polynomials of degree n.
+!           Radially this is a product of two Lagrange Polys so n = 2*Degree.
+! Phi    : Using Trapezoid rule quadrature. m + 1 for exact integration of exp(-i*m*phi).
+!           Max m is defined by the product of exp(-i*L_Limit*Phi)*exp(-i*L_Limit*Phi) = exp(-i*(2*L_Limit)*Phi)
+!
+Int_R_Deg  = 4*Degree - 1
+Int_T_Deg  = 15
+Int_P_Deg  = 2*L_LIMIT + 1
 
-ALLOCATE( RR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
-ALLOCATE( RDR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
-ALLOCATE( DRR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
-ALLOCATE( DRDR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
+Int_TP_Deg = Int_T_Deg*Int_P_Deg
+
+
+
+ALLOCATE( Int_R_Locs(1:Int_R_Deg), Int_R_Weights(1:Int_R_Deg) )
+ALLOCATE( Int_T_Locs(1:Int_T_Deg), Int_T_Weights(1:Int_T_Deg) )
+ALLOCATE( Int_P_Locs(1:Int_P_Deg), Int_P_Weights(1:Int_P_Deg) )
+
+
+ALLOCATE( Cur_R_Locs(1:Int_R_Deg), R_Square(1:Int_R_Deg) )
+
+ALLOCATE( Cur_T_Locs(1:Int_T_Deg) )
+ALLOCATE( Sin_Square( 1:Int_TP_Deg ), Cotan_Val(  1:Int_TP_Deg ) )
+
+
+ALLOCATE( RR_Factor(   1:Int_R_Deg, 0:DEGREE, 0:DEGREE )    )
+ALLOCATE( RDR_Factor(  1:Int_R_Deg, 0:DEGREE, 0:DEGREE )    )
+ALLOCATE( DRR_Factor(  1:Int_R_Deg, 0:DEGREE, 0:DEGREE )    )
+ALLOCATE( DRDR_Factor( 1:Int_R_Deg, 0:DEGREE, 0:DEGREE )    )
 
 ALLOCATE( TP_TP_Integrals( 1:LM_Length, 1:LM_Length, 1:16) )
-ALLOCATE( TP_TP_Integrals_store( 1:LM_Length, 1:LM_Length, 1:16) )
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"-Initializing Modified Vector Laplacian Matrix.  Format: Banded. "
 END IF
+
+
+
+CALL Initialize_LG_Quadrature(Int_R_Deg, Int_R_Locs, Int_R_Weights)
+CALL Initialize_LG_Quadrature(Int_T_Deg, Int_T_Locs, Int_T_Weights)
+CALL Initialize_Trapezoid_Quadrature(Int_P_Deg, Int_P_Locs, Int_P_Weights)
+
+
 
 
 DO re = 0,NUM_R_ELEMENTS-1
@@ -219,7 +244,7 @@ DO l = 0,L_LIMIT
 
     Reusable_Values = 0.0_idp
     DO dp = 0,DEGREE
-        DO rd = 1,Num_R_Quad_Points
+        DO rd = 1,Int_R_Deg
 
             Reusable_Values(dp) = Reusable_Values(dp) &
                                 - R_SQUARE(rd) * LPT_LPT(rd,d,dp,1,1)   &
@@ -252,28 +277,6 @@ END DO  ! d Loop
 END DO ! re Loop
 
 
-!PRINT*,"Work_Mat"
-!DO re = 0,Num_R_Elements-1
-!DO d = 0,Degree
-!DO ui = 1,3
-!DO l = 1,LM_Length
-!DO dp = 0,Degree
-!DO uj = 1,3
-!DO lp = 1,LM_Length
-!
-!    i = FP_Beta_Array_Map(re,d,ui,l)
-!    j = FP_Beta_Array_Map(re,dp,uj,lp)
-!
-!    PRINT*,i,j,Beta_MVL_Banded(Beta_Bandwidth+i-j,j),Beta_Bandwidth+i-j
-!END DO
-!END DO
-!END DO
-!END DO
-!END DO
-!END DO
-!END DO
-!
-!STOP
 
 
 
@@ -350,62 +353,26 @@ END DO ! re Loop
 
 
 
-!TP_TP_Integrals_Store = 0.0_idp
-!DO te = 0,Num_T_Elements-1
-!
-!    DeltaT_OverTwo = (tlocs(te + 1) - tlocs(te))/2.0_idp
-!    CUR_T_LOCS(:) = DeltaT_OverTwo * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(te)
-!
-!    DO pe = 0,Num_P_Elements-1
-!
-!
-!
-!        DeltaP_OverTwo = (plocs(pe + 1) - plocs(pe))/2.0_idp
-!
-!
-!        CALL Calc_TP_Values( DeltaT_OverTwo, DeltaP_OverTwo, Cur_T_Locs, te, pe,                &
-!                             Sin_Square, Cotan_Val,                                             &
-!                             TP_TP_Integrals            )
-!
-!
-!        TP_TP_Integrals_Store = TP_TP_Integrals_Store + TP_TP_Integrals
-!
-!    END DO
-!END DO
-!PRINT*,TP_TP_Integrals_Store
-
-
-
-!    PRINT*,"Work_Mat"
-!    DO re = 0,Num_R_Elements-1
-!    DO d = 0,Degree
-!    DO ui = 1,3
-!    DO l = 1,LM_Length
-!    DO rep = 0,Num_R_Elements-1
-!    DO dp = 0,Degree
-!    DO uj = 1,3
-!    DO lp = 1,LM_Length
-!
-!        i = FP_Beta_Array_Map(re,d,ui,l)
-!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
-!
-!        PRINT*,i,j,Beta_MVL_Banded(Beta_Bandwidth+i-j,j)
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-
-
 
 !Call Output_Laplace_Beta(Beta_MVL_Banded,Beta_Prob_Dim, Beta_Prob_Dim)
 Beta_Factorized_Flag = .FALSE.
 
 
 END SUBROUTINE Initialize_Beta_MVL_Banded
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -430,15 +397,15 @@ SUBROUTINE Calc_Beta1_Terms( re, dp, lp, mp,                                    
 
 INTEGER,                                                        INTENT(IN)  :: re, dp, lp, mp
 
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRDR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRDR_Factor
 
 COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)  :: TP_TP_Integrals
 
 
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: Cur_R_Locs
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: R_Square
+REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: Cur_R_Locs
+REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: R_Square
 
 
 INTEGER                                                     :: d, rd, ui, uj
@@ -536,16 +503,16 @@ SUBROUTINE Calc_Beta2_Terms( re, dp, lp, mp,                                    
 
 INTEGER,                                                        INTENT(IN)  :: re, dp, lp, mp
 
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RdR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRDR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RdR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRDR_Factor
 
 COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)  :: TP_TP_Integrals
 
 
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: Cur_R_Locs
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: R_Square
+REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: Cur_R_Locs
+REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: R_Square
 
 
 INTEGER                                                     :: d, rd, ui, uj
@@ -652,15 +619,15 @@ SUBROUTINE Calc_Beta3_Terms( re, dp, lp, mp,                                    
 
 INTEGER,                                                        INTENT(IN)    :: re, dp, lp, mp
 
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: RR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: DRR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: RDR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: DRDR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: RR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: DRR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: RDR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: DRDR_Factor
 
 COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)    :: TP_TP_Integrals
 
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)    :: Cur_R_Locs
-REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)    :: R_Square
+REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)    :: Cur_R_Locs
+REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)    :: R_Square
 
 
 INTEGER                                                     :: d, rd, ui, uj
@@ -761,13 +728,13 @@ SUBROUTINE CALC_RR_Values( R_Square, TODR,          &
                            RR_Factor, DRR_Factor,   &
                            RDR_Factor, DRDR_Factor  )
 
-REAL(idp), DIMENSION(1:Num_R_Quad_Points),                      INTENT(IN)      :: R_Square
+REAL(idp), DIMENSION(1:Int_R_Deg),                      INTENT(IN)      :: R_Square
 REAL(idp),                                                      INTENT(IN)      :: TODR
 
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(INOUT)   :: RR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(INOUT)   :: DRR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(INOUT)   :: RDR_Factor
-REAL(idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE ), INTENT(INOUT)   :: DRDR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(INOUT)   :: RR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(INOUT)   :: DRR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(INOUT)   :: RDR_Factor
+REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(INOUT)   :: DRDR_Factor
 
 
 INTEGER                                                                         :: d, dp
@@ -775,7 +742,7 @@ REAL(idp), ALLOCATABLE, DIMENSION(:)                                            
 
 
 
-ALLOCATE( R_Int_Weights( 1:NUM_R_QUAD_POINTS ) )
+ALLOCATE( R_Int_Weights( 1:Int_R_Deg ) )
 
 
 
@@ -813,12 +780,12 @@ SUBROUTINE CALC_TP_Values( DeltaT_OverTwo, DeltaP_OverTwo, Cur_T_Locs, te, pe,  
 REAL(idp),                                                  INTENT(IN)      :: DeltaT_OverTwo
 REAL(idp),                                                  INTENT(IN)      :: DeltaP_OverTwo
 
-REAL(idp),    DIMENSION( 1:Num_T_Quad_Points ),             INTENT(IN)      :: Cur_T_Locs
+REAL(idp),    DIMENSION( 1:Int_T_Deg ),             INTENT(IN)      :: Cur_T_Locs
 
 INTEGER,                                                    INTENT(IN)      ::  te, pe
 
-REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),            INTENT(INOUT)   :: Sin_Square
-REAL(idp),    DIMENSION( 1:Num_TP_Quad_Points ),            INTENT(INOUT)   :: Cotan_Val
+REAL(idp),    DIMENSION( 1:Int_TP_Deg ),            INTENT(INOUT)   :: Sin_Square
+REAL(idp),    DIMENSION( 1:Int_TP_Deg ),            INTENT(INOUT)   :: Cotan_Val
 
 
 COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),   INTENT(INOUT)   :: TP_TP_Integrals
@@ -829,21 +796,21 @@ INTEGER                                                                     :: l
 REAL(idp), ALLOCATABLE, DIMENSION(:)                                        :: TP_Int_Weights
 
 
-ALLOCATE( TP_Int_Weights( 1:NUM_TP_QUAD_POINTS) )
+ALLOCATE( TP_Int_Weights( 1:Int_TP_Deg) )
 
 
 
-DO td = 1,NUM_T_QUAD_POINTS
-    DO pd = 1,NUM_P_QUAD_POINTS
-        tpd = (td-1)*NUM_P_QUAD_POINTS + pd
+DO td = 1,Int_T_Deg
+    DO pd = 1,Int_P_Deg
+        tpd = (td-1)*Int_P_Deg + pd
 
         Sin_Square(tpd) = DSIN( Cur_T_Locs(td) )*DSIN( Cur_T_Locs(td) )
         Cotan_Val(tpd)  = 1.0_idp/DTAN( CUR_T_LOCS(td) )
-!        TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = DSIN( Cur_T_Locs(td) )                &
+!        TP_Int_Weights( (td-1)*Int_P_Deg + pd ) = DSIN( Cur_T_Locs(td) )                &
 !                                                        * DeltaT_OverTwo * INT_T_WEIGHTS(td)    &
 !                                                        * DeltaP_OverTwo * INT_P_WEIGHTS(pd)
  
-        TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = DSIN( Cur_T_Locs(td) )                &
+        TP_Int_Weights( (td-1)*Int_P_Deg + pd ) = DSIN( Cur_T_Locs(td) )                &
                                                         * DeltaT_OverTwo * INT_T_WEIGHTS(td)    &
                                                         * INT_P_WEIGHTS(pd)
 
@@ -1439,4 +1406,5 @@ END DO
 END SUBROUTINE DIRICHLET_BC_Beta_Banded_Mat
 
 
-END MODULE FP_Beta_Banded
+END MODULE FP_Beta_Banded_B
+
