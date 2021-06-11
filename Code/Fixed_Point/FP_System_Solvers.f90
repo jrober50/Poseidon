@@ -60,17 +60,6 @@ USE Variables_Derived, &
                     Beta_Prob_Dim,              &
                     Prob_Dim
 
-USE Variables_IO, &
-            ONLY :  Frame_Report_Flag,          &
-                    Write_Report_Flag,          &
-                    Write_Results_Flag,         &
-                    Iter_Report_Num_Samples,    &
-                    Iter_Report_File_ID,        &
-                    Frame_Report_File_ID,       &
-                    Iter_Time_Table,            &
-                    Frame_Update_Table,         &
-                    Frame_Residual_Table
-
 
 USE DRIVER_Parameters, &
             ONLY :  Driver_Test_Number
@@ -234,7 +223,7 @@ Omega = 2.0_idp/(1.0_idp + sin( pi/(Num_R_Nodes) ) )
 
 
 
-timer(1) = MPI_Wtime()
+
 IF (( LINEAR_SOLVER == "CHOL" ) .AND. (MCF_Flag == 0 ) ) THEN
     
     !
@@ -245,16 +234,19 @@ IF (( LINEAR_SOLVER == "CHOL" ) .AND. (MCF_Flag == 0 ) ) THEN
     !   solve the linear system using forward and backward substitution.
     !
 
+    timer(1) = MPI_Wtime()
     CALL Cholesky_Factorization()
     MCF_Flag = 1
 
 
+    timer(2) = MPI_Wtime()
+    CALL Clock_IN(timer(2)-timer(1), 11)
 END IF
-timer(2) = MPI_Wtime()
-CALL Clock_IN(timer(2)-timer(1), 11)
 
 
 
+
+timer(1) = MPI_Wtime()
 IF (LINEAR_SOLVER =='Full') THEN
     !####################################!
     !
@@ -490,6 +482,13 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     END IF
     END DO  ! ui Loop
 
+!    PRINT*,"Coefficient Vector"
+!    DO lm_loc = 1,LM_LENGTH
+!        PRINT*,"Lm_loc = ",lm_loc
+!        PRINT*,FP_Coeff_Vector(:,lm_loc,1)
+!    END DO
+
+
 
 !    PRINT*,"After"
 !    PRINT*,FP_Coeff_Vector(:,:,1:2)
@@ -656,7 +655,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 !    Work_Mat = Beta_MVL_Banded
     Work_Vec = FP_Source_Vector_Beta
 
-    
+
+
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
 
 

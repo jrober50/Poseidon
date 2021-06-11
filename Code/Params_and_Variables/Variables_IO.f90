@@ -24,13 +24,6 @@ IMPLICIT NONE
 
 
 
-INTEGER                     ::  OUTPUT_SETUP_TABLE_FLAG     = 1
-
-
-INTEGER                     ::  WRITE_TIMETABLE_FLAG        = 0     ! 0=Off,1 = Screen, 2 = File, 3 = Both
-INTEGER                     ::  WRITE_REPORT_FLAG           = 1
-INTEGER                     ::  WRITE_RESULTS_FLAG          = 1
-
 
 INTEGER                     ::  ITER_REPORT_NUM_SAMPLES     = 20
 
@@ -38,25 +31,39 @@ INTEGER                     ::  WRITE_RESULTS_R_SAMPS       = 256
 INTEGER                     ::  WRITE_RESULTS_T_SAMPS       = 256
 INTEGER                     ::  WRITE_RESULTS_P_SAMPS       = 1
 
-INTEGER                     ::  WRITE_SOURCES_FLAG          = 0
 
 
-INTEGER                     ::  SOURCE_OUTPUT_FLAG
-INTEGER                     ::  RESULTS_OUTPUT_FLAG
-INTEGER                     ::  RUN_REPORT_FLAG
-INTEGER                     ::  FRAME_REPORT_FLAG
 
 
-! Report File IDs
-INTEGER                     ::  RUN_REPORT_FILE_ID          = -1
-INTEGER                     ::  ITER_REPORT_FILE_ID         = -1
-INTEGER                     ::  FRAME_REPORT_FILE_ID        = -1
+
+INTEGER, PARAMETER                  :: N_RF         = 6
+INTEGER, DIMENSION(N_RF)            :: Report_Flags = 0
+INTEGER, DIMENSION(N_RF)            :: Report_IDs   = -1
+CHARACTER(LEN=14), DIMENSION(N_RF)  :: Report_Names = [ 'Run           ',   &
+                                                        'Frame         ',   &
+                                                        'Iteration     ',   &
+                                                        'Setup         ',   &
+                                                        'Timetable     ',   &
+                                                        'Convergence   '    ]
 
 
-! Output Linear System to File Flags,       0 = Off, 1 = On
-INTEGER                     ::  OUTPUT_MATRIX_FLAG          = 0
-INTEGER                     ::  OUTPUT_RHS_VECTOR_FLAG      = 0
-INTEGER                     ::  OUTPUT_UPDATE_VECTOR_FLAG   = 0
+
+
+INTEGER, PARAMETER          :: N_PF                         = 5
+INTEGER, DIMENSION(N_PF)    :: Print_Flags
+
+
+
+
+INTEGER, PARAMETER                  :: N_WF        = 7
+INTEGER, DIMENSION(N_WF)            :: Write_Flags = 0
+CHARACTER(LEN=16), DIMENSION(N_WF)  :: Write_Names = [  'Matrix(ces)     ', &
+                                                        'RHS Vector(s)   ', &
+                                                        'Update Vector(s)', &
+                                                        'Source(s)       ', &
+                                                        'Results         ', &
+                                                        'Coefficients    ', &
+                                                        'Mesh            '  ]
 
 
 

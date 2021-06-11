@@ -66,15 +66,10 @@ USE Variables_Functions, &
                             Calc_3D_Values_At_Location
 
 USE Variables_IO, &
-                    ONLY :  Iter_Report_File_ID,        &
-                            Frame_Report_File_ID,       &
-                            Write_Results_Flag,         &
-                            Write_Report_Flag,          &
+                    ONLY :  Report_IDs,        &
+                            Report_Flags,       &
+                            Write_Flags,                &
                             Iter_Report_Num_Samples,    &
-                            Output_Matrix_Flag,         &
-                            Output_RHS_Vector_Flag,     &
-                            Output_Update_Vector_Flag,  &
-                            Frame_Report_Flag,          &
                             Frame_Update_Table,         &
                             Iter_Time_Table,            &
                             Total_Run_Iters,            &
@@ -217,10 +212,10 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
         CALL CFA_3D_Master_Build()
     END IF
 
-    IF ( OUTPUT_MATRIX_FLAG == 1 ) THEN
+    IF ( Write_Flags(1) == 1 ) THEN
         CALL OUTPUT_JACOBIAN_MATRIX( Block_Elem_STF_MatVec )
     END IF
-    IF ( OUTPUT_RHS_VECTOR_FLAG == 1 ) THEN
+    IF ( Write_Flags(2) == 1 ) THEN
         CALL OUTPUT_RHS_VECTOR( Block_RHS_Vector )
     END IF
 
@@ -234,7 +229,7 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     CALL Clock_In(timec-timeb, 14)
 
 
-    IF ( OUTPUT_UPDATE_VECTOR_FLAG == 1 ) THEN
+    IF ( Write_Flags(3) == 1 ) THEN
         CALL OUTPUT_UPDATE_VECTOR( Update_Vector )
     END IF
     
@@ -300,7 +295,7 @@ Iteration_Histogram(Cur_Iteration-1) = Iteration_Histogram(Cur_Iteration-1) + 1
 
 
 
-IF ( WRITE_RESULTS_FLAG == 1 ) THEN
+IF ( Write_Flags(5) == 1 ) THEN
 
     CALL OUTPUT_FINAL_RESULTS()
 
@@ -308,7 +303,7 @@ END IF
 
 
 
-IF ( OUTPUT_RHS_VECTOR_FLAG == 1 ) THEN
+IF ( Write_Flags(2)== 1 ) THEN
     !*!
     !*! Clean the System
     !*!
@@ -754,14 +749,14 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
 
 FILE_ID = -1
-IF ( FRAME_REPORT_FLAG == 1 ) THEN
+IF ( Report_Flags(2) == 1 ) THEN
 
-    FILE_ID(0) = FRAME_REPORT_FILE_ID
+    FILE_ID(0) = Report_IDs(2)
 
 END IF
 
-IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    FILE_ID(1) = ITER_REPORT_FILE_ID
+IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
+    FILE_ID(1) = Report_IDs(3)
 END IF
 
 
@@ -817,7 +812,7 @@ END DO
 IF ( Driver_Test_Number .NE. -1 ) THEN
 
     ! Write Results Table Header to Screen
-    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+    IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
         IF ( Rank == 0 ) THEN
             PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
             WRITE(*,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
@@ -851,7 +846,7 @@ IF ( Driver_Test_Number .NE. -1 ) THEN
 
 
         ! Write Results to Screen
-        IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
             IF ( Rank == 0 ) THEN
                 WRITE(*,111) r/Centimeter,              &
                              Analytic_Val,              &
@@ -881,7 +876,7 @@ IF ( Driver_Test_Number .NE. -1 ) THEN
 ELSE
 
     ! Write Results Table Header to Screen
-    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+    IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
         IF ( Rank == 0 ) THEN
             PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
             WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
@@ -911,7 +906,7 @@ ELSE
 
 
         ! Write Results to Screen
-        IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+        IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
             IF ( Rank == 0 ) THEN
                 WRITE(*,111) r/Centimeter,              &
                              PsiPot_Val,                &
@@ -943,7 +938,7 @@ END IF
 
 
 
-WRITE( FRAME_REPORT_FILE_ID, '(4/)')
+WRITE( Report_IDs(3), '(4/)')
 
 END SUBROUTINE OUTPUT_ITERATION_REPORT
 
@@ -986,7 +981,7 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
 
 ! Write Results Table Header to Screen
-IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
     IF ( Rank == 0 ) THEN
         PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
         WRITE(*,110)"r (cm)","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
@@ -1020,7 +1015,7 @@ DO i = 0,ITER_REPORT_NUM_SAMPLES
 
 
     ! Write Results to Screen
-    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+    IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
         IF ( Rank == 0 ) THEN
             WRITE(*,111) r/Centimeter,              &
                           Analytic_Val,              &
@@ -1064,17 +1059,17 @@ INTEGER                                                 ::  MaxA_Loc
 REAL(KIND = idp)                                        ::  Ratio_Real, Ratio_Imag
 
 FILE_ID = -1
-IF ( FRAME_REPORT_FLAG == 1 ) THEN
-    FILE_ID(0) = FRAME_REPORT_FILE_ID
+IF ( Report_Flags(2) == 1 ) THEN
+    FILE_ID(0) = Report_IDs(2)
 END IF
 
-IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    FILE_ID(1) = ITER_REPORT_FILE_ID
+IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
+    FILE_ID(1) = Report_IDs(3)
 END IF
 
 
 MaxA = 0.0_idp
-PRINT*,"In CONVERGENCE_CHECK"
+!PRINT*,"In CONVERGENCE_CHECK"
 DO i = 0,PROB_DIM-1
 
     if ( Coefficient_Vector(i) .NE. 0.0_idp ) THEN
@@ -1143,7 +1138,7 @@ IF (myID_Poseidon == 0) THEN
 
 
 !   Output data to screen
-    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+    IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
         WRITE(*,'(A)')"                                 Convergence Results"
         WRITE(*,'(A)')"            ============================================================="
         WRITE(*,'(A)')""

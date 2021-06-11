@@ -4,6 +4,12 @@ VARIABLES = \
   Variables_BC.o         \
   Variables_Derived.o    \
   Variables_Flags.o      \
+  Variables_FP.o         \
+  Variables_Functions.o  \
+  Variables_IO.o         \
+  Variables_Mesh.o       \
+  Variables_Quadrature.o \
+  Variables_Tables.o     \
   Variables_Source.o     \
   Variables_Yahil.o      \
 

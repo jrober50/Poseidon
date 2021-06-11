@@ -40,19 +40,36 @@ CHARACTER(LEN = 38), PARAMETER        :: Poseidon_LinSys_Dir    = "Poseidon_Outp
 CHARACTER(LEN = 37), PARAMETER        :: Poseidon_Coeffs_Dir    = "Poseidon_Output/Objects/Coefficients/"
 
 
-CHARACTER(LEN = 32),DIMENSION(1:5), PARAMETER   :: &
+INTEGER, PARAMETER                                      :: N_Variables = 5
+CHARACTER(LEN = 32),DIMENSION(N_Variables), PARAMETER   :: &
 CFA_Var_Names = ['Conformal Factor                  ', &
                  'Lapse Function                    ', &
                  'Radial Shift Component            ', &
                  'Theta Shift Component             ', &
                  'Phi Shift Component               ' ]
 
-CHARACTER(LEN = 32),DIMENSION(1:3), PARAMETER   :: &
+INTEGER, PARAMETER                                      :: N_ShortVars = 5
+CHARACTER(LEN = 10),DIMENSION(N_ShortVars), PARAMETER   :: &
+CFA_ShortVars = ['ConFactor ', &
+                 'Lapse     ', &
+                 'Beta1     ', &
+                 'Beta2     ', &
+                 'Beta3     ' ]
+
+
+INTEGER, PARAMETER                                      :: N_Methods = 3
+CHARACTER(LEN = 32),DIMENSION(N_Methods), PARAMETER     :: &
 Method_Names = ['Newton-Raphson                  ', &
                 'Fixed Point Iteration           ', &
                 'Jacobian Free GMRES             ' ]
 
-
+INTEGER, PARAMETER                                      ::  N_Meshes = 5
+CHARACTER(LEN = 35),DIMENSION(N_Meshes), PARAMETER      ::  &
+Mesh_Names = [  'Uniform                            ',      &
+                'Logarithmic                        ',      &
+                'Uniform Core & Logarithmic Exterior',      &
+                'Zoom                               ',      &
+                'MacLaurin Shell                    '       ]
 
 
 END MODULE Poseidon_IO_Parameters

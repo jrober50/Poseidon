@@ -31,14 +31,16 @@ USE Poseidon_Parameters, &
                 ONLY :  Domain_Dim,             &
                         Degree,                 &
                         L_Limit,                &
-                        Solver_Type,            &
+                        Method_Flag,            &
                         Verbose_Flag,           &
                         Convergence_Criteria,   &
                         Num_CFA_Vars,           &
                         Max_Iterations
 
 USE Variables_IO, &
-                ONLY :  RUN_REPORT_FILE_ID,     &
+                ONLY :  Report_Flags,           &
+                        Report_IDs,             &
+                        Write_Flags,            &
                         File_Suffix
 
 USE Variables_Functions, &
@@ -132,6 +134,9 @@ USE Poseidon_IO_Module, &
                 ONLY :  Output_Mesh,            &
                         Output_Nodal_Mesh
 
+USE IO_Setup_Report_Module, &
+                ONLY :  Output_Setup_Report
+
 IMPLICIT NONE
 
 
@@ -155,7 +160,7 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
                                 Coarsen_Option,                         &
                                 r_Option, t_Option, p_Option,           &
                                 dr_Option, dt_Option, dp_Option,        &
-                                Solver_Type_Option,                     &
+                                Method_Flag_Option,                     &
                                 CFA_Eq_Flags_Option,                    &
                                 nProcs_Option,                          &
                                 Suffix_Flag_Option,                     &
@@ -164,7 +169,14 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
                                 Max_Iterations_Option,                  &
                                 Convergence_Criteria_Option,            &
                                 Anderson_M_Option,                      &
-                                Verbose_Option                       )
+                                Verbose_Option,                         &
+                                WriteAll_Option,                        &
+                                Print_Setup_Option,                     &
+                                Write_Setup_Option,                     &
+                                Print_Results_Option,                   &
+                                Write_Results_Option,                   &
+                                Print_Timetable_Option,                 &
+                                Write_Timetable_Option                  )
 
 
 CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Units_Option
@@ -176,8 +188,7 @@ INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  NQ_Option
 INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  NE_Option
 REAL(idp), DIMENSION(2), INTENT(IN), OPTIONAL               ::  Domain_Edge_Option
 
-INTEGER,                 INTENT(IN), OPTIONAL               ::  Solver_Type_Option
-LOGICAL,                 INTENT(IN), OPTIONAL               ::  Verbose_Option
+INTEGER,                 INTENT(IN), OPTIONAL               ::  Method_Flag_Option
 
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Dimensions_Option
 
@@ -202,6 +213,16 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  Max_Iterations_O
 REAL(idp),               INTENT(IN), OPTIONAL               ::  Convergence_Criteria_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Anderson_M_Option
 
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Verbose_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  WriteAll_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Setup_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Setup_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Results_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Results_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Timetable_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Timetable_Option
+
+
 IF ( PRESENT( Verbose_Option ) ) THEN
     Verbose_Flag = Verbose_Option
 ELSE
@@ -211,6 +232,129 @@ END IF
 IF ( Verbose_Flag .EQV. .TRUE. ) THEN
     PRINT*,"Initializing Poseidon..."
 END IF
+
+
+!
+!   Verbose Options
+!
+IF ( Verbose_Flag ) THEN
+    Report_Flags = 1
+    Write_Flags  = 1
+ELSE
+    Report_Flags = 0
+    Write_Flags  = 0
+END IF
+
+IF ( PRESENT( WriteAll_Option) ) THEN
+    Report_Flags = Report_Flags + 2
+    Write_Flags = Write_Flags + 2
+END IF
+
+
+
+
+IF ( PRESENT(Print_Setup_Option) ) THEN
+    IF ( Print_Setup_Option ) THEN
+        IF (Report_Flags(4) > 1 ) THEN
+            Report_Flags(4) = 3
+        ELSE
+            Report_Flags(4) = 1
+        END IF
+    ELSE
+        IF (Report_Flags(4) > 1 ) THEN
+            Report_Flags(4) = 2
+        ELSE
+            Report_Flags(4) = 0
+        END IF
+    END IF
+END IF
+
+
+IF ( PRESENT(Write_Setup_Option) ) THEN
+    IF ( Write_Setup_Option ) THEN
+        IF (Report_Flags(4) < 2 ) THEN
+            Report_Flags(4) = Report_Flags(4) + 2
+        END IF
+    ELSE
+        IF ( Report_Flags(4) > 1 ) THEN
+            Report_Flags(4) = Report_Flags(4) - 2
+        END IF
+    END IF
+END IF
+
+
+
+
+
+IF ( PRESENT(Print_Results_Option) ) THEN
+    IF ( Print_Results_Option ) THEN
+        IF (Write_Flags(5) > 1 ) THEN
+            Write_Flags(5) = 3
+        ELSE
+            Write_Flags(5) = 1
+        END IF
+    ELSE
+        IF (Write_Flags(5) > 1 ) THEN
+            Write_Flags(5) = 2
+        ELSE
+            Write_Flags(5) = 0
+        END IF
+    END IF
+END IF
+
+
+IF ( PRESENT(Write_Results_Option) ) THEN
+    IF ( Write_Results_Option ) THEN
+        IF (Write_Flags(5) < 2 ) THEN
+            Write_Flags(5) = Report_Flags(4) + 2
+        END IF
+    ELSE
+        IF ( Write_Flags(5) > 1 ) THEN
+            Write_Flags(5) = Report_Flags(4) - 2
+        END IF
+    END IF
+END IF
+
+
+
+
+
+
+
+IF ( PRESENT(Print_Timetable_Option) ) THEN
+    IF ( Print_Timetable_Option ) THEN
+        IF (Report_Flags(5) > 1 ) THEN
+            Report_Flags(5) = 3
+        ELSE
+            Report_Flags(5) = 1
+        END IF
+    ELSE
+        IF (Report_Flags(5) > 1 ) THEN
+            Report_Flags(5) = 2
+        ELSE
+            Report_Flags(5) = 0
+        END IF
+    END IF
+END IF
+
+IF ( PRESENT(Write_Timetable_Option) ) THEN
+    IF ( Write_Timetable_Option ) THEN
+        IF (Report_Flags(5) < 2 ) THEN
+            Report_Flags(5) = Report_Flags(4) + 2
+        END IF
+    ELSE
+        IF ( Report_Flags(5) > 1 ) THEN
+            Report_Flags(5) = Report_Flags(4) - 2
+        END IF
+    END IF
+END IF
+
+
+
+
+
+
+
 
 IF ( PRESENT( Max_Iterations_Option ) ) THEN
     Max_Iterations = Max_Iterations_Option
@@ -354,10 +498,10 @@ CALL Initialize_Mesh( )
 
 
 
-IF ( PRESENT( Solver_Type_Option ) ) THEN
-    Solver_Type = Solver_Type_Option
+IF ( PRESENT( Method_Flag_Option ) ) THEN
+    Method_Flag = Method_Flag_Option
 ELSE
-    Solver_Type = 2
+    Method_Flag = 2
 END IF
 
 
@@ -367,7 +511,8 @@ IF ( PRESENT(Suffix_Flag_Option) ) THEN
 
     IF ( Suffix_Flag_Option == "Params") THEN
 
-        WRITE(File_Suffix,'(A,I4.4,A,I2.2,A,I2.2)')"RE",Num_R_Elements,"_D",Degree,"_L",L_Limit
+        WRITE(File_Suffix,'(A,I4.4,A,I3.3,A,I2.2,A,I2.2)')             &
+            "RE",Num_R_Elements,"_TE",Num_T_Elements,"_D",Degree,"_L",L_Limit
 
     ELSEIF ( SUffix_Flag_Option == "Frame") THEN
         
@@ -411,26 +556,33 @@ CALL Initialize_Quadrature()
 CALL Initialize_Tables()
 
 
-IF ( Solver_Type == 1 ) THEN
+IF ( Method_Flag == 1 ) THEN
     CALL Initialize_NR()
-ELSE IF ( Solver_Type == 2 ) THEN
+ELSE IF ( Method_Flag == 2 ) THEN
     CALL Initialize_FP(CFA_EQ_Flags_Option)
 END IF
 
 
 
 IF ( Verbose_Flag ) THEN
+    PRINT*,"Poseidon Initialization Complete"
+END IF
 
 
+IF ( Write_Flags(7) == 1 ) THEN
     PRINT*,"Outputing Radial Mesh to file during initialization."
     CALL Output_Mesh( rlocs, NUM_R_ELEMENTS+1 )
     CALL Output_Nodal_Mesh( rlocs, NUM_R_ELEMENTS+1 )
-
-    PRINT*,"Poseidon Initialization Complete"
-
-    PRINT*,"Poseidon was initialized with the following parameters."
-    CALL Output_Setup_Table()
 END IF
+
+
+
+
+
+CALL Output_Setup_Report()
+
+
+
 
 
 END SUBROUTINE Initialize_Poseidon
@@ -454,163 +606,6 @@ SUBROUTINE Initialize_Poseidon_From_File()
 END SUBROUTINE Initialize_Poseidon_From_File
 
 
-
-
-
-
-!+301+######################################################################################!
-!                                                                                           !
-!       OUTPUT_SETUP_TABLE                                                                  !
-!                                                                                           !
-!###########################################################################################!
-SUBROUTINE OUTPUT_SETUP_TABLE( )
-
-INTEGER                                     ::  NUM_JACOBIAN_ELEMENTS
-INTEGER                                     ::  NONZEROS
-INTEGER                                     ::  BLOCK_NONZEROS
-REAL(KIND = idp)                            ::  SPARSITY
-
-LOGICAL                                     ::  EX
-
-1401 FORMAT('------------- POSEIDON PARAMETERS --------------'/)
-1402 FORMAT('         ACTIVE DIMENSIONS = ',I12.1)
-1403 FORMAT('                    DEGREE = ',I12.1)
-1404 FORMAT('                   L_LIMIT = ',I12.1)
-1405 FORMAT('              NUM_CFA_VARS = ',I12.1)
-1406 FORMAT('                    nPROCS = ',I12.1)
-1411 FORMAT('  POSEIDON RADIAL ELEMENTS = ',I12.1)
-1412 FORMAT('   POSEIDON THETA ELEMENTS = ',I12.1)
-1413 FORMAT('     POSEIDON PHI ELEMENTS = ',I12.1)
-1414 FORMAT('          R_COARSEN_FACTOR = ',I12.1)
-1415 FORMAT('          T_COARSEN_FACTOR = ',I12.1)
-1416 FORMAT('          P_COARSEN_FACTOR = ',I12.1)
-1417 FORMAT('               NUM_R_NODES = ',I12.1)
-1418 FORMAT('          NUMBER OF SHELLS = ',I12.1)
-1419 FORMAT('       NUMBER OF SUBSHELLS = ',I12.1)
-1420 FORMAT('       SUBSHELLS PER SHELL = ',I12.1)
-1421 FORMAT('      NUM BLOCKS PER SHELL = ',I12.1)
-1422 FORMAT('     NUM_R_ELEMS_PER_SHELL = ',I12.1)
-1423 FORMAT('     NUM_T_ELEMS_PER_BLOCK = ',I12.1)
-1424 FORMAT('     NUM_P_ELEMS_PER_BLOCK = ',I12.1)
-1425 FORMAT('                   VAR_DIM = ',I12.1)
-1426 FORMAT('             BLOCK_VAR_DIM = ',I12.1)
-1427 FORMAT('                  PROB_DIM = ',I12.1)
-1428 FORMAT('            BLOCK_PROB_DIM = ',I12.1)
-1429 FORMAT('         SUBSHELL_PROB_DIM = ',I12.1)
-1430 FORMAT('         NUM_OFF_DIAGONALS = ',I12.1)
-1431 FORMAT('     NUM JACOBIAN ELEMENTS = ',I12.1)
-1432 FORMAT(' NUM NNZ JACOBIAN ELEMENTS = ',I12.1)
-1433 FORMAT('        JACOBIAN SPARSITY  = ',F12.6)
-1434 FORMAT('         NUM NNZ PER BLOCK = ',I12.1)
-1435 FORMAT('              Inner Radius = ',ES20.12E3)
-1436 FORMAT('              Outer Radius = ',ES20.12E3)
-1437 FORMAT('      # Radial Quad Points = ',I12.1)
-1438 FORMAT('       # Theta Quad Points = ',I12.1)
-1439 FORMAT('         # Phi Quad Points = ',I12.1)
-1440 FORMAT('        Maximum Iterations = ',I12.1)
-1441 FORMAT('      Convergence Criteria = ',ES20.12E3)
-
-
-IF ( Verbose_Flag ) THEN
-
-    NUM_JACOBIAN_ELEMENTS = PROB_DIM*PROB_DIM
-
-    NONZEROS = NUM_R_ELEMENTS*ELEM_PROB_DIM_SQR          &
-             - (NUM_R_ELEMENTS-1)*ULM_LENGTH*ULM_LENGTH
-
-    BLOCK_NONZEROS = NUM_R_ELEMS_PER_BLOCK*ELEM_PROB_DIM_SQR          &
-                   - (NUM_R_ELEMS_PER_BLOCK-1)*ULM_LENGTH*ULM_LENGTH
-
-    SPARSITY = REAL(NONZEROS,KIND =idp)/REAL(NUM_JACOBIAN_ELEMENTS, KIND = idp)
-
-
-    IF  ( myID_Poseidon == 0 )  THEN
-        WRITE(*,1401)
-        WRITE(*,1402)DOMAIN_DIM
-        WRITE(*,1403)DEGREE
-        WRITE(*,1404)L_LIMIT
-        WRITE(*,1405)NUM_CFA_VARS
-        WRITE(*,1406)nPROCS_POSEIDON
-        WRITE(*,1411)NUM_R_ELEMENTS
-        WRITE(*,1412)NUM_T_ELEMENTS
-        WRITE(*,1413)NUM_P_ELEMENTS
-        WRITE(*,1414)R_COARSEN_FACTOR
-        WRITE(*,1415)T_COARSEN_FACTOR
-        WRITE(*,1416)P_COARSEN_FACTOR
-        WRITE(*,1417)NUM_R_NODES
-        WRITE(*,1418)NUM_SHELLS
-        WRITE(*,1419)NUM_SUBSHELLS
-        WRITE(*,1420)NUM_SUBSHELLS_PER_SHELL
-        WRITE(*,1421)NUM_BLOCKS_PER_SHELL
-        WRITE(*,1422)NUM_R_ELEMS_PER_SHELL
-        WRITE(*,1423)NUM_T_ELEMS_PER_BLOCK
-        WRITE(*,1424)NUM_P_ELEMS_PER_BLOCK
-        WRITE(*,1425)VAR_DIM
-        WRITE(*,1426)BLOCK_VAR_DIM
-        WRITE(*,1427)PROB_DIM
-        WRITE(*,1428)BLOCK_PROB_DIM
-        WRITE(*,1429)SUBSHELL_PROB_DIM
-        WRITE(*,1430)NUM_OFF_DIAGONALS
-        WRITE(*,1431)NUM_JACOBIAN_ELEMENTS
-        WRITE(*,1432)NONZEROS
-        WRITE(*,1433)SPARSITY
-        WRITE(*,1434)BLOCK_NONZEROS
-        WRITE(*,1435)R_INNER
-        WRITE(*,1436)R_OUTER
-        WRITE(*,1437)NUM_R_QUAD_POINTS
-        WRITE(*,1438)NUM_T_QUAD_POINTS
-        WRITE(*,1439)NUM_P_QUAD_POINTS
-        WRITE(*,1440)MAX_ITERATIONS
-        WRITE(*,1441)CONVERGENCE_CRITERIA
-
-    END IF
-
-    IF ( RUN_REPORT_FILE_ID .NE. -1 ) THEN
-        WRITE(RUN_REPORT_FILE_ID,1401)
-        WRITE(RUN_REPORT_FILE_ID,1402)DOMAIN_DIM
-        WRITE(RUN_REPORT_FILE_ID,1403)DEGREE
-        WRITE(RUN_REPORT_FILE_ID,1404)L_LIMIT
-        WRITE(RUN_REPORT_FILE_ID,1405)NUM_CFA_VARS
-        WRITE(RUN_REPORT_FILE_ID,1406)nPROCS_POSEIDON
-        WRITE(RUN_REPORT_FILE_ID,1411)NUM_R_ELEMENTS
-        WRITE(RUN_REPORT_FILE_ID,1412)NUM_T_ELEMENTS
-        WRITE(RUN_REPORT_FILE_ID,1413)NUM_P_ELEMENTS
-        WRITE(RUN_REPORT_FILE_ID,1414)R_COARSEN_FACTOR
-        WRITE(RUN_REPORT_FILE_ID,1415)T_COARSEN_FACTOR
-        WRITE(RUN_REPORT_FILE_ID,1416)P_COARSEN_FACTOR
-        WRITE(RUN_REPORT_FILE_ID,1417)NUM_R_NODES
-        WRITE(RUN_REPORT_FILE_ID,1418)NUM_SHELLS
-        WRITE(RUN_REPORT_FILE_ID,1419)NUM_SUBSHELLS
-        WRITE(RUN_REPORT_FILE_ID,1420)NUM_SUBSHELLS_PER_SHELL
-        WRITE(RUN_REPORT_FILE_ID,1421)NUM_BLOCKS_PER_SHELL
-        WRITE(RUN_REPORT_FILE_ID,1422)NUM_R_ELEMS_PER_SHELL
-        WRITE(RUN_REPORT_FILE_ID,1423)NUM_T_ELEMS_PER_BLOCK
-        WRITE(RUN_REPORT_FILE_ID,1424)NUM_P_ELEMS_PER_BLOCK
-        WRITE(RUN_REPORT_FILE_ID,1425)VAR_DIM
-        WRITE(RUN_REPORT_FILE_ID,1426)BLOCK_VAR_DIM
-        WRITE(RUN_REPORT_FILE_ID,1427)PROB_DIM
-        WRITE(RUN_REPORT_FILE_ID,1428)BLOCK_PROB_DIM
-        WRITE(RUN_REPORT_FILE_ID,1429)SUBSHELL_PROB_DIM
-        WRITE(RUN_REPORT_FILE_ID,1430)NUM_OFF_DIAGONALS
-        WRITE(RUN_REPORT_FILE_ID,1431)NUM_JACOBIAN_ELEMENTS
-        WRITE(RUN_REPORT_FILE_ID,1432)NONZEROS
-        WRITE(RUN_REPORT_FILE_ID,1433)SPARSITY
-        WRITE(RUN_REPORT_FILE_ID,1434)BLOCK_NONZEROS
-        WRITE(RUN_REPORT_FILE_ID,1435)R_INNER
-        WRITE(RUN_REPORT_FILE_ID,1436)R_OUTER
-        WRITE(RUN_REPORT_FILE_ID,1437)NUM_R_QUAD_POINTS
-        WRITE(RUN_REPORT_FILE_ID,1438)NUM_T_QUAD_POINTS
-        WRITE(RUN_REPORT_FILE_ID,1439)NUM_P_QUAD_POINTS
-        WRITE(RUN_REPORT_FILE_ID,1440)MAX_ITERATIONS
-        WRITE(RUN_REPORT_FILE_ID,1441)CONVERGENCE_CRITERIA
-        WRITE(RUN_REPORT_FILE_ID,'(/ / / / / / / /)')
-
-
-    END IF
-END IF
-
-
-END SUBROUTINE OUTPUT_SETUP_TABLE
 
 
 

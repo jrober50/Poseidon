@@ -44,7 +44,7 @@ INTEGER, PUBLIC, PARAMETER          ::  STF_MAPPING_FLAG = 2
 
 INTEGER, PUBLIC                     ::  POSEIDON_FRAME      = 1
 INTEGER, PUBLIC                     ::  CUR_ITERATION       = 1
-INTEGER, PUBLIC                     ::  MAX_ITERATIONS      = 10
+INTEGER, PUBLIC                     ::  MAX_ITERATIONS      = 20
 
 INTEGER, PUBLIC                     ::  CONVERGENCE_FLAG     = 0
 INTEGER, PUBLIC                     ::  Convergence_Type     = 2
@@ -55,8 +55,7 @@ INTEGER, PUBLIC                     ::  INITIAL_GUESS_FLAG
 
 
 INTEGER, PUBLIC                     ::  NEW_PETSC_SOLVER_FLAG
-INTEGER, PUBLIC                     ::  Solver_Type            = 1 ! 1 = Regular N-R (Default), 2 = Jacobian-Free GMRES
-CHARACTER(LEN = 32), PUBLIC         ::  Solver_Name
+INTEGER, PUBLIC                     ::  Method_Flag          = 1 ! 1 = Regular N-R (Default), 2 = Jacobian-Free GMRES
 
 
 

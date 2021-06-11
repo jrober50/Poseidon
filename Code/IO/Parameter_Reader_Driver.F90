@@ -35,10 +35,8 @@ USE Variables_Yahil, &
                     SelfSim_V_Switch
 
 USE Variables_IO, &
-            ONLY:   Results_Output_Flag,        &
-                    Source_Output_Flag,         &
-                    Run_Report_Flag,            &
-                    Frame_Report_Flag
+            ONLY:   Write_Flags,                &
+                    Report_Flags
 
 USE DRIVER_Parameters, &
             ONLY :  DRIVER_R_ELEMS,             &
@@ -147,10 +145,10 @@ IF ( Int_Params(13) .NE. -1 ) THEN
     DRIVER_TEST_NUMBER      = Int_Params(13)    ! DTN (Defaults is 3)
 END IF
 
-SOURCE_OUTPUT_FLAG          = Int_Params(14)    ! SOF
-RESULTS_OUTPUT_FLAG         = Int_Params(15)    ! ROF
-RUN_REPORT_FLAG             = Int_Params(16)    ! RRF
-FRAME_REPORT_FLAG           = Int_Params(17)    ! FRF
+Write_Flags(4)              = Int_Params(14)    ! SOF
+Write_Flags(5)              = Int_Params(15)    ! ROF
+Report_Flags(1)             = Int_Params(16)    ! RRF
+Report_Flags(2)             = Int_Params(17)    ! FRF
 
 CHIMERA_START_FRAME         = Int_Params(18)    ! CSF
 CHIMERA_END_FRAME           = Int_Params(19)    ! CEF

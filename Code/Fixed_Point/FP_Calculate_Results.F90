@@ -118,8 +118,8 @@ COMPLEX(KIND = idp)                                             ::  TMP_VALUE_A
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  xlocP, weightP
 
 
-
 Tmp_U_Value = 0.0_idp
+
 
 IF ( r == rlocs(0) ) THEN
 
@@ -159,7 +159,15 @@ ELSE
                 Loc_RED = FP_FEM_Node_Map(re,d)
                 Loc_LM  = FP_LM_Map(l,m)
 
-
+!                IF ( u == 1 ) THEN
+!                IF ( (re >= 118) .and. (re <= 122) ) THEN
+!!                    PRINT*,Loc_RED,Loc_LM,u,FP_Coeff_Vector(Loc_RED,Loc_LM,u)
+!                    PRINT*,Tmp_U_Value(u),                        &
+!                            FP_Coeff_Vector(Loc_RED,Loc_LM,u),     &
+!                            Spherical_Harmonic(l,m,theta,phi),     &
+!                            LagP(d)
+!                END IF
+!                END IF
                 Tmp_U_Value(u) = Tmp_U_Value(u)                         &
                                 + FP_Coeff_Vector(Loc_RED,Loc_LM,u)     &
                                 * Spherical_Harmonic(l,m,theta,phi)     &
@@ -169,6 +177,11 @@ ELSE
             END DO  !   m Loop
             END DO  !   l Loop
             END DO  !   u Loop
+
+!            IF ( (re >= 118) .and. (re <= 122) ) THEN
+!!                    PRINT*,Loc_RED,Loc_LM,u,FP_Coeff_Vector(Loc_RED,Loc_LM,u)
+!                PRINT*,Tmp_U_Value(1), RE
+!            END IF
 
             EXIT
         END IF

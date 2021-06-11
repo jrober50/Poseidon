@@ -105,8 +105,8 @@ ELSE
 END IF
 
 
-theta = pi/3.0_idp
-phi = pi/2.0_idp
+theta = 0.5_idp * pi
+phi = 0.5_idp * pi
 
 
 WRITE(*,'(A,F4.2,A,F4.2,A)')"Results taken along ray, theta = ",theta/pi," Pi Radians, Phi = ",phi/pi," Pi Radians"

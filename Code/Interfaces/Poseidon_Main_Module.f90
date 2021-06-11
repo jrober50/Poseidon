@@ -48,7 +48,7 @@ USE Poseidon_Parameters, &
                     Num_CFA_Vars,               &
                     Poseidon_Initialized_Flag,  &
                     Poseidon_Frame,             &
-                    Solver_Type
+                    Method_Flag
 
 
 USE Variables_Mesh, &
@@ -88,14 +88,8 @@ USE Allocation_Core, &
 USE CFA_Newton_Raphson_3D_Module, &
             ONLY :  CFA_Newton_Raphson_3D
 
-
-USE FP_Method_Module,  &
-            ONLY :  Fixed_Point_Method,     &
-                    Fixed_Point_Accelerated
-
 USE FP_AndersonM_Module, &
-            ONLY : Fixed_Point_AndersonM,   &
-                   Fixed_Point_AndersonM_B
+            ONLY : Fixed_Point_AndersonM
 
 USE Allocation_Mesh, &
             ONLY : Deallocate_Mesh
@@ -153,14 +147,13 @@ Readiness_Flag = .TRUE.
 
 IF ( Readiness_Flag ) THEN
     
-    IF ( Solver_Type == 1 ) THEN
+    IF ( Method_Flag == 1 ) THEN
 
         CALL CFA_Newton_Raphson_3D()
 
-    ELSE IF ( Solver_Type == 2 ) THEN
+    ELSE IF ( Method_Flag == 2 ) THEN
 
-!        Call Fixed_Point_Accelerated()
-        Call Fixed_Point_AndersonM_B()
+        Call Fixed_Point_AndersonM()
 
     ELSE
 
@@ -213,9 +206,9 @@ CALL Deallocate_Tables()
 
 CALL Deallocate_SelfSim()
 
-IF ( Solver_Type == 1 ) THEN
+IF ( Method_Flag == 1 ) THEN
     CALL Deallocate_NR
-ELSE IF ( Solver_Type == 2 ) THEN
+ELSE IF ( Method_Flag == 2 ) THEN
     CALL Deallocate_FP
 END IF
 

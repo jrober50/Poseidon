@@ -58,14 +58,7 @@ USE Variables_Derived, &
                     Beta_Prob_Dim
 
 USE Variables_IO, &
-            ONLY :  Frame_Report_Flag,          &
-                    Write_Report_Flag,          &
-                    Write_Results_Flag,         &
-                    Iter_Report_Num_Samples,    &
-                    Iter_Report_File_ID,        &
-                    Frame_Report_File_ID,       &
-                    Iter_Time_Table,            &
-                    Frame_Update_Table,         &
+            ONLY :  Frame_Update_Table,         &
                     Frame_Residual_Table
 
 

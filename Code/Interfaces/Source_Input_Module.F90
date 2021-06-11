@@ -22,9 +22,6 @@ USE Poseidon_Internal_Communication_Module, &
 USE Poseidon_Parameters, &
             ONLY :  DOMAIN_DIM
 
-USE Variables_IO, &
-            ONLY :  WRITE_SOURCES_FLAG
-
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS,     &
                     NUM_T_ELEMENTS,     &

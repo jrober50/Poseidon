@@ -81,9 +81,6 @@ USE FP_Beta_Banded, &
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace
 
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In
-
 USE FP_Functions_Mapping, &
             ONLY :  FP_Beta_Array_Map,          &
                     FP_FEM_Node_Map,            &
@@ -703,7 +700,7 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
                     Laplace_Matrix_VAL(Here,l,:) = Laplace_Matrix_VAL(Here,l,:)     &
                                     + SUM( R_SQUARE(:) * LP_LP_Table(:,d,dp,1,1)    &
                                             * TODR * Int_R_Weights(:)               &
-                                           - L_Lp1 * LP_LP_Table(:,d,dp,0,0) / TODR &
+                                           + L_Lp1 * LP_LP_Table(:,d,dp,0,0) / TODR &
                                             * Int_R_Weights(:)                      )
 
                     Here = Here + 1
@@ -835,7 +832,7 @@ DO l = 0,L_LIMIT
             Reusable_Values(dp) = Reusable_Values(dp) &
                                 - R_SQUARE(rd) * LP_LP_Table(rd,d,dp,1,1)   &
                                     * TODR * Int_R_Weights(rd)              &
-                                + L_Lp1 * LP_LP_Table(rd,d,dp,0,0) / TODR   &
+                                - L_Lp1 * LP_LP_Table(rd,d,dp,0,0) / TODR   &
                                     * Int_R_Weights(rd)
                                     
         END DO  ! rd Loop

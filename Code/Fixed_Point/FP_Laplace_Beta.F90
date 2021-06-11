@@ -87,9 +87,6 @@ USE Variables_FP, &
                     CFA_EQ_Map,                 &
                     CFA_Mat_Map
 
-USE Poseidon_IO_Module, &
-            ONLY :  Open_New_File
-
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace,             &
                     Output_Laplace_Beta,        &

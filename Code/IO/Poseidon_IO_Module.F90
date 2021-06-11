@@ -72,6 +72,7 @@ USE Driver_Parameters,  &
 USE Poseidon_Parameters, &
                     ONLY :  DEGREE,                 &
                             L_LIMIT,                &
+                            Num_CFA_Vars,           &
                             Domain_Dim,             &
                             CUR_ITERATION,          &
                             Poseidon_Frame,         &
@@ -91,17 +92,9 @@ USE Variables_Mesh, &
                             R_Outer
 
 USE Variables_IO, &
-                    ONLY :  Iter_Report_File_ID,    &
-                            Frame_Report_File_ID,   &
-                            Run_Report_File_ID,     &
-                            Write_Report_Flag,      &
-                            Frame_Report_Flag,      &
-                            Write_Results_Flag,     &
-                            Write_Timetable_Flag,   &
-                            Write_Sources_Flag,     &
-                            Run_Report_Flag,        &
-                            Results_Output_Flag,    &
-                            Frame_Report_Flag,      &
+                    ONLY :  Write_Flags,            &
+                            Report_Flags,           &
+                            Report_IDs,             &
                             Iter_Time_Table,        &
                             Frame_Time_Table,       &
                             Run_Time_Table,         &
@@ -142,10 +135,18 @@ USE Poseidon_IO_Parameters, &
                             Poseidon_Mesh_Dir,                              &
                             Poseidon_LinSys_Dir,                            &
                             Poseidon_Results_Dir,                           &
-                            Poseidon_Sources_Dir
+                            Poseidon_Sources_Dir,                           &
+                            CFA_ShortVars
 
 USE Functions_Info,   &
                     ONLY  : PQ_ITERATIONS_MAX
+
+USE IO_File_Routines_Module, &
+                    ONLY :  Open_New_File,                  &
+                            Open_Existing_File
+
+USE Variables_FP, &
+                    ONLY :  CFA_Eq_Flags
 
 
 IMPLICIT NONE
@@ -181,26 +182,26 @@ LOGICAL                                                 ::  FLAG, OK
 112 FORMAT (A,I2.2,A,I2.2,A)
 113 FORMAT (A,A,I2.2,A,I2.2,A)
 
-IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
 
     WRITE(FILE_NAME,113) Poseidon_IterReports_Dir,"Iteration_Report_P",Rank,"_I",Iteration,".out"
-    CALL OPEN_NEW_FILE( FILE_NAME, ITER_REPORT_FILE_ID, 100 )
+    CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(3), 100 )
 
 
 
-    WRITE(ITER_REPORT_FILE_ID,109)"                      Report for Iteration ",Iteration," by Process ",Rank
-    WRITE(ITER_REPORT_FILE_ID,'(A)')"-----------------------------------------------------------------------------------------"
-    WRITE(ITER_REPORT_FILE_ID,'(A)')" "
+    WRITE(Report_IDs(3),109)"                      Report for Iteration ",Iteration," by Process ",Rank
+    WRITE(Report_IDs(3),'(A)')"-----------------------------------------------------------------------------------------"
+    WRITE(Report_IDs(3),'(A)')" "
 
 END IF
 
 
-IF ( FRAME_REPORT_FLAG == 1 ) THEN
+IF ( Report_Flags(2) == 1 ) THEN
 
-    WRITE(FRAME_REPORT_FILE_ID,'(A)')"-----------------------------------------------------------------------------------------"
-    WRITE(FRAME_REPORT_FILE_ID,109)"                      Report for Iteration ",Iteration," by Process ",Rank
-    WRITE(FRAME_REPORT_FILE_ID,'(A)')"-----------------------------------------------------------------------------------------"
-    WRITE(FRAME_REPORT_FILE_ID,'(3/)')
+    WRITE(Report_IDs(2),'(A)')"-----------------------------------------------------------------------------------------"
+    WRITE(Report_IDs(2),109)"                      Report for Iteration ",Iteration," by Process ",Rank
+    WRITE(Report_IDs(2),'(A)')"-----------------------------------------------------------------------------------------"
+    WRITE(Report_IDs(2),'(3/)')
 
 END IF
 
@@ -230,7 +231,7 @@ INTEGER                         ::  FILE_ID
 113 FORMAT (A38,ES22.15)
 
 
-IF (( WRITE_TIMETABLE_FLAG == 1 ) .OR. ( WRITE_TIMETABLE_FLAG == 3 ) ) THEN
+IF (( Report_Flags(5) == 1 ) .OR. ( Report_Flags(5) == 3 ) ) THEN
 
     WRITE(*,110)"============================================================="
     WRITE(*,111)" "
@@ -264,7 +265,7 @@ IF (( WRITE_TIMETABLE_FLAG == 1 ) .OR. ( WRITE_TIMETABLE_FLAG == 3 ) ) THEN
 END IF
 
 
-IF (( WRITE_TIMETABLE_FLAG == 2 ) .OR. ( WRITE_TIMETABLE_FLAG == 3 ) ) THEN
+IF (( Report_Flags(5) == 2 ) .OR. ( Report_Flags(5) == 3 ) ) THEN
 
      
     WRITE(FILENAME,'(A,I2.2,A)')'OUTPUT/Timetable_',Ident,'.out'
@@ -319,7 +320,7 @@ END SUBROUTINE OUTPUT_ITER_TIMETABLE
 SUBROUTINE CLOSE_ITER_REPORT_FILE()
 
 
-CLOSE( UNIT = ITER_REPORT_FILE_ID )
+CLOSE( UNIT = Report_IDs(3) )
 
 END SUBROUTINE CLOSE_ITER_REPORT_FILE
 
@@ -327,58 +328,7 @@ END SUBROUTINE CLOSE_ITER_REPORT_FILE
 
 
 
-! !+103+############################################################################!
-!!                                                                                   !
-!!                    OUTPUT_ITERATION_RESULTS                                          !
-!!                                                                                   !
-! !#################################################################################!
-!SUBROUTINE OUTPUT_ITERATION_RESULTS()
-!
-!
-!
-!deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
-!DO i = 0,ITER_REPORT_NUM_SAMPLES
-!
-!    r = i*deltar + R_INNER
-!    theta = pi/2.0_idp
-!    phi = pi/2.0_idp
-!
-!
-!    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
-!                                    Return_Psi, Return_AlphaPsi,                &
-!                                    Return_Beta1, Return_Beta2, Return_Beta3    )
-!
-!    ! Determine the Newtonian Potential at the location r, theta, phi
-!    Analytic_Val = Potential_Solution(r,theta,phi)
-!
-!
-!    ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
-!    ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
-!
-!    ! Calculate Conformal Factor value from Newtonian Potential
-!    PsiPot_Val = 2.0_idp*C_Square*(Return_Psi - 1.0_idp)
-!
-!    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-!    AlphaPsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_AlphaPsi)
-!
-!
-!    ! Write Results to Screen
-!    IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-!        IF ( Rank == 0 ) THEN
-!            WRITE(*,111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
-!        END IF
-!    END IF
-!
-!    ! Write Results to File
-!    DO j = 0,1
-!        IF ( FILE_ID(j) .NE. -1 ) THEN
-!            WRITE(FILE_ID(j),111) r,Analytic_Val,PsiPot_Val,AlphaPsiPot_Val,Return_Beta1,Return_Beta2,Return_Beta3
-!        END IF
-!    END DO ! j Loop
-!
-!END DO  ! i Loop
-!
-!END SUBROUTINE OUTPUT_ITERATION_RESULTS()
+
 
 
 
@@ -444,9 +394,8 @@ REAL(KIND = idp)                                            ::  DELTA_THETA,    
 REAL(KIND = idp)                                            ::  DELTA_PHI,        &
                                                                 PHI_VAL
 
-REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE             ::  Lapse_Holder,       &
-                                                                ConForm_Holder
-REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE           ::  Shift_Holder
+
+REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE           ::  Var_Holder
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,           &
                                                                 T_Holder,           &
                                                                 P_Holder,           &
@@ -466,6 +415,8 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_ze,      
                                                                 Output_dz
 
 
+INTEGER, DIMENSION(Num_CFA_Vars)                            ::  Units
+
 INTEGER                                                     ::  nx, ny, nz
 REAL(idp)                                                   ::  rloc,tloc
 
@@ -479,30 +430,42 @@ REAL(idp)                                                   ::  rloc,tloc
 114 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)    !!! Output for Results file
 115 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)                                     !!! Output for Analytic Solution file
 
-116 FORMAT (A,A,A,A)
+116 FORMAT (A,A,A,A,A,A)
 117 FORMAT (A,A)
 
 
-IF ( WRITE_RESULTS_FLAG == 1 ) THEN
+IF ( Write_Flags(5) > 1 ) THEN
 
 
-    IF ( .TRUE. ) THEN
-    Num_Files = 9
+    Num_Files = 4 + SUM(CFA_Eq_Flags)
 
     ALLOCATE( Filenames(1:Num_Files) )
     ALLOCATE( File_IDs(1:Num_Files) )
 
 
-    WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Lapse_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_ConFactor_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(3),116) Poseidon_Results_Dir,"Results_Beta1_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Beta2_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(5),116) Poseidon_Results_Dir,"Results_Beta3_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(6),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(7),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(8),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(9),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
     
+
+
+    WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
+    WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
+    WRITE(Filenames(3),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
+    WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
+    Here = 5
+    DO i = 1,5
+        IF ( CFA_Eq_Flags(i) == 1 ) THEN
+            WRITE(*,116)                &
+                     Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
+           WRITE(Filenames(Here),116)                &
+                    Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
+            Here = Here + 1
+        END IF
+    END DO
+
+
+
+
+
+
 
 !        DO i = 0,PROB_DIM-1
 !            PRINT*,Coefficient_Vector(i)
@@ -556,215 +519,69 @@ IF ( WRITE_RESULTS_FLAG == 1 ) THEN
 
 
     ! Allocate Data Holders !
-    ALLOCATE( Lapse_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
-    ALLOCATE( ConForm_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
-    ALLOCATE( Shift_Holder(1:3,1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES) )
+
+    ALLOCATE( Var_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES,1:5) )
     ALLOCATE( R_Holder(1:NUM_RADIAL_SAMPLES) )
     ALLOCATE( T_Holder(1:NUM_THETA_RAYS) )
     ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
 
     ! Calculate Output
     DO k = 1,NUM_PHI_RAYS
-        DO j = 1,NUM_THETA_RAYS
-            DO i = 1,NUM_RADIAL_SAMPLES
-
-                PHI_VAL = k*DELTA_PHI
-                THETA_VAL = (j-1)*DELTA_THETA
-
-               
-
-                CALL Calc_3D_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,           &
-                                                 Return_Psi, Return_AlphaPsi,                &
-                                                 Return_Beta1, Return_Beta2, Return_Beta3    )
-
-                IF ( Return_Psi == 0.0_idp ) THEN
-                    Lapse_Holder(k,j,i) = 0.0_idp
-                ELSE
-                    Lapse_Holder(k,j,i) = Return_AlphaPsi/Return_Psi
-                END IF
-                ConForm_Holder(k,j,i) = Return_Psi
-                Shift_Holder(1:3,k,j,i) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
-
-                R_Holder(i) = output_rc(i)
-                T_Holder(j) = THETA_VAL
-                P_Holder(k) = PHI_VAL
-
-
-            END DO ! i Loop
-
-        END DO ! j Loop
-    END DO ! k Loop
-
-
-    ! Write Output Location Files
-    WRITE(File_IDs(7),*)R_Holder/Centimeter
-    WRITE(File_IDs(8),*)T_Holder
-    WRITE(File_IDs(9),*)P_Holder
-
-
-    ! Write Output Value Files
-    DO k = 1,NUM_PHI_RAYS
-        DO j = 1,NUM_THETA_RAYS
-
-
-            WRITE(File_IDs(1),*)Lapse_Holder(k,j,:)
-            WRITE(File_IDs(2),*)ConForm_Holder(k,j,:)
-            WRITE(File_IDs(3),*)Shift_Holder(1,k,j,:)/Shift_Units
-            WRITE(File_IDs(4),*)Shift_Holder(2,k,j,:)
-            WRITE(File_IDs(5),*)Shift_Holder(3,k,j,:)
-
-        END DO ! j Loop
-    END DO ! k Loop
+    DO j = 1,NUM_THETA_RAYS
+    DO i = 1,NUM_RADIAL_SAMPLES
 
 
 
+        PHI_VAL = k*DELTA_PHI
+        THETA_VAL = (j-1)*DELTA_THETA
 
-    WRITE(File_IDs(6),*)Num_Radial_Samples, Num_Theta_Rays, Num_Phi_Rays
+        CALL Calc_3D_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,           &
+                                         Return_Psi, Return_AlphaPsi,                &
+                                         Return_Beta1, Return_Beta2, Return_Beta3    )
 
-    ELSE
+        Var_Holder(k,j,i,1) = Return_Psi
+        IF ( Return_Psi == 0.0_idp ) THEN
+            Var_Holder(k,j,i,2) = 0.0_idp
+        ELSE
+            Var_Holder(k,j,i,2) = Return_AlphaPsi/Return_Psi
+        END IF
+        Var_Holder(k,j,i,3:5) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
 
-
-
-
-
-
-
-
-
-
-
-
-    Num_Files = 9
-
-    ALLOCATE( Filenames(1:Num_Files) )
-    ALLOCATE( File_IDs(1:Num_Files) )
+        R_Holder(i) = output_rc(i)
+        T_Holder(j) = THETA_VAL
+        P_Holder(k) = PHI_VAL
 
 
-    WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Lapse_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_ConFactor_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(3),116) Poseidon_Results_Dir,"Results_Beta1_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Beta2_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(5),116) Poseidon_Results_Dir,"Results_Beta3_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(6),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(7),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(8),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(9),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
-    
 
-!        DO i = 0,PROB_DIM-1
-!            PRINT*,Coefficient_Vector(i)
-!        END DO
-
-
-    DO i = 1,Num_Files
-        CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i), 200 )
-    END DO
-
-    nx = 400
-    ny = 40
-    nz = ny/2
-    
-
-
-    ! Create Radial Spacing !
-    ALLOCATE( Output_xc(1:nx) )
-    ALLOCATE( Output_dx(1:nx) )
-    ALLOCATE( Output_xe(0:nx) )
-
-    ALLOCATE( Output_yc(1:ny) )
-    ALLOCATE( Output_dy(1:ny) )
-    ALLOCATE( Output_ye(0:ny) )
-
-    ALLOCATE( Output_zc(1:nz) )
-    ALLOCATE( Output_dz(1:nz) )
-    ALLOCATE( Output_ze(0:nz) )
-
-  
-    CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, nx,     &
-                                     output_xe, output_xc, output_dx     )
-
-
-    CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, nz,     &
-                                     output_ze, output_zc, output_dz     )
-
-    
-    do k = 0,nz
-        Output_ye(k)    = - output_ze(nz-k)
-        Output_ye(nz+1:ny) = output_ze(1:nz)
-    END DO
-    
-    DO k = 1,ny
-        Output_dy(k) = Output_ye(k)-Output_ye(k-1)
-        Output_yc(k) = Output_ye(k-1)+output_dy(k)/2.0_idp
-    END DO
-
-
-!    PRINT*,Output_ye
-!    PRINT*,"-----"
-!    PRINT*,Output_yc
-!    PRINT*,"======="
-!    PRINT*,Output_dy
-!    stop
-
-
-    ! Allocate Data Holders !
-    ALLOCATE( Lapse_Holder(1:1, 1:ny, 1:nx) )
-    ALLOCATE( ConForm_Holder(1:1, 1:ny, 1:nx) )
-    ALLOCATE( Shift_Holder(1:3,1:1, 1:ny, 1:nx) )
-
-
-    ! Calculate Output
-    k = 1
-    DO j = 1,ny
-        DO i = 1,nx
-
-            rloc = sqrt(Output_xc(i)*Output_xc(i) + Output_yc(j)*Output_yc(j))
-            tloc = ATAN(Output_yc(j)/rloc)
-
-            CALL Calc_3D_Values_At_Location( rloc, tloc, PHI_VAL,           &
-                                             Return_Psi, Return_AlphaPsi,                &
-                                             Return_Beta1, Return_Beta2, Return_Beta3    )
-
-            IF ( Return_Psi == 0.0_idp ) THEN
-                Lapse_Holder(k,j,i) = 0.0_idp
-            ELSE
-                Lapse_Holder(k,j,i) = Return_AlphaPsi/Return_Psi
-            END IF
-            ConForm_Holder(k,j,i) = Return_Psi
-
-
-        END DO ! i Loop
-
+    END DO ! i Loop
     END DO ! j Loop
-
-
-    ! Write Output Location Files
-    WRITE(File_IDs(7),*)Output_xc/centimeter
-    WRITE(File_IDs(8),*)Output_yc/centimeter
-    WRITE(File_IDs(9),*)P_Holder
-
-
-    ! Write Output Value Files
-    DO k = 1,1
-        DO j = 1,ny
-
-
-            WRITE(File_IDs(1),*)Lapse_Holder(k,j,:)
-            WRITE(File_IDs(2),*)ConForm_Holder(k,j,:)
-            WRITE(File_IDs(3),*)Shift_Holder(1,k,j,:)/Shift_Units
-            WRITE(File_IDs(4),*)Shift_Holder(2,k,j,:)
-            WRITE(File_IDs(5),*)Shift_Holder(3,k,j,:)
-
-        END DO ! j Loop
     END DO ! k Loop
 
 
+    ! Write Output Location Files
+    WRITE(File_IDs(1),*)Num_Radial_Samples, Num_Theta_Rays, Num_Phi_Rays
+    WRITE(File_IDs(2),*)R_Holder/Centimeter
+    WRITE(File_IDs(3),*)T_Holder
+    WRITE(File_IDs(4),*)P_Holder
 
 
-    WRITE(File_IDs(6),*)nx,ny,1
 
-    END IF
+    Units = 1.0_idp
+    Units(3) = Shift_Units
+    ! Write Output Value Files
+    Here = 5
+    DO i = 1,5
+        IF ( CFA_Eq_Flags(i) == 1 ) THEN
+            DO k = 1,NUM_PHI_RAYS
+            DO j = 1,NUM_THETA_RAYS
+    
+                WRITE(File_IDs(Here),*)Var_Holder(k,j,:,i)/Units(i)
 
+            END DO ! j Loop
+            END DO ! k Loop
+            Here = Here + 1
+        END IF
+    END DO
 
 
 
@@ -794,14 +611,14 @@ INTEGER, DIMENSION(0:1)                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
 FILE_ID = -1
-IF ( FRAME_REPORT_FLAG == 1 ) THEN
+IF ( Report_Flags(2) == 1 ) THEN
 
-    FILE_ID(0) = FRAME_REPORT_FILE_ID
+    FILE_ID(0) = Report_IDs(2)
 
 END IF
 
-IF (( WRITE_REPORT_FLAG == 2) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
-    FILE_ID(1) = ITER_REPORT_FILE_ID
+IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
+    FILE_ID(1) = Report_IDs(3)
 END IF
 
 
@@ -871,154 +688,7 @@ END SUBROUTINE CLOCK_IN
 
 
 
- !+501+############################################################################!
-!                                                                                   !
-!                     OPEN_NEW_FILE                                                 !
-!                                                                                   !
- !#################################################################################!
-SUBROUTINE OPEN_NEW_FILE(File_Name, File_Number, Suggested_Number)
 
-
-
-CHARACTER(LEN = *), INTENT(IN)                          ::  File_Name
-INTEGER,            INTENT(INOUT)                       ::  File_Number
-INTEGER, OPTIONAL,  INTENT(IN)                          ::  Suggested_Number
-
-INTEGER                                                 ::  Temp_Number
-INTEGER                                                 ::  istat = 0
-LOGICAL                                                 ::  FLAG, OP, EX
-LOGICAL                                                 ::  UNIT_FLAG, NAME_FLAG
-
-
-UNIT_FLAG = .FALSE.
-NAME_FLAG = .FALSE.
-
-
-!  Assigned an unused number, and assign it to new file
-FLAG = .TRUE.
-IF ( Present(Suggested_Number) ) THEN
-    Temp_Number = Suggested_Number
-ELSE
-    Temp_Number = 3000
-END IF
-
-
-DO WHILE (FLAG)
-    INQUIRE( UNIT = Temp_Number, OPENED = OP )
-
-    IF ( OP ) THEN
-        Temp_Number = Temp_Number + 1
-    ELSE
-        File_Number = Temp_Number
-        FLAG = .FALSE.
-        UNIT_FLAG = .TRUE.
-    END IF
-END DO
-
-
-
-
-! Check if file already exists !
-!INQUIRE( FILE = File_Name, EXIST = EX )
-!IF ( EX ) THEN
-!    PRINT*,"File ",File_Name," is already opened"
-!
-!ELSE
-!    PRINT*,File_Name," is not already opened."
-!    NAME_FLAG = .TRUE.
-!END IF
-
-
-
-! Open New File
-IF ( UNIT_FLAG  ) THEN
-
-    OPEN( Unit = File_Number, File = File_Name, IOSTAT = istat )
-    IF ( istat .NE. 0 ) THEN
-
-        PRINT*,"WARNING: Could not open file at ", File_Name, istat
-
-    END IF
-END IF
-
-
-END SUBROUTINE OPEN_NEW_FILE
-
-
-
-
-
-
- !+501+############################################################################!
-!                                                                                   !
-!                     OPEN_EXISTING_FILE                                            !
-!                                                                                   !
- !#################################################################################!
-SUBROUTINE OPEN_EXISTING_FILE(File_Name, File_Number, istat)
-
-
-
-CHARACTER(LEN = *), INTENT(IN)                          ::  File_Name
-INTEGER,            INTENT(INOUT)                       ::  File_Number
-INTEGER,            INTENT(INOUT)                       ::  istat
-
-
-INTEGER                                                 ::  Temp_Number
-
-LOGICAL                                                 ::  FLAG, OP, EX
-LOGICAL                                                 ::  UNIT_FLAG, NAME_FLAG
-
-
-UNIT_FLAG = .FALSE.
-NAME_FLAG = .FALSE.
-
-
-!  Assigned an unused number, and assign it to new file
-FLAG = .TRUE.
-Temp_Number = 421
-DO WHILE (FLAG)
-    INQUIRE( UNIT = Temp_Number, OPENED = OP )
-
-    IF ( OP ) THEN
-        Temp_Number = Temp_Number + 1
-    ELSE
-        File_Number = Temp_Number
-        FLAG = .FALSE.
-        UNIT_FLAG = .TRUE.
-    END IF
-END DO
-
-
-
-
-! Check if file already exists !
-!INQUIRE( FILE = File_Name, EXIST = EX )
-!IF ( EX ) THEN
-!    PRINT*,"File ",File_Name," is already opened"
-!
-!ELSE
-!    PRINT*,File_Name," is not already opened."
-!    NAME_FLAG = .TRUE.
-!END IF
-
-
-
-! Open New File
-IF ( UNIT_FLAG  ) THEN
-
-    OPEN(unit=File_Number, file=File_Name, status='old', &
-         iostat=istat, action='read', position='rewind')
-    IF ( istat .NE. 0 ) THEN
-
-        PRINT*,"WARNING: Could not open file at ", File_Name
-
-    END IF
-END IF
-
-
-
-
-END SUBROUTINE OPEN_EXISTING_FILE
 
 
 
@@ -1089,7 +759,7 @@ REAL(KIND = idp)                                                        ::  Delt
 116 FORMAT (A,A,A,A)
 
 
-IF ( WRITE_SOURCES_FLAG == 1 ) THEN
+IF ( Write_Flags(4) == 1 ) THEN
     Num_Files = 6
 
     ALLOCATE( Filenames(1:Num_Files) )
@@ -1219,7 +889,7 @@ REAL(KIND = idp)                                                        ::  Dt_O
 116 FORMAT (A,A,A,A)
 
 
-IF ( WRITE_SOURCES_FLAG == 1 ) THEN
+IF ( Write_Flags(4) == 1 ) THEN
     Num_Files = 8
 
     ALLOCATE( Filenames(1:Num_Files) )
@@ -1451,9 +1121,9 @@ CHARACTER(LEN = 39)                                     ::  FILE_NAME
 INTEGER                                                 ::  istat
 LOGICAL                                                 ::  FLAG, OK
 
-IF ( RUN_REPORT_FLAG == 1 ) THEN
+IF ( Report_Flags(1) == 1 ) THEN
     WRITE(FILE_NAME,'(A,A)') Poseidon_Reports_Dir,"Run_Report.out"
-    CALL OPEN_NEW_FILE( FILE_NAME, RUN_REPORT_FILE_ID, 10 )
+    CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(1), 10 )
 END IF
 
 END SUBROUTINE OPEN_RUN_REPORT_FILE
@@ -1492,7 +1162,7 @@ INTEGER                                         ::  Max_Iters
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
-FILE_ID = RUN_REPORT_FILE_ID
+FILE_ID = Report_IDs(1)
 
 
 
@@ -1500,7 +1170,7 @@ CALL PQ_ITERATIONS_MAX( Max_Iters )
 
 
 ! Write Timetable to File
-IF ( RUN_REPORT_FLAG == 1 ) THEN
+IF ( Report_Flags(1) == 1 ) THEN
 
     WRITE(FILE_ID,'(A)')"                                Average Timing Results"
     WRITE(FILE_ID,'(A)')"            ============================================================="
@@ -1552,7 +1222,7 @@ END IF
 
 
 ! Write Timetable to Screen
-IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+IF (( Report_Flags(3) == 1) .OR. (Report_Flags(3) == 3) ) THEN
     WRITE(*,'(A)')" "
     WRITE(*,'(A)')" "
     WRITE(*,'(A)')"            ============================================================="
@@ -1589,14 +1259,14 @@ IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
 END IF
 
 
-WRITE_REPORT_FLAG = 1
-PRINT*,"WRITE_REPORT_FLAG",WRITE_REPORT_FLAG
+Report_Flags(3) = 1
+PRINT*,"Report_Flags(3)",Report_Flags(3)
 ! Write Results Table Header to Screen
-IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
+IF (( Report_Flags(3) == 1) .OR. (Report_Flags(3) == 3) ) THEN
     WRITE(*,'(A)')"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
     WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
 
-    IF ( RUN_REPORT_FLAG == 1 ) THEN
+    IF ( Report_Flags(1) == 1 ) THEN
         WRITE(FILE_ID,'(A)')"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
         WRITE(FILE_ID,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
     END IF
@@ -1634,7 +1304,7 @@ IF (( WRITE_REPORT_FLAG == 1) .OR. (WRITE_REPORT_FLAG == 3) ) THEN
                      Return_Beta3
 
         ! Write Results to File
-        IF ( RUN_REPORT_FLAG == 1 ) THEN
+        IF ( Report_Flags(1) == 1 ) THEN
             WRITE(FILE_ID,111) r/Centimeter,              &
                                PsiPot_Val,                &
                                AlphaPsiPot_Val,           &
@@ -1664,8 +1334,8 @@ END SUBROUTINE OUTPUT_RUN_REPORT
  !#################################################################################!
 SUBROUTINE CLOSE_RUN_REPORT_FILE()
 
-IF ( RUN_REPORT_FLAG == 1 ) THEN
-    CLOSE( UNIT = RUN_REPORT_FILE_ID )
+IF ( Report_Flags(1) == 1 ) THEN
+    CLOSE( UNIT = Report_IDs(1) )
 END IF
 
 END SUBROUTINE CLOSE_RUN_REPORT_FILE
@@ -1704,12 +1374,12 @@ LOGICAL                                                 ::  FLAG, OK
 
 
 IF ( myID == 0 ) THEN
-    IF ( FRAME_REPORT_FLAG == 1 ) THEN
+    IF ( Report_Flags(2) == 1 ) THEN
 
         WRITE(FILE_NAME,'(A,A)') Poseidon_IterReports_Dir,"Frame_Report_SCRATCH.out"
-        CALL OPEN_NEW_FILE( FILE_NAME, FRAME_REPORT_FILE_ID )
+        CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(2) )
 
-    END IF ! WRITE_REPORT_FLAGS
+    END IF ! Report_Flags(3)S
 END IF ! myID == 0
 
 
@@ -1769,7 +1439,7 @@ CALL OPEN_NEW_FILE( trim(FILE_NAME), FILE_ID )
 
 IF ( myID == 0 ) THEN
     ! Write Title to File
-    IF ( FRAME_REPORT_FLAG == 1 ) THEN
+    IF ( Report_Flags(2) == 1 ) THEN
 
         WRITE(FILE_ID,109)"                                           Frame Report"
         WRITE(FILE_ID,'(A)')"-----------------------------------------------------------------------------------------"
@@ -1894,9 +1564,9 @@ IF ( myID == 0 ) THEN
 
 
         ! Copy from Scratch File into Frame Report !
-        REWIND( UNIT=FRAME_REPORT_FILE_ID )
+        REWIND( UNIT=Report_IDs(2) )
         DO
-            READ(FRAME_REPORT_FILE_ID,'(A)', iostat=io_stat) Line
+            READ(Report_IDs(2),'(A)', iostat=io_stat) Line
             IF (io_stat /= 0 ) THEN
                 EXIT
             END IF
@@ -1904,10 +1574,10 @@ IF ( myID == 0 ) THEN
         END DO
 
 
-    END IF ! FRAME_REPORT_FLAG == 1
+    END IF ! Report_Flags(2) == 1
 
     CLOSE( UNIT = FILE_ID)
-    CLOSE( UNIT = FRAME_REPORT_FILE_ID, STATUS='delete' )
+    CLOSE( UNIT = Report_IDs(2), STATUS='delete' )
 
 END IF ! myID == 0
 
@@ -1925,7 +1595,7 @@ END SUBROUTINE OUTPUT_FRAME_REPORT
 SUBROUTINE CLOSE_FRAME_REPORT_FILE()
 
 
-CLOSE( UNIT = FRAME_REPORT_FILE_ID, STATUS='delete' )
+CLOSE( UNIT = Report_IDs(2), STATUS='delete' )
 
 
 END SUBROUTINE CLOSE_FRAME_REPORT_FILE

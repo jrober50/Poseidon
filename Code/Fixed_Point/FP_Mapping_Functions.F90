@@ -32,6 +32,10 @@ USE Poseidon_Parameters, &
 USE Variables_Derived, &
             ONLY :  LM_Length
 
+USE Variables_Quadrature, &
+            ONLY :  Num_R_Quad_Points,          &
+                    Num_T_Quad_Points,          &
+                    Num_P_Quad_Points
 
 IMPLICIT NONE
 
@@ -149,6 +153,24 @@ FP_LM_Map = l*(l+1) + m + 1
 END FUNCTION FP_LM_Map
 
 
+
+
+!+201+###########################################################################!
+!                                                                                !
+!                  FP_Vector_Map                                                  !
+!                                                                                !
+!################################################################################!
+PURE FUNCTION FP_tpd_Map( td, pd )
+
+INTEGER                                     :: FP_tpd_Map
+
+INTEGER, INTENT(IN)                         :: td, pd
+
+
+FP_tpd_Map = (td-1)*Num_P_Quad_Points + pd
+
+
+END FUNCTION FP_tpd_Map
 
 
 

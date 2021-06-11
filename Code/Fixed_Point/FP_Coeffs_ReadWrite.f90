@@ -43,7 +43,7 @@ USE Variables_FP,   &
 USE Variables_IO, &
             ONLY :  File_Suffix
 
-USE Poseidon_IO_Module, &
+USE IO_File_Routines_Module, &
             ONLY :  Open_New_File,          &
                     Open_Existing_File
 

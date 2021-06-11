@@ -31,6 +31,8 @@ USE Poseidon_Numbers_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
+USE Variables_IO, &
+            ONLY :  Report_Flags
 
 USE VPRINT_Module,  &
             ONLY :  VPRINT
@@ -226,18 +228,17 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * Input_M
 
 
-IF ( Verbose_Flag ) THEN
 
-    PRINT*,"Using Yahil self-similar profile with following parameters."
-    PRINT*,"Time = ",t_in," ms"
-    PRINT*,"Kappa = ",Kappa_wUnits
-    PRINT*,"Gamma = ",Gamma
-    PRINT*," "
-!    PRINT*,"Eccentricty = ",ecc
-!    PRINT*,"R_Factor = ", R_Factor
-!    PRINT*,"Enclosed_Mass = ", Enclosed_Mass
-
+IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
+    WRITE(*,'(A)')'------------- Test Parameters ----------------'
+    WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
+    WRITE(*,'(A,ES12.5,A)') ' - Yahil Time  : ', t_in,' ms'
+    WRITE(*,'(A,ES12.5)')   ' - Kappa       : ', Kappa_wUnits
+    WRITE(*,'(A,ES12.5)')   ' - Gamma       : ', Gamma
+    WRITE(*,'(/)')
 END IF
+
+
 
 IF (.FALSE.) THEN
 

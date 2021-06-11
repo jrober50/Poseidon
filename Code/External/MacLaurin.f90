@@ -42,6 +42,9 @@ USE Poseidon_Numbers_Module, &
 USE Poseidon_Parameters, &
                         ONLY :  Verbose_Flag
 
+USE  Variables_IO, &
+                        ONLY :  Report_Flags
+
 USE Functions_Mapping, &
                         ONLY :  Map_To_X_Space,         &
                                 Map_From_X_Space
@@ -177,12 +180,14 @@ BB = B*B
 CC = C*C
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"Initalizing Maclaurin Spheroid with the following parameters"
-    WRITE(*,'(A,A)')      "Spheroid Type  : ", Spheroid_Name
-    WRITE(*,'(A,ES12.5)') "Semimajor Axis : ", SemiMajor_Axis
-    WRITE(*,'(A,ES12.5)') "Semiminor Axis : ", SemiMinor_Axis
-    WRITE(*,'(A,ES12.5)') "Density        : ", Rho_O
+IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
+    WRITE(*,'(A)')'------------- Test Parameters ----------------'
+    WRITE(*,'(A)')' Source Configuration : MacLaurin Spheroid'
+    WRITE(*,'(A,A)')      ' - Spheroid Type  :  ', Spheroid_Name
+    WRITE(*,'(A,ES12.5)') ' - Semimajor Axis : ', SemiMajor_Axis
+    WRITE(*,'(A,ES12.5)') ' - Semiminor Axis : ', SemiMinor_Axis
+    WRITE(*,'(A,ES12.5)') ' - Density        : ', Rho_O
+    WRITE(*,'(/)')
 END IF
 
 

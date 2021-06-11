@@ -34,7 +34,7 @@ USE Units_Module, &
                         ONLY :  C_Square
 
 USE Variables_IO, &
-                        ONLY :  Source_Output_Flag
+                        ONLY :  Write_Flags
 
 USE Driver_Parameters, &
                         ONLY :  DRIVER_R_ELEMS,        &
@@ -825,7 +825,7 @@ INTEGER                                             ::  i, j, k
 115 FORMAT (E22.15,3X,ES22.15,3X,ES22.15)
 
 
-IF ( SOURCE_OUTPUT_FLAG == 1 ) THEN
+IF ( Write_Flags(4) == 1 ) THEN
 
     ALLOCATE( character(len=50) :: file_namea )
     ALLOCATE( character(len=48) :: file_nameb )

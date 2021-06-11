@@ -144,7 +144,7 @@ USE Poseidon_Parameters, &
                         NUM_CFA_VARS
 
 USE Variables_IO, &
-                ONLY :  OUTPUT_RHS_VECTOR_FLAG
+                ONLY :  Write_Flags
 
 
 
@@ -1674,7 +1674,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 !    PRINT*,TMP_VECTOR
 
 !    CALL ANALYZE_3D_RHS_VECTOR( TMP_VECTOR, Block_RHS_Vector)
-    IF ( OUTPUT_RHS_VECTOR_FLAG == 1 ) THEN
+    IF ( Write_Flags(2) == 1 ) THEN
 
         CALL OUTPUT_RHS_VECTOR_Parts(TMP_VECTOR, BLOCK_RHS_VECTOR)
 

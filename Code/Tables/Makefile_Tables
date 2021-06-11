@@ -1,5 +1,4 @@
 TABLES = \
-  Variables_Tables.o       \
   Allocation_Tables.o      \
   Initialization_Tables.o  \
 

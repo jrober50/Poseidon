@@ -651,7 +651,6 @@ REAL(KIND = idp)                                        ::  Scale_Factor_Power
 
 
 
-
 ! Create Uniform Radial Core !
 dx_c(1:nc) = (Core_Edge-Inner_Edge)/REAL(nc,KIND = idp)
 

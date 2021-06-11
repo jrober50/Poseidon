@@ -101,8 +101,6 @@ USE FP_Functions_Mapping, &
                     FP_Array_Map,               &
                     FP_LM_Map
 
-USE FP_MacLaurin_Integrator_Module,             &
-            ONLY :  FP_MacLaurin_Integrator
 
 USE MPI
 
@@ -186,8 +184,6 @@ FP_Source_Vector_Beta = 0.0_idp
 !PRINT*,"**WARNING** Create_FP_Source_Vector hacked, Lm loop limited."
 
 DO re = 0,NUM_R_ELEMENTS-1
-!IF ( RE .NE. 20 ) THEN
-IF ( .TRUE. ) THEN
 
     DELTAR_OVERTWO = 0.5_idp *(rlocs(re + 1) - rlocs(re))
     TWOOVER_DELTAR = 1.0_idp/deltar_overtwo
@@ -256,15 +252,7 @@ IF ( .TRUE. ) THEN
 
         END DO ! te Loop
     END DO ! pe Loop
-ELSE
 
-
-    CALL FP_MacLaurin_Integrator( re )
-
-
-
-
-END IF
 
 END DO ! re Loop
 
@@ -274,7 +262,6 @@ END DO ! re Loop
 !    PRINT*,"Lm_loc = ",lm
 !    PRINT*,FP_Source_Vector(:,lm,1)
 !END DO
-!STOP
 
 
 
@@ -715,18 +702,18 @@ REAL(KIND = idp)                                                        ::  Beta
 
 !PRINT*,"Calc_Source_Terms has been altered"
 
-Source_Terms(tpd, rd, 1) = - TwoPi                                      &
-                           * GR_Source_Scalar                          &
-                           * Block_Source_E(rd, td, pd, re, te, pe)
-
-
 !Source_Terms(tpd, rd, 1) = - TwoPi                                      &
-!                            * GR_Source_Scalar                          &
-!                            * Block_Source_E(rd, td, pd, re, te, pe)    &
-!                            * PSI_POWER(5)                              &
-!                         - PSI_POWER(7)                                 &
-!                            / ( 16.0_idp * ALPHAPSI_POWER(2) )          &
-!                            * BigK_Value
+!                           * GR_Source_Scalar                          &
+!                           * Block_Source_E(rd, td, pd, re, te, pe)
+
+
+Source_Terms(tpd, rd, 1) = - TwoPi                                      &
+                            * GR_Source_Scalar                          &
+                            * Block_Source_E(rd, td, pd, re, te, pe)    &
+                            * PSI_POWER(5)                              &
+                         - PSI_POWER(7)                                 &
+                            / ( 16.0_idp * ALPHAPSI_POWER(2) )          &
+                            * BigK_Value
      
 
 

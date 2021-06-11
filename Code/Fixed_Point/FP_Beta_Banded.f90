@@ -95,8 +95,7 @@ USE Variables_FP, &
                     Beta_Factorized_Flag
 
 USE Poseidon_IO_Module, &
-            ONLY :  Open_New_File,              &
-                    CLOCK_IN
+            ONLY :  CLOCK_IN
 
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace,             &

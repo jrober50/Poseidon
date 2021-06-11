@@ -38,7 +38,7 @@ USE Poseidon_Parameters, &
                             Num_CFA_Vars,           &
                             Max_Iterations,         &
                             Convergence_Criteria,   &
-                            Solver_Type,            &
+                            Method_Flag,            &
                             New_Petsc_Solver_Flag
 
 
@@ -54,17 +54,11 @@ USE Variables_Mesh, &
 
 
 USE Variables_IO, &
-                    ONLY :  Write_Report_Flag,          &
-                            Write_Results_Flag,         &
-                            Write_Timetable_Flag,       &
-                            Write_Sources_Flag,         &
-                            Write_Results_R_Samps,      &
+                    ONLY :  Write_Results_R_Samps,      &
                             Write_Results_T_Samps,      &
                             Write_Results_P_Samps,      &
-                            Output_Matrix_Flag,         &
-                            Output_RHS_Vector_Flag,     &
-                            Output_Update_Vector_Flag,  &
-                            Output_Setup_Table_Flag,    &
+                            Write_Flags,                &
+                            Report_Flags,               &
                             Iter_Report_Num_Samples
                             
 
@@ -186,29 +180,29 @@ MAX_ITERATIONS                  = INT_PARAMS(20)
 
 
 IF ( INT_PARAMS(21) .NE. -1 ) THEN
-    WRITE_TIMETABLE_FLAG        = INT_PARAMS(21)    ! Default = 0, Off
+    Report_Flags(5)        = INT_PARAMS(21)    ! Default = 0, Off
 END IF
 IF ( INT_PARAMS(22) .NE. -1 ) THEN
-    WRITE_REPORT_FLAG           = INT_PARAMS(22)    ! Default = 0, Off
+    Report_Flags(3)           = INT_PARAMS(22)    ! Default = 0, Off
 END IF
 IF ( INT_PARAMS(23) .NE. -1 ) THEN
     ITER_REPORT_NUM_SAMPLES     = INT_PARAMS(23)    ! Default = 20
 END IF
 IF ( INT_PARAMS(24) .NE. -1 ) THEN
-    WRITE_RESULTS_FLAG          = INT_PARAMS(24)    ! Default = 0, Off
+    Write_Flags(5)          = INT_PARAMS(24)    ! Default = 0, Off
 END IF
 
 
-NEW_PETSC_SOLVER_FLAG           = INT_PARAMS(25)
+NEW_PETSC_SOLVER_FLAG       = INT_PARAMS(25)
 
 IF ( INT_PARAMS(26) .NE. -1 ) THEN
-    OUTPUT_MATRIX_FLAG          = INT_PARAMS(26)
+    Write_Flags(1)          = INT_PARAMS(26)
 END IF
 IF ( INT_PARAMS(27) .NE. -1 ) THEN
-    OUTPUT_RHS_VECTOR_FLAG      = INT_PARAMS(27)
+    Write_Flags(2)          = INT_PARAMS(27)
 END IF
 IF ( INT_PARAMS(33) .NE. -1 ) THEN
-    OUTPUT_UPDATE_VECTOR_FLAG   = INT_PARAMS(33)
+    Write_Flags(3)          = INT_PARAMS(33)
 END IF
 
 
@@ -218,17 +212,17 @@ WRITE_RESULTS_T_SAMPS           = INT_PARAMS(29)
 WRITE_RESULTS_P_SAMPS           = INT_PARAMS(30)
 
 IF ( INT_PARAMS(31) .NE. -1 ) THEN
-    OUTPUT_SETUP_TABLE_FLAG     = INT_PARAMS(31)    ! Default = 0, Off
+    Report_Flags(4)             = INT_PARAMS(31)    ! Default = 0, Off
 END IF
 
 IF ( INT_PARAMS(32) .NE. -1 ) THEN
-    WRITE_SOURCES_FLAG          = INT_PARAMS(32)    ! Deafult = 0, Off
+    Write_Flags(4)              = INT_PARAMS(32)    ! Deafult = 0, Off
 END IF
 
 CONVERGENCE_CRITERIA            = REAL_PARAMS(1)
 
 IF ( INT_PARAMS(34) .NE. -1 ) THEN
-    Solver_Type                 = INT_PARAMS(34)
+    Method_Flag                 = INT_PARAMS(34)
 END IF
 
 NUM_QUAD_DOF    = NUM_R_QUAD_POINTS   &
@@ -505,19 +499,19 @@ IF ( Param_type == 'PSMPS ' ) THEN
     CYCLE
 END IF
 
-! WRITE_SOURCES_FLAG
+! Write Sources
 IF ( Param_type == 'WRTSC ' ) THEN
     READ (line, 111) INT_PARAMS(32)
     CYCLE
 END IF
 
-! WRITE_SOURCES_FLAG
+! 
 IF ( Param_type == 'OSTF ' ) THEN
     READ (line, 111) INT_PARAMS(31)
     CYCLE
 END IF
 
-! Solver_Type
+! Method_Flag
 IF ( Param_type == 'STF  ' ) THEN
     READ (line, 111) INT_PARAMS(34)
     CYCLE

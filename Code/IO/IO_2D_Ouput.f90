@@ -67,18 +67,7 @@ USE Variables_Mesh, &
                             R_Outer
 
 USE Variables_IO, &
-                    ONLY :  Iter_Report_File_ID,    &
-                            Frame_Report_File_ID,   &
-                            Run_Report_File_ID,     &
-                            Write_Report_Flag,      &
-                            Frame_Report_Flag,      &
-                            Write_Results_Flag,     &
-                            Write_Timetable_Flag,   &
-                            Write_Sources_Flag,     &
-                            Run_Report_Flag,        &
-                            Results_Output_Flag,    &
-                            Frame_Report_Flag,      &
-                            Iter_Time_Table,        &
+                    ONLY :  Iter_Time_Table,        &
                             Frame_Time_Table,       &
                             Run_Time_Table,         &
                             Write_Results_R_Samps,  &
@@ -90,7 +79,8 @@ USE Variables_IO, &
                             Frame_Residual_Table,   &
                             Frame_Update_Table,     &
                             Iteration_Histogram,    &
-                            File_Suffix
+                            File_Suffix,            &
+                            Write_Flags
 
 
 USE Variables_Yahil, &
@@ -221,7 +211,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
 117 FORMAT (A,A)
 
 
-IF ( WRITE_RESULTS_FLAG == 1 ) THEN
+IF ( Write_Flags(5) == 1 ) THEN
     NUM_SAMPLES = 1000
 
 

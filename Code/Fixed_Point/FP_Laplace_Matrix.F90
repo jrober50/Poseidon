@@ -118,6 +118,7 @@ IF ( Matrix_Format == 'Full' ) THEN
         CALL Initialize_Laplace_Matrices_Beta()
         timer(2) = MPI_Wtime()
         Call Clock_In(timer(2)-timer(1),2)
+        
     END IF
 
     Success_Flag = .TRUE.
@@ -132,6 +133,7 @@ ELSEIF ( Matrix_Format == 'CCS' ) THEN
         CALL Initialize_Laplace_Matrices_CCS()
         timer(2) = MPI_Wtime()
         Call Clock_In(timer(2)-timer(1),1)
+    
     END IF
     IF ( ANY(CFA_EQ_Flags(3:5) == 1) ) THEN
         timer(1) = MPI_WTime()
@@ -399,6 +401,14 @@ Laplace_Factored_COL = Laplace_Matrix_COL
 !CALL Cholesky_Factorization()
 !MCF_Flag = 1
 
+
+
+!PRINT*,"Row"
+!PRINT*,-Laplace_Matrix_VAL
+!PRINT*,"col"
+!PRINT*,Laplace_Matrix_ROW
+!PRiNT*,"Val"
+!PRINT*,Laplace_Matrix_COL
 
 
 END SUBROUTINE Initialize_Laplace_Matrices_CCS

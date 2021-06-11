@@ -70,9 +70,9 @@ USE Variables_MPI, &
                     ONLY :  NUM_R_ELEMS_PER_BLOCK
 
 
-USE Poseidon_IO_Module, &
-                    ONLY :  Open_Existing_File,     &
-                            Open_New_File
+USE IO_File_Routines_Module, &
+                    ONLY :  Open_New_File,                  &
+                            Open_Existing_File
 
 USE Functions_Quadrature, &
                     ONLY :  Initialize_LGL_Quadrature_Locations
