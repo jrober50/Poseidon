@@ -554,14 +554,10 @@ DO ui = 1,2
 
         
         DO lm_loc = 1,LM_LENGTH
-!
-!        DO l = 0,L_Limit
-!        lm_loc = FP_LM_Map(l,0)
         DO d = 0,DEGREE
 
+
             RHS_TMP = 0.0_idp
-
-
             DO rd = 1,NUM_R_QUAD_POINTS
 
                 RHS_TMP(ui) =  RHS_TMP(ui)                                          &
@@ -570,18 +566,6 @@ DO ui = 1,2
                                        * TP_Int_Weights(:)                     )   &
                                * Lagrange_Poly_Table(d, rd, 0)                     &
                                * R_Int_Weights(rd)
-
-!                IF ( ui == 1 ) THEN
-!                IF ( (re >= 119) .and. (re <= 120) ) THEN
-!                PRINT*,re,rd,lm_loc,                                       &
-!                        SUM( Source_Terms( :, rd, ui )                  &
-!                            * Ylm_CC_Values( :, lm_loc, te, pe)         &
-!                            * TP_Int_Weights(:)                     ),  &
-!                        Lagrange_Poly_Table(d, rd, 0)                   &
-!                            * R_Int_Weights(rd),                        &
-!                        RHS_TMP(ui)
-!                END IF
-!                END IF
 
             END DO  ! rd Loop
             
@@ -605,8 +589,8 @@ END DO
 DO ui = 3,5
     IF( CFA_EQ_Flags(ui) == 1 ) THEN
 
-        DO lm_loc = 1,LM_LENGTH
         DO d = 0,DEGREE
+        DO lm_loc = 1,LM_LENGTH
         
             RHS_TMP = 0.0_idp
             DO rd = 1,NUM_R_QUAD_POINTS
@@ -628,8 +612,8 @@ DO ui = 3,5
                 = FP_Source_Vector_Beta(Current_i_Location)          &
                 + RHS_TMP(ui)
 
-        END DO  ! d Loop
         END DO  ! lm_loc Loop
+        END DO  ! d Loop
 
     END IF
 
