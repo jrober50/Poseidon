@@ -20,6 +20,7 @@ POSEIDON = \
   $(LINEAR_SOLVERS)  \
   $(NR)              \
   $(FP)              \
+  $(XCFC)            \
   $(EXTERNAL)        \
   $(INIT)            \
   $(INTERFACES)      \

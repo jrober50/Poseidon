@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Allocation_FP                                                                !##!
+MODULE Allocation_XCFC                                                                !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -61,13 +61,17 @@ USE Variables_FP, &
                     Beta_MVL_Diagonal,      &
                     FP_Source_Vector,       &
                     FP_Source_Vector_Beta,  &
+                    FP_Source_Vector_X,  &
                     FP_Coeff_Vector,        &
                     FP_Coeff_Vector_Beta,   &
+                    FP_Coeff_Vector_X,   &
                     FP_Update_Vector,       &
                     FP_Laplace_Vector,      &
                     FP_Laplace_Vector_Beta, &
+                    FP_Laplace_Vector_X, &
                     FP_Residual_Vector,     &
                     FP_Residual_Vector_Beta,&
+                    FP_Residual_Vector_X,&
                     Matrix_Format,          &
                     Num_Matrices,           &
                     First_Column_Storage,   &
@@ -90,7 +94,7 @@ CONTAINS
 !                            Allocate_Poseidon_Variables                         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Allocate_FP()
+SUBROUTINE Allocate_XCFC()
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
 
@@ -115,31 +119,35 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)   )
     ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)    )
 
-    ALLOCATE( First_Column_Beta_Storage(1:LM_Length,0:DEGREE,1:3)   )
-    ALLOCATE( Last_Column_Beta_Storage(1:LM_Length,0:DEGREE,1:3)    )
+    ALLOCATE( First_Column_Beta_Storage(1:LM_Length,0:DEGREE,1:6)   )
+    ALLOCATE( Last_Column_Beta_Storage(1:LM_Length,0:DEGREE,1:6)    )
 
 END IF
 
 
 ALLOCATE( FP_Source_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
 ALLOCATE( FP_Source_Vector_Beta(1:Beta_Prob_Dim) )
+ALLOCATE( FP_Source_Vector_X(1:Beta_Prob_Dim) )
 
-ALLOCATE( FP_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)         )
+ALLOCATE( FP_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:8)         )
 ALLOCATE( FP_Coeff_Vector_Beta(1:Beta_Prob_Dim) )
+ALLOCATE( FP_Coeff_Vector_X(1:Beta_Prob_Dim) )
 
-ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
+ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:8)  )
 
 ALLOCATE( FP_Laplace_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)  )
 ALLOCATE( FP_Laplace_Vector_Beta(1:Beta_Prob_Dim)  )
+ALLOCATE( FP_Laplace_Vector_X(1:Beta_Prob_Dim)  )
 
 ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
 ALLOCATE( FP_Residual_Vector_Beta(1:Beta_Prob_Dim)  )
+ALLOCATE( FP_Residual_Vector_X(1:Beta_Prob_Dim)  )
 
 !ALLOCATE( FP_Coeff_Vector(1:Prob_Dim) )
 !ALLOCATE( FP_Update_Vector(1:Prob_Dim) )
 
 
-END SUBROUTINE Allocate_FP
+END SUBROUTINE Allocate_XCFC
 
 
 
@@ -156,7 +164,7 @@ END SUBROUTINE Allocate_FP
 !                           Deallocate_Poseidon_Variables                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Deallocate_FP()
+SUBROUTINE Deallocate_XCFC()
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
     DEALLOCATE( Laplace_Matrix_Full )
@@ -196,7 +204,7 @@ DEALLOCATE( FP_Residual_Vector_Beta )
 
 
 
-END SUBROUTINE Deallocate_FP
+END SUBROUTINE Deallocate_XCFC
 
 
 
@@ -204,5 +212,5 @@ END SUBROUTINE Deallocate_FP
 
 
 
-END MODULE Allocation_FP
+END MODULE Allocation_XCFC
 

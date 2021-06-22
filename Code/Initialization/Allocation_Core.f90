@@ -68,13 +68,6 @@ USE Variables_IO, &
                     Iteration_Histogram,    &
                     Iter_Time_Table
 
-USE Variables_NR, &
-            ONLY :  Update_Vector,          &
-                    Coefficient_Vector,     &
-                    Block_RHS_Vector,       &
-                    Block_STF_Mat,          &
-                    Block_Elem_STF_MatVec
-
 USE Variables_Source, &
             ONLY :  Block_Source_E,             &
                     Block_Source_S,             &

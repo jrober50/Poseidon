@@ -86,7 +86,7 @@ USE Variables_FP, &
                     CFA_EQ_Map,                 &
                     CFA_Mat_Map
 
-USE Poseidon_IO_Module, &
+USE IO_File_Routines_Module, &
             ONLY :  Open_New_File
 
 

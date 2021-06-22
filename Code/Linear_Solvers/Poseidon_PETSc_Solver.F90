@@ -169,6 +169,9 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     Length_Val_a = ELEM_PROB_DIM - ULM_LENGTH
     Length_Val_b = ULM_LENGTH
     Local_Length_RHS = SUBSHELL_PROB_DIM
+
+   
+
 !    IF ( myID_PETSc == NUM_SUBSHELLS-1) THEN           Set in z.Posidon_MPI_Module
 !       Local_Length = SUBSHELL_PROB_DIM
 !    ELSE

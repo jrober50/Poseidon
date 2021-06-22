@@ -86,12 +86,13 @@ USE Poseidon_Parameters, &
                             CUR_ITERATION,              &
                             MAX_ITERATIONS,             &
                             CONVERGENCE_CRITERIA,       &
-                            CONVERGENCE_FLAG
+                            CONVERGENCE_FLAG,           &
+                            Verbose_Flag
 
 USE Variables_NR,   &
-                    ONLY :  Coefficient_Vector,         &
+                    ONLY :  NR_Coeff_Vector,         &
                             Block_RHS_Vector,           &
-                            Update_Vector,              &
+                            NR_Update_Vector,              &
                             BLOCK_ELEM_STF_MATVEC
 
 USE Variables_MPI, &
@@ -133,8 +134,11 @@ USE IO_Linear_System, &
                             OUTPUT_COEFFICIENT_VECTOR_MATLAB,   &
                             OUTPUT_COEFFICIENT_VECTOR_FORTRAN
 
-!USE Poseidon_Petsc_Solver, &
-!                    ONLY : PETSC_Distributed_Solve
+USE IO_Print_Results, &
+                    ONLY :  Print_Results
+
+USE Poseidon_Petsc_Solver, &
+                    ONLY : PETSC_Distributed_Solve
 
 
 USE Functions_Mapping, &
@@ -175,12 +179,12 @@ timec = 0.0_idp
 
 
 
-IF (myID_Poseidon == 0 ) THEN
-    CALL OUTPUT_GUESS(0, 0)
+IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
+    WRITE(*,'(A)')"Initial Guess Values"
+    CALL Print_Results()
+    PRINT*," "
 END IF
 
-Cur_Iteration = 0
-CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN( Coefficient_Vector )
 
 Cur_Iteration = 1
 CONVERGED = .FALSE.
@@ -189,7 +193,7 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
 
 
     IF (myID_Poseidon == 0 ) THEN
-        CALL OPEN_ITER_REPORT_FILE(Cur_Iteration, myID_Poseidon)
+!        CALL OPEN_ITER_REPORT_FILE(Cur_Iteration, myID_Poseidon)
     END IF
 
     timea = MPI_Wtime()
@@ -230,7 +234,7 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
 
 
     IF ( Write_Flags(3) == 1 ) THEN
-        CALL OUTPUT_UPDATE_VECTOR( Update_Vector )
+        CALL OUTPUT_UPDATE_VECTOR( NR_Update_Vector )
     END IF
     
 
@@ -271,11 +275,14 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
     !*! Output Iteration Report
     !*!
     IF ( myID_Poseidon == 0 ) THEN
-        CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
-        CALL CLOSE_ITER_REPORT_FILE()
+!        CALL OUTPUT_ITERATION_REPORT(Cur_Iteration, myID_Poseidon)
+!        CALL CLOSE_ITER_REPORT_FILE()
         !CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
     END IF
 
+    IF ( Verbose_Flag ) THEN
+        CALL Print_Results()
+    END IF
     
 
     WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
@@ -357,9 +364,8 @@ IF ( DOMAIN_DIM == 1 ) THEN
 
 ELSE IF ( ( DOMAIN_DIM == 2 ) .OR. ( DOMAIN_DIM == 3 ) ) THEN
 
-    PRINT*,"PETSC_Distributed_Solve is disabled. STOPing in CFA_Solve()"
-    STOP
-!    CALL PETSC_Distributed_Solve( Block_Elem_STF_MatVec, Block_RHS_Vector, Update_Vector)
+
+    CALL PETSC_Distributed_Solve( Block_Elem_STF_MatVec, Block_RHS_Vector, NR_Update_Vector)
 
 
 END IF
@@ -386,16 +392,16 @@ SUBROUTINE CFA_Coefficient_Update_All( )
 INTEGER :: i
 
 
-CALL CFA_Update_Modifier()
+!CALL CFA_Update_Modifier()
 
-Coefficient_Vector = Coefficient_Vector + Update_Vector
+NR_Coeff_Vector = NR_Coeff_Vector + NR_Update_Vector
 
 !PRINT*,"Update Vector is being output in CFA_Coefficient_Update_All,z.CFA_Newton_Raphson_3D.F90"
 !DO i = 0,PROB_DIM-1
 !    IF ( Coefficient_Vector(i) .NE. 0.0_idp ) THEN
-!        PRINT*, Update_Vector(i), Update_Vector(i)/Coefficient_Vector(i)
+!        PRINT*, NR_Update_Vector(i), NR_Update_Vector(i)/Coefficient_Vector(i)
 !    ELSE
-!        PRINT*,Update_Vector(i)
+!        PRINT*,NR_Update_Vector(i)
 !    END IF
 !END DO
 
@@ -421,7 +427,7 @@ IF ( DOMAIN_DIM .NE. 1 ) THEN
 
                     Here = CFA_ALL_Matrix_Map(ui, lm_loc, re, d)
 
-                    Update_Vector(Here) = 0.0_idp
+                    NR_Update_Vector(Here) = 0.0_idp
 
                 END DO
             END DO
@@ -449,8 +455,8 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     Start_Here = myID_PETSc*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
     End_Here = Start_Here + Local_Length - 1
 
-    Coefficient_Vector(Start_Here:End_Here) = Coefficient_Vector(Start_Here:End_Here)   &
-                                            + Update_Vector(Start_Here:End_Here)
+    NR_Coeff_Vector(Start_Here:End_Here) = NR_Coeff_Vector(Start_Here:End_Here)   &
+                                            + NR_Update_Vector(Start_Here:End_Here)
 
 END IF
 
@@ -515,7 +521,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     Start_Here = myID_PETSc*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
     End_Here = Start_Here + Local_Length - 1
 
-    Send_Buffer_Block = Coefficient_Vector(Start_Here:End_Here)
+    Send_Buffer_Block = NR_Coeff_Vector(Start_Here:End_Here)
 
 
 
@@ -535,7 +541,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
 
-    Coefficient_Vector = Recieve_Buffer
+    NR_Coeff_Vector = Recieve_Buffer
 
 END IF  ! Poseidon_Comm_PETSC .NE. MPI_COMM_NULL
 
@@ -551,7 +557,7 @@ END IF  ! Poseidon_Comm_PETSC .NE. MPI_COMM_NULL
     !
 IF ( myID_Shell == 0 ) THEN
 
-    CALL MPI_BCAST( Coefficient_Vector,     &
+    CALL MPI_BCAST( NR_Coeff_Vector,     &
                     PROB_DIM,               &
                     MPI_DOUBLE_COMPLEX,     &
                     0,                      &
@@ -567,7 +573,7 @@ ELSE
                     POSEIDON_COMM_SHELL,    &
                     ierr                    )
    
-   Coefficient_Vector = Recieve_Buffer
+   NR_Coeff_Vector = Recieve_Buffer
 
 END IF
 
@@ -641,7 +647,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     Start_Here = myID_PETSc*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
     End_Here = Start_Here + Local_Length - 1
 
-    Send_Buffer_Block = Update_Vector(Start_Here:End_Here)
+    Send_Buffer_Block = NR_Update_Vector(Start_Here:End_Here)
 
 
 
@@ -661,7 +667,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
 
-    Update_Vector = Recieve_Buffer
+    NR_Update_Vector = Recieve_Buffer
 
 END IF  ! Poseidon_Comm_PETSC .NE. MPI_COMM_NULL
 
@@ -677,7 +683,7 @@ END IF  ! Poseidon_Comm_PETSC .NE. MPI_COMM_NULL
     !
 IF ( myID_Shell == 0 ) THEN
 
-    CALL MPI_BCAST( Update_Vector,     &
+    CALL MPI_BCAST( NR_Update_Vector,     &
                     PROB_DIM,               &
                     MPI_DOUBLE_COMPLEX,     &
                     0,                      &
@@ -693,7 +699,7 @@ ELSE
                     POSEIDON_COMM_SHELL,    &
                     ierr                    )
 
-   Update_Vector = Recieve_Buffer
+   NR_Update_Vector = Recieve_Buffer
 
 END IF
 
@@ -950,94 +956,6 @@ END SUBROUTINE OUTPUT_ITERATION_REPORT
 
 
 
-!+501+##########################################################################!
-!                                                                               !
-!                   OUTPUT_GUESS                                                !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE OUTPUT_GUESS(Iter, Rank)
-
-INTEGER, INTENT(IN)                 :: Iter, Rank
-
-INTEGER                                         ::  FILE_ID
-INTEGER                                         ::  i
-REAL(KIND = idp)                                ::  r, theta, phi, deltar
-REAL(KIND = idp)                                ::  Analytic_Val, Solver_Val
-REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
-REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
-REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
-
-120 FORMAT (A61)
-121 FORMAT (A1)
-122 FORMAT (A41,I2.2)
-123 FORMAT (A38,ES22.15)
-
-109 FORMAT (A,I2.2,A,I2.2)
-110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
-111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
-112 FORMAT (A43,I2.2,A2,I2.2,A4)
-
-
-
-
-! Write Results Table Header to Screen
-IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
-    IF ( Rank == 0 ) THEN
-        PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
-        WRITE(*,110)"r (cm)","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
-    END IF
-END IF
-
-deltar = ( R_OUTER - R_INNER )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
-DO i = 0,ITER_REPORT_NUM_SAMPLES
-
-    r = i*deltar + R_INNER
-    theta = pi/2.0_idp
-    phi = pi/2.0_idp
-
-
-    CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
-                                    Return_Psi, Return_AlphaPsi,                &
-                                    Return_Beta1, Return_Beta2, Return_Beta3    )
-
-    ! Determine the Newtonian Potential at the location r, theta, phi
-    Analytic_Val = Potential_Solution(r,theta,phi)/GravPot_Units
-
-
-    ! AlphaPsi_to_Pot   =   2*C_Square*(AlphaPsi - 1)
-    ! Psi_to_Pot        =   2*C_Square*(1 - Psi)
-
-    ! Calculate Conformal Factor value from Newtonian Potential
-    PsiPot_Val = 2.0_idp*C_Square*(1.0_idp - Return_Psi)/GravPot_Units
-
-    ! Calculate the product of the Conformal Factor and Lapse Function from Newtonian Potential
-    AlphaPsiPot_Val = 2.0_idp*C_Square*(Return_AlphaPsi - 1.0_idp)/GravPot_Units
-
-
-    ! Write Results to Screen
-    IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
-        IF ( Rank == 0 ) THEN
-            WRITE(*,111) r/Centimeter,              &
-                          Analytic_Val,              &
-                          PsiPot_Val,                &
-                          AlphaPsiPot_Val,           &
-                          Return_Beta1/Shift_Units,  &
-                          Return_Beta2,              &
-                          Return_Beta3
-        END IF
-    END IF
-
-
-END DO
-
-
-END SUBROUTINE OUTPUT_GUESS
-
-
-
-
-
-
 !+601+##########################################################################!
 !                                                                               !
 !                       CONVERGENCE_CHECK                                       !
@@ -1072,20 +990,19 @@ MaxA = 0.0_idp
 !PRINT*,"In CONVERGENCE_CHECK"
 DO i = 0,PROB_DIM-1
 
-    if ( Coefficient_Vector(i) .NE. 0.0_idp ) THEN
-    PRINT*,Coefficient_Vector(i),Update_Vector(i),Update_Vector(i)/Coefficient_Vector(i)
-    Ratio_Real = REAL( Update_Vector(i)/Coefficient_Vector(i) , KIND = idp)
-    Ratio_Imag = REAL(IMAG(  Update_Vector(i)/Coefficient_Vector(i) ), KIND = idp)
+    if ( NR_Coeff_Vector(i) .NE. 0.0_idp ) THEN
+    Ratio_Real = REAL( NR_Update_Vector(i)/NR_Coeff_Vector(i) , KIND = idp)
+    Ratio_Imag = REAL(IMAG(  NR_Update_Vector(i)/NR_Coeff_Vector(i) ), KIND = idp)
 
 
         IF (  abs(Ratio_Real) > MaxA  .OR. abs(Ratio_Imag) > MaxA   ) THEN
-            MaxA = abs(Update_Vector(i)/Coefficient_Vector(i))
+            MaxA = abs(NR_Update_Vector(i)/NR_Coeff_Vector(i))
             MaxA_Loc = i
         END IF
     END IF
 END DO
 
-PRINT*,"Max Ratio",MaxA, MaxA_Loc
+!PRINT*,"Max Ratio",MaxA, MaxA_Loc
 
 
 
@@ -1093,11 +1010,11 @@ PRINT*,"Max Ratio",MaxA, MaxA_Loc
 
 IF (myID_Poseidon == 0) THEN
 
-    RMS_VALUE = SQRT( SUM(Update_Vector**2)/size(Update_Vector) )
-    Euclidean = SQRT( SUM(ABS(Update_Vector)**2) )
+    RMS_VALUE = SQRT( SUM(NR_Update_Vector**2)/size(NR_Update_Vector) )
+    Euclidean = SQRT( SUM(ABS(NR_Update_Vector)**2) )
 
 
-    IF ( MAXVAL(ABS(Update_Vector)) .LE. Convergence_Criteria ) THEN
+    IF ( MAXVAL(ABS(NR_Update_Vector)) .LE. Convergence_Criteria ) THEN
 
         CONVERGED = .TRUE.
         CONVERGENCE_FLAG = 1
@@ -1110,10 +1027,10 @@ IF (myID_Poseidon == 0) THEN
     END IF
 
 
-!    PRINT*,"RMS ",RMS_VALUE," Euclidean ",Euclidean," MAXVAL ",MAXVAL(ABS(Update_Vector))
+!    PRINT*,"RMS ",RMS_VALUE," Euclidean ",Euclidean," MAXVAL ",MAXVAL(ABS(NR_Update_Vector))
 
 !   Add the current iteration's convergence check value to the frame table
-    Frame_Update_Table(Iteration,1) =    MAXVAL(ABS(Update_Vector))
+    Frame_Update_Table(Iteration,1) =    MAXVAL(ABS(NR_Update_Vector))
 
 !   Output data to files
     DO i = 0,1
@@ -1121,8 +1038,8 @@ IF (myID_Poseidon == 0) THEN
             WRITE(FILE_ID(i),'(A)')"                                 Convergence Results"
             WRITE(FILE_ID(i),'(A)')"            ============================================================="
             WRITE(FILE_ID(i),'(A)')""
-            WRITE(FILE_ID(i),'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(Update_Vector)) ",      &
-                                                     MAXVAL(ABS(Update_Vector)),                            &
+            WRITE(FILE_ID(i),'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(NR_Update_Vector)) ",      &
+                                                     MAXVAL(ABS(NR_Update_Vector)),                            &
                                                      "  Criteria ",Convergence_Criteria
             IF ( CONVERGENCE_FLAG == 1 ) THEN
                 WRITE(FILE_ID(i),'(A,I2.2,A,ES22.15,A,ES22.15)')"CONVERGED IN ", Iteration," Iterations"
@@ -1139,10 +1056,8 @@ IF (myID_Poseidon == 0) THEN
 
 !   Output data to screen
     IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
-        WRITE(*,'(A)')"                                 Convergence Results"
-        WRITE(*,'(A)')"            ============================================================="
-        WRITE(*,'(A)')""
-        WRITE(*,'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(Update_Vector)) ",MAXVAL(ABS(Update_Vector)),   &
+
+        WRITE(*,'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(NR_Update_Vector)) ",MAXVAL(ABS(NR_Update_Vector)),   &
                                               "  Criteria ",Convergence_Criteria
     END IF
 

@@ -605,7 +605,7 @@ IF ( Matrix_Format == 'Full') THEN
             Laplace_Matrix_Full(i, j, l) = Laplace_Matrix_Full(i, j, l)                 &
                                          + SUM( R_SQUARE(:) * LP_LP_Table(:,d,dp,1,1)   &
                                                 * TODR * Int_R_Weights(:)               &
-                                               - L_Lp1 * LP_LP_Table(:,d,dp,0,0) / TODR        &
+                                               + L_Lp1 * LP_LP_Table(:,d,dp,0,0) / TODR        &
                                                 * Int_R_Weights(:)                    )
 
 

@@ -21,10 +21,9 @@ IMPLICIT NONE
 
 
 
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  Coefficient_Vector
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  Update_Vector
-
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  RHS_Vector
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  NR_Coeff_Vector
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  NR_Update_Vector
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  NR_Source_Vector
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  Block_RHS_Vector
 
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)    ::  Block_STF_Mat

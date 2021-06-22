@@ -63,7 +63,7 @@ USE Variables_Mesh, &
             ONLY :  Num_R_Elements
 
 USE Variables_NR, &
-            ONLY :  Coefficient_Vector,         &
+            ONLY :  NR_Coeff_Vector,         &
                     BLOCK_ELEM_STF_MATVEC,      &
                     Block_RHS_Vector
 
@@ -150,13 +150,13 @@ DO ui = 1,NUM_CFA_VARS
             DO m = -M_VALUES(l),M_VALUES(l)
 
                 Value_Location =  Matrix_Location( ui, l, m, 0, 0 )
-                Coefficient_Vector( Value_Location ) = 0.0_idp
+                NR_Coeff_Vector( Value_Location ) = 0.0_idp
 
             END DO
         END DO
 
         Value_Location =  Matrix_Location( ui, 0, 0, 0, 0 )
-        Coefficient_Vector( Value_Location ) = 2.0_idp * sqrt(pi) * INNER_CFA_BC_VALUES(ui)
+        NR_Coeff_Vector( Value_Location ) = 2.0_idp * sqrt(pi) * INNER_CFA_BC_VALUES(ui)
     END IF
 
 
@@ -172,13 +172,13 @@ DO ui = 1,NUM_CFA_VARS
             DO m = -M_VALUES(l),M_VALUES(l)
 
                 Value_Location =  Matrix_Location( ui, l, m, NUM_R_ELEMENTS-1, DEGREE )
-                Coefficient_Vector( Value_Location ) = 0.0_idp
+                NR_Coeff_Vector( Value_Location ) = 0.0_idp
 
             END DO
         END DO
 
         Value_Location =  Matrix_Location( ui, 0, 0, NUM_R_ELEMENTS-1, DEGREE  )
-        Coefficient_Vector( Value_Location ) = 2.0_idp * sqrt(pi) * OUTER_CFA_BC_VALUES(ui)
+        NR_Coeff_Vector( Value_Location ) = 2.0_idp * sqrt(pi) * OUTER_CFA_BC_VALUES(ui)
 
     END IF
 

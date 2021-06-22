@@ -124,6 +124,9 @@ USE Initialization_Derived, &
 USE Initialization_FP, &
                 ONLY :  Initialize_FP
 
+USE Initialization_XCFC, &
+                ONLY :  Initialize_XCFC
+
 USE Initialization_NR, &
                 ONLY :  Initialize_NR
 
@@ -176,7 +179,8 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
                                 Print_Results_Option,                   &
                                 Write_Results_Option,                   &
                                 Print_Timetable_Option,                 &
-                                Write_Timetable_Option                  )
+                                Write_Timetable_Option,                 &
+                                Write_Sources_Option                  )
 
 
 CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Units_Option
@@ -221,7 +225,7 @@ LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Results_Op
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Results_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Timetable_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Timetable_Option
-
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Sources_Option
 
 IF ( PRESENT( Verbose_Option ) ) THEN
     Verbose_Flag = Verbose_Option
@@ -306,11 +310,11 @@ END IF
 IF ( PRESENT(Write_Results_Option) ) THEN
     IF ( Write_Results_Option ) THEN
         IF (Write_Flags(5) < 2 ) THEN
-            Write_Flags(5) = Report_Flags(4) + 2
+            Write_Flags(5) = Write_Flags(5) + 2
         END IF
     ELSE
         IF ( Write_Flags(5) > 1 ) THEN
-            Write_Flags(5) = Report_Flags(4) - 2
+            Write_Flags(5) = Write_Flags(5) - 2
         END IF
     END IF
 END IF
@@ -351,7 +355,13 @@ END IF
 
 
 
-
+IF ( PRESENT(Write_Sources_Option) ) THEN
+    IF ( Write_Sources_Option ) THEN
+        Write_Flags(4) = 2
+    ELSE
+        Write_Flags(4) = 0
+    END IF
+END IF
 
 
 
@@ -547,10 +557,9 @@ LM_Location => CFA_3D_LM_Map
 
 
 
-
+CALL Initialize_Derived()
 CALL Initialize_MPI()
 CALL Allocate_Poseidon_CFA_Variables()
-CALL Initialize_Derived()
 CALL Initialize_Quadrature()
 
 CALL Initialize_Tables()
@@ -560,6 +569,8 @@ IF ( Method_Flag == 1 ) THEN
     CALL Initialize_NR()
 ELSE IF ( Method_Flag == 2 ) THEN
     CALL Initialize_FP(CFA_EQ_Flags_Option)
+ELSE IF ( Method_Flag == 3 ) THEN
+    CALL Initialize_XCFC(CFA_EQ_Flags_Option)
 END IF
 
 

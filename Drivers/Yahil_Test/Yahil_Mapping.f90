@@ -31,10 +31,12 @@ USE Initialization_Poseidon, &
 
 
 USE Variables_IO, &
-               ONLY :  Write_Results_Flag,         &
-                       Write_Results_R_Samps,      &
+               ONLY :  Write_Results_R_Samps,      &
                        Write_Results_T_Samps,      &
                        File_Suffix
+
+USE Variables_Derived, &
+                ONLY : LM_Length
 
 USE Variables_MPI, &
                ONLY :  ierr
@@ -42,6 +44,11 @@ USE Variables_MPI, &
 USE Variables_Functions, &
                 ONLY :  Potential_Solution
 
+USE FP_Functions_Results , &
+                ONLY : Calc_1D_CFA_Values_FP
+
+USE Variables_FP,   &
+                ONLY :  FP_Coeff_Vector
 
 USE Variables_Yahil, &
                 ONLY :  SelfSim_V_Switch
@@ -63,28 +70,19 @@ USE Poseidon_IO_Module, &
                ONLY :  Open_Run_Report_File,       &
                        Output_Final_Results,       &
                        Open_New_File,              &
-                       OPEN_FILE_INQUISITION
+                       OPEN_FILE_INQUISITION,      &
+                       Output_Poseidon_Sources_3D
 
 USE IO_Print_Results, &
                ONLY :  Print_Results
-
-USE IO_Convergence_Output, &
-               ONLY :  Output_Convergence_Data
 
 USE Poseidon_Main_Module, &
                ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions,       &
                        Poseidon_Run,                                       &
                        Poseidon_Close
 
-
-USE FP_Initial_Guess_Module, &
-               ONLY :  Init_FP_Guess_Flat,     &
-                       Init_FP_Guess_Informed, &
-                       Input_FP_Guess
-
 USE Initial_Guess_Module, &
-                ONLY : Calc_Shift_BC_1D,        &
-                        Calc_Shift_1D
+                ONLY :  Poseidon_Input_Guess
 
 USE FP_IO_Module, &
                ONLY :  Output_FP_Timetable
@@ -197,16 +195,24 @@ INTEGER                                                 ::  HCT_Fileid
 CHARACTER(LEN = 100)                                    ::  HCT_Filename
 
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
-CHARACTER(LEN=1), DIMENSION(1:7)                        ::  Letter_Table
-REAL(idp), DIMENSION(1:7)                               ::  Time_Values
+CHARACTER(LEN=1), DIMENSION(1:10)                        ::  Letter_Table
+REAL(idp), DIMENSION(1:6)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
+
+
+INTEGER                                                 ::  ui, lm
+
+
+REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              :: Tmp_Lapse
+REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              :: Tmp_ConFac
+REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              :: Tmp_Shift
 
 CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
 
 ALLOCATE( RE_Table(1:9) )
 
-111 FORMAT (A,I4.4,/,A,I1.1,/,A,I2.2,/,A,I2.2,/,A,F6.3,A,/)
+111 FORMAT (A,I4.4,/,A,I1.1,/,A,I2.2,/,A,I3.3,/,A,F6.3,A,/)
 
 
 !############################################################!
@@ -215,11 +221,11 @@ ALLOCATE( RE_Table(1:9) )
 !#                                                          #!
 !############################################################!
 Units_Input         = "G"
-Solver_Type         = 2
+Solver_Type         = 1
 
-RE_Table            = (/ 3, 80, 160, 240, 320, 400, 600, 800, 1000 /)
+RE_Table            = (/ 1, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.50_idp, 0.050_idp,0.0050_idp /)
+Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.50_idp, 0.1_idp /)
 L_Values            = (/ 5, 10 /)
 
 T_Index_Min         =  1
@@ -228,14 +234,14 @@ T_Index_Max         =  1
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  2
-RE_Index_Max        =  2
+RE_Index_Min        =  3
+RE_Index_Max        =  3
 
 Degree_Min          =  1
 Degree_Max          =  1
 
-L_Limit_Min         =  1
-L_Limit_Max         =  1
+L_Limit_Min         =  0
+L_Limit_Max         =  0
 
 Guess_Type          =  2            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
@@ -250,7 +256,7 @@ SelfSim_V_Switch    =  0
 
 Dimension_Input     = 3
 
-Max_Iterations      = 20
+Max_Iterations      = 10
 CC_Option           = 1.0E-12_idp
 
 Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
@@ -259,22 +265,22 @@ Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
 
 NE(1)               = 128                       ! Number of Radial Elements
-NE(2)               = 1                         ! Number of Theta Elements
+NE(2)               = 1                       ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
 NQ(1)               = 10                        ! Number of Radial Quadrature Points
-NQ(2)               = 30                        ! Number of Theta Quadrature Points
-NQ(3)               = 30                        ! Number of Phi Quadrature Points
+NQ(2)               = 10                        ! Number of Theta Quadrature Points
+NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
 !Verbose             = .FALSE.
 Verbose             = .TRUE.
 Suffix_Input        = "Params"
 
-CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
+CFA_Eqs = (/ 1, 0, 0, 0, 0 /)
 
 
-Letter_Table = (/ "A","B","C","D","E","F","G" /)
+Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
 
 
 Write_Results_R_Samps = 256
@@ -296,16 +302,16 @@ DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     NE(1) = RE_Table(RE_Index)
+    NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(M_Index)
+    Suffix_Tail = Letter_Table(Max_Iterations)
 
 
-
-    WRITE(*,111)" # RE       : ", NE(1),                        &
-                " FEM Degree : ", Degree_Input,                 &
-                " L_Limit    : ", L_Limit_Input,                &
-                " Anderson M : ", Anderson_M_Values(M_Index),   &
-                " Yahil Time : ", Time_Values(T_Index), " ms"
+!    WRITE(*,111)" # RE       : ", NE(1),                        &
+!                " FEM Degree : ", Degree_Input,                 &
+!                " L_Limit    : ", L_Limit_Input,                &
+!                " Anderson M : ", Anderson_M_Values(M_Index),   &
+!                " Yahil Time : ", Time_Values(T_Index), " ms"
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
@@ -378,12 +384,20 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !        dp_Option                   = dz_c              &
            Suffix_Flag_Option          = Suffix_Input,    &
            Suffix_Tail_Option          = Suffix_Tail,     &
-           Solver_Type_Option          = Solver_Type,     &
+           Method_Flag_Option          = Solver_Type,     &
            CFA_Eq_Flags_Option         = CFA_Eqs,         &
            Max_Iterations_Option       = Max_Iterations,  &
            Convergence_Criteria_Option = CC_Option,  &
            Anderson_M_Option           = Anderson_M_Values(M_Index),   &
-           Verbose_Option              = Verbose          )
+           Verbose_Option              = Verbose,           &
+           WriteAll_Option             = .FALSE.,           &
+           Print_Setup_Option          = .TRUE.,            &
+           Write_Setup_Option          = .FALSE.,           &
+           Print_Results_Option        = .TRUE.,            &
+           Write_Results_Option        = .TRUE.,           &
+           Print_Timetable_Option      = .FALSE.,            &
+           Write_Timetable_Option      = .FALSE.,           &
+           Write_Sources_Option        = .TRUE.             )
 
 
 
@@ -404,7 +418,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                                    dx_c, x_e, y_e,                              &
                                    Local_E, Local_S, Local_Si                   )
 
-
+   
 
     CALL Poseidon_Input_Sources(   myID, myID, myID,                           &
                                    Local_E, Local_S, Local_Si,                 &
@@ -417,7 +431,16 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
+    IF ( .FALSE. ) THEN
 
+    CALL Output_Poseidon_Sources_3D( Local_E, Local_S, Local_Si,                &
+                                     NE(1), NE(2), NE(3),                       &
+                                     NQ(1), NQ(2), NQ(3),                       &
+                                     Input_R_Quad, Input_T_Quad, Input_P_Quad,  &
+                                     Left_Limit, Right_Limit                    )
+
+    STOP
+    END IF
 
 
 
@@ -427,20 +450,14 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#          Calculate and Set Boundary Conditions           #!
     !#                                                          #!
     !############################################################!
-
     Psi_BC = 1.0_idp    &
            - 0.5_idp*Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)/C_Square
 
     AlphaPsi_BC = 1.0_idp    &
                 + 0.5_idp*Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)/C_Square
 
+!    PRINT*,"BCs",Psi_BC, AlphaPsi_BC, Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)
 
-    CALL Calc_Shift_BC_1D( Shift_Vector_BC,             &
-                           NQ(1), NQ(2), NQ(3),         &
-                           NE(1), NE(2), NE(3), 3,      &
-                           Local_Si, x_e                )
-
-!    PRINT*,"BCs",Psi_BC,AlphaPsi_BC,Shift_Vector_BC, Shift_Vector_BC/Shift_Units
 
     INNER_BC_TYPES = (/"N", "N","N","N","N"/)
     OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
@@ -449,6 +466,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
     OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, 0.0_idp, 0.0_idp, 0.0_idp /)
 !    OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
+
+
 
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
     CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
@@ -469,19 +488,14 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     IF ( Guess_Type == 1 ) THEN
 
-       CALL Init_FP_Guess_flat()
-    END IF
+       Psi_Guess = 1.0_idp
+       AlphaPsi_Guess = 1.0_idp
+       Beta_Guess = 0.0_idp
 
-
-    IF ( Guess_Type == 2 ) THEN
+    ELSE IF ( Guess_Type == 2 ) THEN
     !     Lapse function Coefficients in 1D correspond to the value of the function
     !     at the location of the FEM nodes.
 
-
-!        CALL Calc_Shift_1D( Beta_Guess,                 &
-!                            NQ(1), NQ(2), NQ(3),         &
-!                            NE(1), NE(2), NE(3), 3,      &
-!                            Local_Si, x_e                )
 
         Beta_Guess = 0.0_idp
 
@@ -489,7 +503,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
         DO re = 1,NE(1)
             Cur_R_Locs(:) = dx_c(re)*(Input_R_Quad(:) + Left_Limit)+  x_e(re)
             DO rq = 1,NQ(1)
-
                 Psi_Guess(rq, re-1, 0, 0) = 1.0_idp    &
                                         - 0.5_idp*Potential_Solution(Cur_R_Locs(rq), 0.0_idp, 0.0_idp)/C_Square
 
@@ -501,20 +514,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-       CALL Input_FP_Guess( Psi_Guess,                                  &
-                            AlphaPsi_Guess,                             &
-                            Beta_Guess,                                 &
-                            NE(1), NE(2), NE(3),                        &
-                            NQ(1), NQ(2), NQ(3),                        &
-                            Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
-                            Left_Limit, Right_Limit                     )
-
-
-
-    END IF
-
-
-    IF ( Guess_Type == 3 ) THEN
+    ELSE IF ( Guess_Type == 3 ) THEN
     !     Lapse function Coefficients in 1D correspond to the value of the function
     !     at the location of the FEM nodes.  These have been perturbed.
 
@@ -533,46 +533,23 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                                      + 0.5_idp*Potential_Solution(Cur_R_Locs(rq), 0.0_idp, 0.0_idp)/C_Square
 
 
-            Offset = (1.0_idp - Cur_R_locs(rq)/Domain_Edge(2)) * (1.0_idp + Perturbation)
+            Offset = (Cur_R_locs(rq)/Domain_Edge(2)) * (1.0_idp + Perturbation)
             Psi_Guess(rq, re-1, 0, 0) = Psi_Guess(rq, re-1, 0, 0)*Offset
             AlphaPsi_Guess(rq, re-1, 0, 0) = AlphaPsi_Guess(rq, re-1, 0, 0)*Offset
 
          END DO ! rq
      END DO ! re
 
-
-
-    CALL Input_FP_Guess( Psi_Guess,                                  &
-                         AlphaPsi_Guess,                             &
-                         Beta_Guess,                                 &
-                         NE(1), NE(2), NE(3),                        &
-                         NQ(1), NQ(2), NQ(3),                        &
-                         Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
-                         Left_Limit, Right_Limit                     )
-
-!        DO re = 1,NE(1)
-!            Cur_R_Locs(:) = dx_c(re)*(Input_R_Quad(:) + Left_Limit)+  x_e(re)
-!            DO rq = 1,NQ(1)
-!
-!                Test_Solution(rq, re-1, 0, 0) =
-!
-!            END DO ! rq
-!        END DO ! re
-!
-!
-!
-!        CALL Input_FP_Guess( Test_Solution,                             &
-!                            NE(1), NE(2), NE(3),                       &
-!                            NQ(1), NQ(2), NQ(3),                       &
-!                            Input_R_Quad, Input_T_Quad, Input_P_Quad,  &
-!                            Left_Limit, Right_Limit                    )
-
-
-
-
     END IF
 
 
+    CALL Poseidon_Input_Guess(  Psi_Guess,                                  &
+                                AlphaPsi_Guess,                             &
+                                Beta_Guess,                                 &
+                                NE(1), NE(2), NE(3),                        &
+                                NQ(1), NQ(2), NQ(3),                        &
+                                Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
+                                Left_Limit, Right_Limit                     )
 
 
     !############################################################!
@@ -584,26 +561,18 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-
-
-
     !############################################################!
     !#                                                          #!
     !#                       Output Results                     #!
     !#                                                          #!
     !############################################################!
-
     IF (Verbose .EQV. .TRUE. ) THEN
-       CALL Print_Results()
+        PRINT*,"Final Results "
+        CALL Print_Results()
     END IF
 
 
-    !Write_Results_Flag = 1
-    IF ( Write_Results_Flag == 1 ) THEN
-       CALL Output_Convergence_Data()
-       CALL Output_Final_Results()
-       CALL Output_FP_Timetable()
-    END IF
+
 
 
 

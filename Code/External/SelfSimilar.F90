@@ -232,22 +232,13 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
 IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
-    WRITE(*,'(A,ES12.5,A)') ' - Yahil Time  : ', t_in,' ms'
-    WRITE(*,'(A,ES12.5)')   ' - Kappa       : ', Kappa_wUnits
-    WRITE(*,'(A,ES12.5)')   ' - Gamma       : ', Gamma
+    WRITE(*,'(A,ES12.5,A)') ' - Yahil Time      : ', t_in,' ms'
+    WRITE(*,'(A,ES12.5)')   ' - Kappa           : ', Kappa_wUnits
+    WRITE(*,'(A,ES12.5)')   ' - Gamma           : ', Gamma
+    WRITE(*,'(A,ES12.5,A)')   ' - Central Density : ', Input_D(1)/(Grav_Constant_G*t*t )/(Gram/Centimeter**3),' g/cm^3'
     WRITE(*,'(/)')
 END IF
 
-
-
-IF (.FALSE.) THEN
-
-    PRINT*,"sqrt(kappa)",SQRT(Kappa_wUnits),"kappa**(1.50_idp)",Kappa_wUnits**(1.50_idp)
-    PRINT*,"(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))",(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))
-    PRINT*,"Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)",Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)
-    PRINT*,"((t)**(2.0_idp-gamma))",((t)**(2.0_idp-gamma))
-    PRINT*,"(t**(4.0_idp - 3.0_idp*gamma))",(t**(4.0_idp - 3.0_idp*gamma))
-END IF
 
 
 IF ( SELFSIM_V_SWITCH == 1 ) THEN
@@ -280,7 +271,6 @@ CALL CONVERT_SELF_SIMILAR_3D(  t, Kappa_wUnits, gamma, ecc,                   &
 !PRINT*,Input_Si
 !PRINT*," "
 
-!sTOP
 
 
 
@@ -466,6 +456,7 @@ DO te = 0,NUM_T_ELEM-1
             Density  = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))*D_FACTOR
             Velocity = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))*V_FACTOR
 
+         
             DX_Holder(re*Num_Nodes(1)+rd) = (INPUT_D(line)*LagPoly_Vals(0) + INPUT_D(line+1)*LagPoly_Vals(1))
             VX_Holder(re*Num_Nodes(1)+rd) = (INPUT_V(line)*LagPoly_Vals(0) + INPUT_V(line+1)*LagPoly_Vals(1))
 
@@ -477,8 +468,6 @@ DO te = 0,NUM_T_ELEM-1
             Pressure = kappa * Density**gamma
             Energy = Pressure/(gamma - 1.0_idp)
             Specific_Enthalpy = C_Square + (Energy + Pressure)/Density
-
-
 
             
             vsqr = Velocity*Velocity

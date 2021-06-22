@@ -103,7 +103,7 @@ USE Variables_Tables, &
 
 
 USE Variables_NR,   &
-                ONLY :  Coefficient_Vector,         &
+                ONLY :  NR_Coeff_Vector,         &
                         Block_RHS_Vector,           &
                         BLOCK_ELEM_STF_MATVEC,      &
                         Block_STF_MAT
@@ -168,6 +168,9 @@ USE Poseidon_BC_Module, &
 
 USE Functions_Mapping, &
                 ONLY :  CFA_ALL_Matrix_Map
+
+USE NR_Mapping_Functions, &
+                ONLY :  NR_Array_Map
 
 USE SubJacobian_Functions_Module_3D, &
                 ONLY :  Calc_EQ1_SubJacobian,           &
@@ -654,7 +657,7 @@ DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
         TP_Int_Weights( (td-1)*NUM_P_QUAD_POINTS + pd ) = SIN_VAL(td)                           &
                                                         * DELTAT_OVERTWO * INT_T_WEIGHTS(td)    &
-                                                        * DELTAP_OVERTWO * INT_P_WEIGHTS(pd)
+                                                        * INT_P_WEIGHTS(pd)
     END DO
 END DO
 
@@ -672,8 +675,8 @@ END DO
 
 
 
-DO lm_loc = 0,LM_LENGTH-1
-    DO lpmp_loc = 0,LM_LENGTH-1
+DO lm_loc = 1,LM_LENGTH
+    DO lpmp_loc = 1,LM_LENGTH
     
         TP_TP_Factor( :, lm_loc, lpmp_loc )  = Ylm_Values( lm_loc, :, te, pe )              &
                                                 * Ylm_CC_Values( :, lpmp_loc, te, pe)       &
@@ -738,7 +741,7 @@ END DO
 !$OMP           Beta_DRV_Trace,                                         &
 !$OMP           Lagrange_Poly_Table,                                    &
 !$OMP           Ylm_Values, Ylm_dt_Values, Ylm_dp_Values,               &
-!$OMP           Coefficient_Vector,                                     &
+!$OMP           NR_Coeff_Vector,                                     &
 !$OMP           Matrix_Location,                                        &
 !$OMP           LM_Location,                                            &
 !$OMP           LM_Length, ULM_LENGTH                           )
@@ -767,15 +770,15 @@ DO rd = 1,NUM_R_QUAD_POINTS
                 Here = CFA_All_Matrix_Map(ui, 0, re, d)
                 There = Here + LM_LENGTH - 1
 
-!                PRINT*,Coefficient_Vector(Here:There)
+!                PRINT*,NR_Coeff_Vector(Here:There)
 
                 TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
-                                        + SUM( Coefficient_Vector( Here:There )     &
+                                        + SUM( NR_Coeff_Vector( Here:There )     &
                                         * Ylm_Values( :, tpd, te, pe )       )      &
                                         * Lagrange_Poly_Table( d, rd, 0 )
 
                 TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
-                                        + SUM( Coefficient_Vector( Here:There )     &
+                                        + SUM( NR_Coeff_Vector( Here:There )     &
                                         * Ylm_Values( :, tpd, te, pe )       )      &
                                         * Lagrange_Poly_Table( d, rd, 1 )           &
                                         / DELTAR_OVERTWO
@@ -783,11 +786,11 @@ DO rd = 1,NUM_R_QUAD_POINTS
 
 !                IF (ui == 3 ) THEN
 !
-!                    PRINT*,SUM( Coefficient_Vector( Here:There )     &
+!                    PRINT*,SUM( NR_Coeff_Vector( Here:There )     &
 !                    * Ylm_Values( :, tpd, te, pe )       )      &
 !                    * Lagrange_Poly_Table( d, rd, 1 )           &
 !                    / DELTAR_OVERTWO,                           &
-!                    Coefficient_Vector( Here:There ),            &
+!                    NR_Coeff_Vector( Here:There ),            &
 !                    Lagrange_Poly_Table( d, rd, 1 )/ DELTAR_OVERTWO
 !
 !                END IF
@@ -795,12 +798,12 @@ DO rd = 1,NUM_R_QUAD_POINTS
 
 
                 TMP_U_T_DRV_Value(ui)   = TMP_U_T_DRV_Value(ui)                     &
-                                        + SUM( Coefficient_Vector( Here:There )     &
+                                        + SUM( NR_Coeff_Vector( Here:There )     &
                                         * Ylm_dt_Values( :, tpd, te, pe)     )       &
                                         * Lagrange_Poly_Table( d, rd, 0)
 
                 TMP_U_P_DRV_Value(ui)   = TMP_U_P_DRV_Value(ui)                     &
-                                        + SUM( Coefficient_Vector( Here:There )     &
+                                        + SUM( NR_Coeff_Vector( Here:There )     &
                                         * Ylm_dp_Values( :, tpd, te, pe)     )      &
                                         * Lagrange_Poly_Table( d, rd, 0)
 
@@ -971,180 +974,75 @@ DO rd = 1,NUM_R_QUAD_POINTS
 
 
 
-        IF ( .FALSE. ) THEN
-            CALL Calc_RHS_Terms( RHS_Terms,                                         &
-                                 re, te, pe,                                        &
-                                 td, pd, tpd, rd,                                   &
-                                 CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                 SIN_SQUARE, CSC_SQUARE,                            &
-                                 PSI_POWER, ALPHAPSI_POWER,                         &
-                                 CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                                 JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+        CALL Calc_RHS_Terms( RHS_Terms,                                         &
+                             re, te, pe,                                        &
+                             td, pd, tpd, rd,                                   &
+                             CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                             SIN_SQUARE, CSC_SQUARE,                            &
+                             PSI_POWER, ALPHAPSI_POWER,                         &
+                             CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                             JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
 
-            
-            !
-            !   Equation 1 ( Conformal Factor ) Subjacobian Terms
-            !
-            CALL Calc_EQ1_SubJacobian( SubJacobian_EQ1_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                       SIN_SQUARE, CSC_SQUARE,                            &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                                       JCBN_BIGK_VALUE                                    )
+        
+        !
+        !   Equation 1 ( Conformal Factor ) Subjacobian Terms
+        !
+        CALL Calc_EQ1_SubJacobian( SubJacobian_EQ1_Term,                              &
+                                   re, te, pe,                                        &
+                                   td, pd, tpd, rd,                                   &
+                                   CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                   SIN_SQUARE, CSC_SQUARE,                            &
+                                   PSI_POWER, ALPHAPSI_POWER,                         &
+                                   CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                                   JCBN_BIGK_VALUE                                    )
 
-            CALL Calc_EQ2_SubJacobian( SubJacobian_EQ2_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                       SIN_SQUARE, CSC_SQUARE,                            &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                                       JCBN_BIGK_VALUE                                    )
-
-    !        PRINT*,rd,td,pd
-    !        PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:14)
-    !        PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:14)
-
-            CALL Calc_EQ3_SubJacobian( SubJacobian_EQ3_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                       SIN_SQUARE, CSC_SQUARE,                            &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
-
-!            PRINT*,rd,td,pd
-!            PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:4)
-!            PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:4)
-!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,1:2)
-!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,5:6)
-!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,9:10)
-
-            CALL Calc_EQ4_SubJacobian( SubJacobian_EQ4_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
-                                       COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
-
-            CALL Calc_EQ5_SubJacobian( SubJacobian_EQ5_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
-                                       COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
-
-        ELSE
-            CALL Calc_RHS_Terms_1D( RHS_Terms,                                         &
-                                 re, te, pe,                                        &
-                                 td, pd, tpd, rd,                                   &
-                                 CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                 SIN_SQUARE, CSC_SQUARE,                            &
-                                 PSI_POWER, ALPHAPSI_POWER,                         &
-                                 CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                                 JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
-
-            
-            !
-            !   Equation 1 ( Conformal Factor ) Subjacobian Terms
-            !
-            CALL Calc_EQ1_SubJacobian_1D( SubJacobian_EQ1_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                       SIN_SQUARE, CSC_SQUARE,                            &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                                       JCBN_BIGK_VALUE                                    )
-
-            CALL Calc_EQ2_SubJacobian_1D( SubJacobian_EQ2_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                       SIN_SQUARE, CSC_SQUARE,                            &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_VAL_BETA, CUR_DRV_BETA,                        &
-                                       JCBN_BIGK_VALUE                                    )
-
-
-            CALL Calc_EQ3_SubJacobian_1D( SubJacobian_EQ3_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                                       SIN_SQUARE, CSC_SQUARE,                            &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
-
-!            PRINT*,rd,td,pd
-!            PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:4)
-!            PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:4)
-!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,1:2)
-!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,5:6)
-!            PRINT*,SubJacobian_EQ3_Term(tpd,rd,9:10)
-
-            CALL Calc_EQ4_SubJacobian_1D( SubJacobian_EQ4_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
-                                       COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
-
-            CALL Calc_EQ5_SubJacobian_1D( SubJacobian_EQ5_Term,                              &
-                                       re, te, pe,                                        &
-                                       td, pd, tpd, rd,                                   &
-                                       CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
-                                       COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
-                                       PSI_POWER, ALPHAPSI_POWER,                         &
-                                       CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
-                                       JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
-
-
-        END IF
+        CALL Calc_EQ2_SubJacobian( SubJacobian_EQ2_Term,                              &
+                                   re, te, pe,                                        &
+                                   td, pd, tpd, rd,                                   &
+                                   CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                   SIN_SQUARE, CSC_SQUARE,                            &
+                                   PSI_POWER, ALPHAPSI_POWER,                         &
+                                   CUR_VAL_BETA, CUR_DRV_BETA,                        &
+                                   JCBN_BIGK_VALUE                                    )
 
 
 
-!        PRINT*,rd,td,pd
-!        PRINT*,SubJacobian_EQ3_Term(tpd,rd,1:20)
-!        PRINT*,""
-!        PRINT*," "
-!        PRINT*,SubJacobian_EQ4_Term(tpd,rd,1:20)
-!        PRINT*,""
-!        PRINT*," "
-!        PRINT*,SubJacobian_EQ5_Term(tpd,rd,1:20)
-!        PRINT*,""
-!        PRINT*," "
+        CALL Calc_EQ3_SubJacobian( SubJacobian_EQ3_Term,                              &
+                                   re, te, pe,                                        &
+                                   td, pd, tpd, rd,                                   &
+                                   CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+                                   SIN_SQUARE, CSC_SQUARE,                            &
+                                   PSI_POWER, ALPHAPSI_POWER,                         &
+                                   CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                   JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+
+        CALL Calc_EQ4_SubJacobian( SubJacobian_EQ4_Term,                              &
+                                   re, te, pe,                                        &
+                                   td, pd, tpd, rd,                                   &
+                                   CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
+                                   COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
+                                   PSI_POWER, ALPHAPSI_POWER,                         &
+                                   CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                   JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+        CALL Calc_EQ5_SubJacobian( SubJacobian_EQ5_Term,                              &
+                                   re, te, pe,                                        &
+                                   td, pd, tpd, rd,                                   &
+                                   CUR_R_LOCS, R_SQUARE, R_CUBED, RSIN_SQUARE,        &
+                                   COTAN_VAL, SIN_SQUARE, CSC_SQUARE,                 &
+                                   PSI_POWER, ALPHAPSI_POWER,                         &
+                                   CUR_DRV_PSI, CUR_DRV_ALPHAPSI,                     &
+                                   JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+
+
+
+
 
         END DO ! rd loop
     END DO  ! td loop
 END DO  ! pd loop
 
-!PRINT*,"SubJacobian_EQ1_Term"
-!PRINT*,SubJacobian_EQ1_Term(:,:,1:4)
-!PRINT*," "
-!PRINT*,"SubJacobian_EQ2_Term"
-!PRINT*,SubJacobian_EQ2_Term(:,:,1:4)
-!PRINT*," "
-!PRINT*,"SubJacobian_EQ3_Term"
-!PRINT*,SubJacobian_EQ3_Term(:,:,1)
-!PRINT*,SubJacobian_EQ3_Term(:,:,2)
-!PRINT*,SubJacobian_EQ3_Term(:,:,5)
-!PRINT*,SubJacobian_EQ3_Term(:,:,6)
-!PRINT*,SubJacobian_EQ3_Term(:,:,9)
-!PRINT*,SubJacobian_EQ3_Term(:,:,10)
-!PRINT*," "
-!PRINT*,"RHS_Terms"
-!PRINT*,RHS_TERMS(:,:,3)
-!PRINT*," "
 
 
 !$OMP END DO
@@ -1222,7 +1120,7 @@ COMPLEX(KIND = idp)                                                     ::  Inne
 DO d = 0,DEGREE
 
 
-    DO lm_loc = 0,LM_LENGTH-1
+    DO lm_loc = 1,LM_LENGTH
 
         RHS_TMP = 0.0_idp
 
@@ -1291,29 +1189,28 @@ DO d = 0,DEGREE
 
         END DO  ! rd Loop
         
-       
-        Current_i_Location = CFA_ALL_Matrix_Map(1, lm_loc, re, d)
+        Current_i_Location = NR_Array_Map(re,d,1,lm_loc)
         Block_RHS_Vector(Current_i_Location)                             &
             = Block_RHS_Vector(Current_i_Location)                       &
             + RHS_TMP(1)
 
-        Current_i_Location = CFA_ALL_Matrix_Map(2, lm_loc, re, d)
+        Current_i_Location = NR_Array_Map(re,d,2,lm_loc)
         Block_RHS_Vector(Current_i_Location)                             &
             = Block_RHS_Vector(Current_i_Location)                       &
             + RHS_TMP(2)
 
-        Current_i_Location = CFA_ALL_Matrix_Map(3, lm_loc, re, d)
+        Current_i_Location = NR_Array_Map(re,d,3,lm_loc)
         Block_RHS_Vector(Current_i_Location)                             &
             = Block_RHS_Vector(Current_i_Location)                       &
             + RHS_TMP(3)
 
 
-        Current_i_Location = CFA_ALL_Matrix_Map(4, lm_loc, re, d)
+        Current_i_Location = NR_Array_Map(re,d,4,lm_loc)
         Block_RHS_Vector(Current_i_Location)                             &
             = Block_RHS_Vector(Current_i_Location)                       &
             + RHS_TMP(4)
 
-        Current_i_Location = CFA_ALL_Matrix_Map(5, lm_loc, re, d)
+        Current_i_Location = NR_Array_Map(re,d,5,lm_loc)
         Block_RHS_Vector(Current_i_Location)                             &
             = Block_RHS_Vector(Current_i_Location)                       &
             + RHS_TMP(5)
@@ -1411,7 +1308,7 @@ REAL(KIND = idp)                                                        ::  time
 ! dp, F, and lpmp_loc choose the row
 DO dp = 0,DEGREE
     DO F = 1,NUM_CFA_VARS
-        DO lpmp_loc = 0,LM_LENGTH-1
+        DO lpmp_loc = 1,LM_LENGTH
 
             ! Do Integrations and put values into a buffer
             time_a = MPI_Wtime()
@@ -1423,7 +1320,7 @@ DO dp = 0,DEGREE
 
             ! Put Buffer into Matrix
             ! row location
-            i_loc = dp*ULM_LENGTH + (F-1)*LM_LENGTH + lpmp_loc
+            i_loc = dp*ULM_LENGTH + (F-1)*LM_LENGTH + lpmp_loc - 1
 
             Start = i_loc*ELEM_PROB_DIM
             Finish = (i_loc+1)*ELEM_PROB_DIM - 1
@@ -1719,7 +1616,7 @@ IF ( myID_SubShell .NE. -1 ) THEN
                     DO dp = 0,DEGREE
 
                         Reusable_Values(dp) = SUM ( ( -R_SQUARE(:) * LPT_LPT(:,d,dp,1,1)*TWOOVER_DELTAR*TWOOVER_DELTAR      &
-                                                    + L_Lp1 * LPT_LPT(:,d,dp,0,0)        )    &
+                                                    - L_Lp1 * LPT_LPT(:,d,dp,0,0)        )    &
                                                     * INT_R_WEIGHTS(:)/TWOOVER_DELTAR     )
 !                        Reusable_Values(dp) = SUM( -DRDR_Factor(:,d,dp) + L_Lp1*RR_Factor(:,d,dp) )
 !                        PRINT*,Reusable_Values(dp)-SUM( -DRDR_Factor(:,d,dp) + L_Lp1*RR_Factor(:,d,dp) )
@@ -1822,7 +1719,7 @@ INTEGER                                                         ::  Start_Here, 
                                                                     here
 
 
-COMPLEX(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1)           ::  TMP_VECTOR
+COMPLEX(KIND = idp), DIMENSION(1:SUBSHELL_PROB_DIM)           ::  TMP_VECTOR
 
 
 INTEGER                                                         :: Start_Here_b, End_Here_b
@@ -1891,7 +1788,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
                     DO dp = 0,DEGREE
 
                         Reusable_Values(dp) = SUM ( ( -R_SQUARE(:) * LPT_LPT(:,d,dp,1,1)* TWOOVER_DELTAR* TWOOVER_DELTAR      &
-                                                + L_Lp1 * LPT_LPT(:,d,dp,0,0)        )    &
+                                                - L_Lp1 * LPT_LPT(:,d,dp,0,0)        )    &
                                                 * INT_R_WEIGHTS(:)/TWOOVER_DELTAR     )
                     END DO
                     
@@ -1947,7 +1844,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
                 CMPLX(1.0_idp,0.0_idp,KIND = idp),          &   ! ALPHA
                 Block_STF_MAT(:,:),                         &   ! A
                 2*NUM_OFF_DIAGONALS+1,                      &   ! LDA
-                -Coefficient_Vector(Start_Here:End_Here),    &   ! X
+                -NR_Coeff_Vector(Start_Here:End_Here),    &   ! X
                 1,                                          &   ! INCX
                 CMPLX(0.0_idp,0.0_idp,KIND = idp),          &   ! BETA
                 TMP_VECTOR(:),                              &   ! Y
@@ -1957,8 +1854,8 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
 
-    Start_Here = myID_SubShell*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH
-    END_HERE = Start_HERE + SUBSHELL_PROB_DIM -1
+    Start_Here = myID_SubShell*NUM_R_ELEMS_PER_SUBSHELL*DEGREE*ULM_LENGTH+1
+    End_Here = Start_Here + SUBSHELL_PROB_DIM - 1
 
 !    PRINT*,TMP_VECTOR
 
@@ -1970,13 +1867,10 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     END IF
 
 
-!    PRINT*,"RHS Vector output in z.CFA_3D_Master_Build, line 1848"
-!    DO i = Start_Here,End_Here
-!        PRINT*,TMP_VECTOR(i),Block_RHS_Vector(i),TMP_VECTOR(i)+Block_RHS_Vector(i)
-!    END DO
+
 
     Block_RHS_Vector(Start_Here:End_Here) = Block_RHS_Vector(Start_Here:End_Here)   &
-                                          + TMP_VECTOR(0:SUBSHELL_PROB_DIM-1)
+                                          + TMP_VECTOR(1:SUBSHELL_PROB_DIM)
 
 
 END IF
@@ -2010,8 +1904,8 @@ IF ( F == 1 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 1/ d u_1
         u = 1
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
                                + SUM( SubJacobian_EQ1_Term( :, rd, 1 ) * TP_TP_Factor( :, l, lp ) )  &
@@ -2021,8 +1915,8 @@ IF ( F == 1 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 1/ d u_2
         u = 2
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                  Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
                                 + SUM( SubJacobian_EQ1_Term( :, rd, 2 ) * TP_TP_Factor( :, l, lp ) )  &
@@ -2032,8 +1926,8 @@ IF ( F == 1 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 1/ d u_3
         u = 3
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                                + SUM( SubJacobian_EQ1_Term(:, rd, 3) * TP_TP_Factor( :, l, lp ) )    &
@@ -2051,8 +1945,8 @@ IF ( F == 1 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 1/ d u_4
         u = 4
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
                                + SUM( SubJacobian_EQ1_Term(:, rd, 7) * TP_TP_Factor( :, l, lp ) )    &
@@ -2070,8 +1964,8 @@ IF ( F == 1 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 1/ d u_5
         u = 5
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                      &
                                + SUM( SubJacobian_EQ1_Term(:, rd, 11) * TP_TP_Factor( :, l, lp ) )   &
@@ -2093,8 +1987,8 @@ ELSE IF ( F == 2 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 2/ d u_1
         u = 1
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ2_Term( :, rd, 1 ) * TP_TP_Factor( :, l, lp ) )  &
@@ -2105,8 +1999,8 @@ ELSE IF ( F == 2 ) THEN
 
     ! Jacobian Term corresponding to d Eq. 2/ d u_2
     u = 2
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                           + SUM( SubJacobian_EQ2_Term( :, rd, 2 ) * TP_TP_Factor( :, l, lp ) )  &
@@ -2116,8 +2010,8 @@ ELSE IF ( F == 2 ) THEN
 
     ! Jacobian Term corresponding to d Eq. 2/ d u_3
     u = 3
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                           + SUM( SubJacobian_EQ2_Term(:, rd, 3) * TP_TP_Factor( :, l, lp ) )    &
@@ -2133,8 +2027,8 @@ ELSE IF ( F == 2 ) THEN
     
     ! Jacobian Term corresponding to d Eq. 2/ d u_4
     u = 4
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                           + SUM( SubJacobian_EQ2_Term(:, rd, 7) * TP_TP_Factor( :, l, lp ) )    &
@@ -2151,8 +2045,8 @@ ELSE IF ( F == 2 ) THEN
 
 !    ! Jacobian Term corresponding to d Eq. 2/ d u_5
     u = 5
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                           + SUM( SubJacobian_EQ2_Term(:, rd, 11) * TP_TP_Factor( :, l, lp ) )   &
@@ -2175,8 +2069,8 @@ ELSE IF ( F == 3 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 3/ d u_1
         u = 1
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 1) * TP_TP_Factor( :, l, lp ) )    &
@@ -2194,8 +2088,8 @@ ELSE IF ( F == 3 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 3/ d u_2
         u = 2
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 5) * TP_TP_Factor( :, l, lp ) )    &
@@ -2211,8 +2105,8 @@ ELSE IF ( F == 3 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 3/ d u_3
         u = 3
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 9) * TP_TP_Factor( :, l, lp ) )    &
@@ -2229,8 +2123,8 @@ ELSE IF ( F == 3 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 3/ d u_4
         u = 4
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
@@ -2247,8 +2141,8 @@ ELSE IF ( F == 3 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 3/ d u_5
         u = 5
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                     &
                               + SUM( SubJacobian_EQ3_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
@@ -2272,8 +2166,8 @@ ELSE IF ( F == 4 ) THEN
 
     ! Jacobian Term corresponding to d Eq. 4/ d u_1
     u = 1
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
                           + SUM( SubJacobian_EQ4_Term(:, rd, 1) * TP_TP_Factor( :, l, lp ) )    &
@@ -2289,8 +2183,8 @@ ELSE IF ( F == 4 ) THEN
 
     ! Jacobian Term corresponding to d Eq. 4/ d u_2
     u = 2
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
                           + SUM( SubJacobian_EQ4_Term(:, rd, 5) * TP_TP_Factor( :, l, lp ) )    &
@@ -2306,8 +2200,8 @@ ELSE IF ( F == 4 ) THEN
 
     ! Jacobian Term corresponding to d Eq. 4/ d u_3
     u = 3
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
                           + SUM( SubJacobian_EQ4_Term(:, rd, 9) * TP_TP_Factor( :, l, lp ) )    &
@@ -2325,8 +2219,8 @@ ELSE IF ( F == 4 ) THEN
     
     ! Jacobian Term corresponding to d Eq. 4/ d u_4
     u = 4
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
                           + SUM( SubJacobian_EQ4_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
@@ -2344,8 +2238,8 @@ ELSE IF ( F == 4 ) THEN
 
     ! Jacobian Term corresponding to d Eq. 4/ d u_5
     u = 5
-    DO l = 0,LM_LENGTH-1
-        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+    DO l = 1,LM_LENGTH
+        j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
         DO rd = 1,NUM_R_QUAD_POINTS
             Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
                           + SUM( SubJacobian_EQ4_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
@@ -2368,8 +2262,8 @@ ELSE IF ( F == 5 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 5/ d u_1
         u = 1
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
                               + SUM( SubJacobian_EQ5_Term(:, rd, 1) * TP_TP_Factor( :, l, lp ) )    &
@@ -2386,8 +2280,8 @@ ELSE IF ( F == 5 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 5/ d u_2
         u = 2
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                                       &
                               + SUM( SubJacobian_EQ5_Term(:, rd, 5) * TP_TP_Factor( :, l, lp ) )    &
@@ -2404,8 +2298,8 @@ ELSE IF ( F == 5 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 5/ d u_3
         u = 3
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                              &
                               + SUM( SubJacobian_EQ5_Term(:, rd, 9) * TP_TP_Factor( :, l, lp ) )    &
@@ -2423,8 +2317,8 @@ ELSE IF ( F == 5 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 5/ d u_4
         u = 4
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                           &
                               + SUM( SubJacobian_EQ5_Term(:, rd, 13) * TP_TP_Factor( :, l, lp ) )   &
@@ -2442,8 +2336,8 @@ ELSE IF ( F == 5 ) THEN
 
         ! Jacobian Term corresponding to d Eq. 5/ d u_5
         u = 5
-        DO l = 0,LM_LENGTH-1
-            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l
+        DO l = 1,LM_LENGTH
+            j_loc = d*ULM_LENGTH + (u-1)*LM_LENGTH + l - 1
             DO rd = 1,NUM_R_QUAD_POINTS
                 Jacobian_Buffer(j_loc) = Jacobian_Buffer(j_loc)                                        &
                               + SUM( SubJacobian_EQ5_Term(:, rd, 17) * TP_TP_Factor( :, l, lp ) )   &
@@ -2484,15 +2378,15 @@ ALLOCATE( RDR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
 ALLOCATE( DRR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
 ALLOCATE( DRDR_Factor( 1:NUM_R_QUAD_POINTS, 0:DEGREE, 0:DEGREE )    )
 
-ALLOCATE( TP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
-ALLOCATE( dTP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
-ALLOCATE( TdP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
-ALLOCATE( TP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
-ALLOCATE( TP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
-ALLOCATE( dTP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
-ALLOCATE( dTP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
-ALLOCATE( TdP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
-ALLOCATE( TdP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 0:LM_LENGTH-1, 0:LM_LENGTH-1) )
+ALLOCATE( TP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
+ALLOCATE( dTP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
+ALLOCATE( TdP_TP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
+ALLOCATE( TP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
+ALLOCATE( TP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
+ALLOCATE( dTP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
+ALLOCATE( dTP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
+ALLOCATE( TdP_dTP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
+ALLOCATE( TdP_TdP_Factor( 1:NUM_TP_QUAD_POINTS, 1:LM_LENGTH, 1:LM_LENGTH) )
 
 ALLOCATE( R_Int_Weights( 1:NUM_R_QUAD_POINTS ) )
 ALLOCATE( TP_Int_Weights( 1:NUM_TP_QUAD_POINTS) )

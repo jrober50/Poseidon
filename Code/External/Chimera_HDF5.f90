@@ -36,37 +36,6 @@ USE Units_Module, &
 USE Variables_IO, &
                         ONLY :  Write_Flags
 
-USE Driver_Parameters, &
-                        ONLY :  DRIVER_R_ELEMS,        &
-                                DRIVER_T_ELEMS,        &
-                                DRIVER_P_ELEMS,        &
-                                DRIVER_R_LOCS,         &
-                                DRIVER_T_LOCS,         &
-                                DRIVER_P_LOCS,         &
-                                DRIVER_R_INPUT_NODES,  &
-                                DRIVER_T_INPUT_NODES,  &
-                                DRIVER_P_INPUT_NODES,  &
-                                DRIVER_Delta_R,        &
-                                DRIVER_Delta_T,        &
-                                DRIVER_Delta_P,        &
-                                Enclosed_Mass,          &
-                                DRIVER_POTENTIAL,      &
-                                DRIVER_LAPSE_VAL,      &
-                                DRIVER_E,              &
-                                DRIVER_S,              &
-                                DRIVER_Si,             &
-                                DRIVER_T_LOCS_LOCAL,   &
-                                DRIVER_P_LOCS_LOCAL,   &
-                                myID,                   &
-                                myID_theta,             &
-                                myID_phi,               &
-                                ij_ray_dim,             &
-                                ik_ray_dim,             &
-                                MPI_COMM_GRID,          &
-                                DRIVER_PROCS,          &
-                                DRIVER_y_PROCS,        &
-                                DRIVER_z_PROCS
-
 USE CHIMERA_TEST_FUNCS_Module,  &
                         ONLY :  INIT_CHIMERA_POTENTIAL, &
                                 INIT_CHIMERA_SHIFT_VAL
@@ -80,6 +49,8 @@ IMPLICIT NONE
 INTEGER                                 :: my_grid = 1
 INTEGER                                 :: nlog=6
 
+INTEGER, DIMENSION(1:3)                             ::  Num_Nodes
+INTEGER, DIMENSION(1:3)                             ::  Num_Elems
 
 INTEGER                                 :: imin, imax
 INTEGER                                 :: jmin, jmax
@@ -127,7 +98,22 @@ REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  vel_t
 REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  vel_p
 REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  int_e
 REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE     ::  Lapse_Val
-REAL(KIND = idp), DIMENSION(1)                                  :: time
+REAL(KIND = idp), DIMENSION(1)                      ::  time
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         :: x_ef
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         :: y_ef
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         :: z_ef
+
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         :: dx_cf
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         :: dy_cf
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE         :: dz_cf
+
+INTEGER                                 :: ij_ray_dim
+INTEGER                                 :: ik_ray_dim
+INTEGER                                 :: myid
+INTEGER                                 :: myid_phi
+INTEGER                                 :: zProcs
+
 
 
 CONTAINS
@@ -136,7 +122,13 @@ CONTAINS
 !               LOAD_CHIMERA_HDF5                                                !
 !                                                                                !
 !################################################################################!
-SUBROUTINE LOAD_CHIMERA_HDF5(file_number, stride, path, frame_flag )
+SUBROUTINE LOAD_CHIMERA_HDF5(file_number, stride, path, frame_flag, &
+                             Num_Quad,                          &
+                             R_Quad, T_Quad, P_Quad,            &
+                             Left_Limit, Right_Limit,           &
+                             Output_Elem,                       &
+                             R_Locs, T_Locs, P_Locs,            &
+                             Output_E, Output_S, Output_Si      )
 
 INTEGER, INTENT(IN)                                 :: file_number
 INTEGER, INTENT(IN)                                 :: stride
@@ -144,6 +136,31 @@ INTEGER, INTENT(IN)                                 :: stride
 LOGICAL, INTENT(IN)                                 :: frame_flag
 
 CHARACTER(len=*), INTENT(IN)                        :: path
+
+INTEGER,    INTENT(IN), DIMENSION( 1:3 )                                    :: Num_Quad
+REAL(idp),  INTENT(IN), DIMENSION( 1:Num_Quad(1) )                          :: R_Quad
+REAL(idp),  INTENT(IN), DIMENSION( 1:Num_Quad(2) )                          :: T_Quad
+REAL(idp),  INTENT(IN), DIMENSION( 1:Num_Quad(3) )                          :: P_Quad
+REAL(idp),  INTENT(IN)                                                      :: Left_Limit
+REAL(idp),  INTENT(IN)                                                      :: Right_Limit
+
+INTEGER,    INTENT(OUT), DIMENSION( 1:3 )                                    :: Output_Elem
+REAL(idp),  INTENT(OUT), DIMENSION( 1:Num_Elems(1)+1 )                        :: R_Locs
+REAL(idp),  INTENT(OUT), DIMENSION( 1:Num_Elems(2)+1 )                        :: T_Locs
+REAL(idp),  INTENT(OUT), DIMENSION( 1:Num_Elems(3)+1 )                        :: P_Locs
+
+REAL(idp),  INTENT(OUT),DIMENSION( 1:Num_Quad(1)*Num_Quad(2)*Num_Quad(3),   &
+                                   0:Num_Elems(1)-1,                         &
+                                   0:Num_Elems(2)-1,                         &
+                                   0:Num_Elems(3)-1  )                       ::  Output_E,   &
+                                                                                Output_S
+
+REAL(idp), INTENT(OUT), DIMENSION( 1:Num_Quad(1)*Num_Quad(2)*Num_Quad(3),   &
+                                   0:Num_Elems(1)-1,                         &
+                                   0:Num_Elems(2)-1,                         &
+                                   0:Num_Elems(3)-1,                         &
+                                   1:3                  )                   ::  Output_Si
+
 
 INTEGER                                             :: here
 INTEGER                                             :: i,j,k
@@ -153,7 +170,7 @@ REAL(KIND = idp)                                    :: Specific_Enthalpy
 REAL(KIND = idp)                                    :: V_Square
 REAL(KIND = idp)                                    :: Reusable_Value
 
-INTEGER, DIMENSION(1:3)                             ::  Num_Nodes
+
 
 REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE   ::  HR_Density
 
@@ -172,14 +189,27 @@ INTEGER :: error
 
 
 
+
+
+
+!  Open CHIMERA HDF5 File  !
+CALL OPEN_CHIMERA_HDF5( file_number, path, frame_flag )
+
+
+!  Read Relevant data into arrays !
+CALL READ_CHIMERA_Base( Num_Elems, file_number, stride )
+
+
+
+
 imin = 1
-imax = DRIVER_R_ELEMS
+imax = Num_Elems(1)
 
 jmin = 1
-jmax = DRIVER_T_ELEMS
+jmax = Num_Elems(2)
 
 kmin = 1
-kmax = DRIVER_P_ELEMS
+kmax = Num_Elems(3)
 
 i_lower = imin
 i_upper = imax
@@ -190,34 +220,47 @@ j_upper = jmax
 k_lower = kmin
 k_upper = kmax
 
-IF ( DRIVER_T_ELEMS > 1) j_lower = 1
-IF ( DRIVER_T_ELEMS > 1) j_upper = ij_ray_dim
-IF ( DRIVER_P_ELEMS > 1) k_lower = 1
-IF ( DRIVER_P_ELEMS > 1) k_upper = ik_ray_dim
+ij_ray_dim = Num_Elems(2)
+ik_ray_dim = Num_Elems(3)
+
+IF ( Num_Elems(2) > 1) j_lower = 1
+IF ( Num_Elems(2) > 1) j_upper = ij_ray_dim
+IF ( Num_Elems(3) > 1) k_lower = 1
+IF ( Num_Elems(3) > 1) k_upper = ik_ray_dim
 
 
-ALLOCATE( HR_DENSITY(DRIVER_R_INPUT_NODES,k_lower:k_upper,j_lower:j_upper,i_lower:i_upper))
-ALLOCATE( Quad_Locs(1:DRIVER_R_INPUT_NODES) )
-ALLOCATE( Quad_Weights(1:DRIVER_R_INPUT_NODES) )
-ALLOCATE( Cur_R_Locs(1:DRIVER_R_INPUT_NODES) )
+ALLOCATE( HR_DENSITY(Num_Quad(1),k_lower:k_upper,j_lower:j_upper,i_lower:i_upper))
+ALLOCATE( Quad_Locs(1:Num_Quad(1)) )
+ALLOCATE( Quad_Weights(1:Num_Quad(1)) )
+ALLOCATE( Cur_R_Locs(1:Num_Quad(1)) )
 
 
 
 !  Allocate space for temporary storage !
 ALLOCATE( Density(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 ALLOCATE( Pressure(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
-ALLOCATE( vel_r(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) ) 
+ALLOCATE( vel_r(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 ALLOCATE( vel_t(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 ALLOCATE( vel_p(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 ALLOCATE( int_e(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 ALLOCATE( Lapse_Val(k_lower:k_upper,j_lower:j_upper,i_lower:i_upper) )
 
 
-CALL Initialize_LG_Quadrature(DRIVER_R_INPUT_NODES, Quad_Locs, Quad_Weights)
+ALLOCATE( x_ef(0:Num_Elems(1)), dx_cf(0:Num_Elems(1)-1) )
+ALLOCATE( y_ef(0:Num_Elems(2)), dy_cf(0:Num_Elems(2)-1) )
+ALLOCATE( z_ef(0:Num_Elems(3)), dz_cf(0:Num_Elems(3)-1) )
 
 
-!  Open CHIMERA HDF5 File  !
-CALL OPEN_CHIMERA_HDF5( file_number, path, frame_flag )
+CALL Initialize_LG_Quadrature(Num_Quad(1), Quad_Locs, Quad_Weights)
+
+
+
+
+
+
+
+
+
 
 !  Read Relevant data into arrays !
 CALL READ_CHIMERA_HDF5( file_number, stride )
@@ -229,67 +272,44 @@ CALL CLOSE_CHIMERA_HDF5()
 
 
 
-Density(:,:,DRIVER_R_ELEMS) = Density(:,:,DRIVER_R_ELEMS-1)
-
-
-!DO i = i_lower, i_upper-1
-!
-!    r_center = (DRIVER_R_LOCS(i)+DRIVER_R_LOCS(i+1))/2.0_idp
-!    deltar_overtwo = (DRIVER_R_LOCS(i+1)-DRIVER_R_LOCS(i))/2.0_idp
-!    CUR_R_LOCS(:) = deltar_overtwo * (Quad_Locs(:) + 1.0_idp ) + DRIVER_R_LOCS(i)
-!
-!    DO rd = 1,DRIVER_R_INPUT_NODES
-!
-!        IF ( CUR_R_LOCS(rd) < r_center  ) THEN
-!
-!
-!        ELSE
-!
-!
-!        END IF
-!    END DO  ! rd Loop
-!END DO  ! i Loop
 
 
 
+Density(:,:,Num_Elems(1)) = Density(:,:,Num_Elems(1)-1)
 
 
 
 
 !  Convert CHIMERA data into CFA Input !
 DO i = i_lower, i_upper
-    DO j = j_lower, j_upper
-        DO k = k_lower, k_upper
+DO j = j_lower, j_upper
+DO k = k_lower, k_upper
 
-            Specific_Enthalpy = C_Square + int_e(k,j,i) + Pressure(k,j,i)/Density(k,j,i)
-            V_Square = vel_r(k,j,i)*vel_r(k,j,i) + vel_t(k,j,i)*vel_t(k,j,i) + vel_p(k,j,i)*vel_p(k,j,i)
+    Specific_Enthalpy = C_Square + int_e(k,j,i) + Pressure(k,j,i)/Density(k,j,i)
+    V_Square = vel_r(k,j,i)*vel_r(k,j,i) + vel_t(k,j,i)*vel_t(k,j,i) + vel_p(k,j,i)*vel_p(k,j,i)
 
-            Reusable_Value = (Density(k,j,i)*Specific_Enthalpy)/(1.0_idp - V_Square/C_Square)
+    Reusable_Value = (Density(k,j,i)*Specific_Enthalpy)/(1.0_idp - V_Square/C_Square)
 
-            DO pd = 1, DRIVER_P_INPUT_NODES
-                DO td = 1, DRIVER_T_INPUT_NODES
-                    DO rd = 1, DRIVER_R_INPUT_NODES
+    DO rd = 1, Num_Quad(1)
+    DO td = 1, Num_Quad(2)
+    DO pd = 1, Num_Quad(3)
 
+        here = (rd-1) * Num_Quad(3)*Num_Quad(2)             &
+             + (td-1) * Num_Quad(3)                                  &
+             + pd
 
+        Output_E(here,i-1,j-1,k-1) = Reusable_Value - Pressure(k,j,i)
+        Output_S(here,i-1,j-1,k-1) = Reusable_Value*V_Square/C_Square + 3.0_idp * Pressure(k,j,i)
+        Output_Si(here,i-1,j-1,k-1,1) = Reusable_Value*vel_r(k,j,i)/C_Square
+        Output_Si(here,i-1,j-1,k-1,2) = Reusable_Value*vel_t(k,j,i)/C_Square
+        Output_Si(here,i-1,j-1,k-1,3) = Reusable_Value*vel_p(k,j,i)/C_Square
 
-                        here = (pd-1) * DRIVER_R_INPUT_NODES*DRIVER_T_INPUT_NODES             &
-                             + (td-1) * DRIVER_R_INPUT_NODES                                   &
-                             + rd
-
-                        DRIVER_E(here,i-1,j-1,k-1) = Reusable_Value - Pressure(k,j,i)
-                        DRIVER_S(here,i-1,j-1,k-1) = Reusable_Value*V_Square/C_Square + 3.0_idp * Pressure(k,j,i)
-                        DRIVER_Si(here,i-1,j-1,k-1,1) = Reusable_Value*vel_r(k,j,i)/C_Square
-                        DRIVER_Si(here,i-1,j-1,k-1,2) = Reusable_Value*vel_t(k,j,i)/C_Square
-                        DRIVER_Si(here,i-1,j-1,k-1,3) = Reusable_Value*vel_p(k,j,i)/C_Square
-
-                        DRIVER_LAPSE_VAL(i-1,j-1,k-1) = Lapse_Val(k,j,i)
-
-                    END DO
-                END DO
-            END DO
-
-        END DO
     END DO
+    END DO
+    END DO
+
+END DO
+END DO
 END DO
 
 
@@ -300,17 +320,8 @@ END DO
 
 CALL INIT_CHIMERA_POTENTIAL( k_lower, k_upper, j_lower, j_upper, i_lower, i_upper, Density )
 
-Num_Nodes = (/ DRIVER_R_INPUT_NODES, DRIVER_T_INPUT_NODES, DRIVER_P_INPUT_NODES /)
-CALL INIT_CHIMERA_SHIFT_VAL( Num_Nodes,                                         &
-                             DRIVER_R_ELEMS,DRIVER_T_ELEMS,DRIVER_P_ELEMS,   &
-                             DRIVER_Si,                                        &
-                             DRIVER_R_LOCS                                     &
-                            )
+Num_Nodes = (/ Num_Quad(1), Num_Quad(2), Num_Quad(3) /)
 
-
-
-
-CALL WRITE_CHIMERA_OUTPUT( file_number )
 
 
 
@@ -326,6 +337,9 @@ DEALLOCATE( Lapse_Val )
 
 
 END SUBROUTINE LOAD_CHIMERA_HDF5
+
+
+
 
 
 
@@ -396,7 +410,7 @@ IF (myID == 0 ) THEN
 
 END IF ! myID == 0
 
-CALL MPI_BCAST( nz_hyperslabs, 1, MPI_INTEGER, 0, MPI_COMM_GRID, error )
+!CALL MPI_BCAST( nz_hyperslabs, 1, MPI_INTEGER, 0, MPI_COMM_GRID, error )
 
 
 j_offset = 0
@@ -406,17 +420,17 @@ k_offset = myID_phi * ik_ray_dim
 ! Initialize hyperslabs and communicators
 !-----------------------------------------------------------------------
 
-nz_hyperslab_width = DRIVER_P_ELEMS / nz_hyperslabs
-IF( MOD( DRIVER_z_PROCS, nz_hyperslabs ) /= 0 ) THEN
-    PRINT*, 'DRIVER_z_PROCS should be evenly divisible by nz_hyperslabs'
-    PRINT*, 'DRIVER_z_PROCS = ', DRIVER_z_PROCS, ' nz_hyperslabs = ', nz_hyperslabs
+nz_hyperslab_width = Num_Elems(3)/ nz_hyperslabs
+IF( MOD( zProcs, nz_hyperslabs ) /= 0 ) THEN
+    PRINT*, 'zProcs should be evenly divisible by nz_hyperslabs'
+    PRINT*, 'zProcs = ', zProcs, ' nz_hyperslabs = ', nz_hyperslabs
     CALL MPI_ABORT( MPI_COMM_WORLD, 666, error)
 END IF
 
-nz_hyperslab_procwidth = DRIVER_z_PROCS / nz_hyperslabs
-IF( nz_hyperslabs > DRIVER_z_PROCS ) THEN
-    PRINT*, 'nz_hyperslabs cannot be more than DRIVER_z_PROCS'
-    PRINT*, 'DRIVER_z_PROCS = ', DRIVER_z_PROCS, ' nz_hyperslabs = ', nz_hyperslabs
+nz_hyperslab_procwidth = zProcs / nz_hyperslabs
+IF( nz_hyperslabs > zProcs ) THEN
+    PRINT*, 'nz_hyperslabs cannot be more than zProcs'
+    PRINT*, 'zProcs = ', zProcs, ' nz_hyperslabs = ', nz_hyperslabs
     CALL MPI_ABORT( MPI_COMM_WORLD, 666, error)
 END IF
 
@@ -425,7 +439,7 @@ k_hyperslab_offset = MOD( k_offset, nz_hyperslab_width )
 
 !-- Create MPI communicator for each group of writers
 my_hyperslab_group = myID_phi / nz_hyperslab_procwidth + 1
-nproc_per_hyperslab_group = DRIVER_z_PROCS / nz_hyperslabs
+nproc_per_hyperslab_group = zProcs / nz_hyperslabs
 
 ALLOCATE(hyperslab_group_member(nproc_per_hyperslab_group))
 
@@ -533,8 +547,34 @@ END SUBROUTINE CLOSE_CHIMERA_HDF5
 
 
 
+!+301+###########################################################################!
+!                                                                                !
+!              READ_CHIMERA_Base                                                 !
+!                                                                                !
+!################################################################################!
+SUBROUTINE READ_CHIMERA_Base( Num_Elems, file_number, stride )
+
+INTEGER, INTENT(OUT), DIMENSION(1:3)                :: Num_Elems
+INTEGER, INTENT(in)                                 :: file_number
+INTEGER, INTENT(in)                                 :: stride
+
+INTEGER                                             :: error
+
+! Open 'mesh' group !
+CALL h5gopen_f(file_id, '/mesh', group_id, error)
 
 
+! Read and Check Array Dimensions !
+! Spatial Elements !
+datasize1d(1) = 3
+CALL read_1d_slab('array_dimensions', Num_Elems, group_id, datasize1d)
+! Close Mesh Group !
+CALL h5gclose_f(group_id, error)
+
+
+
+
+END SUBROUTINE READ_CHIMERA_Base
 
 
 
@@ -567,79 +607,19 @@ INTEGER, DIMENSION(2)                               :: theta_index_bound
 INTEGER, DIMENSION(2)                               :: phi_index_bound
 
 
+REAL(KIND = idp), DIMENSION(Num_Elems(2),Num_Elems(3))     :: ongrid_mask
 
-!REAL(KIND = idp), DIMENSION(0:DRIVER_R_ELEMS)                      :: x_ef
-!REAL(KIND = idp), DIMENSION(0:DRIVER_T_ELEMS)                      :: y_ef
-!REAL(KIND = idp), DIMENSION(0:DRIVER_P_ELEMS)                      :: z_ef
-!
-!REAL(KIND = idp), DIMENSION(0:DRIVER_R_ELEMS-1)                    :: dx_cf
-!REAL(KIND = idp), DIMENSION(0:DRIVER_T_ELEMS-1)                    :: dy_cf
-!REAL(KIND = idp), DIMENSION(0:DRIVER_P_ELEMS-1)                    :: dz_cf
+REAL(KIND = idp)                                            :: r2dr     ! 1/3 (r_outer^3 - r_inner^3)
+REAL(KIND = idp), DIMENSION(Num_Elems(1))                   :: send_buff, recv_buff
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: x_ef
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: y_ef
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: z_ef
-
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: dx_cf
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: dy_cf
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                        :: dz_cf
-
-
-
-REAL(KIND = idp), DIMENSION(DRIVER_T_ELEMS,DRIVER_P_ELEMS)    :: ongrid_mask
-
-REAL(KIND = idp)                                                :: r2dr     ! 1/3 (r_outer^3 - r_inner^3)
-REAL(KIND = idp), DIMENSION(DRIVER_R_ELEMS)                    :: send_buff, recv_buff
-
-REAL(KIND = idp)                                                :: lw_max, l_x, l_y, l_z, rsinth  ! widths of zones
-REAL(KIND = idp)                                                :: min_omega
+REAL(KIND = idp)                                            :: lw_max, l_x, l_y, l_z, rsinth  ! widths of zones
+REAL(KIND = idp)                                            :: min_omega
 
 
 
 ! Open 'mesh' group !
 CALL h5gopen_f(file_id, '/mesh', group_id, error)
 
-
-! Read and Check Array Dimensions !
-! Spatial Elements !
-datasize1d(1) = 3
-CALL read_1d_slab('array_dimensions', array_dimensions, group_id, datasize1d)
-
-!IF ( array_dimensions(1) /= DRIVER_R_ELEMS ) THEN
-!    PRINT *, '*** ERROR: non-matching value of nx:', DRIVER_R_ELEMS, '/=', array_dimensions(1)
-!    CALL MPI_ABORT(MPI_COMM_WORLD,101,error)
-!END IF
-!
-!IF ( array_dimensions(2) /= DRIVER_T_ELEMS ) THEN
-!    PRINT *, '*** ERROR: non-matching value of ny:', DRIVER_T_ELEMS, '/=', array_dimensions(2)
-!    CALL MPI_ABORT(MPI_COMM_WORLD,102,error)
-!END IF
-!
-!IF ( array_dimensions(3) /= DRIVER_P_ELEMS ) THEN
-!    PRINT *, '*** ERROR: non-matching value of nz:', DRIVER_P_ELEMS, '/=', array_dimensions(3)
-!    CALL MPI_ABORT(MPI_COMM_WORLD,103,error)
-!END IF
-
-
-IF ( array_dimensions(1) < DRIVER_R_ELEMS ) THEN
-    PRINT *, '*** ERROR: Incompatable value of nx, too large:', DRIVER_R_ELEMS, '>', array_dimensions(1)
-    CALL MPI_ABORT(MPI_COMM_WORLD,101,error)
-END IF
-
-IF ( array_dimensions(2) < DRIVER_T_ELEMS ) THEN
-    PRINT *, '*** ERROR: Incompatable value of ny, too large:', DRIVER_T_ELEMS, '>', array_dimensions(2)
-    CALL MPI_ABORT(MPI_COMM_WORLD,102,error)
-END IF
-
-IF ( array_dimensions(3) < DRIVER_P_ELEMS ) THEN
-    PRINT *, '*** ERROR: Incompatable value of nz, too large:', DRIVER_P_ELEMS, '>', array_dimensions(3)
-    CALL MPI_ABORT(MPI_COMM_WORLD,103,error)
-END IF
-
-
-ALLOCATE( x_ef(0:array_dimensions(1)), dx_cf(0:array_dimensions(1)-1) )
-ALLOCATE( y_ef(0:array_dimensions(2)), dy_cf(0:array_dimensions(2)-1) )
-ALLOCATE( z_ef(0:array_dimensions(3)), dz_cf(0:array_dimensions(3)-1) )
 
 
 datasize1d(1) = 1
@@ -659,15 +639,6 @@ CALL read_1d_slab('z_ef', z_ef, group_id, datasize1d)
 CALL read_1d_slab('dz_cf',dz_cf, group_id, datasize1d)
 
 
-DRIVER_R_LOCS = x_ef(0:DRIVER_R_ELEMS)
-DRIVER_T_LOCS = y_ef(0:DRIVER_T_ELEMS)
-DRIVER_P_LOCS = z_ef(0:DRIVER_P_ELEMS)
-
-
-DRIVER_Delta_R = dx_cf(0:DRIVER_R_ELEMS-1)
-DRIVER_Delta_T = dy_cf(0:DRIVER_T_ELEMS-1)
-DRIVER_Delta_P = dz_cf(0:DRIVER_P_ELEMS-1)
-
 
 
 ! Close Mesh Group !
@@ -685,7 +656,7 @@ CALL h5gclose_f(group_id, error)
 ! Open fluid Group !
 CALL h5gopen_f(file_id, '/fluid', group_id, error)
 
-datasize3d = (/DRIVER_R_ELEMS, ij_ray_dim, ik_ray_dim/)
+datasize3d = (/num_elems(1), ij_ray_dim, ik_ray_dim/)
 slab_offset3d = (/0,j_offset,k_hyperslab_offset/)
 
 
@@ -717,7 +688,7 @@ CALL h5gclose_f(group_id, error)
 !! Open fluid Group !
 CALL h5gopen_f(file_id, '/metadata', group_id, error)
 
-datasize3d = (/DRIVER_R_ELEMS, ij_ray_dim, ik_ray_dim/)
+datasize3d = (/Num_Elems(1), ij_ray_dim, ik_ray_dim/)
 slab_offset3d = (/0,j_offset,k_hyperslab_offset/)
 
 
@@ -787,146 +758,6 @@ END SUBROUTINE READ_SCALAR_HDF
 
 
 
-!+501+###########################################################################!
-!                                                                                !
-!              WRITE_CHIMERA_OUTPUT                                              !
-!                                                                                !
-!################################################################################!
-SUBROUTINE WRITE_CHIMERA_OUTPUT( file_number )
-
-INTEGER, INTENT(IN)                                 ::  file_number
-
-INTEGER                                             ::  File_IDa = 72
-INTEGER                                             ::  File_IDb = 73
-INTEGER                                             ::  File_IDc = 74
-INTEGER                                             ::  File_IDd = 75
-INTEGER                                             ::  File_IDe = 76
-INTEGER                                             ::  File_IDf = 77
-INTEGER                                             ::  File_IDg = 78
-INTEGER                                             ::  File_IDh = 79
-
-CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namea
-CHARACTER(LEN = :), ALLOCATABLE                     ::  file_nameb
-CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namec
-CHARACTER(LEN = :), ALLOCATABLE                     ::  file_named
-CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namee
-CHARACTER(LEN = :), ALLOCATABLE                     ::  file_namef
-CHARACTER(LEN = :), ALLOCATABLE                     ::  file_nameg
-CHARACTER(LEN = :), ALLOCATABLE                     ::  file_nameh
-
-LOGICAL                                             ::  exist
-INTEGER                                             ::  i, j, k
-
-110 FORMAT (11X,A1,24X,A5)
-111 FORMAT (11X,A1,24X,A1,22X,A2,22X,A1,22X,A3)
-112 FORMAT (11X,A1,23X,A3,17X,A8)
-
-114 FORMAT (E22.15,3x,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
-115 FORMAT (E22.15,3X,ES22.15,3X,ES22.15)
-
-
-IF ( Write_Flags(4) == 1 ) THEN
-
-    ALLOCATE( character(len=50) :: file_namea )
-    ALLOCATE( character(len=48) :: file_nameb )
-    ALLOCATE( character(len=49) :: file_namec )
-    ALLOCATE( character(len=46) :: file_named )
-    ALLOCATE( character(len=46) :: file_namee )
-    ALLOCATE( character(len=46) :: file_namef )
-    ALLOCATE( character(len=50) :: file_nameg )
-    ALLOCATE( character(len=50) :: file_nameh )
-
-    WRITE(file_namea,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Lapse_',file_number,'.out'
-    WRITE(file_nameb,'(A39,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Density_',file_number,'.out'
-    WRITE(file_namec,'(A40,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_Velocity_',file_number,'.out'
-    WRITE(file_named,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_rlocs_',file_number,'.out'
-    WRITE(file_namee,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_tlocs_',file_number,'.out'
-    WRITE(file_namef,'(A37,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_plocs_',file_number,'.out'
-    WRITE(file_nameg,'(A41,I5.5,A4)')'OUTPUT/CHIMERA_RESULTS/CHIMERA_potential_',file_number,'.out'
-
-
-    OPEN(unit = file_ida,file = file_namea)
-    OPEN(unit = file_idb,file = file_nameb)
-    OPEN(unit = file_idc,file = file_namec)
-    OPEN(unit = file_idd,file = file_named)
-    OPEN(unit = file_ide,file = file_namee)
-    OPEN(unit = file_idf,file = file_namef)
-    OPEN(unit = file_idg,file = file_nameg)
-
-
-    ! Output CHIMERA rlocs
-    WRITE(file_IDd,*)1.0_idp
-    DO i = 0,DRIVER_R_ELEMS-1
-        WRITE(file_IDd,*) (DRIVER_R_LOCS(i+1)+DRIVER_R_LOCS(i))/2.0_idp
-    END DO
-
-    ! Output CHIMERA tlocs
-    DO i = 0,ij_ray_dim-1
-        WRITE(file_IDe,*) (DRIVER_T_LOCS(i+1)+DRIVER_T_LOCS(i))/2.0_idp
-    END DO
-
-    ! Output CHIMERA tlocs
-    DO i = 0,ik_ray_dim-1
-        WRITE(file_IDf,*) (DRIVER_P_LOCS(i+1)+DRIVER_P_LOCS(i))/2.0_idp
-    END DO
-
-
-    ! Output CHIMERA Density
-    DO k = 1,ik_ray_dim
-        DO j = 1, ij_ray_dim
-
-            WRITE(file_idb,*)Density(k,j,1),Density(k,j,:)
-
-        END DO ! j Loop
-    END DO ! k Loop
-
-    ! Output CHIMERA Velocity
-    DO k = 1,ik_ray_dim
-        DO j = 1, ij_ray_dim
-
-            WRITE(file_idc,*)Vel_R(k,j,1),Vel_R(k,j,:)
-
-        END DO ! j Loop
-    END DO ! k Loop
-
-
-    ! Output CHIMERA Potential
-    WRITE(file_IDg,*)DRIVER_Potential
-
-
-    WRITE(File_IDa,*)DRIVER_Lapse_val
-
-
-
-    CLOSE(unit = file_ida)
-    CLOSE(unit = file_idb)
-    CLOSE(unit = file_idc)
-    CLOSE(unit = file_idd)
-    CLOSE(unit = file_ide)
-    CLOSE(unit = file_idf)
-    CLOSE(unit = file_IDg)
-
-END IF
-
-
-
-
-
-
-!WRITE(file_nameh,'(A)') 'OUTPUT/Poseidon_Results/Frame_Time.out'
-!inquire(file = file_nameh, exist=exist)
-!
-!IF (( exist ) .AND. (file_number .NE. 1 )) THEN
-!    OPEN(unit = file_idh,file = file_nameh,status="old",position="append", action="write" )
-!    WRITE(file_idh,'(I5.5,E22.15)') file_number, time
-!    CLOSE(unit=file_idh)
-!ELSE
-!    OPEN(unit = file_idh,file = file_nameh)
-!    WRITE(file_idh,'(I5.5,E22.15)') file_number, time
-!    CLOSE(unit=file_idh)
-!END IF
-
-END SUBROUTINE WRITE_CHIMERA_OUTPUT
 
 
 

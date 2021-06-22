@@ -99,7 +99,7 @@ USE Variables_Tables, &
 
 
 USE Variables_NR,   &
-                ONLY :  Coefficient_Vector,         &
+                ONLY :  NR_Coeff_Vector,         &
                         Block_RHS_Vector,           &
                         BLOCK_ELEM_STF_MATVEC,      &
                         Block_STF_MAT
@@ -679,7 +679,7 @@ END DO
 !$OMP           Beta_DRV_Trace,                                         &
 !$OMP           Lagrange_Poly_Table,                                    &
 !$OMP           Ylm_Values, Ylm_dt_Values, Ylm_dp_Values,               &
-!$OMP           Coefficient_Vector,                                     &
+!$OMP           NR_Coeff_Vector,                                     &
 !$OMP           Matrix_Location,                                        &
 !$OMP           LM_Location,                                            &
 !$OMP           LM_Length, ULM_LENGTH                           )
@@ -706,15 +706,15 @@ DO rd = 1,NUM_R_QUAD_POINTS
             Here = CFA_All_Matrix_Map(ui, 0, re, d)
             There = Here + LM_LENGTH - 1
 
-!                PRINT*,Coefficient_Vector(Here:There)
+!                PRINT*,NR_Coeff_Vector(Here:There)
 
             TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
-                                    + SUM( Coefficient_Vector( Here:There )     &
+                                    + SUM( NR_Coeff_Vector( Here:There )     &
                                     * Ylm_Values( :, tpd, te, pe )       )      &
                                     * Lagrange_Poly_Table( d, rd, 0 )
 
             TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
-                                    + SUM( Coefficient_Vector( Here:There )     &
+                                    + SUM( NR_Coeff_Vector( Here:There )     &
                                     * Ylm_Values( :, tpd, te, pe )       )      &
                                     * Lagrange_Poly_Table( d, rd, 1 )           &
                                     / DELTAR_OVERTWO
@@ -1658,7 +1658,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
                 CMPLX(1.0_idp,0.0_idp,KIND = idp),          &   ! ALPHA
                 Block_STF_MAT(:,:),                         &   ! A
                 2*NUM_OFF_DIAGONALS+1,                      &   ! LDA
-                -Coefficient_Vector(Start_Here:End_Here),    &   ! X
+                -NR_Coeff_Vector(Start_Here:End_Here),    &   ! X
                 1,                                          &   ! INCX
                 CMPLX(0.0_idp,0.0_idp,KIND = idp),          &   ! BETA
                 TMP_VECTOR(:),                              &   ! Y

@@ -15,8 +15,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-CMODE	=DEBUG
-#CMODE	=OPTIMIZE
+#CMODE	=DEBUG
+CMODE	=OPTIMIZE
 
 
 ## Compile with Openmp
@@ -44,7 +44,7 @@ MPI_MODE        =ON
 #MPI_MODE       =OFF
 
 
-Poseidon_Dir = /Users/nickroberts/Poseidon/Restructure
+Poseidon_Dir = /Users/nickroberts/Poseidon
 
 include ./Build/Makefile_Core
 
@@ -62,7 +62,7 @@ main  : $(POSEIDON)
 
 
 PoseidonLib: $(POSEIDON)
-	ar crv $(OBJ)/Poseidon.a $(OBJ)/*.o
+	ar crv $(OBJ)/poseidon.a $(OBJ)/*.o
 
 
 

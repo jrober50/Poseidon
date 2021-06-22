@@ -45,7 +45,8 @@ USE Variables_Derived, &
 
 USE Variables_IO, &
             ONLY :  Frame_Update_Table,         &
-                    Write_Flags
+                    Write_Flags,                &
+                    Print_Flags
 
 
 USE Poseidon_Parameters, &
@@ -226,6 +227,7 @@ END IF
 !
 !   Begin Method
 !
+
 IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
     PR = .TRUE.
     WRITE(*,'(A)')"Initial Guess Values"

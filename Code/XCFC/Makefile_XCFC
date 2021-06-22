@@ -1,0 +1,6 @@
+XCFC = \
+  Allocation_XCFC.o             \
+  XCFC_Source_Vector.o          \
+  XCFC_Main_Module.o            \
+  Initialization_XCFC.o     	\
+

@@ -91,6 +91,9 @@ USE CFA_Newton_Raphson_3D_Module, &
 USE FP_AndersonM_Module, &
             ONLY : Fixed_Point_AndersonM
 
+USE XCFC_Main_Module, &
+            ONLY : XCFC_Method
+
 USE Allocation_Mesh, &
             ONLY : Deallocate_Mesh
 
@@ -155,15 +158,19 @@ IF ( Readiness_Flag ) THEN
 
         Call Fixed_Point_AndersonM()
 
+    ELSE IF ( Method_Flag == 3 ) THEN
+        CALL XCFC_Method()
     ELSE
 
         PRINT*,"ERROR IN POSEIDON : Solver Type Flag has invalid value. "
+        STOP
 
     END IF
 
 ELSE
 
     PRINT*, "ERROR IN POSEIDON : There was an error in setting up Poseidon, therefore it did not run."
+    STOP
 
 END IF
 Poseidon_Frame = Poseidon_Frame + 1

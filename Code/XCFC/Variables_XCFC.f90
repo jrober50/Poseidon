@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Variables_FP                                                                 !##!
+MODULE Variables_XCFC                                                                 !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -113,5 +113,5 @@ CHARACTER(LEN=31), DIMENSION(N_FPTT):: FPTT_Names = [   'Initalize Fixed Point M
 
 
 
-END MODULE Variables_FP 
+END MODULE Variables_XCFC
 

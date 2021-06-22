@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Variables_FP                                                                 !##!
+MODULE Variables_XCFC                                                                 !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -36,6 +36,11 @@ COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Source_Vector_Bet
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Coeff_Vector_Beta
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_Beta
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_Beta
+
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Source_Vector_X
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Coeff_Vector_X
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_X
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_X
 
 ! CCS Variables
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  Laplace_Matrix_VAL
@@ -85,5 +90,28 @@ INTEGER                                                 ::  MCF_Flag
 INTEGER                                                 ::  FP_Anderson_M = 3
 INTEGER                                                 ::  Num_Matrices
 
-END MODULE Variables_FP 
+
+
+INTEGER, PARAMETER                  :: N_FPTT         = 17
+CHARACTER(LEN=31), DIMENSION(N_FPTT):: FPTT_Names = [   'Initalize Fixed Point Matrices ',   &
+                                                        '2                              ',   &
+                                                        'Calculate FP Source Vector     ',   &
+                                                        'Solve Laplacian System(s)      ',   &
+                                                        'Solve MVL System(s)            ',   &
+                                                        '6                              ',   &
+                                                        '7                              ',   &
+                                                        'Average Fixed Point Iteration  ',   &
+                                                        '9                              ',   &
+                                                        '10                             ',   &
+                                                        'Cholesky Factorization         ',   &
+                                                        'Factorize Shift Matrix         ',   &
+                                                        '13                             ',   &
+                                                        '14                             ',   &
+                                                        '15                             ',   &
+                                                        'Solve Laplacian Systems        ',   &
+                                                        'Solve MVL Systems              '   ]
+
+
+
+END MODULE Variables_XCFC
 

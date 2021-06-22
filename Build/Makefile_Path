@@ -13,6 +13,7 @@ $(POSEIDON_DIR)/Code/Linear_Solvers:            \
 $(POSEIDON_DIR)/Code/Drivers:                   \
 $(POSEIDON_DIR)/Code/External:                  \
 $(POSEIDON_DIR)/Code/Fixed_Point:               \
+$(POSEIDON_DIR)/Code/XCFC:                      \
 $(POSEIDON_DIR)/Code/Function_Modules:          \
 $(POSEIDON_DIR)/Code/Initialization:            \
 $(POSEIDON_DIR)/Code/Interfaces:                \

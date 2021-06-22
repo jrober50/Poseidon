@@ -283,8 +283,7 @@ REAL(KIND = idp)                                            ::  VAL, &
 ecc =   sqrt(1 - CC/AA)
 eccsqr = ecc*ecc
 
-PRINT*,"Eccs",ecc,eccsqr
-PRINT*,"AA,BB,CC",AA,BB,CC
+
 
 !   Calculate Cartesian Coordinates
 X = r * cos(phi) * sin(theta)
@@ -350,10 +349,6 @@ ELSE IF (VAL > 1.0_idp) THEN
 
     Partc = Partb*Partb*Partb
 
-
-
-    PRINT*,"PArts",Parta,partb, Lambda
-
     IF ( Spheroid_Type_Flag == 1 ) THEN
 
 
@@ -384,10 +379,8 @@ ELSE IF (VAL > 1.0_idp) THEN
 
 END IF
 
-PRINT*,"At the end"
 MacLaurin_Potential  = POTENTIAL
 
-Print*,"at the end 2"
 END FUNCTION MacLaurin_Potential
 
 
@@ -418,104 +411,119 @@ REAL(KIND = idp)                                            ::  VAL, &
 
 !   Calculate Eccentricity !
 ecc =   sqrt(1 - CC/AA)
-eccsqr = ecc*ecc
 
+IF ( SemiMajor_Axis == SemiMinor_Axis ) THEN
 
-!   Calculate Cartesian Coordinates
-X = r * cos(phi) * sin(theta)
-Y = r * sin(phi) * sin(theta)
-Z = r * cos(theta)
+    IF ( r >= SemiMajor_Axis ) THEN
 
-XX = X*X
-YY = Y*Y
-ZZ = Z*Z
+!        POTENTIAL = -GM/r
 
-
-VAL = XX/AA + YY/BB + ZZ/CC
-!
-!   VAL > 1 -> point is outside.  VAL <= 1 -> point is inside
-!
-IF (VAL .LE. 1.0_idp) THEN
-
-    !
-    !   Equations for potential inside homegenous spheroid
-    !
-    !       REF:    Ellipsoidal Figures of Equilibrium - Chandrasekhar - Chapter 3
-    !
-    IF ( Spheroid_Type_Flag == 1 ) THEN
-
-        eccmod = sqrt(1- eccsqr)/(eccsqr*ecc)*ASIN(ecc)
-
-        Parta = eccmod - (1 - eccsqr)/eccsqr
-
-        Partb = 2/eccsqr - 2*eccmod
-
-
-        POTENTIAL = -pi*Grav_Constant_G*Density * ((2*AA - XX - YY)*Parta + (CC - ZZ)*Partb)
-
-
-    ELSE IF (Spheroid_Type_Flag == 2) THEN
-
-        eccmod = (1 - eccsqr)/(eccsqr*ecc) * LOG((1+ecc)/(1-ecc))
-
-        Parta = eccmod - 2*(1 - eccsqr)/eccsqr
-
-        Partb = 1/eccsqr - 0.5_idp*eccmod
-
-
-        POTENTIAL = pi*(2*CC - YY - ZZ)*Partb + (AA - XX)*Parta
-
+    ELSE
 
     END IF
 
+ELSE
 
-ELSE IF (VAL > 1.0_idp) THEN
+    eccsqr = ecc*ecc
 
 
+    !   Calculate Cartesian Coordinates
+    X = r * cos(phi) * sin(theta)
+    Y = r * sin(phi) * sin(theta)
+    Z = r * cos(theta)
+
+    XX = X*X
+    YY = Y*Y
+    ZZ = Z*Z
+
+
+    VAL = XX/AA + YY/BB + ZZ/CC
     !
-    !   Equations for potential outside homegenous spheroid
+    !   VAL > 1 -> point is outside.  VAL <= 1 -> point is inside
     !
-    !       REF:    Ellipsoidal Figures of Equilibrium - Chandrasekhar - Chapter 3 -
-    !
-    lambda = MacLaurin_Root_Finder(r, theta, phi)
+    IF (VAL .LE. 1.0_idp) THEN
 
-    rsqr = XX + YY
+        !
+        !   Equations for potential inside homegenous spheroid
+        !
+        !       REF:    Ellipsoidal Figures of Equilibrium - Chandrasekhar - Chapter 3
+        !
+        IF ( Spheroid_Type_Flag == 1 ) THEN
 
-    Parta = (sqrt(1-eccsqr)/(eccsqr*ecc))*asin(ecc) - (1-eccsqr)/eccsqr;
+            eccmod = sqrt(1- eccsqr)/(eccsqr*ecc)*ASIN(ecc)
 
-    Partb = 2/eccsqr - 2*((1-eccsqr)/(ecc*eccsqr))*asin(ecc);
+            Parta = eccmod - (1 - eccsqr)/eccsqr
 
-    Partc = pi/sqrt(AA-CC) - 2/sqrt(AA-CC)*atan(sqrt((CC+lambda)/(AA-CC)));
-
-
-    IF ( Spheroid_Type_Flag == 1 ) THEN
-
-
+            Partb = 2/eccsqr - 2*eccmod
 
 
-        POTENTIAL = -pi*Grav_Constant_G*Density                                  &
-                    * AA * C                                                    &
-                    * ( (1 + rsqr/(2*(CC-AA)) - ZZ/(CC-AA))*Partc                    &
-                        - rsqr*sqrt(CC+lambda)/((CC-AA)*(AA+lambda))              &
-                        - ZZ*( 2/((AA+lambda)*sqrt(CC+lambda))                  &
-                               - 2*sqrt(CC+lambda)/((CC-AA)*(AA+lambda)) ) );
+            POTENTIAL = -pi*Grav_Constant_G*Density * ((2*AA - XX - YY)*Parta + (CC - ZZ)*Partb)
 
 
-    ELSE IF ( Spheroid_Type_Flag == 2 ) THEN
+        ELSE IF (Spheroid_Type_Flag == 2) THEN
+
+            eccmod = (1 - eccsqr)/(eccsqr*ecc) * LOG((1+ecc)/(1-ecc))
+
+            Parta = eccmod - 2*(1 - eccsqr)/eccsqr
+
+            Partb = 1/eccsqr - 0.5_idp*eccmod
 
 
-        POTENTIAL = A * CC                                                              &
-                  * ( - Parta                                                           &
-                      - Partb                                                           &
-                      + ( XX )                                                          &
-                        * ( (1.5*A - 0.5*C + lambda)*Partb*Partb + Parta/(A - C) )      &
-                      + (YY + ZZ)                                                       &
-                        * ( (1.5*C - 0.5*A + lambda)*Partc*Partc + Parta/(A - C) ) )
+            POTENTIAL = pi*(2*CC - YY - ZZ)*Partb + (AA - XX)*Parta
 
+
+        END IF
+
+
+    ELSE IF (VAL > 1.0_idp) THEN
+
+
+        !
+        !   Equations for potential outside homegenous spheroid
+        !
+        !       REF:    Ellipsoidal Figures of Equilibrium - Chandrasekhar - Chapter 3 -
+        !
+        lambda = MacLaurin_Root_Finder(r, theta, phi)
+
+        rsqr = XX + YY
+
+        Parta = (sqrt(1-eccsqr)/(eccsqr*ecc))*asin(ecc) - (1-eccsqr)/eccsqr;
+
+        Partb = 2/eccsqr - 2*((1-eccsqr)/(ecc*eccsqr))*asin(ecc);
+
+        Partc = pi/sqrt(AA-CC) - 2/sqrt(AA-CC)*atan(sqrt((CC+lambda)/(AA-CC)));
+
+
+        IF ( Spheroid_Type_Flag == 1 ) THEN
+
+
+
+
+            POTENTIAL = -pi*Grav_Constant_G*Density                                  &
+                        * AA * C                                                    &
+                        * ( (1 + rsqr/(2*(CC-AA)) - ZZ/(CC-AA))*Partc                    &
+                            - rsqr*sqrt(CC+lambda)/((CC-AA)*(AA+lambda))              &
+                            - ZZ*( 2/((AA+lambda)*sqrt(CC+lambda))                  &
+                                   - 2*sqrt(CC+lambda)/((CC-AA)*(AA+lambda)) ) );
+
+
+        ELSE IF ( Spheroid_Type_Flag == 2 ) THEN
+
+
+            POTENTIAL = A * CC                                                              &
+                      * ( - Parta                                                           &
+                          - Partb                                                           &
+                          + ( XX )                                                          &
+                            * ( (1.5*A - 0.5*C + lambda)*Partb*Partb + Parta/(A - C) )      &
+                          + (YY + ZZ)                                                       &
+                            * ( (1.5*C - 0.5*A + lambda)*Partc*Partc + Parta/(A - C) ) )
+
+
+
+        END IF
 
 
     END IF
-
 
 END IF
 

@@ -44,7 +44,7 @@ USE Variables_Derived,  &
                             ULM_Length
 
 USE Variables_NR, &
-                    ONLY :  Coefficient_Vector
+                    ONLY :  NR_Coeff_Vector
 
 IMPLICIT NONE
 
@@ -78,7 +78,7 @@ Coeffs_Write = 13
 OPEN(UNIT=Coeffs_Write, FILE='Params/CFA_Coeffs.coefs', ACTION='WRITE', STATUS='REPLACE',IOSTAT=istat)
 
 !DO i = 0,PROB_DIM-1
-!    WRITE(Coeffs_Write,'(2ES24.17)') REAL(Coefficient_Vector(i)), AIMAG(Coefficient_Vector(i))
+!    WRITE(Coeffs_Write,'(2ES24.17)') REAL(NR_Coeff_Vector(i)), AIMAG(NR_Coeff_Vector(i))
 !END DO
 
 DO re = 0,NUM_R_ELEMENTS-1
@@ -87,7 +87,7 @@ DO re = 0,NUM_R_ELEMENTS-1
             DO m = -l,l
                 here = (re*DEGREE+d)*ULM_LENGTH+(l*(l+1)+m)*NUM_CFA_VARS
                 WRITE(Coeffs_Write,'(A2,I1,A3,I2)')"L=",l,",M=",l
-                WRITE(Coeffs_Write,'(2ES24.17)')Coefficient_Vector(here:here+4)
+                WRITE(Coeffs_Write,'(2ES24.17)')NR_Coeff_Vector(here:here+4)
             END DO
             WRITE(Coeffs_Write,'(/ /)')
         END DO
@@ -142,8 +142,8 @@ END DO
 CLOSE(UNIT=Coeffs_Read,STATUS='keep',IOSTAT=istat)
 
 
-!Coefficient_Vector = 0.0_idp
-Coefficient_Vector(:) = CMPLX(TMP(0,:), TMP(1,:), KIND =idp)
+!NR_Coeff_Vector = 0.0_idp
+NR_Coeff_Vector(:) = CMPLX(TMP(0,:), TMP(1,:), KIND =idp)
 
 
 

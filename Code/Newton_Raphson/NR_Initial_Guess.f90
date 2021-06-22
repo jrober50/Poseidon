@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Initial_Guess_Module                                                      !##!
+MODULE NR_Initial_Guess_Module                                                      !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -42,21 +42,17 @@ USE Poseidon_Parameters, &
                     DEGREE,                 &
                     L_LIMIT,                &
                     Verbose_Flag
-
+USE Variables_NR, &
+            ONLY :  NR_Coeff_Vector
 
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector,            &
-                    FP_Coeff_Vector_Beta,       &
-                    CFA_EQ_Flags
-
-
-
 USE Functions_Mapping, &
-            ONLY :  Map_From_X_Space,   &
-                    Map_To_X_Space
+            ONLY :  Map_To_X_Space
+
+USE NR_Mapping_Functions, &
+            ONLY :  NR_Array_Map
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
@@ -64,9 +60,6 @@ USE Functions_Quadrature, &
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_FEM_Node_Map,        &
-                    FP_Beta_Array_Map
 
 IMPLICIT NONE
 
@@ -79,7 +72,7 @@ CONTAINS
 !                  Input_FP_Guess                                                !
 !                                                                                !
 !################################################################################!
-SUBROUTINE FP_Input_Guess(  Psi_Guess,                                  &
+SUBROUTINE NR_Input_Guess(  Psi_Guess,                                  &
                             AlphaPsi_Guess,                             &
                             Beta_Guess,                                 &
                             Input_RE, Input_TE, Input_PE,               &
@@ -115,7 +108,7 @@ REAL(idp), INTENT(IN)                                                           
 
 INTEGER                                                                             :: Num_Input_DOF
 
-INTEGER                                                                             ::  re, rq, rqb
+INTEGER                                                                             ::  re, rq, d
 
 REAL(KIND = idp), DIMENSION(0:DEGREE)                                               ::  Node_Locs
 REAL(idp), DIMENSION(1:Input_RQ)                                                    ::  Lagrange_Poly_Value
@@ -132,10 +125,10 @@ Num_Input_DOF = Input_RQ*Input_TQ*Input_PQ
 Mapped_R_Quad = Map_To_X_Space( Left_Limit, Right_Limit, Input_R_Quad )
 
 
-FP_Coeff_Vector_Beta = 0.0_idp
+NR_Coeff_Vector = 0.0_idp
 DO re = 1,Input_RE
-    DO rqb = 0,Degree
-        Lagrange_Poly_Value = Lagrange_Poly(Node_Locs(rqb), Input_RQ-1, Mapped_R_Quad)
+    DO d = 0,Degree
+        Lagrange_Poly_Value = Lagrange_Poly(Node_Locs(d), Input_RQ-1, Mapped_R_Quad)
 
         Tmp_Value = 0.0_idp
         DO rq = 1,Input_RQ
@@ -153,28 +146,23 @@ DO re = 1,Input_RE
 
         END DO ! rq
 
-        Here = (re-1)*Degree + rqb + 1
-        FP_Coeff_Vector(Here,1,:) = 2.0_idp*Sqrt(pi)*Tmp_Value(:)
+        Here = NR_Array_Map(re-1,d,1,0)
+        NR_Coeff_Vector(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(1)
 
-        Here = FP_Beta_Array_Map(re,rqb,1,0)
-        FP_Coeff_Vector_Beta(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
+        Here = NR_Array_Map(re-1,d,2,0)
+        NR_Coeff_Vector(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(2)
 
-!        Here = FP_Beta_Array_Map(re,rqb,2,0)
-!        FP_Coeff_Vector_Beta(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(4)
-!        Here = FP_Beta_Array_Map(re,rqb,3,0)
-!        FP_Coeff_Vector_Beta(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(5)
+        Here = NR_Array_Map(re-1,d,3,0)
+        NR_Coeff_Vector(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
+
         
-    END DO ! rqb
+    END DO ! d
 END DO ! re
 
-FP_Coeff_Vector(:,:,3:5) = 0.0_idp
 
 
 
-END SUBROUTINE FP_Input_Guess
-
-
-
+END SUBROUTINE NR_Input_Guess
 
 
 
@@ -185,4 +173,8 @@ END SUBROUTINE FP_Input_Guess
 
 
 
-END MODULE FP_Initial_Guess_Module
+
+
+
+END MODULE NR_Initial_Guess_Module
+

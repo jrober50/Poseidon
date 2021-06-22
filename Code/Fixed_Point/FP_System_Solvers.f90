@@ -99,7 +99,9 @@ USE Variables_FP,  &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
                     FP_Source_Vector_Beta,      &
+                    FP_Source_Vector_X,         &
                     FP_Coeff_Vector_Beta,       &
+                    FP_Coeff_Vector_X,          &
                     CFA_EQ_Flags,               &
                     CFA_Eq_Map,                 &
                     CFA_Var_Map,                &
@@ -687,10 +689,6 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
     FP_Coeff_Vector_Beta(:)      = Work_Vec(:)
 
-!    Here  = FP_Array_Map(0,0,3,0)
-!    There = Prob_Dim
-!    FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
-!    FP_Coeff_Vector(Here:There)  = Work_Vec(:)
 
 
 
@@ -733,6 +731,136 @@ END IF
 !PRINT*,"End of Routine"
 
 END SUBROUTINE Solve_FP_System_Beta
+
+
+
+
+
+
+
+
+
+
+
+
+!+301+###########################################################################!
+!                                                                                !
+!           Call Solve_XCFC_System_X                                                 !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Solve_XCFC_System_X()
+
+INTEGER                                                                     ::  INFO
+INTEGER, DIMENSION(1:Beta_Prob_Dim)                                         ::  IPIV
+
+
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_VEC
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
+
+
+INTEGER                                                                     ::  i, j, Col, Row
+INTEGER                                                                     ::  ui, re, d, l
+INTEGER                                                                     ::  uj, rep, dp, lp
+
+
+INTEGER                                                                     ::  Here, There
+
+REAL(idp), DIMENSION(1:4)                                                   ::  timer
+
+REAL(idp)                                                                   ::  RCOND
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"In Anderson FP loop, In Solve_XFCX_System_X."
+END IF
+
+
+
+!####################################!
+!
+!           Full Matrix Solver       !
+!
+!####################################!
+IF (LINEAR_SOLVER =='Full') THEN
+
+
+
+
+!####################################!
+!
+!         Sparse Matrix Solver       !
+!
+!####################################!
+ELSE IF (LINEAR_SOLVER == "CHOL") THEN
+
+
+    timer(1) = MPI_Wtime()
+    IF ( .NOT. Beta_Factorized_Flag ) THEN
+        
+        CALL Factorize_Beta_Banded()
+
+    END IF
+    timer(2) = MPI_Wtime()
+
+    CALL Clock_IN(timer(2)-timer(1), 12)
+
+
+
+    ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
+    
+    Work_Vec = FP_Source_Vector_X
+
+
+
+    CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
+    
+
+    CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
+
+
+
+
+!    PRINT*,"Before ZGBTRS "
+    CALL ZGBTRS( 'N',                   &
+                 Beta_Prob_Dim,         &
+                 Beta_Diagonals,        &
+                 Beta_Diagonals,        &
+                 1,                     &
+                 Beta_MVL_Banded,              &
+                 3*Beta_Diagonals+1,    &
+                 Beta_IPIV,             &
+                 -Work_Vec,              &
+                 Beta_Prob_Dim,         &
+                 INFO                   )
+
+    IF (INFO .NE. 0) THEN
+        print*,"ZGBTRS has failed with INFO = ",INFO
+    END IF
+
+
+
+    FP_Coeff_Vector_X(:) = Work_Vec(:)
+
+
+
+    DEALLOCATE( Work_Vec )
+!    DEALLOCATE( Work_Mat )
+
+
+    timer(1) = MPI_Wtime()
+    CALL Clock_In(timer(1)-timer(2),17)
+
+END IF
+
+
+
+
+!PRINT*,"End of Routine"
+
+END SUBROUTINE Solve_XCFC_System_X
+
+
+
+
 
 
 

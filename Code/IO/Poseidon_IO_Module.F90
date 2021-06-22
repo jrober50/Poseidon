@@ -453,8 +453,6 @@ IF ( Write_Flags(5) > 1 ) THEN
     Here = 5
     DO i = 1,5
         IF ( CFA_Eq_Flags(i) == 1 ) THEN
-            WRITE(*,116)                &
-                     Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
            WRITE(Filenames(Here),116)                &
                     Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
             Here = Here + 1
@@ -888,8 +886,7 @@ REAL(KIND = idp)                                                        ::  Dt_O
 
 116 FORMAT (A,A,A,A)
 
-
-IF ( Write_Flags(4) == 1 ) THEN
+IF ( Write_Flags(4) == 2 ) THEN
     Num_Files = 8
 
     ALLOCATE( Filenames(1:Num_Files) )

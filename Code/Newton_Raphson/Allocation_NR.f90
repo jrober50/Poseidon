@@ -29,8 +29,8 @@ USE Poseidon_Kinds_Module, &
 
 
 USE Variables_NR, &
-            ONLY :  Update_Vector,              &
-                    Coefficient_Vector,         &
+            ONLY :  NR_Update_Vector,              &
+                    NR_Coeff_Vector,         &
                     Block_RHS_Vector,           &
                     Block_STF_Mat,              &
                     Block_Elem_STF_MatVec
@@ -62,10 +62,11 @@ CONTAINS
 SUBROUTINE Allocate_NR()
 
 
-ALLOCATE( Update_Vector(0:PROB_DIM-1 ) )
-ALLOCATE( Coefficient_Vector(0:PROB_DIM-1 ) )
+ALLOCATE( NR_Update_Vector(0:PROB_DIM-1 ) )
+ALLOCATE( NR_Coeff_Vector(0:PROB_DIM-1 ) )
 
-ALLOCATE( Block_RHS_Vector( 0:Block_PROB_DIM-1) )
+
+ALLOCATE( Block_RHS_Vector( 1:Block_PROB_DIM ) )
 ALLOCATE( Block_STF_Mat( 0:2*NUM_OFF_DIAGONALS, 0:SUBSHELL_PROB_DIM-1) )
 
 ALLOCATE( Block_Elem_STF_MatVec(0:ELEM_PROB_DIM_SQR-1 ,0:NUM_R_ELEMS_PER_BLOCK-1) )
@@ -91,8 +92,8 @@ END SUBROUTINE Allocate_NR
 SUBROUTINE Deallocate_NR()
 
 
-DEALLOCATE( Update_Vector )
-DEALLOCATE( Coefficient_Vector )
+DEALLOCATE( NR_Update_Vector )
+DEALLOCATE( NR_Coeff_Vector )
 
 DEALLOCATE( Block_RHS_Vector )
 DEALLOCATE( Block_STF_Mat )

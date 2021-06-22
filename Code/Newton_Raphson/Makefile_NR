@@ -1,10 +1,11 @@
 NR = \
-  Variables_NR.o              \
   Allocation_NR.o             \
-  IO_NR.o                     \
-  Functions_NR.o              \
-  Initialization_NR.o         \
-  Poseidon_NR_BC.o            \
+  NR_Mapping_Functions.o      \
+  NR_Initial_Guess.o          \
+  NR_IO_Module.o              \
+  NR_Functions.o              \
+  NR_Initialization.o         \
+  NR_BC_Module.o              \
   SubJacobian_Functions_1D.o  \
   SubJacobian_Functions_3D.o  \
   CFA_1D_Master_Build.o       \

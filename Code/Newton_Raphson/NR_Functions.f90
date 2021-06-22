@@ -51,7 +51,7 @@ USE Variables_Mesh, &
                     rlocs
 
 USE Variables_NR, &
-            ONLY :  Coefficient_Vector
+            ONLY :  NR_Coeff_Vector
 
 
 USE Variables_Tables, &
@@ -130,7 +130,7 @@ IF ( r == rlocs(0) ) THEN
 
                 TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
                 Current_Location =  Matrix_Location( u, l, m, 0, 0 )
-                Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector(Current_Location) * TMP_VALUE_A
+                Tmp_U_Value(u) = Tmp_U_Value(u) + NR_Coeff_Vector(Current_Location) * TMP_VALUE_A
                 
                 
             END DO ! m Loop
@@ -159,7 +159,7 @@ ELSE
                             TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi) * LagP(d)
                             Current_Location = Matrix_Location( u, l, m, re, d )
                             
-                            Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector( Current_Location ) * TMP_VALUE_A
+                            Tmp_U_Value(u) = Tmp_U_Value(u) + NR_Coeff_Vector( Current_Location ) * TMP_VALUE_A
 
                         END DO  !   d Loop
                     END DO  !   m Loop
@@ -180,7 +180,7 @@ ELSE
 
                     Current_Location = Matrix_Location( u, l, m, NUM_R_ELEMENTS-1, DEGREE )
                     TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
-                    Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector( Current_Location ) * TMP_VALUE_A
+                    Tmp_U_Value(u) = Tmp_U_Value(u) + NR_Coeff_Vector( Current_Location ) * TMP_VALUE_A
 
 
                 END DO  !   m Loop
@@ -258,7 +258,7 @@ DO re = 0,NUM_R_ELEMENTS-1
             DO d = 0,DEGREE
 
                 Current_Location = Matrix_Location(u,0,0,re,d)
-                Tmp_U_Value(u) = Tmp_U_Value(u) + Coefficient_Vector(Current_Location)  &
+                Tmp_U_Value(u) = Tmp_U_Value(u) + NR_Coeff_Vector(Current_Location)  &
                                                 * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
  
             END DO ! d Loop

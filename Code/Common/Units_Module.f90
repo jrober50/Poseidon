@@ -49,6 +49,8 @@ REAL(idp)             :: Joule, Erg, Newton
 REAL(idp)             :: GravPot_Units, Shift_Units
 REAL(idp)             :: E_Units, S_Units, Si_Units
 
+REAL(idp)             :: Solar_Mass
+
                         !*F&S*==========================================!
                         !                                               !
                         !           Functions & Subroutines             !
@@ -200,6 +202,8 @@ Shift_Units     = Centimeter/Second
 E_Units         = Erg/Centimeter**3
 S_Units         = Erg/Centimeter**3
 Si_Units        = Gram/(Second*Centimeter**2)
+
+Solar_Mass      = 1.988435E+30 * Kilogram
 
 END SUBROUTINE Set_Units
 

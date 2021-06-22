@@ -4,7 +4,9 @@ VARIABLES = \
   Variables_BC.o         \
   Variables_Derived.o    \
   Variables_Flags.o      \
+  Variables_NR.o         \
   Variables_FP.o         \
+  Variables_XCFC.o       \
   Variables_Functions.o  \
   Variables_IO.o         \
   Variables_Mesh.o       \
