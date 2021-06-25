@@ -225,11 +225,11 @@ Solver_Type         = 1
 
 RE_Table            = (/ 1, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.50_idp, 0.1_idp /)
+Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.50_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  1
-T_Index_Max         =  1
+T_Index_Min         =  6
+T_Index_Max         =  6
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -256,8 +256,8 @@ SelfSim_V_Switch    =  0
 
 Dimension_Input     = 3
 
-Max_Iterations      = 10
-CC_Option           = 1.0E-12_idp
+Max_Iterations      = 7
+CC_Option           = 1.0E-10_idp
 
 Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
@@ -265,11 +265,11 @@ Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
 
 NE(1)               = 128                       ! Number of Radial Elements
-NE(2)               = 1                       ! Number of Theta Elements
+NE(2)               = 10                        ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
 NQ(1)               = 10                        ! Number of Radial Quadrature Points
-NQ(2)               = 10                        ! Number of Theta Quadrature Points
+NQ(2)               = 1                         ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
@@ -277,7 +277,7 @@ NQ(3)               = 1                         ! Number of Phi Quadrature Point
 Verbose             = .TRUE.
 Suffix_Input        = "Params"
 
-CFA_Eqs = (/ 1, 0, 0, 0, 0 /)
+CFA_Eqs = (/ 1, 1, 1, 0, 0 /)
 
 
 Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)

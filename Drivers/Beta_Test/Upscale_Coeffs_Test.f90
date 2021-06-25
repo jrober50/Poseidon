@@ -183,14 +183,14 @@ Mesh_Type           = 1
 Domain_Edge(1)      = 1.0_idp   ! Inner Radius
 Domain_Edge(2)      = 1E9_idp   ! Outer Radius
 
-RE_Index_Min        = 1
-RE_Index_Max        = 1
+RE_Index_Min        = 3
+RE_Index_Max        = 3
 
 Degree_Min          = 1
 Degree_Max          = 1
 
-L_Limit_Min         = 5
-L_Limit_Max         = 5
+L_Limit_Min         = 1
+L_Limit_Max         = 1
 
 !Verbose             = .FALSE.
 Verbose             = .TRUE.
@@ -223,7 +223,7 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
             NE(2) = 1                       ! Number of Theta Elements
             NE(3) = 1                       ! Number of Phi Elements
 
-            Suffix_Tail = Letter_Table(3)
+            Suffix_Tail = Letter_Table(1)
 
 
             ALLOCATE( x_e(0:NE(1)), y_e(0:NE(2)), z_e(0:NE(3)) )
@@ -285,7 +285,7 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
             ALLOCATE( Output(1:Beta_Prob_Dim) )
             Output = 0.0_idp
     
-            CALL ReadIn_FP_Coeffs( NE(1), FEM_Degree_Input, 0, Suffix_Tail )
+            CALL ReadIn_FP_Coeffs( NE(1), FEM_Degree_Input, 1, Suffix_Tail )
 
 
 
@@ -310,21 +310,21 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
 
 
  
-                PRINT*,"Work_Vec A"
-                PRINT*,Work_Vec
+!                PRINT*,"Work_Vec A"
+!                PRINT*,Work_Vec
                 CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
 
 
-                PRINT*,"Work_Vec B"
-                PRINT*,Work_Vec
+!                PRINT*,"Work_Vec B"
+!                PRINT*,Work_Vec
 
                 CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
 
 
      
-                PRINT*,"Work_Vec C"
-                PRINT*,Work_Vec
+!                PRINT*,"Work_Vec C"
+!                PRINT*,Work_Vec
 
                 CALL ZGBMV('N',                     &
                             Beta_Prob_Dim,          &
@@ -348,9 +348,9 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
 !                PRINT*," "
 
 
-                PRINT*,"ZGBMV"
-                PRINT*,Output - Work_Vec
-                PRINT*," "
+!                PRINT*,"ZGBMV"
+!                PRINT*,Output - Work_Vec
+!                PRINT*," "
 
 
 
@@ -373,16 +373,16 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
 
 
 
-                PRINT*,"Work_Vec A"
-                PRINT*,Work_Vec
+!                PRINT*,"Work_Vec A"
+!                PRINT*,Work_Vec
 
                 CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
 
 
 
-                PRINT*,"Work_Vec B"
-                PRINT*,Work_Vec
+!                PRINT*,"Work_Vec B"
+!                PRINT*,Work_Vec
 
                 CALL JACOBI_CONDITIONING_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
 
@@ -390,8 +390,8 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
 
 
 
-                PRINT*,"Work_Vec C"
-                PRINT*,Work_Vec
+!                PRINT*,"Work_Vec C"
+!                PRINT*,Work_Vec
 
 !                CALL ZGEMV('N',                     &
 !                            Beta_Prob_Dim,          &
@@ -414,9 +414,9 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
                 Output = MVMULT_FULL( Work_Mat,            &
                                       FP_Coeff_Vector_Beta(:),        &
                                       Beta_Prob_Dim, Beta_Prob_Dim    )
-                PRINT*,"MVMULT_FULL"
-                PRINT*,Output - Work_Vec
-                PRINT*," "
+!                PRINT*,"MVMULT_FULL"
+!                PRINT*,Output - Work_Vec
+!                PRINT*," "
                 
 
             END IF
@@ -428,26 +428,26 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
             PRINT*," "
 
 
-            
-            DO ui = 1,3
-            DO RE = 0,NE(1)-1
-            DO d  = 0,FEM_Degree_Input
-            DO lm = 0,LM_Length-1
-
-                Here = (RE*FEM_Degree_Input + d)*3*LM_Length     &
-                     +  (ui - 1)*LM_Length                       &
-                     +  lm + 1
-
-!                PRINT*,ui, RE+1,d,lm,Here,Output(Here)-Work_Vec(Here)
-!                PRINT*,Here,Output(Here),Work_Vec(Here),Output(Here)-Work_Vec(Here)
-
-
-            END DO ! lm
-            END DO ! ui
-            END DO ! d
-            END DO ! RE
+!            
+!            DO ui = 1,3
+!            DO RE = 0,NE(1)-1
+!            DO d  = 0,FEM_Degree_Input
+!            DO lm = 0,LM_Length-1
+!
+!                Here = (RE*FEM_Degree_Input + d)*3*LM_Length     &
+!                     +  (ui - 1)*LM_Length                       &
+!                     +  lm + 1
+!
+!!                PRINT*,ui, RE+1,d,lm,Here,Output(Here)-Work_Vec(Here)
+!!                PRINT*,Here,Output(Here),Work_Vec(Here),Output(Here)-Work_Vec(Here)
+!                PRINT*,ui,RE,d,lm,FP_Coeff_Vector_Beta(Here)
+!
+!            END DO ! lm
+!            END DO ! ui
+!            END DO ! d
+!            END DO ! RE
             PRINT*," "
-            PRINT*,"Maximum value of the output vector is ",MAXVAL(abs(Output)),        &
+            PRINT*,"Maximum value of the output vector is ",MAXVAL(abs(Output-Work_Vec)),        &
                    " at ",maxloc(abs(Output))
 
 

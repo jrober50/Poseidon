@@ -415,7 +415,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_ze,      
                                                                 Output_dz
 
 
-INTEGER, DIMENSION(Num_CFA_Vars)                            ::  Units
+REAL(idp), DIMENSION(Num_CFA_Vars)                            ::  Units
 
 INTEGER                                                     ::  nx, ny, nz
 REAL(idp)                                                   ::  rloc,tloc
@@ -523,6 +523,8 @@ IF ( Write_Flags(5) > 1 ) THEN
     ALLOCATE( T_Holder(1:NUM_THETA_RAYS) )
     ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
 
+
+
     ! Calculate Output
     DO k = 1,NUM_PHI_RAYS
     DO j = 1,NUM_THETA_RAYS
@@ -563,10 +565,13 @@ IF ( Write_Flags(5) > 1 ) THEN
     WRITE(File_IDs(4),*)P_Holder
 
 
-
+    
+    
     Units = 1.0_idp
     Units(3) = Shift_Units
     ! Write Output Value Files
+
+
     Here = 5
     DO i = 1,5
         IF ( CFA_Eq_Flags(i) == 1 ) THEN

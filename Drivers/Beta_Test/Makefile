@@ -18,8 +18,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-CMODE   =DEBUG
-#CMODE  =OPTIMIZE
+#CMODE   =DEBUG
+CMODE  =OPTIMIZE
 
 
 ## Compile with Openmp
@@ -99,6 +99,6 @@ clean_output:
 	rm -f $(OUT)/Objects/Sources/*.out
 	rm -f $(OUT)/Objects/Linear_System/*.out
 	rm -f $(OUT)/Objects/Residual/*.out
-
-
+	rm -f $(OUT)/Objects/Mesh/*.out
+	rm -f $(OUT)/Objects/Coefficients/*.out
 

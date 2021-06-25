@@ -444,8 +444,8 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 END DO ! Converged Loop
 
-CALL Deallocate_FP_Source_Variables()
 
+CALL Deallocate_FP_Source_Variables()
 
 
 
@@ -453,7 +453,6 @@ CALL Deallocate_FP_Source_Variables()
 CALL Output_Final_Results()
 CALL Output_FP_Timetable()
 CALL Output_Convergence_Reports()
-
 
 END SUBROUTINE Fixed_Point_AndersonM
 

@@ -16,5 +16,6 @@ Tests/.DS_Store
 # Object files
 *.o
 *.mod
+*.DS_Store
 
 Params/CFA_Coeffs.coefs

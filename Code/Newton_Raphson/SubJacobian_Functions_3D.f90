@@ -880,38 +880,26 @@ REAL(KIND = idp)                                                        ::  Beta
 Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
 
 
-RHS_Terms(tpd, rd, 1) = - TwoPi * GR_Source_Scalar * Block_Source_E(rd, td, pd, re, te, pe) * PSI_POWER(5)   &
-                         - PSI_POWER(7)/ (16.0_idp * ALPHAPSI_POWER(2)) * JCBN_BIGK_VALUE
+RHS_Terms(tpd, rd, 1) = - TwoPi                                                 &
+                            * GR_Source_Scalar                                  &
+                            * Block_Source_E(rd, td, pd, re, te, pe)            &
+                            * PSI_POWER(5)                                      &
+                         - PSI_POWER(7)                                         &
+                            / (16.0_idp * ALPHAPSI_POWER(2) )                   &
+                            * JCBN_BIGK_VALUE
 
 
-RHS_Terms(tpd, rd, 2) = TwoPi * ALPHAPSI_POWER(1) * PSI_POWER(4)                             &
-                * GR_Source_Scalar * ( Block_Source_E(rd, td, pd, re, te, pe)                   &
-                                       + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe)  )    &
-                + 7.0_idp*PSI_POWER(6)/ (16.0_idp * ALPHAPSI_POWER(1)) * JCBN_BIGK_VALUE
+RHS_Terms(tpd, rd, 2) = TwoPi                                                           &
+                            * ALPHAPSI_POWER(1)                                         &
+                            * PSI_POWER(4)                                              &
+                            * GR_Source_Scalar                                          &
+                            * ( Block_Source_E(rd, td, pd, re, te, pe)                  &
+                                + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe)  )   &
+                        + 7.0_idp*PSI_POWER(6)                                          &
+                            / (16.0_idp * ALPHAPSI_POWER(1))                            &
+                            * JCBN_BIGK_VALUE
 
 
-
-!RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 1)             &
-!                      + ( 8.0_idp/(3.0_idp * R_SQUARE(rd) )                                         &
-!                            - 4.0_idp* JCBN_n_ARRAY(1)/(3.0_idp * CUR_R_LOCS(rd)) )                 &
-!                        * CUR_VAL_BETA(tpd, rd, 1)                                                  &
-!                      + ( 2.0_idp * COTAN_VAL(td)/CUR_R_LOCS(rd)                                    &
-!                          - TwoThirds * JCBN_n_ARRAY(1)*COTAN_VAL(td)  )                            &
-!                        * CUR_VAL_BETA(tpd, rd, 2 )                                                 &
-!                      + ( FourThirds * JCBN_n_ARRAY(1) )                                            &
-!                        * CUR_DRV_BETA(tpd, rd, 1, 1 )                                              &
-!                      + ( JCBN_n_ARRAY(2)/R_SQUARE(rd) )                                            &
-!                        * CUR_DRV_BETA(tpd, rd, 2, 1 )                                              &
-!                      + ( JCBN_n_ARRAY(3)/RSIN_SQUARE(td,rd) )                                      &
-!                        * CUR_DRV_BETA(tpd, rd, 3, 1 )                                              &
-!                      + ( JCBN_n_ARRAY(2) - COTAN_VAL(td)/3.0_idp )                                 &
-!                        * CUR_DRV_BETA(tpd, rd, 1, 2 )                                              &
-!                      + ( 2.0_idp * FourThirds / CUR_R_LOCS(rd) - TwoThirds * JCBN_n_ARRAY(1) )    &
-!                        * CUR_DRV_BETA(tpd, rd, 2, 2 )                                              &
-!                      + ( JCBN_n_ARRAY(3)  )                                                        &
-!                        * CUR_DRV_BETA(tpd, rd, 1, 3 )                                              &
-!                      + ( 2.0_idp * FourThirds / CUR_R_LOCS(rd) - TwoThirds * JCBN_n_Array(1) )     &
-!                        * CUR_DRV_BETA(tpd, rd, 3, 3 )
 
 RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 1)             &
                       + ( 8.0_idp/(3.0_idp * R_SQUARE(rd) )                                         &

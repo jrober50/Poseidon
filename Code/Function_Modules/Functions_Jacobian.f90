@@ -88,17 +88,6 @@ REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
                                          1:3, 1:3               )          ::  CUR_DRV_BETA
 
 
-REAL(KIND = idp)                    ::  Beta_Drv_Trace
-
-
-
-
-
-!Beta_Drv_Trace = CUR_DRV_BETA( tpd, rd, 1, 1 )    &
-!               + CUR_DRV_BETA( tpd, rd, 2, 2 )    &
-!               + CUR_DRV_BETA( tpd, rd, 3, 3 )
-
-
 
 
 
