@@ -82,7 +82,8 @@ USE Poseidon_Main_Module, &
                        Poseidon_Close
 
 USE Initial_Guess_Module, &
-                ONLY :  Poseidon_Input_Guess
+                ONLY :  Poseidon_Input_Guess,           &
+                        Poseidon_Init_FlatGuess
 
 USE FP_IO_Module, &
                ONLY :  Output_FP_Timetable
@@ -221,7 +222,7 @@ ALLOCATE( RE_Table(1:9) )
 !#                                                          #!
 !############################################################!
 Units_Input         = "G"
-Solver_Type         = 1
+Solver_Type         = 2
 
 RE_Table            = (/ 1, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
@@ -543,13 +544,15 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
 
 
-    CALL Poseidon_Input_Guess(  Psi_Guess,                                  &
-                                AlphaPsi_Guess,                             &
-                                Beta_Guess,                                 &
-                                NE(1), NE(2), NE(3),                        &
-                                NQ(1), NQ(2), NQ(3),                        &
-                                Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
-                                Left_Limit, Right_Limit                     )
+    CALL Poseidon_Init_FlatGuess()
+
+!    CALL Poseidon_Input_Guess(  Psi_Guess,                                  &
+!                                AlphaPsi_Guess,                             &
+!                                Beta_Guess,                                 &
+!                                NE(1), NE(2), NE(3),                        &
+!                                NQ(1), NQ(2), NQ(3),                        &
+!                                Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
+!                                Left_Limit, Right_Limit                     )
 
 
     !############################################################!

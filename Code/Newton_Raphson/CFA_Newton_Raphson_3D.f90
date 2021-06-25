@@ -171,6 +171,8 @@ LOGICAL                                         :: CONVERGED
 
 REAL(KIND = idp)                                :: timea, timeb, timec
 
+LOGICAL                                                 :: PR = .FALSE.
+
 INTEGER :: i,j,k,l
 
 timea = 0.0_idp
@@ -180,6 +182,7 @@ timec = 0.0_idp
 
 
 IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
+    PR = .TRUE.
     WRITE(*,'(A)')"Initial Guess Values"
     CALL Print_Results()
     PRINT*," "
@@ -280,12 +283,21 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
         !CALL OUTPUT_COEFFICIENT_VECTOR_FORTRAN()
     END IF
 
-    IF ( Verbose_Flag ) THEN
+    IF ( PR ) THEN
+        WRITE(*,'(A,I3.3,A)')'Iteration ',Cur_Iteration,' Results'
         CALL Print_Results()
+        PRINT*," "
     END IF
-    
 
-    WRITE(*,'(2/,A,I2.2,2/)') 'End of Iteration ',Cur_Iteration
+
+
+
+
+    IF ( Verbose_Flag .EQV. .TRUE. ) THEN
+        WRITE(*,'(A,1X,I3.3,/)') "End of Iteration",Cur_Iteration
+    END IF
+
+   
 
 
 
