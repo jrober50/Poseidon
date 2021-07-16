@@ -53,13 +53,6 @@ VPATH += ./Obj
 #---------------------------- Compilation Rules ------------------------------------#
 
 
-main  : $(POSEIDON)
-	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(DRV)/$(CODE_drv:%.o=%.$(EXT)) -o $(DRIVER_OBJ)
-	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/main.x
-	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
-
-
 
 PoseidonLib: $(POSEIDON)
 	ar crv $(OBJ)/poseidon.a $(OBJ)/*.o
