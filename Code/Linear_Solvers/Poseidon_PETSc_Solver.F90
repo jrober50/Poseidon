@@ -58,6 +58,7 @@ USE Variables_Derived, &
 USE Poseidon_IO_Module,    &
             ONLY :  OUTPUT_PETSC_REPORT
 
+#ifdef POSEIDON_PETSC_FLAG
 #include <petsc/finclude/petscsys.h>
 #include <petsc/finclude/petscksp.h>
 #include <petsc/finclude/petscmat.h>
@@ -69,7 +70,7 @@ use petscsys
 use petscmat
 use petscvec
 use petscpc
-
+#endif
 
 IMPLICIT NONE
 
@@ -91,7 +92,7 @@ COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:NUM_R_ELEMS_PER_BLOCK-1), INTEN
 COMPLEX(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(IN)     ::  b_Vec
 COMPLEX(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(OUT)    ::  x_Vec
 
-
+#ifdef POSEIDON_PETSC_FLAG
 
 double precision info(MAT_INFO_SIZE)
 
@@ -506,6 +507,19 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
     CALL PetscFinalize(jerr)
 
 END IF
+
+
+#else
+
+WRITE(*,'(A/)')"**********   FATAL ERROR in Poseidon   **********"
+WRITE(*,'(A)') "Poseidon requires PETSc to use the Newton-Raphson solver."
+WRITE(*,'(A/)')"To use PETSc set the PETSC_MODE =ON in the makefile."
+WRITE(*,'(A/)')"Poseidon is now STOPing this code. "
+WRITE(*,'(A/)') "************************************************"
+
+STOP
+
+#endif
 
 
 
