@@ -26,6 +26,7 @@ IMPLICIT NONE
 
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Source_Vector
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Coeff_Vector
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Coeff_Vector_Orig
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector

@@ -109,6 +109,9 @@ USE Allocation_NR, &
 USE Allocation_FP, &
             ONLY : Deallocate_FP
 
+USE Allocation_XCFC, &
+            ONLY : Deallocate_XCFC
+
 USE Allocation_SelfSimilar, &
             ONLY : Deallocate_SelfSim
 USE mpi
@@ -217,6 +220,8 @@ IF ( Method_Flag == 1 ) THEN
     CALL Deallocate_NR
 ELSE IF ( Method_Flag == 2 ) THEN
     CALL Deallocate_FP
+ELSE IF ( Method_Flag == 3 ) THEN
+    CALL Deallocate_XCFC
 END IF
 
 

@@ -313,14 +313,7 @@ Iteration_Histogram(Cur_Iteration-1) = Iteration_Histogram(Cur_Iteration-1) + 1
 
 
 
-
-IF ( Write_Flags(5) == 1 ) THEN
-
-    CALL OUTPUT_FINAL_RESULTS()
-
-END IF
-
-
+CALL OUTPUT_FINAL_RESULTS()
 
 IF ( Write_Flags(2)== 1 ) THEN
     !*!

@@ -877,8 +877,6 @@ REAL(KIND = idp)                                                        ::  Beta
 
 !PRINT*,"Calc_RHS_Terms has been altered"
 
-Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
-
 
 RHS_Terms(tpd, rd, 1) = - TwoPi                                                 &
                             * GR_Source_Scalar                                  &
@@ -898,6 +896,9 @@ RHS_Terms(tpd, rd, 2) = TwoPi                                                   
                         + 7.0_idp*PSI_POWER(6)                                          &
                             / (16.0_idp * ALPHAPSI_POWER(1))                            &
                             * JCBN_BIGK_VALUE
+
+
+Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
 
 
 
@@ -979,8 +980,127 @@ END SUBROUTINE Calc_RHS_Terms
 
 
 
-
-
+!!+106+###########################################################################!
+!!                                                                                !
+!!           Calc_RHS_Terms                                                       !
+!!                                                                                !
+!!################################################################################!
+!SUBROUTINE Calc_RHS_Terms( RHS_Terms,                                         &
+!                           re, te, pe,                                        &
+!                           td, pd, tpd, rd,                                   &
+!                           CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
+!                           SIN_SQUARE, CSC_SQUARE,                            &
+!                           PSI_POWER, ALPHAPSI_POWER,                         &
+!                           CUR_VAL_BETA, CUR_DRV_BETA,                        &
+!                           JCBN_BIGK_VALUE, JCBN_n_Array, JCBN_Kappa_Array    )
+!
+!REAL(KIND = idp), INTENT(INOUT), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
+!                                            1:NUM_R_QUAD_POINTS,    &
+!                                            1:5                     )   ::  RHS_Terms
+!
+!INTEGER, INTENT(IN)                                                     ::  re, te, pe
+!INTEGER, INTENT(IN)                                                     ::  td, pd, tpd, rd
+!
+!REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_R_QUAD_POINTS)            ::  CUR_R_LOCS
+!
+!REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_R_QUAD_POINTS)            ::  R_SQUARE
+!
+!REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_T_QUAD_POINTS,    &
+!                                        1:NUM_R_QUAD_POINTS     )       ::  RSIN_SQUARE
+!
+!REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_T_QUAD_POINTS)            ::  SIN_SQUARE,         &
+!                                                                            CSC_SQUARE,         &
+!                                                                            COTAN_VAL
+!
+!REAL(KIND = idp), INTENT(IN), DIMENSION(1:11)                           ::  PSI_POWER
+!REAL(KIND = idp), INTENT(IN), DIMENSION(1:4)                            ::  ALPHAPSI_POWER
+!
+!REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
+!                                         1:NUM_R_QUAD_POINTS,   &
+!                                         1:3                    )       ::  CUR_VAL_BETA
+!
+!REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
+!                                         1:NUM_R_QUAD_POINTS,   &
+!                                         1:3, 1:3               )       ::  CUR_DRV_BETA
+!
+!
+!
+!REAL(KIND = idp), INTENT(IN)                                            ::  JCBN_BIGK_VALUE
+!REAL(KIND = idp), INTENT(IN), DIMENSION(1:3)                            ::  JCBN_n_ARRAY
+!REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  JCBN_kappa_Array
+!
+!REAL(KIND = idp)                                                        ::  Beta_Source_Prefix
+!
+!
+!
+!!PRINT*,"Calc_RHS_Terms has been altered"
+!
+!
+!RHS_Terms(tpd, rd, 1) = - TwoPi                                                 &
+!                            * GR_Source_Scalar                                  &
+!                            * Block_Source_E(rd, td, pd, re, te, pe)            &
+!                            * PSI_POWER(5)                                      &
+!                         - PSI_POWER(7)                                         &
+!                            / (16.0_idp * ALPHAPSI_POWER(2) )                   &
+!                            * JCBN_BIGK_VALUE
+!
+!
+!RHS_Terms(tpd, rd, 2) = TwoPi                                                           &
+!                            * ALPHAPSI_POWER(1)                                         &
+!                            * PSI_POWER(4)                                              &
+!                            * GR_Source_Scalar                                          &
+!                            * ( Block_Source_E(rd, td, pd, re, te, pe)                  &
+!                                + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe)  )   &
+!                        + 7.0_idp*PSI_POWER(6)                                          &
+!                            / (16.0_idp * ALPHAPSI_POWER(1))                            &
+!                            * JCBN_BIGK_VALUE
+!
+!
+!Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
+!
+!
+!
+!RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 1)             &
+!                        + 8.0_idp/(3.0_idp * R_SQUARE(rd) )  * CUR_VAL_BETA(tpd, rd, 1)             &
+!                        + 2.0_idp * COTAN_VAL(td)/CUR_R_LOCS(rd) * CUR_VAL_BETA(tpd, rd, 2 )        &
+!                        - COTAN_VAL(td)/3.0_idp * CUR_DRV_BETA(tpd, rd, 1, 2 )                      &
+!                        + 2.0_idp * FourThirds / CUR_R_LOCS(rd) * CUR_DRV_BETA(tpd, rd, 2, 2 )      &
+!                        + 2.0_idp * FourThirds / CUR_R_LOCS(rd) * CUR_DRV_BETA(tpd, rd, 3, 3 )      &
+!                        + JCBN_n_ARRAY(1) * JCBN_Kappa_Array(1,1)                                   &
+!                        + JCBN_n_ARRAY(2) * JCBN_Kappa_Array(2,1)                                   &
+!                        + JCBN_n_ARRAY(3) * JCBN_Kappa_Array(3,1)
+!
+!RHS_Terms(tpd, rd, 4) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 2)                     &
+!                    + 2.0_idp*TwoThirds/R_SQUARE(rd)*COTAN_VAL(td) * CUR_DRV_BETA(tpd, rd, 1, 1)            &
+!                    - 2.0_idp * TwoThirds/( CUR_R_LOCS(rd)*R_SQUARE(rd) ) * CUR_DRV_BETA(tpd, rd, 2, 1)     &
+!                    + ( TwoThirds/RSIN_SQUARE(td,rd) - 1.0_idp/R_SQUARE(rd) )  * CUR_VAL_BETA(tpd, rd, 2)   &
+!                    - 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(tpd, rd, 1, 2 )                                 &
+!                    + 3.5_idp*TwoThirds/R_SQUARE(rd)*COTAN_VAL(td) * CUR_DRV_BETA(tpd, rd, 3, 3 )           &
+!                    + JCBN_n_ARRAY(1) * JCBN_Kappa_Array(1,2)                   &
+!                    + JCBN_n_ARRAY(2) * JCBN_Kappa_Array(2,2)                   &
+!                    + JCBN_n_ARRAY(3) * JCBN_Kappa_Array(3,2)
+!
+!
+!
+!RHS_Terms(tpd, rd, 5) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 3)                          &
+!                    + 2.0_idp*FourThirds/(CUR_R_LOCS(rd)*RSIN_SQUARE(td, rd))* CUR_DRV_BETA(tpd, rd, 3, 1)         &
+!                    - FourThirds*COTAN_VAL(td)/CUR_R_LOCS(rd)/RSIN_SQUARE(td, rd) * CUR_DRV_BETA(tpd, rd, 3, 2 ) &
+!                    - 2.0_idp/CUR_R_LOCS(rd) * CUR_DRV_BETA(tpd, rd, 1, 3 )                                     &
+!                    - 2.0_idp*COTAN_VAL(td)/R_SQUARE(rd) * CUR_DRV_BETA(tpd, rd, 2, 3 )                         &
+!                    + JCBN_n_ARRAY(1) * JCBN_Kappa_Array(1,3)                                                   &
+!                    + JCBN_n_ARRAY(2) * JCBN_Kappa_Array(2,3)                                                   &
+!                    + JCBN_n_Array(3) * JCBN_Kappa_Array(3,3)
+!
+!
+!
+!
+!
+!
+!
+!END SUBROUTINE Calc_RHS_Terms
+!
+!
+!
 
 
 

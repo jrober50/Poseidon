@@ -99,11 +99,11 @@ END SUBROUTINE Output_Setup_Report
 
 
 
-!+201+######################################################################################!
-!                                                                                           !
-!       OUTPUT_SETUP_TABLE                                                                  !
-!                                                                                           !
-!###########################################################################################!
+!+201+##################################################################!
+!                                                                       !
+!       OUTPUT_SETUP_TABLE                                              !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Output_Params_Report( Report_ID )
 
 INTEGER, INTENT(IN)                                 ::  Report_ID
@@ -178,11 +178,11 @@ END SUBROUTINE Output_Params_Report
 
 
 
-!+201+######################################################################################!
-!                                                                                           !
-!       OUTPUT_SETUP_TABLE                                                                  !
-!                                                                                           !
-!###########################################################################################!
+!+201+##################################################################!
+!                                                                       !
+!       OUTPUT_SETUP_TABLE                                              !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Output_Method_Report( Report_ID )
 
 INTEGER, INTENT(IN)                                 ::  Report_ID
@@ -202,7 +202,7 @@ IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3)) THEN
     WRITE(*,1502)Method_Names(Method_Flag)
     WRITE(*,1503)Max_Iterations
     WRITE(*,1504)Convergence_Criteria
-    IF ( Method_Flag == 2 ) THEN
+    IF ( Method_Flag >= 2 ) THEN
         WRITE(*,1505) FP_Anderson_M
     END IF
     WRITE(*,1500)
@@ -215,7 +215,7 @@ IF ( Report_ID .NE. -1 ) THEN
     WRITE(Report_ID,1502)Method_Names(Method_Flag)
     WRITE(Report_ID,1503)Max_Iterations
     WRITE(Report_ID,1504)Convergence_Criteria
-    IF ( Method_Flag == 2 ) THEN
+    IF ( Method_Flag >= 2 ) THEN
         WRITE(Report_ID,1505) FP_Anderson_M
     END IF
 END IF

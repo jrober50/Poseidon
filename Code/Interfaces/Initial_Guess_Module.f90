@@ -98,7 +98,6 @@ REAL(idp), INTENT(IN)                                                           
 
 
 
-
 IF ( Method_Flag == 1 ) THEN
 
     CALL NR_Input_Guess( Psi_Guess,                                  &
@@ -110,8 +109,7 @@ IF ( Method_Flag == 1 ) THEN
                          Left_Limit, Right_Limit                     )
 
 
-ELSE IF ( Method_Flag == 2 ) THEN
-
+ELSE IF ( Method_Flag >= 2 ) THEN
     CALL FP_Input_Guess( Psi_Guess,                                  &
                          AlphaPsi_Guess,                             &
                          Beta_Guess,                                 &
@@ -172,7 +170,6 @@ AlphaPsi_Guess = 1.0_idp
 Beta_Guess = 0.0_idp
 
 
-
 IF ( Method_Flag == 1 ) THEN
 
     CALL NR_Input_Guess( Psi_Guess,                                  &
@@ -184,7 +181,7 @@ IF ( Method_Flag == 1 ) THEN
                          Left_Limit, Right_Limit                     )
 
 
-ELSE IF ( Method_Flag == 2 ) THEN
+ELSE IF ( Method_Flag >= 2 ) THEN
 
     CALL FP_Input_Guess( Psi_Guess,                                  &
                          AlphaPsi_Guess,                             &
@@ -195,7 +192,6 @@ ELSE IF ( Method_Flag == 2 ) THEN
                          Left_Limit, Right_Limit                     )
 
 END IF
-
 
 
 

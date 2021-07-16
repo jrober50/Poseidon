@@ -61,7 +61,7 @@ INTEGER, PARAMETER                                      :: N_Methods = 3
 CHARACTER(LEN = 32),DIMENSION(N_Methods), PARAMETER     :: &
 Method_Names = ['Newton-Raphson                  ', &
                 'Fixed Point Iteration           ', &
-                'Jacobian Free GMRES             ' ]
+                'XCFC with Fixed Point Iteration ' ]
 
 INTEGER, PARAMETER                                      ::  N_Meshes = 5
 CHARACTER(LEN = 35),DIMENSION(N_Meshes), PARAMETER      ::  &

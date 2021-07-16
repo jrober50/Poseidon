@@ -434,6 +434,7 @@ REAL(idp)                                                   ::  rloc,tloc
 117 FORMAT (A,A)
 
 
+
 IF ( Write_Flags(5) > 1 ) THEN
 
 
@@ -443,7 +444,7 @@ IF ( Write_Flags(5) > 1 ) THEN
     ALLOCATE( File_IDs(1:Num_Files) )
 
 
-    
+
 
 
     WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
@@ -488,12 +489,11 @@ IF ( Write_Flags(5) > 1 ) THEN
 
     IF ( R_OUTER/(R_Inner+1.0_idp) > 1E3 ) THEN
         CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,     &
-                                        output_re, output_rc, output_dr     )
+                                         output_re, output_rc, output_dr     )
     ELSE
         CALL Create_Uniform_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,     &
                                      output_re, output_rc, output_dr     )
     END IF
-
 
     ! Create Output Spacing
     ! Pull Number of Samples From Parameters !
@@ -535,9 +535,10 @@ IF ( Write_Flags(5) > 1 ) THEN
         PHI_VAL = k*DELTA_PHI
         THETA_VAL = (j-1)*DELTA_THETA
 
-        CALL Calc_3D_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,           &
+        CALL Calc_3D_Values_At_Location( output_re(i), THETA_VAL, PHI_VAL,           &
                                          Return_Psi, Return_AlphaPsi,                &
                                          Return_Beta1, Return_Beta2, Return_Beta3    )
+
 
         Var_Holder(k,j,i,1) = Return_Psi
         IF ( Return_Psi == 0.0_idp ) THEN
@@ -547,7 +548,7 @@ IF ( Write_Flags(5) > 1 ) THEN
         END IF
         Var_Holder(k,j,i,3:5) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
 
-        R_Holder(i) = output_rc(i)
+        R_Holder(i) = output_re(i)
         T_Holder(j) = THETA_VAL
         P_Holder(k) = PHI_VAL
 
@@ -556,6 +557,8 @@ IF ( Write_Flags(5) > 1 ) THEN
     END DO ! i Loop
     END DO ! j Loop
     END DO ! k Loop
+
+
 
 
     ! Write Output Location Files

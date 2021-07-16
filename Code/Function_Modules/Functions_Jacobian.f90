@@ -430,4 +430,124 @@ END FUNCTION JCBN_BIGK_FUNCTION_1D
 
 
 
+
+
+!+301+###########################################################################!
+!                                                                                !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Calc_Ahat( Ahat_Array,                               &
+                        NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINTS,  &
+                        Cur_R_Locs, R_SQUARE,                   &
+                        RSIN_SQUARE, COTAN_VAL,                 &
+                        CUR_VAL_X, CUR_DRV_X                    )
+
+REAL(KIND = idp), DIMENSION(Num_TP_Quad_Points,Num_R_Quad_Points,3,3), INTENT(OUT) ::  Ahat_Array
+
+INTEGER, INTENT(IN)                                                 ::  NUM_R_QUAD_POINTS,      &
+                                                                        NUM_TP_QUAD_POINTS
+
+REAL(KIND = idp), DIMENSION(Num_R_Quad_Points), INTENT(IN)          ::  Cur_R_Locs
+REAL(KIND = idp), DIMENSION(Num_R_Quad_Points), INTENT(IN)          ::  R_SQUARE
+
+REAL(KIND = idp), DIMENSION(Num_TP_Quad_Points), INTENT(IN)         ::  COTAN_VAL
+
+REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points, 1:Num_R_Quad_Points), INTENT(IN)  ::  RSIN_SQUARE
+
+
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
+                                         1:NUM_R_QUAD_POINTS,   &
+                                         1:3                    )          ::  CUR_VAL_X
+
+
+REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
+                                         1:NUM_R_QUAD_POINTS,   &
+                                         1:3, 1:3               )          ::  CUR_DRV_X
+
+
+INTEGER                                                                     ::  rd, tpd
+
+
+
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+    
+        Ahat_Array(tpd, rd, 1,1) =  FourThirds                  * CUR_DRV_X( tpd, rd, 1, 1 )       &
+                                  - FourThirds/ Cur_R_Locs(rd)  * CUR_VAL_X( tpd, rd, 1 )          &
+                                  - TwoThirds * COTAN_VAL(tpd)  * CUR_VAL_X( tpd, rd, 2 )          &
+                                  - TwoThirds                   * CUR_DRV_X( tpd, rd, 2, 2 )       &
+                                  - TwoThirds                   * CUR_DRV_X( tpd, rd, 3, 3 )
+
+END DO
+END DO
+
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+
+    Ahat_Array(tpd, rd, 2, 1) =  CUR_DRV_X( tpd, rd, 2, 1 )                                     &
+                                +  CUR_DRV_X( tpd, rd, 1, 2 )/R_SQUARE(rd)
+
+END DO
+END DO
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+
+    Ahat_Array(tpd, rd, 3, 1) =  CUR_DRV_X( tpd, rd, 3, 1 )                                     &
+                                +  CUR_DRV_X( tpd, rd, 1, 3 )/RSIN_SQUARE(tpd,rd)
+END DO
+END DO
+
+
+
+
+Ahat_Array(:,:,1,2) = Ahat_Array(:,:,2,1)
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+    Ahat_Array(tpd, rd, 2, 2) = TwoThirds    /(R_SQUARE(rd)*Cur_R_Locs(rd)) * CUR_VAL_X( tpd, rd, 1 )      &
+                                - (TwoThirds/ R_SQUARE(rd))*COTAN_VAL(tpd)  * CUR_VAL_X( tpd, rd, 2 )      &
+                                + FourThirds/ R_SQUARE(rd)                  * CUR_DRV_X( tpd, rd, 2, 2 )   &
+                                - TwoThirds / R_SQUARE(rd)                  * CUR_DRV_X( tpd, rd, 1, 1 )   &
+                                - TwoThirds / R_SQUARE(rd)                  * CUR_DRV_X( tpd, rd, 3, 3 )
+END DO
+END DO
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+    Ahat_Array(tpd, rd, 3, 2) = CUR_DRV_X( tpd, rd, 3, 2 )/R_SQUARE(rd)                             &
+                                + CUR_DRV_X( tpd, rd, 2, 3 )/RSIN_SQUARE(tpd,rd)
+END DO
+END DO
+
+
+Ahat_Array(:,:,1,3) = Ahat_Array(:,:,3,1)
+Ahat_Array(:,:,2,3) = Ahat_Array(:,:,3,2)
+
+
+
+DO rd = 1,Num_R_Quad_Points
+DO tpd = 1,Num_TP_Quad_Points
+    Ahat_Array(tpd, rd, 3, 3) = TwoThirds/( Cur_R_Locs(rd) * RSIN_SQUARE(tpd,rd))                   &
+                                                                    * CUR_VAL_X( tpd, rd, 1 )    &
+                                + FourThirds * COTAN_VAL(tpd)/RSIN_SQUARE(tpd,rd)                   &
+                                                                    * CUR_VAL_X( tpd, rd, 2 )    &
+                                + FourThirds / RSIN_SQUARE(tpd,rd)  * CUR_DRV_X( tpd, rd, 3, 3 ) &
+                                - TwoThirds / RSIN_SQUARE(tpd,rd)   * CUR_DRV_X( tpd, rd, 1, 1 ) &
+                                - TwoThirds / RSIN_SQUARE(tpd,rd)   * CUR_DRV_X( tpd, rd, 2, 2 )
+END DO
+END DO
+
+END SUBROUTINE Calc_Ahat
+
+
+
+
+
 END MODULE Functions_Jacobian

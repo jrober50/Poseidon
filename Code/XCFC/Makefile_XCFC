@@ -1,6 +1,10 @@
 XCFC = \
   Allocation_XCFC.o             \
   XCFC_Source_Vector.o          \
+  XCFC_X_Module.o               \
+  XCFC_ConFactor_Module.o       \
+  XCFC_Lapse_Module.o           \
+  XCFC_Shift_Module.o           \
   XCFC_Main_Module.o            \
   Initialization_XCFC.o     	\
 

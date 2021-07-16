@@ -61,17 +61,18 @@ USE Variables_FP, &
                     Beta_MVL_Diagonal,      &
                     FP_Source_Vector,       &
                     FP_Source_Vector_Beta,  &
-                    FP_Source_Vector_X,  &
+                    FP_Source_Vector_X,     &
                     FP_Coeff_Vector,        &
+                    FP_Coeff_Vector_Orig,   &
                     FP_Coeff_Vector_Beta,   &
-                    FP_Coeff_Vector_X,   &
+                    FP_Coeff_Vector_X,      &
                     FP_Update_Vector,       &
                     FP_Laplace_Vector,      &
                     FP_Laplace_Vector_Beta, &
-                    FP_Laplace_Vector_X, &
+                    FP_Laplace_Vector_X,    &
                     FP_Residual_Vector,     &
                     FP_Residual_Vector_Beta,&
-                    FP_Residual_Vector_X,&
+                    FP_Residual_Vector_X,   &
                     Matrix_Format,          &
                     Num_Matrices,           &
                     First_Column_Storage,   &
@@ -95,6 +96,7 @@ CONTAINS
 !                                                                                !
 !################################################################################!
 SUBROUTINE Allocate_XCFC()
+
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
 
@@ -129,6 +131,7 @@ ALLOCATE( FP_Source_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
 ALLOCATE( FP_Source_Vector_Beta(1:Beta_Prob_Dim) )
 ALLOCATE( FP_Source_Vector_X(1:Beta_Prob_Dim) )
 
+ALLOCATE( FP_Coeff_Vector_Orig(1:NUM_R_NODES,1:LM_LENGTH,1:5)         )
 ALLOCATE( FP_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:8)         )
 ALLOCATE( FP_Coeff_Vector_Beta(1:Beta_Prob_Dim) )
 ALLOCATE( FP_Coeff_Vector_X(1:Beta_Prob_Dim) )
@@ -192,14 +195,21 @@ END IF
 
 DEALLOCATE( FP_Source_Vector )
 DEALLOCATE( FP_Source_Vector_Beta )
+DEALLOCATE( FP_Source_Vector_X )
+
+DEALLOCATE( FP_Coeff_Vector_Orig )
 DEALLOCATE( FP_Coeff_Vector )
 DEALLOCATE( FP_Coeff_Vector_Beta )
+DEALLOCATE( FP_Coeff_Vector_X )
+
 DEALLOCATE( FP_Update_Vector )
 DEALLOCATE( FP_Laplace_Vector )
 DEALLOCATE( FP_Laplace_Vector_Beta )
+DEALLOCATE( FP_Laplace_Vector_X )
+
 DEALLOCATE( FP_Residual_Vector )
 DEALLOCATE( FP_Residual_Vector_Beta )
-
+DEALLOCATE( FP_Residual_Vector_X )
 
 
 

@@ -132,6 +132,8 @@ Num_Input_DOF = Input_RQ*Input_TQ*Input_PQ
 Mapped_R_Quad = Map_To_X_Space( Left_Limit, Right_Limit, Input_R_Quad )
 
 
+
+FP_Coeff_Vector = 0.0_idp
 FP_Coeff_Vector_Beta = 0.0_idp
 DO re = 1,Input_RE
     DO rqb = 0,Degree
@@ -154,7 +156,7 @@ DO re = 1,Input_RE
         END DO ! rq
 
         Here = (re-1)*Degree + rqb + 1
-        FP_Coeff_Vector(Here,1,:) = 2.0_idp*Sqrt(pi)*Tmp_Value(:)
+        FP_Coeff_Vector(Here,1,1:3) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:3)
 
         Here = FP_Beta_Array_Map(re,rqb,1,0)
         FP_Coeff_Vector_Beta(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
@@ -167,9 +169,7 @@ DO re = 1,Input_RE
     END DO ! rqb
 END DO ! re
 
-FP_Coeff_Vector(:,:,3:5) = 0.0_idp
-
-
+FP_Coeff_Vector(:,:,4:5) = 0.0_idp
 
 END SUBROUTINE FP_Input_Guess
 

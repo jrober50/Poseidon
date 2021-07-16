@@ -147,6 +147,7 @@ REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_P_Quad
 REAL(idp)                                               ::  Left_Limit
 REAL(idp)                                               ::  Right_Limit
 
+
 REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Local_E
 REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Local_S
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Local_Si
@@ -157,7 +158,11 @@ REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Beta_Guess
 
 INTEGER                                                 ::  myID
 
-INTEGER                                                 ::  re, rq, tq, pq, q, i
+INTEGER                                                 ::  re, te, pe
+INTEGER                                                 ::  rq, tq, pq
+INTEGER                                                 ::  here, q, i
+
+REAL(idp)                                               ::  Psi_Holder
 
 INTEGER                                                 ::  Guess_Type
 
@@ -222,21 +227,21 @@ ALLOCATE( RE_Table(1:9) )
 !#                                                          #!
 !############################################################!
 Units_Input         = "G"
-Solver_Type         = 2
+Solver_Type         = 3
 
-RE_Table            = (/ 1, 128, 160, 240, 320, 400, 600, 256, 512 /)
+RE_Table            = (/ 5, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.50_idp, 0.05_idp /)
+Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  6
-T_Index_Max         =  6
+T_Index_Min         =  3
+T_Index_Max         =  3
 
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  3
-RE_Index_Max        =  3
+RE_Index_Min        =  2
+RE_Index_Max        =  2
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -257,7 +262,7 @@ SelfSim_V_Switch    =  0
 
 Dimension_Input     = 3
 
-Max_Iterations      = 7
+Max_Iterations      = 10
 CC_Option           = 1.0E-10_idp
 
 Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
@@ -270,15 +275,15 @@ NE(2)               = 10                        ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
 NQ(1)               = 10                        ! Number of Radial Quadrature Points
-NQ(2)               = 1                         ! Number of Theta Quadrature Points
+NQ(2)               = 10                         ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-!Verbose             = .FALSE.
-Verbose             = .TRUE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
 Suffix_Input        = "Params"
 
-CFA_Eqs = (/ 1, 1, 1, 0, 0 /)
+CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
 
 
 Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
@@ -305,7 +310,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     NE(1) = RE_Table(RE_Index)
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(Max_Iterations)
+    Suffix_Tail = Letter_Table(Solver_Type)
 
 
 !    WRITE(*,111)" # RE       : ", NE(1),                        &
@@ -326,6 +331,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     ALLOCATE( dx_c(1:NE(1)) )
     ALLOCATE( dy_c(1:NE(2)) )
     ALLOCATE( dz_c(1:NE(3)) )
+
 
     ALLOCATE( Local_E(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
     ALLOCATE( Local_S(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
@@ -392,13 +398,13 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
            Anderson_M_Option           = Anderson_M_Values(M_Index),   &
            Verbose_Option              = Verbose,           &
            WriteAll_Option             = .FALSE.,           &
-           Print_Setup_Option          = .TRUE.,            &
+           Print_Setup_Option          = .FALSE.,            &
            Write_Setup_Option          = .FALSE.,           &
-           Print_Results_Option        = .TRUE.,            &
+           Print_Results_Option        = .FALSE.,            &
            Write_Results_Option        = .TRUE.,           &
            Print_Timetable_Option      = .FALSE.,            &
            Write_Timetable_Option      = .FALSE.,           &
-           Write_Sources_Option        = .TRUE.             )
+           Write_Sources_Option        = .FALSE.             )
 
 
 
@@ -418,6 +424,39 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                                    NE(1), NE(2), NE(3),                         &
                                    dx_c, x_e, y_e,                              &
                                    Local_E, Local_S, Local_Si                   )
+
+
+    IF ( Solver_Type == 3 ) THEN
+
+
+        DO pe = 1,NE(3)
+        DO te = 1,NE(2)
+        DO re = 1,NE(1)
+        DO pq = 1,NQ(3)
+        DO tq = 1,NQ(2)
+        DO rq = 1,NQ(1)
+
+            here = (pq-1)*NQ(2)*NQ(1)   &
+                 + (tq-1)*NQ(1)                &
+                 + rq
+            Psi_Holder = 1.0_idp    &
+                    - 0.5_idp*Potential_Solution(x_e(re-1), 0.0_idp, 0.0_idp)/C_Square
+
+            Local_E(Here,re-1,te-1,pe-1) = Local_E(Here,re-1,te-1,pe-1)*Psi_Holder**6
+            Local_S(Here,re-1,te-1,pe-1) = Local_S(Here,re-1,te-1,pe-1)*Psi_Holder**6
+            Local_Si(Here,re-1,te-1,pe-1,1:3) = Local_Si(Here,re-1,te-1,pe-1,1:3)*Psi_Holder**6
+
+        END DO
+        END DO
+        END DO
+        END DO
+        END DO
+        END DO
+
+
+
+    END IF
+
 
    
 
@@ -544,15 +583,15 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
 
 
-    CALL Poseidon_Init_FlatGuess()
+!    CALL Poseidon_Init_FlatGuess()
 
-!    CALL Poseidon_Input_Guess(  Psi_Guess,                                  &
-!                                AlphaPsi_Guess,                             &
-!                                Beta_Guess,                                 &
-!                                NE(1), NE(2), NE(3),                        &
-!                                NQ(1), NQ(2), NQ(3),                        &
-!                                Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
-!                                Left_Limit, Right_Limit                     )
+    CALL Poseidon_Input_Guess(  Psi_Guess,                                  &
+                                AlphaPsi_Guess,                             &
+                                Beta_Guess,                                 &
+                                NE(1), NE(2), NE(3),                        &
+                                NQ(1), NQ(2), NQ(3),                        &
+                                Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
+                                Left_Limit, Right_Limit                     )
 
 
     !############################################################!

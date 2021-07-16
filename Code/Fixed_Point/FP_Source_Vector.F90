@@ -122,9 +122,6 @@ REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: SIN_VAL_B
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: SIN_VAL
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: SIN_SQUARE
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: TP_SIN_SQUARE
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: COS_VAL
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: COS_SQUARE
-REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: CSC_VAL
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: CSC_SQUARE
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: COTAN_VAL
 
@@ -164,8 +161,7 @@ INTEGER                                                     ::  re, te, pe,     
                                                                 d, lm,          &
                                                                 rd, tpd, td, pd
 
-REAL(KIND = idp)                                                ::  TWOOVER_DELTAR,    &
-                                                                    deltar_overtwo,     &
+REAL(KIND = idp)                                                ::  deltar_overtwo,     &
                                                                     deltat_overtwo,     &
                                                                     deltap_overtwo
 
@@ -186,7 +182,6 @@ FP_Source_Vector_Beta = 0.0_idp
 DO re = 0,NUM_R_ELEMENTS-1
 
     DELTAR_OVERTWO = 0.5_idp *(rlocs(re + 1) - rlocs(re))
-    TWOOVER_DELTAR = 1.0_idp/deltar_overtwo
     CUR_R_LOCS(:) = deltar_overtwo * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(re)
 
 
@@ -202,10 +197,7 @@ DO re = 0,NUM_R_ELEMENTS-1
 
         DO te = 0,NUM_T_ELEMENTS-1
 
-!            IF ( re == 64 ) THEN
-!                PRINT*,re,pe,te,FINDLOC(Block_Source_E(:, :, 1, re, te, pe),0.0_idp,2)
-!                PRINT*,Block_Source_E(:, :, 1, re, te, pe)
-!            END IF
+
 
             deltat_overtwo = 0.5_idp*(tlocs(te + 1) - tlocs(te))
             CUR_T_LOCS(:) = deltat_overtwo * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(te)
@@ -214,14 +206,10 @@ DO re = 0,NUM_R_ELEMENTS-1
 
 
             COTAN_VAL(:) = 1.0_idp/DTAN(CUR_T_LOCS(:))
-            CSC_VAL(:) = 1.0_idp/DSIN(CUR_T_LOCS(:))
             SIN_VAL(:) = DSIN(CUR_T_LOCS(:))
-            COS_VAL(:) = DCOS(CUR_T_LOCS(:))
 
-            COS_SQUARE(:) = COS_VAL(:)*COS_VAL(:)
             SIN_SQUARE(:) = SIN_VAL(:)*SIN_VAL(:)
-            CSC_SQUARE(:) = CSC_VAL(:)*CSC_VAL(:)
-
+            CSC_SQUARE(:) = 1.0_idp/SIN_SQUARE(:)
             DO td = 1,NUM_T_QUAD_POINTS
             DO pd = 1,NUM_P_QUAD_POINTS
                 tpd = (td-1)*NUM_P_QUAD_POINTS + pd
@@ -493,10 +481,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
     CALL Calc_Source_Terms( Source_Terms,                                      &
                             re, te, pe,                                        &
                             td, pd, tpd, rd,                                   &
-                            CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                            SIN_SQUARE, CSC_SQUARE,                            &
                             PSI_POWER, ALPHAPSI_POWER,                         &
-                            CUR_VAL_BETA, CUR_DRV_BETA,                        &
                             BigK_Value, n_Array, Kappa_Array    )
 
 
@@ -545,7 +530,6 @@ COMPLEX(KIND = idp)                                                     ::  Comm
 REAL(KIND = idp)                                                        ::  Combined_Weights
 
 COMPLEX(KIND = idp)                                                     ::  Inner, Middle
-
 
 
 
@@ -639,10 +623,7 @@ END SUBROUTINE Create_FP_Source_Vector
 SUBROUTINE Calc_Source_Terms( Source_Terms,                                      &
                               re, te, pe,                                        &
                               td, pd, tpd, rd,                                   &
-                              CUR_R_LOCS, R_SQUARE, RSIN_SQUARE, COTAN_VAL,      &
-                              SIN_SQUARE, CSC_SQUARE,                            &
                               PSI_POWER, ALPHAPSI_POWER,                         &
-                              CUR_VAL_BETA, CUR_DRV_BETA,                        &
                               BigK_Value, n_Array, Kappa_Array    )
 
 REAL(KIND = idp), INTENT(INOUT), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
@@ -652,28 +633,8 @@ REAL(KIND = idp), INTENT(INOUT), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
 INTEGER, INTENT(IN)                                                     ::  re, te, pe
 INTEGER, INTENT(IN)                                                     ::  td, pd, tpd, rd
 
-REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_R_QUAD_POINTS)            ::  CUR_R_LOCS
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_R_QUAD_POINTS)            ::  R_SQUARE
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_T_QUAD_POINTS,    &
-                                        1:NUM_R_QUAD_POINTS     )       ::  RSIN_SQUARE
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(1:NUM_T_QUAD_POINTS)            ::  SIN_SQUARE,         &
-                                                                            CSC_SQUARE,         &
-                                                                            COTAN_VAL
-
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:11)                           ::  PSI_POWER
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:4)                            ::  ALPHAPSI_POWER
-
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
-                                         1:NUM_R_QUAD_POINTS,   &
-                                         1:3                    )       ::  CUR_VAL_BETA
-
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
-                                         1:NUM_R_QUAD_POINTS,   &
-                                         1:3, 1:3               )       ::  CUR_DRV_BETA
-
 
 
 REAL(KIND = idp), INTENT(IN)                                            ::  BigK_VALUE
@@ -683,12 +644,6 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  Kapp
 REAL(KIND = idp)                                                        ::  Beta_Source_Prefix
 
 
-
-!PRINT*,"Calc_Source_Terms has been altered"
-
-!Source_Terms(tpd, rd, 1) = - TwoPi                                      &
-!                           * GR_Source_Scalar                          &
-!                           * Block_Source_E(rd, td, pd, re, te, pe)
 
 
 Source_Terms(tpd, rd, 1) = - TwoPi                                      &
@@ -700,8 +655,6 @@ Source_Terms(tpd, rd, 1) = - TwoPi                                      &
                             * BigK_Value
      
 
-
-!PRINT*,Block_Source_E(rd, td, pd, re, te, pe) ,PSI_POWER(1),ALPHAPSI_POWER(1)
 
 
 
@@ -770,9 +723,6 @@ ALLOCATE( SIN_VAL_B( 1:NUM_TP_QUAD_POINTS ) )
 ALLOCATE( SIN_VAL( 1:NUM_T_QUAD_POINTS ) )
 ALLOCATE( SIN_SQUARE( 1:NUM_T_QUAD_POINTS ) )
 ALLOCATE( TP_SIN_SQUARE( 1:NUM_TP_QUAD_POINTS ) )
-ALLOCATE( COS_VAL( 1:NUM_T_QUAD_POINTS ) )
-ALLOCATE( COS_SQUARE( 1:NUM_T_QUAD_POINTS ) )
-ALLOCATE( CSC_VAL( 1:NUM_T_QUAD_POINTS ) )
 ALLOCATE( CSC_SQUARE( 1:NUM_T_QUAD_POINTS ) )
 ALLOCATE( COTAN_VAL( 1:NUM_T_QUAD_POINTS ) )
 
@@ -817,9 +767,6 @@ DEALLOCATE( SIN_VAL_B )
 DEALLOCATE( SIN_VAL )
 DEALLOCATE( SIN_SQUARE )
 DEALLOCATE( TP_SIN_SQUARE )
-DEALLOCATE( COS_VAL )
-DEALLOCATE( COS_SQUARE )
-DEALLOCATE( CSC_VAL )
 DEALLOCATE( CSC_SQUARE )
 DEALLOCATE( COTAN_VAL )
 

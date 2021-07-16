@@ -566,7 +566,7 @@ CALL Initialize_Tables()
 
 
 IF ( Method_Flag == 1 ) THEN
-    CALL Initialize_NR()
+    CALL Initialize_NR(CFA_EQ_Flags_Option)
 ELSE IF ( Method_Flag == 2 ) THEN
     CALL Initialize_FP(CFA_EQ_Flags_Option)
 ELSE IF ( Method_Flag == 3 ) THEN
