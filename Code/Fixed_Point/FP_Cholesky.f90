@@ -103,20 +103,16 @@ CONTAINS
 SUBROUTINE Cholesky_Factorization()
 
 
-INTEGER                                                             ::  l, i, ui
+INTEGER                                                         ::  l, i, ui
+INTEGER                                                         ::  OLD_NNZ, NEW_NNZ
 
-INTEGER                                                             ::  shift, OLD_NNZ, NEW_NNZ
+INTEGER(KIND = 1), ALLOCATABLE, DIMENSION(:,:,:)                :: LogMap
+
+INTEGER, ALLOCATABLE, DIMENSION(:,:,:)                          :: NEW_ROW_IND
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              :: NEW_ELEM_VAL
 
 
-
-INTEGER(KIND = 1), ALLOCATABLE, DIMENSION(:,:,:)                      :: LogMap
-
-INTEGER, ALLOCATABLE, DIMENSION(:,:,:)                                  :: NEW_ROW_IND
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)                       :: NEW_ELEM_VAL
-
-REAL(KIND = idp), DIMENSION(0:NUM_R_NODES-1,0:NUM_R_NODES-1)        :: Orig, Recon, Diff, Lower
-
-REAL(idp),      DIMENSION(2)                            :: Timer
+REAL(idp),      DIMENSION(2)                                    :: Timer
 
 
 IF ( Verbose_Flag ) THEN
@@ -884,7 +880,7 @@ COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(INOUT)                :: b
 
 
 INTEGER                                                             :: i, j, here
-REAL(KIND = idp)                                                    :: TMP
+COMPLEX(KIND = idp)                                                 :: TMP
 
 
 

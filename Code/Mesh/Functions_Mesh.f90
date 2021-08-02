@@ -269,8 +269,6 @@ REAL(KIND = idp), DIMENSION(0:nz),  INTENT(OUT)         ::  z_e
 REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  z_c
 REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  dz_c
 
-INTEGER                                                 ::  i
-
 
 
 ! Create Uniform Radial Mesh !
@@ -644,7 +642,6 @@ REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
 
 
 INTEGER                                                 ::  i
-REAL(KIND = idp)                                        ::  tmp_Inner_Edge
 REAL(KIND = idp)                                        ::  Scale_Factor
 REAL(KIND = idp)                                        ::  Scale_Factor_Power
 
@@ -760,7 +757,6 @@ REAL(KIND = idp), DIMENSION(0:Output_Number_of_Elements), INTENT(INOUT)     ::  
 REAL(KIND = idp), DIMENSION(1:Output_Number_of_Elements), INTENT(INOUT)     ::  dMesh
 
 INTEGER                                                                     ::  i
-REAL(KIND = idp)                                                            ::  tmp
 
 
 IF ( Coarsen_Factor .NE. 1 ) THEN
@@ -832,7 +828,7 @@ REAL(idp), DIMENSION(1:l+1),    INTENT(INOUT)       ::  radii
 REAL(idp), DIMENSION(1:l),      INTENT(OUT)         ::  dx_Array
 INTEGER,   DIMENSION(1:l),      INTENT(OUT)         ::  n_Array
 
-INTEGER                                             ::  i, j
+INTEGER                                             ::  i
 REAL(idp)                                           ::  a, b
 REAL(idp), DIMENSION(1:l)                           ::  dr_Array
 
@@ -942,7 +938,6 @@ REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
 
 
 INTEGER                                                 ::  i
-REAL(KIND = idp)                                        ::  tmp_Inner_Edge
 REAL(KIND = idp)                                        ::  Scale_Factor
 REAL(KIND = idp)                                        ::  Scale_Factor_Power
 

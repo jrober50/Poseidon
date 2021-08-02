@@ -34,8 +34,6 @@ USE Poseidon_Parameters, &
 USE Variables_IO, &
             ONLY :  Report_Flags
 
-USE VPRINT_Module,  &
-            ONLY :  VPRINT
 
 USE Units_Module, &
             ONLY :  Grav_Constant_G,    &
@@ -121,7 +119,7 @@ REAL(KIND = idp), DIMENSION(:),ALLOCATABLE                                      
                                                                                             Input_V,    &
                                                                                             Input_M
 
-REAL(KIND = idp)                                                                        ::  V_Factor,R_Factor
+REAL(KIND = idp)                                                                        ::  R_Factor
 REAL(KIND = idp)                                                                        ::  Kappa_wUnits
 
 
@@ -137,7 +135,6 @@ INTEGER                                     :: CUR_LINE
 
 
 INTEGER                             :: nread
-INTEGER                             :: iskipp
 INTEGER                             :: istat
 
 
@@ -147,10 +144,7 @@ END IF
 
 
 101 FORMAT (a128)
-111 FORMAT (1x,e16.10)
-121 FORMAT (21x,e12.10)
-131 FORMAT (37x,e13.10)
-141 FORMAT (55x,e13.10)
+
 
 nread = 42
 OPEN(UNIT=nread, FILE='../../Input/YahilHomologousCollapse_Gm_130.dat', STATUS='OLD', IOSTAT=istat)
@@ -280,7 +274,6 @@ CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, In
 Potential_Solution => SELFSIM_NEWT_SOL
 Shift_Solution => SELFSIM_SHIFT_SOL
 
- 5000 RETURN
 END SUBROUTINE Initialize_Yahil_Sources
 
 
@@ -344,12 +337,8 @@ REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
                             0:NUM_P_ELEM-1, 1:3 ),  INTENT(INOUT)           ::  Input_Si
 
 
-INTEGER                                                                     ::  Frame_Number = 1
-INTEGER                                                                     ::  i
 INTEGER                                                                     ::  re, te, pe, &
                                                                                 rd, td, pd
-
-
 
 INTEGER                                                                     ::  nd, line, line_min
 REAL(KIND = idp), DIMENSION(0:1)                                            ::  xlocs
@@ -363,16 +352,12 @@ REAL(KIND = idp)                                                            ::  
 REAL(KIND = idp), DIMENSION(0:1)                                            ::  LagPoly_Vals
 REAL(KIND = idp), DIMENSION(1:NUM_NODES(1))                                 ::  CUR_R_LOCS
 
-
-REAL(KIND = idp)                                                            ::  r_sqr
-REAL(KIND = idp)                                                            ::  deltar_overtwo
-
 REAL(KIND = idp)                                                            ::  D_FACTOR,               &
                                                                                 V_FACTOR,               &
                                                                                 X_Factor,               &
                                                                                 M_FACTOR
 
-REAL(KIND = idp)                                                            ::  ecc_sqr, ooomes, cos_sqr, sin_sqr
+REAL(KIND = idp)                                                            ::  ecc_sqr, ooomes
 REAL(KIND = idp)                                                            ::  Specific_Enthalpy
 
 INTEGER                                                                     ::  Num_Radial_Points
@@ -381,18 +366,8 @@ INTEGER                                                                     ::  
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  Density_Holder,         &
                                                                                 Velocity_Holder
 
-INTEGER                                                                     ::  Here, There
 REAL(KIND = idp)                                                            ::  xloc
 REAL(KIND = idp)                                                            ::  E_Units
-
-
-INTEGER, DIMENSION(1:5)                                                     ::  File_ID
-CHARACTER(len = 44)                                                         ::  Density_Filename
-CHARACTER(len = 43)                                                         ::  RadVel_Filename
-CHARACTER(len = 42)                                                         ::  Rlocs_Filename
-CHARACTER(len = 42)                                                         ::  Tlocs_Filename
-CHARACTER(len = 42)                                                         ::  Plocs_Filename
-
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  DX_Holder
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  VX_Holder
@@ -658,17 +633,9 @@ REAL(KIND = idp), DIMENSION( 1:NUM_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),  &
 REAL(KIND = idp), DIMENSION( 0:NUM_R_ELEM ),  INTENT(IN)          ::  r_locs
 
 
-COMPLEX(KIND = idp)                                               ::  Basis_Funcs,  &
-                                                                      Tmp_Psi,      &
-                                                                      Tmp_AlphaPsi
+INTEGER                                                           ::  Ord
 
-INTEGER                                                           ::  Ord,          &
-                                                                      Current_Location
-
-
-INTEGER                                                           ::  i, j, l, m, d, re, reb
-
-
+INTEGER                                                           ::  i, j, re, reb
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: x_locs,     &
                                                                      ri_locs,    &
@@ -683,7 +650,6 @@ REAL(KIND = idp)                                                  :: Psi
 REAL(KIND = idp)                                                  :: Outer_Int
 REAL(KIND = idp)                                                  :: Inner_Int
 
-REAL(KIND = idp)                                                  :: x_tmp
 Ord = 6
 
 
@@ -862,8 +828,6 @@ REAL(KIND = idp)                 :: SELFSIM_NEWT_SOL
 
 INTEGER                          :: cur_entry
 INTEGER                          :: i
-
-REAL(KIND = idp)                 :: deltar
 
 
 DO i = 1,NUM_ENTRIES-1

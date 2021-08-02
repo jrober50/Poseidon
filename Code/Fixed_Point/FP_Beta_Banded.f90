@@ -136,17 +136,15 @@ SUBROUTINE Initialize_Beta_MVL_Banded()
 
 
 
-INTEGER                                                 ::  l, m, lp, mp, lm, lm_loc, lpmp_loc
-INTEGER                                                 ::  re, te, pe, rep
-INTEGER                                                 ::  rd, td, pd, tpd
+INTEGER                                                 ::  l, m
+INTEGER                                                 ::  re, te, pe
+INTEGER                                                 ::  rd
 INTEGER                                                 ::  d, dp
-INTEGER                                                 ::  i, j, ui, uj
-INTEGER                                                 ::  row, col
+INTEGER                                                 ::  i, j, ui
 
 REAL(idp)                                        ::  deltar, TODR
 REAL(idp)                                        ::  L_Lp1
 
-INTEGER                                                 ::  Mat_Loc
 
 REAL(idp), ALLOCATABLE, DIMENSION(:)             ::  CUR_R_LOCS
 REAL(idp), ALLOCATABLE, DIMENSION(:)             ::  CUR_T_LOCS
@@ -156,14 +154,12 @@ REAL(idp), ALLOCATABLE, DIMENSION(:)             :: SIN_SQUARE
 REAL(idp), ALLOCATABLE, DIMENSION(:)             :: COTAN_VAL
 
 
-COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values
-COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values_b
+COMPLEX(idp), DIMENSION(0:DEGREE)                ::  Reusable_Values
 
 
 
-REAL(idp)                                        ::  deltar_overtwo,     &
-                                                            deltat_overtwo,     &
-                                                            deltap_overtwo
+REAL(idp)                                        ::  deltat_overtwo,     &
+                                                     deltap_overtwo
 
 REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )       :: RR_Factor
 REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )       :: DRR_Factor
@@ -174,10 +170,7 @@ REAL(idp), ALLOCATABLE, DIMENSION( :,:,: )       :: DRDR_Factor
 COMPLEX(idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_TP_Integrals
 COMPLEX(idp), ALLOCATABLE, DIMENSION( :,:,: )    :: TP_TP_Integrals_store
 
-INTEGER                                                 :: INFO
-
-REAL(idp), DIMENSION(1:3)                               :: Timer
-REAL(idp), DIMENSION(1:3)                               :: Timer_Tots
+!REAL(idp), DIMENSION(1:3)                               :: Timer
 
 Beta_MVL_Banded = 0.0_idp
 
@@ -440,7 +433,7 @@ REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: C
 REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: R_Square
 
 
-INTEGER                                                     :: d, rd, ui, uj
+INTEGER                                                     :: d, ui, uj
 INTEGER                                                     :: row, col
 INTEGER                                                     :: lm_loc, lpmp_loc
 
@@ -547,7 +540,7 @@ REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: C
 REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)  :: R_Square
 
 
-INTEGER                                                     :: d, rd, ui, uj
+INTEGER                                                     :: d, ui, uj
 INTEGER                                                     :: row, col
 INTEGER                                                     :: lm_loc, lpmp_loc
 
@@ -662,7 +655,7 @@ REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)    ::
 REAL(idp),    DIMENSION( 1:Num_R_Quad_Points ),                 INTENT(IN)    :: R_Square
 
 
-INTEGER                                                     :: d, rd, ui, uj
+INTEGER                                                     :: d, ui, uj
 INTEGER                                                     :: row, col
 INTEGER                                                     :: lm_loc, lpmp_loc
 
@@ -986,13 +979,6 @@ END SUBROUTINE CALC_TP_Values
 SUBROUTINE Factorize_Beta_Banded()
 
 
-INTEGER                                                 :: Col, Row
-INTEGER                                                 :: lm
-
-INTEGER                                                 ::  i, j
-INTEGER                                                 ::  re, d, l, ui
-INTEGER                                                 ::  rep, dp, lp, uj
-
 
 INTEGER                                                 :: INFO
 COMPLEX(idp),   DIMENSION(2*Beta_Prob_Dim)              :: WORK
@@ -1001,7 +987,7 @@ REAL(idp)                                               :: RCOND_One
 REAL(idp)                                               :: NORM
 
 REAL(idp),      DIMENSION(2)                            :: Timer
-
+INTEGER                                                 :: i
 
 
 IF ( Verbose_Flag ) THEN
@@ -1015,28 +1001,6 @@ timer(1) = MPI_Wtime()
 !   so those values are stored before we modify the matrix.
 !
 CALL DIRICHLET_BC_Beta_Banded_Mat()
-
-!PRINT*,"Work_Mat"
-!DO ui = 1,3
-!re = Num_R_Elements-1
-!DO d = 0,Degree
-!DO l = 1,LM_Length
-!DO uj = 1,3
-!rep = Num_R_Elements-1
-!DO dp = 0,Degree
-!DO lp = 1,LM_Length
-!
-!    i = FP_Beta_Array_Map(re,d,ui,l)
-!    j = FP_Beta_Array_Map(rep,dp,uj,lp)
-!
-!    PRINT*,i,j,Beta_MVL_Banded(Beta_Bandwidth+i-j,j)
-!END DO
-!END DO
-!END DO
-!END DO
-!END DO
-!END DO
-
 
 
 CALL Jacobi_PC_MVL_Banded()
@@ -1112,9 +1076,9 @@ END SUBROUTINE Factorize_Beta_Banded
 !################################################################################!
 SUBROUTINE Jacobi_PC_MVL_Banded()
 
-INTEGER                                         ::  i, j
+INTEGER                                         ::  i
 INTEGER                                         ::  Row, Col
-INTEGER                                         ::  RE, REp
+INTEGER                                         ::  RE
 INTEGER                                         ::  ui, d, l
 INTEGER                                         ::  uj, dp, lp
 
@@ -1287,10 +1251,8 @@ SUBROUTINE DIRICHLET_BC_Beta_Banded_Mat()
 
 
 INTEGER                                                 :: Col, Row
-INTEGER                                                 :: re, d, ui, lm
-INTEGER                                                 :: rep, dp, uj, lpmp, lp
-
-INTEGER                                                 ::  i, j
+INTEGER                                                 :: d, ui, lm
+INTEGER                                                 :: dp, uj, lp
 
 
 

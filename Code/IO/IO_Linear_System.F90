@@ -200,7 +200,6 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
-100 FORMAT (A,A,I2.2,A,I2.2,A)
 101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
@@ -245,7 +244,6 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
-100 FORMAT (A,A,I2.2,A,I2.2,A)
 101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
@@ -300,7 +298,6 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
-100 FORMAT (A,A,I2.2,A,I2.2,A)
 101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
@@ -336,7 +333,6 @@ CHARACTER(LEN = 40)                                     ::  fmt
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
-100 FORMAT (A,A,I2.2,A,I2.2,A)
 101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
@@ -370,10 +366,6 @@ CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 40)                                     ::  fmt
 
 INTEGER                                                 ::  FILE_ID
-INTEGER                                                 ::  i
-
-100 FORMAT (A,A,I2.2,A,I2.2,A)
-101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'
@@ -407,17 +399,10 @@ CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 40)                                     ::  fmt
 
 INTEGER                                                 ::  FILE_ID
-INTEGER                                                 ::  i
 
 COMPLEX(KIND = idp), DIMENSION(0:Block_PROB_DIM-1 )     ::  Test
-INTEGER                                                 :: N_RE, D, L
 INTEGER                                                 ::  istat
-CHARACTER(len = 100)                                    ::  test_str
-CHARACTER(len = 23)                                     ::  REAL_PART
-REAL(KIND = idp)                                        ::  REAL_NUM
 
-100 FORMAT (A,I2.2,A,I2.2,A)
-101 FORMAT (I5.5," ",I2.2," ",I2.2)
 
 fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'

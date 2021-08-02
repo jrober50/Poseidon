@@ -1,5 +1,5 @@
 INTERFACES = \
- Initial_Guess_Module.o   \
- Source_Input_Module.o   \
- Poseidon_Main_Module.o  \
-
+ Initial_Guess_Module.f90   \
+ Source_Input_Module.f90   \
+ Poseidon_Main_Module.f90  \
+ Poseidon_XCFC_Interface.f90

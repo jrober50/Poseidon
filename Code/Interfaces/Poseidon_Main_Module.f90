@@ -143,7 +143,6 @@ CONTAINS
 SUBROUTINE Poseidon_Run()
 
 LOGICAL                                             ::  Readiness_Flag
-INTEGER, DIMENSION(1:5)                             ::  Eq_Flag_Array
 
 
 
@@ -280,7 +279,6 @@ REAL(KIND = idp), DIMENSION(1:NUM_R_ELEMENTS),    OPTIONAL,   INTENT(IN)      ::
 REAL(KIND = idp), DIMENSION(1:NUM_T_ELEMENTS),    OPTIONAL,   INTENT(IN)      ::  Input_Delta_T_Vector
 REAL(KIND = idp), DIMENSION(1:NUM_P_ELEMENTS),    OPTIONAL,   INTENT(IN)      ::  Input_Delta_P_Vector
 
-REAL(KIND = idp), DIMENSION(1:NUM_R_ELEMENTS)                                  ::  TMP_Delta_R_Vector
 REAL(KIND = idp), DIMENSION(1:NUM_T_ELEMENTS)                                  ::  TMP_Delta_T_Vector
 REAL(KIND = idp), DIMENSION(1:NUM_P_ELEMENTS)                                  ::  TMP_Delta_P_Vector
 
@@ -399,10 +397,6 @@ CHARACTER(LEN = 1), INTENT(IN)                                  ::  BC_Location_
 CHARACTER(LEN = 1), DIMENSION(1:NUM_CFA_VARS), INTENT(IN)       ::  BC_Type_Input
 
 REAL(KIND = idp), DIMENSION(1:NUM_CFA_VARS), INTENT(IN)         ::  BC_Value_Input
-
-
-
-INTEGER                         ::  ui
 
 
 

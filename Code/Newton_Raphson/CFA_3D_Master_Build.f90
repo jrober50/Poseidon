@@ -275,9 +275,7 @@ SUBROUTINE CFA_3D_Master_Build()
 
 
 REAL(KIND = idp)        :: timea, timeb, timec
-INTEGER                 :: i,j,k
-INTEGER                 :: here, re, d, dp, lm_loc, lpmp_loc, F, u, l, m
-INTEGER                 :: i_loc, j_loc, m_loc
+
 
 timea = 0.0_idp
 timeb = 0.0_idp
@@ -399,24 +397,7 @@ INTEGER                                                         ::  Local_re,   
                                                                     Global_re,      &
                                                                     Global_te,      &
                                                                     Global_pe,      &
-                                                                    d, l, m,        &
-                                                                    dp, lp, mp,     &
                                                                     rd, td, pd, tpd
-
-
-
-
-COMPLEX(KIND = idp)                                             ::  REUSED_VALUE
-
-REAL(KIND = idp), DIMENSION(1:3,1:3)                            ::  JCBN_kappa_Array
-REAL(KIND = idp), DIMENSION(1:3)                                ::  JCBN_n_ARRAY
-
-REAL(KIND = idp)                                                ::  JCBN_BIGK_VALUE
-
-
-
-INTEGER, DIMENSION(1:NUM_T_QUAD_POINTS)                         ::  here
-
 
 REAL(KIND = idp)                                                ::  TWOOVER_DELTAR,    &
                                                                     deltar_overtwo,     &
@@ -435,9 +416,6 @@ REAL(KIND = idp)                                    ::  timea, timeb, timec, tim
                                                         time_CURVALS, time_SJT, time_JCBNM, &
                                                         time_RHS
 
-
-INTEGER                                             ::  ierr, i
-INTEGER                                             ::  CUR_LOC
 
 time_CURVALS = 0.0_idp
 time_SJT = 0.0_idp
@@ -630,15 +608,13 @@ COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Tmp_U_Value,
 
 
 
-INTEGER                                                         ::  l, m, d, dp,        &
+INTEGER                                                         ::  d, dp,        &
                                                                     rd, td, pd, tpd,    &
                                                                     ui
 
 
 INTEGER                                                         ::  Here, There
 INTEGER                                                         ::  lm_loc, lpmp_loc
-
-COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Local_Coefficients
 
 
 
@@ -880,12 +856,9 @@ END SUBROUTINE Calc_3D_Current_Values
 SUBROUTINE Calc_3D_SubJcbn_Terms( re, te, pe )
 
 
-
-
 INTEGER, INTENT(IN)                                                     ::  re, te, pe
 
 
-REAL(KIND = idp)                                                        ::  REUSED_VALUE
 
 INTEGER                                                                 ::  pd, td, rd,     &
                                                                             i, tpd
@@ -1084,18 +1057,12 @@ INTEGER, INTENT(IN)                                                     ::  re, 
 
 REAL(KIND = idp), INTENT(IN)                                            ::  DELTAR_OVERTWO
 
-INTEGER                                                                 ::  pd, td, rd, tpd,     &
-                                                                            l, m, d,        &
-                                                                            lm_loc, u
+INTEGER                                                                 ::  rd, d, lm_loc
 
 INTEGER                                                                 ::  Current_i_Location
 
 COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_TMP
-COMPLEX(KIND = idp)                                                     :: Test
-COMPLEX(KIND = idp)                                                     ::  Common_Basis
-REAL(KIND = idp)                                                        ::  Combined_Weights
 
-COMPLEX(KIND = idp)                                                     ::  Inner, Middle
 
 
 !PRINT*,"CREATE_3D_RHS_VECTOR has been altered, u = 1,1"
@@ -1268,37 +1235,16 @@ REAL(KIND = idp), INTENT(IN)                                            ::  TWOO
 
 
 
-INTEGER                                                                 ::  pd, td, rd,     &
-                                                                            l, m, d,        &
-                                                                            lp, mp, dp
-
-
-
-INTEGER                                                                 ::  Current_i_Location,         &
-                                                                            Current_j_Location
-
-
-
-INTEGER                                                                 ::  F, u
-INTEGER                                                                 ::  lm_loc, lpmp_loc
-INTEGER                                                                 ::  MATVEC_LOC
-INTEGER                                                                 ::  i_loc, j_loc
+INTEGER                                                                 ::  dp, F
+INTEGER                                                                 ::  lpmp_loc
+INTEGER                                                                 ::  i_loc
 
 INTEGER                                                                 ::  Start, Finish
 
-REAL(KIND = idp), DIMENSION(1:NUM_R_QUAD_POINTS)                        ::  Common_Term_A,  &
-                                                                            Common_Term_B,  &
-                                                                            Common_Term_C
-
 
 COMPLEX(KIND = idp), DIMENSION(0:ELEM_PROB_DIM-1)                       ::  Jacobian_Buffer
-COMPLEX(KIND = idp), DIMENSION(1:25)                                    ::  Jacobian_Terms
 
 
-REAL(KIND = idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:2)                   ::  Current_Lag_Polys
-
-
-INTEGER                                                                 ::  i, ierr
 REAL(KIND = idp)                                                        ::  time_a, time_b
 
 
@@ -1382,8 +1328,6 @@ INTEGER                                     ::  Start_Here_ND,     &
 
 COMPLEX(KIND=idp),DIMENSION(0:SUBSHELL_PROB_DIM-1)    :: RHS_Receive_Buffer
 
-
-INTEGER    :: i
 
 
 IF ( nPROCS_SHELL .NE. 0 ) THEN
@@ -1528,10 +1472,8 @@ SUBROUTINE FINISH_3D_JACOBIAN_MATRIX()
 
 
 
-INTEGER                                             ::  ui, l, m, re, d, dp, rd, u
+INTEGER                                             ::  l, m, re, d, dp, u
 
-INTEGER                                             ::  Current_i_Location, &
-                                                        Current_j_Location
 
 REAL(KIND = idp)                                                ::  TWOOVER_DELTAR, &
                                                                     L_Lp1
@@ -1548,10 +1490,6 @@ INTEGER                                                         ::  Block_re
 INTEGER                                                         ::  iloc, jloc
 INTEGER                                                         ::  MATVEC_LOC
 
-
-REAL(KIND = idp)                                                :: TMP_VALUE
-
-INTEGER :: i, ierr
 
 
 
@@ -1692,7 +1630,7 @@ END SUBROUTINE FINISH_3D_JACOBIAN_MATRIX
 SUBROUTINE FINISH_3D_RHS_VECTOR()
 
 
-INTEGER                                                         ::  ui, l, m, re, d, dp, rd,k
+INTEGER                                                         ::  ui, l, m, re, d, dp
 
 INTEGER                                                         ::  Current_i_Location, &
                                                                     Current_j_Location
@@ -1708,27 +1646,15 @@ REAL(KIND = idp), DIMENSION(0:DEGREE)                           :: Reusable_Valu
 
 
 INTEGER                                                         ::  Global_re
-INTEGER                                                         ::  Block_re
-INTEGER                                                         ::  iloc, jloc
-INTEGER                                                         ::  MATVEC_LOC
-REAL(KIND = idp)                                                ::  TMP_VALUE
 
 
 INTEGER                                                         ::  Start_Here,     &
-                                                                    End_Here,       &
-                                                                    here
+                                                                    End_Here
 
 
 COMPLEX(KIND = idp), DIMENSION(1:SUBSHELL_PROB_DIM)           ::  TMP_VECTOR
 
 
-INTEGER                                                         :: Start_Here_b, End_Here_b
-
-INTEGER                                                         ::  ierr
-
-
-
-INTEGER :: i,j
 
 
 !PRINT*,"FINISH_3D_RHS_VECTOR has been altered, ui = 1,1"

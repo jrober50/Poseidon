@@ -49,13 +49,12 @@ COMPLEX(KIND = idp), DIMENSION(0:NNZ - 1), INTENT(IN)       :: ELEM_VAL
 COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(IN)           :: VECT
 
 
-REAL(KIND = idp), DIMENSION(0:N-1)                          :: MVMULT_CCS
+COMPLEX(KIND = idp), DIMENSION(0:N-1)                          :: MVMULT_CCS
 
 INTEGER                                                     :: i, j
 
 MVMULT_CCS = 0.0_idp
 
-print*,Col_PTR
 DO i = 0,N-1
 
     PRINT*,i,COL_PTR(i),COL_PTR(i+1)-1
@@ -129,7 +128,7 @@ COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:M)             :: V
 COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:N,1:M)         :: A
 
 
-REAL(KIND = idp), DIMENSION(1:N)                            :: Sol
+COMPLEX(KIND = idp), DIMENSION(1:N)                            :: Sol
 
 INTEGER                                                     :: i,j
 

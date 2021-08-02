@@ -60,14 +60,6 @@ USE Units_Module, &
                             Shift_Units
 
 
-USE Driver_Parameters,  &
-                    ONLY  : DRIVER_TEST_NUMBER,                             &
-                            DRIVER_FRAME,                                   &
-                            DRIVER_INNER_RADIUS,                            &
-                            DRIVER_OUTER_RADIUS,                            &
-                            DRIVER_TOTAL_FRAMES,                            &
-                            myID,                                           &
-                            Driver_R_Input_Nodes
 
 USE Poseidon_Parameters, &
                     ONLY :  DEGREE,                 &
@@ -79,6 +71,9 @@ USE Poseidon_Parameters, &
                             Convergence_Type,       &
                             Convergence_Flag,       &
                             Max_Iterations
+
+USE Variables_MPI, &
+                    ONLY :  myID_Poseidon
 
 USE Variables_Derived, &
                     ONLY :  Num_R_Nodes
@@ -175,11 +170,8 @@ SUBROUTINE OPEN_ITER_REPORT_FILE(Iteration, Rank)
 INTEGER, INTENT(IN)                                     ::  Iteration, Rank
 
 CHARACTER(LEN = 70)                                     ::  FILE_NAME
-INTEGER                                                 ::  istat
-LOGICAL                                                 ::  FLAG, OK
 
 109 FORMAT (A,I2.2,A,I2.2)
-112 FORMAT (A,I2.2,A,I2.2,A)
 113 FORMAT (A,A,I2.2,A,I2.2,A)
 
 IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
@@ -344,23 +336,10 @@ END SUBROUTINE CLOSE_ITER_REPORT_FILE
 SUBROUTINE OUTPUT_FINAL_RESULTS()
 
 
-INTEGER                                                     ::  NUM_SAMPLES
-
-
 CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
 INTEGER                                                     ::  Num_Files
 
-CHARACTER(LEN = 50)                                         ::  filenamea,          &
-                                                                filenameb,          &
-                                                                filenamec,          &
-                                                                filenamed,          &
-                                                                filenamee
-
-INTEGER                                                     ::  file_ida,           &
-                                                                file_idb,           &
-                                                                file_idc,           &
-                                                                file_idd
 
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,          &
                                                                 Output_rc,          &
@@ -372,21 +351,12 @@ REAL(KIND = idp)                                            ::  Return_Psi,     
                                                                 Return_Beta2,       &
                                                                 Return_Beta3
 
-
-REAL(KIND = idp)                                            ::  deltar, r,          &
-                                                                theta, phi,         &
-                                                                Analytic_Val,       &
-                                                                Solver_Val,         &
-                                                                Solver_Valb,        &
-                                                                Error_Val
-
-INTEGER                                                     ::  i, j, k, ORD, Here
+INTEGER                                                     ::  i, j, k, Here
 
 INTEGER                                                     ::  NUM_THETA_RAYS,     &
                                                                 NUM_PHI_RAYS,       &
                                                                 NUM_RADIAL_SAMPLES
 
-REAL(KIND = idp)                                            ::  deltar_overtwo
 
 REAL(KIND = idp)                                            ::  DELTA_THETA,        &
                                                                 THETA_VAL
@@ -398,40 +368,12 @@ REAL(KIND = idp)                                            ::  DELTA_PHI,      
 REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE           ::  Var_Holder
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,           &
                                                                 T_Holder,           &
-                                                                P_Holder,           &
-                                                                xlocs, cur_r_locs
+                                                                P_Holder
 
+REAL(idp), DIMENSION(Num_CFA_Vars)                          ::  Units
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_xe,          &
-                                                                Output_xc,          &
-                                                                Output_dx
-
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_ye,          &
-                                                                Output_yc,          &
-                                                                Output_dy
-
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_ze,          &
-                                                                Output_zc,          &
-                                                                Output_dz
-
-
-REAL(idp), DIMENSION(Num_CFA_Vars)                            ::  Units
-
-INTEGER                                                     ::  nx, ny, nz
-REAL(idp)                                                   ::  rloc,tloc
-
-
-110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A10)                              !!! Output Header
-
-111 FORMAT (11X,A1,24X,A3,19X,A8,15X,A11,14X,A11,14X,A11)                       !!! Output Header for Results file
-112 FORMAT (11X,A1,16X,A18,9x,A14)                                              !!! Output Header for Analytic Solution file
-
-113 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)               !!! Output
-114 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)    !!! Output for Results file
-115 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)                                     !!! Output for Analytic Solution file
 
 116 FORMAT (A,A,A,A,A,A)
-117 FORMAT (A,A)
 
 
 
@@ -750,7 +692,7 @@ REAL(KIND = idp), DIMENSION(1:Local_RQ_Dim)                             ::  CUR_
 REAL(KIND = idp), INTENT(IN)                                            ::  Left_Limit,     &
                                                                             Right_Limit
 
-INTEGER                                                                 ::  i, re, te, pe, rd, td, pd
+INTEGER                                                                 ::  i, re, rd
 
 CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE                         ::  Filenames
 INTEGER, DIMENSION(:), ALLOCATABLE                                      ::  File_IDs
@@ -1123,8 +1065,6 @@ END SUBROUTINE OPEN_FILE_INQUISITION
 SUBROUTINE OPEN_RUN_REPORT_FILE()
 
 CHARACTER(LEN = 39)                                     ::  FILE_NAME
-INTEGER                                                 ::  istat
-LOGICAL                                                 ::  FLAG, OK
 
 IF ( Report_Flags(1) == 1 ) THEN
     WRITE(FILE_NAME,'(A,A)') Poseidon_Reports_Dir,"Run_Report.out"
@@ -1144,11 +1084,10 @@ SUBROUTINE OUTPUT_RUN_REPORT()
 
 INTEGER                                         ::  FILE_ID
 INTEGER                                         ::  i
-REAL(KIND = idp)                                ::  r, theta, phi, deltar
+REAL(KIND = idp)                                ::  r, theta, phi
 REAL(KIND = idp), DIMENSION(0:ITER_REPORT_NUM_SAMPLES)  ::  x_e
 REAL(KIND = idp), DIMENSION(1:ITER_REPORT_NUM_SAMPLES)  ::  x_c, dx_c
 
-REAL(KIND = idp)                                ::  Analytic_Val, Solver_Val
 REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
 REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
 REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
@@ -1159,13 +1098,10 @@ INTEGER                                         ::  Max_Iters
 
 120 FORMAT (A61)
 121 FORMAT (A1)
-122 FORMAT (A41,I2.2)
 123 FORMAT (A38,ES22.15)
 
-109 FORMAT (A,I2.2,A,I2.2)
 110 FORMAT (11X,A1,18X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
-112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
 FILE_ID = Report_IDs(1)
 
@@ -1276,14 +1212,14 @@ IF (( Report_Flags(3) == 1) .OR. (Report_Flags(3) == 3) ) THEN
         WRITE(FILE_ID,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
     END IF
 
-    Call Create_Logarithmic_1D_Mesh( DRIVER_INNER_RADIUS, DRIVER_OUTER_RADIUS, ITER_REPORT_NUM_SAMPLES,     &
+    Call Create_Logarithmic_1D_Mesh( R_Inner, R_Outer, ITER_REPORT_NUM_SAMPLES,     &
                                      x_e, x_c, dx_c )
 
 
-    !deltar = ( DRIVER_OUTER_RADIUS - DRIVER_INNER_RADIUS )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+    !deltar = ( R_Outer - R_Inner )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
     DO i = 0,ITER_REPORT_NUM_SAMPLES
 
-    !    r = i*deltar + DRIVER_INNER_RADIUS
+    !    r = i*deltar + R_Inner
         r = x_e(i)*Centimeter
         theta = pi/8.0_idp
         phi = pi/2.0_idp
@@ -1368,24 +1304,20 @@ END SUBROUTINE CLOSE_RUN_REPORT_FILE
  !#################################################################################!
 SUBROUTINE OPEN_FRAME_REPORT_FILE(Frame)
 
-INTEGER, INTENT(IN)                                     ::  Frame
+INTEGER, INTENT(IN)                                     :: frame
 
 CHARACTER(LEN = 70)                                     ::  FILE_NAME
-INTEGER                                                 ::  istat
-LOGICAL                                                 ::  FLAG, OK
-
-109 FORMAT (A,I2.2)
 
 
 
-IF ( myID == 0 ) THEN
+IF ( myID_Poseidon == 0 ) THEN
     IF ( Report_Flags(2) == 1 ) THEN
 
         WRITE(FILE_NAME,'(A,A)') Poseidon_IterReports_Dir,"Frame_Report_SCRATCH.out"
         CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(2) )
 
     END IF ! Report_Flags(3)S
-END IF ! myID == 0
+END IF ! myID_Poseidon == 0
 
 
 END SUBROUTINE OPEN_FRAME_REPORT_FILE
@@ -1402,14 +1334,14 @@ SUBROUTINE OUTPUT_FRAME_REPORT()
 
 !INTEGER, INTENT(IN)                 :: FRAME
 
-INTEGER                                                 ::  FILE_ID, FILE_IDb
+INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  i
-REAL(KIND = idp)                                        ::  r, theta, phi, deltar
+REAL(KIND = idp)                                        ::  r, theta, phi
 REAL(KIND = idp), DIMENSION(0:ITER_REPORT_NUM_SAMPLES)  ::  x_e
 REAL(KIND = idp), DIMENSION(1:ITER_REPORT_NUM_SAMPLES)  ::  x_c, dx_c
 
 
-REAL(KIND = idp)                                        ::  Analytic_Val, Solver_Val
+REAL(KIND = idp)                                        ::  Analytic_Val
 REAL(KIND = idp)                                        ::  Return_Psi, Return_AlphaPsi
 REAL(KIND = idp)                                        ::  Return_Beta1, Return_Beta2, Return_Beta3
 REAL(KIND = idp)                                        ::  PsiPot_Val, AlphaPsiPot_Val
@@ -1422,14 +1354,11 @@ INTEGER                                                 ::  ITER_REPORT_NUM_SAMP
 
 
 120 FORMAT (12X,A)
-121 FORMAT (A1)
-122 FORMAT (A,I2.2)
 123 FORMAT (12X,A38,ES22.15)
 
 109 FORMAT (A,I2.2,A,I2.2)
 110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
-112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
 132 FORMAT (A,A,A,A)
 
@@ -1442,7 +1371,7 @@ INTEGER                                                 ::  ITER_REPORT_NUM_SAMP
 WRITE(FILE_NAME,132)Poseidon_IterReports_Dir,"Frame_Report_",trim(File_Suffix),".out"
 CALL OPEN_NEW_FILE( trim(FILE_NAME), FILE_ID )
 
-IF ( myID == 0 ) THEN
+IF ( myID_Poseidon == 0 ) THEN
     ! Write Title to File
     IF ( Report_Flags(2) == 1 ) THEN
 
@@ -1498,10 +1427,10 @@ IF ( myID == 0 ) THEN
         WRITE(FILE_ID,123)"               Total Iteration Time : ",Frame_Time_Table(18)
         WRITE(FILE_ID,123)"             Poseidon_Dist_Sol Time : ",Frame_Time_Table(19)
         WRITE(FILE_ID,120)"============================================================="
-        WRITE(FILE_ID,121)" "
-        WRITE(FILE_ID,121)" "
-        WRITE(FILE_ID,121)" "
-        WRITE(FILE_ID,121)" "
+        WRITE(FILE_ID,'(A)')" "
+        WRITE(FILE_ID,'(A)')" "
+        WRITE(FILE_ID,'(A)')" "
+        WRITE(FILE_ID,'(A)')" "
 
 
 
@@ -1524,13 +1453,13 @@ IF ( myID == 0 ) THEN
 
 
 
-        Call Create_Logarithmic_1D_Mesh( DRIVER_INNER_RADIUS, DRIVER_OUTER_RADIUS, ITER_REPORT_NUM_SAMPLES,     &
+        Call Create_Logarithmic_1D_Mesh( R_Inner, R_Outer, ITER_REPORT_NUM_SAMPLES,     &
                                          x_e, x_c, dx_c )
-!        deltar = ( DRIVER_OUTER_RADIUS - DRIVER_INNER_RADIUS )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
+!        deltar = ( R_Outer - R_Inner )/ REAL(ITER_REPORT_NUM_SAMPLES, KIND = idp)
 
         DO i = 0,ITER_REPORT_NUM_SAMPLES
 
- !          r = i*deltar + DRIVER_OUTER_RADIUS
+ !          r = i*deltar + R_Outer
             r = x_e(i)*Centimeter
             theta = pi/2.0_idp
             phi = pi/2.0_idp
@@ -1584,7 +1513,7 @@ IF ( myID == 0 ) THEN
     CLOSE( UNIT = FILE_ID)
     CLOSE( UNIT = Report_IDs(2), STATUS='delete' )
 
-END IF ! myID == 0
+END IF ! myID_Poseidon == 0
 
 END SUBROUTINE OUTPUT_FRAME_REPORT
 
@@ -1633,7 +1562,7 @@ CHARACTER(LEN = 65)                             ::  FILE_NAME
 WRITE(FILE_NAME,'(A,A)')Poseidon_IterReports_Dir,"Iteration_Histogram.out"
 CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID )
 
-DO i = 1,DRIVER_TOTAL_FRAMES
+DO i = 1,Poseidon_Frame
 
     WRITE(FILE_ID,'(I3.3,A,I3.3)')i,"   ",Iteration_Histogram(i)
 
@@ -1776,7 +1705,7 @@ CHARACTER(LEN = 300)                                        ::  FILE_NAMEb
 CHARACTER(LEN = 40)                                         ::  fmt
 
 
-INTEGER                                                     ::  rows, cols
+INTEGER                                                     ::  rows
 
 INTEGER                                                     ::  FILE_ID
 INTEGEr                                                     ::  i
@@ -1845,10 +1774,10 @@ REAL(KIND = idp)                                            ::  DROT
 REAL(KIND = idp), DIMENSION(0:Degree)                       ::  Local_Locations
 REAL(KIND = idp), DIMENSION(0:Degree)                       ::  Cur_R_Locs
 
-INTEGER                                                     ::  rows, cols
+INTEGER                                                     ::  rows
 
 INTEGER                                                     ::  FILE_ID
-INTEGEr                                                     ::  i, re, d
+INTEGER                                                     ::  re, d
 
 CHARACTER(LEN = 29)        :: Poseidon_Mesh_Dir      = "Poseidon_Output/Objects/Mesh/"
 

@@ -100,8 +100,6 @@ SUBROUTINE UNPACK_POSEIDON_PARAMETERS()
 
 INTEGER                                         ::  POSEIDON_read
 
-
-INTEGER                                         ::  iskipp
 INTEGER                                         ::  istat
 
 INTEGER                                         ::  NUM_INT_PARAMS
@@ -262,12 +260,6 @@ INTEGER,                                        INTENT(IN)          ::  NUM_REAL
 
 INTEGER,          DIMENSION(1:NUM_INT_PARAMS),  INTENT(INOUT)       ::  INT_PARAMS
 REAL(KIND = idp), DIMENSION(1:NUM_REAL_PARAMS), INTENT(INOUT)       ::  REAL_PARAMS
-
-
-
-
-INTEGER                             :: iskipp
-INTEGER                             :: istat
 
 
 

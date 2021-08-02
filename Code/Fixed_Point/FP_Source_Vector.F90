@@ -158,17 +158,11 @@ SUBROUTINE Calc_FP_Source_Vector()
 REAL(KIND = idp),DIMENSION(1:4)                             ::  Timer
 
 INTEGER                                                     ::  re, te, pe,     &
-                                                                d, lm,          &
                                                                 rd, tpd, td, pd
 
 REAL(KIND = idp)                                                ::  deltar_overtwo,     &
                                                                     deltat_overtwo,     &
                                                                     deltap_overtwo
-
-REAL(KIND = idp), DIMENSION(1:3,1:3)                            ::  Kappa_Array
-REAL(KIND = idp), DIMENSION(1:3)                                ::  n_Array
-
-REAL(KIND = idp)                                                ::  BigK_Value
 
 
 
@@ -291,7 +285,7 @@ COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Tmp_U_Value,
 
 
 INTEGER                                                         ::  tpd, td, pd, rd,    &
-                                                                    lm, d, Here, ui
+                                                                    d, Here, ui
 
 
 
@@ -412,9 +406,6 @@ END SUBROUTINE Calc_FP_Current_Values
 SUBROUTINE Calc_FP_Source_Terms( re, te, pe )
 
 INTEGER, INTENT(IN)                                                     ::  re, te, pe
-
-REAL(KIND = idp)                                                        ::  REUSED_VALUE
-
 INTEGER                                                                 ::  pd, td, rd,     &
                                                                             i, tpd
 
@@ -518,18 +509,11 @@ INTEGER, INTENT(IN)                                                     ::  re, 
 REAL(KIND = idp), INTENT(IN)                                            ::  DELTAR_OVERTWO
 REAL(KIND = idp), DIMENSION(1:NUM_TP_QUAD_POINTS), INTENT(IN)           ::  SIN_VAL
 
-INTEGER                                                                 ::  pd, td, rd, tpd,     &
-                                                                            l, m, d,        &
-                                                                            lm_loc, u,ui
+INTEGER                                                                 ::  rd, d, lm_loc, ui
 
 INTEGER                                                                 ::  Current_i_Location
 
 COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_TMP
-COMPLEX(KIND = idp)                                                     ::  Test
-COMPLEX(KIND = idp)                                                     ::  Common_Basis
-REAL(KIND = idp)                                                        ::  Combined_Weights
-
-COMPLEX(KIND = idp)                                                     ::  Inner, Middle
 
 
 

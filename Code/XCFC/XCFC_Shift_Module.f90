@@ -126,31 +126,26 @@ SUBROUTINE XCFC_Solve_Shift_System()
 
 
 INTEGER                                                                     ::  INFO
-INTEGER, DIMENSION(1:Beta_Prob_Dim)                                         ::  IPIV
-
-
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_VEC
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
+!REAL(idp), DIMENSION(1:4)                                                   ::  timer
 
 
-INTEGER                                                                     ::  i, j, Col, Row
-INTEGER                                                                     ::  ui, re, d, l
-INTEGER                                                                     ::  uj, rep, dp, lp
 
-
-INTEGER                                                                     ::  Here, There
-
-REAL(idp), DIMENSION(1:4)                                                   ::  timer
-
-REAL(idp)                                                                   ::  RCOND
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"--In XCFC Iteration, In XCFC_Solve_Shift_System."
 END IF
 
+
+
+
+
 IF ( .NOT. Beta_Factorized_Flag ) THEN
     CALL Factorize_Beta_Banded()
 END IF
+
+
+
 
 
 
@@ -160,7 +155,6 @@ Work_Vec = FP_Source_Vector_Beta
 
 
 CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
-
 CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
 

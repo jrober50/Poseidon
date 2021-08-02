@@ -58,8 +58,7 @@ USE Units_Module, &
                             GravPot_Units,              &
                             Shift_Units
 
-USE DRIVER_Parameters, &
-                    ONLY :  Driver_Test_Number
+
 
 USE Variables_Functions, &
                     ONLY :  Potential_Solution,         &
@@ -172,8 +171,6 @@ LOGICAL                                         :: CONVERGED
 REAL(KIND = idp)                                :: timea, timeb, timec
 
 LOGICAL                                                 :: PR = .FALSE.
-
-INTEGER :: i,j,k,l
 
 timea = 0.0_idp
 timeb = 0.0_idp
@@ -393,8 +390,6 @@ END SUBROUTINE CFA_Solve
 !                                                                               !
 !###############################################################################!
 SUBROUTINE CFA_Coefficient_Update_All( )
-
-INTEGER :: i
 
 
 !CALL CFA_Update_Modifier()
@@ -739,7 +734,7 @@ INTEGER, INTENT(IN)                 :: Iter, Rank
 INTEGER, DIMENSION(0:1)                         ::  FILE_ID
 INTEGER                                         ::  i, j
 REAL(KIND = idp)                                ::  r, theta, phi, deltar
-REAL(KIND = idp)                                ::  Analytic_Val, Solver_Val
+REAL(KIND = idp)                                ::  Analytic_Val
 REAL(KIND = idp)                                ::  Return_Psi, Return_AlphaPsi
 REAL(KIND = idp)                                ::  Return_Beta1, Return_Beta2, Return_Beta3
 REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
@@ -747,13 +742,10 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
 120 FORMAT (A61)
 121 FORMAT (A1)
-122 FORMAT (A41,I2.2)
 123 FORMAT (A38,ES22.15)
 
-109 FORMAT (A,I2.2,A,I2.2)
 110 FORMAT (11X,A1,16X,A18,9X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
-112 FORMAT (A43,I2.2,A2,I2.2,A4)
 
 
 
@@ -820,7 +812,7 @@ END DO
 
 
 
-IF ( Driver_Test_Number .NE. -1 ) THEN
+IF ( ASSOCIATED(Potential_Solution) ) THEN
 
     ! Write Results Table Header to Screen
     IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
@@ -977,7 +969,7 @@ INTEGER                                                 ::  i
 COMPLEX(KIND = idp)                                     ::  RMS_VALUE
 COMPLEX(KIND = idp)                                     ::  Euclidean
 
-REAL(KIND = idp)                                        ::  MaxA, MaxB
+REAL(KIND = idp)                                        ::  MaxA
 INTEGER                                                 ::  MaxA_Loc
 REAL(KIND = idp)                                        ::  Ratio_Real, Ratio_Imag
 

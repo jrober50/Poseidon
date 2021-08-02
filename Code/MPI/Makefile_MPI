@@ -1,6 +1,6 @@
 MPI = \
-  Variables_MPI.o           \
-  Internal_Communication.o  \
-  Functions_MPI.o           \
-  Initialization_MPI.o      \
+  Variables_MPI.f90           \
+  Internal_Communication.f90  \
+  Functions_MPI.f90           \
+  Initialization_MPI.f90      \
 

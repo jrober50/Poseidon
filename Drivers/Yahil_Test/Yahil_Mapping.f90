@@ -21,10 +21,7 @@ USE Poseidon_Numbers_Module, &
 USE Units_Module, &
                ONLY :  C_Square,       &
                        Set_Units,      &
-                       Shift_Units,    &
-                       Centimeter,     &
-                       Second,         &
-                       Gram
+                       Centimeter
 
 USE Initialization_Poseidon, &
                ONLY :  Initialize_Poseidon
@@ -35,8 +32,6 @@ USE Variables_IO, &
                        Write_Results_T_Samps,      &
                        File_Suffix
 
-USE Variables_Derived, &
-                ONLY : LM_Length
 
 USE Variables_MPI, &
                ONLY :  ierr
@@ -46,9 +41,6 @@ USE Variables_Functions, &
 
 USE FP_Functions_Results , &
                 ONLY : Calc_1D_CFA_Values_FP
-
-USE Variables_FP,   &
-                ONLY :  FP_Coeff_Vector
 
 USE Variables_Yahil, &
                 ONLY :  SelfSim_V_Switch
@@ -105,7 +97,6 @@ IMPLICIT NONE
 !                                       !
 !   Poseidon Initialization Variables   !
 !                                       !
-INTEGER                                                 ::  Test_Number
 
 INTEGER                                                 ::  Dimension_Input
 
@@ -117,7 +108,6 @@ CHARACTER(LEN = 1)                                      ::  Units_Input
 INTEGER, DIMENSION(3)                                   ::  NE
 INTEGER, DIMENSION(3)                                   ::  NQ
 REAL(idp), DIMENSION(2)                                 ::  Domain_Edge
-REAL(idp)                                               ::  Star_Surface
 INTEGER                                                 ::  Num_DOF
 
 
@@ -126,7 +116,6 @@ REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_e, y_e, z_e
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_c, y_c, z_c
 
 LOGICAL                                                 ::  Verbose
-LOGICAL                                                 ::  Flat_Guess
 
 INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
@@ -160,7 +149,7 @@ INTEGER                                                 ::  myID
 
 INTEGER                                                 ::  re, te, pe
 INTEGER                                                 ::  rq, tq, pq
-INTEGER                                                 ::  here, q, i
+INTEGER                                                 ::  here
 
 REAL(idp)                                               ::  Psi_Holder
 
@@ -197,28 +186,19 @@ REAL(idp)                                               ::  CC_Option
 REAL(idp)                                               ::  Perturbation
 REAL(idp)                                               ::  Offset
 
-INTEGER                                                 ::  HCT_Fileid
-CHARACTER(LEN = 100)                                    ::  HCT_Filename
-
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 CHARACTER(LEN=1), DIMENSION(1:10)                        ::  Letter_Table
 REAL(idp), DIMENSION(1:6)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
 
 
-INTEGER                                                 ::  ui, lm
 
-
-REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              :: Tmp_Lapse
-REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              :: Tmp_ConFac
-REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              :: Tmp_Shift
 
 CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
 
 ALLOCATE( RE_Table(1:9) )
 
-111 FORMAT (A,I4.4,/,A,I1.1,/,A,I2.2,/,A,I3.3,/,A,F6.3,A,/)
 
 
 !############################################################!
@@ -249,7 +229,7 @@ Degree_Max          =  1
 L_Limit_Min         =  0
 L_Limit_Max         =  0
 
-Guess_Type          =  2            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
+Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
 
 Kappa               = 953946015514834.4
@@ -279,8 +259,8 @@ NQ(2)               = 10                         ! Number of Theta Quadrature Po
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 Suffix_Input        = "Params"
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)

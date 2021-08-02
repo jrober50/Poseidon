@@ -120,7 +120,6 @@ SUBROUTINE Initialize_XCFC( CFA_EQ_Flags_Input )
 
 INTEGER, DIMENSION(5), INTENT(IN), OPTIONAL             ::  CFA_EQ_Flags_Input
 
-INTEGER                                                 ::  i, j
 REAL(idp), Dimension(1:2)                               ::  Timer
 
 

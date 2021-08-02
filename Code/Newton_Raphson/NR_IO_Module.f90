@@ -64,14 +64,9 @@ CONTAINS
 SUBROUTINE WRITE_CFA_COEFFICIENTS( )
 
 
-INTEGER                                             :: i
-INTEGER                                             ::  re, d, l, m, u, here
-
-INTEGER                                             :: Coeffs_Write
-
-
-INTEGER                                             :: iskipp
-INTEGER                                             :: istat
+INTEGER                                             ::  re, d, l, m, here
+INTEGER                                             ::  Coeffs_Write
+INTEGER                                             ::  istat
 
 Coeffs_Write = 13
 
@@ -115,16 +110,12 @@ END SUBROUTINE WRITE_CFA_COEFFICIENTS
 SUBROUTINE READ_CFA_COEFFICIENTS( )
 
 
-INTEGER                                          :: i
+INTEGER                                         :: i
+INTEGER                                         :: Coeffs_read
+INTEGER                                         :: istat
+REAL(KIND=idp), DIMENSION(0:1,0:PROB_DIM-1)     :: TMP
 
-INTEGER                                 :: Coeffs_read
 
-
-
-INTEGER                                 :: iskipp
-INTEGER                                 :: istat
-
-REAL(KIND=idp), DIMENSION(0:1,0:PROB_DIM-1)        :: TMP
 
 Coeffs_Read = 13
 

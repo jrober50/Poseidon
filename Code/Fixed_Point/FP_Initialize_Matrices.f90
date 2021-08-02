@@ -208,7 +208,25 @@ CALL Calculate_Angular_Terms()
 CALL Calculate_Laplace_Matrix()
 CALL Calculate_MVL_Banded()
 
+DEALLOCATE( Cur_T_Locs )
+DEALLOCATE( Cur_P_Locs )
 
+DEALLOCATE( Int_R_Locs, Int_R_Weights )
+DEALLOCATE( Int_T_Locs, Int_T_Weights )
+DEALLOCATE( Int_P_Locs, Int_P_Weights )
+DEALLOCATE( Int_TP_Weights )
+
+DEALLOCATE( LP_LP_Table )
+DEALLOCATE( TP_TP_Integrals )
+
+
+DEALLOCATE( Ylm    )
+DEALLOCATE( Ylm_dt )
+DEALLOCATE( Ylm_dp )
+
+DEALLOCATE( Ylm_CC )
+DEALLOCATE( Ylm_CC_dt )
+DEALLOCATE( Ylm_CC_dp )
 
 
 
@@ -283,7 +301,7 @@ END SUBROUTINE Calculate_Radial_Terms
 SUBROUTINE Calculate_Angular_Terms()
 
 
-INTEGER                                                         ::  l, m, te, pe
+INTEGER                                                         ::  l, m
 INTEGER                                                         ::  td, pd, tpd
 
 
@@ -296,9 +314,7 @@ REAL(idp)                                                       ::  REAL_L
 
 REAL(idp), DIMENSION(-L_LIMIT:L_LIMIT)                          ::  M_POWER_TABLE
 
-INTEGER                                                         ::  lm_loc, lpmp_loc, tpd_loc
-
-INTEGER, DIMENSION(1:Int_T_Deg)                                 ::  here
+INTEGER                                                         ::  lm_loc, lpmp_loc
 
 COMPLEX(idp), ALLOCATABLE, DIMENSION(:,:,:)                     ::  Ylm_Table
 
@@ -561,7 +577,7 @@ END SUBROUTINE Calculate_Angular_Terms
 !###############################################################################!
 SUBROUTINE Calculate_Laplace_Matrix()
 
-INTEGER                                                 ::  l, re, rd, d, dp
+INTEGER                                                 ::  l, re, d, dp
 INTEGER                                                 ::  i, j, Here
 
 REAL(KIND = idp)                                        ::  DR, TODR
@@ -755,42 +771,23 @@ SUBROUTINE Calculate_MVL_Banded()
 
 
 
-INTEGER                                                 ::  l, m, lm_loc
-INTEGER                                                 ::  lp, mp, lpmp_loc
+INTEGER                                                 ::  l, m
 
-INTEGER                                                 ::  re, te, pe, rep
-INTEGER                                                 ::  rd, td, pd, tpd
+INTEGER                                                 ::  re,rd
 INTEGER                                                 ::  d, dp
-INTEGER                                                 ::  i, j, ui, uj
-INTEGER                                                 ::  row, col
-
+INTEGER                                                 ::  i, j, ui
 
 REAL(idp)                                               ::  L_Lp1
 
-
-
-
 REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Cur_R_Locs
-REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Cur_T_Locs
 REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  R_Square
-
-REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Sin_Square
-REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Cotan_Val
-
 
 COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values
 
 
 REAL(idp)                                               ::  DR, TODR
-REAL(idp)                                               ::  DTOT,     &
-                                                            DPOT
 
 
-
-INTEGER                                                 :: INFO
-
-REAL(idp), DIMENSION(1:3)                               :: Timer
-REAL(idp), DIMENSION(1:3)                               :: Timer_Tots
 
 Beta_MVL_Banded = 0.0_idp
 
@@ -917,6 +914,14 @@ END DO ! re Loop
 Beta_Factorized_Flag = .FALSE.
 
 
+DEALLOCATE( Cur_R_Locs, R_Square )
+
+DEALLOCATE( RR_Factor    )
+DEALLOCATE( RDR_Factor   )
+DEALLOCATE( DRR_Factor   )
+DEALLOCATE( DRDR_Factor  )
+
+
 END SUBROUTINE Calculate_MVL_Banded
 
 
@@ -965,6 +970,7 @@ DO d = 0,DEGREE
     END DO
 END DO
 
+DEALLOCATE( R_Int_Weights)
 
 
 END SUBROUTINE CALC_RR_Values
@@ -997,7 +1003,7 @@ REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: Cur_R_Loc
 REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: R_Square
 
 
-INTEGER                                                     :: d, rd, ui, uj
+INTEGER                                                     :: d, ui, uj
 INTEGER                                                     :: row, col
 INTEGER                                                     :: lm_loc, lpmp_loc
 
@@ -1104,7 +1110,7 @@ REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: Cur_R_Loc
 REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: R_Square
 
 
-INTEGER                                                     :: d, rd, ui, uj
+INTEGER                                                     :: d, ui, uj
 INTEGER                                                     :: row, col
 INTEGER                                                     :: lm_loc, lpmp_loc
 
@@ -1219,7 +1225,7 @@ REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)    :: Cur_R_L
 REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)    :: R_Square
 
 
-INTEGER                                                     :: d, rd, ui, uj
+INTEGER                                                     :: d, ui, uj
 INTEGER                                                     :: row, col
 INTEGER                                                     :: lm_loc, lpmp_loc
 

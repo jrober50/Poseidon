@@ -72,20 +72,11 @@ INTEGER                                             ::  key, color
 
 INTEGER                                             ::  MPI_GROUP_WORLD,            &
                                                         POSEIDON_GROUP_WORLD,       &
-                                                        POSEIDON_GROUP_INTERSHELL,  &
-                                                        POSEIDON_GROUP_INTRASHELL
+                                                        POSEIDON_GROUP_INTERSHELL
 INTEGER                                             ::  POSEIDON_GROUP_PETSC
 
 
 INTEGER                                            ::   POSEIDON_COMM_WORLD_TEST
-
-
-INTEGER                                             ::  Test_CommSize
-
-INTEGER                                             ::  myBlock
-
-INTEGER                                             ::  Procs_Per_Shell
-INTEGER                                             ::  Procs_Per_Block
 
 INTEGER                                             ::  here
 

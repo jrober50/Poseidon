@@ -1,9 +1,9 @@
 FUNCTIONS = \
-  Functions_Info.o        \
-  Functions_Jacobian.o    \
-  Functions_Quadrature.o  \
-  Functions_Math.o        \
-  Functions_Mapping.o     \
-  Functions_Additional.o  \
-  Functions_Matrix.o      \
+  Functions_Info.f90        \
+  Functions_Jacobian.f90    \
+  Functions_Quadrature.f90  \
+  Functions_Math.f90        \
+  Functions_Mapping.f90     \
+  Functions_Additional.f90  \
+  Functions_Matrix.f90      \
 

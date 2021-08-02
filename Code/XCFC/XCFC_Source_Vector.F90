@@ -170,8 +170,7 @@ SUBROUTINE XCFC_Calc_X_Source()
 
 
 INTEGER                                                     ::  re, te, pe,     &
-                                                                d, lm,          &
-                                                                rd, tpd, td, pd
+                                                                tpd, td, pd
 
 REAL(KIND = idp)                                            ::  deltar_overtwo,     &
                                                                 deltat_overtwo,     &
@@ -246,12 +245,8 @@ REAL(KIND = idp), INTENT(IN)                                    ::  DELTAR_OVERT
                                                                     DELTAT_OVERTWO,     &
                                                                     DELTAP_OVERTWO
 
-
-COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Tmp_U_Value
-
 INTEGER                                                         ::  tpd, td, pd, rd
-INTEGER                                                         ::  d, Here
-INTEGER                                                         ::  ui, s
+INTEGER                                                         ::  s
 
 
 
@@ -333,20 +328,14 @@ SUBROUTINE Create_XCFC_X_Vector( re, te, pe )
 
 
 
-INTEGER, INTENT(IN)                                                     ::  re, te, pe
+INTEGER, INTENT(IN)                                         ::  re, te, pe
 
-INTEGER                                                                 ::  pd, td, rd, tpd,     &
-                                                                            l, m, d,        &
-                                                                            lm_loc, u,ui
+INTEGER                                                     ::  rd, d, lm_loc, ui
 
-INTEGER                                                                 ::  Current_i_Location
+INTEGER                                                     ::  Current_i_Location
 
-COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_TMP
-COMPLEX(KIND = idp)                                                     ::  Test
-COMPLEX(KIND = idp)                                                     ::  Common_Basis
-REAL(KIND = idp)                                                        ::  Combined_Weights
+COMPLEX(KIND = idp), DIMENSION(1:5)                         ::  RHS_TMP
 
-COMPLEX(KIND = idp)                                                     ::  Inner, Middle
 
 DO ui = 3,5
 DO d = 0,DEGREE
@@ -411,7 +400,6 @@ END SUBROUTINE Create_XCFC_X_Vector
 SUBROUTINE XCFC_Calc_ConFactor_Source()
 
 INTEGER                                                     ::  re, te, pe,     &
-                                                                d, lm,          &
                                                                 rd, tpd, td, pd
 
 REAL(KIND = idp)                                            ::  deltar_overtwo,     &
@@ -571,8 +559,8 @@ DO pd = 1,NUM_P_QUAD_POINTS
     s = 1
 !    Orig_Val_Psi(tpd, rd )    = REAL(Tmp_U_Value(1), KIND = idp)
     Cur_Val_Psi(tpd,rd)       = REAL(Tmp_U_Value(2), KIND = idp)
-    StaredSource(tpd, rd, s ) = Orig_Val_Psi(tpd, rd )**6         &
-                              * Block_Source_E(rd,td,pd,re,te,pe)
+!    StaredSource(tpd, rd, s ) = Orig_Val_Psi(tpd, rd )**6         &
+!                              * Block_Source_E(rd,td,pd,re,te,pe)
 
     StaredSource(tpd, rd, s ) = Block_Source_E(rd,td,pd,re,te,pe)
 
@@ -686,20 +674,12 @@ SUBROUTINE Create_XCFC_ConFact_Vector( re, te, pe )
 
 
 
-INTEGER, INTENT(IN)                                                     ::  re, te, pe
+INTEGER, INTENT(IN)                                         ::  re, te, pe
 
-INTEGER                                                                 ::  pd, td, rd, tpd,     &
-                                                                            l, m, d,        &
-                                                                            lm_loc, u,ui
+INTEGER                                                     ::  rd, d, lm_loc, ui
+INTEGER                                                     ::  Current_i_Location
 
-INTEGER                                                                 ::  Current_i_Location
-
-COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_TMP
-COMPLEX(KIND = idp)                                                     ::  Test
-COMPLEX(KIND = idp)                                                     ::  Common_Basis
-REAL(KIND = idp)                                                        ::  Combined_Weights
-
-COMPLEX(KIND = idp)                                                     ::  Inner, Middle
+COMPLEX(KIND = idp), DIMENSION(1:5)                         ::  RHS_TMP
 
 ui = 1
 DO lm_loc = 1,LM_LENGTH
@@ -752,7 +732,6 @@ END SUBROUTINE Create_XCFC_ConFact_Vector
 SUBROUTINE XCFC_Calc_Lapse_Source()
 
 INTEGER                                                     ::  re, te, pe,     &
-                                                                d, lm,          &
                                                                 rd, tpd, td, pd
 
 REAL(KIND = idp)                                            ::  deltar_overtwo,     &
@@ -911,19 +890,6 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
     END DO  ! d
 
-    ! Calculate Current Psi Value and Scaled Source Term
-    s = 2
-!    Orig_Val_Psi(tpd, rd )    = REAL(Tmp_U_Value(1), KIND = idp)
-    Cur_Val_Psi(tpd,rd)       = REAL(Tmp_U_Value(2), KIND = idp)
-    Cur_Val_AlphaPsi(tpd,rd)       = REAL(Tmp_U_Value(3), KIND = idp)
-
-!    StaredSource(tpd, rd, s ) = Orig_Val_Psi(tpd, rd )**6                           &
-!                                * (Block_Source_E(rd,td,pd,re,te,pe)                &
-!                                    + 2.0_idp*Block_Source_S(rd,td,pd,re,te,pe)     )
-    
-    StaredSource(tpd, rd, s ) = Block_Source_E(rd,td,pd,re,te,pe)           &
-                                + 2.0_idp*Block_Source_S(rd,td,pd,re,te,pe)
-
 
     ! Calculate Current X Values
     DO ui = 6,8
@@ -962,6 +928,16 @@ DO pd = 1,NUM_P_QUAD_POINTS
     CUR_DRV_X(tpd,rd,1:3,1) = REAL(TMP_U_DRV_Value(6:8,1), kind = idp)
     CUR_DRV_X(tpd,rd,1:3,2) = REAL(TMP_U_DRV_Value(6:8,2), kind = idp)
     CUR_DRV_X(tpd,rd,1:3,3) = REAL(TMP_U_DRV_Value(6:8,3), kind = idp)
+
+
+    ! Calculate Current Psi Value and Scaled Source Term
+    s = 2
+    Cur_Val_Psi(tpd,rd)         = REAL(Tmp_U_Value(2), KIND = idp)
+    Cur_Val_AlphaPsi(tpd,rd)    = REAL(Tmp_U_Value(3), KIND = idp)
+
+
+    StaredSource(tpd, rd, s ) = Block_Source_E(rd,td,pd,re,te,pe)           &
+                            + 2.0_idp*Block_Source_S(rd,td,pd,re,te,pe)
 
 END DO ! pd
 END DO ! td
@@ -1020,20 +996,13 @@ SUBROUTINE Create_XCFC_Lapse_Vector( re, te, pe )
 
 
 
-INTEGER, INTENT(IN)                                                     ::  re, te, pe
+INTEGER, INTENT(IN)                                         ::  re, te, pe
 
-INTEGER                                                                 ::  pd, td, rd, tpd,     &
-                                                                            l, m, d,        &
-                                                                            lm_loc, u,ui
+INTEGER                                                     ::  rd, d, lm_loc, ui
+INTEGER                                                     ::  Current_i_Location
+COMPLEX(KIND = idp), DIMENSION(1:5)                         ::  RHS_TMP
 
-INTEGER                                                                 ::  Current_i_Location
 
-COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_TMP
-COMPLEX(KIND = idp)                                                     ::  Test
-COMPLEX(KIND = idp)                                                     ::  Common_Basis
-REAL(KIND = idp)                                                        ::  Combined_Weights
-
-COMPLEX(KIND = idp)                                                     ::  Inner, Middle
 
 ui = 2
 DO lm_loc = 1,LM_LENGTH
@@ -1088,7 +1057,6 @@ END SUBROUTINE Create_XCFC_Lapse_Vector
 SUBROUTINE XCFC_Calc_Shift_Source()
 
 INTEGER                                                     ::  re, te, pe,     &
-                                                                d, lm,          &
                                                                 rd, tpd, td, pd
 
 REAL(KIND = idp)                                            ::  deltar_overtwo,     &
@@ -1096,7 +1064,7 @@ REAL(KIND = idp)                                            ::  deltar_overtwo, 
                                                                 deltap_overtwo
 
 
-FP_Source_Vector = 0.0_idp
+FP_Source_Vector_Beta = 0.0_idp
 
 DO re = 0,NUM_R_ELEMENTS-1
 
@@ -1184,14 +1152,13 @@ REAL(KIND = idp), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3,3) ::  Ahat_Array
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3 )  ::  f
-REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points )    ::  Tmp
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3 )  ::  n_Array
 
 INTEGER                                                         ::  tpd, td, pd, rd
 INTEGER                                                         ::  d, Here
 INTEGER                                                         ::  ui, s
-INTEGER                                                         ::  i, j
+INTEGER                                                         ::  i
 
                           !                                                 !
                          !!                                                 !!
@@ -1382,20 +1349,12 @@ END SUBROUTINE Calc_XCFC_Shift_CurVals
 SUBROUTINE Calc_XCFC_Shift_Vector(re, te, pe)
 
 
-INTEGER, INTENT(IN)                                                     ::  re, te, pe
+INTEGER, INTENT(IN)                                             ::  re, te, pe
 
-INTEGER                                                                 ::  pd, td, rd, tpd,     &
-                                                                            l, m, d,        &
-                                                                            lm_loc, u,ui
+INTEGER                                                         ::  rd, d, lm_loc, ui
 
-INTEGER                                                                 ::  Current_i_Location
-
-COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_TMP
-COMPLEX(KIND = idp)                                                     ::  Test
-COMPLEX(KIND = idp)                                                     ::  Common_Basis
-REAL(KIND = idp)                                                        ::  Combined_Weights
-
-COMPLEX(KIND = idp)                                                     ::  Inner, Middle
+INTEGER                                                         ::  Current_i_Location
+COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  RHS_TMP
 
 DO ui = 3,5
 DO d = 0,DEGREE

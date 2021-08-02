@@ -41,7 +41,7 @@ CHARACTER(LEN = 37), PARAMETER        :: Poseidon_Coeffs_Dir    = "Poseidon_Outp
 
 
 INTEGER, PARAMETER                                      :: N_Variables = 5
-CHARACTER(LEN = 32),DIMENSION(N_Variables), PARAMETER   :: &
+CHARACTER(LEN = 34),DIMENSION(N_Variables), PARAMETER   :: &
 CFA_Var_Names = ['Conformal Factor                  ', &
                  'Lapse Function                    ', &
                  'Radial Shift Component            ', &

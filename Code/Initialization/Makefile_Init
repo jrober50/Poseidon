@@ -1,5 +1,5 @@
 INIT = \
-  Allocation_Core.o         \
-  Initialization_Derived.o  \
-  Initialization_Poseidon.o \
+  Allocation_Core.f90         \
+  Initialization_Derived.f90  \
+  Initialization_Poseidon.f90 \
  

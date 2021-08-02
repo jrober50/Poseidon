@@ -145,12 +145,9 @@ REAL(KIND = idp), DIMENSION(-L_LIMIT:L_LIMIT)                   :: M_POWER_TABLE
 
 INTEGER                                                         ::  lm_loc, tpd_loc
 
-INTEGER, DIMENSION(1:NUM_T_QUAD_POINTS)                         ::  here
-
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:,:)        ::  Ylm_Table
 
 COMPLEX(KIND = idp), DIMENSION(1:LM_LENGTH)                     ::  Sqrt_Term
-REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  SIN_VAL, TAN_VAL
 REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  CSC_VAL, COT_VAL
 
 COMPLEX(Kind = idp)                                             ::  Tmp_Value_A

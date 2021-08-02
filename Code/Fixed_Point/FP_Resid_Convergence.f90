@@ -61,10 +61,6 @@ USE Variables_IO, &
             ONLY :  Frame_Update_Table,         &
                     Frame_Residual_Table
 
-
-USE DRIVER_Parameters, &
-            ONLY :  Driver_Test_Number
-
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
@@ -180,10 +176,9 @@ SUBROUTINE Check_FP_Convergence( CONVERGED )
 
 LOGICAL, INTENT(INOUT)                              ::  CONVERGED
 
-REAL(idp), DIMENSION(1:3,1:LM_LENGTH, 1:5)        ::  Resid_Data
-REAL(idp)                                           ::  Convergence_Stat
 
-INTEGER                                             ::  ui, l
+REAL(idp), DIMENSION(1:3,1:LM_LENGTH, 1:5)          ::  Resid_Data
+INTEGER                                             ::  ui
 
 
 ! Test Residual
@@ -241,10 +236,7 @@ SUBROUTINE Calc_FP_Residual( Convergence_Stat )
 REAL(KIND = idp), DIMENSION(1:3,1:LM_LENGTH,1:5), INTENT(OUT)       ::  Convergence_Stat
 
 
-INTEGER                                             ::  Convergence_Type = 3
-
-INTEGER                                             ::  ui, l, m, lm_loc, map_loc, i
-INTEGER                                             ::  uj, dp, lp, re, rep, j, d
+INTEGER                                             ::  ui, l, m, lm_loc, map_loc
 
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)    ::  WORK_MAT

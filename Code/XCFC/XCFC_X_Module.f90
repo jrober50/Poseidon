@@ -113,28 +113,24 @@ END SUBROUTINE XCFC_X_Solve
 SUBROUTINE XCFC_Solve_X_System()
 
 
-INTEGER                                                                     ::  INFO
-INTEGER, DIMENSION(1:Beta_Prob_Dim)                                         ::  IPIV
+INTEGER                                                             ::  INFO
+
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                      ::  WORK_VEC
+
+!REAL(idp), DIMENSION(1:4)                                           ::  timer
 
 
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_VEC
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
 
 
-INTEGER                                                                     ::  i, j, Col, Row
-INTEGER                                                                     ::  ui, re, d, l
-INTEGER                                                                     ::  uj, rep, dp, lp
-
-
-INTEGER                                                                     ::  Here, There
-
-REAL(idp), DIMENSION(1:4)                                                   ::  timer
-
-REAL(idp)                                                                   ::  RCOND
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"--In XCFC Iteration, In XCFC_Solve_X_System."
 END IF
+
+
+
+
+
 
 IF ( .NOT. Beta_Factorized_Flag ) THEN
     CALL Factorize_Beta_Banded()
@@ -142,19 +138,16 @@ END IF
 
 
 
+
+
 ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
-
-
 Work_Vec = FP_Source_Vector_X
 
 
 CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
-
 CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
 
-!PRINT*,"Before BETA ZGBTRS ",BETA_PRob_dim, Beta_Diagonals
-!PRINT*,Beta_IPIV
 CALL ZGBTRS( 'N',                   &
              Beta_Prob_Dim,         &
              Beta_Diagonals,        &
@@ -177,6 +170,8 @@ FP_Coeff_Vector_X(:) = Work_Vec(:)
 
 
 DEALLOCATE( Work_Vec )
+
+
 
 
 END SUBROUTINE XCFC_Solve_X_System

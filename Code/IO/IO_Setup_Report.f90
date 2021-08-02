@@ -78,7 +78,6 @@ CONTAINS
 !###########################################################################################!
 SUBROUTINE Output_Setup_Report()
 
-INTEGER                                             ::  Report_ID = -1
 CHARACTER(LEN = 100)                                ::  Report_Name
 INTEGER                                             ::  Suggested_Number = 400
 

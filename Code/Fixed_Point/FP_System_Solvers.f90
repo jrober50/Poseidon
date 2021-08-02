@@ -60,10 +60,6 @@ USE Variables_Derived, &
                     Beta_Prob_Dim,              &
                     Prob_Dim
 
-
-USE DRIVER_Parameters, &
-            ONLY :  Driver_Test_Number
-
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
@@ -186,11 +182,10 @@ CONTAINS
 !################################################################################!
 SUBROUTINE Solve_FP_System()
 
-INTEGER                                                                     ::  INFO, LDAB
+INTEGER                                                                     ::  INFO
 INTEGER, DIMENSION(NUM_R_NODES)                                             ::  IPIV
 
 
-REAL(KIND = idp)                                                            ::  SCALE_FACTOR
 COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES)                               ::  WORK_VEC
 COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES)                               ::  WORK_VECB
 
@@ -198,13 +193,7 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_ELEM_VAL
 
 INTEGER                                                                     ::  NNZ
-
-CHARACTER(LEN = 70)                                                         ::  FILE_NAME
-INTEGER                                                                     ::  FILE_ID
-
-INTEGER                                                                     ::  Here, There
-INTEGER                                                                     ::  i, j
-INTEGER                                                                     ::  l, m, k, lm_loc, ui
+INTEGER                                                                     ::  l, m, lm_loc, ui
 INTEGER                                                                     ::  Guess_Flag
 INTEGER                                                                     ::  Mat_Loc
 REAL(idp)                                                                   ::  omega
@@ -219,10 +208,6 @@ IF ( Verbose_Flag ) THEN
 END IF
 
 Omega = 2.0_idp/(1.0_idp + sin( pi/(Num_R_Nodes) ) )
-
-
-113 FORMAT (A,I2.2,A,I5.5,A)
-
 
 
 
@@ -542,24 +527,19 @@ END SUBROUTINE Solve_FP_System
 !################################################################################!
 SUBROUTINE Solve_FP_System_Beta()
 
-INTEGER                                                                     ::  INFO
-INTEGER, DIMENSION(1:Beta_Prob_Dim)                                         ::  IPIV
+INTEGER                                                         ::  INFO
+INTEGER, DIMENSION(1:Beta_Prob_Dim)                             ::  IPIV
 
 
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_VEC
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                  ::  WORK_VEC
+COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                ::  WORK_MAT
 
 
-INTEGER                                                                     ::  i, j, Col, Row
-INTEGER                                                                     ::  ui, re, d, l
-INTEGER                                                                     ::  uj, rep, dp, lp
+INTEGER                                                         ::  ui, re, d, l
+INTEGER                                                         ::  Here, There
 
+REAL(idp), DIMENSION(1:4)                                       ::  timer
 
-INTEGER                                                                     ::  Here, There
-
-REAL(idp), DIMENSION(1:4)                                                   ::  timer
-
-REAL(idp)                                                                   ::  RCOND
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"In Anderson FP loop, In Solve_FP_System_Beta."

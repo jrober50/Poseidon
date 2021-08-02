@@ -52,7 +52,7 @@ INTEGER, INTENT(IN)                                     ::  Ord
 REAL(KIND = idp), INTENT(INOUT), DIMENSION(0:Ord)       ::  xloc, weights
 
 
-INTEGER                                                 ::  i, j, Op1
+INTEGER                                                 ::  i, Op1
 REAL(KIND = idp), DIMENSION(0:Ord)                      ::  xtmp, xlast
 REAL(KIND = idp), DIMENSION(0:Ord,0:Ord)                ::  VanderM
 
@@ -122,7 +122,7 @@ INTEGER, INTENT(IN)                                     ::  Ord
 REAL(KIND = idp),  DIMENSION(0:Ord)                     ::  Initialize_LGL_Quadrature_Locations
 
 
-INTEGER                                                 ::  i, j, Op1
+INTEGER                                                 ::  i, Op1
 REAL(KIND = idp), DIMENSION(0:Ord)                      ::  xtmp, xlast
 REAL(KIND = idp), DIMENSION(0:Ord,0:Ord)                ::  VanderM
 

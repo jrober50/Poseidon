@@ -25,7 +25,7 @@ FORT_BlueWaters    = ftn
 
 #### Debuging Options
 
-STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
+STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
 STD_OPTIMIZE_NicksMacBook = -O2
 
 STD_DEBUG_sjdunham    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
@@ -64,6 +64,26 @@ OPENMP_BlueWaters_OFF		= -h noomp
 
 
 
+### AMReX Linkers
+
+
+#AMREX_NicksMacBook_DIR = /Users/nickroberts/amrex
+
+#AMREX_HOME             = $(AMREX_$(MACHINE_NAME)_DIR)
+
+#include  $(AMREX_$(MACHINE_NAME)_DIR)/Tools/GNUMake/Make.defs
+
+#include $(AMREX_$(MACHINE_NAME)_DIR)/Src/Base/Make.package
+#include $(AMREX_$(MACHINE_NAME)_DIR)/Src/F_Interfaces/Base/Make.package
+
+#include $(AMREX_$(MACHINE_NAME)_DIR)/Tools/GNUMake/Make.rules             
+
+#USE_F_INTERFACES        = TRUE
+#AMREX_COMP_FLAG_ON      = -DPOSEIDON_AMREX_FLAG
+#AMREX_COMP_FLAG_OFF     = 
+
+
+
 
 ### PETSc Linkers
 
@@ -80,7 +100,7 @@ PETSC_sjdunham_ARCH = /Users/dunhamsj/Research/Codes/petsc/arch-darwin-c-debug
 PETSC_sjdunham_ON   = -I$(PETSC_sjdunham_DIR)/include -I$(PETSC_sjdunham_ARCH)/include -L$(PETSC_sjdunham_DIR)/lib -L$(PETSC_sjdunham_ARCH)/lib -lpetsc
 PETSC_sjdunham_Off  =
 
-PETSC_MacBook_DIR       = /usr/local/petsc/petsc-3.10.4
+PETSC_MacBook_DIR       = $(PETSC_$(MACHINE_NAME)_DIR)
 PETSC_MacBook_ARCH      = arch-darwin-c-debug
 PETSC_MacBook_ON	= -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
 PETSC_MacBook_Off	=
@@ -164,6 +184,7 @@ COMP_BlueWaters    = ftn
 
 STD 		=$(STD_$(CMODE)_$(MACHINE_NAME))
 OPENMP_COMP 	=$(OPENMP_$(MACHINE_NAME)_$(OPENMP_MODE))
+AMREX_COMP      =$(AMREX_COMP_FLAG_$(AMREX_MODE)) $(AMREX_$(MACHINE_NAME)_$(AMREX_MODE))
 PETSC_COMP	=$(PETSC_COMP_FLAG_$(PETSC_MODE)) $(PETSC_$(MACHINE_NAME)_$(PETSC_MODE))
 HDF5_COMP       =$(HDF5_$(MACHINE_NAME)_$(HDF5_MODE))
 MPI_COMP        =$(MPI_$(MPI_MODE))

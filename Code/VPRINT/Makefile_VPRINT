@@ -1,2 +1,2 @@
 VPRINT =\
-   VPRINT.o
+   VPRINT.f90

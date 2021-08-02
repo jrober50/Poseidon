@@ -1,5 +1,5 @@
 QUAD = \
-  Allocation_Quadrature.o     \
-  Functions_Quadrature.o      \
-  Initialization_Quadrature.o \
+  Allocation_Quadrature.f90     \
+  Functions_Quadrature.f90      \
+  Initialization_Quadrature.f90 \
 

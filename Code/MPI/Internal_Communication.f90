@@ -183,44 +183,32 @@ REAL(KIND = idp), INTENT(INOUT), DIMENSION( 1:NUM_R_QUAD_POINTS,        &
 
 
 
-INTEGER                                         ::  Block_Num
-Integer                                         ::  Shell, Block_indx
+Integer                                         ::  Shell
 INTEGER                                         ::  Input_Shell_R_Begin,      &
                                                     Input_Shell_R_End,        &
                                                     Input_TE_Begin,      &
                                                     Input_PE_Begin
 
 
-INTEGER                                         ::  Input_Shell_R_Loc,        &
-                                                    Input_Shell_T_Loc,        &
-                                                    Input_Shell_P_Loc
+INTEGER                                         ::  Input_Shell_R_Loc
 
-INTEGER                                         ::  i, j, k, d, n
+INTEGER                                         ::  i, j, k, d
 INTEGER                                         ::  ii, jj, kk
-INTEGER                                         ::  rd, td, pd
 INTEGER                                         ::  jd, kd
 INTEGER                                         ::  jq, kq
 
-
-INTEGER                                         ::  Block_R_Loc,        &
-                                                    Block_T_Loc,        &
-                                                    Block_P_Loc
 
 INTEGER                                         ::  Input_RE_Start,     &
                                                     Input_TE_Start,     &
                                                     Input_PE_Start
 
-INTEGER                                                     ::  re, te, pe,                 &
-                                                                Local_R, Local_T, Local_P,  &
-                                                                Input_R, Input_T, Input_P,  &
-                                                                Local_Here, Input_Here
+INTEGER                                                     ::  Local_R, Local_T, Local_P,  &
+                                                                Input_T, Input_P,  &
+                                                                Local_Here
 
 INTEGER                                                     ::  Num_Local_DOF,              &
                                                                 Num_Input_DOF,              &
                                                                 Num_Coarse_DOF
-
-
-
 
 
 REAL(KIND = idp), DIMENSION(1:NUM_R_QUAD_POINTS)            ::  Local_R_Locations
@@ -267,7 +255,6 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Delta_FREoCRE
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Delta_FTEoCTE
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Delta_FPEoCPE
 
-REAL(KIND = idp)                                            ::  Input_Delta_x
 REAL(KIND = idp)                                            ::  Delta_x_Ratio
 
 INTEGER                                                     ::  Size_of_Send
@@ -277,8 +264,7 @@ INTEGER                                                     ::  Size_of_Send_b
 
 INTEGER                                                     ::  Elems_Per_Block
 
-INTEGER                                                     ::  Cur_Elem_Num,           &
-                                                                Next_Elem_Num
+INTEGER                                                     ::  Cur_Elem_Num
 
 INTEGER                                                     ::  Start_Here, End_Here
 INTEGER                                                     ::  Start_Here_B, End_Here_B
@@ -294,8 +280,7 @@ INTEGER                                                     ::  Block_RE_Loc,   
                                                                 Block_TE_Loc,                &
                                                                 Block_PE_Loc
 
-INTEGER                                                     ::  Block_Input_RE_Begin,        &
-                                                                Block_Input_TE_Begin,        &
+INTEGER                                                     ::  Block_Input_TE_Begin,        &
                                                                 Block_Input_PE_Begin
 
 INTEGER                                                     ::  Global_Input_R_Loc,          &
@@ -305,7 +290,6 @@ INTEGER                                                     ::  Global_Input_R_L
 INTEGER                                                     ::  Input_RAD_Elems_Per_Shell
 INTEGER                                                     ::  Block_Index
 
-INTEGER                                                     ::  print_indx
 INTEGER                                                     ::  request
 INTEGER, DIMENSION(MPI_STATUS_SIZE)                         ::  status
 
@@ -325,8 +309,6 @@ INTEGER                                                     ::  P_Shift_Loc,    
                                                                 T_Shift_Loc,    &
                                                                 R_Shift_Loc
 
-INTEGER             ::  Cur_Elem_Num_B,  &
-                        Local_Here_B
 
 
 
@@ -901,7 +883,7 @@ SUBROUTINE Poseidon_Distribute_Solution( CoeffVec )
 
 COMPLEX(idp), DIMENSION(0:Prob_Dim-1), INTENT(INOUT)    ::  CoeffVec
 
-INTEGER                                                 ::  i, j
+INTEGER                                                 ::  i
 INTEGER                                                 ::  ierr
 
 INTEGER                                                 ::  Length_A,       &

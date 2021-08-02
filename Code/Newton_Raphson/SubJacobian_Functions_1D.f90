@@ -315,9 +315,6 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:3)                            ::  JCBN
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  JCBN_kappa_Array
 
 
-INTEGER                                                                 ::  testa, testb
-
-
 
 
 ! d F_3 / d u_1 Non-Derivative Term

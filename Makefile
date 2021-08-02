@@ -54,27 +54,10 @@ VPATH += ./Obj
 
 
 
-PoseidonLib: $(POSEIDON)
+PoseidonLib: $(POSEIDON_o)
 	ar crv $(OBJ)/poseidon.a $(OBJ)/*.o
 
 
-
-
-
-#-------------------------- Execution Rule ------------------------------------#
-
-
-run:
-	$(BIN)/main.x
-
-run_yahil:
-	mpirun  -np $(NPROCS) ./$(BIN)/main_$(DIMENSION).x
-
-run_mpi:
-	mpirun  -np $(NPROCS) ./$(BIN)/main_$(DIMENSION).x
-
-run_replot:
-	mpirun ./$(BIN)/replot.x
 
 
 #------------------------------- Clean Up Rule  ------------------------------------#
@@ -83,7 +66,7 @@ clean:
 	rm -f $(OBJ)/*.o
 	rm -f $(OBJ)/*.mod
 	rm -f $(BIN)/*.x
-
+	rm -f $(OBJ)/*.a
 
 clean_output:
 	rm -f $(OUT)/*.out

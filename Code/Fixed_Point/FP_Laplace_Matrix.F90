@@ -175,7 +175,6 @@ INTEGER                                                 ::  i, j
 REAL(KIND = idp)                                        ::  deltar, TODR
 REAL(KIND = idp)                                        ::  L_Lp1
 
-INTEGER                                                 ::  Mat_Loc
 
 INTEGER                                                 ::  Int_Degree
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  CUR_R_LOCS
@@ -264,7 +263,7 @@ SUBROUTINE Initialize_Laplace_Matrices_CCS()
 
 
 INTEGER                                                 ::  l, re, rd, d, dp
-INTEGER                                                 ::  i, j, Here
+INTEGER                                                 ::  Here
 
 
 REAL(KIND = idp)                                        ::  deltar, TODR

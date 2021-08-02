@@ -192,11 +192,11 @@ END SUBROUTINE DIRICHLET_BC
  !#################################################################################!
 SUBROUTINE NEUMANN_BC(L_VALUE, WORK_VEC)
 
-INTEGER,                                            INTENT(IN)                      ::  L_VALUE
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES - 1),  INTENT(INOUT)                   ::  WORK_VEC
+INTEGER,                                            INTENT(IN)          ::  L_VALUE
+COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES - 1),  INTENT(INOUT)       ::  WORK_VEC
 
 
-INTEGER                 :: i,j, ui
+INTEGER                 :: ui
 
 
 
@@ -403,10 +403,10 @@ INTEGER, DIMENSION(0:NNZ-1),                    INTENT(IN)                  ::  
 COMPLEX(KIND = idp), DIMENSION(0:N - 1),        INTENT(INOUT)               ::  WORK_VEC
 
 
-COMPLEX(KIND = idp), DIMENSION(0:NNZ-1),           INTENT(INOUT)               ::  ELEM_VAL
+COMPLEX(KIND = idp), DIMENSION(0:NNZ-1),           INTENT(INOUT)            ::  ELEM_VAL
 
 
-INTEGER                                                                     ::  i, shift, ui
+INTEGER                                                                     ::  ui
 
 REAL(KIND = idp)                                                            ::  BC_Enc_Mass,    &
                                                                                 Shift_Value
@@ -616,7 +616,7 @@ COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim,1:Beta_Prob_Dim), INTENT(INOUT)  
 
 
 
-INTEGER                 :: i, shift, uj, ui, m, l, d, Here
+INTEGER                 :: i, shift, uj, ui, m, l, Here
 
 
 COMPLEX(KIND = idp)                                                         :: BC_Value
@@ -732,7 +732,7 @@ COMPLEX(KIND = idp), DIMENSION(1:N),        INTENT(INOUT)               ::  WORK
 COMPLEX(KIND = idp)                                                         :: BC_Value
 
 INTEGER                                                                     :: ui
-INTEGER                                                                     :: i, lm, d, Row
+INTEGER                                                                     :: lm, d, Row
 INTEGER                                                                     :: Shift
 
 

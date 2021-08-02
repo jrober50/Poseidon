@@ -375,9 +375,7 @@ REAL(KIND = idp)                                            ::  Star_Surface
                             !!  Global Variables  !!
                              !                    !
 
-!INTEGER,                                                   ::  DRIVER_R_ELEMS,             &
-!                                                               DRIVER_T_ELEMS,             &
-!                                                               DRIVER_P_ELEMS
+
 
 
 REAL(KIND = idp), DIMENSION(1:R_Elements) :: Delta_R_Vector

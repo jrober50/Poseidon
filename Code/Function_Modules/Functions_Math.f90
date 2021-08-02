@@ -240,9 +240,9 @@ PURE FUNCTION Legendre_Poly(l,m,num_points,theta)
 
 INTEGER, INTENT(IN)                                     :: l,m, num_points
 REAL(KIND = idp),  INTENT(IN), DIMENSION(1:num_points)  :: theta
-REAL(KIND = idp), DIMENSION(1:num_points)               :: Legendre_Poly, Legendre_Polyc
+REAL(KIND = idp), DIMENSION(1:num_points)               :: Legendre_Poly
 
-INTEGER                                         :: i,j,n
+INTEGER                                         :: i, n
 REAL(KIND = idp)                                :: factor, normfactor
 REAL(KIND = idp), DIMENSION(1:num_points)       :: costheta, sqrfactor
 REAL(KIND = idp), DIMENSION(0:l,1:num_points)   :: Plm
@@ -373,15 +373,11 @@ PURE FUNCTION Spherical_Harmonic(l,m,theta,phi)
 INTEGER, INTENT(IN)                         :: l,m
 REAL(KIND = idp), INTENT(IN)                :: theta, phi
 
-
-INTEGER                                     :: abs_m
 REAL(KIND = idp), DIMENSION(0:0)            :: Plm
 COMPLEX(KIND = idp)                         :: Spherical_Harmonic
 
 
 Plm = Legendre_Poly(l,m,1,[theta])
-
-
 Spherical_Harmonic = Norm_Factor(l,m)*Plm(0)*EXP(CMPLX(0,m*phi, KIND = idp))
 
 

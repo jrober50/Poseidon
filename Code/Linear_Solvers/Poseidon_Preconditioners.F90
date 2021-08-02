@@ -66,7 +66,7 @@ SUBROUTINE Jacobi_Type_A_PC( A_Mat, b_Vec)
 COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:NUM_R_ELEMS_PER_BLOCK-1), INTENT(INOUT) :: A_Mat
 COMPLEX(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(INOUT)     ::  b_Vec
 
-INTEGER                                                     ::  re, d, i, F, lm_loc
+INTEGER                                                     ::  re, d, F, lm_loc
 REAL(KIND = idp), DIMENSION(0:Block_PROB_DIM-1)             ::  Modifier
 
 INTEGER                                                     ::  Start, Finish, Here
@@ -138,13 +138,11 @@ COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:NUM_R_ELEMS_PER_BLOCK-1), INTEN
 COMPLEX(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(INOUT)     ::  b_Vec
 
 INTEGER                                                     ::  re, d, i, F, lm_loc
-REAL(KIND = idp), DIMENSION(0:Block_PROB_DIM-1)             ::  Modifier
+COMPLEX(KIND = idp), DIMENSION(0:Block_PROB_DIM-1)             ::  Modifier
 
 INTEGER                                                     ::  Start, Finish, Here
 
-REAL(KIND = idp)                                            ::  Delta_R_Over_Two
-REAL(KIND = idp), DIMENSION(0:DEGREE)                       ::  Node_X_Locs,        &
-                                                                Node_R_Locs
+REAL(KIND = idp), DIMENSION(0:DEGREE)                       ::  Node_X_Locs
 
 
 Node_X_Locs = Initialize_LGL_Quadrature_Locations(DEGREE)

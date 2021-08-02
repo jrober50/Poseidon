@@ -101,12 +101,12 @@ COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)       :: A
 COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1)                        :: b, Z
 COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1)                        :: X
 
-INTEGER                                             :: i, j, k, ierr, MAX_ITER
+INTEGER                                             :: k, MAX_ITER
 
 REAL(KIND = idp)                                    :: alpha, omega
 
 COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1)            ::  P, Q, R
-REAL(KIND = idp)                                        ::  rho, rhoo
+COMPLEX(KIND = idp)                                        ::  rho, rhoo
 
 
 MAX_ITER = 1000*NUM_R_NODES
@@ -213,8 +213,9 @@ COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(INOUT)        :: B, GUESS
 
 INTEGER                                                     :: k, MAX_ITER
 
-REAL(KIND = idp)                                            :: rho, rhoo, rhooo, alpha, tol, omega
-COMPLEX(KIND = idp), DIMENSION(0:N-1)                          :: X, P, Q, R, Z
+REAL(idp)                                                   :: rho, rhoo, alpha, tol, omega
+
+COMPLEX(idp), DIMENSION(0:N-1)                              :: X, P, Q, R, Z
 
 
 
@@ -248,8 +249,6 @@ DO WHILE ((MAXVAL(ABS(R)) .GE. eps) .AND. ( abs(rho) .GE. tol)  .AND. (k .LE. MA
 
     IF (PRECOND_TYPE == 0) THEN
         CALL JACOBI_VECTOR_CONDITIONER_CCS(N, NNZ, ELEM_VAL, COL_PTR, ROW_IND, R, Z)
-    ELSE IF (PRECOND_TYPE == 1) THEN
-        CALL SSOR_VECTOR_CONDITIONER_CCS(N, NNZ, ELEM_VAL, COL_PTR, ROW_IND, R, Z, omega)
     END IF
 
     rhoo = rho
@@ -400,15 +399,15 @@ SUBROUTINE JACOBI_CONDITIONING(A,b)
 
 
 
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1), INTENT(INOUT)                        :: b
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1), INTENT(INOUT)       :: A
+COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1), INTENT(INOUT)                 :: b
+COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1), INTENT(INOUT) :: A
 
 
-INTEGER                                                                         :: i, j
+INTEGER                                                                         :: i
 
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1)                                  :: TMP_VEC
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                  :: CONDITIONER, TMP_MAT
-COMPLEX(KIND = idp)                                                               :: One, Zero
+COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1)                                :: TMP_VEC
+COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                :: CONDITIONER, TMP_MAT
+COMPLEX(KIND = idp)                                                             :: One, Zero
 
 CONDITIONER = 0.0_idp
 One = 1.0_idp
@@ -450,7 +449,7 @@ COMPLEX(KIND = idp), DIMENSION(1:Rows, 1:Cols), INTENT(INOUT)       :: A
 INTEGER                                 , INTENT(IN)                :: rows, cols
 
 
-INTEGER                                                                         :: i, j
+INTEGER                                                                         :: i
 
 COMPLEX(KIND = idp), DIMENSION(1:cols)                                  :: TMP_VEC
 COMPLEX(KIND = idp), DIMENSION(1:cols, 1:rows)                          :: CONDITIONER, TMP_MAT
@@ -508,7 +507,7 @@ COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(INOUT)           :: WORK_VEC
 
 
 INTEGER                                                     :: i, j, COL_HERE
-REAL(KIND = idp), DIMENSION(0:N-1)                          :: CONDITIONER
+COMPLEX(KIND = idp), DIMENSION(0:N-1)                          :: CONDITIONER
 
 
 
@@ -578,7 +577,6 @@ COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(INOUT)           :: Z
 
 
 INTEGER                                                     :: i, j, COL_HERE
-REAL(KIND = idp), DIMENSION(0:N-1)                          :: CONDITIONER, CND
 
 
 
@@ -672,12 +670,11 @@ COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1, 0:NUM_R_NODES-1), INTENT(IN)   
 COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES -1), INTENT(INOUT)                        :: Z
 
 
-INTEGER                                                                         :: i,j,k, INFO, LWORK
+INTEGER                                                                         :: i,j, INFO, LWORK
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)                                     :: WORK
 INTEGER, DIMENSION(0:NUM_R_NODES-1)                                             :: IPIV
 
-REAL(KIND = idp), DIMENSION(0:NUM_R_NODES -1)                                  :: TMP_VEC
-REAL(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                  :: invD, L, P, C
+COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                  :: invD, L, P, C
 
 LWORK = 5*NUM_R_NODES
 ALLOCATE(WORK(1:LWORK))
@@ -750,61 +747,6 @@ END SUBROUTINE SSOR_VECTOR_CONDITIONER_FULL
 
 
 
-
-
-!+207+#########################################################################################!
-!                                                                                               !
-!                                           SSOR_CONDITIONING                                   !
-!                                                                                               !
-!###############################################################################################!
-SUBROUTINE SSOR_VECTOR_CONDITIONER_CCS(N, NNZ, ELEM_VAL, COL_PTR, ROW_IND, WORK_VEC, Z, omega)
-
-
-INTEGER, INTENT(IN)                                         :: N, NNZ
-INTEGER, DIMENSION(0:N), INTENT(IN)                         :: COL_PTR
-INTEGER, DIMENSION(0:NNZ-1), INTENT(IN)                     :: ROW_IND
-
-
-REAL(KIND = idp), INTENT(IN)                                :: omega
-COMPLEX(KIND = idp), DIMENSION(0:NNZ - 1), INTENT(IN)          :: ELEM_VAL
-COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(IN)              :: WORK_VEC
-COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(INOUT)           :: Z
-
-
-
-INTEGER                                                     :: i,j,k
-
-
-REAL(KIND = idp), DIMENSION(0:N - 1)                        :: TMP_VEC
-REAL(KIND = idp), DIMENSION(0:NNZ - 1)                      :: LinvD, L, P, C
-
-
-
-DO i = 0,NUM_R_ELEMENTS - 1
-
-
-    DO j = COL_PTR(i),COL_PTR(i+1)-1
-
-
-
-
-
-
-    END DO
-
-
-END DO
-
-
-
-
-
-
-
-
-
-
-END SUBROUTINE SSOR_VECTOR_CONDITIONER_CCS
 
 
 

@@ -1,7 +1,6 @@
 include $(POSEIDON_DIR)/Build/Makefile_Path
 include $(POSEIDON_DIR)/Build/Makefile_Rules
 include $(POSEIDON_DIR)/Build/Makefile_Include
-include $(POSEIDON_DIR)/Build/Makefile_Objects
 include $(POSEIDON_DIR)/Build/Makefile_Dictionary
 
 
@@ -25,3 +24,5 @@ POSEIDON = \
   $(INIT)            \
   $(INTERFACES)      \
 
+
+POSEIDON_o = $(addsuffix .o,$(basename $(POSEIDON)))

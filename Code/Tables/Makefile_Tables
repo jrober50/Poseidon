@@ -1,4 +1,4 @@
 TABLES = \
-  Allocation_Tables.o      \
-  Initialization_Tables.o  \
+  Allocation_Tables.f90      \
+  Initialization_Tables.f90  \
 

@@ -73,7 +73,7 @@ CONTAINS
 SUBROUTINE Print_Results()
 
 INTEGER                                                 ::  i
-REAL(KIND = idp)                                        ::  r, theta, phi, deltar
+REAL(KIND = idp)                                        ::  r, theta, phi
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_e
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_c, dx_c
 

@@ -90,23 +90,17 @@ CONTAINS
 SUBROUTINE XCFC_ConFactor_Solve()
 
 
-INTEGER                                                 ::  i, k
+INTEGER                                                 ::  i
 INTEGER                                                 ::  here, there
-INTEGER                                                 ::  ui, re, d
-INTEGER                                                 ::  l, lm_loc
+INTEGER                                                 ::  ui, lm_loc
 
 INTEGER                                                 ::  M
 INTEGER                                                 ::  LWORK
 INTEGER                                                 ::  mk
 INTEGER                                                 ::  INFO
 
-REAL(KIND = idp), DIMENSION(1:4)                        :: timer
+!REAL(KIND = idp), DIMENSION(1:4)                        :: timer
 
-COMPLEX(idp), DIMENSION(1:NUM_R_NODES)                  ::  WORK_VEC
-COMPLEX(idp), DIMENSION(1:NUM_R_NODES,1:NUM_R_NODES)    ::  WORK_MAT
-
-
-COMPLEX(idp),DIMENSION(Var_Dim)                         :: Resid_Vector
 COMPLEX(idp),DIMENSION(Var_Dim)                         :: BVector
 COMPLEX(idp),DIMENSION(Var_Dim)                         :: UVector
 COMPLEX(idp),DIMENSION(Var_Dim)                         :: GVectorM
@@ -124,7 +118,7 @@ COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Work
 LOGICAL                                                 ::  PR = .FALSE.
 INTEGER                                                 ::  Cur_Iteration       = 0
 LOGICAL                                                 ::  CONVERGED           = .FALSE.
-LOGICAL                                                 ::  CONVERGED_Residual  = .FALSE.
+!LOGICAL                                                 ::  CONVERGED_Residual  = .FALSE.
 
 ui = 1
 M = FP_Anderson_M
@@ -300,24 +294,16 @@ END  SUBROUTINE XCFC_ConFactor_Solve
 !################################################################################!
 SUBROUTINE XCFC_Solve_ConFactor_System()
 
-
-INTEGER                                                         ::  INFO
-INTEGER, DIMENSION(NUM_R_NODES)                                 ::  IPIV
-
-
 COMPLEX(KIND = idp), DIMENSION(NUM_R_NODES)                     ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                  ::  WORK_ELEM_VAL
 
-INTEGER                                                         ::  i, j, Col, Row
-INTEGER                                                         ::  ui, re, d, l, m
-INTEGER                                                         ::  uj, rep, dp, lp, mp
+INTEGER                                                         ::  ui, l, m
 INTEGER                                                         ::  lm_loc
 
-INTEGER                                                         ::  Here, There
+!REAL(idp), DIMENSION(4)                                         ::  timer
 
-REAL(idp), DIMENSION(4)                                         ::  timer
 
-REAL(idp)                                                       ::  RCOND
+
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"--In XCFC Iteration, In XCFC_Solve_ConFactor_System."

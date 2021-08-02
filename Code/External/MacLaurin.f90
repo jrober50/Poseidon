@@ -118,7 +118,6 @@ REAL(idp), INTENT(OUT), DIMENSION( 1:Num_Quad(1)*Num_Quad(2)*Num_Quad(3),   &
 
 INTEGER                                                     ::  re, te, pe
 INTEGER                                                     ::  rd, td, pd
-INTEGER                                                     ::  l, m, d
 INTEGER                                                     ::  Tot_Quad
 
 REAL(idp),  DIMENSION( 1:Num_Quad(1) )                      ::  RQ_Loc
@@ -272,10 +271,9 @@ REAL(KIND = idp)                                            ::  MacLaurin_Potent
 REAL(KIND = idp)                                            ::  X, Y, Z
 REAL(KIND = idp)                                            ::  XX, YY, ZZ
 REAL(KIND = idp)                                            ::  VAL, &
-                                                                rsqr, psqr, &
                                                                 ecc, eccsqr, eccmod, &
                                                                 Parta, Partb, Partc, &
-                                                                lambda, POTENTIAL,h
+                                                                lambda, POTENTIAL
 
 
 
@@ -402,10 +400,10 @@ REAL(KIND = idp), INTENT(OUT)                               ::  Pot
 REAL(KIND = idp)                                            ::  X, Y, Z
 REAL(KIND = idp)                                            ::  XX, YY, ZZ
 REAL(KIND = idp)                                            ::  VAL, &
-                                                                rsqr, psqr, &
+                                                                rsqr,                &
                                                                 ecc, eccsqr, eccmod, &
                                                                 Parta, Partb, Partc, &
-                                                                lambda, POTENTIAL,h
+                                                                lambda, POTENTIAL
 
 
 

@@ -131,7 +131,7 @@ END SUBROUTINE CFA_3D_Apply_BCs_Part2
 !################################################################################!
 SUBROUTINE CFA_3D_Dirichlet_BCs_Part1( )
 
-INTEGER                                             ::  i, l, m, ui, d
+INTEGER                                             ::  l, m, ui
 
 INTEGER                                             ::  Value_Location
 
@@ -201,7 +201,7 @@ SUBROUTINE CFA_3D_Dirichlet_BCs_Part2( )
 
 
 
-INTEGER                                             ::  i, l, m, ui, d
+INTEGER                                             ::  i, l, m, ui
 
 INTEGER                                             ::  Value_Location
 

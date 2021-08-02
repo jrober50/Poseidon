@@ -261,9 +261,7 @@ SUBROUTINE CFA_1D_Master_Build()
 
 
 REAL(KIND = idp)        :: timea, timeb, timec
-INTEGER                 :: i,j,k
-INTEGER                 :: here, re, d, dp, lm_loc, lpmp_loc, F, u, l, m
-INTEGER                 :: i_loc, j_loc, m_loc
+
 
 timea = 0.0_idp
 timeb = 0.0_idp
@@ -388,23 +386,7 @@ INTEGER                                                         ::  Local_re,   
                                                                     Global_re,      &
                                                                     Global_te,      &
                                                                     Global_pe,      &
-                                                                    d, l, m,        &
-                                                                    dp, lp, mp,     &
-                                                                    rd, td, pd, tpd
-
-
-
-
-COMPLEX(KIND = idp)                                             ::  REUSED_VALUE
-
-REAL(KIND = idp), DIMENSION(1:3,1:3)                            ::  JCBN_kappa_Array
-REAL(KIND = idp), DIMENSION(1:3)                                ::  JCBN_n_ARRAY
-
-REAL(KIND = idp)                                                ::  JCBN_BIGK_VALUE_1D
-
-
-
-INTEGER, DIMENSION(1:NUM_T_QUAD_POINTS)                         ::  here
+                                                                    rd
 
 
 REAL(KIND = idp)                                                ::  TWOOVER_DELTAR,    &
@@ -413,20 +395,9 @@ REAL(KIND = idp)                                                ::  TWOOVER_DELT
                                                                     deltap_overtwo
 
 
-
-
-INTEGER                                                         ::  Block_T_Begin, Block_P_Begin
-
-
-
-
 REAL(KIND = idp)                                    ::  timea, timeb, timec, timed, timee,  &
                                                         time_CURVALS, time_SJT, time_JCBNM, &
                                                         time_RHS
-
-
-INTEGER                                             ::  ierr, i
-INTEGER                                             ::  CUR_LOC
 
 time_CURVALS = 0.0_idp
 time_SJT = 0.0_idp
@@ -517,7 +488,6 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
     !*! Calculate Current Values of CFA Varaiables and their Deriviatives
     !*!
     timea = MPI_Wtime()
-    PRINT*,"Before Calc_1D_Current_Values"
     CALL Calc_1D_Current_Values(Global_re , Local_te  , Local_pe,               &
                                 DELTAR_OVERTWO, DELTAT_OVERTWO, DELTAP_OVERTWO  )
 
@@ -529,7 +499,6 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
     !*!
     !*!  Calculate the Sub-Jacobian and RHS Terms
     !*!
-    PRINT*,"Before Calc_1D_SubJcbn_Terms"
     CALL Calc_1D_SubJcbn_Terms( Local_re, Local_te, Local_pe )
 
     timec = MPI_Wtime()
@@ -538,7 +507,6 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
     !*!
     !*! Create the Residual Vector ( Sans Laplacian Contribution )
     !*!
-    PRINT*,"Before CREATE_1D_RHS_VECTOR"
     CALL CREATE_1D_RHS_VECTOR(  Local_re, Local_te, Local_pe, DELTAR_OVERTWO )
 
     timed = MPI_Wtime()
@@ -548,7 +516,6 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
     !*!
     !*! Create Jacobian Matrix ( Sans Laplacian Contribution )
     !*!
-    PRINT*,"Before CREATE_1D_JCBN_MATRIX"
     CALL CREATE_1D_JCBN_MATRIX( Local_re, Local_te, Local_pe,               &
                                 Global_re , Global_te  , Global_pe,         &
                                 TWOOVER_DELTAR                              )
@@ -611,21 +578,17 @@ REAL(KIND = idp), INTENT(IN)                                    ::  DELTAR_OVERT
 
 
 COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Tmp_U_Value,        &
-                                                                    Tmp_U_R_DRV_Value,  &
-                                                                    Tmp_U_T_DRV_Value,  &
-                                                                    Tmp_U_P_DRV_Value
+                                                                    Tmp_U_R_DRV_Value
 
 
 
-INTEGER                                                         ::  l, m, d, dp,        &
-                                                                    rd, td, pd, tpd,    &
+INTEGER                                                         ::  d, dp,        &
+                                                                    rd, tpd,    &
                                                                     ui
 
 
 INTEGER                                                         ::  Here, There
-INTEGER                                                         ::  lm_loc, lpmp_loc
 
-COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Local_Coefficients
 
 
 
@@ -771,7 +734,6 @@ SUBROUTINE Calc_1D_SubJcbn_Terms( re, te, pe )
 INTEGER, INTENT(IN)                                                     ::  re, te, pe
 
 
-REAL(KIND = idp)                                                        ::  REUSED_VALUE
 
 INTEGER                                                                 ::  pd, td, rd,     &
                                                                             i, tpd
@@ -837,14 +799,12 @@ DO rd = 1,NUM_R_QUAD_POINTS
 
 
     ! K_{ij}K^{ij} = Psi^{14}/AlphaPsi^{2} * BIGK
-    PRINT*,"Before JCBN_BIGK_FUNCTION_1D"
     JCBN_BIGK_VALUE_1D = JCBN_BIGK_FUNCTION_1D( rd,                            &
                                              CUR_VAL_BETA, CUR_DRV_BETA,    &
                                              CUR_R_LOCS(rd), R_SQUARE(rd),  &
                                              NUM_R_QUAD_POINTS  )
 
 
-    PRINT*,"Before JCBN_kappa_FUNCTION_3D_ALL"
     JCBN_kappa_Array = JCBN_kappa_FUNCTION_1D_ALL(  rd, CUR_R_LOCS(rd),         &
                                                     CUR_VAL_BETA, CUR_DRV_BETA, &
                                                     Num_R_Quad_Points )
@@ -860,7 +820,6 @@ DO rd = 1,NUM_R_QUAD_POINTS
 
 
 
-    PRINT*,"Before Calc_RHS_Terms_1D"
     CALL Calc_RHS_Terms_1D( RHS_Terms,                                         &
                          re, te, pe,                                        &
                          td, pd, tpd, rd,                                   &
@@ -874,7 +833,6 @@ DO rd = 1,NUM_R_QUAD_POINTS
     !
     !   Equation 1 ( Conformal Factor ) Subjacobian Terms
     !
-    PRINT*,"Before Calc_EQ1_SubJacobian_1D"
     CALL Calc_EQ1_SubJacobian_1D( SubJacobian_EQ1_Term,                              &
                                re, te, pe,                                        &
                                td, pd, tpd, rd,                                   &
@@ -884,7 +842,6 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                CUR_VAL_BETA, CUR_DRV_BETA,                        &
                                JCBN_BIGK_VALUE_1D                                    )
 
-    PRINT*,"Before Calc_EQ2_SubJacobian_1D"
     CALL Calc_EQ2_SubJacobian_1D( SubJacobian_EQ2_Term,                              &
                                re, te, pe,                                        &
                                td, pd, tpd, rd,                                   &
@@ -894,11 +851,8 @@ DO rd = 1,NUM_R_QUAD_POINTS
                                CUR_VAL_BETA, CUR_DRV_BETA,                        &
                                JCBN_BIGK_VALUE_1D                                    )
 
-    !        PRINT*,rd,td,pd
-    !        PRINT*,SubJacobian_EQ1_Term(tpd,rd,1:14)
-    !        PRINT*,SubJacobian_EQ2_Term(tpd,rd,1:14)
 
-    PRINT*,"Before Calc_EQ3_SubJacobian_1D"
+
     CALL Calc_EQ3_SubJacobian_1D( SubJacobian_EQ3_Term,                              &
                                re, te, pe,                                        &
                                td, pd, tpd, rd,                                   &
@@ -951,21 +905,11 @@ SUBROUTINE CREATE_1D_RHS_VECTOR( re, te, pe, DELTAR_OVERTWO )
 
 
 INTEGER, INTENT(IN)                                                     ::  re, te, pe
-
 REAL(KIND = idp), INTENT(IN)                                            ::  DELTAR_OVERTWO
 
-INTEGER                                                                 ::  pd, td, rd, tpd,     &
-                                                                            l, m, d,        &
-                                                                            lm_loc, u
-
+INTEGER                                                                 ::  rd, d, lm_loc
 INTEGER                                                                 ::  Current_i_Location
-
 COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_TMP
-COMPLEX(KIND = idp)                                                     :: Test
-COMPLEX(KIND = idp)                                                     ::  Common_Basis
-REAL(KIND = idp)                                                        ::  Combined_Weights
-
-COMPLEX(KIND = idp)                                                     ::  Inner, Middle
 
 
 !PRINT*,"CREATE_1D_RHS_VECTOR has been altered, u = 1,1"
@@ -1084,39 +1028,16 @@ REAL(KIND = idp), INTENT(IN)                                            ::  TWOO
 
 
 
-
-
-INTEGER                                                                 ::  pd, td, rd,     &
-                                                                            l, m, d,        &
-                                                                            lp, mp, dp
-
-
-
-INTEGER                                                                 ::  Current_i_Location,         &
-                                                                            Current_j_Location
-
-
-
-INTEGER                                                                 ::  F, u
-INTEGER                                                                 ::  lm_loc, lpmp_loc
-INTEGER                                                                 ::  MATVEC_LOC
-INTEGER                                                                 ::  i_loc, j_loc
+INTEGER                                                                 ::  F, dp
+INTEGER                                                                 ::  lpmp_loc
+INTEGER                                                                 ::  i_loc
 
 INTEGER                                                                 ::  Start, Finish
 
-REAL(KIND = idp), DIMENSION(1:NUM_R_QUAD_POINTS)                        ::  Common_Term_A,  &
-                                                                            Common_Term_B,  &
-                                                                            Common_Term_C
 
 
 COMPLEX(KIND = idp), DIMENSION(0:ELEM_PROB_DIM-1)                       ::  Jacobian_Buffer
-COMPLEX(KIND = idp), DIMENSION(1:25)                                    ::  Jacobian_Terms
 
-
-REAL(KIND = idp), DIMENSION(1:NUM_R_QUAD_POINTS, 0:2)                   ::  Current_Lag_Polys
-
-
-INTEGER                                                                 ::  i, ierr
 REAL(KIND = idp)                                                        ::  time_a, time_b
 
 
@@ -1199,7 +1120,6 @@ INTEGER                                     ::  Start_Here_ND,     &
 COMPLEX(KIND=idp),DIMENSION(0:SUBSHELL_PROB_DIM-1)    :: RHS_Receive_Buffer
 
 
-INTEGER    :: i
 
 
 IF ( nPROCS_SHELL .NE. 0 ) THEN
@@ -1344,10 +1264,9 @@ SUBROUTINE FINISH_1D_JACOBIAN_MATRIX()
 
 
 
-INTEGER                                             ::  ui, l, m, re, d, dp, rd, u
+INTEGER                                             ::  l, m, re, d, dp, u
 
-INTEGER                                             ::  Current_i_Location, &
-                                                        Current_j_Location
+
 
 REAL(KIND = idp)                                                ::  TWOOVER_DELTAR, &
                                                                     L_Lp1
@@ -1365,9 +1284,6 @@ INTEGER                                                         ::  iloc, jloc
 INTEGER                                                         ::  MATVEC_LOC
 
 
-REAL(KIND = idp)                                                :: TMP_VALUE
-
-INTEGER :: i, ierr
 
 
 
@@ -1506,7 +1422,7 @@ END SUBROUTINE FINISH_1D_JACOBIAN_MATRIX
 SUBROUTINE FINISH_1D_RHS_VECTOR()
 
 
-INTEGER                                                         ::  ui, l, m, re, d, dp, rd,k
+INTEGER                                                         ::  ui, l, m, re, d, dp
 
 INTEGER                                                         ::  Current_i_Location, &
                                                                     Current_j_Location
@@ -1522,27 +1438,16 @@ REAL(KIND = idp), DIMENSION(0:DEGREE)                           :: Reusable_Valu
 
 
 INTEGER                                                         ::  Global_re
-INTEGER                                                         ::  Block_re
-INTEGER                                                         ::  iloc, jloc
-INTEGER                                                         ::  MATVEC_LOC
-REAL(KIND = idp)                                                ::  TMP_VALUE
 
 
 INTEGER                                                         ::  Start_Here,     &
-                                                                    End_Here,       &
-                                                                    here
+                                                                    End_Here
 
 
 COMPLEX(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1)           ::  TMP_VECTOR
 
 
-INTEGER                                                         :: Start_Here_b, End_Here_b
 
-INTEGER                                                         ::  ierr
-
-
-
-INTEGER :: i,j
 
 
 !PRINT*,"FINISH_1D_RHS_VECTOR has been altered, ui = 1,1"
@@ -1735,7 +1640,7 @@ REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
 COMPLEX                                     :: Calc_Jacobian_Term_1D, Jacobian_Term
 
 INTEGER                                     :: Case_Number
-INTEGER                                     :: rd, td, pd, tpd
+INTEGER                                     :: rd
 
 Case_Number = (F-1) * NUM_CFA_VARS + u-1
 Jacobian_Term = 0.0_idp

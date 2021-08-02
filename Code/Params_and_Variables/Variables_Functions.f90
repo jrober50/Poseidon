@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Variables_Functions                                                             !##!
+MODULE Variables_Functions                                                          !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -83,7 +83,7 @@ ABSTRACT INTERFACE
 
         REAL(KIND = KIND(1.D0)), DIMENSION(1:Num_RQ_Input), INTENT(IN)     ::  RQ_Input
         REAL(KIND = KIND(1.D0)), INTENT(IN)                                ::  Left_Limit,     &
-                                                                        Right_Limit
+                                                                                Right_Limit
 
 
         REAL(KIND = KIND(1.D0)), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Lapse

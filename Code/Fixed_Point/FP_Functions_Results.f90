@@ -111,10 +111,7 @@ REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
 INTEGER                                                         ::  re, l, m, d, u
 
 
-INTEGER                                                         :: Current_Location
 INTEGER                                                         :: Loc_RED, Loc_LM
-
-COMPLEX(KIND = idp)                                             ::  TMP_VALUE_A
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  xlocP, weightP
 
 

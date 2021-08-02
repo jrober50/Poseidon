@@ -1,11 +1,10 @@
 IO = \
-  Poseidon_IO_Parameters.o    \
-  IO_File_Routines.o          \
-  Poseidon_IO_Module.o        \
-  IO_Setup_Report.o           \
-  IO_Print_Results.o          \
-  IO_Linear_System.o          \
-  IO_Convergence_Output.o     \
-  Parameter_Reader_Poseidon.o \
-  Parameter_Reader_Driver.o   \
+  Poseidon_IO_Parameters.f90    \
+  IO_File_Routines.f90          \
+  Poseidon_IO_Module.f90        \
+  IO_Setup_Report.f90           \
+  IO_Print_Results.f90          \
+  IO_Linear_System.f90          \
+  IO_Convergence_Output.f90     \
+  Parameter_Reader_Poseidon.f90 \
 

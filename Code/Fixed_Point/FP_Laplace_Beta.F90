@@ -113,17 +113,14 @@ CONTAINS
 !################################################################################!
 SUBROUTINE Initialize_Laplace_Matrices_Beta()
 
-INTEGER                                                 ::  l, m, lp, mp, lm_loc, lpmp_loc
-INTEGER                                                 ::  re, te, pe, rep
-INTEGER                                                 ::  rd, td, pd, tpd
+INTEGER                                                 ::  l, m
+INTEGER                                                 ::  re, te, pe
+INTEGER                                                 ::  rd
 INTEGER                                                 ::  d, dp
-INTEGER                                                 ::  i, j, ui, uj
-INTEGER                                                 ::  row, col
+INTEGER                                                 ::  i, j, ui
 
 REAL(KIND = idp)                                        ::  deltar, TODR
 REAL(KIND = idp)                                        ::  L_Lp1
-
-INTEGER                                                 ::  Mat_Loc
 
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             ::  CUR_R_LOCS
 REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             ::  CUR_T_LOCS
@@ -135,8 +132,7 @@ REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)             :: COTAN_VAL
 
 COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values
 
-REAL(KIND = idp)                                        ::  deltar_overtwo,     &
-                                                            deltat_overtwo,     &
+REAL(KIND = idp)                                        ::  deltat_overtwo,     &
                                                             deltap_overtwo
 
 REAL(KIND = idp), ALLOCATABLE, DIMENSION( :,:,: )       :: RR_Factor
@@ -436,7 +432,7 @@ REAL(KIND = idp), ALLOCATABLE, DIMENSION(:)                                     
 
 COMPLEX(idp)                                                                            ::  Lone_Norm
 REAL(idp)                                                                                :: Test
-INTEGER                                                                                 ::  Test_loca, test_locb
+
 TEST = 0.0_idp
 Lone_Norm = 0.0_idp
 

@@ -128,7 +128,7 @@ INTEGER, OPTIONAL,  INTENT(IN)                          ::  Suggested_Number
 
 INTEGER                                                 ::  Temp_Number
 INTEGER                                                 ::  istat = 0
-LOGICAL                                                 ::  FLAG, OP, EX
+LOGICAL                                                 ::  FLAG, OP
 LOGICAL                                                 ::  UNIT_FLAG, NAME_FLAG
 
 

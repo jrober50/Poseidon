@@ -1,4 +1,6 @@
  COMMON = \
-  Poseidon_Kinds.o          \
-  Poseidon_Numbers.o        \
-  Units_Module.o
+  Poseidon_Kinds.f90          \
+  Poseidon_Numbers.f90        \
+  Units_Module.f90
+
+

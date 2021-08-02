@@ -168,10 +168,9 @@ CONTAINS
 SUBROUTINE Fixed_Point_AndersonM()
 
 LOGICAL                                                 ::  CONVERGED
-LOGICAL                                                 ::  CONVERGED_Residual
-INTEGER                                                 ::  i, k, lm_loc
+!LOGICAL                                                 ::  CONVERGED_Residual
+INTEGER                                                 ::  i, ui, lm_loc
 INTEGER                                                 ::  here, there
-INTEGER                                                 ::  ui, re, d, l
 
 
 INTEGER                                                 ::  M
@@ -180,9 +179,6 @@ INTEGER                                                 ::  mk
 INTEGER                                                 ::  INFO
 
 REAL(KIND = idp), DIMENSION(1:4)                        :: timer
-
-COMPLEX(idp), DIMENSION(1:NUM_R_NODES)                  ::  WORK_VEC
-COMPLEX(idp), DIMENSION(1:NUM_R_NODES,1:NUM_R_NODES)    ::  WORK_MAT
 
 
 COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Resid_Vector
