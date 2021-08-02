@@ -16,7 +16,7 @@ EXT	= F90
 ### Fortran Compiler
 
 FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90
-FORT_sjdunham      = /usr/local/Cellar/mpich/3.3.2_1/bin/mpif90
+FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
 FORT_MacBook 	   = /usr/local/openmpi/bin/mpif90
 FORT_Rhea	   = mpifort
 FORT_BlueWaters    = ftn
@@ -95,8 +95,8 @@ PETSC_NicksMacBook_ARCH      = /usr/local/petsc/petsc-3.10.4/arch-darwin-c-debug
 PETSC_NicksMacBook_ON        = -I$(PETSC_NicksMacBook_DIR)/include -I$(PETSC_NicksMacBook_ARCH)/include -L$(PETSC_NicksMacBook_DIR)/lib -L$(PETSC_NicksMacBook_ARCH)/lib -lpetsc
 PETSC_NicksMacBook_Off       =
 
-PETSC_sjdunham_DIR  = /Users/dunhamsj/Research/Codes/petsc
-PETSC_sjdunham_ARCH = /Users/dunhamsj/Research/Codes/petsc/arch-darwin-c-debug
+PETSC_sjdunham_DIR  = $(PETSC_DIR)
+PETSC_sjdunham_ARCH = $(PETSC_DIR)/$(PETSC_ARCH)
 PETSC_sjdunham_ON   = -I$(PETSC_sjdunham_DIR)/include -I$(PETSC_sjdunham_ARCH)/include -L$(PETSC_sjdunham_DIR)/lib -L$(PETSC_sjdunham_ARCH)/lib -lpetsc
 PETSC_sjdunham_Off  =
 
@@ -113,7 +113,7 @@ PETSC_BlueWaters_OFF	=
 
 
 PETSC_COMP_FLAG_ON      = -DPOSEIDON_PETSC_FLAG
-PETSC_COMP_FLAG_OFF     = 
+PETSC_COMP_FLAG_OFF     =
 
 
 
@@ -121,7 +121,7 @@ PETSC_COMP_FLAG_OFF     =
 
 HDF5_NicksMacBook_ON         = -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5
 HDF5_NicksMacBook_OFF        =
-HDF5_sjdunham_ON             = -I/usr/local/Cellar/hdf5/1.12.0_1/include -L/usr/local/Cellar/hdf5/1.12.0_1/lib -lhdf5_fortran -lhdf5
+HDF5_sjdunham_ON             = -I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5_fortran -lhdf5
 HDF5_sjdunham_OFF            =
 HDF5_MacBook_ON		= -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5
 HDF5_MacBook_OFF 	=
@@ -138,8 +138,8 @@ HDF5_Bluewaters_OFF     =
 MPI_NicksMacBook_Lib        = -I/usr/local/openmpi/lib
 MPI_NicksMacBook_Include    = -L/usr/local/openmpi/include
 
-MPI_sjdunham_Lib            = -I/usr/local/Cellar/mpich/3.3.2_1/lib
-MPI_sjdunham_Include        = -L/usr/local/Cellar/mpich/3.3.2_1/include
+MPI_sjdunham_Lib            = -I$(MPICH_DIR)/lib
+MPI_sjdunham_Include        = -L$(MPICH_DIR)/include
 
 MPI_MacBook_Lib             = -I/usr/local/openmpi/lib
 MPI_MacBook_Include         = -L/usr/local/openmpi/include
@@ -153,7 +153,7 @@ MPI_OFF                     =
 
 #### LAPACK
 
-LAPACK_NicksMacBook     = -framework Accelerate 
+LAPACK_NicksMacBook     = -framework Accelerate
 LAPACK_sjdunham         = -framework Accelerate -fallow-argument-mismatch
 LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl
