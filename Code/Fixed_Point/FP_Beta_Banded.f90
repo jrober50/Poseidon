@@ -1035,24 +1035,23 @@ ELSE
 END IF
 
 
-
-CALL ZGBCON( '1',                   &
-             Beta_Prob_Dim,         &
-             Beta_Diagonals,        &
-             Beta_Diagonals,        &
-             Beta_MVL_Banded,       &
-             3*Beta_Diagonals+1,    &
-             Beta_IPIV,             &
-             NORM,                  &
-             RCOND_One,             &
-             WORK,                  &
-             RWORK,                 &
-             INFO                   )
-IF (INFO .NE. 0) THEN
-    print*,"ZGBCON has failed with INFO = ",INFO
-ELSE
-    IF ( Verbose_Flag ) THEN
-        PRINT*,"RCOND = ",RCOND_One," Norm = ",Norm
+IF ( Verbose_Flag ) THEN
+    CALL ZGBCON( '1',                   &
+                 Beta_Prob_Dim,         &
+                 Beta_Diagonals,        &
+                 Beta_Diagonals,        &
+                 Beta_MVL_Banded,       &
+                 3*Beta_Diagonals+1,    &
+                 Beta_IPIV,             &
+                 NORM,                  &
+                 RCOND_One,             &
+                 WORK,                  &
+                 RWORK,                 &
+                 INFO                   )
+    IF (INFO .NE. 0) THEN
+        print*,"ZGBCON has failed with INFO = ",INFO
+    ELSE
+            PRINT*,"RCOND = ",RCOND_One," Norm = ",Norm
     END IF
 END IF
 !PRINT*,"STOPing in Factorize_Beta_Banded"

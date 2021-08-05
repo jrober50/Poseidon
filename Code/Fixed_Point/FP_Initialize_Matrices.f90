@@ -393,7 +393,7 @@ END DO ! td
 
 
         
-
+Ylm_Table = 0.0_idp
 DO l = 0,L_LIMIT
 DO m = -M_VALUES(l),M_VALUES(l)
 DO td = 1,Int_T_Deg

@@ -28,8 +28,8 @@ OPENMP_MODE	=OFF
 
 ## Compile with PETSc
 
-PETSC_MODE	=ON
-#PETSC_MODE	=OFF
+#PETSC_MODE	=ON
+PETSC_MODE	=OFF
 
 
 ## Compile with HDF5
@@ -43,8 +43,6 @@ HDF5_MODE       =ON
 MPI_MODE        =ON
 #MPI_MODE       =OFF
 
-
-Poseidon_Dir = /Users/nickroberts/Poseidon
 
 include ./Build/Makefile_Core
 
