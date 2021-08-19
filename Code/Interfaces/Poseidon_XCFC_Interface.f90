@@ -129,7 +129,7 @@ REAL(idp),  DIMENSION(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3)), INTENT(OUT) ::  Retu
 
 INTEGER                                                         ::  re, te, pe
 INTEGER                                                         ::  rd, td, pd, tpd
-INTEGER                                                         ::  u, d, lm, Here
+INTEGER                                                         ::  d, lm, Here
 
 REAL(KIND = idp)                                                ::  Quad_Span
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  Local_Locations
@@ -157,12 +157,13 @@ DO re = 1,NE(1)
         LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
         Tmp_U_Value = 0.0_idp
 
-        DO lm = 0,LM_Length
+        DO lm = 1,LM_Length
         DO d = 0,DEGREE
 
-            Current_Location = FP_FEM_Node_Map(re,d)
+            Current_Location = FP_FEM_Node_Map(re-1,d)
             Tmp_U_Value = Tmp_U_Value + FP_Coeff_Vector(Current_Location,lm,1)  &
-                                      * LagP(d) * Ylm_Values( lm, tpd, te, pe )
+                                      * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
+
         END DO ! d Loop
         END DO ! lm Loop
 
@@ -214,7 +215,7 @@ REAL(idp),  DIMENSION(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3)), INTENT(OUT) ::  Retu
 
 INTEGER                                                         ::  re, te, pe
 INTEGER                                                         ::  rd, td, pd, tpd
-INTEGER                                                         ::  u, d, lm, Here
+INTEGER                                                         ::  d, lm, Here
 
 REAL(KIND = idp)                                                ::  Quad_Span
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  Local_Locations
@@ -242,15 +243,15 @@ DO re = 1,NE(1)
         LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
         Tmp_U_Value = 0.0_idp
 
-        DO lm = 0,LM_Length
+        DO lm = 1,LM_Length
         DO d = 0,DEGREE
 
-            Current_Location = FP_FEM_Node_Map(re,d)
+            Current_Location = FP_FEM_Node_Map(re-1,d)
             Tmp_U_Value(1) = Tmp_U_Value(1) + FP_Coeff_Vector(Current_Location,lm,1)  &
-                                            * LagP(d) * Ylm_Values( lm, tpd, te, pe )
+                                            * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
             Tmp_U_Value(2) = Tmp_U_Value(2) + FP_Coeff_Vector(Current_Location,lm,2)  &
-                                            * LagP(d) * Ylm_Values( lm, tpd, te, pe )
+                                            * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
         END DO ! d Loop
         END DO ! lm Loop
@@ -303,7 +304,7 @@ REAL(idp),  DIMENSION(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3),1:3), INTENT(OUT) ::  
 
 INTEGER                                                         ::  re, te, pe
 INTEGER                                                         ::  rd, td, pd, tpd
-INTEGER                                                         ::  u, d, lm, Here
+INTEGER                                                         ::  d, lm, Here
 
 REAL(KIND = idp)                                                ::  Quad_Span
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  Local_Locations
@@ -331,18 +332,18 @@ DO re = 1,NE(1)
         LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
         Tmp_U_Value = 0.0_idp
 
-        DO lm = 0,LM_Length
+        DO lm = 1,LM_Length
         DO d = 0,DEGREE
 
-            Current_Location = FP_FEM_Node_Map(re,d)
+            Current_Location = FP_FEM_Node_Map(re-1,d)
             Tmp_U_Value(1) = Tmp_U_Value(1) + FP_Coeff_Vector(Current_Location,lm,3)  &
-                                            * LagP(d) * Ylm_Values( lm, tpd, te, pe )
+                                            * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
             Tmp_U_Value(2) = Tmp_U_Value(2) + FP_Coeff_Vector(Current_Location,lm,4)  &
-                                            * LagP(d) * Ylm_Values( lm, tpd, te, pe )
+                                            * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
-            Tmp_U_Value(3) = Tmp_U_Value(2) + FP_Coeff_Vector(Current_Location,lm,5)  &
-                                            * LagP(d) * Ylm_Values( lm, tpd, te, pe )
+            Tmp_U_Value(3) = Tmp_U_Value(3) + FP_Coeff_Vector(Current_Location,lm,5)  &
+                                            * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
         END DO ! d Loop
         END DO ! lm Loop
