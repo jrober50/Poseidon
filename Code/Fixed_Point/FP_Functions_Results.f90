@@ -37,6 +37,13 @@ USE Poseidon_Parameters, &
                     L_LIMIT,                &
                     NUM_CFA_VARS
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,                  &
+                    iU_LF,                  &
+                    iU_S1,                  &
+                    iU_S2,                  &
+                    iU_S3,                  &
+                    iVB_S
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
@@ -50,7 +57,8 @@ USE Variables_Functions, &
             ONLY : Matrix_Location
 
 USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector
+            ONLY :  FP_Coeff_Vector_A,      &
+                    FP_Coeff_Vector_B
 
 USE Variables_Tables, &
             ONLY :  M_Values
@@ -70,6 +78,7 @@ USE Functions_Math, &
 USE FP_Functions_Mapping, &
             ONLY :  FP_FEM_Node_Map,    &
                     FP_LM_Map,          &
+                    FP_Array_Map_TypeB, &
                     FP_Array_Map
 
 IMPLICIT NONE
@@ -108,10 +117,8 @@ COMPLEX(KIND = idp), DIMENSION(1:5)                         ::  Tmp_U_Value
 REAL(KIND = idp)                                                ::  r_tmp
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
 
-INTEGER                                                         ::  re, l, m, d, u
+INTEGER                                                         ::  re
 
-
-INTEGER                                                         :: Loc_RED, Loc_LM
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  xlocP, weightP
 
 
@@ -120,21 +127,11 @@ Tmp_U_Value = 0.0_idp
 
 IF ( r == rlocs(0) ) THEN
 
-    DO u = 1,NUM_CFA_VARS
-    DO l = 0,L_Limit
-    DO m = -M_VALUES(l),M_VALUES(l)
 
-        Loc_RED = FP_FEM_Node_Map(0,0)
-        Loc_LM  = FP_LM_Map(l,m)
-        Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                        + FP_Coeff_Vector(Loc_RED,Loc_LM,u)     &
-                        * Spherical_Harmonic(l,m,theta,phi)
+    LagP    = 0.0_idp
+    LagP(1) = 1.0_idp
 
-
-    END DO ! m Loop
-    END DO  ! l Loop
-    END DO  ! u Loop
-
+    CALL Calc_Values_Here( 0, theta, phi, LagP, Tmp_U_Value )
 
 
 ELSE
@@ -142,66 +139,26 @@ ELSE
     CALL Initialize_LGL_Quadrature(DEGREE,xlocP,weightP)
 
     DO re = 0,NUM_R_ELEMENTS-1
+    IF ( r > rlocs(re) .AND. r <= rlocs(re+1) ) THEN
 
-        IF ( r > rlocs(re) .AND. r <= rlocs(re+1) ) THEN
 
-            r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
-            LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
+        r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
+        LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
 
-            DO u = 1,NUM_CFA_VARS
-            DO l = 0,L_Limit
-            DO m = -M_VALUES(l),M_VALUES(l)
-            DO d = 0,DEGREE
+        CALL Calc_Values_Here( re, theta, phi, LagP, Tmp_U_Value )
 
-                Loc_RED = FP_FEM_Node_Map(re,d)
-                Loc_LM  = FP_LM_Map(l,m)
 
-!                IF ( u == 1 ) THEN
-!                IF ( (re >= 118) .and. (re <= 122) ) THEN
-!!                    PRINT*,Loc_RED,Loc_LM,u,FP_Coeff_Vector(Loc_RED,Loc_LM,u)
-!                    PRINT*,Tmp_U_Value(u),                        &
-!                            FP_Coeff_Vector(Loc_RED,Loc_LM,u),     &
-!                            Spherical_Harmonic(l,m,theta,phi),     &
-!                            LagP(d)
-!                END IF
-!                END IF
-                Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                                + FP_Coeff_Vector(Loc_RED,Loc_LM,u)     &
-                                * Spherical_Harmonic(l,m,theta,phi)     &
-                                * LagP(d)
-
-            END DO  !   d Loop
-            END DO  !   m Loop
-            END DO  !   l Loop
-            END DO  !   u Loop
-
-!            IF ( (re >= 118) .and. (re <= 122) ) THEN
-!!                    PRINT*,Loc_RED,Loc_LM,u,FP_Coeff_Vector(Loc_RED,Loc_LM,u)
-!                PRINT*,Tmp_U_Value(1), RE
-!            END IF
-
-            EXIT
-        END IF
-
+        EXIT
+    END IF
     END DO
 
     IF ( r > rlocs(NUM_R_ELEMENTS) ) THEN
 
-        DO u = 1,NUM_CFA_VARS
-        DO l = 0,L_Limit
-        DO m = -M_VALUES(l),M_VALUES(l)
+        LagP         = 0.0_idp
+        LagP(DEGREE) = 1.0_idp
 
+        CALL Calc_Values_Here( Num_R_Elements-1, theta, phi, LagP, Tmp_U_Value )
 
-            Loc_RED = FP_FEM_Node_Map(Num_R_Elements-1,Degree)
-            Loc_LM  = FP_LM_Map(l,m)
-            Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                            + FP_Coeff_Vector(Loc_RED,Loc_LM,u)     &
-                            * Spherical_Harmonic(l,m,theta,phi)
-
-
-        END DO  !   m Loop
-        END DO  !   l Loop
-        END DO ! u Loop
     END IF
 
 END IF
@@ -218,6 +175,61 @@ Return_Beta3    = REAL(Tmp_U_Value(5), KIND = idp)
 END SUBROUTINE Calc_FP_Values_At_Location
 
 
+
+
+!+102+###########################################################################!
+!                                                                                !
+!                  Calc_1D_CFA_Values_FP          !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Calc_Values_Here( re, theta, phi, LagP, Tmp_U_Value )
+
+INTEGER,                        INTENT(IN)                      ::  re
+REAL(idp),                      INTENT(IN)                      ::  theta, phi
+REAL(idp), DIMENSION(0:DEGREE), INTENT(INOUT)                   ::  LagP
+COMPLEX(idp), DIMENSION(1:5),   INTENT(INOUT)                   ::  Tmp_U_Value
+
+
+INTEGER                                                         ::  l, m, d, u
+INTEGER                                                         ::  Loc_RED, Loc_LM
+
+
+DO u = iU_CF,iU_LF
+DO l = 0,L_Limit
+DO m = -M_VALUES(l),M_VALUES(l)
+DO d = 0,DEGREE
+
+    Loc_RED = FP_FEM_Node_Map(re,d)
+    Loc_LM  = FP_LM_Map(l,m)
+
+    Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                    + FP_Coeff_Vector_A(Loc_RED,Loc_LM,u)     &
+                    * Spherical_Harmonic(l,m,theta,phi)     &
+                    * LagP(d)
+
+END DO  !   d Loop
+END DO  !   m Loop
+END DO  !   l Loop
+END DO  !   u Loop
+
+
+DO u = iU_S1,iU_S3
+DO l = 1,LM_Length
+DO d = 0,DEGREE
+
+    Loc_RED = FP_Array_Map_TypeB(u,iVB_S,re,d,l)
+
+    Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                    + FP_Coeff_Vector_B(Loc_RED,iVB_S)     &
+                    * Spherical_Harmonic(l,m,theta,phi)     &
+                    * LagP(d)
+
+END DO  !   d Loop
+END DO  !   l Loop
+END DO  !   u Loop
+
+
+END SUBROUTINE Calc_Values_Here
 
 
 
@@ -271,14 +283,23 @@ DO re = 0,NUM_R_ELEMENTS-1
         LagP = Lagrange_Poly(CUR_X_LOCS(x),DEGREE,Local_Locations)
         Tmp_U_Value = 0.0_idp
 
-        DO u = 1,3
+        DO u = 1,2
             DO d = 0,DEGREE
 
                 Current_Location = FP_FEM_Node_Map(re,d)
-                Tmp_U_Value(u) = Tmp_U_Value(u) + FP_Coeff_Vector(Current_Location,1,u)  &
+                Tmp_U_Value(u) = Tmp_U_Value(u) + FP_Coeff_Vector_A(Current_Location,1,u)  &
                                                 * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
             END DO ! d Loop
         END DO ! u Loop
+
+        DO d = 0,DEGREE
+
+            Current_Location = FP_Array_Map_TypeB(iU_S1,iVB_S,re,d,0)
+            Tmp_U_Value(u) = Tmp_U_Value(u) + FP_Coeff_Vector_B(Current_Location,iVB_S)  &
+                                            * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
+        END DO ! d Loop
+
+
 
         CFA_ConFactor(x,re+1,1,1) = REAL(Tmp_U_Value(1), KIND = idp)
         CFA_Lapse(x,re+1,1,1)     = REAL(Tmp_U_Value(2), KIND = idp)        &

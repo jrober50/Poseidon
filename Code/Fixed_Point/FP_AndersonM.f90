@@ -66,8 +66,8 @@ USE Poseidon_Parameters, &
 USE Variables_FP,  &
             ONLY :  Matrix_Format,              &
                     Linear_Solver,              &
-                    FP_Source_Vector,           &
-                    FP_Coeff_Vector,            &
+                    FP_Coeff_Vector_A,          &
+                    FP_Coeff_Vector_B,          &
                     FP_Update_Vector,           &
                     FP_Laplace_Vector,          &
                     FP_Residual_Vector,         &
@@ -81,8 +81,6 @@ USE Variables_FP,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
-                    FP_Source_Vector_Beta,      &
-                    FP_Coeff_Vector_Beta,       &
                     CFA_EQ_Flags,               &
                     CFA_Eq_Map,                 &
                     CFA_MAT_Map,                &
@@ -151,6 +149,10 @@ USE FP_System_Solvers_Module,   &
 USE FP_Resid_Convergence_Module,    &
             ONLY :  Check_FP_Convergence
 
+USE FP_Functions_Coeffs_Module, &
+            ONLY :  Coeff_To_Vector,    &
+                    Vector_To_Coeff
+
 IMPLICIT NONE
 
 
@@ -169,8 +171,7 @@ SUBROUTINE Fixed_Point_AndersonM()
 
 LOGICAL                                                 ::  CONVERGED
 !LOGICAL                                                 ::  CONVERGED_Residual
-INTEGER                                                 ::  i, ui, lm_loc
-INTEGER                                                 ::  here, there
+INTEGER                                                 ::  i
 
 
 INTEGER                                                 ::  M
@@ -256,14 +257,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     IF ( Cur_Iteration .NE. 1 ) THEN
         UVector = GVectorM
     ELSE
-        DO ui = 1,5
-        DO lm_loc = 1,LM_Length
-!            PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
-            here = (ui-1)*Var_Dim + (lm_loc-1)*Num_R_Nodes + 1
-            there = (ui-1)*Var_Dim + lm_loc*Num_R_Nodes
-            UVector(here:there) = FP_Coeff_Vector(:,lm_loc,ui)
-        END DO
-        END DO
+        CALL Coeff_To_Vector( UVector )
     END IF
 
 
@@ -289,21 +283,13 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
-
     IF ( Verbose_Flag ) THEN
         PRINT*,"In Anderson FP loop, Before Update."
     END IF
 
+    CALL Coeff_To_Vector( GVector(:,mk) )
 
-
-    DO ui = 1,5
-    DO lm_loc = 1,LM_Length
-!            PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
-        here = (ui-1)*Var_Dim + (lm_loc-1)*Num_R_Nodes + 1
-        there = (ui-1)*Var_Dim + lm_loc*Num_R_Nodes
-        GVector(here:there,mk) = FP_Coeff_Vector(:,lm_loc,ui)
-    END DO
-    END DO
+    
     FVector(:,mk) = GVector(:,mk) - UVector(:)
 
 
@@ -373,26 +359,8 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     END IF
 
 
-    !
-    !   Calculate Source Vector with u_k
-    !
-
-
-    DO ui = 1,5
-    DO lm_loc = 1,LM_Length
-!            PRINT*,FP_Coeff_Vector(:,lm_loc,ui)
-        here = (ui-1)*Var_Dim + (lm_loc-1)*Num_R_Nodes + 1
-        there = (ui-1)*Var_Dim + lm_loc*Num_R_Nodes
-        FP_Coeff_Vector(:,lm_loc,ui) = GVectorM(here:there)
-    END DO
-    END DO
-    
-!        PRINT*,"FP_Coeff_Vector in Fixed_Point_AndersonM_B "
-!        DO lm_loc = 1,3!LM_Length
-!            PRINT*,"lm_loc",lm_loc
-!            PRINT*,FP_Coeff_Vector(:,lm_loc,1)
-!        END DO
-    
+!   Update Coefficient Vectors
+    CALL Vector_To_Coeff( GVectorM )
 
 
     IF ( Verbose_Flag ) THEN
@@ -401,21 +369,10 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     timer(1) = MPI_Wtime()
 
 
+!   Calculate Source Vector with new solution
     CALL Calc_FP_Source_Vector()
 
 
-
-!    PRINT*,"Before Check_FP_Convergence"
-!    timer(2) = MPI_Wtime()
-!    Call Check_FP_Convergence(Converged_Residual)
-!    timer(3) = MPI_WTime()
-!    IF ( Converged_Residual ) THEN
-!        PRINT*,"The Method has converged. The residual is within the tolerance set. "
-!        Converged = .TRUE.
-!    END IF
-
-!    CALL Clock_In(timer(2)-timer(1),6)
-!    CALL Clock_In(timer(3)-timer(2),7)
 
 
     timer(1) = MPI_Wtime()
@@ -427,9 +384,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         CALL Print_Results()
         PRINT*," "
     END IF
-
-
-
 
 
     IF ( Verbose_Flag .EQV. .TRUE. ) THEN

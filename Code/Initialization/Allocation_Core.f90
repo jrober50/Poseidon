@@ -73,9 +73,16 @@ USE Variables_Source, &
                     Block_Source_S,             &
                     Block_Source_Si
 
+#ifdef POSEIDON_AMREX_FLAG
+USE Variables_AMReX_Multifabs, &
+            ONLY :  MF_Source,              &
+                    BA_Source,              &
+                    DM_Source
+#endif
 
 
-
+USE Variables_AMReX_Core, &
+            ONLY :  AMREX_Levels
 
 IMPLICIT NONE
 
@@ -116,6 +123,12 @@ ALLOCATE(Block_Source_Si(   1:NUM_R_QUAD_POINTS,        &
                             0:NUM_T_ELEMS_PER_BLOCK-1,  &
                             0:NUM_P_ELEMS_PER_BLOCK-1,  &
                             1:3          )   )
+
+#ifdef POSEIDON_AMREX_FLAG
+ALLOCATE( MF_Source(0:AMReX_Levels-1))
+ALLOCATE( BA_Source(0:AMReX_Levels-1))
+ALLOCATE( DM_Source(0:AMReX_Levels-1))
+#endif
 
 
 

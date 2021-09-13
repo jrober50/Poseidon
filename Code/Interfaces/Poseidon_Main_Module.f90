@@ -91,7 +91,7 @@ USE CFA_Newton_Raphson_3D_Module, &
 USE FP_AndersonM_Module, &
             ONLY : Fixed_Point_AndersonM
 
-USE XCFC_Main_Module, &
+USE XCFC_Method_Module, &
             ONLY : XCFC_Method
 
 USE Allocation_Mesh, &

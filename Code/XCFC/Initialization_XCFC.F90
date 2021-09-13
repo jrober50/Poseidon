@@ -70,9 +70,6 @@ USE Allocation_XCFC, &
 USE FP_Functions_Mapping, &
             ONLY :  FP_LM_Map
 
-USE FP_Functions_Laplace, &
-            ONLY :  Initialize_Laplace_Matrices
-
 USE FP_Functions_Results,   &
             ONLY :  Calc_FP_Values_At_Location,  &
                     Calc_1D_CFA_Values_FP
@@ -150,7 +147,6 @@ Beta_Bandwidth = 2*Beta_Diagonals+1
 CALL Allocate_XCFC()
 
 timer(1)= MPI_Wtime()
-!CALL Initialize_Laplace_Matrices()
 CALL Initialize_FP_Matrices()
 timer(2) = MPI_Wtime()
 Call Clock_In(timer(2)-timer(1),1)

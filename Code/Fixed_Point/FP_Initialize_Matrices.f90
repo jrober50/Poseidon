@@ -72,12 +72,6 @@ USE Variables_FP, &
 USE Poseidon_Cholesky_Module,   &
             ONLY :  Cholesky_Factorization
 
-USE FP_Functions_Laplace_Beta, &
-            ONLY :  Initialize_Laplace_Matrices_Beta
-
-USE FP_Beta_Banded, &
-            ONLY :  Initialize_Beta_MVL_Banded
-
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace
 

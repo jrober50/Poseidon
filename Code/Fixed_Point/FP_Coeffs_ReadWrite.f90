@@ -92,7 +92,7 @@ CALL OPEN_NEW_FILE( FileName, FileID, 342 )
 DO rq = 1,Num_R_Nodes
 DO ui = 1,5
 DO lq = 1,LM_Length
-    WRITE(FileID,'(2ES24.17)') REAL(FP_Coeff_Vector(rq,lq,ui),idp),AIMAG(FP_Coeff_Vector(rq,lq,ui))
+    WRITE(FileID,'(2ES24.17)') REAL(FP_Coeff_Vector_A(rq,lq,ui),idp),AIMAG(FP_Coeff_Vector_A(rq,lq,ui))
 END DO
 END DO
 END DO

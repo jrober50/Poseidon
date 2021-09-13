@@ -39,6 +39,15 @@ USE Poseidon_Parameters, &
                     NUM_CFA_EQs,                &
                     NUM_CFA_VARs
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iVB_S
+
+
 USE Variables_Quadrature, &
             ONLY :  NUM_R_QUAD_POINTS,          &
                     NUM_T_QUAD_POINTS,          &
@@ -77,10 +86,10 @@ USE Variables_Derived, &
                     LM_LENGTH
 
 USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector,            &
-                    FP_Coeff_Vector_Beta,       &
-                    FP_Source_Vector,           &
-                    FP_Source_Vector_Beta,      &
+            ONLY :  FP_Coeff_Vector_A,          &
+                    FP_Coeff_Vector_B,          &
+                    FP_Source_Vector_A,         &
+                    FP_Source_Vector_B,         &
                     CFA_EQ_Map,                 &
                     CFA_EQ_Flags
 
@@ -97,9 +106,12 @@ USE Functions_Mapping, &
 
 USE FP_Functions_Mapping, &
             ONLY :  FP_FEM_Node_Map,            &
-                    FP_Beta_Array_Map,          &
+                    FP_Array_Map_TypeB,         &
                     FP_Array_Map,               &
                     FP_LM_Map
+
+USE FP_Source_Terms_Module, &
+            ONLY :  Calc_Source_Terms
 
 
 USE MPI
@@ -167,8 +179,8 @@ REAL(KIND = idp)                                                ::  deltar_overt
 
 
 Timer = 0.0_idp
-FP_Source_Vector = 0.0_idp
-FP_Source_Vector_Beta = 0.0_idp
+FP_Source_Vector_A = 0.0_idp
+FP_Source_Vector_B = 0.0_idp
 
 
 !PRINT*,"**WARNING** Create_FP_Source_Vector hacked, Lm loop limited."
@@ -220,12 +232,17 @@ DO re = 0,NUM_R_ELEMENTS-1
 
 
 
-
+!            PRINT*,"re,te,pe",re,te,pe
+!            PRINT*,"Before Calc_FP_Current_Values"
             CALL Calc_FP_Current_Values(  re, te, pe,     &
                                           DELTAR_OVERTWO, &
                                           DELTAT_OVERTWO, &
                                           DELTAP_OVERTWO  )
+
+!            PRINT*,"Before Calc_FP_Source_Terms"
             CALL Calc_FP_Source_Terms(    re, te, pe )
+
+!            PRINT*,"Before Create_FP_Source_Vector"
             CALL Create_FP_Source_Vector( re, te, pe,       &
                                           DELTAR_OVERTWO,   &
                                           SIN_VAL_B         )
@@ -284,9 +301,9 @@ COMPLEX(KIND = idp), DIMENSION(1:5)                             ::  Tmp_U_Value,
 
 
 
-INTEGER                                                         ::  tpd, td, pd, rd,    &
-                                                                    d, Here, ui
-
+INTEGER                                                         ::  tpd, td, pd, rd
+INTEGER                                                         ::  ui, d
+INTEGER                                                         ::  Here, There
 
 
                           !                                                 !
@@ -310,6 +327,8 @@ END DO
 
 
 
+
+
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
@@ -319,33 +338,71 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     Tmp_U_P_DRV_Value = 0.0_idp
 
     
-    DO ui = 1,5
+    DO ui = iU_CF,iU_LF
     DO d = 0,DEGREE
+
         Here = FP_FEM_Node_Map(re,d)
 
     
 
 
         TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
-                                + SUM( FP_Coeff_Vector( Here, :, ui )       &
+                                + SUM( FP_Coeff_Vector_A( Here, :, ui )     &
                                 * Ylm_Values( :, tpd, te, pe )       )      &
                                 * Lagrange_Poly_Table( d, rd, 0 )
 
 
         TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector( Here, :, ui )       &
+                                + SUM( FP_Coeff_Vector_A( Here, :, ui )     &
                                 * Ylm_Values( :, tpd, te, pe )       )      &
                                 * Lagrange_Poly_Table( d, rd, 1 )           &
                                 / DELTAR_OVERTWO
 
 
         TMP_U_T_DRV_Value(ui)   = TMP_U_T_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector( Here, :, ui )       &
+                                + SUM( FP_Coeff_Vector_A( Here, :, ui )     &
                                 * Ylm_dt_Values( :, tpd, te, pe)     )      &
                                 * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_U_P_DRV_Value(ui)   = TMP_U_P_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector( Here, :, ui )       &
+                                + SUM( FP_Coeff_Vector_A( Here, :, ui )     &
+                                * Ylm_dp_Values( :, tpd, te, pe)     )      &
+                                * Lagrange_Poly_Table( d, rd, 0)
+
+
+
+
+    END DO  ! d
+    END DO  ! ui
+
+
+    DO ui = iU_S1,iU_S3
+    DO d = 0,DEGREE
+        Here  = FP_Array_Map_TypeB(ui,iVB_S,re,d,1)
+        There = FP_Array_Map_TypeB(ui,iVB_S,re,d,LM_Length)
+
+
+
+        TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
+                                + SUM( FP_Coeff_Vector_B(Here:There,iVB_S)  &
+                                * Ylm_Values( :, tpd, te, pe )       )      &
+                                * Lagrange_Poly_Table( d, rd, 0 )
+
+
+        TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
+                                + SUM( FP_Coeff_Vector_B(Here:There,iVB_S)  &
+                                * Ylm_Values( :, tpd, te, pe )       )      &
+                                * Lagrange_Poly_Table( d, rd, 1 )           &
+                                / DELTAR_OVERTWO
+
+
+        TMP_U_T_DRV_Value(ui)   = TMP_U_T_DRV_Value(ui)                     &
+                                + SUM( FP_Coeff_Vector_B(Here:There,iVB_S)  &
+                                * Ylm_dt_Values( :, tpd, te, pe)     )      &
+                                * Lagrange_Poly_Table( d, rd, 0)
+
+        TMP_U_P_DRV_Value(ui)   = TMP_U_P_DRV_Value(ui)                     &
+                                + SUM( FP_Coeff_Vector_B(Here:There,iVB_S)  &
                                 * Ylm_dp_Values( :, tpd, te, pe)     )      &
                                 * Lagrange_Poly_Table( d, rd, 0)
 
@@ -365,6 +422,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     CUR_DRV_ALPHAPSI( tpd, rd, 1 ) = REAL(Tmp_U_R_DRV_Value(2), KIND = idp)
     CUR_DRV_ALPHAPSI( tpd, rd, 2 ) = REAL(Tmp_U_T_DRV_Value(2), KIND = idp)
     CUR_DRV_ALPHAPSI( tpd, rd, 3 ) = REAL(Tmp_U_P_DRV_Value(2), KIND = idp)
+
 
 
     CUR_VAL_BETA( tpd, rd, 1 )     = REAL(Tmp_U_Value(3), KIND = idp)
@@ -453,7 +511,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
 
-!    PRINT*,"Before  JCBN_kappa_Array"
+
     Kappa_Array = JCBN_kappa_FUNCTION_3D_ALL(  rd, tpd,                                        &
                                                NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINTS,          &
                                                CUR_R_LOCS(rd), R_SQUARE(rd), R_CUBED(rd),      &
@@ -517,7 +575,7 @@ COMPLEX(KIND = idp), DIMENSION(1:5)                                     ::  RHS_
 
 
 
-DO ui = 1,2
+DO ui = iU_CF,iU_LF
     IF ( CFA_EQ_Flags(ui) == 1 ) THEN
 
         
@@ -539,9 +597,10 @@ DO ui = 1,2
             
 
             Current_i_Location = FP_FEM_Node_Map(re,d)
-            FP_Source_Vector(Current_i_Location,lm_loc,ui)                &
-                = FP_Source_Vector(Current_i_Location,lm_loc,ui)          &
+            FP_Source_Vector_A(Current_i_Location,lm_loc,ui)                &
+                = FP_Source_Vector_A(Current_i_Location,lm_loc,ui)          &
                 + RHS_TMP(ui)
+
 
         END DO  ! d Loop
         END DO  ! lm_loc Loop
@@ -554,7 +613,7 @@ END DO
 
 
 
-DO ui = 3,5
+DO ui = iU_S1,iU_S3
     IF( CFA_EQ_Flags(ui) == 1 ) THEN
 
         DO d = 0,DEGREE
@@ -562,7 +621,6 @@ DO ui = 3,5
         
             RHS_TMP = 0.0_idp
             DO rd = 1,NUM_R_QUAD_POINTS
-
 
                 RHS_TMP(ui) =  RHS_TMP(ui)                                          &
                                 + SUM( Source_Terms( :, rd, ui )                    &
@@ -574,11 +632,12 @@ DO ui = 3,5
 
             END DO  ! rd Loop
 
-            Current_i_Location = FP_Beta_Array_Map(re,d,ui-2,lm_loc)
+            Current_i_Location = FP_Array_Map_TypeB(ui,iVB_S,re,d,lm_loc)
 
-            FP_Source_Vector_Beta(Current_i_Location)                &
-                = FP_Source_Vector_Beta(Current_i_Location)          &
+            FP_Source_Vector_B(Current_i_Location,iVB_S)                &
+                = FP_Source_Vector_B(Current_i_Location,iVB_S)          &
                 + RHS_TMP(ui)
+
 
         END DO  ! lm_loc Loop
         END DO  ! d Loop
@@ -599,88 +658,7 @@ END SUBROUTINE Create_FP_Source_Vector
 
 
 
-!+301+###########################################################################!
-!                                                                                !
-!           Calc_Source_Terms                                                       !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Calc_Source_Terms( Source_Terms,                                      &
-                              re, te, pe,                                        &
-                              td, pd, tpd, rd,                                   &
-                              PSI_POWER, ALPHAPSI_POWER,                         &
-                              BigK_Value, n_Array, Kappa_Array    )
 
-REAL(KIND = idp), INTENT(INOUT), DIMENSION( 1:NUM_TP_QUAD_POINTS,   &
-                                            1:NUM_R_QUAD_POINTS,    &
-                                            1:5                     )   ::  Source_Terms
-
-INTEGER, INTENT(IN)                                                     ::  re, te, pe
-INTEGER, INTENT(IN)                                                     ::  td, pd, tpd, rd
-
-REAL(KIND = idp), INTENT(IN), DIMENSION(1:11)                           ::  PSI_POWER
-REAL(KIND = idp), INTENT(IN), DIMENSION(1:4)                            ::  ALPHAPSI_POWER
-
-
-REAL(KIND = idp), INTENT(IN)                                            ::  BigK_VALUE
-REAL(KIND = idp), INTENT(IN), DIMENSION(1:3)                            ::  n_ARRAY
-REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  Kappa_Array
-
-REAL(KIND = idp)                                                        ::  Beta_Source_Prefix
-
-
-
-
-Source_Terms(tpd, rd, 1) = - TwoPi                                      &
-                            * GR_Source_Scalar                          &
-                            * Block_Source_E(rd, td, pd, re, te, pe)    &
-                            * PSI_POWER(5)                              &
-                         - PSI_POWER(7)                                 &
-                            / ( 16.0_idp * ALPHAPSI_POWER(2) )          &
-                            * BigK_Value
-     
-
-
-
-
-Source_Terms(tpd, rd, 2) = TwoPi                                                        &
-                            * ALPHAPSI_POWER(1)                                         &
-                            * PSI_POWER(4)                                              &
-                            * GR_Source_Scalar                                          &
-                                * ( Block_Source_E(rd, td, pd, re, te, pe)              &
-                                    + 2.0_idp                                           &
-                                        * Block_Source_S(rd, td, pd, re, te, pe)  )     &
-                         + 7.0_idp                                                      &
-                            * PSI_POWER(6)                                              &
-                            / ( 16.0_idp * ALPHAPSI_POWER(1) )                          &
-                            * BigK_Value
-
-
-
-
-
-Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
-
-Source_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 1)      &
-                         + Kappa_Array(1,1) * n_Array(1)                                        &
-                         + Kappa_Array(2,1) * n_Array(2)                                        &
-                         + Kappa_Array(3,1) * n_Array(3)
-
-
-Source_Terms(tpd, rd, 4) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 2)      &
-                         + Kappa_Array(1,2) * n_Array(1)                                        &
-                         + Kappa_Array(2,2) * n_Array(2)                                        &
-                         + Kappa_Array(3,2) * n_Array(3)
-
-
-Source_Terms(tpd, rd, 5) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 3)      &
-                         + Kappa_Array(1,3) * n_Array(1)                                        &
-                         + Kappa_Array(2,3) * n_Array(2)                                        &
-                         + Kappa_Array(3,3) * n_Array(3)
-
-
-
-
-END SUBROUTINE Calc_Source_Terms
 
 
 

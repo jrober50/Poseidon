@@ -207,7 +207,7 @@ ALLOCATE( RE_Table(1:9) )
 !#                                                          #!
 !############################################################!
 Units_Input         = "G"
-Solver_Type         = 3
+Solver_Type         = 2
 
 RE_Table            = (/ 5, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
@@ -632,6 +632,9 @@ END DO ! T_Index
 END DO ! M_Index
 
 
+
+
+CALL MPI_FINALIZE(ierr)
 
 CONTAINS
 

@@ -43,13 +43,15 @@ USE Poseidon_Parameters, &
                     L_LIMIT,                &
                     Verbose_Flag
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iVB_S                      
 
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS
 
 USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector,            &
-                    FP_Coeff_Vector_Beta,       &
+            ONLY :  FP_Coeff_Vector_A,      &
+                    FP_Coeff_Vector_B,      &
                     CFA_EQ_Flags
 
 
@@ -127,14 +129,10 @@ Node_Locs = Initialize_LGL_Quadrature_Locations(DEGREE)
 
 Num_Input_DOF = Input_RQ*Input_TQ*Input_PQ
 
-
-
 Mapped_R_Quad = Map_To_X_Space( Left_Limit, Right_Limit, Input_R_Quad )
 
-
-
-FP_Coeff_Vector = 0.0_idp
-FP_Coeff_Vector_Beta = 0.0_idp
+FP_Coeff_Vector_A = 0.0_idp
+FP_Coeff_Vector_B = 0.0_idp
 DO re = 1,Input_RE
     DO rqb = 0,Degree
         Lagrange_Poly_Value = Lagrange_Poly(Node_Locs(rqb), Input_RQ-1, Mapped_R_Quad)
@@ -156,20 +154,20 @@ DO re = 1,Input_RE
         END DO ! rq
 
         Here = (re-1)*Degree + rqb + 1
-        FP_Coeff_Vector(Here,1,1:3) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:3)
+        FP_Coeff_Vector_A(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
 
         Here = FP_Beta_Array_Map(re,rqb,1,0)
-        FP_Coeff_Vector_Beta(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
+        FP_Coeff_Vector_B(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
 
 !        Here = FP_Beta_Array_Map(re,rqb,2,0)
-!        FP_Coeff_Vector_Beta(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(4)
+!        FP_Coeff_Vector_B(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(4)
 !        Here = FP_Beta_Array_Map(re,rqb,3,0)
-!        FP_Coeff_Vector_Beta(Here) = 2.0_idp*Sqrt(pi)*Tmp_Value(5)
+!        FP_Coeff_Vector_B(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(5)
         
     END DO ! rqb
 END DO ! re
 
-FP_Coeff_Vector(:,:,4:5) = 0.0_idp
+
 
 END SUBROUTINE FP_Input_Guess
 

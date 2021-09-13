@@ -59,10 +59,10 @@ USE Variables_FP, &
                     Beta_Bandwidth,         &
                     Beta_MVL_Banded,        &
                     Beta_MVL_Diagonal,      &
-                    FP_Source_Vector,       &
-                    FP_Source_Vector_Beta,  &
-                    FP_Coeff_Vector,        &
-                    FP_Coeff_Vector_Beta,   &
+                    FP_Source_Vector_A,     &
+                    FP_Source_Vector_B,     &
+                    FP_Coeff_Vector_A,      &
+                    FP_Coeff_Vector_B,      &
                     FP_Update_Vector,       &
                     FP_Laplace_Vector,      &
                     FP_Laplace_Vector_Beta, &
@@ -121,11 +121,11 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 END IF
 
 
-ALLOCATE( FP_Source_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
-ALLOCATE( FP_Source_Vector_Beta(1:Beta_Prob_Dim) )
+ALLOCATE( FP_Source_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
+ALLOCATE( FP_Source_Vector_B(1:Beta_Prob_Dim,1) )
 
-ALLOCATE( FP_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)         )
-ALLOCATE( FP_Coeff_Vector_Beta(1:Beta_Prob_Dim) )
+ALLOCATE( FP_Coeff_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:5)         )
+ALLOCATE( FP_Coeff_Vector_B(1:Beta_Prob_Dim,1) )
 
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
 
@@ -182,10 +182,10 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     
 END IF
 
-DEALLOCATE( FP_Source_Vector )
-DEALLOCATE( FP_Source_Vector_Beta )
-DEALLOCATE( FP_Coeff_Vector )
-DEALLOCATE( FP_Coeff_Vector_Beta )
+DEALLOCATE( FP_Source_Vector_A )
+DEALLOCATE( FP_Source_Vector_B )
+DEALLOCATE( FP_Coeff_Vector_A )
+DEALLOCATE( FP_Coeff_Vector_B )
 DEALLOCATE( FP_Update_Vector )
 DEALLOCATE( FP_Laplace_Vector )
 DEALLOCATE( FP_Laplace_Vector_Beta )

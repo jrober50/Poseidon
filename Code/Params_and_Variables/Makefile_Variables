@@ -1,15 +1,19 @@
 VARIABLES = \
-  Parameters_Poseidon.f90  \
-  Variables_BC.f90         \
-  Variables_Derived.f90    \
-  Variables_Flags.f90      \
-  Variables_NR.f90         \
-  Variables_FP.f90         \
-  Variables_Functions.f90  \
-  Variables_IO.f90         \
-  Variables_Mesh.f90       \
-  Variables_Quadrature.f90 \
-  Variables_Tables.f90     \
-  Variables_Source.f90     \
-  Variables_Yahil.f90      \
+  Parameters_Poseidon.f90    \
+  Parameters_Variable_Indices.f90 \
+  Variables_BC.f90           \
+  Variables_Derived.f90      \
+  Variables_Flags.f90        \
+  Variables_NR.f90           \
+  Variables_FP.f90           \
+  Variables_Functions.f90    \
+  Variables_IO.f90           \
+  Variables_Mesh.f90         \
+  Variables_Quadrature.f90   \
+  Variables_Tables.f90       \
+  Variables_Source.f90       \
+  Variables_Yahil.f90        \
+  Variables_AMReX_Multifabs.F90 \
+  Variables_AMReX_Core.F90   \
+
 

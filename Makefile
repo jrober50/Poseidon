@@ -43,6 +43,10 @@ HDF5_MODE       =ON
 MPI_MODE        =ON
 #MPI_MODE       =OFF
 
+#AMREX_MODE      =ON
+AMREX_MODE      =OFF
+
+
 
 include ./Build/Makefile_Core
 

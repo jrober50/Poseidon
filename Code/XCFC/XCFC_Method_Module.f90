@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE XCFC_Main_Module                                                             !##!
+MODULE XCFC_Method_Module                                                           !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -30,10 +30,12 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
+USE Variables_Derived, &
+            ONLY :  Num_R_Nodes,                &
+                    LM_Length
 
 USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector,            &
-                    FP_Coeff_Vector_Orig,       &
+            ONLY :  FP_Coeff_Vector_A,           &
                     CFA_EQ_Flags
 
 USE Variables_IO, &
@@ -46,22 +48,17 @@ USE IO_Print_Results, &
 USE Poseidon_IO_Module, &
             ONLY :  Output_Final_Results
 
-USE XCFC_X_Module ,  &
-            ONLY :  XCFC_X_Solve
+USE XCFC_Solvers_Main_Module ,  &
+            ONLY :  XCFC_X_Solve,               &
+                    XCFC_ConFactor_Solve,       &
+                    XCFC_Lapse_Solve,           &
+                    XCFC_Shift_Solve
 
-USE XCFC_ConFactor_Module, &
-            ONLY :  XCFC_ConFactor_Solve
-
-USE XCFC_Lapse_Module, &
-            ONLY :  XCFC_Lapse_Solve
-
-USE XCFC_Shift_Module, &
-            ONLY :  XCFC_Shift_Solve
-
-USE XCFC_Source_Vector_Module, &
+USE XCFC_Source_Variables_Module, &
             ONLY :  Allocate_XCFC_Source_Variables, &
                     Deallocate_XCFC_Source_Variables
 
+USE MPI
 
 IMPLICIT NONE
 
@@ -78,12 +75,11 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE XCFC_Method()
 
-INTEGER :: i, ConFact_Loop_Number
-LOGICAL                                                 :: PR = .FALSE.
+INTEGER                     :: ierr
+LOGICAL                     :: PR = .FALSE.
 
 
 
-ConFact_Loop_Number = 1
 
 CALL Allocate_XCFC_Source_Variables()
 
@@ -92,42 +88,45 @@ IF ( Verbose_Flag ) THEN
     PRINT*,"Begining XCFC Fixed Point Iterative Solve."
 END IF
 
-IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
-    PR = .TRUE.
-    WRITE(*,'(A)')"Initial Guess Values"
-    CALL Print_Results()
-    PRINT*," "
-END IF
 
-! Save Origional FP_Coeff_Vector
-FP_Coeff_Vector_Orig = FP_Coeff_Vector
+
+CALL Output_Initial_Guess(PR)
+
+
 
 
 ! Solve for X
 CALL XCFC_X_Solve()
 
+PRINT*,"STOPing in XCFC_Method"
+CALL MPI_Finalize(ierr)
+STOP
 
 
-! Solve for Conformal Factor
-DO i = 1,ConFact_Loop_Number
-    FP_Coeff_Vector_Orig( :, :, 1 ) = FP_Coeff_Vector( :, :, 1 )
-    IF ( CFA_Eq_Flags(1) == 1 ) THEN
-        CALL XCFC_ConFactor_Solve()
-    END IF
-END DO
 
-! Define S*Block_Source_Si(rd, td, pd, re, te, pe, ui)
+
+IF ( CFA_Eq_Flags(1) == 1 ) THEN
+    CALL XCFC_ConFactor_Solve()
+END IF
+
+
+
 
 ! Solve for Lapse Function
 IF ( CFA_Eq_Flags(2) == 1 ) THEN
     CALL XCFC_Lapse_Solve()
 END IF
 
-! Solve for Shift Vector
 
+
+! Solve for Shift Vector
 IF ( ANY(CFA_Eq_Flags(3:5) == 1) ) THEN
     CALL XCFC_Shift_Solve()
 END IF
+
+
+
+
 
 CALL Deallocate_XCFC_Source_Variables()
 
@@ -148,7 +147,50 @@ END SUBROUTINE XCFC_Method
 
 
 
+!+101+##########################################################################!
+!                                                                               !
+!                       XCFC_Method                                             !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE XCFC_Method_New()
 
+INTEGER                         :: ierr
+LOGICAL                         :: PR = .FALSE.
+
+
+
+
+CALL Allocate_XCFC_Source_Variables()
+
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"Begining XCFC Fixed Point Iterative Solve."
+END IF
+
+
+CALL Output_Initial_Guess(PR)
+
+
+CALL XCFC_X_Solve()
+
+PRINT*,"STOPing in XCFC_Method"
+CALL MPI_Finalize(ierr)
+STOP
+
+
+CALL XCFC_ConFactor_Solve()
+
+CALL XCFC_Lapse_Solve()
+
+CALL XCFC_Shift_Solve()
+
+
+CALL Deallocate_XCFC_Source_Variables()
+
+
+CALL Output_Final_Results()
+
+END SUBROUTINE XCFC_Method_New
 
 
 
@@ -165,12 +207,10 @@ END SUBROUTINE XCFC_Method
 !###############################################################################!
 SUBROUTINE XCFC_Method_Part1()
 
-INTEGER :: i, ConFact_Loop_Number
-LOGICAL                                                 :: PR = .FALSE.
+LOGICAL                             :: PR = .FALSE.
 
 
 
-ConFact_Loop_Number = 1
 
 CALL Allocate_XCFC_Source_Variables()
 
@@ -179,17 +219,8 @@ IF ( Verbose_Flag ) THEN
     PRINT*,"Begining XCFC Metric Solve (Part 1 of 2)."
 END IF
 
-IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
-    PR = .TRUE.
-    WRITE(*,'(A)')"Initial Guess Values"
-    CALL Print_Results()
-    PRINT*," "
-END IF
 
-
-! Save Origional FP_Coeff_Vector
-FP_Coeff_Vector_Orig = FP_Coeff_Vector
-
+CALL Output_Initial_Guess(PR)
 
 
 ! Solve for X
@@ -198,12 +229,9 @@ CALL XCFC_X_Solve()
 
 
 ! Solve for Conformal Factor
-DO i = 1,ConFact_Loop_Number
-    FP_Coeff_Vector_Orig( :, :, 1 ) = FP_Coeff_Vector( :, :, 1 )
-    IF ( CFA_Eq_Flags(1) == 1 ) THEN
-        CALL XCFC_ConFactor_Solve()
-    END IF
-END DO
+IF ( CFA_Eq_Flags(1) == 1 ) THEN
+    CALL XCFC_ConFactor_Solve()
+END IF
 
 
 
@@ -269,9 +297,27 @@ END SUBROUTINE XCFC_Method_Part2
 
 
 
+!+301+##########################################################################!
+!                                                                               !
+!         Output_Initial_Guess                                                  !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Output_Initial_Guess( PR )
+
+LOGICAL, INTENT(INOUT)             :: PR
+
+
+IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
+    PR = .TRUE.
+    WRITE(*,'(A)')"Initial Guess Values"
+    CALL Print_Results()
+    PRINT*," "
+END IF
+
+END SUBROUTINE OUTPUT_Initial_Guess
 
 
 
 
 
-END MODULE XCFC_Main_Module
+END MODULE XCFC_Method_Module

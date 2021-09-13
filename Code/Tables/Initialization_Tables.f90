@@ -35,6 +35,9 @@ USE Poseidon_Parameters, &
                     L_Limit,                &
                     Verbose_Flag
 
+USE Variables_AMReX_Core, &
+            ONLY :  AMReX_Mode
+
 USE Variables_MPI, &
             ONLY :  Num_Block_Theta_Rows,   &
                     Num_T_Elems_Per_Block,  &
@@ -108,8 +111,10 @@ END IF
 
 CALL Allocate_Tables()
 
-CALL Initialize_Ylm_Tables()
-CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
+IF ( .NOT. AMReX_Mode ) THEN
+    CALL Initialize_Ylm_Tables()
+    CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
+END IF
 
 END SUBROUTINE Initialize_Tables
 
@@ -163,7 +168,7 @@ ALLOCATE( Ylm_Table(-L_LIMIT:L_LIMIT, -1:L_LIMIT,                           &
 Block_T_Begin = MOD(myID_Shell,NUM_BLOCK_THETA_ROWS)*NUM_T_ELEMS_PER_BLOCK
 Block_P_Begin = (myID_Shell/NUM_BLOCK_THETA_ROWS)*NUM_P_ELEMS_PER_BLOCK
 
-
+!PRINT*,myID_Shell,Block_T_Begin,Block_P_Begin
 !PRINT*,"ylm T/P_Begin",Block_T_Begin, Block_P_Begin
 
 M_POWER_TABLE(0) = 1.0_idp
@@ -204,7 +209,6 @@ END DO ! l Loop
 
 
 Ylm_Table = 0.0_idp
-
 DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
 
      !                                                          !

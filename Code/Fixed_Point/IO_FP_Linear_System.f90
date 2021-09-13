@@ -64,15 +64,6 @@ USE Variables_Derived, &
                     Var_Dim,                    &
                     Beta_Prob_Dim
 
-USE Variables_Tables, &
-            ONLY :  LPT_LPT,                    &
-                    Ylm_Values,             &
-                    Ylm_dt_Values,          &
-                    Ylm_dp_Values,          &
-                    Ylm_CC_Values,          &
-                    Ylm_CC_dt_Values,       &
-                    Ylm_CC_dp_Values
-
 USE Variables_IO, &
             ONLY :  File_Suffix
 

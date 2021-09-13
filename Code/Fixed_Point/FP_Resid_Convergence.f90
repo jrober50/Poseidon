@@ -35,6 +35,15 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,                        &
+                    iU_LF,                        &
+                    iU_S1,                        &
+                    iU_S2,                        &
+                    iU_S3,                        &
+                    iVB_S
+
+
 USE Units_Module, &
             ONLY :  C_Square,                   &
                     Centimeter,                 &
@@ -80,8 +89,10 @@ USE Variables_MPI, &
 USE Variables_FP,  &
             ONLY :  Matrix_Format,              &
                     Linear_Solver,              &
-                    FP_Source_Vector,           &
-                    FP_Coeff_Vector,            &
+                    FP_Source_Vector_A,         &
+                    FP_Source_Vector_B,         &
+                    FP_Coeff_Vector_A,          &
+                    FP_Coeff_Vector_B,          &
                     FP_Update_Vector,           &
                     FP_Laplace_Vector,          &
                     FP_Residual_Vector,         &
@@ -95,8 +106,6 @@ USE Variables_FP,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
-                    FP_Source_Vector_Beta,      &
-                    FP_Coeff_Vector_Beta,       &
                     Beta_MVL_Banded,            &
                     Beta_Diagonals,             &
                     CFA_EQ_Flags,               &
@@ -132,7 +141,7 @@ USE FP_Functions_BC,  &
                     Neumann_BC,                     &
                     Neumann_BC_CCS
 
-USE FP_Beta_Banded, &
+USE FP_Factorize_Beta_Banded, &
             ONLY :  Jacobi_PC_MVL_Banded_Vector
 
 USE IO_FP_Linear_System, &
@@ -268,12 +277,12 @@ IF ( Matrix_Format == 'Full' ) THEN
                     map_loc = CFA_MAT_Map(CFA_EQ_Map(ui))
 
                     WORK_MAT = Laplace_Matrix_Full(:,:,l)
-                    WORK_VEC = FP_Source_Vector(:,lm_loc,ui)
+                    WORK_VEC = FP_Source_Vector_A(:,lm_loc,ui)
         
                     CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
 
                     FP_Laplace_Vector(:,lm_loc,ui) = MVMULT_FULL( WORK_MAT,                             &
-                                                            FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)),   &
+                                                            FP_Coeff_Vector_A(:,lm_loc,CFA_EQ_Map(ui)),   &
                                                             NUM_R_NODES, NUM_R_NODES                    )
 
 
@@ -316,7 +325,7 @@ IF ( Matrix_Format == 'Full' ) THEN
         ALLOCATE( WORK_MAT(1:Beta_Prob_Dim,1:Beta_Prob_Dim) )
 
         WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
-        WORK_VEC(:) = FP_Source_Vector_Beta(:)
+        WORK_VEC(:) = FP_Source_Vector_B(:,iVB_S)
 
         CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
@@ -324,50 +333,17 @@ IF ( Matrix_Format == 'Full' ) THEN
         CALL Jacobi_Conditioning_Beta(Work_mat,work_Vec,Beta_Prob_Dim,Beta_Prob_Dim)
 
 
-!        PRINT*,"FP_Coeff_Vector_Beta, Full"
-!        PRINT*,FP_Coeff_Vector_Beta
-!
-!        PRINT*,"Laplace Full"
-!        DO ui = 1,3
-!        DO re = 1,Num_R_Elements-1
-!        DO d = 0,Degree
-!        DO l = 1,LM_Length
-!        DO uj = 1,3
-!        DO rep = 1,Num_R_Elements-1
-!        DO dp = 0,Degree
-!        DO lp = 1,LM_Length
-!
-!            i = FP_Beta_Array_Map(re,d,ui,l)
-!            j = FP_Beta_Array_Map(rep,dp,uj,lp)
-!
-!            PRINT*,i,j,Work_Mat(i,j)
-!        END DO
-!        END DO
-!        END DO
-!        END DO
-!        END DO
-!        END DO
-!        END DO
-!        END DO
-
-
-
-        CALL ZGEMV('N',                     &
-                    Beta_Prob_Dim,          &
-                    Beta_Prob_Dim,          &
-                    1.0_idp,                &
-                    Work_Mat,    &
-                    Beta_Prob_Dim,          &
-                    FP_Coeff_Vector_Beta,   &
-                    1,                      &
-                    0.0_idp,                &
-                    FP_Laplace_Vector_Beta,                 &
+        CALL ZGEMV('N',                         &
+                    Beta_Prob_Dim,              &
+                    Beta_Prob_Dim,              &
+                    1.0_idp,                    &
+                    Work_Mat,                   &
+                    Beta_Prob_Dim,              &
+                    FP_Coeff_Vector_B(:,iVB_S), &
+                    1,                          &
+                    0.0_idp,                    &
+                    FP_Laplace_Vector_Beta,     &
                     1                       )
-
-
-!        FP_Laplace_Vector_Beta = MVMULT_FULL( WORK_MAT,                 &
-!                                                FP_Coeff_Vector_Beta(:),        &
-!                                                Beta_Prob_Dim, Beta_Prob_Dim    )
 
 
         FP_Residual_Vector_Beta = (FP_Laplace_Vector_Beta - Work_Vec)
@@ -414,15 +390,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                     lm_loc = FP_LM_Map(l,m)
 
 
-!                PRINT*,"#######",ui
-!                PRINT*,Laplace_Factored_VAL(:,l,ui)
-!                PRINT*,"-------"
-!                PRINT*,Laplace_Factored_COL(:,l)
-!                PRINT*,"======="
-!                PRINT*,Laplace_Factored_ROW(:,l)
-!                PRINT*,"~~~~~~~"
-!                PRINT*,FP_Coeff_Vector(:,l,CFA_EQ_Map(ui))
-                    WORK_VEC = -FP_Source_Vector(:,lm_loc,ui)
+                    WORK_VEC = -FP_Source_Vector_A(:,lm_loc,ui)
 
                     CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                             Factored_NNZ,               &
@@ -441,7 +409,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                                                     Laplace_Factored_VAL(:,l,ui),           &
                                                     Laplace_Factored_COL(:,l),              &
                                                     Laplace_Factored_ROW(:,l),              &
-                                                    FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)),    &
+                                                    FP_Coeff_Vector_A(:,lm_loc,CFA_EQ_Map(ui)),    &
                                                     FP_Laplace_Vector(:,lm_loc,ui) )
 
 
@@ -480,59 +448,26 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
 
     DEALLOCATE(Work_Vec)
     ALLOCATE( Work_Vec(1:Beta_Prob_Dim ) )
-    Work_Vec = FP_Source_Vector_Beta
+    Work_Vec = FP_Source_Vector_B(:,iVB_S)
 
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
 
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
-
-!    PRINT*,"FP_Coeff_Vector_Beta, Sparse"
-!    PRINT*,FP_Coeff_Vector_Beta
-
-
-
-!    PRINT*,"Work_Mat"
-!    DO ui = 1,3
-!    DO re = 1,Num_R_Elements-1
-!    DO d = 0,Degree
-!    DO l = 1,LM_Length
-!
-!    DO uj = 1,3
-!    DO rep = 1,Num_R_Elements-1
-!    DO dp = 0,Degree
-!    DO lp = 1,LM_Length
-!
-!        i = FP_Beta_Array_Map(re,d,ui,l)
-!        j = FP_Beta_Array_Map(rep,dp,uj,lp)
-!
-!        PRINT*,i,j,Beta_MVL_Banded(Beta_Bandwidth+i-j,j)
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-!
-!    END DO
-!    END DO
-!    END DO
-!    END DO
-
-
-
     ! Shift Residual
-    CALL ZGBMV('N',                     &
-                Beta_Prob_Dim,          &
-                Beta_Prob_Dim,          &
-                Beta_Diagonals,         &
-                2*Beta_Diagonals,       &
-                1.0_idp,                &
-                Beta_MVL_Banded,        &
-                3*Beta_Diagonals+1,     &
-                FP_Coeff_Vector_Beta,   &
-                1,                      &
-                0.0_idp,                &
-                FP_Laplace_Vector_Beta, &
-                1                       )
+    CALL ZGBMV('N',                         &
+                Beta_Prob_Dim,              &
+                Beta_Prob_Dim,              &
+                Beta_Diagonals,             &
+                2*Beta_Diagonals,           &
+                1.0_idp,                    &
+                Beta_MVL_Banded,            &
+                3*Beta_Diagonals+1,         &
+                FP_Coeff_Vector_B(:,iVB_S), &
+                1,                          &
+                0.0_idp,                    &
+                FP_Laplace_Vector_Beta,     &
+                1                           )
 
 
    

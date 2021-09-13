@@ -488,8 +488,8 @@ END DO
 DO rd = 1,Num_R_Quad_Points
 DO tpd = 1,Num_TP_Quad_Points
 
-    Ahat_Array(tpd, rd, 2, 1) =  CUR_DRV_X( tpd, rd, 2, 1 )                                     &
-                                +  CUR_DRV_X( tpd, rd, 1, 2 )/R_SQUARE(rd)
+    Ahat_Array(tpd, rd, 2, 1) =  CUR_DRV_X( tpd, rd, 1, 2 )                                     &
+                                +  CUR_DRV_X( tpd, rd, 2, 1 )/R_SQUARE(rd)
 
 END DO
 END DO
@@ -498,8 +498,8 @@ END DO
 DO rd = 1,Num_R_Quad_Points
 DO tpd = 1,Num_TP_Quad_Points
 
-    Ahat_Array(tpd, rd, 3, 1) =  CUR_DRV_X( tpd, rd, 3, 1 )                                     &
-                                +  CUR_DRV_X( tpd, rd, 1, 3 )/RSIN_SQUARE(tpd,rd)
+    Ahat_Array(tpd, rd, 3, 1) =  CUR_DRV_X( tpd, rd, 1, 3 )                                     &
+                                +  CUR_DRV_X( tpd, rd, 3, 1 )/RSIN_SQUARE(tpd,rd)
 END DO
 END DO
 
@@ -521,8 +521,8 @@ END DO
 
 DO rd = 1,Num_R_Quad_Points
 DO tpd = 1,Num_TP_Quad_Points
-    Ahat_Array(tpd, rd, 3, 2) = CUR_DRV_X( tpd, rd, 3, 2 )/R_SQUARE(rd)                             &
-                                + CUR_DRV_X( tpd, rd, 2, 3 )/RSIN_SQUARE(tpd,rd)
+    Ahat_Array(tpd, rd, 3, 2) = CUR_DRV_X( tpd, rd, 2, 3 )/R_SQUARE(rd)                             &
+                                + CUR_DRV_X( tpd, rd, 3, 2 )/RSIN_SQUARE(tpd,rd)
 END DO
 END DO
 

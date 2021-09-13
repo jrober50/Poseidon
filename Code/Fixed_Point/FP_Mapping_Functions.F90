@@ -46,7 +46,7 @@ CONTAINS
 
 !+201+###########################################################################!
 !                                                                                !
-!                  FP_Beta_Array_Map                                                  !
+!                  FP_Array_Map                                                  !
 !                                                                                !
 !################################################################################!
 PURE FUNCTION FP_Array_Map(re,d,ui,lm_loc, m_opt)
@@ -80,7 +80,7 @@ END FUNCTION FP_Array_Map
 
 !+201+###########################################################################!
 !                                                                                !
-!                  FP_Beta_Array_Map                                                  !
+!                  FP_Beta_Array_Map                                             !
 !                                                                                !
 !################################################################################!
 PURE FUNCTION FP_Beta_Array_Map(re,d,ui,lm_loc, m_opt)
@@ -110,6 +110,98 @@ END IF
 
 
 END FUNCTION FP_Beta_Array_Map
+
+
+
+!+201+###########################################################################!
+!                                                                                !
+!                  FP_Beta_Array_Map                                                  !
+!                                                                                !
+!################################################################################!
+PURE FUNCTION FP_X_Array_Map(re,d,ui,lm_loc, m_opt)
+
+INTEGER                                     ::  FP_X_Array_Map
+
+INTEGER, INTENT(IN)                         ::  re
+INTEGER, INTENT(IN)                         ::  d
+INTEGER, INTENT(IN)                         ::  ui
+INTEGER, INTENT(IN)                         ::  lm_loc
+INTEGER, INTENT(IN), OPTIONAL               ::  m_opt
+
+
+IF ( PRESENT(m_opt) ) THEN
+
+    FP_X_Array_Map = (re*Degree + d) * 3 * LM_Length   &
+                      + (ui - 6) * LM_Length              &
+                      + lm_loc*(lm_loc+1) + m_opt + 1
+
+
+ELSE
+    FP_X_Array_Map = (re*Degree + d) * 3 * LM_Length   &
+                      + (ui - 6) * LM_Length              &
+                      + lm_loc
+
+END IF
+
+
+END FUNCTION FP_X_Array_Map
+
+
+
+
+
+
+
+!+201+###########################################################################!
+!                                                                                !
+!                  FP_Beta_Array_Map                                                  !
+!                                                                                !
+!################################################################################!
+FUNCTION FP_Array_Map_TypeB(ui,iVB,re,d,lm_loc, m_opt)
+
+INTEGER                                     ::  FP_Array_Map_TypeB
+
+INTEGER, INTENT(IN)                         ::  ui
+INTEGER, INTENT(IN)                         ::  iVB
+INTEGER, INTENT(IN)                         ::  re
+INTEGER, INTENT(IN)                         ::  d
+INTEGER, INTENT(IN)                         ::  lm_loc
+INTEGER, INTENT(IN), OPTIONAL               ::  m_opt
+
+INTEGER                                     ::  Offset
+
+Offset = 3*iVB
+
+
+IF ( PRESENT(m_opt) ) THEN
+
+    FP_Array_Map_TypeB = (re*Degree + d) * 3 * LM_Length   &
+                       + (ui - Offset) * LM_Length         &
+                       + lm_loc*(lm_loc+1) + m_opt + 1
+
+
+ELSE
+
+    FP_Array_Map_TypeB = (re*Degree + d) * 3 * LM_Length   &
+                       + (ui - Offset) * LM_Length         &
+                       + lm_loc
+
+
+END IF
+
+
+END FUNCTION FP_Array_Map_TypeB
+
+
+
+
+
+
+
+
+
+
+
 
 
 

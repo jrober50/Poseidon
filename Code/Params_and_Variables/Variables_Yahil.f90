@@ -36,7 +36,7 @@ REAL(KIND=idp), PUBLIC, ALLOCATABLE, DIMENSION(:)       :: SELFSIM_R_VALS
 REAL(KIND=idp), PUBLIC, ALLOCATABLE, DIMENSION(:)       :: SELFSIM_POT_VALS
 REAL(KIND=idp), PUBLIC, ALLOCATABLE, DIMENSION(:)       :: SELFSIM_SHIFT_VALS
 
-INTEGER, PUBLIC                                         :: SELFSIM_V_SWITCH = 1
+INTEGER, PUBLIC                                         :: SELFSIM_V_SWITCH = 0
 
 LOGICAL, PUBLIC                                         ::  SelfSim_Allocated = .FALSE.
 

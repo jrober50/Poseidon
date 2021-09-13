@@ -20,12 +20,15 @@ USE Poseidon_Kinds_Module, &
 
 IMPLICIT NONE
 
-!COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Coeff_Vector
-!COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)        ::  FP_Update_Vector
 
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Source_Vector
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Coeff_Vector
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Source_Vector_A
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Source_Vector_B
+
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Coeff_Vector_A
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Coeff_Vector_B
+
+
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Coeff_Vector_Orig
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
@@ -33,13 +36,9 @@ COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector
 
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  Laplace_Matrix_Full ! Should these be reals?
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  Laplace_Matrix_Beta
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Source_Vector_Beta
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Coeff_Vector_Beta
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_Beta
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_Beta
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Source_Vector_X
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Coeff_Vector_X
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_X
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_X
 

@@ -37,6 +37,15 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
+
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,                        &
+                    iU_LF,                        &
+                    iU_S1,                        &
+                    iU_S2,                        &
+                    iU_S3,                        &
+                    iVB_S
+
 USE Units_Module, &
             ONLY :  C_Square,                   &
                     Centimeter,                 &
@@ -79,8 +88,10 @@ USE Variables_MPI, &
 USE Variables_FP,  &
             ONLY :  Matrix_Format,              &
                     Linear_Solver,              &
-                    FP_Source_Vector,           &
-                    FP_Coeff_Vector,            &
+                    FP_Source_Vector_A,         &
+                    FP_Source_Vector_B,         &
+                    FP_Coeff_Vector_A,          &
+                    FP_Coeff_Vector_B,          &
                     FP_Update_Vector,           &
                     FP_Laplace_Vector,          &
                     FP_Residual_Vector,         &
@@ -94,10 +105,6 @@ USE Variables_FP,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
-                    FP_Source_Vector_Beta,      &
-                    FP_Source_Vector_X,         &
-                    FP_Coeff_Vector_Beta,       &
-                    FP_Coeff_Vector_X,          &
                     CFA_EQ_Flags,               &
                     CFA_Eq_Map,                 &
                     CFA_Var_Map,                &
@@ -155,9 +162,10 @@ USE FP_Functions_Mapping, &
             ONLY :  FP_LM_Map,                      &
                     FP_FEM_Node_Map,                &
                     FP_Beta_Array_Map,              &
+                    FP_Array_Map_TypeB,             &
                     FP_Array_Map
 
-USE FP_Beta_Banded, &
+USE FP_Factorize_Beta_Banded, &
             ONLY :  Factorize_Beta_Banded,          &
                     Jacobi_PC_MVL_Banded_Vector
 
@@ -192,10 +200,7 @@ COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES)                               ::  
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                            ::  WORK_MAT
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                              ::  WORK_ELEM_VAL
 
-INTEGER                                                                     ::  NNZ
 INTEGER                                                                     ::  l, m, lm_loc, ui
-INTEGER                                                                     ::  Guess_Flag
-INTEGER                                                                     ::  Mat_Loc
 REAL(idp)                                                                   ::  omega
 
 
@@ -249,7 +254,7 @@ IF (LINEAR_SOLVER =='Full') THEN
 
             lm_loc   = FP_LM_Map(l,m)
             WORK_MAT = Laplace_Matrix_Full(:,:,l)
-            WORK_VEC = FP_Source_Vector(:,lm_loc,ui)
+            WORK_VEC = FP_Source_Vector_A(:,lm_loc,ui)
 
 
             CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
@@ -267,14 +272,8 @@ IF (LINEAR_SOLVER =='Full') THEN
             END IF
 
         
-
-!            Here  = FP_Array_Map(0,0,ui,l,m)
-!            There = FP_Array_Map(0,0,ui+1,0,0)
-!            FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
-!            FP_Coeff_Vector(Here:There)  = Work_Vec(:)
-
-            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
-            FP_Coeff_Vector(:,lm_loc,ui) = WORK_VEC(:)
+            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,CFA_EQ_Map(ui))
+            FP_Coeff_Vector_A(:,lm_loc,ui) = WORK_VEC(:)
 
 
 
@@ -285,107 +284,12 @@ IF (LINEAR_SOLVER =='Full') THEN
     END DO ! ui Loop
 
 
-ELSE IF (LINEAR_SOLVER == 'CCS') THEN
-            !#######################################################################!
-            !                                                                       !
-            !           CCS Preconditioned Conjugate Gradient Matrix Solver         !
-            !                                                                       !
-            !#######################################################################!
-    NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-    ALLOCATE(WORK_ELEM_VAL(0:NNZ-1))
-
-    PRINT*,"In CCS Solver"
-    DO ui = 1,NUM_CFA_EQs
-    DO l = 0,L_LIMIT
-    DO m = -l,l
-
-
-        Mat_Loc = CFA_MAT_Map(ui)
-        WORK_ELEM_VAL(:) = Laplace_Matrix_VAL(:,l,Mat_Loc)
-        WORK_VEC(:) = FP_Source_Vector(:,m,l)
-
-
-
-        CALL DIRICHLET_BC_CCS(  NUM_R_NODES,                &
-                                Laplace_NNZ,                &
-                                l,                          &
-                                m,                          &
-                                WORK_ELEM_VAL,              &
-                                Laplace_Matrix_COL(:,l),    &
-                                Laplace_Matrix_ROW(:,l),    &
-                                WORK_VEC                    )
-
-
-
-        CALL NEUMANN_BC_CCS(    NUM_R_NODES,                &
-                                Laplace_NNZ,                &
-                                l,                          &
-                                m,                          &
-                                WORK_ELEM_VAL,              &
-                                Laplace_Matrix_COL(:,l),    &
-                                Laplace_Matrix_ROW(:,l),    &
-                                WORK_VEC                    )
-
-
-
-
-        GUESS_FLAG = 0  !!! 0 Means no guess, 1 means guess
-
-
-        IF ( 1 == 1) THEN
-
-            WORK_VECB = WORK_VEC
-
-            CALL PRECOND_CONJ_GRAD_CCS(NUM_R_NODES,                 &
-                                        Laplace_NNZ,                &
-                                        WORK_ELEM_VAL,              &
-                                        Laplace_Matrix_COL(:,l),    &
-                                        Laplace_Matrix_ROW(:,l),    &
-                                        WORK_VECB,                  &
-                                        GUESS_FLAG,                 &
-                                        WORK_VECB,                  &
-                                        0                           )
-
-
-            GUESS_FLAG = 1
-
-        END IF
-
-
-
-
-        CALL PRECOND_CONJ_GRAD_CCS( NUM_R_NODES,                &
-                                    Laplace_NNZ,                &
-                                    WORK_ELEM_VAL,              &
-                                    Laplace_Matrix_COL(:,l),     &
-                                    Laplace_Matrix_ROW(:,l),     &
-                                    WORK_VECB,                  &
-                                    GUESS_FLAG,                 &
-                                    WORK_VECB,                  &
-                                    0                           )
-
-        lm_loc = FP_LM_Map(l,m)
-        FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)
-
-!        Here  = FP_Array_Map(0,0,ui,l,m)
-!        There = FP_Array_Map(0,0,ui+1,0,0)
-!        FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
-!        FP_Coeff_Vector(Here:There)  = Work_Vec(:)
-
-    END DO ! m
-    END DO ! l
-    END DO ! ui
-
-
 ELSE IF (LINEAR_SOLVER == "CHOL") THEN
             !#######################################################################!
             !                                                                       !
             !               Cholesky Factorization Matrix Solver                !
             !                                                                       !
             !#######################################################################!
-
-!    PRINT*,"Midway"
-!    PRINT*,FP_Coeff_Vector(:,:,1:2)
 
 
     ALLOCATE(WORK_ELEM_VAL(0:Factored_NNZ-1))
@@ -397,7 +301,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
             lm_loc = FP_LM_Map(l,m)
-            WORK_VEC = -FP_Source_Vector(:,lm_loc,ui)
+            WORK_VEC = -FP_Source_Vector_A(:,lm_loc,ui)
             WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_MAP(ui))
 
     
@@ -424,10 +328,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                     Laplace_Factored_ROW(:,l),  &
                                     WORK_VEC                    )
 
-!            PRINT*,"Work_Vec C"
-!            PRINT*,Work_Vec
-!
-!                PRINT*,"Before Forward Sub",ui
+
             CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
                                             Factored_NNZ,                   &
                                             WORK_ELEM_VAL,                  &
@@ -435,11 +336,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                             Laplace_Factored_ROW(:,l),      &
                                             WORK_VEC                        )
 
-!            PRINT*,"Work_Vec D"
-!            PRINT*,Work_Vec
 
-
-!                PRINT*,"Before Backward Sub",ui
             CALL CCS_Back_Substitution(     NUM_R_NODES,                    &
                                             Factored_NNZ,                   &
                                             WORK_ELEM_VAL,                  &
@@ -447,18 +344,10 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
                                             Laplace_Factored_ROW(:,l),      &
                                             WORK_VEC                        )
 
-!            PRINT*,"Work_Vec E"
-!            PRINT*,Work_Vec
 
 
-!            Here  = FP_Array_Map(0,0,ui,l,m)
-!            There = FP_Array_Map(0,0,ui+1,0,0)
-!            FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
-!            FP_Coeff_Vector(Here:There)  = Work_Vec(:)
-
-
-            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector(:,lm_loc,ui)
-            FP_Coeff_Vector( :,lm_loc,ui) = WORK_VEC(:)
+            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,ui)
+            FP_Coeff_Vector_A( :,lm_loc,ui) = WORK_VEC(:)
 
 
 
@@ -467,16 +356,6 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     END IF
     END DO  ! ui Loop
 
-!    PRINT*,"Coefficient Vector"
-!    DO lm_loc = 1,LM_LENGTH
-!        PRINT*,"Lm_loc = ",lm_loc
-!        PRINT*,FP_Coeff_Vector(:,lm_loc,1)
-!    END DO
-
-
-
-!    PRINT*,"After"
-!    PRINT*,FP_Coeff_Vector(:,:,1:2)
 
 END IF
 
@@ -536,7 +415,7 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                ::  WORK_MAT
 
 
 INTEGER                                                         ::  ui, re, d, l
-INTEGER                                                         ::  Here, There
+INTEGER                                                         ::  Here, There, Thither
 
 REAL(idp), DIMENSION(1:4)                                       ::  timer
 
@@ -560,7 +439,7 @@ IF (LINEAR_SOLVER =='Full') THEN
     ALLOCATE( WORK_MAT( 1:Beta_Prob_Dim, 1:Beta_Prob_Dim ) )
 
     WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
-    WORK_VEC(:)   = FP_Source_Vector_Beta(:)
+    WORK_VEC(:)   = FP_Source_Vector_B(:,iVB_S)
 
     
 
@@ -578,30 +457,24 @@ IF (LINEAR_SOLVER =='Full') THEN
         print*,"ZGESV has failed with INFO = ",INFO
     END IF
 
-    FP_Coeff_Vector_Beta(:) = WORK_VEC(:)
-
-
-!    Here  = FP_Array_Map(0,0,3,0)
-!    There = Prob_Dim
-!    FP_Update_Vector(Here:There) = Work_Vec(:) - FP_Coeff_Vector(Here:There)
-!    FP_Coeff_Vector(Here:There)  = Work_Vec(:)
-
-
+    
     DO ui = 1,3
     DO re = 0,Num_R_Elements-1
     DO d = 0,Degree
     DO l = 1,LM_Length
 
-                    Here  = FP_Beta_Array_Map(re,d,ui,l)
-                    There = FP_FEM_Node_Map(re,d)
+        Here    = FP_Beta_Array_Map(re,d,ui,l)
+        There   = FP_FEM_Node_Map(re,d)
+        Thither = FP_Array_Map_TypeB(ui,iVB_S,re,d,l)
 
-                    FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector(There,l,ui+2)
-                    FP_Coeff_Vector( There,l,ui+2) = Work_Vec(Here)
+        FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector_B(Thither,iVB_S)
 
     END DO  ! l
     END DO ! d
     END DO ! re
     END DO ! ui
+
+    FP_Coeff_Vector_B(:,iVB_S) = WORK_VEC(:)
 
 
     DEALLOCATE( Work_Vec )
@@ -633,7 +506,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 !    ALLOCATE( WORK_MAT( 1:(3*Beta_Diagonals+1), 1:Beta_Prob_Dim ) )
     
 !    Work_Mat = Beta_MVL_Banded
-    Work_Vec = FP_Source_Vector_Beta
+    Work_Vec = FP_Source_Vector_B(:,iVB_S)
 
 
 
@@ -642,7 +515,6 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
-
 
 
 
@@ -665,31 +537,24 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
 
-    FP_Coeff_Vector_Beta(:)      = Work_Vec(:)
-
-
     DO ui = 1,3
-    DO re = 0,Num_R_Elements -1
+    DO re = 0,Num_R_Elements-1
     DO d = 0,Degree
     DO l = 1,LM_Length
 
-        Here  = FP_Beta_Array_Map(re,d,ui,l)
-        There = FP_FEM_Node_Map(re,d)
+        Here    = FP_Beta_Array_Map(re,d,ui,l)
+        There   = FP_FEM_Node_Map(re,d)
+        Thither = FP_Array_Map_TypeB(ui+2,iVB_S,re,d,l)
 
-
-        FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector(There,l,ui+2)
-        FP_Coeff_Vector( There,l,ui+2) = Work_Vec(Here)
-
+        FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector_B(Thither,iVB_S)
 
     END DO  ! l
     END DO ! d
     END DO ! re
     END DO ! ui
 
-
-
-
-
+    FP_Coeff_Vector_B(:,iVB_S) = WORK_VEC(:)
+    
 
     DEALLOCATE( Work_Vec )
 !    DEALLOCATE( Work_Mat )

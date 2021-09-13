@@ -4,6 +4,7 @@ $(POSEIDON_DIR)/Code:                           \
 $(POSEIDON_DIR)/Code/Common:                    \
 $(POSEIDON_DIR)/Code/Params_and_Variables:      \
 $(POSEIDON_DIR)/Code/VPRINT:                    \
+$(POSEIDON_DIR)/Code/AMReX_Interfacing:         \
 $(POSEIDON_DIR)/Code/Mesh:                      \
 $(POSEIDON_DIR)/Code/Quadrature                 \
 $(POSEIDON_DIR)/Code/Tables:                    \

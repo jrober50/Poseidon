@@ -100,6 +100,11 @@ USE Variables_MPI, &
                         Num_SubShells,          &
                         Num_SubShells_Per_Shell
 
+USE Variables_AMReX_Core, &
+                ONLY :  AMReX_Levels,           &
+                        AMReX_Mode
+
+
 USE Allocation_Core, &
                 ONLY :  Allocate_Poseidon_CFA_Variables
 
@@ -172,6 +177,8 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
                                 Max_Iterations_Option,                  &
                                 Convergence_Criteria_Option,            &
                                 Anderson_M_Option,                      &
+                                AMReX_Mode_Option,                      &
+                                AMReX_Levels_Option,                    &
                                 Verbose_Option,                         &
                                 WriteAll_Option,                        &
                                 Print_Setup_Option,                     &
@@ -216,6 +223,8 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  Max_Iterations_O
 
 REAL(idp),               INTENT(IN), OPTIONAL               ::  Convergence_Criteria_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Anderson_M_Option
+INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Levels_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  AMReX_Mode_Option
 
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Verbose_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  WriteAll_Option
@@ -400,6 +409,22 @@ IF ( PRESENT(Anderson_M_Option) ) THEN
     FP_Anderson_M = Anderson_M_Option
 END IF
 
+IF ( PRESENT(AMReX_Mode_Option) ) THEN
+    AMReX_Mode = AMReX_Mode_Option
+ELSE
+    AMReX_Mode = .FALSE.
+END IF
+
+
+
+IF ( PRESENT(AMReX_Levels_Option) ) THEN
+    AMReX_Levels = AMReX_Levels_Option
+ELSE
+    AMReX_Levels = 1
+END IF
+
+
+
 
 IF ( PRESENT(nProcs_Option) ) THEN
     nProcs_Poseidon = nProcs_Option
@@ -457,14 +482,6 @@ Num_Loc_P_Elements = Num_R_Elements
 
 CALL Allocate_Mesh()
 
-IF ( PRESENT( Domain_Edge_Option ) ) THEN
-    R_Inner = Domain_Edge_Option(1)
-    R_Outer = Domain_Edge_Option(2)
-ELSE
-    R_Inner = 0.0_idp
-    R_Outer = 1.0_idp
-END IF
-
 IF ( PRESENT( r_Option ) ) THEN
     rlocs = r_Option
     locs_set(1) = .TRUE.
@@ -477,6 +494,14 @@ END IF
 IF ( PRESENT( t_Option ) ) THEN
     tlocs = t_Option
     locs_set(2) = .TRUE.
+END IF
+
+IF ( PRESENT( Domain_Edge_Option ) ) THEN
+    R_Inner = Domain_Edge_Option(1)
+    R_Outer = Domain_Edge_Option(2)
+ELSE
+    R_Inner = 0.0_idp
+    R_Outer = 1.0_idp
 END IF
 
 
