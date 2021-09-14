@@ -14,9 +14,10 @@ MODULE ADM_Mass_Module                                                       !##
 !##!                                                                         !##!
 !##!        +101+                   Calc_ADM_Mass                            !##!
 !##!                                                                         !##!
-!##!        +201+                   Calc_Int_Weights                         !##!
-!##!        +202+                   Calc_Int_Source                          !##!
-!##!        +203+                   Calc_Element_ADM_Integral                !##!
+!##!        +201+                   Calc_Cur_Values                          !##!
+!##!        +202+                   Calc_Int_Weights                         !##!
+!##!        +203+                   Calc_Int_Source                          !##!
+!##!        +204+                   Calc_Element_ADM_Integral                !##!
 !##!                                                                         !##!
 !###############################################################################!
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
@@ -38,15 +39,10 @@ USE Units_Module, &
             ONLY :  GR_Source_Scalar
 
 USE Parameters_Variable_Indices, &
-            ONLY :  iU_CF,                        &
-                    iU_LF,                        &
-                    iU_S1,                        &
-                    iU_S2,                        &
-                    iU_S3,                        &
-                    iU_X1,                        &
-                    iU_X2,                        &
-                    iU_X3,                       &
-                    iVB_S,                       &
+            ONLY :  iU_CF,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X3,                      &
                     iVB_X
 
 
@@ -80,16 +76,16 @@ USE FP_Functions_Mapping, &
 USE XCFC_Source_Functions_Module, &
             ONLY :  Calc_Val_On_Elem_TypeA,         &
                     Calc_Val_And_Drv_On_Elem_TypeB
+
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
 
 IMPLICIT NONE
 
 
+
+
 CONTAINS
-
-
-
 !+101+##################################################################!
 !                                                                       !
 !          Calc_ADM_Mass                          				        !
@@ -124,48 +120,36 @@ REAL(idp), DIMENSION(1:Num_TP_Quad_Points,          &
 
 REAL(idp)                                           ::  Int_Val
 
+
+
 ADM_Mass = 0.0_idp
 
+
 DO re = 0,Num_R_Elements-1
-
-
 DO te = 0,Num_T_Elements-1
 DO pe = 0,Num_P_Elements-1
 
-    DROT = 0.5_idp * (rlocs(re + 1) - rlocs(re))
-    DPOT = 0.5_idp * (plocs(pe + 1) - plocs(pe))
-    DTOT = 0.5_idp * (tlocs(te + 1) - tlocs(te))
 
-    crlocs(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(re)
-    ctlocs(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(te)
-
-    rSquare(:) = crlocs(:)*crlocs(:)
-
-    DO td = 1,NUM_T_QUAD_POINTS
-    DO pd = 1,NUM_P_QUAD_POINTS
-        tpd = FP_tpd_Map(td,pd)
-        TP_Sin_Val(tpd)    = DSIN(ctlocs(td))
-        TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(ctlocs(td))
-    END DO
-    END DO
-
-
-    DO rd = 1,NUM_R_QUAD_POINTS
-        TP_RSIN_SQUARE(:,rd) = rSquare(rd)*TP_Sin_Val(:)*TP_Sin_Val(:)
-    END DO
-
+    CALL Calc_Cur_Values( re, te, pe,           &
+                          DROT, DTOT, DPOT,     &
+                          crlocs, ctlocs,       &
+                          rSquare,              &
+                          TP_Sin_Val,           &
+                          TP_Cotan_Val,         &
+                          TP_rSin_Square        )
 
 
     CALL Calc_Int_Weights( DROT, DTOT,              &
                            rSquare, TP_Sin_Val,     &
                            Int_Weights              )
 
+
     CALL Calc_Int_Source( re, te, pe,      &
                           DROT, DTOT, DPOT,&
                           crlocs, rSquare, &
                           TP_Sin_Val,      &
                           TP_Cotan_Val,    &
-                          TP_RSin_Square,  &
+                          TP_rSin_Square,  &
                           Int_Source       )
 
 
@@ -185,9 +169,63 @@ END SUBROUTINE Calc_ADM_Mass
 
 
 
-
-
 !+201+###########################################################################!
+!                                                                                !
+!                  Calc_Cur_Values          !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Calc_Cur_Values( re, te, pe,             &
+                            DROT, DTOT, DPOT,       &
+                            crlocs, ctlocs,         &
+                            rSquare,                &
+                            TP_Sin_Val,             &
+                            TP_Cotan_Val,           &
+                            TP_RSin_Square          )
+
+INTEGER,   INTENT(IN)                                       ::  re, te, pe
+
+REAL(idp), INTENT(OUT)                                      ::  DROT, DTOT, DPOT
+REAL(idp), INTENT(OUT), DIMENSION(1:Num_R_Quad_Points)      ::  crlocs
+REAL(idp), INTENT(OUT), DIMENSION(1:Num_T_Quad_Points)      ::  ctlocs
+REAL(idp), INTENT(OUT), DIMENSION(1:Num_R_Quad_Points)      ::  rSquare
+
+REAL(idp), INTENT(OUT), DIMENSION(1:Num_TP_Quad_Points)     ::  TP_Sin_Val
+REAL(idp), INTENT(OUT), DIMENSION(1:Num_TP_Quad_Points)     ::  TP_Cotan_Val
+
+REAL(idp), INTENT(OUT), DIMENSION(1:Num_TP_Quad_Points,     &
+                                  1:Num_R_Quad_Points)      ::  TP_Rsin_Square
+
+
+INTEGER                                                     ::  rd, td, pd, tpd
+
+
+DROT = 0.5_idp * (rlocs(re + 1) - rlocs(re))
+DTOT = 0.5_idp * (tlocs(te + 1) - tlocs(te))
+DPOT = 0.5_idp * (plocs(pe + 1) - plocs(pe))
+
+crlocs(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(re)
+ctlocs(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(te)
+
+rSquare(:) = crlocs(:)*crlocs(:)
+
+DO td = 1,NUM_T_QUAD_POINTS
+DO pd = 1,NUM_P_QUAD_POINTS
+    tpd = FP_tpd_Map(td,pd)
+    TP_Sin_Val(tpd)    = DSIN(ctlocs(td))
+    TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(ctlocs(td))
+END DO
+END DO
+
+
+DO rd = 1,NUM_R_QUAD_POINTS
+    TP_RSIN_SQUARE(:,rd) = rSquare(rd)*TP_Sin_Val(:)*TP_Sin_Val(:)
+END DO
+
+
+
+END SUBROUTINE Calc_Cur_Values
+
+!+202+###########################################################################!
 !                                                                                !
 !                  Calc_Int_Weights          !
 !                                                                                !
@@ -224,7 +262,7 @@ END SUBROUTINE Calc_Int_Weights
 
 
 
-!+202+###########################################################################!
+!+203+###########################################################################!
 !                                                                                !
 !                  Calc_Current_Values          !
 !                                                                                !
@@ -309,6 +347,7 @@ DO tpd = 1,NUM_T_QUAD_POINTS
 END DO ! tpd
 END DO ! rd
 
+
 AA_Array = 0.0_idp
 DO i = 1,3
 DO j = 1,3
@@ -317,8 +356,6 @@ DO j = 1,3
 
 END DO ! i
 END DO ! j
-
-
 
 
 
@@ -349,7 +386,7 @@ END SUBROUTINE Calc_Int_Source
 
 
 
-!+203+##########################################################################!
+!+204+##########################################################################!
 !                                                                               !
 !                 Calc_Element_ADM_Integral                                     !
 !                                                                               !
