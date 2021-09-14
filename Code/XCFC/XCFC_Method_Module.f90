@@ -98,9 +98,9 @@ CALL Output_Initial_Guess(PR)
 ! Solve for X
 CALL XCFC_X_Solve()
 
-PRINT*,"STOPing in XCFC_Method"
-CALL MPI_Finalize(ierr)
-STOP
+!PRINT*,"STOPing in XCFC_Method"
+!CALL MPI_Finalize(ierr)
+!STOP
 
 
 
@@ -233,7 +233,7 @@ IF ( CFA_Eq_Flags(1) == 1 ) THEN
     CALL XCFC_ConFactor_Solve()
 END IF
 
-
+CALL Deallocate_XCFC_Source_Variables()
 
 END SUBROUTINE XCFC_Method_Part1
 
@@ -261,6 +261,7 @@ END SUBROUTINE XCFC_Method_Part1
 !###############################################################################!
 SUBROUTINE XCFC_Method_Part2()
 
+CALL Allocate_XCFC_Source_Variables()
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"Begining XCFC Metric Solve (Part 2 of 2)."

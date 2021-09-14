@@ -44,7 +44,8 @@ USE Variables_Tables, &
                 Lagrange_Poly_Table
 
 USE Variables_Derived, &
-        ONLY :  LM_LENGTH
+        ONLY :  LM_LENGTH,          &
+                Beta_Prob_Dim
 
 USE Variables_FP, &
         ONLY :  FP_Coeff_Vector_A,  &
@@ -348,7 +349,7 @@ DO rd = 1,NQ(1)
     DO lm = 1,LM_Length
     DO d = 0,DEGREE
 
-        Current_Location = FP_Array_Map_TypeB(iU,iVB_S,re,d,lm)
+        Current_Location = FP_Array_Map_TypeB(iU,iVB_S,re-1,d,lm)
         Tmp_U_Value = Tmp_U_Value                                       &
                     + FP_Coeff_Vector_B(Current_Location,iVB_S)         &
                     * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )

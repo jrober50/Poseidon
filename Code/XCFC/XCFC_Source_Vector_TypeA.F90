@@ -244,6 +244,8 @@ DO d = 0,DEGREE
         = FP_Source_Vector_A(Current_i_Location,lm_loc,iU)    &
         + RHS_TMP
 
+    
+
 END DO  ! d Loop
 END DO  ! lm_loc Loop
 
@@ -285,7 +287,9 @@ CALL Calc_Int_Weights( DROT, DTOT,                      &
                        R_Int_Weights, TP_Int_Weights    )
 
 CALL Calc_Val_On_Elem_TypeA( RE, TE, PE, Cur_Val_Psi, iU_CF )
- 
+CALL Calc_Val_On_Elem_TypeA( RE, TE, PE, Cur_Val_AlphaPsi, iU_LF )
+
+
 CALL Calc_Val_And_Drv_On_Elem_TypeB( RE, TE, PE, DROT,      &
                                     CUR_Val_X(:,:,1),       &
                                     CUR_DRV_X(:,:,:,1),     &
@@ -306,6 +310,8 @@ CALL Calc_Ahat( Ahat_Array,                             &
                 Cur_R_Locs, R_SQUARE,                   &
                 TP_RSIN_SQUARE, TP_COTAN_VAL,           &
                 CUR_VAL_X, CUR_DRV_X                  )
+
+
 
 
 
@@ -333,6 +339,7 @@ END DO ! j
 CALL Get_Source_Term( SourceTerm(:,:,iU), iU, re, te, pe, AA_Array)
 
 
+
 END SUBROUTINE Calc_XCFC_CurVals_TypeA
 
 
@@ -341,11 +348,11 @@ END SUBROUTINE Calc_XCFC_CurVals_TypeA
 
 
 
-!+701+###########################################################################!
-!                                                                                !
-!           Get_Physical_Source                                      !
-!                                                                                !
-!################################################################################!
+!+701+##################################################################!
+!                                                                       !
+!           Get_Source_Term                                             !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Get_Source_Term( Source, iU, RE, TE, PE, AA )
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
@@ -394,6 +401,7 @@ ELSEIF ( iU == 2 ) THEN
     END DO ! pd
     END DO ! td
     END DO ! rd
+
 
 
 ELSE IF ( iU == 3) THEN

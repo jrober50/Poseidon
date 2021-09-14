@@ -99,7 +99,7 @@ INTEGER, INTENT(IN)                                             ::  iU
 COMPLEX(KIND = idp), DIMENSION(NUM_R_NODES)                     ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                  ::  WORK_ELEM_VAL
 
-INTEGER                                                         ::  ui, l, m
+INTEGER                                                         ::  l, m
 INTEGER                                                         ::  lm_loc
 
 
@@ -148,7 +148,7 @@ DO m = -l,l
     WORK_VEC = -FP_Source_Vector_A(:,lm_loc,iU)
     WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_Map(iU))
 
-
+    
     CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                             Factored_NNZ,               &
                             l,                          &
@@ -156,7 +156,7 @@ DO m = -l,l
                             Laplace_Factored_COL(:,l),  &
                             Laplace_Factored_ROW(:,l),  &
                             WORK_VEC,                   &
-                            ui                          )
+                            iU                          )
 
 
 
@@ -257,6 +257,9 @@ END IF
 
 ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
 Work_Vec = FP_Source_Vector_B(:,iVB)
+
+
+!PRINT*,Work_Vec
 
 
 CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )

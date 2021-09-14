@@ -20,4 +20,5 @@ $(POSEIDON_DIR)/Code/Initialization:            \
 $(POSEIDON_DIR)/Code/Interfaces:                \
 $(POSEIDON_DIR)/Code/Newton_Raphson:            \
 $(POSEIDON_DIR)/Code/Params_And_Variables:      \
+$(POSEIDON_DIR)/Code/Utilities:                 \
 ..

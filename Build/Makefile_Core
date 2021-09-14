@@ -23,6 +23,7 @@ POSEIDON = \
   $(XCFC)            \
   $(EXTERNAL)        \
   $(INIT)            \
+  $(UTILITIES)       \
   $(INTERFACES)      \
 
 

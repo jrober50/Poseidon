@@ -13,5 +13,6 @@ include $(POSEIDON_DIR)/Code/Newton_Raphson/Makefile_NR
 include $(POSEIDON_DIR)/Code/Fixed_Point/Makefile_FP
 include $(POSEIDON_DIR)/Code/XCFC/Makefile_XCFC
 include $(POSEIDON_DIR)/Code/External/Makefile_External
+include $(POSEIDON_DIR)/Code/Utilities/Makefile_Utilities
 include $(POSEIDON_DIR)/Code/Interfaces/Makefile_Interfaces
 include $(POSEIDON_DIR)/Code/Initialization/Makefile_Init
