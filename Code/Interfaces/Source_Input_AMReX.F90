@@ -70,7 +70,7 @@ USE Variables_AMReX_Multifabs,  &
                     BA_Source,          &
                     DM_Source
 
-USE Utilities_AMReX,    &
+USE Poseidon_AMReX_Utilities_Module,    &
             ONLY :  AMReX2Poseidon,     &
                     UnpackSources_AMReX
 #endif

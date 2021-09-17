@@ -31,6 +31,18 @@ USE Poseidon_Parameters, &
                     Max_Iterations,     &
                     Convergence_Criteria
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,                        &
+                    iU_LF,                        &
+                    iU_S1,                        &
+                    iU_S2,                        &
+                    iU_S3,                        &
+                    iU_X1,                        &
+                    iU_X2,                        &
+                    iU_X3,                       &
+                    iVB_S,                       &
+                    iVB_X
+
 USE Variables_Derived, &
             ONLY :  Var_Dim
 
@@ -91,9 +103,8 @@ COMPLEX(idp),DIMENSION(FP_Anderson_M)                   :: Alpha
 COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Work
 
 LOGICAL                                                 ::  PR = .FALSE.
-INTEGER                                                 ::  Cur_Iteration       = 0
-LOGICAL                                                 ::  CONVERGED           = .FALSE.
-!LOGICAL                                                 ::  CONVERGED_Residual  = .FALSE.
+INTEGER                                                 ::  Cur_Iteration
+LOGICAL                                                 ::  CONVERGED
 
 M = FP_Anderson_M
 LWORK = 2*M
@@ -105,7 +116,15 @@ ALLOCATE( Work(1:LWORK) )
 
 
 IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining Conformal Factor system. "
+    IF ( iU == iU_CF ) THEN
+        WRITE(*,'(A)')"Begining Conformal Factor system."
+    ELSE IF ( iU == iU_LF ) THEN
+        WRITE(*,'(A)')"Begining Lapse Function system."
+    ELSE
+        WRITE(*,'(A)')"Invalid input to XCFC_Fixed_Point."
+        WRITE(*,'(A,I1.1)')" iU value input : ", iU
+        WRITE(*,'(A)')" Acceptable values are 1 or 2."
+    END IF
 END IF
 
 
@@ -114,7 +133,7 @@ CALL XCFC_Calc_Source_Vector_TypeA( iU )
 
 
 Cur_Iteration = 0
-CONVERGED           = .FALSE.
+CONVERGED     = .FALSE.
 DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
