@@ -193,7 +193,7 @@ COMPLEX(idp), DIMENSION(1:5),   INTENT(INOUT)                   ::  Tmp_U_Value
 INTEGER                                                         ::  l, m, d, u
 INTEGER                                                         ::  Loc_RED, Loc_LM
 
-
+Tmp_U_Value = 0.0_idp
 DO u = iU_CF,iU_LF
 DO l = 0,L_Limit
 DO m = -M_VALUES(l),M_VALUES(l)
@@ -214,17 +214,20 @@ END DO  !   u Loop
 
 
 DO u = iU_S1,iU_S3
-DO l = 1,LM_Length
+DO l = 0,L_Limit
+DO m = -M_VALUES(l),M_VALUES(l)
 DO d = 0,DEGREE
 
-    Loc_RED = FP_Array_Map_TypeB(u,iVB_S,re,d,l)
+    Loc_RED = FP_Array_Map_TypeB(u,iVB_S,re,d,l,m)
 
     Tmp_U_Value(u) = Tmp_U_Value(u)                         &
                     + FP_Coeff_Vector_B(Loc_RED,iVB_S)     &
                     * Spherical_Harmonic(l,m,theta,phi)     &
                     * LagP(d)
 
+
 END DO  !   d Loop
+END DO  !   m Loop
 END DO  !   l Loop
 END DO  !   u Loop
 

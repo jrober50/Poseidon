@@ -28,30 +28,34 @@ MODULE MacLaurin_Module                                                         
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-                        ONLY :  idp
+            ONLY :  idp
 
 USE Units_Module, &
-                        ONLY :  Grav_Constant_G,        &
-                                Gram,                  &
-                                Centimeter,             &
-                                C_Square
+            ONLY :  Grav_Constant_G,        &
+                    Gram,                  &
+                    Centimeter,             &
+                    C_Square
 
 USE Poseidon_Numbers_Module, &
-                        ONLY :  pi
+            ONLY :  pi
 
 USE Poseidon_Parameters, &
-                        ONLY :  Verbose_Flag
+            ONLY :  Verbose_Flag
+
+USE Variables_MPI, &
+            ONLY :  myID_Poseidon,          &
+                    MasterID_Poseidon
 
 USE  Variables_IO, &
-                        ONLY :  Report_Flags
+            ONLY :  Report_Flags
 
 USE Functions_Mapping, &
-                        ONLY :  Map_To_X_Space,         &
-                                Map_From_X_Space
+            ONLY :  Map_To_X_Space,         &
+                    Map_From_X_Space
 
 
 USE Variables_Functions, &
-                        ONLY :  Potential_Solution
+            ONLY :  Potential_Solution
 
 IMPLICIT NONE
 
@@ -178,7 +182,7 @@ AA = A*A
 BB = B*B
 CC = C*C
 
-
+IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : MacLaurin Spheroid'
@@ -188,7 +192,7 @@ IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
     WRITE(*,'(A,ES12.5)') ' - Density        : ', Rho_O
     WRITE(*,'(/)')
 END IF
-
+END IF
 
 Density  = Rho_O
 Pressure = 0.0_idp

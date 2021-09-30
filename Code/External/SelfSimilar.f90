@@ -23,13 +23,17 @@ MODULE SelfSimilar_Module                                                       
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-                        ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Numbers_Module, &
-                        ONLY :  pi, eps
+            ONLY :  pi, eps
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
+
+USE Variables_MPI, &
+            ONLY :  myID_Poseidon,      &
+                    MasterID_Poseidon
 
 USE Variables_IO, &
             ONLY :  Report_Flags
@@ -56,8 +60,8 @@ USE Variables_Yahil, &
 
 
 USE Variables_Functions, &
-                ONLY :  Potential_Solution,                      &
-                        Shift_Solution
+            ONLY :  Potential_Solution,                      &
+                    Shift_Solution
 
 USE Poseidon_IO_Module, &
             ONLY :  OUTPUT_PRIMATIVES,  &
@@ -222,7 +226,7 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * Input_M
 
 
-
+IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
@@ -232,7 +236,7 @@ IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
     WRITE(*,'(A,ES12.5,A)')   ' - Central Density : ', Input_D(1)/(Grav_Constant_G*t*t )/(Gram/Centimeter**3),' g/cm^3'
     WRITE(*,'(/)')
 END IF
-
+END IF
 
 
 IF ( SELFSIM_V_SWITCH == 1 ) THEN

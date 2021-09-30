@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE XCFC_System_Solvers_Module                                            !##!
+MODULE XCFC_System_Solvers_TypeA_Module                                      !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -43,7 +43,14 @@ USE Parameters_Variable_Indices, &
 
 USE Variables_Derived, &
         ONLY :  Beta_Prob_Dim,              &
-                Num_R_Nodes
+                Num_R_Nodes,                &
+                LM_Length
+
+USE Variables_MPI, &
+        ONLY :  myID_Poseidon,              &
+                MasterID_Poseidon,          &
+                Poseidon_Comm_World,        &
+                nPROCS_Poseidon
 
 USE Variables_FP,  &
         ONLY :  FP_Coeff_Vector_A,            &
@@ -80,6 +87,10 @@ USE FP_Functions_BC,  &
 USE FP_Functions_Mapping, &
         ONLY :  FP_LM_Map
 
+USE MPI_Communication_TypeA_Module,             &
+        ONLY :  MPI_RTM_Source_TypeA,           &
+                MPI_BCast_Coeffs_TypeA
+
 IMPLICIT NONE
 
 
@@ -89,7 +100,7 @@ CONTAINS
 
 !+301+###########################################################################!
 !                                                                                !
-!           Call Solve_FP_System                                                 !
+!          XCFC_Solve_System_TypeA                                               !
 !                                                                                !
 !################################################################################!
 SUBROUTINE XCFC_Solve_System_TypeA(iU)
@@ -99,16 +110,17 @@ INTEGER, INTENT(IN)                                             ::  iU
 COMPLEX(KIND = idp), DIMENSION(NUM_R_NODES)                     ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                  ::  WORK_ELEM_VAL
 
-INTEGER                                                         ::  l, m
-INTEGER                                                         ::  lm_loc
+INTEGER                                                         ::  l, m, i
+INTEGER                                                         ::  lm_loc, ierr
 
-
+INTEGER                                                         ::  Lower_Limit
+INTEGER                                                         ::  Upper_Limit
 
 
 
 IF ( Verbose_Flag ) THEN
     IF( iU == 1 ) THEN
-        WRITE(*,'(A)')"--In XCFC Iteration, Begining Conformal Factor System Solve."
+        WRITE(*,'(A)')"--In XCFC Iteration, Begining Conformal Factor System Solve.", myID_Poseidon
     ELSE IF ( iU == 2 ) THEN
         WRITE(*,'(A)')"--In XCFC Iteration, Begining Lapse Function System Solve."
     ELSE
@@ -136,67 +148,124 @@ IF ( MCF_Flag == 0 ) THEN
 END IF
 
 
-ALLOCATE( Work_Elem_Val(0:Factored_NNZ-1))
 
 
 
 
-DO l = 0,L_LIMIT
-DO m = -l,l
-
-    lm_loc = FP_LM_Map(l,m)
-    WORK_VEC = -FP_Source_Vector_A(:,lm_loc,iU)
-    WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_Map(iU))
-
-    
-    CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
-                            Factored_NNZ,               &
-                            l,                          &
-                            m,                          &
-                            Laplace_Factored_COL(:,l),  &
-                            Laplace_Factored_ROW(:,l),  &
-                            WORK_VEC,                   &
-                            iU                          )
 
 
+! Reduce Souce Vector To Master !
+#ifdef POSEIDON_AMREX_FLAG
+Lower_Limit = 1
+Upper_Limit = Num_R_Nodes
+CALL MPI_RTM_Source_TypeA(  iU,                     &
+                            Lower_Limit,            &
+                            Upper_Limit,            &
+                            MasterID_Poseidon,      &
+                            Poseidon_Comm_World,    &
+                            ierr                    )
 
-    CALL NEUMANN_BC_CCS(    NUM_R_NODES,                &
-                            Factored_NNZ,               &
-                            l,                          &
-                            m,                          &
-                            WORK_ELEM_VAL,              &
-                            Laplace_Factored_COL(:,l),  &
-                            Laplace_Factored_ROW(:,l),  &
-                            WORK_VEC                    )
+#endif
 
 
 
 
-    CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
-                                    Factored_NNZ,                   &
-                                    WORK_ELEM_VAL,                  &
-                                    Laplace_Factored_COL(:,l),      &
-                                    Laplace_Factored_ROW(:,l),      &
-                                    WORK_VEC                        )
 
 
-    CALL CCS_Back_Substitution(     NUM_R_NODES,                    &
-                                    Factored_NNZ,                   &
-                                    WORK_ELEM_VAL,                  &
-                                    Laplace_Factored_COL(:,l),      &
-                                    Laplace_Factored_ROW(:,l),      &
-                                    WORK_VEC                        )
+
+IF ( myID_Poseidon == MasterID_Poseidon ) THEN
+
+    ALLOCATE( Work_Elem_Val(0:Factored_NNZ-1))
+
+    DO l = 0,L_LIMIT
+    DO m = -l,l
+
+        lm_loc = FP_LM_Map(l,m)
+        WORK_VEC = -FP_Source_Vector_A(:,lm_loc,iU)
+        WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_Map(iU))
 
 
-    FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,iU)
-    FP_Coeff_Vector_A( :,lm_loc,iU) = WORK_VEC(:)
+
+        CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
+                                Factored_NNZ,               &
+                                l,                          &
+                                m,                          &
+                                Laplace_Factored_COL(:,l),  &
+                                Laplace_Factored_ROW(:,l),  &
+                                WORK_VEC,                   &
+                                iU                          )
 
 
-END DO  ! m Loop
-END DO  ! l Loop
+
+        CALL NEUMANN_BC_CCS(    NUM_R_NODES,                &
+                                Factored_NNZ,               &
+                                l,                          &
+                                m,                          &
+                                WORK_ELEM_VAL,              &
+                                Laplace_Factored_COL(:,l),  &
+                                Laplace_Factored_ROW(:,l),  &
+                                WORK_VEC                    )
 
 
-DEALLOCATE( Work_Elem_Val )
+
+
+        CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
+                                        Factored_NNZ,                   &
+                                        WORK_ELEM_VAL,                  &
+                                        Laplace_Factored_COL(:,l),      &
+                                        Laplace_Factored_ROW(:,l),      &
+                                        WORK_VEC                        )
+
+
+        CALL CCS_Back_Substitution(     NUM_R_NODES,                    &
+                                        Factored_NNZ,                   &
+                                        WORK_ELEM_VAL,                  &
+                                        Laplace_Factored_COL(:,l),      &
+                                        Laplace_Factored_ROW(:,l),      &
+                                        WORK_VEC                        )
+
+
+        FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,iU)
+        FP_Coeff_Vector_A( :,lm_loc,iU) = WORK_VEC(:)
+
+
+    END DO  ! m Loop
+    END DO  ! l Loop
+
+
+    DEALLOCATE( Work_Elem_Val )
+END IF
+
+
+
+
+
+
+
+#ifdef POSEIDON_AMREX_FLAG
+
+Lower_Limit = 1
+Upper_Limit = Num_R_Nodes
+CALL MPI_BCAST_Coeffs_TypeA(iU,                     &
+                            Lower_Limit,            &
+                            Upper_Limit,            &
+                            MasterID_Poseidon,      &
+                            Poseidon_Comm_World,    &
+                            ierr                    )
+
+!DO i = 0,nPROCS_Poseidon-1
+!IF ( myID_Poseidon == i ) THEN
+!    PRINT*,"myID_Poseidon ",i
+!    DO lm_loc = 1,LM_Length
+!        PRINT*,FP_Coeff_Vector_A(:,lm_loc, iU)
+!    END DO
+!END IF
+!CALL MPI_Barrier(Poseidon_Comm_World,ierr)
+!END DO
+
+#endif
+
+
 
 END SUBROUTINE XCFC_Solve_System_TypeA
 
@@ -205,98 +274,4 @@ END SUBROUTINE XCFC_Solve_System_TypeA
 
 
 
-
-
-!+301+###########################################################################!
-!                                                                                !
-!           Call Solve_FP_System                                                 !
-!                                                                                !
-!################################################################################!
-SUBROUTINE XCFC_Solve_System_TypeB(iU)
-
-
-INTEGER, DIMENSION(3), INTENT(IN)                                   :: iU
-
-INTEGER                                                             ::  INFO
-INTEGER                                                             ::  iVB
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                      ::  WORK_VEC
-
-!REAL(idp), DIMENSION(1:4)                                           ::  timer
-
-
-
-
-
-IF ( Verbose_Flag ) THEN
-    IF (iU(1) == iU_X1) THEN
-        PRINT*,"--In XCFC Iteration, Begining X System Solve."
-    ELSE IF ( iU(1) == iU_S1 ) THEN
-        PRINT*,"--In XCFC Iteration, Begining Shift System Solve."
-    ELSE
-
-    END IF
-END IF
-
-IF ( iU(1) == iU_X1 ) THEN
-    iVB = iVB_X
-ELSE IF ( iU(1) == iU_S1 ) THEN
-    iVB = iVB_S
-ELSE
-    WRITE(*,'(A)') "Incompatable iU value passed to XCFC_Solve_System_TypeB."
-    WRITE(*,'(A,3I3.3)') "iU values received ",iU
-    WRITE(*,'(A)') "iU must be 3,4,5 or 6,7,8."
-END IF
-
-
-
-IF ( .NOT. Beta_Factorized_Flag ) THEN
-    CALL Factorize_Beta_Banded()
-END IF
-
-
-
-ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
-Work_Vec = FP_Source_Vector_B(:,iVB)
-
-
-!PRINT*,Work_Vec
-
-
-CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
-CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
-
-
-CALL ZGBTRS( 'N',                   &
-             Beta_Prob_Dim,         &
-             Beta_Diagonals,        &
-             Beta_Diagonals,        &
-             1,                     &
-             Beta_MVL_Banded,       &
-             3*Beta_Diagonals+1,    &
-             Beta_IPIV,             &
-             -Work_Vec,             &
-             Beta_Prob_Dim,         &
-             INFO                   )
-
-IF (INFO .NE. 0) THEN
-    print*,"ZGBTRS has failed with INFO = ",INFO
-END IF
-
-
-
-FP_Coeff_Vector_B(:,iVB) = Work_Vec(:)
-
-
-DEALLOCATE( Work_Vec )
-
-
-
-
-END SUBROUTINE XCFC_Solve_System_TypeB
-
-
-
-
-
-
-END MODULE XCFC_System_Solvers_Module
+END MODULE XCFC_System_Solvers_TypeA_Module

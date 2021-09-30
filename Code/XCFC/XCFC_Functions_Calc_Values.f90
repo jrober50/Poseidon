@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE XCFC_Source_Functions_Module                                          !##!
+MODULE XCFC_Functions_Calc_Values_Module                                      !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -141,19 +141,20 @@ DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
    
-   TMP_Val = 0.0_idp
-   DO d = 0,DEGREE
-       Here = FP_FEM_Node_Map(re,d)
+    TMP_Val = 0.0_idp
+    DO d = 0,DEGREE
+        Here = FP_FEM_Node_Map(re,d)
+!        PRINT*,iU,tpd,te,pe, Ylm_Values( :, tpd, te, pe ), Lagrange_Poly_Table( d, rd, 0 )
+    
+        TMP_Val = TMP_Val                               &
+            + SUM( FP_Coeff_Vector_A( Here, :, iU )     &
+                   * Ylm_Values( :, tpd, te, pe )   )   &
+            * Lagrange_Poly_Table( d, rd, 0 )
 
-       TMP_Val = TMP_Val                                   &
-               + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
-                       * Ylm_Values( :, tpd, te, pe )   )  &
-               * Lagrange_Poly_Table( d, rd, 0 )
 
+    END DO  ! d
 
-   END DO  ! d
-
-   Val(tpd,rd)       = REAL(TMP_Val, KIND = idp)
+    Val(tpd,rd)       = REAL(TMP_Val, KIND = idp)
 
 END DO ! td
 END DO ! rd
@@ -466,4 +467,4 @@ END DO ! rd
 END SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeB
 
 
-END MODULE XCFC_Source_Functions_Module
+END MODULE XCFC_Functions_Calc_Values_Module

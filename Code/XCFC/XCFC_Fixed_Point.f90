@@ -43,19 +43,28 @@ USE Parameters_Variable_Indices, &
                     iVB_S,                       &
                     iVB_X
 
+USE Variables_Mesh, &
+            ONLY :  NUM_R_ELEMENTS,             &
+                    NUM_T_ELEMENTS,             &
+                    NUM_P_ELEMENTS
+
 USE Variables_Derived, &
             ONLY :  Var_Dim
 
 USE Variables_FP, &
             ONLY :  FP_Anderson_M
 
+USE Variables_FP, &
+ONLY :  FP_Coeff_Vector_A,          &
+        FP_Coeff_Vector_B
+
 USE XCFC_Source_Vector_TypeA_Module, &
             ONLY :  XCFC_Calc_Source_Vector_TypeA
 
-USE XCFC_System_Solvers_Module, &
+USE XCFC_System_Solvers_TypeA_Module, &
             ONLY :  XCFC_Solve_System_TypeA
 
-USE XCFC_Coeff_Functions_Module, &
+USE XCFC_Functions_Coeff_Module, &
             ONLY :  Coeff_To_Vector_TypeA,  &
                     Vector_To_Coeff_TypeA
 
@@ -78,6 +87,8 @@ SUBROUTINE XCFC_Fixed_Point(iU)
 
 INTEGER, INTENT(IN)                                     ::  iU
 
+INTEGER, DIMENSION(3)                                   ::  iEU
+INTEGER, DIMENSION(3)                                   ::  iEL
 
 INTEGER                                                 ::  i
 
@@ -109,27 +120,17 @@ LOGICAL                                                 ::  CONVERGED
 M = FP_Anderson_M
 LWORK = 2*M
 
+iEL = [0, 0, 0]
+iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
 ALLOCATE( Work(1:LWORK) )
 
 
 
 
-IF ( Verbose_Flag ) THEN
-    IF ( iU == iU_CF ) THEN
-        WRITE(*,'(A)')"Begining Conformal Factor system."
-    ELSE IF ( iU == iU_LF ) THEN
-        WRITE(*,'(A)')"Begining Lapse Function system."
-    ELSE
-        WRITE(*,'(A)')"Invalid input to XCFC_Fixed_Point."
-        WRITE(*,'(A,I1.1)')" iU value input : ", iU
-        WRITE(*,'(A)')" Acceptable values are 1 or 2."
-    END IF
-END IF
+CALL XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
 
 
-
-CALL XCFC_Calc_Source_Vector_TypeA( iU )
 
 
 Cur_Iteration = 0
@@ -149,14 +150,21 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     END IF
 
 
+
+
     !
     !   Solve Systems
     !
     CALL XCFC_Solve_System_TypeA(iU)
 
 
+
+
     CALL Coeff_To_Vector_TypeA( GVector(:,mk), iU )
     FVector(:,mk) = GVector(:,mk) - UVector(:)
+
+
+
 
 
     IF ( mk == 1 ) THEN
@@ -186,8 +194,12 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
+
     ! Check for Convergence
     CALL FP_Convergence_Check( FVectorM, Cur_Iteration, Converged )
+
+
+
 
 
 
@@ -204,8 +216,9 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     CALL Vector_To_Coeff_TypeA( GVectorM, iU )
 
 
+!    PRINT*,"Before XCFC_Calc_Source_Vector_TypeA"
     !   Calculate Source Vector with updated solution
-    CALL XCFC_Calc_Source_Vector_TypeA( iU )
+    CALL XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
     
 
 

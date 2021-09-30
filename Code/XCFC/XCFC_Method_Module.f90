@@ -30,12 +30,31 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X3,                      &
+                    iVB_S,                      &
+                    iVB_X
+
+USE Variables_MPI, &
+            ONLY :  myID_Poseidon,              &
+                    MasterID_Poseidon,          &
+                    Poseidon_Comm_World,        &
+                    nPROCS_Poseidon
+
 USE Variables_Derived, &
             ONLY :  Num_R_Nodes,                &
                     LM_Length
 
 USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector_A,           &
+            ONLY :  FP_Coeff_Vector_A,          &
+                    FP_Coeff_Vector_B,          &
                     CFA_EQ_Flags
 
 USE Variables_IO, &
@@ -58,6 +77,11 @@ USE XCFC_Source_Variables_Module, &
             ONLY :  Allocate_XCFC_Source_Variables, &
                     Deallocate_XCFC_Source_Variables
 
+USE Poseidon_MPI_Utilities_Module, &
+            ONLY :  STOP_MPI,               &
+                    MPI_Master_Print,       &
+                    MPI_All_Print
+
 USE MPI
 
 IMPLICIT NONE
@@ -75,10 +99,10 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE XCFC_Method()
 
-INTEGER                     :: ierr
+INTEGER                     :: ierr, i
 LOGICAL                     :: PR = .FALSE.
 
-
+INTEGER                     :: lm_loc
 
 
 CALL Allocate_XCFC_Source_Variables()
@@ -94,18 +118,13 @@ CALL Output_Initial_Guess(PR)
 
 
 
-
 ! Solve for X
 CALL XCFC_X_Solve()
 
-!PRINT*,"STOPing in XCFC_Method"
-!CALL MPI_Finalize(ierr)
-!STOP
 
 
-
-
-IF ( CFA_Eq_Flags(1) == 1 ) THEN
+! Solve for Conformal Factor
+IF ( CFA_Eq_Flags(iU_CF) == 1 ) THEN
     CALL XCFC_ConFactor_Solve()
 END IF
 
@@ -113,17 +132,17 @@ END IF
 
 
 ! Solve for Lapse Function
-IF ( CFA_Eq_Flags(2) == 1 ) THEN
+IF ( CFA_Eq_Flags(iU_LF) == 1 ) THEN
     CALL XCFC_Lapse_Solve()
 END IF
 
 
 
+
 ! Solve for Shift Vector
-IF ( ANY(CFA_Eq_Flags(3:5) == 1) ) THEN
+IF ( ANY(CFA_Eq_Flags(iU_S1:iU_S3) == 1) ) THEN
     CALL XCFC_Shift_Solve()
 END IF
-
 
 
 
@@ -131,8 +150,10 @@ END IF
 CALL Deallocate_XCFC_Source_Variables()
 
 
+IF (myID_Poseidon == MasterID_Poseidon ) THEN
+    CALL Output_Final_Results()
+END IF
 
-CALL Output_Final_Results()
 
 END SUBROUTINE XCFC_Method
 
@@ -154,7 +175,7 @@ END SUBROUTINE XCFC_Method
 !###############################################################################!
 SUBROUTINE XCFC_Method_New()
 
-INTEGER                         :: ierr
+!INTEGER                         :: ierr
 LOGICAL                         :: PR = .FALSE.
 
 
@@ -173,9 +194,9 @@ CALL Output_Initial_Guess(PR)
 
 CALL XCFC_X_Solve()
 
-PRINT*,"STOPing in XCFC_Method"
-CALL MPI_Finalize(ierr)
-STOP
+!PRINT*,"STOPing in XCFC_Method"
+!CALL MPI_Finalize(ierr)
+!STOP
 
 
 CALL XCFC_ConFactor_Solve()
@@ -307,12 +328,13 @@ SUBROUTINE Output_Initial_Guess( PR )
 
 LOGICAL, INTENT(INOUT)             :: PR
 
-
+IF ( myID_Poseidon == 1 ) THEN
 IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
     PR = .TRUE.
     WRITE(*,'(A)')"Initial Guess Values"
     CALL Print_Results()
     PRINT*," "
+END IF
 END IF
 
 END SUBROUTINE OUTPUT_Initial_Guess

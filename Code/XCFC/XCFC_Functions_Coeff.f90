@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE XCFC_Coeff_Functions_Module                                           !##!
+MODULE XCFC_Functions_Coeff_Module                                           !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -188,5 +188,5 @@ END SUBROUTINE Vector_To_Coeff_TypeB
 
 
 
-END MODULE XCFC_Coeff_Functions_Module
+END MODULE XCFC_Functions_Coeff_Module
 

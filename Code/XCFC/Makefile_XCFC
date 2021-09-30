@@ -1,13 +1,15 @@
 XCFC = \
-  Allocation_XCFC.f90           \
-  XCFC_Source_Variables.f90     \
-  XCFC_Coeff_Functions.f90      \
-  XCFC_Source_Functions.f90     \
-  XCFC_Source_Vector_TypeA.F90  \
-  XCFC_Source_Vector_TypeB.F90  \
-  XCFC_System_Solvers.f90       \
-  XCFC_Fixed_Point_Module.f90   \
-  XCFC_Solvers_Main.f90         \
-  XCFC_Method_Module.f90        \
-  Initialization_XCFC.f90     	\
+  Allocation_XCFC.f90                \
+  XCFC_Source_Variables.f90          \
+  XCFC_Functions_Coeff.f90           \
+  XCFC_Functions_Calc_Values.f90     \
+  XCFC_Functions_Physical_Source.F90 \
+  XCFC_Source_Vector_TypeA.F90       \
+  XCFC_Source_Vector_TypeB.F90       \
+  XCFC_System_Solvers_TypeA.F90      \
+  XCFC_System_Solvers_TypeB.F90      \
+  XCFC_Fixed_Point.f90               \
+  XCFC_Solvers_Main.f90              \
+  XCFC_Method_Module.f90             \
+  Initialization_XCFC.f90     	     \
 

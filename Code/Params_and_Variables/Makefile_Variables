@@ -9,11 +9,12 @@ VARIABLES = \
   Variables_Functions.f90    \
   Variables_IO.f90           \
   Variables_Mesh.f90         \
+  Variables_MPI.f90          \
   Variables_Quadrature.f90   \
   Variables_Tables.f90       \
   Variables_Source.f90       \
   Variables_Yahil.f90        \
   Variables_AMReX_Multifabs.F90 \
   Variables_AMReX_Core.F90   \
-
+  Variables_AMReX_Source.f90
 

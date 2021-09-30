@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE ADM_Mass_Module                                                       !##!
+MODULE ADM_Mass_In_Parts_Module                                              !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -12,7 +12,7 @@ MODULE ADM_Mass_Module                                                       !##
 !##!                                                                         !##!
 !##!    Contains:                                                            !##!
 !##!                                                                         !##!
-!##!        +101+                   Calc_ADM_Mass                            !##!
+!##!        +101+                   Calc_ADM_Mass_In_Parts                   !##!
 !##!                                                                         !##!
 !##!        +201+                   Calc_Cur_Values                          !##!
 !##!        +202+                   Calc_Int_Weights                         !##!
@@ -80,6 +80,10 @@ USE XCFC_Functions_Calc_Values_Module, &
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
 
+USE ADM_Mass_Module, &
+            ONLY :  Calc_Cur_Values,                &
+                    Calc_Int_Weights
+
 IMPLICIT NONE
 
 
@@ -88,13 +92,14 @@ IMPLICIT NONE
 CONTAINS
 !+101+##################################################################!
 !                                                                       !
-!          Calc_ADM_Mass                          				        !
+!          Calc_ADM_Mass_In_Parts                          				!
 !                                                                       !
 !#######################################################################!
-SUBROUTINE Calc_ADM_Mass( ADM_Mass )
+SUBROUTINE Calc_ADM_Mass_In_Parts( ADM_Mass, ADM_Phys, ADM_Curve )
 
 REAL(idp), INTENT(OUT)                              ::  ADM_Mass
-
+REAL(idp), INTENT(OUT)                              ::  ADM_Phys
+REAL(idp), INTENT(OUT)                              ::  ADM_Curve
 
 
 
@@ -116,14 +121,15 @@ REAL(idp), DIMENSION(1:Num_TP_Quad_Points,          &
                      1:Num_R_Quad_Points)           ::  Int_Weights
 
 REAL(idp), DIMENSION(1:Num_TP_Quad_Points,          &
-                     1:Num_R_Quad_Points)           ::  Int_Source
+                     1:Num_R_Quad_Points, 3 )       ::  Int_Source
 
-REAL(idp)                                           ::  Int_Val
+REAL(idp), DIMENSION(3)                             ::  Int_Val
 
 
 
 ADM_Mass = 0.0_idp
-
+ADM_Phys = 0.0_idp
+ADM_Curve = 0.0_idp
 
 DO re = 0,Num_R_Elements-1
 DO te = 0,Num_T_Elements-1
@@ -144,121 +150,33 @@ DO pe = 0,Num_P_Elements-1
                            Int_Weights              )
 
 
-    CALL Calc_Int_Source( re, te, pe,      &
-                          DROT, DTOT, DPOT,&
-                          crlocs, rSquare, &
-                          TP_Sin_Val,      &
-                          TP_Cotan_Val,    &
-                          TP_rSin_Square,  &
-                          Int_Source       )
+    CALL Calc_Int_Source_In_Parts( re, te, pe,      &
+                                   DROT, DTOT, DPOT,&
+                                   crlocs, rSquare, &
+                                   TP_Sin_Val,      &
+                                   TP_Cotan_Val,    &
+                                   TP_rSin_Square,  &
+                                   Int_Source       )
 
 
-    CALL Calc_Element_ADM_Integral( Int_Weights,    &
-                                    Int_Source,     &
-                                    Int_Val         )
+    CALL Calc_Element_ADM_Parts_Integral( Int_Weights,    &
+                                          Int_Source,     &
+                                          Int_Val         )
 
 
-    ADM_Mass = ADM_Mass + Int_Val
+    ADM_Mass = ADM_Mass + Int_Val(1)
+    ADM_Phys = ADM_Phys + Int_Val(2)
+    ADM_Curve = ADM_Curve + Int_Val(3)
 
 END DO ! pe Loop
 END DO ! te Loop
 END DO ! re Loop
 
 
-END SUBROUTINE Calc_ADM_Mass
+END SUBROUTINE Calc_ADM_Mass_In_Parts
 
 
 
-!+201+###########################################################################!
-!                                                                                !
-!                  Calc_Cur_Values          !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Calc_Cur_Values( re, te, pe,             &
-                            DROT, DTOT, DPOT,       &
-                            crlocs, ctlocs,         &
-                            rSquare,                &
-                            TP_Sin_Val,             &
-                            TP_Cotan_Val,           &
-                            TP_RSin_Square          )
-
-INTEGER,   INTENT(IN)                                       ::  re, te, pe
-
-REAL(idp), INTENT(OUT)                                      ::  DROT, DTOT, DPOT
-REAL(idp), INTENT(OUT), DIMENSION(1:Num_R_Quad_Points)      ::  crlocs
-REAL(idp), INTENT(OUT), DIMENSION(1:Num_T_Quad_Points)      ::  ctlocs
-REAL(idp), INTENT(OUT), DIMENSION(1:Num_R_Quad_Points)      ::  rSquare
-
-REAL(idp), INTENT(OUT), DIMENSION(1:Num_TP_Quad_Points)     ::  TP_Sin_Val
-REAL(idp), INTENT(OUT), DIMENSION(1:Num_TP_Quad_Points)     ::  TP_Cotan_Val
-
-REAL(idp), INTENT(OUT), DIMENSION(1:Num_TP_Quad_Points,     &
-                                  1:Num_R_Quad_Points)      ::  TP_Rsin_Square
-
-
-INTEGER                                                     ::  rd, td, pd, tpd
-
-
-DROT = 0.5_idp * (rlocs(re + 1) - rlocs(re))
-DTOT = 0.5_idp * (tlocs(te + 1) - tlocs(te))
-DPOT = 0.5_idp * (plocs(pe + 1) - plocs(pe))
-
-crlocs(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(re)
-ctlocs(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(te)
-
-rSquare(:) = crlocs(:)*crlocs(:)
-
-DO td = 1,NUM_T_QUAD_POINTS
-DO pd = 1,NUM_P_QUAD_POINTS
-    tpd = FP_tpd_Map(td,pd)
-    TP_Sin_Val(tpd)    = DSIN(ctlocs(td))
-    TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(ctlocs(td))
-END DO
-END DO
-
-
-DO rd = 1,NUM_R_QUAD_POINTS
-    TP_RSIN_SQUARE(:,rd) = rSquare(rd)*TP_Sin_Val(:)*TP_Sin_Val(:)
-END DO
-
-
-
-END SUBROUTINE Calc_Cur_Values
-
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_Int_Weights          !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Calc_Int_Weights( DROT, DTOT,            &
-                             R_Square, Sin_Val,     &
-                             Int_Weights            )
-
-
-REAL(idp), INTENT(IN)                                       ::  DROT, DTOT
-REAL(idp), INTENT(IN),    DIMENSION(1:Num_R_Quad_Points)    ::  R_Square
-REAL(idp), INTENT(IN),    DIMENSION(1:Num_TP_Quad_Points)   ::  Sin_Val
-REAL(idp), INTENT(INOUT), DIMENSION(1:Num_TP_Quad_Points,   &
-                                    1:Num_R_Quad_Points)    ::  Int_Weights
-
-INTEGER                                                     ::  tpd, rd, td, pd
-
-
-
-DO rd = 1,Num_R_Quad_Points
-DO td = 1,NUM_T_QUAD_POINTS
-DO pd = 1,NUM_P_QUAD_POINTS
-
-   tpd = FP_tpd_Map(td,pd)
-   Int_Weights( tpd, rd ) = DROT * R_SQUARE(rd) * INT_R_WEIGHTS(rd)  &
-                          * DTOT * SIN_VAL(tpd) * INT_T_WEIGHTS(td)  &
-                          * INT_P_WEIGHTS(pd)
-
-END DO ! pd Loop
-END DO ! td Loop
-END DO ! rd Loop
-
-END SUBROUTINE Calc_Int_Weights
 
 
 
@@ -267,28 +185,28 @@ END SUBROUTINE Calc_Int_Weights
 !                  Calc_Current_Values          !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Int_Source( re, te, pe,        &
-                             DROT, DTOT, DPOT,  &
-                             rlocs, rSquare,    &
-                             TP_Sin_Val,        &
-                             TP_Cotan_Val,      &
-                             TP_RSin_Square,    &
-                             Int_Source         )
+SUBROUTINE Calc_Int_Source_In_Parts( re, te, pe,        &
+                                     DROT, DTOT, DPOT,  &
+                                     rlocs, rSquare,    &
+                                     TP_Sin_Val,        &
+                                     TP_Cotan_Val,      &
+                                     TP_RSin_Square,    &
+                                     Int_Source         )
 
-INTEGER,    INTENT(IN)                                      ::  re, te, pe
-REAL(idp),  INTENT(IN)                                      ::  DROT, DTOT, DPOT
+INTEGER,    INTENT(IN)                                          ::  re, te, pe
+REAL(idp),  INTENT(IN)                                          ::  DROT, DTOT, DPOT
 
-REAL(idp),  INTENT(IN), DIMENSION(1:Num_R_Quad_Points)      ::  rlocs
-REAL(idp),  INTENT(IN), DIMENSION(1:Num_R_Quad_Points)      ::  rSquare
+REAL(idp),  INTENT(IN), DIMENSION(1:Num_R_Quad_Points)          ::  rlocs
+REAL(idp),  INTENT(IN), DIMENSION(1:Num_R_Quad_Points)          ::  rSquare
 
-REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points)     ::  TP_Sin_Val
-REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points)     ::  TP_Cotan_Val
+REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points)         ::  TP_Sin_Val
+REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points)         ::  TP_Cotan_Val
 
-REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points,     &
-                                  1:Num_R_Quad_Points)      ::  TP_Rsin_Square
+REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points,         &
+                                  1:Num_R_Quad_Points)          ::  TP_Rsin_Square
 
-REAL(idp),  INTENT(INOUT), DIMENSION(1:Num_TP_Quad_Points,  &
-                                     1:Num_R_Quad_Points)   ::  Int_Source
+REAL(idp),  INTENT(INOUT), DIMENSION(1:Num_TP_Quad_Points,      &
+                                     1:Num_R_Quad_Points, 3 )   ::  Int_Source
 
 
 
@@ -366,19 +284,26 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
     tpd = FP_tpd_Map(td,pd)
 
-    Int_Source(tpd,rd) = GR_Source_Scalar                               &
-                            / Cur_Val_Psi(tpd,rd)                       &
-                            * Block_Source_E(rd,td,pd,re,te,pe)         &
-                         + AA_Array(tpd,rd)                             &
+    Int_Source(tpd,rd,1) = GR_Source_Scalar                                 &
+                            / Cur_Val_Psi(tpd,rd)                           &
+                            * Block_Source_E(rd,td,pd,re,te,pe)             &
+                          + AA_Array(tpd,rd)                                &
                             / ( 16.0_idp * pi * Cur_Val_Psi(tpd,rd)**7)
-                            
+
+
+    Int_Source(tpd,rd,2) = GR_Source_Scalar                                 &
+                            / Cur_Val_Psi(tpd,rd)                           &
+                            * Block_Source_E(rd,td,pd,re,te,pe)
+
+    Int_Source(tpd,rd,3) = AA_Array(tpd,rd)                                 &
+                            / ( 16.0_idp * pi * Cur_Val_Psi(tpd,rd)**7)
 
 END DO ! pd
 END DO ! td
 END DO ! rd
 
 
-END SUBROUTINE Calc_Int_Source
+END SUBROUTINE Calc_Int_Source_In_Parts
 
 
 
@@ -391,21 +316,21 @@ END SUBROUTINE Calc_Int_Source
 !                 Calc_Element_ADM_Integral                                     !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Calc_Element_ADM_Integral( Int_Weights,      &
-                                      Int_Source,       &
-                                      Int_Val           )
+SUBROUTINE Calc_Element_ADM_Parts_Integral( Int_Weights,      &
+                                            Int_Source,       &
+                                            Int_Val           )
 
 REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points, &
                                   1:Num_R_Quad_Points)  ::  Int_Weights
 
 REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points, &
-                                  1:Num_R_Quad_Points)  ::  Int_Source
+                                  1:Num_R_Quad_Points,3)::  Int_Source
 
 
-REAL(idp), INTENT(OUT)                                  ::  Int_Val
+REAL(idp),    DIMENSION(3), INTENT(OUT)                 ::  Int_Val
 
 INTEGER                                                 ::  rd
-COMPLEX(idp)                                            ::  Tmp_Val
+COMPLEX(idp), DIMENSION(3)                              ::  Tmp_Val
 
 
 
@@ -413,24 +338,32 @@ COMPLEX(idp)                                            ::  Tmp_Val
 Tmp_Val = 0.0_idp
 DO rd = 1,NUM_R_QUAD_POINTS
 
-    Tmp_Val =  Tmp_Val                      &
-             + SUM( Int_Source( :, rd )     &
-                  * Int_Weights(:, rd )     )
+    Tmp_Val(1) =  Tmp_Val(1)                    &
+               + SUM( Int_Source( :, rd, 1 )    &
+               * Int_Weights(:, rd )            )
+
+    Tmp_Val(2) =  Tmp_Val(2)                    &
+               + SUM( Int_Source( :, rd, 2 )    &
+               * Int_Weights(:, rd )            )
+
+    Tmp_Val(3) =  Tmp_Val(3)                    &
+               + SUM( Int_Source( :, rd, 3 )    &
+               * Int_Weights(:, rd )            )
 
 END DO  ! rd Loop
     
 
-Int_Val = Tmp_Val
+Int_Val = REAL(Tmp_Val, Kind = idp)
 
 
-END SUBROUTINE Calc_Element_ADM_Integral
-
-
-
+END SUBROUTINE Calc_Element_ADM_Parts_Integral
 
 
 
 
 
 
-END MODULE ADM_Mass_Module
+
+
+
+END MODULE ADM_Mass_In_Parts_Module

@@ -38,7 +38,7 @@ INTEGER, PUBLIC                                             ::  ierr,           
 
 INTEGER, PUBLIC                                             ::  myShell = -1
 
-INTEGER, PUBLIC                                             ::  myID_Poseidon
+INTEGER, PUBLIC                                             ::  myID_Poseidon   =  0
 INTEGER, PUBLIC                                             ::  myID_Shell      = -1
 INTEGER, PUBLIC                                             ::  myID_SubShell   = -1
 INTEGER, PUBLIC                                             ::  myID_Dist       = -1
@@ -46,6 +46,7 @@ INTEGER, PUBLIC                                             ::  myID_PETSc      
 
 INTEGER, PUBLIC                                             ::  Local_Length = -1
 
+INTEGER, PUBLIC, PARAMETER                                  ::  MasterID_Poseidon = 0
 
 INTEGER, PUBLIC                      ::  NUM_SHELLS                 = 1
 INTEGER, PUBLIC                      ::  NUM_SUBSHELLS_PER_SHELL    = 1

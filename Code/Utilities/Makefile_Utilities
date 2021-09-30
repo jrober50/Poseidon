@@ -1,4 +1,5 @@
 UTILITIES = \
   ADM_Mass.f90           \
+  ADM_Mass_In_Parts.f90  \
   Poseidon_Utilities.f90 \
 

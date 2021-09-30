@@ -44,7 +44,8 @@ USE Poseidon_Parameters, &
                     Verbose_Flag
 
 USE Parameters_Variable_Indices, &
-            ONLY :  iVB_S                      
+            ONLY :  iVB_S,          &
+                    iU_S1
 
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS
@@ -68,7 +69,8 @@ USE Functions_Math, &
 
 USE FP_Functions_Mapping, &
             ONLY :  FP_FEM_Node_Map,        &
-                    FP_Beta_Array_Map
+                    FP_Beta_Array_Map,      &
+                    FP_Array_Map_TypeB
 
 IMPLICIT NONE
 
@@ -156,7 +158,7 @@ DO re = 1,Input_RE
         Here = (re-1)*Degree + rqb + 1
         FP_Coeff_Vector_A(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
 
-        Here = FP_Beta_Array_Map(re,rqb,1,0)
+        Here = FP_Array_Map_TypeB(iU_S1,iVB_S,re-1,rqb,1)
         FP_Coeff_Vector_B(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
 
 !        Here = FP_Beta_Array_Map(re,rqb,2,0)

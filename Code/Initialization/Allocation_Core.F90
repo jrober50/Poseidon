@@ -77,7 +77,8 @@ USE Variables_Source, &
 USE Variables_AMReX_Multifabs, &
             ONLY :  MF_Source,              &
                     BA_Source,              &
-                    DM_Source
+                    DM_Source,              &
+                    Geom_Source
 #endif
 
 
@@ -128,6 +129,7 @@ ALLOCATE(Block_Source_Si(   1:NUM_R_QUAD_POINTS,        &
 ALLOCATE( MF_Source(0:AMReX_Levels-1))
 ALLOCATE( BA_Source(0:AMReX_Levels-1))
 ALLOCATE( DM_Source(0:AMReX_Levels-1))
+ALLOCATE( Geom_Source(0:AMReX_Levels-1))
 #endif
 
 

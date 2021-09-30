@@ -117,6 +117,7 @@ INTEGER                                             ::  lvl
 INTEGER                                             ::  nghost = 0
 INTEGER                                             ::  Num_DOF
 
+INTEGER                                             :: nComp
 REAL(idp), CONTIGUOUS, POINTER                      :: SRC(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      :: DST(:,:,:,:)
 
@@ -130,6 +131,8 @@ DO lvl = 0,nLevels_Input-1
 
     BA_Source(lvl) = MF_SRC_Input(lvl)%ba
     DM_Source(lvl) = MF_SRC_Input(lvl)%dm
+    nComp = MF_SRC_Input(lvl)%ncomp()
+    PRINT*,"nComp ",nComp," Num_DOF*nVars_Input ",Num_DOF*nVars_Input
 
     CALL amrex_multifab_build(  MF_Source(lvl),         &
                                 BA_Source(lvl),         &
@@ -150,10 +153,11 @@ DO lvl = 0,nLevels_Input-1
         ELo = Box%lo
         EHi = Box%hi
 
-        
+!        PRINT*,"ELo ",Elo
+!        PRINT*,"EHi ",EHi
         DO PE = ELo(3), EHi(3)
-        DO TE = ELo(3), EHi(3)
-        DO RE = ELo(3), EHi(3)
+        DO TE = ELo(2), EHi(2)
+        DO RE = ELo(1), EHi(1)
 
 
             DST(RE,TE,PE,:) = SRC(RE,TE,PE,:)

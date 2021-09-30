@@ -1,0 +1,14 @@
+geometry.coord_sys   = 2           
+geometry.prob_lo     = 0.0 0.0 0.0 # Lower domain size
+geometry.prob_hi     = 1000000000 3.1415926535897931 6.2831853071795862 # Upper domain size
+geometry.is_periodic = 00 00 01    # Periodicity. 0 (no), 1 (yes)
+
+amr.n_cell            = 128 1 01 # Number of cells in each dimension
+amr.max_grid_size_x   = 128
+amr.max_grid_size_y   = 1
+amr.max_grid_size_z   = 1
+amr.blocking_factor_x = 1
+amr.blocking_factor_y = 1
+amr.blocking_factor_z = 1
+amr.max_level         = 0
+

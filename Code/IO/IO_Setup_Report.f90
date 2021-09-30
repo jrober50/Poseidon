@@ -42,6 +42,10 @@ USE Poseidon_IO_Parameters, &
                 ONLY :  Method_Names,           &
                         Poseidon_Reports_Dir
 
+USE Variables_MPI, &
+                ONLY :  myID_Poseidon,          &
+                        MasterID_Poseidon
+
 USE Variables_Mesh, &
                 ONLY :  Num_R_Elements,         &
                         Num_T_Elements,         &
@@ -81,15 +85,20 @@ SUBROUTINE Output_Setup_Report()
 CHARACTER(LEN = 100)                                ::  Report_Name
 INTEGER                                             ::  Suggested_Number = 400
 
-IF ( Report_Flags(4) > 1 ) THEN
-    WRITE(Report_Name,'(A,A,A,A)') Poseidon_Reports_Dir,"Setup_Report_",trim(File_Suffix),".out"
-    CALL Open_New_File( Report_Name, Report_IDs(4), Suggested_Number)
+PRINT*, "In Output_Setup_Report",myID_Poseidon
+IF (myID_Poseidon == MasterID_Poseidon ) THEN
+
+
+    IF ( Report_Flags(4) > 1 ) THEN
+        WRITE(Report_Name,'(A,A,A,A)') Poseidon_Reports_Dir,"Setup_Report_",trim(File_Suffix),".out"
+        CALL Open_New_File( Report_Name, Report_IDs(4), Suggested_Number)
+    END IF
+
+    CALL Output_Params_Report( Report_IDs(4) )
+    CALL Output_Method_Report( Report_IDs(4) )
+
+
 END IF
-
-
-CALL Output_Params_Report( Report_IDs(4) )
-CALL Output_Method_Report( Report_IDs(4) )
-
 
 
 END SUBROUTINE Output_Setup_Report
@@ -125,7 +134,6 @@ INTEGER, INTENT(IN)                                 ::  Report_ID
 1411 FORMAT(' # Radial Quad Points = ',I3.1)
 1412 FORMAT(' # Theta Quad Points  = ',I3.1)
 1413 FORMAT(' # Phi Quad Points    = ',I3.1)
-
 
 
 IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3)) THEN
