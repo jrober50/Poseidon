@@ -103,6 +103,13 @@ USE FP_Functions_Mapping, &
                     FP_FEM_Node_Map,            &
                     FP_LM_Map
 
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                 &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_XCFC_Type_B_Factorization
+
 
 USE MPI
 
@@ -135,8 +142,7 @@ INTEGER                                                 :: i
 IF ( Verbose_Flag ) THEN
     PRINT*,"--In Factorize_Beta_Banded."
 END IF
-
-timer(1) = MPI_Wtime()
+CALL TimerStart( Timer_XCFC_Type_B_Factorization )
 
 !   Dirichlet BCs modify the stiffness matrix so we modify it now.
 !   But to apply the BCs we will need values from the original matrix,
@@ -199,8 +205,12 @@ END IF
 !PRINT*,"STOPing in Factorize_Beta_Banded"
 !STOP
 
-timer(2) = MPI_Wtime()
-CALL Clock_In(Timer(2)-Timer(1),19)
+
+
+
+CALL TimerStop( Timer_XCFC_Type_B_Factorization )
+
+
 
 END SUBROUTINE Factorize_Beta_Banded
 

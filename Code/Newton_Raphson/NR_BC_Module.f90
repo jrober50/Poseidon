@@ -40,9 +40,6 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
-USE Units_Module, &
-            ONLY :  C_Square,           &
-                    GR_Source_Scalar
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution,     &

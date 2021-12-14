@@ -32,14 +32,8 @@ USE Poseidon_Parameters, &
                 Verbose_Flag
 
 USE Parameters_Variable_Indices, &
-        ONLY :  iVB_X,                      &
-                iVB_S,                      &
-                iU_X1,                      &
-                iU_X2,                      &
-                iU_X3,                      &
-                iU_S1,                      &
-                iU_S2,                      &
-                iU_S3
+        ONLY :  iU_CF,                      &
+                iU_LF
 
 USE Variables_Derived, &
         ONLY :  Beta_Prob_Dim,              &
@@ -91,6 +85,14 @@ USE MPI_Communication_TypeA_Module,             &
         ONLY :  MPI_RTM_Source_TypeA,           &
                 MPI_BCast_Coeffs_TypeA
 
+USE Timer_Routines_Module, &
+        ONLY :  TimerStart,                     &
+                TimerStop
+
+USE Timer_Variables_Module, &
+        ONLY :  Timer_XCFC_Lapse_LinearSolve,   &
+                Timer_XCFC_ConFactor_LinearSolve
+
 IMPLICIT NONE
 
 
@@ -119,9 +121,9 @@ INTEGER                                                         ::  Upper_Limit
 
 
 IF ( Verbose_Flag ) THEN
-    IF( iU == 1 ) THEN
+    IF( iU == iU_CF ) THEN
         WRITE(*,'(A)')"--In XCFC Iteration, Begining Conformal Factor System Solve.", myID_Poseidon
-    ELSE IF ( iU == 2 ) THEN
+    ELSE IF ( iU == iU_LF ) THEN
         WRITE(*,'(A)')"--In XCFC Iteration, Begining Lapse Function System Solve."
     ELSE
         WRITE(*,'(A)')"Incompatable iU value passed to XCFC_Solve_System_TypeA."
@@ -150,7 +152,11 @@ END IF
 
 
 
-
+IF ( iU == iU_CF ) THEN
+    CALL TimerStart( Timer_XCFC_ConFactor_LinearSolve)
+ELSEIF ( iU == iU_LF ) THEN
+    CALL TimerStart( Timer_XCFC_Lapse_LinearSolve)
+END IF
 
 
 
@@ -205,7 +211,6 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                                 Laplace_Factored_COL(:,l),  &
                                 Laplace_Factored_ROW(:,l),  &
                                 WORK_VEC                    )
-
 
 
 
@@ -264,6 +269,21 @@ CALL MPI_BCAST_Coeffs_TypeA(iU,                     &
 !END DO
 
 #endif
+
+
+
+
+IF ( iU == iU_CF ) THEN
+    CALL TimerStop( Timer_XCFC_ConFactor_LinearSolve)
+ELSEIF ( iU == iU_LF ) THEN
+    CALL TimerStop( Timer_XCFC_Lapse_LinearSolve)
+END IF
+
+
+
+
+!PRINT*,FP_Coeff_Vector_A( :,1,iU)
+
 
 
 

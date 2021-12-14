@@ -46,13 +46,6 @@ USE Parameters_Variable_Indices, &
                     iU_S3,                        &
                     iVB_S
 
-USE Units_Module, &
-            ONLY :  C_Square,                   &
-                    Centimeter,                 &
-                    Meter,                      &
-                    Second,                     &
-                    GravPot_Units,              &
-                    Shift_Units
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution,         &

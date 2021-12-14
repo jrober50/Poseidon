@@ -53,11 +53,6 @@ USE MPI
 
 USE OMP_LIB
 
-USE Units_Module, &
-                ONLY :  GR_Source_Scalar,   &
-                        Speed_of_Light
-
-
 USE Poseidon_Kinds_Module, &
                 ONLY :  idp
                         
@@ -859,7 +854,6 @@ SUBROUTINE Calc_3D_SubJcbn_Terms( re, te, pe )
 INTEGER, INTENT(IN)                                                     ::  re, te, pe
 
 
-
 INTEGER                                                                 ::  pd, td, rd,     &
                                                                             i, tpd
 
@@ -893,7 +887,6 @@ REAL(KIND = idp)                                                        ::  JCBN
 !$OMP           RSIN_SQUARE, R_SQUARE, R_CUBED,                         &
 !$OMP           SIN_VAL, SIN_SQUARE, COTAN_VAL, COS_VAL,                &
 !$OMP           CSC_VAL, CSC_SQUARE,                                    &
-!$OMP           GR_Source_Scalar,                                       &
 !$OMP           NUM_OFF_DIAGONALS,                                      &
 !$OMP           RHS_TERMS,                                              &
 !$OMP           Block_SOURCE_E, Block_SOURCE_S, Block_SOURCE_Si,        &
@@ -908,7 +901,7 @@ DO rd = 1,NUM_R_QUAD_POINTS
   DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = (td-1)*NUM_P_QUAD_POINTS + pd
-
+            
 
         PSI_POWER(1) = CUR_VAL_PSI( tpd, rd)
         DO i = 2,11
@@ -1099,7 +1092,7 @@ DO d = 0,DEGREE
                             + SUM( RHS_TERMS( :, rd, 1 )                        &
                                     * Ylm_CC_Values( :, lm_loc, te, pe)         &
                                     * TP_Int_Weights(:)                     )   &
-                            * Lagrange_Poly_Table(d, rd, 0)                     &
+                            * Lagrange_Poly_Table( d, rd, 0)                     &
                             * R_Int_Weights(rd)
 
 
@@ -1109,7 +1102,7 @@ DO d = 0,DEGREE
                             + SUM( RHS_TERMS( :, rd, 2 )                        &
                                     * Ylm_CC_Values( :, lm_loc, te, pe)         &
                                     * TP_Int_Weights(:)                     )   &
-                            * Lagrange_Poly_Table(d, rd, 0)                     &
+                            * Lagrange_Poly_Table( d, rd, 0)                     &
                             * R_Int_Weights(rd)
 
 
@@ -1117,12 +1110,12 @@ DO d = 0,DEGREE
                             + SUM( RHS_TERMS( :, rd, 3 )                        &
                                     * Ylm_CC_Values( :, lm_loc, te, pe)         &
                                     * TP_Int_Weights(:)                     )   &
-                            * Lagrange_Poly_Table(d, rd, 0)                     &
+                            * Lagrange_Poly_Table( d, rd, 0)                     &
                             * R_Int_Weights(rd)                                 &
                             + OneThird * SUM( Beta_DRV_Trace(:,rd)              &
                                 * Ylm_CC_Values( :, lm_loc, te, pe)             &
                                 * TP_Int_Weights(:)                         )   &
-                            * Lagrange_Poly_Table(d, rd, 1 )/ DELTAR_OVERTWO    &
+                            * Lagrange_Poly_Table( d, rd, 1 )/ DELTAR_OVERTWO    &
                             * R_Int_Weights(rd)
 
 
@@ -1131,12 +1124,12 @@ DO d = 0,DEGREE
                             + SUM( RHS_TERMS( :, rd, 4 )                        &
                                     * Ylm_CC_Values( :, lm_loc, te, pe)         &
                                     * TP_Int_Weights(:)                     )   &
-                            * Lagrange_Poly_Table(d, rd, 0)                     &
+                            * Lagrange_Poly_Table( d, rd, 0)                     &
                             * R_Int_Weights(rd)                                 &
                             + OneThird * SUM( Beta_DRV_Trace(:,rd)              &
                                 * Ylm_CC_dt_Values( :, lm_loc, te, pe)          &
                                 * TP_Int_Weights(:)                         )   &
-                            * Lagrange_Poly_Table(d, rd, 0 )                    &
+                            * Lagrange_Poly_Table( d, rd, 0 )                    &
                             * R_Int_Weights(rd)/ R_SQUARE(rd)
 
 
@@ -1145,12 +1138,12 @@ DO d = 0,DEGREE
                             + SUM( RHS_TERMS( :, rd, 5 )                                &
                                     * Ylm_CC_Values( :, lm_loc, te, pe)                 &
                                     * TP_Int_Weights(:)                     )           &
-                            * Lagrange_Poly_Table(d, rd, 0)                             &
+                            * Lagrange_Poly_Table( d, rd, 0)                             &
                             * R_Int_Weights(rd)                                         &
                             + OneThird * SUM( Beta_DRV_Trace(:,rd)                      &
                                 * Ylm_CC_dp_Values( :, lm_loc, te, pe)                  &
                                 * TP_Int_Weights(:)/(R_SQUARE(rd)*TP_SIN_SQUARE(:) ) )  &
-                            * Lagrange_Poly_Table(d, rd, 0 )                            &
+                            * Lagrange_Poly_Table( d, rd, 0 )                            &
                             * R_Int_Weights(rd)
 
 

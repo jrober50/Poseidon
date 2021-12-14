@@ -17,7 +17,6 @@ MODULE Functions_Additional                                                     
 !##!                                                                                !##!
 !##!    +105+   Spherical_Harmonic                                                  !##!
 !##!                                                                                !##!
-!##!    +201+   Norm_Factor                                                         !##!
 !##!    +202+   Factorial                                                           !##!
 !##!    +203+   Factorial_Division                                                  !##!
 !##!                                                                                !##!
@@ -46,7 +45,6 @@ USE Poseidon_Numbers_Module, &
 
 USE Functions_Math, &
             ONLY :  Legendre_Poly,      &
-                    Norm_Factor,        &
                     Spherical_Harmonic
 
 USE Functions_Mapping,  &

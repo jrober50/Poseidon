@@ -1,4 +1,11 @@
 POSEIDON2AMREX = \
+  Poseidon_AMReX_Multilayer_Utilities.F90        \
+  Poseidon_AMReX_Tagging_Module.F90  \
+  Poseidon_AMReX_Init_Data_On_Level_Module.F90   \
+  Poseidon_AMReX_Patch_Module.F90    \
+  Poseidon_AMReX_Virtual_Functions.F90 \
+  Poseidon_AMReX_MakeFineMask_fi.cpp \
+  Poseidon_AMReX_MakeFineMask.F90    \
   Poseidon_AMReX_Input_Parsing.F90   \
   Poseidon_AMReX_Utilities.F90       \
 

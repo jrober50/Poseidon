@@ -33,7 +33,11 @@ USE Poseidon_IO_Parameters, &
 USE Variables_IO, &
         ONLY :  Run_Time_Table,         &
                 File_Suffix,            &
-                Report_Flags
+                Report_Flags,           &
+                iRF_Time
+
+USE Timer_IO_Module, &
+        ONLY :  Output_Time_Report
 
 USE Variables_FP, &
         ONLY :  FPTT_Names
@@ -59,16 +63,17 @@ CHARACTER(LEN = 100)                                ::  File_Name
 
 
 
-IF ( Report_Flags(5) == 1 ) THEN
-    WRITE(*,'(A)')'------------- Fixed Point Timetable -----------'
-    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(1), ' : ',Run_Time_Table(1), ' s'
-    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(3), ' : ',Run_Time_Table(3), ' s'
-    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(11),' : ',Run_Time_Table(11),' s'
-    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(4), ' : ',Run_Time_Table(4), ' s'
-    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(12),' : ',Run_Time_Table(12),' s'
-    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(5), ' : ',Run_Time_Table(5), ' s'
-    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(8), ' : ',Run_Time_Table(8), ' s'
-    WRITE(*,'(/,/)')
+IF ( Report_Flags(iRF_Time) == 1 ) THEN
+    CALL Output_Time_Report()
+!    WRITE(*,'(A)')'------------- Fixed Point Timetable -----------'
+!    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(1), ' : ',Run_Time_Table(1), ' s'
+!    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(3), ' : ',Run_Time_Table(3), ' s'
+!    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(11),' : ',Run_Time_Table(11),' s'
+!    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(4), ' : ',Run_Time_Table(4), ' s'
+!    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(12),' : ',Run_Time_Table(12),' s'
+!    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(5), ' : ',Run_Time_Table(5), ' s'
+!    WRITE(*,'(A,A,ES12.4E3,A)')FPTT_Names(8), ' : ',Run_Time_Table(8), ' s'
+!    WRITE(*,'(/,/)')
 END IF
 
 

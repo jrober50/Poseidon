@@ -34,9 +34,6 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
-USE Units_Module, &
-            ONLY :  C_Square
-
 USE Poseidon_Parameters, &
             ONLY :  DOMAIN_DIM,             &
                     DEGREE,                 &

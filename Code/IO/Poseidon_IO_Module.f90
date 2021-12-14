@@ -46,7 +46,7 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                     ONLY : pi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
                     ONLY :  C_Square,       &
                             Gram,           &
                             Centimeter,     &
@@ -102,7 +102,13 @@ USE Variables_IO, &
                             Frame_Residual_Table,   &
                             Frame_Update_Table,     &
                             Iteration_Histogram,    &
-                            File_Suffix
+                            File_Suffix,            &
+                            iWF_Source,             &
+                            iWF_Results,            &
+                            iRF_Run,                &
+                            iRF_Frame,              &
+                            iRF_Time,               &
+                            iRF_Iter
 
 
 USE Variables_Yahil, &
@@ -174,26 +180,26 @@ CHARACTER(LEN = 70)                                     ::  FILE_NAME
 109 FORMAT (A,I2.2,A,I2.2)
 113 FORMAT (A,A,I2.2,A,I2.2,A)
 
-IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
+IF (( Report_Flags(iRF_Iter) == 2) .OR. (Report_Flags(iRF_Iter) == 3) ) THEN
 
     WRITE(FILE_NAME,113) Poseidon_IterReports_Dir,"Iteration_Report_P",Rank,"_I",Iteration,".out"
-    CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(3), 100 )
+    CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(iRF_Iter), 100 )
 
 
 
-    WRITE(Report_IDs(3),109)"                      Report for Iteration ",Iteration," by Process ",Rank
-    WRITE(Report_IDs(3),'(A)')"-----------------------------------------------------------------------------------------"
-    WRITE(Report_IDs(3),'(A)')" "
+    WRITE(Report_IDs(iRF_Iter),109)"                      Report for Iteration ",Iteration," by Process ",Rank
+    WRITE(Report_IDs(iRF_Iter),'(A)')"-----------------------------------------------------------------------------------------"
+    WRITE(Report_IDs(iRF_Iter),'(A)')" "
 
 END IF
 
 
-IF ( Report_Flags(2) == 1 ) THEN
+IF ( Report_Flags(iRF_Frame) == 1 ) THEN
 
-    WRITE(Report_IDs(2),'(A)')"-----------------------------------------------------------------------------------------"
-    WRITE(Report_IDs(2),109)"                      Report for Iteration ",Iteration," by Process ",Rank
-    WRITE(Report_IDs(2),'(A)')"-----------------------------------------------------------------------------------------"
-    WRITE(Report_IDs(2),'(3/)')
+    WRITE(Report_IDs(iRF_Frame),'(A)')"-----------------------------------------------------------------------------------------"
+    WRITE(Report_IDs(iRF_Frame),109)"                      Report for Iteration ",Iteration," by Process ",Rank
+    WRITE(Report_IDs(iRF_Frame),'(A)')"-----------------------------------------------------------------------------------------"
+    WRITE(Report_IDs(iRF_Frame),'(3/)')
 
 END IF
 
@@ -223,7 +229,7 @@ INTEGER                         ::  FILE_ID
 113 FORMAT (A38,ES22.15)
 
 
-IF (( Report_Flags(5) == 1 ) .OR. ( Report_Flags(5) == 3 ) ) THEN
+IF (( Report_Flags(iRF_Time) == 1 ) .OR. ( Report_Flags(iRF_Time) == 3 ) ) THEN
 
     WRITE(*,110)"============================================================="
     WRITE(*,111)" "
@@ -257,7 +263,7 @@ IF (( Report_Flags(5) == 1 ) .OR. ( Report_Flags(5) == 3 ) ) THEN
 END IF
 
 
-IF (( Report_Flags(5) == 2 ) .OR. ( Report_Flags(5) == 3 ) ) THEN
+IF (( Report_Flags(iRF_Time) == 2 ) .OR. ( Report_Flags(iRF_Time) == 3 ) ) THEN
 
      
     WRITE(FILENAME,'(A,I2.2,A)')'OUTPUT/Timetable_',Ident,'.out'
@@ -312,7 +318,7 @@ END SUBROUTINE OUTPUT_ITER_TIMETABLE
 SUBROUTINE CLOSE_ITER_REPORT_FILE()
 
 
-CLOSE( UNIT = Report_IDs(3) )
+CLOSE( UNIT = Report_IDs(iRF_Iter) )
 
 END SUBROUTINE CLOSE_ITER_REPORT_FILE
 
@@ -377,7 +383,7 @@ REAL(idp), DIMENSION(Num_CFA_Vars)                          ::  Units
 
 
 
-IF ( Write_Flags(5) > 1 ) THEN
+IF ( Write_Flags(iWF_Results) > 1 ) THEN
 
 
     Num_Files = 4 + SUM(CFA_Eq_Flags)
@@ -559,14 +565,14 @@ INTEGER, DIMENSION(0:1)                                 ::  FILE_ID
 INTEGER                                                 ::  i
 
 FILE_ID = -1
-IF ( Report_Flags(2) == 1 ) THEN
+IF ( Report_Flags(iRF_Frame) == 1 ) THEN
 
-    FILE_ID(0) = Report_IDs(2)
+    FILE_ID(0) = Report_IDs(iRF_Frame)
 
 END IF
 
-IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
-    FILE_ID(1) = Report_IDs(3)
+IF (( Report_Flags(iRF_Iter) == 2) .OR. (Report_Flags(iRF_Iter) == 3) ) THEN
+    FILE_ID(1) = Report_IDs(iRF_Iter)
 END IF
 
 
@@ -707,7 +713,7 @@ REAL(KIND = idp)                                                        ::  Delt
 116 FORMAT (A,A,A,A)
 
 
-IF ( Write_Flags(4) == 1 ) THEN
+IF ( Write_Flags(iWF_Source) == 1 ) THEN
     Num_Files = 6
 
     ALLOCATE( Filenames(1:Num_Files) )
@@ -836,7 +842,7 @@ REAL(KIND = idp)                                                        ::  Dt_O
 
 116 FORMAT (A,A,A,A)
 
-IF ( Write_Flags(4) == 2 ) THEN
+IF ( Write_Flags(iWF_Source) == 2 ) THEN
     Num_Files = 8
 
     ALLOCATE( Filenames(1:Num_Files) )
@@ -1066,9 +1072,9 @@ SUBROUTINE OPEN_RUN_REPORT_FILE()
 
 CHARACTER(LEN = 39)                                     ::  FILE_NAME
 
-IF ( Report_Flags(1) == 1 ) THEN
+IF ( Report_Flags(iRF_Run) == 1 ) THEN
     WRITE(FILE_NAME,'(A,A)') Poseidon_Reports_Dir,"Run_Report.out"
-    CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(1), 10 )
+    CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(iRF_Run), 10 )
 END IF
 
 END SUBROUTINE OPEN_RUN_REPORT_FILE
@@ -1103,7 +1109,7 @@ INTEGER                                         ::  Max_Iters
 110 FORMAT (11X,A1,18X,A13,10X,A18,10X,A11,14X,A11,14X,A11)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 
-FILE_ID = Report_IDs(1)
+FILE_ID = Report_IDs(iRF_Run)
 
 
 
@@ -1111,7 +1117,7 @@ CALL PQ_ITERATIONS_MAX( Max_Iters )
 
 
 ! Write Timetable to File
-IF ( Report_Flags(1) == 1 ) THEN
+IF ( Report_Flags(iRF_Run) == 1 ) THEN
 
     WRITE(FILE_ID,'(A)')"                                Average Timing Results"
     WRITE(FILE_ID,'(A)')"            ============================================================="
@@ -1163,7 +1169,7 @@ END IF
 
 
 ! Write Timetable to Screen
-IF (( Report_Flags(3) == 1) .OR. (Report_Flags(3) == 3) ) THEN
+IF (( Report_Flags(iRF_Iter) == 1) .OR. (Report_Flags(iRF_Iter) == 3) ) THEN
     WRITE(*,'(A)')" "
     WRITE(*,'(A)')" "
     WRITE(*,'(A)')"            ============================================================="
@@ -1200,14 +1206,14 @@ IF (( Report_Flags(3) == 1) .OR. (Report_Flags(3) == 3) ) THEN
 END IF
 
 
-Report_Flags(3) = 1
-PRINT*,"Report_Flags(3)",Report_Flags(3)
+Report_Flags(iRF_Iter) = 1
+PRINT*,"Report_Flags(iRF_Iter)",Report_Flags(iRF_Iter)
 ! Write Results Table Header to Screen
-IF (( Report_Flags(3) == 1) .OR. (Report_Flags(3) == 3) ) THEN
+IF (( Report_Flags(iRF_Iter) == 1) .OR. (Report_Flags(iRF_Iter) == 3) ) THEN
     WRITE(*,'(A)')"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
     WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
 
-    IF ( Report_Flags(1) == 1 ) THEN
+    IF ( Report_Flags(iRF_Run) == 1 ) THEN
         WRITE(FILE_ID,'(A)')"++++++++++++++++++++++++++ Sample Run Results ++++++++++++++++++++++++++"
         WRITE(FILE_ID,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
     END IF
@@ -1245,7 +1251,7 @@ IF (( Report_Flags(3) == 1) .OR. (Report_Flags(3) == 3) ) THEN
                      Return_Beta3
 
         ! Write Results to File
-        IF ( Report_Flags(1) == 1 ) THEN
+        IF ( Report_Flags(iRF_Run) == 1 ) THEN
             WRITE(FILE_ID,111) r/Centimeter,              &
                                PsiPot_Val,                &
                                AlphaPsiPot_Val,           &
@@ -1275,8 +1281,8 @@ END SUBROUTINE OUTPUT_RUN_REPORT
  !#################################################################################!
 SUBROUTINE CLOSE_RUN_REPORT_FILE()
 
-IF ( Report_Flags(1) == 1 ) THEN
-    CLOSE( UNIT = Report_IDs(1) )
+IF ( Report_Flags(iRF_Run) == 1 ) THEN
+    CLOSE( UNIT = Report_IDs(iRF_Run) )
 END IF
 
 END SUBROUTINE CLOSE_RUN_REPORT_FILE
@@ -1311,10 +1317,10 @@ CHARACTER(LEN = 70)                                     ::  FILE_NAME
 
 
 IF ( myID_Poseidon == 0 ) THEN
-    IF ( Report_Flags(2) == 1 ) THEN
+    IF ( Report_Flags(iRF_Frame) == 1 ) THEN
 
         WRITE(FILE_NAME,'(A,A)') Poseidon_IterReports_Dir,"Frame_Report_SCRATCH.out"
-        CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(2) )
+        CALL OPEN_NEW_FILE( FILE_NAME, Report_IDs(iRF_Frame) )
 
     END IF ! Report_Flags(3)S
 END IF ! myID_Poseidon == 0
@@ -1373,7 +1379,7 @@ CALL OPEN_NEW_FILE( trim(FILE_NAME), FILE_ID )
 
 IF ( myID_Poseidon == 0 ) THEN
     ! Write Title to File
-    IF ( Report_Flags(2) == 1 ) THEN
+    IF ( Report_Flags(iRF_FRame) == 1 ) THEN
 
         WRITE(FILE_ID,109)"                                           Frame Report"
         WRITE(FILE_ID,'(A)')"-----------------------------------------------------------------------------------------"
@@ -1498,9 +1504,9 @@ IF ( myID_Poseidon == 0 ) THEN
 
 
         ! Copy from Scratch File into Frame Report !
-        REWIND( UNIT=Report_IDs(2) )
+        REWIND( UNIT=Report_IDs(iRF_Frame) )
         DO
-            READ(Report_IDs(2),'(A)', iostat=io_stat) Line
+            READ(Report_IDs(iRF_Frame),'(A)', iostat=io_stat) Line
             IF (io_stat /= 0 ) THEN
                 EXIT
             END IF
@@ -1511,7 +1517,7 @@ IF ( myID_Poseidon == 0 ) THEN
     END IF ! Report_Flags(2) == 1
 
     CLOSE( UNIT = FILE_ID)
-    CLOSE( UNIT = Report_IDs(2), STATUS='delete' )
+    CLOSE( UNIT = Report_IDs(iRF_Frame), STATUS='delete' )
 
 END IF ! myID_Poseidon == 0
 
@@ -1529,7 +1535,7 @@ END SUBROUTINE OUTPUT_FRAME_REPORT
 SUBROUTINE CLOSE_FRAME_REPORT_FILE()
 
 
-CLOSE( UNIT = Report_IDs(2), STATUS='delete' )
+CLOSE( UNIT = Report_IDs(iRF_Frame), STATUS='delete' )
 
 
 END SUBROUTINE CLOSE_FRAME_REPORT_FILE

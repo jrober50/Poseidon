@@ -61,14 +61,13 @@ USE Poseidon_IO_Module, &
 
 
 
-USE Variables_AMReX_Core,   &
-            ONLY :  AMReX_Levels
 
 #ifdef POSEIDON_AMREX_FLAG
 USE Variables_AMReX_Multifabs,  &
             ONLY :  MF_Source,          &
                     BA_Source,          &
-                    DM_Source
+                    DM_Source,          &
+                    GM_Source
 
 USE Poseidon_AMReX_Utilities_Module,    &
             ONLY :  AMReX2Poseidon,     &
@@ -91,6 +90,7 @@ CONTAINS
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_AMREX( MF_SRC_Input,              &
+                                         GM_SRC_Input,              &
                                          nLevels_Input,             &
                                          nVars_Input,               &
                                          NE, NQ,                    &
@@ -98,6 +98,7 @@ SUBROUTINE Poseidon_Input_Sources_AMREX( MF_SRC_Input,              &
                                          LeftLimit, RightLimit      )
 
 TYPE(amrex_multifab), INTENT(IN)                    ::  MF_SRC_Input(0:nLevels_Input-1)
+TYPE(amrex_geometry), INTENT(IN)                    ::  GM_SRC_Input(0:nLevels_Input-1)
 INTEGER, INTENT(IN)                                 ::  nLevels_Input
 INTEGER, INTENT(IN)                                 ::  nVars_Input
 
@@ -126,27 +127,29 @@ TYPE(amrex_box)                                     :: Box
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
+PRINT*,"Poseidon_Input_Sources_AMREX"
+!DO lvl = 0,nLevels_Input-1
+!
+!    BA_Source(lvl) = MF_SRC_Input(lvl)%ba
+!    DM_Source(lvl) = MF_SRC_Input(lvl)%dm
+!    GM_Source(lvl) = GM_SRC_Input(lvl)
+!    nComp = MF_SRC_Input(lvl)%ncomp()
+!!    PRINT*,"nComp ",nComp," Num_DOF*nVars_Input ",Num_DOF*nVars_Input
+!
+!    CALL amrex_multifab_build(  MF_Source(lvl),         &
+!                                BA_Source(lvl),         &
+!                                DM_Source(lvl),         &
+!                                Num_DOF*nVars_Input,   &
+!                                nghost                  )
+!END DO ! lvl Loop
 
-DO lvl = 0,nLevels_Input-1
-
-    BA_Source(lvl) = MF_SRC_Input(lvl)%ba
-    DM_Source(lvl) = MF_SRC_Input(lvl)%dm
-    nComp = MF_SRC_Input(lvl)%ncomp()
-    PRINT*,"nComp ",nComp," Num_DOF*nVars_Input ",Num_DOF*nVars_Input
-
-    CALL amrex_multifab_build(  MF_Source(lvl),         &
-                                BA_Source(lvl),         &
-                                DM_Source(lvl),         &
-                                Num_DOF*nVars_Input,   &
-                                nghost                  )
-END DO ! lvl Loop
 
 
 DO lvl = 0,nLevels_Input-1
     CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .false. )
     DO WHILE(mfi%next())
 
-        SRC => MF_SRC_Input(lvl)%dataPtr(mfi)
+!        SRC => MF_SRC_Input(lvl)%dataPtr(mfi)
         DST => MF_Source(lvl)%dataPTR(mfi)
         Box = mfi%tilebox()
 
@@ -159,20 +162,22 @@ DO lvl = 0,nLevels_Input-1
         DO TE = ELo(2), EHi(2)
         DO RE = ELo(1), EHi(1)
 
-
-            DST(RE,TE,PE,:) = SRC(RE,TE,PE,:)
-
+            PRINT*,DST(RE,TE,PE,:)
+!            DST(RE,TE,PE,:) = SRC(RE,TE,PE,:)
 
         END DO
         END DO
         END DO
+
+        NULLIFY( DST )
+        NULLIFY( SRC )
 
     END DO
     CALL amrex_mfiter_destroy(mfi)
 END DO ! lvl
 
 
-
+STOP
 
 END SUBROUTINE Poseidon_Input_Sources_AMREX
 
@@ -194,14 +199,14 @@ END SUBROUTINE Poseidon_Input_Sources_AMREX
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_XCFC_Input_Sources_AMREX(   MF_Sources, AMReX_Levels,   &
+SUBROUTINE Poseidon_XCFC_Input_Sources_AMREX(   MF_Sources, nLevels_Input,   &
                                                 NE_Lower, NE_Upper,         &
                                                 NQ, Si_Dim                  )
 
 
 
-TYPE(amrex_multifab), INTENT(IN)                                ::  MF_Sources(0:AMReX_Levels-1)
-INTEGER             , INTENT(IN)                                ::  AMReX_Levels
+TYPE(amrex_multifab), INTENT(IN)                                ::  MF_Sources(0:nLevels_Input-1)
+INTEGER             , INTENT(IN)                                ::  nLevels_Input
 
 
 INTEGER, DIMENSION(3), INTENT(IN)                               ::  NE_Lower
@@ -215,7 +220,7 @@ INTEGER                                                         ::  Num_DOF
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
 
-CALL UnpackSources_AMReX( Num_DOF, AMReX_Levels,                &
+CALL UnpackSources_AMReX( Num_DOF, nLevels_Input,                &
                           NE_Lower, NE_Upper,                   &
                           Block_Source_E, Block_Source_S, Block_Source_Si,  &
                           MF_Sources                            )

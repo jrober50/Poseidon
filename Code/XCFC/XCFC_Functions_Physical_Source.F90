@@ -61,6 +61,9 @@ USE FP_Functions_Mapping, &
             ONLY :  FP_FEM_Node_Map,    &
                     FP_tpd_Map
 
+USE Quadrature_Mapping_Functions, &
+            ONLY :  Quad_Map
+
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR
 
@@ -86,19 +89,19 @@ CONTAINS
 !                                                     				!
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Get_Physical_Source( Source, iU, RE, TE, PE)
+SUBROUTINE Get_Physical_Source( Source, iU, iE)
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
 INTEGER,                                                     INTENT(IN)     :: iU
-INTEGER,                                                     INTENT(IN)     :: RE, TE, PE
+INTEGER,   DIMENSION(3),                                     INTENT(IN)     :: iE
 
 #ifdef POSEIDON_AMREX_FLAG
 
-    CALL Get_Physical_Source_AMReX( Source, iU, RE, TE, PE)
+    CALL Get_Physical_Source_AMReX( Source, iU, iE)
 
 #else
 
-    CALL Get_Physical_Source_Native( Source, iU, RE, TE, PE)
+    CALL Get_Physical_Source_Native( Source, iU, iE)
 
 #endif
 
@@ -112,15 +115,15 @@ END SUBROUTINE Get_Physical_Source
 !                                                                     !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Get_Physical_Source_Native( Source, iU, RE, TE, PE)
+SUBROUTINE Get_Physical_Source_Native( Source, iU, iE)
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
 INTEGER,                                                     INTENT(IN)     :: iU
-INTEGER,                                                     INTENT(IN)     :: RE, TE, PE
+INTEGER,   DIMENSION(3),                                     INTENT(IN)     :: iE
 
 
 INTEGER                                                         :: rd, td, pd, tpd
-
+INTEGER                                                         :: Here
 
 IF ( iU == 1 ) THEN
 
@@ -128,8 +131,9 @@ IF ( iU == 1 ) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd = FP_tpd_Map(td,pd)
-        Source(tpd,rd) = Block_Source_E(rd,td,pd,re,te,pe)
+        tpd  = FP_tpd_Map(td,pd)
+        Here = Quad_Map(rd,td,pd)
+        Source(tpd,rd) = Block_Source_E(Here,iE(1),iE(2),iE(3))
 
     END DO ! pd
     END DO ! td
@@ -142,9 +146,10 @@ ELSEIF ( iU == 2 ) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd = FP_tpd_Map(td,pd)
-        Source(tpd,rd) = Block_Source_E(rd,td,pd,re,te,pe)                &
-                       + 2.0_idp*Block_Source_S(rd,td,pd,re,te,pe)
+        tpd  = FP_tpd_Map(td,pd)
+        Here = Quad_Map(rd,td,pd)
+        Source(tpd,rd) = Block_Source_E(Here,iE(1),iE(2),iE(3))                &
+                       + 2.0_idp*Block_Source_S(Here,iE(1),iE(2),iE(3))
 
 
 
@@ -158,8 +163,9 @@ ELSEIF ( iU == 3) THEN
    DO td = 1,NUM_T_QUAD_POINTS
    DO pd = 1,NUM_P_QUAD_POINTS
 
-       tpd = FP_tpd_Map(td,pd)
-       Source(tpd,rd) = Block_Source_Si(rd,td,pd,re,te,pe,1)
+       tpd  = FP_tpd_Map(td,pd)
+       Here = Quad_Map(rd,td,pd)
+       Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
 
    END DO ! pd
    END DO ! td
@@ -171,8 +177,9 @@ ELSE IF ( iU == 4) THEN
    DO td = 1,NUM_T_QUAD_POINTS
    DO pd = 1,NUM_P_QUAD_POINTS
 
-       tpd = FP_tpd_Map(td,pd)
-       Source(tpd,rd) = Block_Source_Si(rd,td,pd,re,te,pe,2)
+       tpd  = FP_tpd_Map(td,pd)
+       Here = Quad_Map(rd,td,pd)
+       Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),2)
 
 
    END DO ! pd
@@ -185,8 +192,9 @@ ELSE IF ( iU == 5 ) THEN
    DO td = 1,NUM_T_QUAD_POINTS
    DO pd = 1,NUM_P_QUAD_POINTS
 
-       tpd = FP_tpd_Map(td,pd)
-       Source(tpd,rd) = Block_Source_Si(rd,td,pd,re,te,pe,3)
+       tpd  = FP_tpd_Map(td,pd)
+       Here = Quad_Map(rd,td,pd)
+       Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),3)
 
 
    END DO ! pd
@@ -205,17 +213,17 @@ END SUBROUTINE Get_Physical_Source_Native
 !                                                                     !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Get_Physical_Source_AMReX( Source, iU, RE, TE, PE)
+SUBROUTINE Get_Physical_Source_AMReX( Source, iU, iE)
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
 INTEGER,                                                     INTENT(IN)     :: iU
-INTEGER,                                                     INTENT(IN)     :: RE, TE, PE
+INTEGER,   DIMENSION(3),                                     INTENT(IN)     :: iE
 INTEGER                                                         :: rd, td, pd, tpd
 INTEGER                                                         :: Here, There
 
 INTEGER                                                         :: ierr
 
-!PRINT*,"In Physical_Source_AMReX, MyID ",myID_Poseidon," - ",re,te,pe
+!PRINT*,"In Physical_Source_AMReX, MyID ",myID_Poseidon," - ",iE(1),iE(2),iE(3)
 !CALL MPI_Barrier(Poseidon_Comm_World, ierr )
 
 IF ( iU == 1 ) THEN
@@ -226,13 +234,9 @@ IF ( iU == 1 ) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = FP_tpd_Map(td,pd)
-        Here = (iS_E-1)*NUM_Quad_DOF                       &
-             + (pd-1)*Num_R_Quad_Points*Num_T_Quad_Points   &
-             + (td-1)*Num_R_Quad_Points                     &
-             + rd
-
-        Source(tpd,rd) = Source_PTR(re+1,te+1,pe+1,Here)
-
+        Here = (iS_E-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
+        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
+!        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here)
 
     END DO ! pd
     END DO ! td
@@ -245,16 +249,10 @@ ELSEIF ( iU == 2 ) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = FP_tpd_Map(td,pd)
-        Here = (iS_E-1)*NUM_Quad_DOF                       &
-             + (pd-1)*Num_R_Quad_Points*Num_T_Quad_Points   &
-             + (td-1)*Num_R_Quad_Points                     &
-             + rd
-        There = (iS_S-1)*NUM_Quad_DOF                       &
-                + (pd-1)*Num_R_Quad_Points*Num_T_Quad_Points   &
-                + (td-1)*Num_R_Quad_Points                     &
-                + rd
-        Source(tpd,rd) = Source_PTR(re+1,te+1,pe+1,Here)  &
-                    + 2.0_idp*Source_PTR(re+1,te+1,pe+1,There)
+        Here = (iS_E-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
+        There = (iS_S-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
+        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)  &
+                    + 2.0_idp*Source_PTR(iE(1),iE(2),iE(3),There)
 
 
     END DO ! pd
@@ -268,14 +266,11 @@ ELSE IF ( iU == 3) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = FP_tpd_Map(td,pd)
-        Here = (iS_S1-1)*NUM_Quad_DOF                       &
-             + (pd-1)*Num_R_Quad_Points*Num_T_Quad_Points   &
-             + (td-1)*Num_R_Quad_Points                     &
-             + rd
+        Here = (iS_S1-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
-!        PRINT*,"myID ",myID_Poseidon," - ",Here,re+1,te+1,pe+1
-        Source(tpd,rd) = Source_PTR(re+1,te+1,pe+1,Here)
-
+!        PRINT*,"Here ",Here,iE(1),iE(2),iE(3)
+        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
+!        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here)
 !        PRINT*,"myID ",myID_Poseidon," - ",Source(tpd,rd)
 
     END DO ! pd
@@ -289,12 +284,9 @@ ELSE IF ( iU == 4) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = FP_tpd_Map(td,pd)
-        Here = (iS_S2-1)*NUM_Quad_DOF                       &
-             + (pd-1)*Num_R_Quad_Points*Num_T_Quad_Points   &
-             + (td-1)*Num_R_Quad_Points                     &
-             + rd
+        Here = (iS_S2-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
-        Source(tpd,rd) = Source_PTR(re+1,te+1,pe+1,Here)
+        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
 
 
     END DO ! pd
@@ -308,12 +300,9 @@ ELSE IF ( iU == 5 ) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = FP_tpd_Map(td,pd)
-        Here = (iS_S3-1)*NUM_Quad_DOF                       &
-             + (pd-1)*Num_R_Quad_Points*Num_T_Quad_Points   &
-             + (td-1)*Num_R_Quad_Points                     &
-             + rd
+        Here = (iS_S3-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
-        Source(tpd,rd) = Source_PTR(re+1,te+1,pe+1,Here)
+        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
         
 
     END DO ! pd

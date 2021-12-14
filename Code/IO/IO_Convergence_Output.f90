@@ -25,10 +25,6 @@ MODULE IO_Convergence_Output                                                    
 USE Poseidon_Kinds_Module, &
                     ONLY : idp
 
-USE Units_Module, &
-                    ONLY :  Centimeter,             &
-                            Shift_Units
-
 USE Poseidon_Parameters, &
                     ONLY :  Cur_Iteration,          &
                             Max_Iterations,         &
@@ -38,7 +34,8 @@ USE Variables_IO, &
                     ONLY :  Frame_Update_Table,     &
                             Frame_Residual_Table,   &
                             File_Suffix,            &
-                            Report_Flags
+                            Report_Flags,           &
+                            iRF_Converge
 
 USE Poseidon_IO_Parameters, &
                     ONLY :  Poseidon_Reports_Dir
@@ -82,7 +79,7 @@ INTEGER                                                     ::  i, ui, iter
 116 FORMAT (A,A,A,A)
 
 
-IF ( Report_Flags(6) == 1 ) THEN
+IF ( Report_Flags(iRF_Converge) == 1 ) THEN
 
     Num_Files = 5
     ALLOCATE( Resid_Name(1:Num_Files) )

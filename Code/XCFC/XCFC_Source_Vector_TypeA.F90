@@ -30,7 +30,7 @@ USE Poseidon_Numbers_Module, &
            ONLY :  pi,                         &
                    TwoPi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
            ONLY :  GR_Source_Scalar
 
 USE Poseidon_Parameters, &
@@ -75,8 +75,11 @@ USE Variables_Source, &
                    Block_Source_Si
 
 USE Variables_Tables, &
-           ONLY :  Ylm_CC_Values,              &
-                   Lagrange_Poly_Table
+           ONLY :   Ylm_CC_Values,              &
+                    Ylm_Elem_CC_Values,         &
+                    Level_dx,                   &
+                    Lagrange_Poly_Table,        &
+                    Lagpoly_MltiLayer_Table
 
 USE Variables_Derived, &
            ONLY :  LM_LENGTH
@@ -87,9 +90,6 @@ USE Variables_FP, &
 
 USE Functions_Jacobian, &
            ONLY :  Calc_Ahat
-
-USE Poseidon_IO_Module, &
-           ONLY :  Clock_In
 
 USE FP_Functions_Mapping, &
            ONLY :  FP_FEM_Node_Map,            &
@@ -123,6 +123,19 @@ USE XCFC_Functions_Calc_Values_Module, &
                     Calc_Val_On_Elem_TypeA,         &
                     Calc_Val_And_Drv_On_Elem_TypeB
 
+USE Initialization_Tables, &
+            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
+                    Initialize_Ylm_Tables_On_Elem
+
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                     &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_XCFC_Lapse_SourceVector,  &
+                    Timer_XCFC_ConFactor_SourceVector
+
 USE MPI
 
 
@@ -141,18 +154,29 @@ USE amrex_boxarray_module, &
 
 USE amrex_multifab_module,  &
             ONLY:   amrex_multifab,         &
-                    amrex_multifab_build
+                    amrex_multifab_build,   &
+                    amrex_imultifab_build
 
 USE Variables_AMReX_Multifabs, &
             ONLY :  MF_Source,  &
                     BA_Source,  &
-                    DM_Source
-
-USE Variables_AMReX_Core,   &
-            ONLY :  AMReX_Levels
+                    DM_Source,  &
+                    GM_Source,  &
+                    nLevels,    &
+                    Level_Ratio
 
 USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR
+            ONLY :  Source_PTR,         &
+                    Mask_PTR,           &
+                    iCoarse,            &
+                    iFine
+
+
+USE Poseidon_AMReX_MakeFineMask_Module, &
+            ONLY :  AMReX_MakeFineMask
+
+USE Poseidon_AMReX_Multilayer_Utilities_Module, &
+            ONLY :  Find_Coarsest_Parent
 
 #endif
 
@@ -177,22 +201,52 @@ INTEGER, INTENT(IN)                     ::  iU
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL
 
+INTEGER,             DIMENSION(3)       ::  iE
+#ifndef POSEIDON_AMREX_FLAG
+INTEGER                                 ::  re, te, pe
+#endif
+
+
+IF ( iU == iU_CF ) THEN
+    CALL TimerStart( Timer_XCFC_ConFactor_SourceVector)
+ELSEIF ( iU == iU_LF ) THEN
+    CALL TimerStart( Timer_XCFC_Lapse_SourceVector)
+END IF
+
+
+
 
 #ifdef POSEIDON_AMREX_FLAG
 
     CALL XCFC_AMReX_Calc_Source_Vector_TypeA( iU )
 
 #else
-
-    CALL XCFC_Native_Calc_Source_Vector_TypeA( iU, iEU, iEL )
-
+    
+    FP_Source_Vector_A(:,:,iU) = 0.0_idp
+    DO re = iEL(1),iEU(1)
+    DO te = iEL(2),iEU(2)
+    DO pe = iEL(3),iEU(3)
+        iE = [re,te,pe]
+        CALL XCFC_Calc_Source_Vector_On_Element_TypeA( iU, iE )
+    END DO ! pe
+    END DO ! te
+    END DO ! re
 #endif
 
 
 
+IF ( iU == iU_CF ) THEN
+    CALL TimerStop( Timer_XCFC_ConFactor_SourceVector)
+ELSEIF ( iU == iU_LF ) THEN
+    CALL TimerStop( Timer_XCFC_Lapse_SourceVector)
+END IF
+
+
+
+!PRINT*,FP_Source_Vector_A(:,:,iU)
+
+
 END SUBROUTINE XCFC_Calc_Source_Vector_TypeA
-
-
 
 
 
@@ -201,71 +255,98 @@ END SUBROUTINE XCFC_Calc_Source_Vector_TypeA
 !           XCFC_Calc_Source_Vector_TypeA                                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE XCFC_Native_Calc_Source_Vector_TypeA( iU, iEU, iEL )
+SUBROUTINE XCFC_Calc_Source_Vector_On_Element_TypeA( iU, iE, Level_Option )
 
 INTEGER, INTENT(IN)                             ::  iU
-INTEGER, INTENT(IN), DIMENSION(3)               ::  iEU
-INTEGER, INTENT(IN), DIMENSION(3)               ::  iEL
+INTEGER, INTENT(IN), DIMENSION(3)               ::  iE
+INTEGER, INTENT(IN), OPTIONAL                   ::  Level_Option
 
-INTEGER                                         ::  re, te, pe,     &
-                                                    rd, tpd, td, pd
+
+INTEGER                                         ::  rd, tpd, td, pd
 
 REAL(KIND = idp)                                ::  DROT,     &
-                                                    DTOT,     &
-                                                    DPOT
+                                                    DTOT
+
+INTEGER                                         ::  Level, i
+INTEGER                                         ::  iCE(3)
+INTEGER                                         ::  iRE(3)
+
+IF (Present(Level_Option)) THEN
+    Level = Level_Option
+ELSE
+    Level = 0
+END IF
 
 
-#ifndef POSEIDON_AMREX_FLAG
-FP_Source_Vector_A(:,:,iU) = 0.0_idp
+#ifdef POSEIDON_AMREX_FLAG
+
+
+DO i = 1,3
+    iCE(i) = Find_Coarsest_Parent(iE(i), Level)
+    iRE(i) = 2.0_idp*MOD(iE(i),Level_Ratio(Level))
+END DO
+
+
+DROT = Level_dx(Level,1)/2.0_idp
+DTOT = Level_dx(Level,2)/2.0_idp
+
+CUR_R_LOCS(:) = DROT * (Int_R_Locations(:) + 1.0_idp + iE(1)*2.0_idp)
+CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iE(2)*2.0_idp)
+
+#else
+
+
+DROT = 0.5_idp * (rlocs(iE(1)+1) - rlocs(iE(1)))
+DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
+
+CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
+CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
+
+
 #endif
 
-DO re = iEL(1),iEU(1)
-DO te = iEL(2),iEU(2)
-DO pe = iEL(3),iEU(3)
-
-    DROT = 0.5_idp * (rlocs(re+1) - rlocs(re))
-    DPOT = 0.5_idp * (plocs(pe+1) - plocs(pe))
-    DTOT = 0.5_idp * (tlocs(te+1) - tlocs(te))
-
-    CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(re)
-    CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(te)
-
-    R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
-    DO td = 1,NUM_T_QUAD_POINTS
-    DO pd = 1,NUM_P_QUAD_POINTS
-        tpd = FP_tpd_Map(td,pd)
-        TP_Sin_Val(tpd)    = DSIN(CUR_T_LOCS(td))
-        TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(CUR_T_LOCS(td))
-    END DO
-    END DO
-    TP_Sin_Square(:) = TP_Sin_Val(:)*TP_Sin_Val
 
 
-    DO rd = 1,NUM_R_QUAD_POINTS
-        TP_RSIN_SQUARE(:,rd) = R_SQUARE(rd)*TP_SIN_SQUARE(:)
-    END DO
+R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
+DO td = 1,NUM_T_QUAD_POINTS
+DO pd = 1,NUM_P_QUAD_POINTS
+    tpd = FP_tpd_Map(td,pd)
+    TP_Sin_Val(tpd)    = DSIN(CUR_T_LOCS(td))
+    TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(CUR_T_LOCS(td))
+END DO
+END DO
+TP_Sin_Square(:) = TP_Sin_Val(:)*TP_Sin_Val
 
-    CALL Calc_Int_Weights( DROT, DTOT,                  &
-                           R_Square, TP_Sin_Val,        &
-                           R_Int_Weights, TP_Int_Weights )
 
-!    PRINT*,"Before Calc_XCFC_CurVals_TypeA",re,te,pe
-    CALL Calc_XCFC_CurVals_TypeA( re, te, pe, iU,   &
-                                  DROT,   &
-                                  DTOT,   &
-                                  DPOT    )
+DO rd = 1,NUM_R_QUAD_POINTS
+    TP_RSIN_SQUARE(:,rd) = R_SQUARE(rd)*TP_SIN_SQUARE(:)
+END DO
 
-!    PRINT*,"Before Create_XCFC_Vector_TypeA"
-    CALL Create_XCFC_Vector_TypeA( re, te, pe, iU )
+
+!PRINT*,"Before Calc_Int_Weights",iE
+CALL Calc_Int_Weights( DROT, DTOT,                  &
+                       R_Square, TP_Sin_Val,        &
+                       R_Int_Weights, TP_Int_Weights )
+
+!PRINT*,"Before Calc_XCFC_CurVals_TypeA",iE
+CALL Calc_XCFC_CurVals_TypeA( iE,       &
+                              iU,       &
+                              DROT,     &
+                              DTOT,     &
+                              Level     )
+
+!PRINT*,"Before Create_XCFC_Vector_TypeA",iE
+CALL Create_XCFC_Vector_TypeA( iE, iU, Level )
 
 
 
-END DO ! te Loop
-END DO ! pe Loop
-END DO ! re Loop
+END SUBROUTINE XCFC_Calc_Source_Vector_On_Element_TypeA
 
 
-END SUBROUTINE XCFC_Native_Calc_Source_Vector_TypeA
+
+
+
+
 
 
 
@@ -276,46 +357,117 @@ END SUBROUTINE XCFC_Native_Calc_Source_Vector_TypeA
 !                  Create_XCFC_Vector_TypeA                                     !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Create_XCFC_Vector_TypeA( re, te, pe, iU )
+SUBROUTINE Create_XCFC_Vector_TypeA( iE, iU, Level )
 
 
+INTEGER, INTENT(IN), DIMENSION(3)                           ::  iE
+INTEGER, INTENT(IN)                                         ::  iU
+INTEGER, INTENT(IN)                                         ::  Level
 
-INTEGER, INTENT(IN)                                         ::  re, te, pe, iU
 
-INTEGER                                                     ::  rd, d, lm_loc
+INTEGER                                                     ::  rd, d, lm_loc, td,pd,tpd
 INTEGER                                                     ::  Current_i_Location
 
 COMPLEX(KIND = idp)                                         ::  RHS_TMP
+INTEGER                                                     ::  iCT
 
+
+#ifdef POSEIDON_AMREX_FLAG
+
+iCT = 2**(level+1) + mod(iE(1),2**level) - 2
 DO lm_loc = 1,LM_LENGTH
 DO d = 0,DEGREE
-
-
+    
     RHS_TMP = 0.0_idp
     DO rd = 1,NUM_R_QUAD_POINTS
 
-
-
-        RHS_TMP =  RHS_TMP                                         &
-                 + SUM( SourceTerm( :, rd, iU )                    &
-                       * Ylm_CC_Values( :, lm_loc, te, pe)          &
+        RHS_TMP =  RHS_TMP                                          &
+                 + SUM( SourceTerm( :, rd, iU )                     &
+                       * Ylm_Elem_CC_Values( :, lm_loc )            &
                        * TP_Int_Weights(:)                     )    &
-               * Lagrange_Poly_Table(d, rd, 0)                      &
+               * LagPoly_MltiLayer_Table( d, rd, 0, iCT)            &
                * R_Int_Weights(rd)
 
+!        PRINT*,"________Source_Term_____________",lm_loc,d,rd
+!        PRINT*,SourceTerm( :, rd, iU )
+!        PRINT*,"_______Lagrange_Poly____________"
+!        PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
+!        PRINT*,"_______TP_Int_Weights___________"
+!        PRINT*,TP_INT_Weights(:)
 
+
+
+!        PRINT*,lm_loc,d,rd,                                 &
+!        SUM( SourceTerm( :, rd, iU )                        &
+!                * Ylm_Elem_CC_Values( :, lm_loc )           &
+!                * TP_Int_Weights(:)                     ),  &
+!        LagPoly_MltiLayer_Table( d, rd, 0, iCT),            &
+!        R_Int_Weights(rd)
+        
     END DO  ! rd Loop
     
 
-    Current_i_Location = FP_FEM_Node_Map(re,d)
+
+    Current_i_Location = FP_FEM_Node_Map(Find_Coarsest_Parent(iE(1),Level),d)
+    FP_Source_Vector_A(Current_i_Location,lm_loc,iU)          &
+        = FP_Source_Vector_A(Current_i_Location,lm_loc,iU)    &
+        + RHS_TMP
+
+
+!    PRINT*,Current_i_Location,FP_Source_Vector_A(Current_i_Location,lm_loc,iU)
+
+END DO  ! d Loop
+END DO  ! lm_loc Loop
+
+
+
+
+#else
+
+DO lm_loc = 1,LM_LENGTH
+DO d = 0,DEGREE
+    RHS_TMP = 0.0_idp
+    DO rd = 1,NUM_R_QUAD_POINTS
+
+        RHS_TMP =  RHS_TMP                                          &
+                 + SUM( SourceTerm( :, rd, iU )                     &
+                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+                       * TP_Int_Weights(:)                     )    &
+               * Lagrange_Poly_Table( d, rd, 0)                     &
+               * R_Int_Weights(rd)
+
+
+!        PRINT*,"________Source_Term_____________",lm_loc,d,rd
+!        PRINT*,SourceTerm( :, rd, iU )
+!        PRINT*,"_______Lagrange_Poly____________"
+!        PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
+!        PRINT*,"_______TP_Int_Weights___________"
+!        PRINT*,TP_INT_Weights(:)
+
+!        PRINT*,lm_loc,d,rd,                                 &
+!        SUM( SourceTerm( :, rd, iU )                        &
+!                * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))   &
+!                * TP_Int_Weights(:)                     ),  &
+!        Lagrange_Poly_Table( d, rd, 0),                     &
+!        R_Int_Weights(rd)
+
+    END DO  ! rd Loop
+    Current_i_Location = FP_FEM_Node_Map(iE(1),d)
+
     FP_Source_Vector_A(Current_i_Location,lm_loc,iU)          &
         = FP_Source_Vector_A(Current_i_Location,lm_loc,iU)    &
         + RHS_TMP
 
     
+!    PRINT*,Current_i_Location,FP_Source_Vector_A(Current_i_Location,lm_loc,iU)
 
 END DO  ! d Loop
 END DO  ! lm_loc Loop
+
+
+#endif
+
+
 
 
 END SUBROUTINE Create_XCFC_Vector_TypeA
@@ -334,12 +486,12 @@ END SUBROUTINE Create_XCFC_Vector_TypeA
 !                  Calc_Current_Values          !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_XCFC_CurVals_TypeA( re, te, pe, iU,     &
-                                    DROT, DTOT, DPOT    )
+SUBROUTINE Calc_XCFC_CurVals_TypeA( iE, iU, DROT, DTOT, Level )
 
-INTEGER, INTENT(IN)                                             ::  re, te, pe, iU
-REAL(KIND = idp), INTENT(IN)                                    ::  DROT, DTOT, DPOT
-
+INTEGER, INTENT(IN), DIMENSION(3)                               ::  iE
+INTEGER, INTENT(IN)                                             ::  iU
+REAL(KIND = idp), INTENT(IN)                                    ::  DROT, DTOT
+INTEGER, INTENT(IN)                                             ::  Level
 
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3,3) ::  Ahat_Array
@@ -350,33 +502,49 @@ REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points)     ::  PhysSrc
 INTEGER                                                         ::  tpd, rd
 INTEGER                                                         ::  i, j
 
-!PRINT*,"A"
+!PRINT*,"A",Level
 CALL Calc_Int_Weights( DROT, DTOT,                      &
                        R_Square, TP_Sin_Val,               &
                        R_Int_Weights, TP_Int_Weights    )
 
-CALL Calc_Val_On_Elem_TypeA( RE, TE, PE, Cur_Val_Psi, iU_CF )
-CALL Calc_Val_On_Elem_TypeA( RE, TE, PE, Cur_Val_AlphaPsi, iU_LF )
+!PRINT*,"B"
+CALL Calc_Val_On_Elem_TypeA( iE, Cur_Val_Psi, iU_CF, Level )
+CALL Calc_Val_On_Elem_TypeA( iE, Cur_Val_AlphaPsi, iU_LF, Level )
 
-
-CALL Calc_Val_And_Drv_On_Elem_TypeB( RE, TE, PE, DROT,      &
+!PRINT*,"C"
+CALL Calc_Val_And_Drv_On_Elem_TypeB(iE, DROT,      &
                                     CUR_Val_X(:,:,1),       &
                                     CUR_DRV_X(:,:,:,1),     &
-                                    iU_X1, iVB_X            )
+                                    iU_X1, iVB_X,           &
+                                    Level                   )
 
-CALL Calc_Val_And_Drv_On_Elem_TypeB( RE, TE, PE, DROT,      &
+CALL Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT,      &
                                     CUR_Val_X(:,:,2),       &
                                     CUR_DRV_X(:,:,:,2),     &
-                                    iU_X2, iVB_X            )
+                                    iU_X2, iVB_X,           &
+                                    Level                   )
 
-CALL Calc_Val_And_Drv_On_Elem_TypeB( RE, TE, PE, DROT,      &
+CALL Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT,      &
                                     CUR_Val_X(:,:,3),       &
                                     CUR_DRV_X(:,:,:,3),     &
-                                    iU_X3, iVB_X            )
+                                    iU_X3, iVB_X,           &
+                                    Level                   )
 
 
 
-!PRINT*,"B"
+
+!PRINT*,"_____Psi______",iE
+!PRINT*,Cur_Val_Psi
+!PRINT*,"_____AlphaPsi______"
+!PRINT*,Cur_Val_AlphaPsi
+!PRINT*,"_____X1______"
+!PRINT*,Cur_Val_X(:,:,1)
+!PRINT*,"_____X2______"
+!PRINT*,Cur_Val_X(:,:,2)
+!PRINT*,"_____X3______"
+!PRINT*,Cur_Val_X(:,:,3)
+
+!PRINT*,"D"
 CALL Calc_Ahat( Ahat_Array,                             &
                 NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINTS,  &
                 Cur_R_Locs, R_SQUARE,                   &
@@ -386,7 +554,7 @@ CALL Calc_Ahat( Ahat_Array,                             &
 
 
 
-!PRINT*,"B2"
+!PRINT*,"E"
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
@@ -400,7 +568,7 @@ END DO ! rd
 
 
 
-!PRINT*,"B3"
+!PRINT*,"F"
 AA_Array = 0.0_idp
 DO i = 1,3
 DO j = 1,3
@@ -412,13 +580,18 @@ END DO ! i
 END DO ! j
 
 
-!PRINT*,"C"
-CALL Get_Physical_Source( PhysSrc, iU, re, te, pe)
+!PRINT*,"G"
+CALL Get_Physical_Source( PhysSrc, iU, iE )
 
 
-!PRINT*,"D"
+!PRINT*,"H",iU
 IF ( iU == iU_CF ) THEN
-
+!    PRINT*,"1"
+!    PRINT*,Cur_Val_Psi(:,:)
+!    PRINT*,"2"
+!    PRINT*,PhysSrc(:,:)
+!    PRINT*,"3"
+!    PRINT*,AA_Array(:,:)
     SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar / Cur_Val_Psi(:,:)   &
                         * PhysSrc(:,:)                                  &
                       -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
@@ -426,6 +599,14 @@ IF ( iU == iU_CF ) THEN
 
 ELSEIF ( iU == iU_LF ) THEN
 
+!    PRINT*,"1"
+!    PRINT*,Cur_Val_Psi(:,:)
+!    PRINT*,"2"
+!    PRINT*,PhysSrc(:,:)
+!    PRINT*,"3"
+!    PRINT*,AA_Array(:,:)
+!    PRINT*,"4"
+!    PRINT*,Cur_Val_AlphaPsi(:,:)
     SourceTerm(:,:,iU) = TwoPi * GR_Source_Scalar * Cur_Val_AlphaPsi(:,:)   &
                         / (Cur_Val_Psi(:,:)**2) * PhysSrc(:,:)              &
                     + 7.0_idp*Cur_Val_AlphaPsi(:,:)                         &
@@ -433,118 +614,12 @@ ELSEIF ( iU == iU_LF ) THEN
 
 ENDIF
 
+!PRINT*,"I"
 
 
 END SUBROUTINE Calc_XCFC_CurVals_TypeA
 
 
-
-
-
-
-
-!+701+##################################################################!
-!                                                                       !
-!           Get_Source_Term                                             !
-!                                                                       !
-!#######################################################################!
-SUBROUTINE Get_Source_Term( Source, iU, RE, TE, PE, AA )
-
-REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
-INTEGER,                                                     INTENT(IN)     :: iU
-INTEGER,                                                     INTENT(IN)     :: RE, TE, PE
-REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(IN)     :: AA
-
-INTEGER                                                         :: rd, td, pd, tpd
-
-
-
-IF ( iU == 1 ) THEN
-
-    DO rd = 1,NUM_R_QUAD_POINTS
-    DO td = 1,NUM_T_QUAD_POINTS
-    DO pd = 1,NUM_P_QUAD_POINTS
-        tpd = FP_tpd_Map(td,pd)
-
-        Source(tpd,rd) = -2.0_idp * pi * GR_Source_Scalar                   &
-                            / Cur_Val_Psi(tpd,rd)                           &
-                            * Block_Source_E(rd,td,pd,re,te,pe)             &
-                         - 1.0_idp / ( 8.0_idp * Cur_Val_Psi(tpd,rd)**7)    &
-                            * AA(tpd,rd)
-
-    END DO ! pd
-    END DO ! td
-    END DO ! rd
-
-
-ELSEIF ( iU == 2 ) THEN
-
-    DO rd = 1,NUM_R_QUAD_POINTS
-    DO td = 1,NUM_T_QUAD_POINTS
-    DO pd = 1,NUM_P_QUAD_POINTS
-
-        tpd = FP_tpd_Map(td,pd)
-        Source(tpd,rd) = 2.0_idp * pi * GR_Source_Scalar                        &
-                            * Cur_Val_AlphaPsi(tpd,rd)                          &
-                            / (Cur_Val_Psi(tpd,rd)**2)                          &
-                            * (Block_Source_E(rd,td,pd,re,te,pe)                &
-                                + 2.0_idp*Block_Source_S(rd,td,pd,re,te,pe) )   &
-                        + (7.0_idp*Cur_Val_AlphaPsi(tpd,rd))                    &
-                            / ( 8.0_idp * Cur_Val_Psi(tpd,rd)**8) * AA(tpd,rd)
-
-
-
-    END DO ! pd
-    END DO ! td
-    END DO ! rd
-
-
-
-ELSE IF ( iU == 3) THEN
-
-   DO rd = 1,NUM_R_QUAD_POINTS
-   DO td = 1,NUM_T_QUAD_POINTS
-   DO pd = 1,NUM_P_QUAD_POINTS
-
-       tpd = FP_tpd_Map(td,pd)
-       Source(tpd,rd) = Block_Source_Si(rd,td,pd,re,te,pe,1)
-
-
-   END DO ! pd
-   END DO ! td
-   END DO ! rd
-
-ELSE IF ( iU == 4) THEN
-
-   DO rd = 1,NUM_R_QUAD_POINTS
-   DO td = 1,NUM_T_QUAD_POINTS
-   DO pd = 1,NUM_P_QUAD_POINTS
-
-       tpd = FP_tpd_Map(td,pd)
-       Source(tpd,rd) = Block_Source_Si(rd,td,pd,re,te,pe,2)
-
-
-   END DO ! pd
-   END DO ! td
-   END DO ! rd
-
-ELSE IF ( iU == 5 ) THEN
-
-   DO rd = 1,NUM_R_QUAD_POINTS
-   DO td = 1,NUM_T_QUAD_POINTS
-   DO pd = 1,NUM_P_QUAD_POINTS
-
-       tpd = FP_tpd_Map(td,pd)
-       Source(tpd,rd) = Block_Source_Si(rd,td,pd,re,te,pe,3)
-
-
-   END DO ! pd
-   END DO ! td
-   END DO ! rd
-
-END IF
-
-END SUBROUTINE Get_Source_Term
 
 
 
@@ -563,27 +638,66 @@ INTEGER, INTENT(IN)                             ::  iU
 TYPE(amrex_mfiter)                              ::  mfi
 TYPE(amrex_box)                                 ::  Box
 
-INTEGER, DIMENSION(3)                           ::  ELo, EHi
+TYPE(amrex_imultifab)                           ::  Level_Mask
+
+INTEGER                                         ::  re, te, pe
+INTEGER, DIMENSION(3)                           ::  iE
+INTEGER, DIMENSION(3)                           ::  iEL, iEU
 INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl
 
+PRINT*,"In XCFC_AMReX_Calc_Source_Vector_TypeA"
 
 FP_Source_Vector_A(:,:,iU) = 0.0_idp
 
-DO lvl = 0,AMReX_Levels-1
+DO lvl = 0,nLevels-1
+    IF ( lvl < nLevels-1 ) THEN
+        CALL AMReX_MakeFineMask(  Level_Mask,               &
+                                  MF_Source(lvl)%ba,        &
+                                  MF_Source(lvl)%dm,        &
+                                  MF_Source(lvl+1)%ba,      &
+                                  iCoarse, iFine            )
+    ELSE
+        ! Create Level_Mask all equal to 1
+        CALL amrex_imultifab_build( Level_Mask,             &
+                                    MF_Source(lvl)%ba,      &
+                                    MF_Source(lvl)%dm,      &
+                                    1,                      &
+                                    0                       )
+        CALL Level_Mask%SetVal(iCoarse)
+    END IF
+
+
+
+
     CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .false. )
     DO WHILE(mfi%next())
 
-!        Source_PTR => MF_Source(lvl)%dataPtr(mfi)
+        Source_PTR => MF_Source(lvl)%dataPtr(mfi)
+        Mask_PTR   => Level_Mask%dataPtr(mfi)
+
+
         Box = mfi%tilebox()
 
         nComp =  MF_Source(lvl)%ncomp()
 
-        ELo = Box%lo
-        EHi = Box%hi
+        iEL = Box%lo
+        iEU = Box%hi
 
-        CALL XCFC_Native_Calc_Source_Vector_TypeA( iU, EHi-1, ELo-1 )
-         
+        CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
+
+        DO re = iEL(1),iEU(1)
+        DO te = iEL(2),iEU(2)
+        DO pe = iEL(3),iEU(3)
+            
+            IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+                CALL Initialize_Ylm_Tables_On_Elem( te, pe, iEL, lvl )
+                iE = [re,te,pe]
+                CALL XCFC_Calc_Source_Vector_On_Element_TypeA( iU, iE, lvl )
+            END IF
+        END DO ! pe
+        END DO ! te
+        END DO ! re
 
     END DO
     CALL amrex_mfiter_destroy(mfi)

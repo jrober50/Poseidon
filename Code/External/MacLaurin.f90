@@ -30,7 +30,7 @@ MODULE MacLaurin_Module                                                         
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  Grav_Constant_G,        &
                     Gram,                  &
                     Centimeter,             &
@@ -47,7 +47,8 @@ USE Variables_MPI, &
                     MasterID_Poseidon
 
 USE  Variables_IO, &
-            ONLY :  Report_Flags
+            ONLY :  Report_Flags,           &
+                    iRF_Setup
 
 USE Functions_Mapping, &
             ONLY :  Map_To_X_Space,         &
@@ -56,6 +57,9 @@ USE Functions_Mapping, &
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
+
+USE Quadrature_Mapping_Functions,   &
+            ONLY :  Quad_Map
 
 IMPLICIT NONE
 
@@ -183,7 +187,7 @@ BB = B*B
 CC = C*C
 
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
-IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
+IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3) ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : MacLaurin Spheroid'
     WRITE(*,'(A,A)')      ' - Spheroid Type  :  ', Spheroid_Name
@@ -223,9 +227,8 @@ DO pe = 1,Num_Elem(3)
     DO td = 1,Num_Quad(2)
     DO pd = 1,Num_Quad(3)
 
-        Here = (rd-1) * Num_Quad(3) * Num_Quad(2)       &
-             + (td-1) * Num_Quad(3)                     &
-             + pd
+        Here = Quad_Map(rd, td, pd, Num_Quad )
+
 
         Value = ( rsqr(rd) * cossqr_p(pd) * sinsqr_t(td) ) / AA      &
               + ( rsqr(rd) * sinsqr_p(pd) * sinsqr_t(td) ) / BB      &

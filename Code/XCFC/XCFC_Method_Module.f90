@@ -99,10 +99,7 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE XCFC_Method()
 
-INTEGER                     :: ierr, i
 LOGICAL                     :: PR = .FALSE.
-
-INTEGER                     :: lm_loc
 
 
 CALL Allocate_XCFC_Source_Variables()

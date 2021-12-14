@@ -14,6 +14,7 @@ VARIABLES = \
   Variables_Tables.f90       \
   Variables_Source.f90       \
   Variables_Yahil.f90        \
+  Variables_Poisson.f90      \
   Variables_AMReX_Multifabs.F90 \
   Variables_AMReX_Core.F90   \
   Variables_AMReX_Source.f90

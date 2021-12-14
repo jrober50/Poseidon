@@ -35,7 +35,7 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  Pi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  GR_Source_Scalar
 
 USE Parameters_Variable_Indices, &
@@ -73,6 +73,9 @@ USE Variables_Source, &
 USE FP_Functions_Mapping, &
             ONLY :  FP_tpd_Map
 
+USE Quadrature_Mapping_Functions, &
+            ONLY :  Quad_Map
+
 USE XCFC_Functions_Calc_Values_Module, &
             ONLY :  Calc_Val_On_Elem_TypeA,         &
                     Calc_Val_And_Drv_On_Elem_TypeB
@@ -99,7 +102,6 @@ REAL(idp), INTENT(OUT)                              ::  ADM_Mass
 
 
 INTEGER                                             ::  re, te, pe
-INTEGER                                             ::  rd, td, pd, tpd
 
 REAL(idp)                                           ::  DROT, DTOT, DPOT
 REAL(idp), DIMENSION(1:Num_R_Quad_Points)           ::  crlocs
@@ -119,7 +121,6 @@ REAL(idp), DIMENSION(1:Num_TP_Quad_Points,          &
                      1:Num_R_Quad_Points)           ::  Int_Source
 
 REAL(idp)                                           ::  Int_Val
-
 
 
 ADM_Mass = 0.0_idp
@@ -303,28 +304,33 @@ REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3 )  ::  Cur_Val_X
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3,3) ::  Cur_Drv_X
 
 INTEGER                                                         ::  tpd, rd, td, pd
-INTEGER                                                         ::  i, j
+INTEGER                                                         ::  i, j, HEre
+
+INTEGER, DIMENSION(3)                               ::  iE
+INTEGER                                                         ::  Level = 0
+iE = [RE, TE, PE]
 
 
+CALL Calc_Val_On_Elem_TypeA( iE, Cur_Val_Psi, iU_CF, Level )
 
 
-CALL Calc_Val_On_Elem_TypeA( RE, TE, PE, Cur_Val_Psi, iU_CF )
-
-
-CALL Calc_Val_And_Drv_On_Elem_TypeB( RE, TE, PE, DROT,      &
+CALL Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT,      &
                                      CUR_Val_X(:,:,1),      &
                                      CUR_DRV_X(:,:,:,1),    &
-                                     iU_X1, iVB_X           )
+                                     iU_X1, iVB_X,          &
+                                     Level                  )
 
-CALL Calc_Val_And_Drv_On_Elem_TypeB( RE, TE, PE, DROT,      &
+CALL Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT,      &
                                      CUR_Val_X(:,:,2),      &
                                      CUR_DRV_X(:,:,:,2),    &
-                                     iU_X2, iVB_X           )
+                                     iU_X2, iVB_X,          &
+                                     Level                  )
 
-CALL Calc_Val_And_Drv_On_Elem_TypeB( RE, TE, PE, DROT,      &
+CALL Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT,      &
                                      CUR_Val_X(:,:,3),      &
                                      CUR_DRV_X(:,:,:,3),    &
-                                     iU_X3, iVB_X           )
+                                     iU_X3, iVB_X,          &
+                                     Level                  )
 
 CALL Calc_Ahat( Ahat_Array,                             &
                 NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINTS,  &
@@ -365,10 +371,11 @@ DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
 
     tpd = FP_tpd_Map(td,pd)
+    Here = Quad_Map(rd,td,pd)
 
     Int_Source(tpd,rd) = GR_Source_Scalar                               &
                             / Cur_Val_Psi(tpd,rd)                       &
-                            * Block_Source_E(rd,td,pd,re,te,pe)         &
+                            * Block_Source_E(Here,re,te,pe)         &
                          + AA_Array(tpd,rd)                             &
                             / ( 16.0_idp * pi * Cur_Val_Psi(tpd,rd)**7)
                             

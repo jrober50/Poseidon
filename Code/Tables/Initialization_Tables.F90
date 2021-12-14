@@ -53,7 +53,8 @@ USE Variables_Quadrature, &
                     Int_P_Locations
 
 USE Variables_Mesh, &
-            ONLY :  tlocs,                  &
+            ONLY :  rlocs,                  &
+                    tlocs,                  &
                     plocs
 
 USE Variables_Derived, &
@@ -68,8 +69,18 @@ USE Variables_Tables, &
                     Ylm_CC_dt_Values,       &
                     Ylm_CC_dp_Values,       &
                     Lagrange_Poly_Table,    &
-                    LPT_LPT,              &
-                    M_Values
+                    LPT_LPT,                &
+                    M_Values,               &
+                    Ylm_Sqrt_Table,         &
+                    Ylm_Norm_Table,         &
+                    rBT_NormedLegendre,     &
+                    Ylm_Elem_Values,        &
+                    Ylm_Elem_dt_Values,     &
+                    Ylm_Elem_dp_Values,     &
+                    Ylm_Elem_CC_Values,     &
+                    Level_dx,               &
+                    LagPoly_MltiLayer_Table,&
+                    LagPoly_Num_Tables
 
 USE Variables_Functions, &
             ONLY :  LM_Location
@@ -84,11 +95,20 @@ USE Functions_Math, &
             ONLY :  Lagrange_Poly,          &
                     Lagrange_Poly_Deriv,    &
                     Legendre_Poly,          &
+                    Legendre_Poly_Array,    &
                     Norm_Factor,            &
-                    Factorial
+                    Sqrt_Factor
+
+USE FP_Functions_Mapping, &
+            ONLY :  FP_tpd_Map
+
 
 USE Allocation_Tables, &
             ONLY :  Allocate_Tables
+
+USE Variables_AMReX_Multifabs, &
+            ONLY :  MaxGridSizeX2,          &
+                    nLevels
 
 
 IMPLICIT NONE
@@ -108,12 +128,26 @@ IF ( Verbose_Flag ) THEN
     PRINT*,"-Initializing Basis Function Tables. "
 END IF
 
+LagPoly_Num_Tables = 2**(nLevels+1) - 1  ! Sum of power of 2
+
 
 CALL Allocate_Tables()
-
-
-CALL Initialize_Ylm_Tables()
 CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
+
+
+#ifdef POSEIDON_AMREX_FLAG
+
+    CALL Initialize_Ylm_Norm_Tables_AMReX()
+    CALL Initialize_Level_dx_Table()
+
+#else
+
+    CALL Initialize_Ylm_Tables()
+
+#endif
+
+
+
 
 END SUBROUTINE Initialize_Tables
 
@@ -235,6 +269,7 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
             Norm_Storage = Norm_Factor(l,m)
             Legendre_Poly_Value = Legendre_Poly(l, m, 1, T_Locations(td))
 
+
             Ylm_Table(m, l, td, pd, te, pe) = Norm_Storage                            &   ! Normalization Factor
                                             * Legendre_Poly_Value(1)                  &   ! Legendre Polynomial
                                             * CDEXP(CMPLX(0.0_idp,m*P_Locations(pd),idp))   ! exp(im phi)
@@ -276,46 +311,45 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
         DO pd = 1,NUM_P_QUAD_POINTS
         DO td = 1,NUM_T_QUAD_POINTS
         DO l = 0,L_LIMIT
+        DO m = -M_VALUES(l),M_VALUES(l)
 
             REAL_L = REAL(l, idp)
 
-            DO m = -M_VALUES(l),M_VALUES(l)
+            tpd_loc = (td-1)*NUM_P_QUAD_POINTS + pd
+            lm_loc = LM_Location(l,m)
+            Norm_Storage = Norm_Factor(l,m)
+            Legendre_Poly_Value = Legendre_Poly(l, m, 1, T_Locations(td))
 
+            Ylm_Values(lm_loc, tpd_loc, te, pe) = Ylm_Table(m,l,td, pd, te, pe)
 
-                tpd_loc = (td-1)*NUM_P_QUAD_POINTS + pd
-                lm_loc = LM_Location(l,m)
-                Norm_Storage = Norm_Factor(l,m)
-                Legendre_Poly_Value = Legendre_Poly(l, m, 1, T_Locations(td))
-
-                Ylm_Values(lm_loc, tpd_loc, te, pe) = Ylm_Table(m,l,td, pd, te, pe)
-
-                Ylm_dt_Values(lm_loc, tpd_loc, te, pe) = REAL_L*COT_VAL(td)                     &
-                                                        * Ylm_Table(m,l,td, pd, te, pe)         &
-                                                      - SQRT_TERM(lm_loc) * CSC_VAL(td)         &
-                                                        * Ylm_Table(m,l-1,td, pd, te, pe)
+            Ylm_dt_Values(lm_loc, tpd_loc, te, pe) = REAL_L*COT_VAL(td)                     &
+                                                    * Ylm_Table(m,l,td, pd, te, pe)         &
+                                                  - SQRT_TERM(lm_loc) * CSC_VAL(td)         &
+                                                    * Ylm_Table(m,l-1,td, pd, te, pe)
 
 !                PRINT*,t_locations(td),P_Locations(pd),lm_loc, Ylm_dt_Values(lm_loc,tpd_loc,te,pe)
 
-                Ylm_dp_Values(lm_loc, tpd_loc, te, pe) = CMPLX(0,m,idp)                         &
-                                                        * Ylm_Table(m,l,td, pd, te, pe)
+            Ylm_dp_Values(lm_loc, tpd_loc, te, pe) = CMPLX(0,m,idp)                         &
+                                                    * Ylm_Table(m,l,td, pd, te, pe)
 
 
 
-                Ylm_CC_Values( tpd_loc, lm_loc, te, pe) = M_POWER_TABLE(m) * Ylm_Table(-m,l,td, pd, te, pe)
-
-                Ylm_CC_dp_Values( tpd_loc, lm_loc, te, pe) = CMPLX(0,-m,idp)                      &
-                                                         * Ylm_CC_Values(tpd_loc, lm_loc, te, pe)
-
-                
-                Ylm_CC_dt_Values( tpd_loc, lm_loc, te, pe) = REAL_L*COT_VAL(td)                     &
-                                                           * Ylm_CC_Values( tpd_loc, lm_loc, te, pe)  &
-                                                         - SQRT_TERM(lm_loc) * CSC_VAL(td)          &
-                                                           * M_POWER_TABLE(m)                       &  ! Complex Conjugate
-                                                           * Ylm_Table(-m, l-1, td, pd, te, pe)     ! of Y^{l-1}_{m}
+            Ylm_CC_Values( tpd_loc, lm_loc, te, pe) = M_POWER_TABLE(m) * Ylm_Table(-m,l,td, pd, te, pe)
 
 
+            Ylm_CC_dp_Values( tpd_loc, lm_loc, te, pe) = CMPLX(0,-m,idp)                      &
+                                                     * Ylm_CC_Values(tpd_loc, lm_loc, te, pe)
 
-            END DO ! m Loop
+            
+            Ylm_CC_dt_Values( tpd_loc, lm_loc, te, pe) = REAL_L*COT_VAL(td)                     &
+                                                       * Ylm_CC_Values( tpd_loc, lm_loc, te, pe)  &
+                                                     - SQRT_TERM(lm_loc) * CSC_VAL(td)          &
+                                                       * M_POWER_TABLE(m)                       &  ! Complex Conjugate
+                                                       * Ylm_Table(-m, l-1, td, pd, te, pe)     ! of Y^{l-1}_{m}
+
+
+
+        END DO ! m Loop
         END DO ! l Loop
         END DO ! td Loop
         END DO ! pd Loop
@@ -358,19 +392,58 @@ REAL(KIND = idp), DIMENSION(0:Ord)          ::  Lagrange_DRV_Values
 INTEGER                                     ::  Eval_Point
 INTEGER                                     ::  rd, d, dp,dd
 
+INTEGER                                     ::  lvl, elem
+INTEGER                                     ::  iNLE, Cur_Table
+REAL(idp)                                   ::  ra, rb, wl
+REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  Local_R
 
 Lagrange_Poly_Table = 0.0_idp
 
 
 Local_Locations = Initialize_LGL_Quadrature_Locations(Ord)
 
+
+#ifdef POSEIDON_AMREX_FLAG
+DO lvl = 0,nLevels-1
+iNLE = 2**lvl-1
+DO elem = 0,iNLE
+
+    Cur_Table = iNLE+elem
+    wl = 2.0_idp/2.0_idp**lvl
+    ra = REAL(     -1 + wl*elem, Kind = idp)
+    rb = REAL( -1 + wl*(elem+1), Kind = idp)
+
+
+    Local_R(:) = Map_From_X_Space(ra, rb, Int_R_Locations(:))
+
+
+
+    DO Eval_Point = 1,Num_R_Quad_Points
+        
+
+        Lagrange_Poly_Values = Lagrange_Poly(Local_R(Eval_Point), Ord, Local_Locations)
+        Lagrange_DRV_Values  = Lagrange_Poly_Deriv(Local_R(Eval_Point), Ord, Local_Locations)
+
+        LagPoly_MltiLayer_Table( :, Eval_Point, 0, Cur_Table) = Lagrange_Poly_Values
+        LagPoly_MltiLayer_Table( :, Eval_Point, 1, Cur_Table) = Lagrange_DRV_Values
+
+
+    END DO
+
+END DO
+END DO
+#endif
+
+
+
+
 DO Eval_Point = 1,Num_Quad_Points
     
     Lagrange_Poly_Values = Lagrange_Poly(INT_R_Locations(Eval_Point), Ord, Local_Locations)
     Lagrange_DRV_Values  = Lagrange_Poly_Deriv(INT_R_Locations(Eval_Point), Ord, Local_Locations)
 
-    Lagrange_Poly_Table(:, Eval_Point, 0) = Lagrange_Poly_Values
-    Lagrange_Poly_Table(:, Eval_Point, 1) = Lagrange_DRV_Values
+    Lagrange_Poly_Table( :, Eval_Point, 0) = Lagrange_Poly_Values
+    Lagrange_Poly_Table( :, Eval_Point, 1) = Lagrange_DRV_Values
 
 END DO
 
@@ -389,9 +462,260 @@ DO dd = 0,1
 END DO
 
 
+
+
+
+
+
 END SUBROUTINE Initialize_Lagrange_Poly_Tables
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+!+203+##########################################################################!
+!                                                                               !
+!             Initialize_Ylm_Norm_Tables_AMReX                                  !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Initialize_Ylm_Norm_Tables_AMReX
+
+
+INTEGER                                                         ::  l, m
+
+! Ylm = Norm_Factor(l,m) * Legendre_Poly(l,m,theta) * exp(im, phi)
+!
+! Create tables for
+!       Norm_Factor
+!       Sqrt_Factor (Like Norm_Factor but used for derivatives )
+!
+
+DO l = 0,L_LIMIT
+DO m = -l,l
+    Ylm_Norm_Table( m,l ) = COMPLEX( Norm_Factor(l,m), 0.0_idp )
+    Ylm_Sqrt_Table( m,l ) = COMPLEX( Sqrt_Factor(l,m), 0.0_idp )
+END DO ! m Loop
+END DO ! l Loop
+
+
+
+END SUBROUTINE Initialize_Ylm_Norm_Tables_AMReX
+
+
+
+
+
+
+!+203+##########################################################################!
+!                                                                               !
+!          Initialize_Normed_Legendre_Tables_on_Level                           !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, Level )
+
+INTEGER,   DIMENSION(3), INTENT(IN)                 ::  iEU
+INTEGER,   DIMENSION(3), INTENT(IN)                 ::  iEL
+INTEGER,                 INTENT(IN)                 ::  Level
+
+
+INTEGER                                             ::  te, l, m
+INTEGER                                             ::  lm, teb
+
+REAL(idp), DIMENSION(-L_Limit:L_Limit,              &
+                     0:L_Limit,                     &
+                     1:Num_T_Quad_Points,           &
+                     0:MaxGridSizeX2-1      )       ::  LegPoly_Table
+
+
+
+! Ylm = Norm_Factor(l,m) * Legendre_Poly(l,m,theta) * exp(im,phi)
+!     = rBT_NormedLegendre(l,m,theta) * exp(-im,phi)
+!
+! Create table for
+!       rBT_NormedLegendre(l,m,theta)
+!
+!
+
+rBT_NormedLegendre = 0.0_idp
+!PRINT*,"A"
+DO te = iEL(2), iEU(2)
+    teb = te-iEL(2)
+    tlocs = Level_dx(Level,2)/2.0_idp * (Int_T_Locations(:) + 1.0_idp + 2.0_idp*te )
+    DO l = 0,L_LIMIT
+    DO m = -l,l
+
+        LegPoly_Table(m, l, :, teb) = Legendre_Poly(l,m,Num_T_Quad_Points,tlocs)
+
+    END DO ! m Loop
+    END DO ! l Loop
+END DO ! te Loop
+
+
+
+!PRINT*,"B"
+DO te = iEL(2), iEU(2)
+DO l = 0,L_LIMIT
+DO m = -l,l
+
+    lm = LM_Location(l,m)
+    teb = te-iEL(2)
+    rBT_NormedLegendre(m,l,:,teb) = Ylm_Norm_Table( m, l )      &
+                                  * LegPoly_Table(m,l,:,teb)
+!    PRINT*,te,l,m
+!    PRINT*,Ylm_Norm_Table( m, l )
+!    PRINT*,LegPoly_Table(m,l,:,teb)
+!    PRINT*,"+++++++++++++++"
+END DO ! m Loop
+END DO ! l Loop
+END DO ! te Loop
+!PRINT*,"C"
+
+
+
+END SUBROUTINE Initialize_Normed_Legendre_Tables_on_Level
+
+
+
+
+
+
+
+
+
+
+!+203+##########################################################################!
+!                                                                               !
+!          Initialize_Ylm_Tables_on_Elem                                  !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Initialize_Ylm_Tables_on_Elem( iTE, iPE, iEL, Level )
+
+INTEGER,    INTENT(IN)                              ::  iTE
+INTEGER,    INTENT(IN)                              ::  iPE
+INTEGER,    INTENT(IN)                              ::  iEL(3)
+INTEGER,    INTENT(IN)                              ::  Level
+
+INTEGER                                             ::  l, m, lm
+INTEGER                                             ::  td, pd, tpd
+INTEGER                                             ::  teb
+
+REAL(idp), DIMENSION(1:Num_T_Quad_Points)           ::  Cot_Val
+REAL(idp), DIMENSION(1:Num_T_Quad_Points)           ::  Csc_Val
+
+REAL(idp), DIMENSION(1:Num_T_Quad_Points)           ::  tlocs
+REAL(idp), DIMENSION(1:Num_P_Quad_Points)           ::  plocs
+
+REAL(KIND = idp), DIMENSION(-L_LIMIT:L_LIMIT)       :: M_POWER_TABLE
+
+!PRINT*,"In Init_Ylm_Tables",iTE,iPE
+
+teb = iTE - iEL(2)
+
+tlocs = Level_dx(Level,2)/2.0_idp * (Int_T_Locations(:) + 1.0_idp + 2.0_idp*iTE )
+plocs = Level_dx(Level,3)/2.0_idp * (Int_P_Locations(:) + 1.0_idp + 2.0_idp*iPE )
+
+Csc_Val = 1.0_idp/DSIN(tlocs(:))
+Cot_Val = 1.0_idp/DTAN(tlocs(:))
+
+
+
+M_POWER_TABLE(0) = 1.0_idp
+IF ( L_LIMIT > 0 ) THEN
+    DO m = 1, L_LIMIT
+
+        M_POWER_TABLE(m) = -1.0_idp*M_POWER_TABLE(m-1)
+        M_POWER_TABLE(-m) = -1.0_idp*M_POWER_TABLE(m-1)
+    END DO
+END IF
+
+
+
+DO td = 1,Num_T_Quad_Points
+DO pd = 1,Num_P_Quad_Points
+DO l  = 0,L_Limit
+DO m  = -l,l
+
+    tpd = FP_Tpd_Map(td,pd)
+    lm = LM_Location(l,m)
+
+
+    Ylm_Elem_Values( lm, tpd )      = rBT_NormedLegendre(m,l,td,teb)           &
+                                    * CDEXP(CMPLX(0.0_idp,m*plocs(pd),idp))
+
+
+!    PRINT*,lm,tpd, rBT_NormedLegendre(m,l,td,teb),CDEXP(CMPLX(0.0_idp,m*plocs(pd),idp))
+
+    Ylm_Elem_dt_Values( lm, tpd )   = REAL( l, idp ) * COT_VAL(td)              &
+                                      * rBT_NormedLegendre(m,l,td,teb)         &
+                                      * CDEXP(CMPLX(0.0_idp,m*plocs(pd),idp))   &
+                                    - Ylm_Sqrt_Table(m,l) * CSC_VAL(td)         &
+                                      * rBT_NormedLegendre(m,l-1,td,teb)       &
+                                      * CDEXP(CMPLX(0.0_idp,m*plocs(pd),idp))
+
+    Ylm_Elem_dp_Values( lm, tpd )   = CMPLX(0,m,idp)                            &
+                                    * rBT_NormedLegendre(m,l,td,teb)           &
+                                    * CDEXP(CMPLX(0.0_idp,m*plocs(pd),idp))
+
+    
+    Ylm_Elem_CC_Values( tpd, lm )   = M_Power_Table(m)                          &
+                                    * rBT_NormedLegendre(-m,l,td,teb)          &
+                                    * CDEXP(CMPLX(0.0_idp,-m*plocs(pd),idp))
+
+
+
+END DO ! m Loop
+END DO ! l Loop
+END DO ! pd Loop
+END DO ! td Loop
+
+END SUBROUTINE Initialize_Ylm_Tables_on_Elem
+
+
+
+
+
+
+
+
+ !+203+############################################################!
+!                                                                   !
+!          Initialize_Level_dx_Table                                !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Initialize_Level_dx_Table()
+
+INTEGER                 ::  lvl
+REAL(idp)               ::  dr, dt, dp
+
+
+dr = rlocs(1)-rlocs(0)
+dt = tlocs(1)-tlocs(0)
+dp = plocs(1)-plocs(0)
+
+
+DO lvl = 0,nLevels-1
+    Level_dx(lvl,1) = dr/2.0_idp**lvl
+END DO
+
+DO lvl = 0,nLevels-1
+    Level_dx(lvl,2) = dt/2.0_idp**lvl
+END DO
+
+DO lvl = 0,nLevels-1
+    Level_dx(lvl,3) = dp/2.0_idp**lvl
+END DO
+
+
+END SUBROUTINE Initialize_Level_dx_Table
 
 
 

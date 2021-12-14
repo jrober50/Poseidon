@@ -35,6 +35,14 @@ IMPLICIT NONE
 
 #ifdef POSEIDON_AMREX_FLAG
 
+TYPE(amrex_multifab),  ALLOCATABLE                  ::  MF_Source(:)
+TYPE(amrex_boxarray),  ALLOCATABLE                  ::  BA_Source(:)
+TYPE(amrex_distromap), ALLOCATABLE                  ::  DM_Source(:)
+TYPE(amrex_geometry),  ALLOCATABLE                  ::  GM_Source(:)
+
+#endif
+
+
 REAL(idp)           , ALLOCATABLE           :: xL(:), xR(:)
 INTEGER                                     :: coord_sys
 INTEGER             , ALLOCATABLE           :: nCells(:)
@@ -49,12 +57,32 @@ INTEGER                                     :: BlockingFactorX2
 INTEGER                                     :: BlockingFactorX3
 LOGICAL                                     :: UseTiling
 
+INTEGER                                     :: iMaxGridSizeX1
+INTEGER                                     :: iMaxGridSizeX2
+INTEGER                                     :: iMaxGridSizeX3
+INTEGER                                     :: iMaxGridSizeX(3)
 
-TYPE(amrex_multifab),  ALLOCATABLE                  ::  MF_Source(:)
-TYPE(amrex_boxarray),  ALLOCATABLE                  ::  BA_Source(:)
-TYPE(amrex_distromap), ALLOCATABLE                  ::  DM_Source(:)
-TYPE(amrex_geometry),  ALLOCATABLE                  ::  Geom_Source(:)
-#endif
+
+INTEGER                                             :: MF_Src_nComps
+INTEGER                                             :: MF_Src_nGhost
+
+
+
+
+
+INTEGER             , ALLOCATABLE                   ::  Level_Ratio(:)
+
+INTEGER, ALLOCATABLE, PUBLIC, SAVE :: lo_bc(:,:)
+INTEGER, ALLOCATABLE, PUBLIC, SAVE :: hi_bc(:,:)
+
+INTEGER,   ALLOCATABLE :: StepNo(:)
+REAL(idp), ALLOCATABLE :: dt   (:)
+REAL(idp), ALLOCATABLE :: t_old(:)
+REAL(idp), ALLOCATABLE :: t_new(:)
+
+
+
+
 
 
 

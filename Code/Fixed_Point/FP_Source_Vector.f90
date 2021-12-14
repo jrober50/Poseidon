@@ -30,7 +30,7 @@ USE Poseidon_Numbers_Module, &
             ONLY :  pi,                         &
                     TwoPi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  GR_Source_Scalar
 
 USE Poseidon_Parameters, &
@@ -68,11 +68,6 @@ USE Variables_Mesh, &
                     rlocs,                      &
                     tlocs,                      &
                     plocs
-                  
-USE Variables_Source, &
-            ONLY :  Block_Source_E,             &
-                    Block_Source_S,             &
-                    Block_Source_Si
 
 USE Variables_Tables, &
             ONLY :  Ylm_Values,                 &
@@ -590,7 +585,7 @@ DO ui = iU_CF,iU_LF
                                  + SUM( Source_Terms( :, rd, ui )                    &
                                        * Ylm_CC_Values( :, lm_loc, te, pe)         &
                                        * TP_Int_Weights(:)                     )   &
-                               * Lagrange_Poly_Table(d, rd, 0)                     &
+                               * Lagrange_Poly_Table( d, rd, 0)                     &
                                * R_Int_Weights(rd)
 
             END DO  ! rd Loop
@@ -626,7 +621,7 @@ DO ui = iU_S1,iU_S3
                                 + SUM( Source_Terms( :, rd, ui )                    &
                                         * Ylm_CC_Values( :, lm_loc, te, pe)         &
                                         * TP_Int_Weights(:)                     )   &
-                                * Lagrange_Poly_Table(d, rd, 0)                     &
+                                * Lagrange_Poly_Table( d, rd, 0)                     &
                                 * R_Int_Weights(rd)
 
 

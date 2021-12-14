@@ -24,7 +24,7 @@ MODULE Poseidon_AMReX_Input_Parsing_Module                                   !##
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-               ONLY :  idp
+            ONLY :  idp
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -49,23 +49,32 @@ USE amrex_parmparse_module, ONLY: &
   amrex_parmparse,       &
   amrex_parmparse_build, &
   amrex_parmparse_destroy
+USE amrex_bc_types_module, ONLY: &
+  amrex_bc_foextrap, &
+  amrex_bc_bogus
 
 USE Variables_AMReX_Multifabs, &
-        ONLY :  xL,                 &
-                xR,                 &
-                coord_sys,          &
-                nCells,             &
-                nLevels,            &
-                MaxLevel,           &
-                MaxGridSizeX1,      &
-                MaxGridSizeX2,      &
-                MaxGridSizeX3,      &
-                MaxGridSizeX,       &
-                BlockingFactorX1,   &
-                BlockingFactorX2,   &
-                BlockingFactorX3,   &
-                UseTiling
-
+            ONLY :  xL,                 &
+                    xR,                 &
+                    coord_sys,          &
+                    nCells,             &
+                    nLevels,            &
+                    MaxLevel,           &
+                    MaxGridSizeX1,      &
+                    MaxGridSizeX2,      &
+                    MaxGridSizeX3,      &
+                    MaxGridSizeX,       &
+                    BlockingFactorX1,   &
+                    BlockingFactorX2,   &
+                    BlockingFactorX3,   &
+                    UseTiling,          &
+                    StepNo,             &
+                    t_new,              &
+                    t_old,              &
+                    dt,                 &
+                    lo_Bc,              &
+                    hi_bc,              &
+                    Level_Ratio
 
 #endif
 
@@ -85,6 +94,7 @@ SUBROUTINE Init_AMReX_Parameters()
 
 
 #ifdef POSEIDON_AMREX_FLAG
+INTEGER                                     :: lvl
 TYPE(amrex_parmparse)                       :: PP
 
 ALLOCATE( xL(3), xR(3) )
@@ -118,6 +128,28 @@ CALL amrex_parmparse_destroy( PP )
 
 MaxGridSizeX = [ MaxGridSizeX1, MaxGridSizeX2, MaxGridSizeX3 ]
 nLevels = MaxLevel+1
+
+ALLOCATE(stepno(0:nLevels-1) )
+ALLOCATE(t_new(0:nLevels-1) )
+ALLOCATE(t_old(0:nLevels-1) )
+ALLOCATE(dt(0:nLevels-1) )
+dt = 1.0_idp
+
+ALLOCATE( lo_bc(1:amrex_spacedim,1) )
+ALLOCATE( hi_bc(1:amrex_spacedim,1) )
+
+lo_bc = amrex_bc_bogus
+hi_bc = amrex_bc_bogus
+
+
+ALLOCATE( Level_Ratio(0:nLevels) )
+DO lvl = 0,nLevels
+    Level_Ratio(lvl) = 2**lvl
+END DO
+
+
+
+
 #endif
 
 

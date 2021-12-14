@@ -35,15 +35,8 @@ USE Poseidon_Numbers_Module, &
                     ONLY : pi
 
 
-USE Units_Module, &
-                    ONLY :  C_Square,       &
-                            Gram,           &
-                            Centimeter,     &
-                            Kilometer,      &
-                            Erg,            &
-                            Second,         &
-                            GravPot_Units,  &
-                            Shift_Units
+USE Poseidon_Units_Module, &
+                    ONLY :  Centimeter
 
 USE Poseidon_IO_Parameters, &
                     ONLY :  Poseidon_LinSys_Dir,    &

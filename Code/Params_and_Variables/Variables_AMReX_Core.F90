@@ -19,8 +19,7 @@ USE Poseidon_Kinds_Module,  &
 IMPLICIT NONE
 
 LOGICAL, PUBLIC                                 :: AMReX_Mode   = .FALSE.
-INTEGER, PUBLIC                                 :: AMReX_Levels = 1
-
+LOGICAL, PUBLIC                                 :: AMReX_Tiling = .TRUE.
 
 
 END MODULE Variables_AMReX_Core

@@ -41,7 +41,7 @@ USE Poseidon_Numbers_Module, &
                         ONLY :  pi
 
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
                 ONLY :  C_Square,           &
                         Grav_Constant_G
 

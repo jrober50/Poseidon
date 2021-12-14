@@ -80,7 +80,16 @@ USE FP_Intialize_Matrices, &
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In
 
-USE mpi
+
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                     &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_XCFC_Initialization,      &
+                    Timer_XCFC_Matrix_Init
+
 
 
 
@@ -123,7 +132,7 @@ REAL(idp), Dimension(1:2)                               ::  Timer
 IF ( Verbose_Flag ) THEN
     PRINT*,"-Initializing XCFC Fixed Point Method variables. "
 END IF
-
+CALL TimerStart( Timer_XCFC_Initialization )
 
 !
 !   CFA_EQ_Flags = Turns on/off which equations are solved.
@@ -146,16 +155,17 @@ Beta_Bandwidth = 2*Beta_Diagonals+1
 
 CALL Allocate_XCFC()
 
-timer(1)= MPI_Wtime()
+CALL TimerStart( Timer_XCFC_Matrix_Init )
 CALL Initialize_FP_Matrices()
-timer(2) = MPI_Wtime()
-Call Clock_In(timer(2)-timer(1),1)
+CALL TimerStop( Timer_XCFC_Matrix_Init )
 
 
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
 
+
+CALL TimerStop( Timer_XCFC_Initialization )
 
 
 

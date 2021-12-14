@@ -66,9 +66,9 @@ INTEGER, PUBLIC                     ::  Ratio_P_BNDLperBLCK
 INTEGER, PUBLIC                     ::  Ratio_BNDLperBLCK
 
 
-Logical, PUBLIC                     ::  Verbose_Flag = .FALSE.
+LOGICAL, PUBLIC                     ::  Verbose_Flag = .FALSE.
 
-
+LOGICAL, PUBLIC                     ::  Poisson_Mode = .FALSE.
 
 
 CHARACTER(17), DIMENSION(3), PUBLIC, PARAMETER        ::  &

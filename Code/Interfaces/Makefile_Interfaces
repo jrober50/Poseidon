@@ -1,6 +1,4 @@
 INTERFACES = \
  Initial_Guess_Module.f90   \
- Source_Input_AMReX.F90    \
- Source_Input_Module.f90   \
  Poseidon_Main_Module.f90  \
  Poseidon_XCFC_Interface.f90

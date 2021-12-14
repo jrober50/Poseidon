@@ -49,7 +49,11 @@ USE Variables_Tables, &
             ONLY :  Ylm_Values,                 &
                     Ylm_dt_Values,              &
                     Ylm_dp_Values,              &
-                    Lagrange_Poly_Table
+                    Ylm_Elem_Values,            &
+                    Ylm_Elem_dt_Values,         &
+                    Ylm_Elem_dp_Values,         &
+                    Lagrange_Poly_Table,        &
+                    Lagpoly_MltiLayer_Table
 
 USE Variables_FP, &
             ONLY :  FP_Coeff_Vector_A,          &
@@ -60,6 +64,9 @@ USE FP_Functions_Mapping, &
             ONLY :  FP_tpd_Map,                 &
                     FP_FEM_Node_Map,            &
                     FP_Array_Map_TypeB
+
+USE Poseidon_AMReX_Multilayer_Utilities_Module, &
+            ONLY :  Find_Coarsest_Parent
 
 
 IMPLICIT NONE
@@ -104,6 +111,8 @@ DO pd = 1,NUM_P_QUAD_POINTS
                     * DTOT * INT_T_WEIGHTS(td)      &
                     * INT_P_WEIGHTS(pd)
 
+
+
 END DO
 END DO
 
@@ -126,29 +135,79 @@ END SUBROUTINE Calc_Int_Weights
 !                  Calc_ConFact_Values         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Val_On_Elem_TypeA( RE, TE, PE, Val, iU )
+SUBROUTINE Calc_Val_On_Elem_TypeA( iE, Val, iU, Level )
 
-INTEGER,   INTENT(IN)                       :: RE, TE, PE
+INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points),   INTENT(OUT)  :: Val
-INTEGER,   INTENT(IN)                       :: iU
+INTEGER,    INTENT(IN)                      :: iU
+INTEGER,    INTENT(IN)                      :: Level
 
 REAL(idp)                                   :: TMP_Val
-INTEGER                                     :: rd, tpd, d, Here
+INTEGER                                     :: rd, tpd, d
+INTEGER,        DIMENSION(0:DEGREE)         :: Here
+INTEGER                                     :: iRE, iCT
+
+
+!PRINT*,"1A"
+#ifdef POSEIDON_AMREX_FLAG
+    iRE = Find_Coarsest_Parent(iE(1),Level)
+#else
+    iRE = iE(1)
+#endif
+
+
+
+
+!PRINT*,"2A"
+
+DO d = 0,DEGREE
+    Here(d) = FP_FEM_Node_Map(iRE,d)
+END DO ! d
+
+
+
+#if POSEIDON_AMREX_FLAG
+!PRINT*,"3A"
+iCT = 2**level + mod(iE(1),2**level) - 1
+
+!PRINT*,iCT, iE(1),Level,mod(iE(1),2**level)
+!PRINT*,LagPoly_MltiLayer_Table( :, :, 0, iCT)
 
 
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
-
-   
+    
     TMP_Val = 0.0_idp
     DO d = 0,DEGREE
-        Here = FP_FEM_Node_Map(re,d)
-!        PRINT*,iU,tpd,te,pe, Ylm_Values( :, tpd, te, pe ), Lagrange_Poly_Table( d, rd, 0 )
-    
+
+
+ 
         TMP_Val = TMP_Val                               &
-            + SUM( FP_Coeff_Vector_A( Here, :, iU )     &
-                   * Ylm_Values( :, tpd, te, pe )   )   &
+            + SUM( FP_Coeff_Vector_A( Here(d), :, iU )  &
+                   * Ylm_Elem_Values( :, tpd )   )      &
+            * LagPoly_MltiLayer_Table( d, rd, 0, iCT)
+
+    END DO  ! d
+
+    Val(tpd,rd)       = REAL(TMP_Val, KIND = idp)
+
+END DO ! td
+END DO ! rd
+
+
+#else
+
+
+DO rd = 1,NUM_R_QUAD_POINTS
+DO tpd = 1,NUM_TP_QUAD_POINTS
+    
+    TMP_Val = 0.0_idp
+    DO d = 0,DEGREE
+
+        TMP_Val = TMP_Val                                   &
+            + SUM( FP_Coeff_Vector_A( Here(d), :, iU )      &
+                   * Ylm_Values( :, tpd, iE(2), iE(3) ) )   &
             * Lagrange_Poly_Table( d, rd, 0 )
 
 
@@ -158,6 +217,8 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
 END DO ! td
 END DO ! rd
+
+#endif
 
 END SUBROUTINE Calc_Val_On_Elem_TypeA
 
@@ -169,43 +230,58 @@ END SUBROUTINE Calc_Val_On_Elem_TypeA
 !                  Calc_ConFact_Values         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Drv_On_Elem_TypeA( RE, TE, PE, DROT, Drv, iU )
+SUBROUTINE Calc_Drv_On_Elem_TypeA( iE, DROT, Drv, iU, Level )
 
-INTEGER,   INTENT(IN)                       :: RE, TE, PE
-REAL(idp), INTENT(IN)                       :: DROT
+INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
+REAL(idp), INTENT(IN)                       ::  DROT
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3),  INTENT(OUT)  :: Drv
-INTEGER,   INTENT(IN)                       :: iU
+INTEGER,   INTENT(IN)                       ::  iU
+INTEGER,    INTENT(IN)                      ::  Level
 
-REAL(idp), DIMENSION(3)                     :: TMP_Drv
-INTEGER                                     :: rd, tpd, d, Here
+REAL(idp), DIMENSION(3)                     ::  TMP_Drv
+INTEGER                                     ::  rd, tpd, d
+INTEGER                                     ::  Here
+INTEGER                                     ::  iRE, iCT
 
 
+
+#ifdef POSEIDON_AMREX_FLAG
+    iRE = Find_Coarsest_Parent(iE(1),Level)
+#else
+    iRE = iE(1)
+#endif
+
+
+
+
+#if POSEIDON_AMREX_FLAG
+iCT = 2**(level+1) + mod(iE(1),2**level) - 2
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
    
    TMP_Drv = 0.0_idp
    DO d = 0,DEGREE
-       Here = FP_FEM_Node_Map(re,d)
+       Here = FP_FEM_Node_Map(iRE,d)
 
 
-       TMP_Drv(1) = TMP_Drv(1)                                 &
-                  + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
-                        * Ylm_Values( :, tpd, te, pe )     )   &
-                  * Lagrange_Poly_Table( d, rd, 1 )            &
-                  / DROT
+        TMP_Drv(1) = TMP_Drv(1)                                 &
+                   + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                         * Ylm_Elem_Values( :, tpd ) )          &
+                   * Lagrange_Poly_Table( d, rd, 1 )            &
+                   / DROT
 
 
-       TMP_Drv(2) = TMP_Drv(2)                                 &
-                  + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
-                        * Ylm_dt_Values( :, tpd, te, pe)   )   &
-                  * Lagrange_Poly_Table( d, rd, 0)
+        TMP_Drv(2) = TMP_Drv(2)                                 &
+                   + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                         * Ylm_Elem_dt_Values( :, tpd )     )   &
+                   * Lagrange_Poly_Table( d, rd, 0)
 
-       TMP_Drv(3) = TMP_Drv(3)                                 &
-                  + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
-                        * Ylm_dp_Values( :, tpd, te, pe)   )   &
-                  * Lagrange_Poly_Table( d, rd, 0)
+        TMP_Drv(3) = TMP_Drv(3)                                 &
+                   + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                         * Ylm_Elem_dp_Values( :, tpd )     )   &
+                   * Lagrange_Poly_Table( d, rd, 0)
 
    END DO  ! d
 
@@ -216,6 +292,49 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 END DO ! td
 END DO ! rd
 
+
+#else
+
+
+DO rd = 1,NUM_R_QUAD_POINTS
+DO tpd = 1,NUM_TP_QUAD_POINTS
+
+   
+   TMP_Drv = 0.0_idp
+   DO d = 0,DEGREE
+       Here = FP_FEM_Node_Map(iRE,d)
+
+       TMP_Drv(1) = TMP_Drv(1)                                 &
+                  + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                        * Ylm_Values( :, tpd, iE(2), iE(3)))   &
+                  * Lagrange_Poly_Table( d, rd, 1 )            &
+                  / DROT
+
+
+       TMP_Drv(2) = TMP_Drv(2)                                 &
+                  + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                        * Ylm_dt_Values( :, tpd, iE(2), iE(3))   )   &
+                  * Lagrange_Poly_Table( d, rd, 0)
+
+       TMP_Drv(3) = TMP_Drv(3)                                 &
+                  + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                        * Ylm_dp_Values( :, tpd, iE(2), iE(3))   )   &
+                  * Lagrange_Poly_Table( d, rd, 0)
+
+
+
+   END DO  ! d
+
+   Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
+   Drv(tpd,rd,2)       = REAL(TMP_Drv(2), KIND = idp)
+   Drv(tpd,rd,3)       = REAL(TMP_Drv(2), KIND = idp)
+
+END DO ! td
+END DO ! rd
+
+#endif
+
+
 END SUBROUTINE Calc_Drv_On_Elem_TypeA
 
 
@@ -225,52 +344,109 @@ END SUBROUTINE Calc_Drv_On_Elem_TypeA
 !                  Calc_ConFact_Values         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeA( RE, TE, PE, DROT, Val, Drv, iU )
+SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeA( iE, DROT, Val, Drv, iU, Level)
 
-INTEGER,   INTENT(IN)                       :: RE, TE, PE
-REAL(idp), INTENT(IN)                       :: DROT
+INTEGER,   INTENT(IN), DIMENSION(3)         ::  iE
+REAL(idp), INTENT(IN)                       ::  DROT
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points),    INTENT(OUT)  :: Val
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3),  INTENT(OUT)  :: Drv
-INTEGER,   INTENT(IN)                       :: iU
+INTEGER,   INTENT(IN)                       ::  iU
+INTEGER,   INTENT(IN)                       ::  Level
 
-REAL(idp)                                   :: TMP_Val
-REAL(idp), DIMENSION(3)                     :: TMP_Drv
+REAL(idp)                                   ::  TMP_Val
+REAL(idp), DIMENSION(3)                     ::  TMP_Drv
 
-INTEGER                                     :: rd, tpd, d, Here
+INTEGER                                     ::  rd, tpd, d
+INTEGER                                     ::  Here
+INTEGER                                     ::  iRE, iCT
+
+
+#ifdef POSEIDON_AMREX_FLAG
+    iRE = Find_Coarsest_Parent(iE(1),Level)
+#else
+    iRE = iE(1)
+#endif
 
 
 
-
+#ifdef POSEIDON_AMREX_FLAG
+iCT = 2**(level+1) + mod(iE(1),2**level) - 2
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
    TMP_Val = 0.0_idp
    TMP_Drv = 0.0_idp
    DO d = 0,DEGREE
-       Here = FP_FEM_Node_Map(re,d)
+       Here = FP_FEM_Node_Map(iRE,d)
+
+        TMP_Val = TMP_Val                               &
+            + SUM( FP_Coeff_Vector_A( Here, :, iU )  &
+                   * Ylm_Elem_Values( :, tpd )   )      &
+            * Lagrange_Poly_Table( d, rd, 0 )
+
+
+        TMP_Drv(1) = TMP_Drv(1)                                 &
+                   + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                         * Ylm_Elem_Values( :, tpd ) )          &
+                   * Lagrange_Poly_Table( d, rd, 1 )            &
+                   / DROT
+
+
+        TMP_Drv(2) = TMP_Drv(2)                                 &
+                   + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                         * Ylm_Elem_dt_Values( :, tpd )     )   &
+                   * Lagrange_Poly_Table( d, rd, 0)
+
+        TMP_Drv(3) = TMP_Drv(3)                                 &
+                   + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+                         * Ylm_Elem_dp_Values( :, tpd )     )   &
+                   * Lagrange_Poly_Table( d, rd, 0)
+
+   END DO  ! d
+
+   Val(tpd,rd)         = REAL(TMP_Val,    KIND = idp)
+   Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
+   Drv(tpd,rd,2)       = REAL(TMP_Drv(2), KIND = idp)
+   Drv(tpd,rd,3)       = REAL(TMP_Drv(2), KIND = idp)
+
+END DO ! td
+END DO ! rd
+
+
+
+
+#else
+DO rd = 1,NUM_R_QUAD_POINTS
+DO tpd = 1,NUM_TP_QUAD_POINTS
+
+   TMP_Val = 0.0_idp
+   TMP_Drv = 0.0_idp
+   DO d = 0,DEGREE
+       Here = FP_FEM_Node_Map(iRE,d)
+
 
        TMP_Val = TMP_Val                                        &
                + SUM( FP_Coeff_Vector_A( Here, :, iU )          &
-                       * Ylm_Values( :, tpd, te, pe )   )       &
+                       * Ylm_Values( :, tpd, iE(2), iE(3) )   )       &
                * Lagrange_Poly_Table( d, rd, 0 )
 
 
        TMP_Drv(1) = TMP_Drv(1)                                  &
                   + SUM( FP_Coeff_Vector_A( Here, :, iU )       &
-                        * Ylm_Values( :, tpd, te, pe )     )    &
+                        * Ylm_Values( :, tpd, iE(2), iE(3) )     )    &
                   * Lagrange_Poly_Table( d, rd, 1 )             &
                   / DROT
 
 
        TMP_Drv(2) = TMP_Drv(2)                                  &
                   + SUM( FP_Coeff_Vector_A( Here, :, iU )       &
-                        * Ylm_dt_Values( :, tpd, te, pe)   )    &
+                        * Ylm_dt_Values( :, tpd, iE(2), iE(3))   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
 
        TMP_Drv(3) = TMP_Drv(3)                                  &
                   + SUM( FP_Coeff_Vector_A( Here, :, iU )       &
-                        * Ylm_dp_Values( :, tpd, te, pe)   )    &
+                        * Ylm_dp_Values( :, tpd, iE(2), iE(3))   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
 
    END DO  ! d
@@ -282,6 +458,11 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
 END DO ! td
 END DO ! rd
+
+#endif
+
+
+
 
 END SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeA
 
@@ -304,16 +485,57 @@ END SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeA
 !                  Calc_ConFact_Values         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Val_On_Elem_TypeB( RE, TE, PE, Val, iU, iVB )
+SUBROUTINE Calc_Val_On_Elem_TypeB( iE, Val, iU, iVB, Level )
 
-INTEGER,   INTENT(IN)                       :: RE, TE, PE
+INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points),   INTENT(OUT)  :: Val
-INTEGER,   INTENT(IN)                       :: iU, iVB
+INTEGER,   INTENT(IN)                       ::  iU, iVB
+INTEGER,    INTENT(IN)                      ::  Level
 
-REAL(idp)                                   :: TMP_Val
-INTEGER                                     :: rd, tpd, d, Here, There
+REAL(idp)                                   ::  TMP_Val
+INTEGER                                     ::  rd, tpd, d
+INTEGER                                     ::  Here, There
+INTEGER                                     ::  iRE, iCT
 
+
+
+#ifdef POSEIDON_AMREX_FLAG
+    iRE = Find_Coarsest_Parent(iE(1),Level)
+#else
+    iRE = iE(1)
+#endif
+
+
+
+#ifdef POSEIDON_AMREX_FLAG
+iCT = 2**(level+1) + mod(iE(1),2**level) - 2
+DO rd = 1,NUM_R_QUAD_POINTS
+DO tpd = 1,NUM_TP_QUAD_POINTS
+
+   
+    TMP_Val = 0.0_idp
+    DO d = 0,DEGREE
+
+        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
+        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
+
+        TMP_Val = TMP_Val                                   &
+               + SUM( FP_Coeff_Vector_B( Here:There, iVB )  &
+                       * Ylm_Elem_Values( :, tpd )      )   &
+               * Lagrange_Poly_Table( d, rd, 0 )
+    END DO  ! d
+
+    Val(tpd,rd)       = REAL(TMP_Val, KIND = idp)
+
+END DO ! td
+END DO ! rd
+
+
+
+
+
+#else
 
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
@@ -322,14 +544,13 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     TMP_Val = 0.0_idp
     DO d = 0,DEGREE
 
-        Here  = FP_Array_Map_TypeB(iU,iVB,re,d,1)
-        There = FP_Array_Map_TypeB(iU,iVB,re,d,LM_Length)
+        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
+        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
 
         TMP_Val = TMP_Val                                   &
                + SUM( FP_Coeff_Vector_B( Here:There, iVB )  &
-                       * Ylm_Values( :, tpd, te, pe )   )   &
+                       * Ylm_Values( :, tpd, iE(2), iE(3) )   )   &
                * Lagrange_Poly_Table( d, rd, 0 )
-
 
     END DO  ! d
 
@@ -337,6 +558,9 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
 END DO ! td
 END DO ! rd
+
+
+#endif
 
 END SUBROUTINE Calc_Val_On_Elem_TypeB
 
@@ -348,43 +572,95 @@ END SUBROUTINE Calc_Val_On_Elem_TypeB
 !                  Calc_ConFact_Values         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Drv_On_Elem_TypeB( RE, TE, PE, DROT, Drv, iU, iVB )
+SUBROUTINE Calc_Drv_On_Elem_TypeB( iE, DROT, Drv, iU, iVB, Level )
 
-INTEGER,   INTENT(IN)                       :: RE, TE, PE
+INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
 REAL(idp), INTENT(IN)                       :: DROT
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3),  INTENT(OUT)  :: Drv
 INTEGER,   INTENT(IN)                       :: iU, iVB
-
-REAL(idp), DIMENSION(3)                     :: TMP_Drv
-INTEGER                                     :: rd, tpd, d, Here, There
+INTEGER,    INTENT(IN)                      :: Level
 
 
+REAL(idp), DIMENSION(3)                     ::  TMP_Drv
+INTEGER                                     ::  rd, tpd, d
+INTEGER                                     ::  Here, There
+INTEGER                                     ::  iRE, iCT
+
+
+
+#ifdef POSEIDON_AMREX_FLAG
+    iRE = Find_Coarsest_Parent(iE(1),Level)
+#else
+    iRE = iE(1)
+#endif
+
+
+#ifdef POSEIDON_AMREX_FLAG
+iCT = 2**(level+1) + mod(iE(1),2**level) - 2
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
    
     TMP_Drv = 0.0_idp
     DO d = 0,DEGREE
-        Here  = FP_Array_Map_TypeB(iU,iVB,re,d,1)
-        There = FP_Array_Map_TypeB(iU,iVB,re,d,LM_Length)
+        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
+        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
 
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
-                        * Ylm_Values( :, tpd, te, pe )     )    &
+                        * Ylm_Elem_Values( :, tpd )         )   &
                   * Lagrange_Poly_Table( d, rd, 1 )             &
                   / DROT
 
 
         TMP_Drv(2) = TMP_Drv(2)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
-                        * Ylm_dt_Values( :, tpd, te, pe)   )    &
+                        * Ylm_Elem_dt_Values( :, tpd )      )   &
                   * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_Drv(3) = TMP_Drv(3)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
-                        * Ylm_dp_Values( :, tpd, te, pe)   )    &
+                        * Ylm_Elem_dp_Values( :, tpd )      )   &
+                  * Lagrange_Poly_Table( d, rd, 0)
+    END DO  ! d
+
+    Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
+    Drv(tpd,rd,2)       = REAL(TMP_Drv(2), KIND = idp)
+    Drv(tpd,rd,3)       = REAL(TMP_Drv(2), KIND = idp)
+
+END DO ! td
+END DO ! rd
+
+
+
+
+#else
+DO rd = 1,NUM_R_QUAD_POINTS
+DO tpd = 1,NUM_TP_QUAD_POINTS
+
+   
+    TMP_Drv = 0.0_idp
+    DO d = 0,DEGREE
+        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
+        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
+
+        TMP_Drv(1) = TMP_Drv(1)                                 &
+                  + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                        * Ylm_Values( :, tpd, iE(2), iE(3) )     )    &
+                  * Lagrange_Poly_Table( d, rd, 1 )             &
+                  / DROT
+
+
+        TMP_Drv(2) = TMP_Drv(2)                                 &
+                  + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                        * Ylm_dt_Values( :, tpd, iE(2), iE(3))   )    &
+                  * Lagrange_Poly_Table( d, rd, 0)
+
+        TMP_Drv(3) = TMP_Drv(3)                                 &
+                  + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                        * Ylm_dp_Values( :, tpd, iE(2), iE(3))   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
 
     END DO  ! d
@@ -396,6 +672,9 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 END DO ! td
 END DO ! rd
 
+#endif
+
+
 END SUBROUTINE Calc_Drv_On_Elem_TypeB
 
 
@@ -405,53 +684,116 @@ END SUBROUTINE Calc_Drv_On_Elem_TypeB
 !                  Calc_ConFact_Values         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeB( RE, TE, PE, DROT, Val, Drv, iU, iVB )
+SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT, Val, Drv, iU, iVB, Level )
 
-INTEGER,   INTENT(IN)                       :: RE, TE, PE
+INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
 REAL(idp), INTENT(IN)                       :: DROT
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points),    INTENT(OUT)  :: Val
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3),  INTENT(OUT)  :: Drv
 INTEGER,   INTENT(IN)                       :: iU, iVB
+INTEGER,    INTENT(IN)                      :: Level
+
+
 
 REAL(idp)                                   :: TMP_Val
 REAL(idp), DIMENSION(3)                     :: TMP_Drv
 
-INTEGER                                     :: rd, tpd, d, Here, There
+INTEGER                                     ::  rd, tpd, d
+INTEGER                                     ::  Here, There
+INTEGER                                     ::  iRE, iCT
 
 
 
+#ifdef POSEIDON_AMREX_FLAG
+    iRE = Find_Coarsest_Parent(iE(1),Level)
+#else
+    iRE = iE(1)
+#endif
+!PRINT*,"1",iE(1),iRE
+
+
+#ifdef POSEIDON_AMREX_FLAG
+iCT = 2**(level+1) + mod(iE(1),2**level) - 2
 
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
+
     TMP_Val = 0.0_idp
     TMP_Drv = 0.0_idp
     DO d = 0,DEGREE
-        Here  = FP_Array_Map_TypeB(iU,iVB,re,d,1)
-        There = FP_Array_Map_TypeB(iU,iVB,re,d,LM_Length)
+        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
+        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
 
         TMP_Val = TMP_Val                                       &
                + SUM( FP_Coeff_Vector_B( Here:There, iVB )      &
-                       * Ylm_Values( :, tpd, te, pe )   )       &
+                       * Ylm_Elem_Values( :, tpd )          )   &
                * Lagrange_Poly_Table( d, rd, 0 )
 
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
-                        * Ylm_Values( :, tpd, te, pe )     )    &
+                        * Ylm_Elem_Values( :, tpd )         )   &
                   * Lagrange_Poly_Table( d, rd, 1 )             &
                   / DROT
 
 
         TMP_Drv(2) = TMP_Drv(2)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
-                        * Ylm_dt_Values( :, tpd, te, pe)   )    &
+                        * Ylm_Elem_dt_Values( :, tpd )      )   &
                   * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_Drv(3) = TMP_Drv(3)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
-                        * Ylm_dp_Values( :, tpd, te, pe)   )    &
+                        * Ylm_Elem_dp_Values( :, tpd )      )   &
+                  * Lagrange_Poly_Table( d, rd, 0)
+   END DO  ! d
+
+   Val(tpd,rd)         = REAL(TMP_Val,    KIND = idp)
+   Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
+   Drv(tpd,rd,2)       = REAL(TMP_Drv(2), KIND = idp)
+   Drv(tpd,rd,3)       = REAL(TMP_Drv(2), KIND = idp)
+
+END DO ! td
+END DO ! rd
+
+
+
+
+
+
+#else
+DO rd = 1,NUM_R_QUAD_POINTS
+DO tpd = 1,NUM_TP_QUAD_POINTS
+
+    TMP_Val = 0.0_idp
+    TMP_Drv = 0.0_idp
+    DO d = 0,DEGREE
+        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
+        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
+
+        TMP_Val = TMP_Val                                       &
+               + SUM( FP_Coeff_Vector_B( Here:There, iVB )      &
+                       * Ylm_Values( :, tpd, iE(2), iE(3) )   )       &
+               * Lagrange_Poly_Table( d, rd, 0 )
+
+
+        TMP_Drv(1) = TMP_Drv(1)                                 &
+                  + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                        * Ylm_Values( :, tpd, iE(2), iE(3) )     )    &
+                  * Lagrange_Poly_Table( d, rd, 1 )             &
+                  / DROT
+
+
+        TMP_Drv(2) = TMP_Drv(2)                                 &
+                  + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                        * Ylm_dt_Values( :, tpd, iE(2), iE(3))   )    &
+                  * Lagrange_Poly_Table( d, rd, 0)
+
+        TMP_Drv(3) = TMP_Drv(3)                                 &
+                  + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                        * Ylm_dp_Values( :, tpd, iE(2), iE(3))   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
 
    END DO  ! d
@@ -464,7 +806,35 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 END DO ! td
 END DO ! rd
 
+
+#endif
+
+
+
+
 END SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeB
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 END MODULE XCFC_Functions_Calc_Values_Module

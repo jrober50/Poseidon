@@ -36,10 +36,11 @@ USE Variables_MPI, &
                     MasterID_Poseidon
 
 USE Variables_IO, &
-            ONLY :  Report_Flags
+            ONLY :  Report_Flags,       &
+                    iRF_Setup
 
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  Grav_Constant_G,    &
                     Speed_of_Light,     &
                     C_Square,           &
@@ -71,6 +72,14 @@ USE Allocation_SelfSimilar, &
             ONLY :  Allocate_SelfSim
 
 
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                     &
+                    TimerStop
+
+USE Timer_VAriables_Module, &
+            ONLY :  Timer_Core_Init_Test_Problem
+
+
 IMPLICIT NONE
 
 CONTAINS
@@ -88,63 +97,68 @@ SUBROUTINE Initialize_Yahil_Sources( t_in, kappa, gamma, ecc,                &
                                     Input_E, Input_S, Input_Si )
 
 
-REAL(KIND = idp),               INTENT(IN)                                              ::  t_in, kappa, gamma, ecc
-INTEGER,    DIMENSION(1:3),     INTENT(IN)                                              ::  Num_Nodes
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                                  ::  INPUT_R_QUAD
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(2)),INTENT(IN)                                  ::  INPUT_T_QUAD
+REAL(idp),                          INTENT(IN)                      ::  t_in, kappa, gamma, ecc
+INTEGER,  DIMENSION(1:3),           INTENT(IN)                      ::  Num_Nodes
+REAL(idp),DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
+REAL(idp),DIMENSION(1:NUM_NODES(2)),INTENT(IN)                      ::  INPUT_T_QUAD
 
-INTEGER,                        INTENT(IN)                                              ::  NUM_R_ELEM
-INTEGER,                        INTENT(IN)                                              ::  NUM_T_ELEM
-INTEGER,                        INTENT(IN)                                              ::  NUM_P_ELEM
+INTEGER,                            INTENT(IN)                      ::  NUM_R_ELEM
+INTEGER,                            INTENT(IN)                      ::  NUM_T_ELEM
+INTEGER,                            INTENT(IN)                      ::  NUM_P_ELEM
 
-REAL(KIND = idp), DIMENSION(1:NUM_R_ELEM), INTENT(IN)                                ::  Delta_R
-REAL(KIND = idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                                ::  r_locs
-REAL(KIND = idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                                ::  t_locs
-
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),                   &
-                            0:NUM_R_ELEM-1, 0:NUM_T_ELEM-1, 0:NUM_P_ELEM-1    ),        &
-                            INTENT(INOUT)                                               ::  Input_E
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),                   &
-                            0:NUM_R_ELEM-1, 0:NUM_T_ELEM-1, 0:NUM_P_ELEM-1    ),        &
-                            INTENT(INOUT)                                               ::  Input_S
-
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),                   &
-                            0:NUM_R_ELEM-1, 0:NUM_T_ELEM-1, 0:NUM_P_ELEM-1,             &
-                            1:3 ),  INTENT(INOUT)                                       ::  Input_Si
+REAL(idp), DIMENSION(1:NUM_R_ELEM), INTENT(IN)                      ::  Delta_R
+REAL(idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                      ::  r_locs
+REAL(idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                      ::  t_locs
 
 
-REAL(KIND = idp)                                                                        ::  t
+REAL(idp), DIMENSION( 1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),     &
+                      0:NUM_R_ELEM-1,                               &
+                      0:NUM_T_ELEM-1,                               &
+                      0:NUM_P_ELEM-1    ), INTENT(INOUT)            ::  Input_E
+
+REAL(idp), DIMENSION( 1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),     &
+                      0:NUM_R_ELEM-1,                               &
+                      0:NUM_T_ELEM-1,                               &
+                      0:NUM_P_ELEM-1    ), INTENT(INOUT)            ::  Input_S
+
+REAL(idp), DIMENSION( 1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),     &
+                      0:NUM_R_ELEM-1,                               &
+                      0:NUM_T_ELEM-1,                               &
+                      0:NUM_P_ELEM-1,1:3), INTENT(INOUT)            ::  Input_Si
 
 
-REAL(KIND = idp), DIMENSION(:),ALLOCATABLE                                              ::  Input_X,    &
-                                                                                            Input_D,    &
-                                                                                            Input_V,    &
-                                                                                            Input_M
-
-REAL(KIND = idp)                                                                        ::  R_Factor
-REAL(KIND = idp)                                                                        ::  Kappa_wUnits
+REAL(idp)                                                           ::  t
 
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                             ::  Enclosed_Mass
-REAL(KIND = idp), DIMENSION(:),ALLOCATABLE                                              ::  Input_R
+REAL(idp), DIMENSION(:),ALLOCATABLE                                 ::  Input_X,    &
+                                                                        Input_D,    &
+                                                                        Input_V,    &
+                                                                        Input_M
+
+REAL(idp)                                                           ::  R_Factor
+REAL(idp)                                                           ::  Kappa_wUnits
 
 
-CHARACTER(LEN=128)                  :: line
+REAL(idp), DIMENSION(:), ALLOCATABLE                                ::  Enclosed_Mass
+REAL(idp), DIMENSION(:),ALLOCATABLE                                 ::  Input_R
 
+
+CHARACTER(LEN=128)                          :: line
 
 INTEGER                                     :: NUM_LINES
 INTEGER                                     :: CUR_LINE
 
 
-INTEGER                             :: nread
-INTEGER                             :: istat
+INTEGER                                     :: nread
+INTEGER                                     :: istat
 
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"-Initializing Yahil Sources. "
 END IF
+CALL TimerStart( Timer_Core_Init_Test_Problem )
+
+
 
 
 101 FORMAT (a128)
@@ -222,12 +236,12 @@ Input_R = R_Factor*Input_X
 
 Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)  &
-              * (t**(4.0_idp - 3.0_idp*gamma))                      &
+              * (t**(4.0_idp- 3.0_idp*gamma))                      &
               * Input_M
 
 
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
-IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
+IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3) ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
     WRITE(*,'(A,ES12.5,A)') ' - Yahil Time      : ', t_in,' ms'
@@ -278,12 +292,194 @@ CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, In
 Potential_Solution => SELFSIM_NEWT_SOL
 Shift_Solution => SELFSIM_SHIFT_SOL
 
+
+CALL TimerStop( Timer_Core_Init_Test_Problem )
+
 END SUBROUTINE Initialize_Yahil_Sources
 
 
 
 
 
+
+
+
+
+!+101+###########################################################################!
+!                                                                                !
+!                  Initialize_Yahil_Sources                                           !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Initialize_Yahil_Density( t_in, kappa, gamma, ecc,               &
+                                    Num_Nodes, INPUT_R_QUAD,                &
+                                    NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
+                                    Delta_r, r_locs,                        &
+                                    Density )
+
+
+REAL(idp),               INTENT(IN)                              ::  t_in, kappa, gamma, ecc
+INTEGER,    DIMENSION(1:3),     INTENT(IN)                        ::  Num_Nodes
+REAL(idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                  ::  INPUT_R_QUAD
+
+INTEGER,                        INTENT(IN)                              ::  NUM_R_ELEM
+INTEGER,                        INTENT(IN)                              ::  NUM_T_ELEM
+INTEGER,                        INTENT(IN)                              ::  NUM_P_ELEM
+
+REAL(idp), DIMENSION(1:NUM_R_ELEM), INTENT(IN)                   ::  Delta_R
+REAL(idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                   ::  r_locs
+
+
+REAL(idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),   &
+                            0:NUM_R_ELEM-1,                             &
+                            0:NUM_T_ELEM-1,                             &
+                            0:NUM_P_ELEM-1    ),  INTENT(INOUT)         ::  Density
+
+
+REAL(idp)                                                                        ::  t
+
+
+REAL(idp), DIMENSION(:),ALLOCATABLE                                              ::  Input_X,    &
+                                                                                            Input_D,    &
+                                                                                            Input_V,    &
+                                                                                            Input_M
+
+REAL(idp)                                                                        ::  R_Factor
+REAL(idp)                                                                        ::  Kappa_wUnits
+
+
+REAL(idp), DIMENSION(:), ALLOCATABLE                                             ::  Enclosed_Mass
+REAL(idp), DIMENSION(:),ALLOCATABLE                                              ::  Input_R
+
+
+CHARACTER(LEN=128)                  :: line
+
+
+INTEGER                                     :: NUM_LINES
+INTEGER                                     :: CUR_LINE
+
+
+INTEGER                             :: nread
+INTEGER                             :: istat
+
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Yahil Density. "
+END IF
+CALL TimerStart( Timer_Core_Init_Test_Problem )
+
+
+
+
+101 FORMAT (a128)
+
+
+nread = 42
+OPEN(UNIT=nread, FILE='../../Input/YahilHomologousCollapse_Gm_130.dat', STATUS='OLD', IOSTAT=istat)
+IF ( istat .NE. 0 ) THEN
+    PRINT*,"Could not open 'Input/YahilHomologousCollapse_Gm_130.dat'. "
+END IF
+REWIND(nread)
+NUM_LINES = 0
+DO
+    READ(nread, *, IOSTAT=istat) line
+    IF ( istat .NE. 0 ) EXIT
+    NUM_LINES = NUM_LINES + 1
+END DO
+NUM_LINES = NUM_LINES -1
+
+
+
+ALLOCATE( Input_X(1:NUM_LINES), Input_D(1:NUM_LINES), Input_V(1:NUM_LINES) )
+ALLOCATE( Input_R(1:NUM_LINES) )
+ALLOCATE( Input_M(1:NUM_LINES) )
+ALLOCATE( Enclosed_Mass(1:NUM_LINES)  )
+
+NUM_ENTRIES = NUM_LINES
+
+CALL Allocate_SelfSim(Num_Entries)
+
+
+
+
+REWIND(nread)
+CUR_LINE = 1
+READ(nread,*)
+DO
+
+    READ(nread, 101, IOSTAT=istat) line
+    IF ( istat .NE. 0 ) EXIT
+
+
+    READ(line,*) Input_X(CUR_LINE), Input_D(CUR_LINE), Input_V(CUR_LINE), Input_M(CUR_LINE)
+    CUR_LINE = CUR_LINE + 1
+    
+END DO
+
+CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
+
+
+
+
+IF ( .TRUE. ) THEN
+    Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
+ELSE
+    Kappa_wUnits = 18.394097187796024_idp
+    PRINT*,"Kappa_wUnits over written.",Kappa_wUnits
+END IF
+
+
+
+t = t_in*Millisecond
+
+R_Factor = SQRT(Kappa_wUnits)                                &
+        *(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))       &
+        *((t)**(2.0_idp-gamma))
+
+
+Input_R = R_Factor*Input_X
+
+
+Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
+              * Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)  &
+              * (t**(4.0_idp- 3.0_idp*gamma))                      &
+              * Input_M
+
+
+IF ( myID_Poseidon == MasterID_Poseidon ) THEN
+IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
+    WRITE(*,'(A)')'------------- Test Parameters ----------------'
+    WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
+    WRITE(*,'(A,ES12.5,A)') ' - Yahil Time      : ', t_in,' ms'
+    WRITE(*,'(A,ES12.5)')   ' - Kappa           : ', Kappa_wUnits
+    WRITE(*,'(A,ES12.5)')   ' - Gamma           : ', Gamma
+    WRITE(*,'(A,ES12.5,A)')   ' - Central Density : ', Input_D(1)/(Grav_Constant_G*t*t )/(Gram/Centimeter**3),' g/cm^3'
+    WRITE(*,'(/)')
+END IF
+END IF
+
+
+
+
+CALL Calculate_Yahil_Density(   t, kappa, gamma,                        &
+                                Num_Nodes, NUM_LINES,                   &
+                                INPUT_R_QUAD,                           &
+                                NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
+                                Delta_R, r_locs,                        &
+                                Input_D,                                &
+                                Input_X,                                &
+                                Density                                )
+
+
+
+
+CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
+
+Potential_Solution => SELFSIM_NEWT_SOL
+
+
+CALL TimerStop( Timer_Core_Init_Test_Problem )
+
+END SUBROUTINE Initialize_Yahil_Density
 
 
 
@@ -306,36 +502,36 @@ SUBROUTINE CONVERT_SELF_SIMILAR_3D( t, kappa, gamma, ecc,                  &
                                     Input_E, Input_S, Input_Si              )
 
 
-REAL(KIND = idp),               INTENT(IN)                                  ::  t, kappa, gamma, ecc
+REAL(idp),               INTENT(IN)                                  ::  t, kappa, gamma, ecc
 INTEGER,    DIMENSION(1:3),     INTENT(IN)                                  ::  Num_Nodes
 INTEGER,    INTENT(IN)                                                      ::  Num_LINES
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(2)),INTENT(IN)                      ::  INPUT_T_QUAD
+REAL(idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
+REAL(idp), DIMENSION(1:NUM_NODES(2)),INTENT(IN)                      ::  INPUT_T_QUAD
 
 INTEGER,                        INTENT(IN)                                  ::  NUM_R_ELEM
 INTEGER,                        INTENT(IN)                                  ::  NUM_T_ELEM
 INTEGER,                        INTENT(IN)                                  ::  NUM_P_ELEM
 
-REAL(KIND = idp), DIMENSION(NUM_R_ELEM),   INTENT(IN)                       ::  Delta_R
-REAL(KIND = idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
-REAL(KIND = idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                       ::  t_locs
+REAL(idp), DIMENSION(NUM_R_ELEM),   INTENT(IN)                       ::  Delta_R
+REAL(idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
+REAL(idp), DIMENSION(0:NUM_T_ELEM), INTENT(IN)                       ::  t_locs
 
 
-REAL(KIND = idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_D,    &
+REAL(idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_D,    &
                                                                                 Input_V,    &
                                                                                 Input_X
 
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+REAL(idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
                             0:NUM_R_ELEM-1,                                 &
                             0:NUM_T_ELEM-1,                                 &
                             0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Input_E
 
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+REAL(idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
                             0:NUM_R_ELEM-1,                                 &
                             0:NUM_T_ELEM-1,                                 &
                             0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Input_S
 
-REAL(KIND = idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+REAL(idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
                             0:NUM_R_ELEM-1,                                 &
                             0:NUM_T_ELEM-1,                                 &
                             0:NUM_P_ELEM-1, 1:3 ),  INTENT(INOUT)           ::  Input_Si
@@ -345,38 +541,38 @@ INTEGER                                                                     ::  
                                                                                 rd, td, pd
 
 INTEGER                                                                     ::  nd, line, line_min
-REAL(KIND = idp), DIMENSION(0:1)                                            ::  xlocs
-REAL(KIND = idp)                                                            ::  x
-REAL(KIND = idp)                                                            ::  Density, Velocity
+REAL(idp), DIMENSION(0:1)                                            ::  xlocs
+REAL(idp)                                                            ::  x
+REAL(idp)                                                            ::  Density, Velocity
 
-REAL(KIND = idp)                                                            ::  Pressure, Energy
-REAL(KIND = idp)                                                            ::  vsqr, LF_sqr
-REAL(KIND = idp)                                                            ::  E, Si, S
+REAL(idp)                                                            ::  Pressure, Energy
+REAL(idp)                                                            ::  vsqr, LF_sqr
+REAL(idp)                                                            ::  E, Si, S
 
-REAL(KIND = idp), DIMENSION(0:1)                                            ::  LagPoly_Vals
-REAL(KIND = idp), DIMENSION(1:NUM_NODES(1))                                 ::  CUR_R_LOCS
+REAL(idp), DIMENSION(0:1)                                            ::  LagPoly_Vals
+REAL(idp), DIMENSION(1:NUM_NODES(1))                                 ::  CUR_R_LOCS
 
-REAL(KIND = idp)                                                            ::  D_FACTOR,               &
+REAL(idp)                                                            ::  D_FACTOR,               &
                                                                                 V_FACTOR,               &
                                                                                 X_Factor,               &
                                                                                 M_FACTOR
 
-REAL(KIND = idp)                                                            ::  ecc_sqr, ooomes
-REAL(KIND = idp)                                                            ::  Specific_Enthalpy
+REAL(idp)                                                            ::  ecc_sqr, ooomes
+REAL(idp)                                                            ::  Specific_Enthalpy
 
 INTEGER                                                                     ::  Num_Radial_Points
 INTEGER                                                                     ::  Num_Theta_Points
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  Density_Holder,         &
+REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  Density_Holder,         &
                                                                                 Velocity_Holder
 
-REAL(KIND = idp)                                                            ::  xloc
-REAL(KIND = idp)                                                            ::  E_Units
+REAL(idp)                                                            ::  xloc
+REAL(idp)                                                            ::  E_Units
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  DX_Holder
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  VX_Holder
+REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  DX_Holder
+REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  VX_Holder
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                                 ::  r_Holder
+REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  r_Holder
 
 
 Num_Radial_Points = NUM_R_ELEM*NUM_NODES(1)
@@ -393,14 +589,14 @@ xlocs(0) = -1.0_idp
 xlocs(1) = 1.0_idp
 
 ecc_sqr = ecc*ecc
-ooomes = 1.0_idp/(1.0_idp - ecc_sqr)
+ooomes = 1.0_idp/(1.0_idp- ecc_sqr)
 
 
-D_FACTOR = 1.0_idp /(Grav_Constant_G*t*t )
+D_FACTOR = 1.0_idp/(Grav_Constant_G*t*t )
 
 V_FACTOR = SQRT(kappa)                          &
          * Grav_Constant_G**((1.0_idp-gamma)/2.0_idp)  &
-         * t**(1.0_idp - gamma)
+         * t**(1.0_idp- gamma)
 
 X_Factor = kappa**(-0.5_idp)                               &
         *(Grav_Constant_G**((gamma-1.0_idp)/2.0_idp))       &
@@ -408,7 +604,7 @@ X_Factor = kappa**(-0.5_idp)                               &
 
 M_FACTOR = kappa**(3.0_idp/2.0_idp)                             &
          * Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)   &
-         * t**(4.0_idp - 3.0_idp * gamma )
+         * t**(4.0_idp- 3.0_idp* gamma )
 
 
 DO pe = 0,NUM_P_ELEM-1
@@ -450,13 +646,13 @@ DO te = 0,NUM_T_ELEM-1
 
             
             vsqr = Velocity*Velocity
-            LF_sqr = 1.0_idp/(1.0_idp - vsqr/C_Square)
+            LF_sqr = 1.0_idp/(1.0_idp- vsqr/C_Square)
             
 
             !  Calculate CFA Input Values
             E  = Density*Specific_Enthalpy*LF_sqr - Pressure
             Si = Density*Specific_Enthalpy*LF_sqr*Velocity/C_Square
-            S  = Density*Specific_Enthalpy*LF_sqr*vsqr/C_Square + 3.0_idp * Pressure
+            S  = Density*Specific_Enthalpy*LF_sqr*vsqr/C_Square + 3.0_idp* Pressure
 
 !            PRINT*,re,E,S,Si
 !            PRINT*,re,Velocity
@@ -507,14 +703,166 @@ END SUBROUTINE CONVERT_SELF_SIMILAR_3D
 
 !+201+###########################################################################!
 !                                                                                !
+!                  Calculate_Yahil_Density                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Calculate_Yahil_Density( t, kappa, gamma,                        &
+                                    Num_Nodes, NUM_LINES,                   &
+                                    INPUT_R_QUAD,                           &
+                                    NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM,     &
+                                    Delta_R, r_locs,                        &
+                                    Input_D,                                &
+                                    Input_X,                                &
+                                    Output_D                                )
+
+
+REAL(idp),               INTENT(IN)                                  ::  t, kappa, gamma
+INTEGER,    DIMENSION(1:3),     INTENT(IN)                                  ::  Num_Nodes
+INTEGER,    INTENT(IN)                                                      ::  Num_LINES
+REAL(idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
+
+INTEGER,                        INTENT(IN)                                  ::  NUM_R_ELEM
+INTEGER,                        INTENT(IN)                                  ::  NUM_T_ELEM
+INTEGER,                        INTENT(IN)                                  ::  NUM_P_ELEM
+
+REAL(idp), DIMENSION(NUM_R_ELEM),   INTENT(IN)                       ::  Delta_R
+REAL(idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
+
+REAL(idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_D
+REAL(idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_X
+
+REAL(idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
+                            0:NUM_R_ELEM-1,                                 &
+                            0:NUM_T_ELEM-1,                                 &
+                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Output_D
+
+
+INTEGER                                                                     ::  re
+INTEGER                                                                     ::  rd, td, pd
+
+INTEGER                                                                     ::  nd, line, line_min
+REAL(idp)                                                            ::  xloc
+REAL(idp), DIMENSION(0:1)                                            ::  xlocs
+REAL(idp)                                                            ::  x
+REAL(idp)                                                            ::  Density
+
+REAL(idp), DIMENSION(0:1)                                            ::  LagPoly_Vals
+REAL(idp), DIMENSION(1:NUM_NODES(1))                                 ::  CUR_R_LOCS
+
+REAL(idp)                                                            ::  D_FACTOR
+REAL(idp)                                                            ::  X_FACTOR
+
+INTEGER                                                                     ::  Num_Radial_Points
+
+REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  D_Holder
+REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  V_Holder
+REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  R_Holder
+
+
+
+Num_Radial_Points = NUM_R_ELEM*NUM_NODES(1)
+
+ALLOCATE( D_Holder(1:Num_Radial_Points) )
+ALLOCATE( V_Holder(1:Num_Radial_Points) )
+ALLOCATE( R_Holder(1:Num_Radial_Points) )
+
+V_Holder = 0.0_idp
+
+
+xlocs(0) = -1.0_idp
+xlocs(1) = 1.0_idp
+
+D_FACTOR = 1.0_idp/(Grav_Constant_G*t*t )
+
+X_Factor = kappa**(-0.5_idp)                               &
+        *(Grav_Constant_G**((gamma-1.0_idp)/2.0_idp))       &
+        *((t)**(gamma-2.0_idp))
+
+line_min = 1
+DO re = 0,NUM_R_ELEM-1
+    CUR_R_LOCS(:) = Delta_R(Re+1) * (INPUT_R_QUAD(:)+0.5_idp) + r_locs(re)
+
+
+    DO rd = 1,NUM_NODES(1)
+        xloc = CUR_R_LOCS(rd)*X_Factor
+    !            CALL Find_Line_SUB(xloc, Input_X, NUM_LINES)
+        line = Find_Line(xloc, Input_X, NUM_LINES)
+
+        x = MAP_TO_X_SPACE(Input_X(Line),Input_X(Line+1),xloc)
+        IF ( x > 1 ) THEN
+            x = 1
+        END IF
+        LagPoly_Vals = Lagrange_Poly(x, 1, xlocs)
+
+
+        D_Holder(re*NUM_NODES(1)+rd) = D_FACTOR                              &
+                                     * ( INPUT_D(line)*LagPoly_Vals(0)       &
+                                       + INPUT_D(line+1)*LagPoly_Vals(1)     )
+
+        r_Holder(re*NUM_NODES(1)+rd) = CUR_R_LOCS(rd)
+
+    END DO ! rd
+
+END DO ! RE
+
+
+
+
+DO re = 0,NUM_R_ELEM-1
+DO pd = 1,NUM_NODES(3)
+DO td = 1,NUM_NODES(2)
+DO rd = 1,Num_Nodes(1)
+
+    nd = (pd-1)*NUM_NODES(2)*NUM_NODES(1)   &
+       + (td-1)*NUM_NODES(1)                &
+       + rd
+
+    Output_D(nd, re,:,:) = D_Holder(re*Num_Nodes(1)+rd)
+
+END DO ! rd
+END DO ! td
+END DO ! pd
+END DO ! re
+
+
+
+
+
+IF ( OUTPUT_PRIMATIVES_FLAG == 1 ) THEN
+
+    CALL OUTPUT_PRIMATIVES( D_Holder, V_Holder, R_Holder, Num_Radial_Points)
+
+END IF
+
+
+
+
+DEALLOCATE( D_Holder )
+DEALLOCATE( V_Holder )
+DEALLOCATE( R_Holder )
+
+
+
+END SUBROUTINE Calculate_Yahil_Density
+
+
+
+
+
+
+
+
+
+!+201+###########################################################################!
+!                                                                                !
 !                  CREATE_SELFSIM_NEWT_SOL                                       !
 !                                                                                !
 !################################################################################!
 SUBROUTINE CREATE_SELFSIM_NEWT_SOL( Line_Count, R_Values, Enclosed_Mass )
 
 INTEGER, INTENT(IN)                                             :: Line_Count
-REAL(KIND = idp), DIMENSION(1:Line_Count), INTENT(IN)           :: R_Values
-REAL(KIND = idp), DIMENSION(1:Line_Count), INTENT(IN)           :: Enclosed_Mass
+REAL(idp), DIMENSION(1:Line_Count), INTENT(IN)           :: R_Values
+REAL(idp), DIMENSION(1:Line_Count), INTENT(IN)           :: Enclosed_Mass
 
 INTEGER     :: i
 
@@ -522,7 +870,6 @@ INTEGER     :: i
 
 SELFSIM_R_VALS(0) = 0.0_idp
 SELFSIM_R_VALS(1:NUM_ENTRIES) = R_Values(1:NUM_ENTRIES)
-!SELFSIM_POT_VALS = - Grav_Constant_G*Enclosed_Mass(:)/R_Values(:)
 
 SELFSIM_POT_VALS(NUM_ENTRIES) = -GRAV_Constant_G*Enclosed_Mass(Num_Entries)/R_Values(Num_Entries)
 
@@ -533,29 +880,18 @@ DO i = NUM_ENTRIES-1,1,-1
                                                  / (SELFSIM_R_Vals(i)*SELFSIM_R_Vals(i))
 
 END DO
-!SELFSIM_POT_VALS(0) = SELFSIM_POT_VALS(1)/2.0_idp
 
 SELFSIM_POT_VALS(0) = SELFSIM_POT_VALS(1) - 3*Grav_Constant_G*Enclosed_Mass(1)           &
                                             /(2*SELFSIM_R_VALS(1))
 
-!PRINT*,"SELFSIM_R_VALS"
-!PRINT*,SELFSIM_R_VALS
-!PRINT*," "
-!PRINT*,"Enclosed_Mass"
-!PRINT*,Enclosed_Mass
-!PRINT*," "
-!PRINT*,"SELFSIM_POT_VALS"
-!DO i = 1,Line_Count
-!    PRINT*,SELFSIM_POT_VALS(i)
-!END DO
-!PRINT*," "
-
-
-
-!CALL SELFSIM_NEWT_SUB( SELFSIM_R_VALS(100) + (SELFSIM_R_VALS(101)-SELFSIM_R_VALS(100))/2.0_idp)
 
 
 END SUBROUTINE CREATE_SELFSIM_NEWT_SOL
+
+
+
+
+
 
 
 
@@ -566,13 +902,13 @@ END SUBROUTINE CREATE_SELFSIM_NEWT_SOL
 !################################################################################!
 FUNCTION SELFSIM_NEWT_SOL( r, theta, phi )
 
-REAL(KIND = idp), INTENT(IN)     :: r, theta, phi
-REAL(KIND = idp)                 :: SELFSIM_NEWT_SOL
+REAL(idp), INTENT(IN)     :: r, theta, phi
+REAL(idp)                 :: SELFSIM_NEWT_SOL
 
 INTEGER                          :: cur_entry
 INTEGER                          :: i
 
-REAL(KIND = idp)                 :: deltar
+REAL(idp)                 :: deltar
 
 
 
@@ -628,31 +964,31 @@ INTEGER,                 INTENT( IN )                              ::  NUM_R_ELE
                                                                        NUM_T_ELEM,  &
                                                                        NUM_P_ELEM
 
-REAL(KIND = idp), DIMENSION( 1:NUM_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),  &
+REAL(idp), DIMENSION( 1:NUM_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),  &
                              0:NUM_R_ELEM-1,                            &
                              0:NUM_T_ELEM-1,                            &
                              0:NUM_P_ELEM-1,                            &
                              1:3 ), INTENT(IN)                    ::  Sr
 
-REAL(KIND = idp), DIMENSION( 0:NUM_R_ELEM ),  INTENT(IN)          ::  r_locs
+REAL(idp), DIMENSION( 0:NUM_R_ELEM ),  INTENT(IN)          ::  r_locs
 
 
 INTEGER                                                           ::  Ord
 
 INTEGER                                                           ::  i, j, re, reb
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: x_locs,     &
+REAL(idp), DIMENSION(:), ALLOCATABLE                       :: x_locs,     &
                                                                      ri_locs,    &
                                                                      wi
 
-REAL(KIND = idp), DIMENSION(:,:), ALLOCATABLE                     :: rij_locs,    &
+REAL(idp), DIMENSION(:,:), ALLOCATABLE                     :: rij_locs,    &
                                                                      PSI_10,     &
                                                                      Sr_New
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                       :: AlphaPsi
-REAL(KIND = idp)                                                  :: Psi
-REAL(KIND = idp)                                                  :: Outer_Int
-REAL(KIND = idp)                                                  :: Inner_Int
+REAL(idp), DIMENSION(:), ALLOCATABLE                       :: AlphaPsi
+REAL(idp)                                                  :: Psi
+REAL(idp)                                                  :: Outer_Int
+REAL(idp)                                                  :: Inner_Int
 
 Ord = 6
 
@@ -672,24 +1008,24 @@ CALL Initialize_LG_Quadrature( Ord, x_locs, wi )
 SELFSIM_SHIFT_VALS(0) = 0.0_idp
 DO re = 0,NUM_R_ELEM-1
    ! Calculate the r locations for the Outer Integral's Quadrature Points !
-   ri_locs(:) = (r_locs(re+1)-r_locs(re))/2.0_idp * ( x_locs(:) + 1.0_idp ) + r_locs(re)
+   ri_locs(:) = (r_locs(re+1)-r_locs(re))/2.0_idp* ( x_locs(:) + 1.0_idp) + r_locs(re)
 
    ! Calculate the Alpha Psi values at each of the Outer Integral's Quadrature Points !
    DO i = 1,Ord
-      AlphaPsi(i) =  1.0_idp + 0.5_idp*SELFSIM_NEWT_SOL(ri_locs(i),0.0_idp,0.0_idp)/C_Square
+      AlphaPsi(i) =  1.0_idp+ 0.5_idp*SELFSIM_NEWT_SOL(ri_locs(i),0.0_idp,0.0_idp)/C_Square
    END DO
 
 
    DO i = 1,Ord
 
       ! Calculate the Quadrature Points for each of the Inner Integrals
-      rij_locs(:,i) = (ri_locs(i) - 0.0_idp)/2.0_idp *(x_locs(:) + 1.0_idp) + 0.0_idp
+      rij_locs(:,i) = (ri_locs(i) - 0.0_idp)/2.0_idp*(x_locs(:) + 1.0_idp) + 0.0_idp
 
 
       ! Calculate Psi^10 values at each of the Inner Quadrature Points
       DO j = 1,Ord
 
-           Psi = 1.0_idp - 0.5_idp*SELFSIM_NEWT_SOL(rij_locs(j,i),0.0_idp,0.0_idp)/C_Square
+           Psi = 1.0_idp- 0.5_idp*SELFSIM_NEWT_SOL(rij_locs(j,i),0.0_idp,0.0_idp)/C_Square
            Psi_10(j,i) = Psi**10
 
       END DO
@@ -735,7 +1071,7 @@ DO re = 0,NUM_R_ELEM-1
                 + AlphaPsi(i)                                     &
                 / (ri_locs(i)*ri_locs(i)*ri_locs(i)*ri_locs(i))   &
                 * Inner_Int                                       &
-                * ( ri_locs(i) - 0.0_idp)/2.0_idp                 &
+                * ( ri_locs(i) - 0.0_idp)/2.0_idp                &
                 * wi(i)
 
    END DO ! i Loop
@@ -747,7 +1083,7 @@ DO re = 0,NUM_R_ELEM-1
       SELFSIM_SHIFT_VALS(re+1) = (3.0_idp/2.0_idp)                      &
                                * 8.0_idp*pi* GR_Source_Scalar           &
                                * r_locs(re+1)                           &
-                               * ( r_locs(re+1) - r_locs(re))/2.0_idp   &
+                               * ( r_locs(re+1) - r_locs(re))/2.0_idp  &
                                * Outer_Int
 
    ELSE
@@ -757,7 +1093,7 @@ DO re = 0,NUM_R_ELEM-1
                                + (3.0_idp/2.0_idp)                      &
                                * 8.0_idp*pi*GR_Source_Scalar            &
                                * r_locs(re+1)                           &
-                               * ( r_locs(re+1) - r_locs(re))/2.0_idp   &
+                               * ( r_locs(re+1) - r_locs(re))/2.0_idp  &
                                * Outer_Int
 
    END IF
@@ -779,18 +1115,18 @@ END SUBROUTINE CREATE_SELFSIM_SHIFT_SOL
 !################################################################################!
 FUNCTION SELFSIM_SHIFT_SOL( r, r_locs,  NUM_R_ELEM )
 
-REAL(KIND = idp), INTENT(IN)                              :: r
+REAL(idp), INTENT(IN)                              :: r
 INTEGER, INTENT(IN)                                       :: NUM_R_ELEM
 
-REAL(KIND = idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)     :: r_locs
+REAL(idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)     :: r_locs
 
 
-REAL(KIND = idp)                 :: SELFSIM_SHIFT_SOL
+REAL(idp)                 :: SELFSIM_SHIFT_SOL
 
 INTEGER                          :: cur_entry
 INTEGER                          :: i
 
-REAL(KIND = idp)                 :: deltar
+REAL(idp)                 :: deltar
 
 cur_entry = 0
 DO i = 0,NUM_R_ELEM-1
@@ -820,6 +1156,10 @@ SELFSIM_SHIFT_SOL = (1.0_idp/deltar)    &
 END FUNCTION SELFSIM_SHIFT_SOL
 
 
+
+
+
+
 !+201+###########################################################################!
 !                                                                                !
 !                  CREATE_SELFSIM_NEWT_SOL                                       !
@@ -827,8 +1167,8 @@ END FUNCTION SELFSIM_SHIFT_SOL
 !################################################################################!
 SUBROUTINE SELFSIM_NEWT_SUB( r )
 
-REAL(KIND = idp), INTENT(IN)     :: r
-REAL(KIND = idp)                 :: SELFSIM_NEWT_SOL
+REAL(idp), INTENT(IN)     :: r
+REAL(idp)                 :: SELFSIM_NEWT_SOL
 
 INTEGER                          :: cur_entry
 INTEGER                          :: i
@@ -866,13 +1206,13 @@ PURE FUNCTION Lagrange_Poly(x, Ord, xlocs)
 
 
 INTEGER, INTENT(IN)                                 :: Ord
-REAL(KIND = idp), INTENT(IN)                        :: x
-REAL(KIND = idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
+REAL(idp), INTENT(IN)                        :: x
+REAL(idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
 
 
 INTEGER                                             :: i,j
-REAL(KIND = idp), DIMENSION(0:Ord)                  :: tmp
-REAL(KIND = idp), DIMENSION(0:Ord)                  :: Lagrange_Poly
+REAL(idp), DIMENSION(0:Ord)                  :: tmp
+REAL(idp), DIMENSION(0:Ord)                  :: Lagrange_Poly
 
 
 
@@ -904,9 +1244,9 @@ END FUNCTION Lagrange_Poly
 !###############################################################!
 PURE ELEMENTAL FUNCTION Map_To_X_Space(ra, rb, r)
 
-REAL(KIND = idp)                            ::  Map_To_X_Space
-REAL(KIND = idp), intent(in)                ::  ra, rb
-REAL(KIND = idp), intent(in)                ::  r
+REAL(idp)                            ::  Map_To_X_Space
+REAL(idp), intent(in)                ::  ra, rb
+REAL(idp), intent(in)                ::  r
 
 Map_To_X_Space = (2.0_idp*(r - ra))/(rb - ra) - 1.0_idp
 
@@ -928,10 +1268,10 @@ END FUNCTION Map_To_X_Space
 SUBROUTINE Initialize_LG_Quadrature(Ord, xloc, weights)
 
 INTEGER, INTENT(IN)                                     ::  Ord
-REAL(KIND = idp), INTENT(INOUT), DIMENSION(1:Ord)       ::  xloc, weights
+REAL(idp), INTENT(INOUT), DIMENSION(1:Ord)       ::  xloc, weights
 
 INTEGER                                                 :: i, j, m
-REAL(KIND = idp)                                        :: p1, p2, p3, pp, z, z1
+REAL(idp)                                        :: p1, p2, p3, pp, z, z1
 
 
 m = (Ord + 1)/2
@@ -964,7 +1304,7 @@ DO i = 1,m
     xloc(i) = -z
     xloc(Ord-i+1) = +z
 
-    weights(i) = 2.0_idp/((1.0_idp - z*z)*pp*pp)
+    weights(i) = 2.0_idp/((1.0_idp- z*z)*pp*pp)
     weights(Ord-i+1) = weights(i)
 
 END DO
@@ -975,9 +1315,14 @@ END SUBROUTINE Initialize_LG_Quadrature
 
 
 
+
+!+503+##################################################################!
+!                                                                       !
+!                                                                       !
+!#######################################################################!
 PURE INTEGER FUNCTION Find_Line( x, x_list, list_len )
 
-REAL(KIND = idp), INTENT(IN)            :: x, x_list(list_len)
+REAL(idp), INTENT(IN)            :: x, x_list(list_len)
 INTEGER, INTENT(IN)                     :: list_len
 
 INTEGER                                 :: up, down, mid
@@ -1007,10 +1352,19 @@ END FUNCTION Find_Line
 
 
 
+
+
+
+
+
+!+503+##################################################################!
+!                                                                       !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Find_Line_SUB( x, x_list, list_len )
 
-REAL(KIND = idp), INTENT(IN)                        :: x
-REAL(KIND = idp), DIMENSION(1:List_Len), INTENT(IN) :: x_list(list_len)
+REAL( idp), INTENT(IN)                             :: x
+REAL( idp), DIMENSION(1:List_Len), INTENT(IN)      :: x_list(list_len)
 INTEGER, INTENT(IN)                                 :: list_len
 
 INTEGER                                     :: up, down, mid

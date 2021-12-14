@@ -25,7 +25,7 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                 ONLY :  pi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
                 ONLY :  Set_Units
 
 USE Poseidon_Parameters, &
@@ -36,7 +36,8 @@ USE Poseidon_Parameters, &
                         Verbose_Flag,           &
                         Convergence_Criteria,   &
                         Num_CFA_Vars,           &
-                        Max_Iterations
+                        Max_Iterations,         &
+                        Poisson_Mode
 
 USE Poseidon_IO_Parameters, &
                 ONLY :  Method_Names,           &
@@ -49,7 +50,9 @@ USE Variables_MPI, &
 USE Variables_Mesh, &
                 ONLY :  Num_R_Elements,         &
                         Num_T_Elements,         &
-                        Num_P_Elements
+                        Num_P_Elements,         &
+                        R_Inner,                &
+                        R_Outer
 
 USE Variables_Quadrature, &
                 ONLY :  Num_R_Quad_Points,      &
@@ -62,7 +65,8 @@ USE Variables_FP,   &
 USE Variables_IO, &
                 ONLY :  Report_Flags,           &
                         Report_IDs,             &
-                        File_Suffix
+                        File_Suffix,            &
+                        iRF_Setup
 
 USE IO_File_Routines_Module, &
                 ONLY :  Open_New_File
@@ -89,14 +93,16 @@ PRINT*, "In Output_Setup_Report",myID_Poseidon
 IF (myID_Poseidon == MasterID_Poseidon ) THEN
 
 
-    IF ( Report_Flags(4) > 1 ) THEN
+    IF ( Report_Flags(iRF_Setup) > 1 ) THEN
         WRITE(Report_Name,'(A,A,A,A)') Poseidon_Reports_Dir,"Setup_Report_",trim(File_Suffix),".out"
-        CALL Open_New_File( Report_Name, Report_IDs(4), Suggested_Number)
+        CALL Open_New_File( Report_Name, Report_IDs(iRF_Setup), Suggested_Number)
     END IF
 
-    CALL Output_Params_Report( Report_IDs(4) )
-    CALL Output_Method_Report( Report_IDs(4) )
+    CALL Output_Params_Report( Report_IDs(iRF_Setup) )
 
+    IF ( .NOT. Poisson_Mode ) THEN
+        CALL Output_NL_Solver_Report( Report_IDs(iRF_Setup) )
+    END IF
 
 END IF
 
@@ -119,6 +125,7 @@ INTEGER, INTENT(IN)                                 ::  Report_ID
 
 1400 FORMAT(/)
 1401 FORMAT('------------- POSEIDON PARAMETERS --------------')
+1301 FORMAT('         Running in Poisson Solver Mode         ')
 
 1402 FORMAT(/'------------- Expansion Parameters ------------')
 1403 FORMAT('      Finite Element Degree = ',I3.1)
@@ -136,9 +143,16 @@ INTEGER, INTENT(IN)                                 ::  Report_ID
 1413 FORMAT(' # Phi Quad Points    = ',I3.1)
 
 
-IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3)) THEN
+1415 FORMAT(/'----------------- Domain Limits ---------------')
+1416 FORMAT(' Inner Radius = ',ES12.4E3)
+1417 FORMAT(' Outer Radius = ',ES12.4E3)
+
+
+
+IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3)) THEN
     WRITE(*,1400)
     WRITE(*,1401)
+    IF ( Poisson_Mode ) WRITE(*,1301)
     WRITE(*,1402)
     WRITE(*,1403)Degree
     WRITE(*,1404)L_LIMIT
@@ -150,13 +164,16 @@ IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3)) THEN
     WRITE(*,1411)Num_R_Quad_Points
     WRITE(*,1412)Num_T_Quad_Points
     WRITE(*,1413)Num_P_Quad_Points
-    WRITE(*,1400)
+    WRITE(*,1415)
+    WRITE(*,1416)R_INNER
+    WRITE(*,1417)R_Outer
 END IF
 
 IF ( Report_ID .NE. -1 ) THEN
 
     WRITE(Report_ID,1400)
     WRITE(Report_ID,1401)
+    IF ( Poisson_Mode ) WRITE(Report_ID,1301)
     WRITE(Report_ID,1402)
     WRITE(Report_ID,1403)Degree
     WRITE(Report_ID,1404)L_LIMIT
@@ -183,19 +200,17 @@ END SUBROUTINE Output_Params_Report
 
 
 
-
-
 !+201+##################################################################!
 !                                                                       !
-!       OUTPUT_SETUP_TABLE                                              !
+!        Output_NL_Solver_Report                                        !
 !                                                                       !
 !#######################################################################!
-SUBROUTINE Output_Method_Report( Report_ID )
+SUBROUTINE Output_NL_Solver_Report( Report_ID )
 
 INTEGER, INTENT(IN)                                 ::  Report_ID
 
 1500 FORMAT(/)
-1501 FORMAT('------------- Method Parameters --------------')
+1501 FORMAT('--------- Non-Linear Solver Parameters ---------')
 1502 FORMAT(' Solver Method : ',A /)
 1503 FORMAT(' Maximum Iterations   = ',I4.0)
 1504 FORMAT(' Convergence Criteria = ',ES12.4E3)
@@ -204,7 +219,7 @@ INTEGER, INTENT(IN)                                 ::  Report_ID
 
 
 
-IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3)) THEN
+IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3)) THEN
     WRITE(*,1501)
     WRITE(*,1502)Method_Names(Method_Flag)
     WRITE(*,1503)Max_Iterations
@@ -228,7 +243,7 @@ IF ( Report_ID .NE. -1 ) THEN
 END IF
 
 
-END SUBROUTINE Output_Method_Report
+END SUBROUTINE Output_NL_Solver_Report
 
 
 
