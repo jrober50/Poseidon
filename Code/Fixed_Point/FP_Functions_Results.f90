@@ -74,10 +74,12 @@ USE Functions_Math, &
                     Spherical_Harmonic
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_FEM_Node_Map,    &
-                    FP_LM_Map,          &
-                    FP_Array_Map_TypeB, &
+            ONLY :  FP_Array_Map_TypeB, &
                     FP_Array_Map
+
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_lm,          &
+                    Map_To_FEM_Node
 
 IMPLICIT NONE
 
@@ -198,8 +200,8 @@ DO l = 0,L_Limit
 DO m = -l,l
 DO d = 0,DEGREE
 
-    Loc_RED = FP_FEM_Node_Map(re,d)
-    Loc_LM  = FP_LM_Map(l,m)
+    Loc_RED = Map_To_FEM_Node(re,d)
+    Loc_LM  = Map_to_lm(l,m)
 !    PRINT*,Loc_RED,Loc_LM, u,l,m,d
 
     Tmp_U_Value(u) = Tmp_U_Value(u)                         &
@@ -288,7 +290,7 @@ DO re = 0,NUM_R_ELEMENTS-1
         DO u = 1,2
             DO d = 0,DEGREE
 
-                Current_Location = FP_FEM_Node_Map(re,d)
+                Current_Location = Map_To_FEM_Node(re,d)
                 Tmp_U_Value(u) = Tmp_U_Value(u) + FP_Coeff_Vector_A(Current_Location,1,u)  &
                                                 * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
             END DO ! d Loop

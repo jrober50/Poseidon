@@ -92,22 +92,29 @@ CHARACTER(KIND=c_char), INTENT(INOUT)   ::  Tag(TLo(1):THi(1),  &
                                                 TLo(3):THi(3),  &
                                                 TLo(4):THi(4)   )
 
-
+INTEGER                                 ::  Third
 INTEGER                                 ::  Fourth
-INTEGER                                 ::  Middle
+INTEGER                                 ::  Half
 INTEGER                                 ::  UFourth
 INTEGER                                 ::  re, te, pe
 
 
-Middle  = Num_R_Elements/2**(Level+1)
-Fourth  = Middle/2
+Third   = Num_R_Elements
+Half    = Num_R_Elements/2**(Level+1)
+Fourth  = Half/2
 UFourth = Num_R_Elements - Fourth
+
+
+!PRINT*,Num_R_Elements, 2**(Level+1),Half
 
 DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
 DO re = BLo(1),BHi(1)
     
-    IF ( re < Fourth ) THEN
+
+    
+    IF ( re < Half ) THEN
+!        PRINT*,"Refining",re
         Tag(re,te,pe,1) = SetTag
     ELSE
         Tag(re,te,pe,1) = ClearTag

@@ -61,15 +61,16 @@ USE Variables_Yahil, &
 
 
 USE Variables_Functions, &
-            ONLY :  Potential_Solution,                      &
+            ONLY :  Potential_Solution,             &
                     Shift_Solution
 
 USE Poseidon_IO_Module, &
-            ONLY :  OUTPUT_PRIMATIVES,  &
+            ONLY :  OUTPUT_PRIMATIVES,              &
                     OUTPUT_YAHIL_PRIMATIVES
 
 USE Allocation_SelfSimilar, &
-            ONLY :  Allocate_SelfSim
+            ONLY :  Allocate_SelfSim,               &
+                    Deallocate_SelfSim
 
 
 USE Timer_Routines_Module, &
@@ -292,6 +293,8 @@ CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, In
 Potential_Solution => SELFSIM_NEWT_SOL
 Shift_Solution => SELFSIM_SHIFT_SOL
 
+
+!CALL Deallocate_SelfSim()
 
 CALL TimerStop( Timer_Core_Init_Test_Problem )
 

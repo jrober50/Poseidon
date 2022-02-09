@@ -166,6 +166,11 @@ USE Timer_Variables_Module, &
             ONLY :  Timer_Poisson_Matrix_Init,      &
                     Timer_Core_Initialization
 
+
+USE Initialization_Subroutines, &
+            ONLY :  Init_Fixed_Point_Params,        &
+                    Init_IO_Params
+
 IMPLICIT NONE
 
 
@@ -276,129 +281,15 @@ END IF
 !
 !   Verbose Options
 !
-IF ( Verbose_Flag ) THEN
-    Report_Flags = 1
-    Write_Flags  = 1
-ELSE
-    Report_Flags = 0
-    Write_Flags  = 0
-END IF
+CALL Init_IO_Params(WriteAll_Option,            &
+                    Print_Setup_Option,         &
+                    Write_Setup_Option,         &
+                    Print_Results_Option,       &
+                    Write_Results_Option,       &
+                    Print_Timetable_Option,     &
+                    Write_Timetable_Option,     &
+                    Write_Sources_Option        )
 
-IF ( PRESENT( WriteAll_Option) ) THEN
-    Report_Flags = Report_Flags + 2
-    Write_Flags = Write_Flags + 2
-END IF
-
-
-
-
-IF ( PRESENT(Print_Setup_Option) ) THEN
-    IF ( Print_Setup_Option ) THEN
-        IF (Report_Flags(iRF_Setup) > 1 ) THEN
-            Report_Flags(iRF_Setup) = 3
-        ELSE
-            Report_Flags(iRF_Setup) = 1
-        END IF
-    ELSE
-        IF (Report_Flags(iRF_Setup) > 1 ) THEN
-            Report_Flags(iRF_Setup) = 2
-        ELSE
-            Report_Flags(iRF_Setup) = 0
-        END IF
-    END IF
-END IF
-
-
-IF ( PRESENT(Write_Setup_Option) ) THEN
-    IF ( Write_Setup_Option ) THEN
-        IF (Report_Flags(iRF_Setup) < 2 ) THEN
-            Report_Flags(iRF_Setup) = Report_Flags(4) + 2
-        END IF
-    ELSE
-        IF ( Report_Flags(iRF_Setup) > 1 ) THEN
-            Report_Flags(iRF_Setup) = Report_Flags(4) - 2
-        END IF
-    END IF
-END IF
-
-
-
-
-
-IF ( PRESENT(Print_Results_Option) ) THEN
-    IF ( Print_Results_Option ) THEN
-        IF (Write_Flags(iWF_Results) > 1 ) THEN
-            Write_Flags(iWF_Results) = 3
-        ELSE
-            Write_Flags(iWF_Results) = 1
-        END IF
-    ELSE
-        IF (Write_Flags(iWF_Results) > 1 ) THEN
-            Write_Flags(iWF_Results) = 2
-        ELSE
-            Write_Flags(iWF_Results) = 0
-        END IF
-    END IF
-END IF
-
-
-IF ( PRESENT(Write_Results_Option) ) THEN
-    IF ( Write_Results_Option ) THEN
-        IF (Write_Flags(iWF_Results) < 2 ) THEN
-            Write_Flags(iWF_Results) = Write_Flags(5) + 2
-        END IF
-    ELSE
-        IF ( Write_Flags(iWF_Results) > 1 ) THEN
-            Write_Flags(iWF_Results) = Write_Flags(5) - 2
-        END IF
-    END IF
-END IF
-
-
-
-
-
-
-
-IF ( PRESENT(Print_Timetable_Option) ) THEN
-    IF ( Print_Timetable_Option ) THEN
-        IF (Report_Flags(iRF_Time) > 1 ) THEN
-            Report_Flags(iRF_Time) = 3
-        ELSE
-            Report_Flags(iRF_Time) = 1
-        END IF
-    ELSE
-        IF (Report_Flags(iRF_Time) > 1 ) THEN
-            Report_Flags(iRF_Time) = 2
-        ELSE
-            Report_Flags(iRF_Time) = 0
-        END IF
-    END IF
-END IF
-
-
-
-IF ( PRESENT(Write_Timetable_Option) ) THEN
-    IF ( Write_Timetable_Option ) THEN
-        IF (Report_Flags(iRF_Time) < 2 ) THEN
-            Report_Flags(iRF_Time) = Report_Flags(iRF_Time) + 2
-        END IF
-    ELSE
-        IF ( Report_Flags(iRF_Time) > 1 ) THEN
-            Report_Flags(iRF_Time) = Report_Flags(iRF_Time) - 2
-        END IF
-    END IF
-END IF
-
-
-
-IF ( PRESENT(Write_Sources_Option) ) THEN
-    IF ( Write_Sources_Option ) THEN
-        Write_Flags(iWF_Source) = 2
-    ELSE
-        Write_Flags(iWF_Source) = 0
-    END IF
-END IF
 
 
 
@@ -553,36 +444,6 @@ CALL Initialize_Mesh( )
 
 
 
-IF ( PRESENT(Suffix_Flag_Option) ) THEN
-
-
-    IF ( Suffix_Flag_Option == "Params") THEN
-
-        WRITE(File_Suffix,'(A,I4.4,A,I3.3,A,I2.2,A,I2.2)')             &
-            "RE",Num_R_Elements,"_TE",Num_T_Elements,"_D",Degree,"_L",L_Limit
-
-    ELSEIF ( SUffix_Flag_Option == "Frame") THEN
-        
-        IF ( PRESENT(Frame_Option) ) THEN
-            WRITE(File_Suffix,'(I5.5)') Frame_Option
-        ELSE
-            WRITE(File_Suffix,'(I5.5)') 1
-        END IF
-    END IF
-ELSE
-    WRITE(File_Suffix,'(I5.5)') 1
-END IF
-
-
-IF ( PRESENT(Suffix_Tail_Option) ) THEN
-    WRITE(File_Suffix,'(A,A,A)') TRIM(File_Suffix),"_",Suffix_Tail_Option
-
-END IF
-
-
-
-
-
 
 IF ( PRESENT(Poisson_Mode_Option) ) THEN
     Poisson_Mode = Poisson_Mode_Option
@@ -628,22 +489,9 @@ ELSE
     !=======================================================!
 
 
-
-    IF ( PRESENT( Max_Iterations_Option ) ) THEN
-        Max_Iterations = Max_Iterations_Option
-    END IF
-
-
-    IF ( PRESENT( Convergence_Criteria_Option) ) THEN
-        Convergence_Criteria = Convergence_Criteria_Option
-    END IF
-
-
-    IF ( PRESENT(Anderson_M_Option) ) THEN
-        FP_Anderson_M = Anderson_M_Option
-    END IF
-
-
+    CALL Init_Fixed_Point_Params( Max_Iterations_Option,          &
+                                  Convergence_Criteria_Option,    &
+                                  Anderson_M_Option               )
 
 
 
@@ -665,14 +513,7 @@ ELSE
 
 
 
-
-
-
     LM_Location => CFA_3D_LM_Map
-
-
-
-
 
 
 
@@ -781,6 +622,10 @@ SUBROUTINE Initialize_Poseidon_From_File()
 
 
 END SUBROUTINE Initialize_Poseidon_From_File
+
+
+
+
 
 
 

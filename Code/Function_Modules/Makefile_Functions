@@ -1,5 +1,6 @@
 FUNCTIONS = \
   Functions_Info.f90        \
+  Functions_Domain_Maps.f90\
   Functions_Jacobian.f90    \
   Functions_Quadrature.f90  \
   Functions_Math.f90        \

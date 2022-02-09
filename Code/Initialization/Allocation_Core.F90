@@ -75,12 +75,13 @@ USE Variables_Source, &
                     Block_Source_Si
 
 #ifdef POSEIDON_AMREX_FLAG
-USE Variables_AMReX_Multifabs, &
+USE Variables_AMReX_Core, &
             ONLY :  MF_Source,              &
                     BA_Source,              &
                     DM_Source,              &
                     GM_Source,              &
-                    nLevels
+                    iLeafElementsPerLvl,    &
+                    AMReX_Num_Levels
 #endif
 
 IMPLICIT NONE
@@ -99,7 +100,16 @@ SUBROUTINE Allocate_Poseidon_CFA_Variables()
 
 
 
+#ifdef POSEIDON_AMREX_FLAG
 
+ALLOCATE( MF_Source(0:AMReX_Num_Levels-1))
+ALLOCATE( BA_Source(0:AMReX_Num_Levels-1))
+ALLOCATE( DM_Source(0:AMReX_Num_Levels-1))
+ALLOCATE( GM_Source(0:AMReX_Num_Levels-1))
+
+ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
+
+#else
 
 ALLOCATE(Block_Source_E(    1:Num_Quad_DOF,             &
                             0:NUM_R_ELEMS_PER_BLOCK-1,  &
@@ -117,12 +127,6 @@ ALLOCATE(Block_Source_Si(   1:Num_Quad_DOF,             &
                             0:NUM_P_ELEMS_PER_BLOCK-1,  &
                             1:3          )   )
 
-#ifdef POSEIDON_AMREX_FLAG
-
-ALLOCATE( MF_Source(0:nLevels-1))
-ALLOCATE( BA_Source(0:nLevels-1))
-ALLOCATE( DM_Source(0:nLevels-1))
-ALLOCATE( GM_Source(0:nLevels-1))
 #endif
 
 
@@ -162,13 +166,23 @@ END SUBROUTINE Allocate_Poseidon_CFA_Variables
 !################################################################################!
 SUBROUTINE Deallocate_Poseidon_CFA_Variables()
 
+#ifdef POSEIDON_AMREX_FLAG
 
+
+DEALLOCATE( MF_Source )
+DEALLOCATE( BA_Source )
+DEALLOCATE( DM_Source )
+DEALLOCATE( GM_Source )
+
+DEALLOCATE( iLeafElementsPerLvl )
+
+#else
 
 
 DEALLOCATE( Block_Source_E )
 DEALLOCATE( Block_Source_S )
 DEALLOCATE( Block_Source_Si )
-
+#endif
 
 
 DEALLOCATE( ITER_TIME_TABLE )

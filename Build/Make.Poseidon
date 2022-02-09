@@ -1,0 +1,14 @@
+# For use with GNUmake for AMREX compilation.
+
+include $(POSEIDON_DIR)/Build/Makefile_Include
+include $(POSEIDON_DIR)/Build/Makefile_Dictionary
+include $(POSEIDON_DIR)/Build/Makefile_Path
+include $(POSEIDON_DIR)/Build/Makefile_List
+
+
+f90EXE_sources   += $(filter %.f90,$(POSEIDON))
+F90EXE_sources   += $(filter %.F90,$(POSEIDON))
+CEXE_sources     += $(filter %.cpp,$(POSEIDON))
+
+
+

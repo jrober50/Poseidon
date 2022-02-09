@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Variables_AMReX_Multifabs                                                    !##!
+MODULE Variables_Driver_AMReX                                                       !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -35,10 +35,12 @@ IMPLICIT NONE
 
 #ifdef POSEIDON_AMREX_FLAG
 
-TYPE(amrex_multifab),  ALLOCATABLE                  ::  MF_Source(:)
-TYPE(amrex_boxarray),  ALLOCATABLE                  ::  BA_Source(:)
-TYPE(amrex_distromap), ALLOCATABLE                  ::  DM_Source(:)
-TYPE(amrex_geometry),  ALLOCATABLE                  ::  GM_Source(:)
+TYPE(amrex_multifab),  ALLOCATABLE                  ::  MF_Driver_Source(:)
+TYPE(amrex_boxarray),  ALLOCATABLE                  ::  BA_Driver_Source(:)
+TYPE(amrex_distromap), ALLOCATABLE                  ::  DM_Driver_Source(:)
+TYPE(amrex_geometry),  ALLOCATABLE                  ::  GM_Driver_Source(:)
+
+
 
 #endif
 
@@ -63,22 +65,18 @@ INTEGER                                     :: iMaxGridSizeX3
 INTEGER                                     :: iMaxGridSizeX(3)
 
 
-INTEGER                                             :: MF_Src_nComps
-INTEGER                                             :: MF_Src_nGhost
+INTEGER                                     :: MF_Src_nComps
+INTEGER                                     :: MF_Src_nGhost
 
 
 
+INTEGER, ALLOCATABLE, PUBLIC, SAVE          :: lo_bc(:,:)
+INTEGER, ALLOCATABLE, PUBLIC, SAVE          :: hi_bc(:,:)
 
-
-INTEGER             , ALLOCATABLE                   ::  Level_Ratio(:)
-
-INTEGER, ALLOCATABLE, PUBLIC, SAVE :: lo_bc(:,:)
-INTEGER, ALLOCATABLE, PUBLIC, SAVE :: hi_bc(:,:)
-
-INTEGER,   ALLOCATABLE :: StepNo(:)
-REAL(idp), ALLOCATABLE :: dt   (:)
-REAL(idp), ALLOCATABLE :: t_old(:)
-REAL(idp), ALLOCATABLE :: t_new(:)
+INTEGER,   ALLOCATABLE                      :: StepNo(:)
+REAL(idp), ALLOCATABLE                      :: dt   (:)
+REAL(idp), ALLOCATABLE                      :: t_old(:)
+REAL(idp), ALLOCATABLE                      :: t_new(:)
 
 
 
@@ -86,7 +84,7 @@ REAL(idp), ALLOCATABLE :: t_new(:)
 
 
 
-END MODULE Variables_AMReX_Multifabs
+END MODULE Variables_Driver_AMReX
 
 
 

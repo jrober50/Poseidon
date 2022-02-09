@@ -100,10 +100,11 @@ USE Functions_Mapping, &
             ONLY :  Map_To_X_Space
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_FEM_Node_Map,            &
-                    FP_Array_Map_TypeB,         &
-                    FP_Array_Map,               &
-                    FP_LM_Map
+            ONLY :  FP_Array_Map_TypeB,         &
+                    FP_Array_Map
+
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_FEM_Node
 
 USE FP_Source_Terms_Module, &
             ONLY :  Calc_Source_Terms
@@ -336,7 +337,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     DO ui = iU_CF,iU_LF
     DO d = 0,DEGREE
 
-        Here = FP_FEM_Node_Map(re,d)
+        Here = Map_To_FEM_Node(re,d)
 
     
 
@@ -591,7 +592,7 @@ DO ui = iU_CF,iU_LF
             END DO  ! rd Loop
             
 
-            Current_i_Location = FP_FEM_Node_Map(re,d)
+            Current_i_Location = Map_To_FEM_Node(re,d)
             FP_Source_Vector_A(Current_i_Location,lm_loc,ui)                &
                 = FP_Source_Vector_A(Current_i_Location,lm_loc,ui)          &
                 + RHS_TMP(ui)

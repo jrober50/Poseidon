@@ -13,6 +13,7 @@ HDF5_LIB       = $(HDF5_HOME)/lib
 
 USE_F_INTERFACES = TRUE
 
+#DEBUG     = FALSE
 DEBUG     = TRUE
 
 USE_MPI   = TRUE
@@ -21,7 +22,7 @@ USE_OMP   = FALSE
 #MEM_PROFILE  = FALSE
 #TINY_PROFILE = FALSE
 
-DIM = 3
+DIM       = 3
 
 EBASE     = AMReX_Mapping
 
@@ -62,5 +63,18 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.rules
 
 
 
+
+.PHONY : clean_poseidon
+clean_poseidon :
+	rm -f $(OUT)/*.out
+	rm -f $(OUT)/Results/*.out
+	rm -f $(OUT)/Reports/*.out
+	rm -f $(OUT)/Reports/Iteration_Reports/*.out
+	rm -f $(OUT)/Objects/*.out
+	rm -f $(OUT)/Objects/Sources/*.out
+	rm -f $(OUT)/Objects/Linear_System/*.out
+	rm -f $(OUT)/Objects/Residual/*.out
+	rm -f $(OUT)/Objects/Mesh/*.out
+	rm -f $(OUT)/Objects/Coefficients/*.out
 
 

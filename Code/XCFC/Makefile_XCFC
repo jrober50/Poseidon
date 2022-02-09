@@ -12,4 +12,4 @@ XCFC = \
   XCFC_Solvers_Main.f90              \
   XCFC_Method_Module.f90             \
   Initialization_XCFC.f90     	     \
-
+  Initialization_XCFC_with_AMReX.F90

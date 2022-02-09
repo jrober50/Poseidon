@@ -21,52 +21,54 @@ MODULE Poseidon_XCFC_Interface_Module                                           
    !################################################################################!
 
 USE Poseidon_Kinds_Module, &
-        ONLY : idp
+            ONLY : idp
 
 USE Poseidon_Parameters, &
-        ONLY :  DEGREE
+            ONLY :  DEGREE
 
 USE Parameters_Variable_Indices, &
-        ONLY :  iVB_X,                      &
-                iVB_S,                      &
-                iU_CF,                      &
-                iU_LF,                      &
-                iU_S1,                      &
-                iU_S2,                      &
-                iU_S3,                      &
-                iU_X1,                      &
-                iU_X2,                      &
-                iU_X3
+            ONLY :  iVB_X,                      &
+                    iVB_S,                      &
+                    iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X3
 
 
 USE Variables_Tables, &
-        ONLY :  Ylm_Values,                 &
-                Lagrange_Poly_Table
+            ONLY :  Ylm_Values,                 &
+                    Lagrange_Poly_Table
 
 USE Variables_Derived, &
-        ONLY :  LM_LENGTH,          &
-                Beta_Prob_Dim
+            ONLY :  LM_LENGTH,          &
+                    Beta_Prob_Dim
 
 USE Variables_FP, &
-        ONLY :  FP_Coeff_Vector_A,  &
-                FP_Coeff_Vector_B
+            ONLY :  FP_Coeff_Vector_A,  &
+                    FP_Coeff_Vector_B
 
 
 USE FP_Functions_Mapping, &
-        ONLY :  FP_FEM_Node_Map,    &
-                FP_tpd_Map,         &
-                FP_Array_Map_TypeB
+            ONLY :  FP_Array_Map_TypeB
+
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_tpd,     &
+                    Map_To_FEM_Node
 
 USE Functions_Quadrature, &
-        ONLY :  Initialize_LGL_Quadrature_Locations
+            ONLY :  Initialize_LGL_Quadrature_Locations
 
 USE Functions_Math, &
-        ONLY :  Lagrange_Poly
+            ONLY :  Lagrange_Poly
 
 
 USE XCFC_Method_Module, &
-        ONLY :  XCFC_Method_Part1,      &
-                XCFC_Method_Part2
+            ONLY :  XCFC_Method_Part1,      &
+                    XCFC_Method_Part2
 
 
 CONTAINS
@@ -168,14 +170,14 @@ DO re = 1,NE(1)
     DO td = 1,NQ(2)
     DO rd = 1,NQ(1)
 
-        tpd = FP_tpd_Map(td,pd)
+        tpd = Map_To_tpd(td,pd)
         LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
         Tmp_U_Value = 0.0_idp
 
         DO lm = 1,LM_Length
         DO d = 0,DEGREE
 
-            Current_Location = FP_FEM_Node_Map(re-1,d)
+            Current_Location = Map_To_FEM_Node(re-1,d)
             Tmp_U_Value = Tmp_U_Value + FP_Coeff_Vector_A(Current_Location,lm,iU_CF)  &
                                       * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
@@ -254,14 +256,14 @@ DO re = 1,NE(1)
     DO td = 1,NQ(2)
     DO rd = 1,NQ(1)
 
-        tpd = FP_tpd_Map(td,pd)
+        tpd = Map_To_tpd(td,pd)
         LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
         Tmp_U_Value = 0.0_idp
 
         DO lm = 1,LM_Length
         DO d = 0,DEGREE
 
-            Current_Location = FP_FEM_Node_Map(re-1,d)
+            Current_Location = Map_To_FEM_Node(re-1,d)
             Tmp_U_Value(1) = Tmp_U_Value(1) + FP_Coeff_Vector_A(Current_Location,lm,iU_CF)  &
                                             * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
@@ -342,7 +344,7 @@ DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
 
-    tpd = FP_tpd_Map(td,pd)
+    tpd = Map_To_tpd(td,pd)
     LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
     Tmp_U_Value = 0.0_idp
 

@@ -100,10 +100,12 @@ iVB = iVB_X
 iEL = [0, 0, 0]
 iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
+!PRINT*,"Before Calc_Source"
 CALL TimerStart( Timer_XCFC_X_SourceVector )
 CALL XCFC_Calc_Source_Vector_TypeB( iU, iVB, iEU, iEL )
 CALL TimerStop(  Timer_XCFC_X_SourceVector )
 
+!PRINT*,"Before Solve"
 CALL TimerStart( Timer_XCFC_X_LinearSolve )
 CALL XCFC_Solve_System_TypeB( iU, iVB )
 CALL TimerStop(  Timer_XCFC_X_LinearSolve )
@@ -112,7 +114,10 @@ CALL TimerStop( Timer_XCFC_X )
 
 
 
-
+IF ( .FALSE. ) THEN
+    PRINT*,"Stopping at the end of XCFC_x_Solve"
+    STOP
+END IF
 
 END SUBROUTINE XCFC_X_Solve
 

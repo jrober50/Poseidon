@@ -70,8 +70,8 @@ USE Variables_Mesh, &
 USE Variables_Source, &
             ONLY :  Block_Source_E
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_tpd_Map
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_tpd
 
 USE Quadrature_Mapping_Functions, &
             ONLY :  Quad_Map
@@ -211,7 +211,7 @@ rSquare(:) = crlocs(:)*crlocs(:)
 
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
-    tpd = FP_tpd_Map(td,pd)
+    tpd = Map_To_tpd(td,pd)
     TP_Sin_Val(tpd)    = DSIN(ctlocs(td))
     TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(ctlocs(td))
 END DO
@@ -250,7 +250,7 @@ DO rd = 1,Num_R_Quad_Points
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
 
-   tpd = FP_tpd_Map(td,pd)
+   tpd = Map_To_tpd(td,pd)
    Int_Weights( tpd, rd ) = DROT * R_SQUARE(rd) * INT_R_WEIGHTS(rd)  &
                           * DTOT * SIN_VAL(tpd) * INT_T_WEIGHTS(td)  &
                           * INT_P_WEIGHTS(pd)
@@ -370,7 +370,7 @@ DO rd = 1,NUM_R_QUAD_POINTS
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
 
-    tpd = FP_tpd_Map(td,pd)
+    tpd = Map_To_tpd(td,pd)
     Here = Quad_Map(rd,td,pd)
 
     Int_Source(tpd,rd) = GR_Source_Scalar                               &

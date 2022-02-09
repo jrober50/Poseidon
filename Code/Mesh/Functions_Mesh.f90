@@ -22,14 +22,19 @@ MODULE Functions_Mesh                                                           
 !===================================!
 
 USE Poseidon_Kinds_Module, &
-                ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Numbers_Module, &
-                ONLY :  pi
+            ONLY :  pi
 
 USE Variables_Mesh, &
-                ONLY :  locs_Set,   &
-                        dlocs_Set
+            ONLY :  locs_Set,   &
+                    dlocs_Set
+
+USE Variables_AMReX_Core, &
+            ONLY :  Findloc_Table,      &
+                    FEM_Elem_Table,     &
+                    Table_Offsets
 
 IMPLICIT NONE
 
@@ -85,7 +90,9 @@ INTEGER                                                     ::  ns
 INTEGER                                                     ::  Error_Num
 
 
-IF ( Mesh_Type == 1 ) THEN
+
+SELECT CASE (Mesh_Type)
+CASE( 1 ) ! Uniform Mesh
 
     CALL Create_Uniform_3D_Mesh( Inner_Radius, Outer_Radius,       &
                                  nx, ny, nz,                       &
@@ -95,7 +102,7 @@ IF ( Mesh_Type == 1 ) THEN
 
 
 
-ELSE IF ( Mesh_Type == 2) THEN
+CASE( 2 ) ! Logarithmic Mesh
 
     CALL Create_Logarithmic_3D_Mesh( Inner_Radius, Outer_Radius,       &
                                      nx, ny, nz,                       &
@@ -105,7 +112,7 @@ ELSE IF ( Mesh_Type == 2) THEN
 
 
 
-ELSE IF ( Mesh_Type == 3) THEN
+CASE( 3 ) ! Split Mesh
 
     IF ( PRESENT(nc) .AND. PRESENT(Core_Radius) ) THEN
 
@@ -137,7 +144,7 @@ ELSE IF ( Mesh_Type == 3) THEN
 
     END IF
 
-ELSE IF ( Mesh_Type == 4) THEN
+CASE ( 4 ) ! Zoom Mesh
     
 
     IF ( PRESENT(Zoom) ) THEN
@@ -161,7 +168,7 @@ ELSE IF ( Mesh_Type == 4) THEN
     END IF
 
 
-ELSE IF ( Mesh_Type == 5) THEN ! MacLaurin Split
+CASE( 5 ) ! MacLaurin Split
 
     IF ( PRESENT(SemiMajor) .AND. PRESENT(SemiMinor) ) THEN
         Error_Num = 000
@@ -229,7 +236,21 @@ ELSE IF ( Mesh_Type == 5) THEN ! MacLaurin Split
 
 
 
-END IF
+CASE( 6 )  ! AMReX Mimic
+
+
+CALL Create_AMReX_Mimic_3D_Mesh( Inner_Radius, Outer_Radius,       &
+                                 nx, ny, nz,                       &
+                                 x_e, x_c, dx_c,                   &
+                                 y_e, y_c, dy_c,                   &
+                                 z_e, z_c, dz_c                    )
+
+
+
+
+
+
+END SELECT
 
 
 END SUBROUTINE Create_3D_Mesh
@@ -980,6 +1001,164 @@ END DO
 END SUBROUTINE Create_MacLaurin_1D_Mesh
 
 
+
+
+
+
+
+
+
+
+
+
+!+601+##############################################################################!
+!                                                                                   !
+!           Create_AMReX_Mimic_Mesh                                             !
+!                                                                                   !
+!-----------------------------------------------------------------------------------!
+!                                                                                   !
+!   Creates a uniform radial mesh.                                                  !
+!                                                                                   !
+!###################################################################################!
+SUBROUTINE Create_AMReX_Mimic_3D_Mesh( Inner_Radius, Outer_Radius,       &
+                                        nx, ny, nz,                       &
+                                        x_e, x_c, dx_c,                   &
+                                        y_e, y_c, dy_c,                   &
+                                        z_e, z_c, dz_c                    )
+
+
+
+REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Radius,           &
+                                                            Outer_Radius
+
+INTEGER,            INTENT(IN)                          ::  nx, ny, nz
+
+REAL(KIND = idp), DIMENSION(0:nx),  INTENT(OUT)         ::  x_e
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  x_c
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
+
+REAL(KIND = idp), DIMENSION(0:ny),  INTENT(OUT)         ::  y_e
+REAL(KIND = idp), DIMENSION(1:ny),  INTENT(OUT)         ::  y_c
+REAL(KIND = idp), DIMENSION(1:ny),  INTENT(OUT)         ::  dy_c
+
+REAL(KIND = idp), DIMENSION(0:nz),  INTENT(OUT)         ::  z_e
+REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  z_c
+REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  dz_c
+
+
+
+
+CALL Create_AMReX_Mimic_Mesh( Inner_Radius, Outer_Radius,                    &
+                                nx, x_e, x_c, dx_c                          )
+
+! Create Uniform Theta Mesh !
+CALL Create_Uniform_1D_Mesh( 0.0_idp, pi, ny, y_e, y_c, dy_c )
+
+! Create Uniform Phi Mesh !
+CALL Create_Uniform_1D_Mesh( 0.0_idp, 2.0_idp*pi, nz, z_e, z_c, dz_c )
+
+END SUBROUTINE Create_AMReX_Mimic_3D_Mesh
+
+
+
+
+ !+602+################################################################!
+!                                                                       !
+!                   Create_AMReX_Mimic_Mesh                             !
+!                                                                       !
+ !#####################################################################!
+SUBROUTINE Create_AMReX_Mimic_Mesh( Inner_Edge, Outer_Edge,     &
+                                    nx, x_e, x_c, dx_c          )
+
+REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Edge, &
+                                                            Outer_Edge
+
+INTEGER,            INTENT(IN)                          ::  nx
+
+REAL(KIND = idp), DIMENSION(0:nx),  INTENT(OUT)         ::  x_e
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  x_c
+REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
+
+INTEGER                                                 ::  Third
+INTEGER                                                 ::  TwoThirds
+INTEGER                                                 ::  Break
+
+INTEGER                                                 ::  i
+REAL(idp)                                               ::  dxs, dxl
+
+Third       = nx/3
+TwoThirds   = 2*nx/3
+Break       = TwoThirds
+
+
+
+
+
+dxl         = (Outer_Edge-Inner_Edge)/TwoThirds
+dxs         = dxl/2.0_idp
+
+x_e(0) = Inner_Edge
+DO i = 1,Break
+
+    x_e(i) = x_e(i-1) + dxs
+    x_c(i) = x_e(i) + dxs/2.0_idp
+    dx_c(i) = dxs
+
+
+END DO
+
+
+DO i = Break+1,nx
+
+    x_e(i) = x_e(i-1) + dxl
+    x_c(i) = x_e(i) + dxl/2.0_idp
+    dx_c(i) = dxl
+
+END DO
+
+
+
+
+END SUBROUTINE Create_AMReX_Mimic_Mesh
+
+
+
+
+
+
+
+
+
+
+
+ !+701+################################################################!
+!                                                                       !
+!                   FEM_Elem_Map                                        !
+!                                                                       !
+ !#####################################################################!
+INTEGER FUNCTION FEM_Elem_Map( AMReX_Elem_Num, AMReX_Level )
+
+INTEGER, INTENT(IN)             ::  AMReX_Elem_Num
+INTEGER, INTENT(IN)             ::  AMReX_Level
+
+INTEGER                         ::  Here
+INTEGER                         ::  There
+INTEGER                         ::  Index
+
+
+Here  = Table_Offsets(AMReX_Level)
+There = Table_Offsets(AMReX_Level+1)-1
+
+Index = Findloc(Findloc_Table(Here:There), AMReX_Elem_Num, DIM=1)
+
+
+! Since the arrays start their indexing at 0,
+! and the Fortran standard is to start at 1,
+! Index-1 must be used as the array index.
+FEM_Elem_Map = FEM_Elem_Table(Index+ Table_Offsets(AMReX_Level)-1)
+                                            
+
+END FUNCTION FEM_Elem_Map
 
 
 END MODULE Functions_Mesh

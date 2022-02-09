@@ -138,10 +138,6 @@ USE Poseidon_IO_Module, &
                     CLOSE_ITER_REPORT_FILE,             &
                     OUTPUT_FINAL_RESULTS
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_LM_Map,                      &
-                    FP_Array_Map
-
 USE FP_System_Solvers_Module,   &
             ONLY :  Solve_FP_System,                &
                     Solve_FP_System_Beta

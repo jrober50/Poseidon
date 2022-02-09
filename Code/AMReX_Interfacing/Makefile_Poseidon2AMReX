@@ -6,6 +6,8 @@ POSEIDON2AMREX = \
   Poseidon_AMReX_Virtual_Functions.F90 \
   Poseidon_AMReX_MakeFineMask_fi.cpp \
   Poseidon_AMReX_MakeFineMask.F90    \
+  Poseidon_AMReX_BoxArraySize_fi.cpp \
+  Poseidon_AMReX_BoxArraySize.F90    \
   Poseidon_AMReX_Input_Parsing.F90   \
   Poseidon_AMReX_Utilities.F90       \
 

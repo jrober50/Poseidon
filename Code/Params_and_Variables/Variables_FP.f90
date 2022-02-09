@@ -87,7 +87,8 @@ CHARACTER(LEN = 4)                                      :: Linear_Solver = 'CHOL
 ! Cholesky Factorizatio Flag
 INTEGER                                                 ::  MCF_Flag
 
-INTEGER                                                 ::  FP_Anderson_M = 3
+INTEGER, PUBLIC                                         ::  FP_Anderson_M = 3
+INTEGER, PUBLIC, PARAMETER                              ::  FP_Anderson_M_Default = 3
 INTEGER                                                 ::  Num_Matrices
 
 

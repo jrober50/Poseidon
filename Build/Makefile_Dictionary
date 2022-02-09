@@ -154,7 +154,8 @@ MPI_OFF                     =
 
 #### LAPACK
 
-LAPACK_NicksMacBook     = -framework Accelerate
+LAPACK_NicksMacBook     = -lblas -llapack
+#LAPACK_NicksMacBook     = -framework Accelerate
 LAPACK_sjdunham         = -framework Accelerate -fallow-argument-mismatch
 LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl

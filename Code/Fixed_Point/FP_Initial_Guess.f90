@@ -65,8 +65,7 @@ USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_FEM_Node_Map,        &
-                    FP_Beta_Array_Map,      &
+            ONLY :  FP_Beta_Array_Map,      &
                     FP_Array_Map_TypeB
 
 IMPLICIT NONE

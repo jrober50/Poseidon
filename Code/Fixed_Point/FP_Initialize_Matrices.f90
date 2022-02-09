@@ -76,14 +76,16 @@ USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_Beta_Array_Map,          &
-                    FP_FEM_Node_Map,            &
-                    FP_LM_Map
+            ONLY :  FP_Beta_Array_Map
+
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_FEM_Node,            &
+                    Map_To_lm
 
 USE Functions_Math, &
-            ONLY :  Lagrange_Poly,          &
-                    Lagrange_Poly_Deriv,    &
-                    Legendre_Poly,          &
+            ONLY :  Lagrange_Poly,              &
+                    Lagrange_Poly_Deriv,        &
+                    Legendre_Poly,              &
                     Norm_Factor
 
 USE Functions_Mapping, &
@@ -181,7 +183,7 @@ ALLOCATE( Ylm_CC_dp(1:Int_TP_Deg,1:LM_Length) )
 
 CALL Initialize_LG_Quadrature(Int_R_Deg, Int_R_Locs, Int_R_Weights)
 CALL Initialize_LG_Quadrature(Int_T_Deg, Int_T_Locs, Int_T_Weights)
-CALL Initialize_Trapezoid_Quadrature(Int_P_Deg, Int_P_Locs, Int_P_Weights)
+CALL Initialize_Trapezoid_Quadrature(Int_P_Deg, 1, Int_P_Locs, Int_P_Weights)
 
 
 
@@ -359,7 +361,7 @@ DO l = 1,L_LIMIT
         Tmp_Value_A = COMPLEX( (2.0_idp * REAL_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp )
         Tmp_Value_B = COMPLEX( (l-m)*(l+m),0.0_idp )
 
-        Sqrt_Term(FP_LM_Map(l,m)) = zsqrt( Tmp_Value_A)*zsqrt(Tmp_Value_B)
+        Sqrt_Term(Map_To_lm(l,m)) = zsqrt( Tmp_Value_A)*zsqrt(Tmp_Value_B)
 
     END DO ! m Loop
 END DO ! l Loop
@@ -415,7 +417,7 @@ DO m = -M_VALUES(l),M_VALUES(l)
 
     REAL_L = REAL(l, idp)
 
-    lm_loc  = FP_LM_Map(l,m)
+    lm_loc  = Map_To_lm(l,m)
     Norm_Storage = Norm_Factor(l,m)
 
 
@@ -609,8 +611,8 @@ IF ( Matrix_Format == 'Full') THEN
         DO dp = 0,DEGREE
         DO d = 0,DEGREE
 
-            i = FP_FEM_Node_Map(re,d)
-            j = FP_FEM_Node_Map(re,dp)
+            i = Map_To_FEM_Node(re,d)
+            j = Map_To_FEM_Node(re,dp)
 
             Laplace_Matrix_Full(i, j, l) = Laplace_Matrix_Full(i, j, l)                 &
                                          + SUM( R_SQUARE(:) * LP_LP_Table(:,d,dp,1,1)   &
@@ -1004,7 +1006,7 @@ INTEGER                                                     :: lm_loc, lpmp_loc
 
 
 ui       = 1
-lpmp_loc = FP_LM_Map(lp,mp)
+lpmp_loc = Map_To_lm(lp,mp)
 Row      = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
 
 
@@ -1111,7 +1113,7 @@ INTEGER                                                     :: lm_loc, lpmp_loc
 
 
 ui       = 2
-lpmp_loc = FP_LM_Map(lp,mp)
+lpmp_loc = Map_To_lm(lp,mp)
 Row      = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
 
 
@@ -1224,10 +1226,10 @@ INTEGER                                                     :: row, col
 INTEGER                                                     :: lm_loc, lpmp_loc
 
 
-lpmp_loc = FP_LM_Map(lp,mp)
+lpmp_loc = Map_To_lm(lp,mp)
 
 ui       = 3
-lpmp_loc = FP_LM_Map(lp,mp)
+lpmp_loc = Map_To_lm(lp,mp)
 Row      = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
 
 

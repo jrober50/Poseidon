@@ -24,55 +24,58 @@ MODULE XCFC_Source_Vector_TypeB_Module                                          
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-           ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Numbers_Module, &
-           ONLY :  pi,                         &
-                   TwoPi
+            ONLY :  pi,                         &
+                    TwoPi
 
 USE Poseidon_Units_Module, &
-           ONLY :  GR_Source_Scalar
+            ONLY :  GR_Source_Scalar
 
 USE Poseidon_Parameters, &
-           ONLY :  DEGREE,                     &
-                   L_LIMIT,                    &
-                   NUM_CFA_EQs,                &
-                   NUM_CFA_VARs
+            ONLY :  DEGREE,                     &
+                    L_LIMIT,                    &
+                    NUM_CFA_EQs,                &
+                    NUM_CFA_VARs
 
 USE Parameters_Variable_Indices, &
-           ONLY :  iU_CF,                        &
-                   iU_LF,                        &
-                   iU_S1,                        &
-                   iU_S2,                        &
-                   iU_S3,                        &
-                   iU_X1,                        &
-                   iU_X2,                        &
-                   iU_X3,                       &
-                   iVB_S,                       &
-                   iVB_X
+            ONLY :  iU_CF,                        &
+                    iU_LF,                        &
+                    iU_S1,                        &
+                    iU_S2,                        &
+                    iU_S3,                        &
+                    iU_X1,                        &
+                    iU_X2,                        &
+                    iU_X3,                       &
+                    iVB_S,                       &
+                    iVB_X
 
 
 USE Variables_Quadrature, &
-           ONLY :  NUM_R_QUAD_POINTS,          &
-                   NUM_T_QUAD_POINTS,          &
-                   NUM_P_QUAD_POINTS,          &
-                   NUM_TP_QUAD_POINTS,         &
-                   INT_R_LOCATIONS,            &
-                   INT_T_LOCATIONS,            &
-                   INT_P_LOCATIONS
+            ONLY :  NUM_R_QUAD_POINTS,          &
+                    NUM_T_QUAD_POINTS,          &
+                    NUM_P_QUAD_POINTS,          &
+                    NUM_TP_QUAD_POINTS,         &
+                    INT_R_LOCATIONS,            &
+                    INT_T_LOCATIONS,            &
+                    INT_P_LOCATIONS
 
 USE Variables_Mesh, &
-           ONLY :  rlocs,                      &
-                   tlocs,                      &
-                   plocs
+            ONLY :  Num_P_Elements,             &
+                    rlocs,                      &
+                    drlocs,                     &
+                    tlocs,                      &
+                    plocs
                 
 
 USE Variables_Tables, &
             ONLY :  Ylm_CC_Values,              &
                     Ylm_Elem_CC_Values,         &
                     Lagrange_Poly_Table,        &
-                    Lagpoly_MltiLayer_Table,    &
-                    Level_dx
+                    Lagpoly_MultiLayer_Table,   &
+                    Level_dx,                   &
+                    Level_Ratios
 
 USE Variables_Derived, &
             ONLY :  LM_LENGTH
@@ -89,12 +92,16 @@ USE Poseidon_IO_Module, &
             ONLY :  Clock_In
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_FEM_Node_Map,            &
-                    FP_tpd_Map,                 &
-                    FP_Array_Map_TypeB
+            ONLY :  FP_Array_Map_TypeB
+
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_FEM_Node,            &
+                    Map_To_tpd
+
 
 USE XCFC_Functions_Calc_Values_Module, &
             ONLY :  Calc_Int_Weights,               &
+                    Calc_Int_Weights_AMReX,         &
                     Calc_Val_On_Elem_TypeB,         &
                     Calc_Val_And_Drv_On_Elem_TypeA, &
                     Calc_Val_And_Drv_On_Elem_TypeB
@@ -136,6 +143,8 @@ USE Initialization_Tables, &
             ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
                     Initialize_Ylm_Tables_On_Elem
 
+USE Functions_Mesh, &
+            ONLY :  FEM_Elem_Map
 
 
 
@@ -155,18 +164,17 @@ USE amrex_multifab_module,  &
                     amrex_imultifab_build,  &
                     amrex_imultifab_destroy
 
-USE Variables_AMReX_Multifabs, &
-            ONLY :  MF_Source,  &
-                    BA_Source,  &
-                    DM_Source,  &
-                    GM_Source,  &
-                    nLevels,    &
-                    Level_Ratio
+USE Variables_AMReX_Core, &
+            ONLY :  MF_Source,              &
+                    AMReX_Num_Levels,       &
+                    Findloc_Table,      &
+                    FEM_Elem_Table,     &
+                    Table_Offsets
 
 USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR,         &
-                    Mask_PTR,           &
-                    iCoarse,            &
+            ONLY :  Source_PTR,             &
+                    Mask_PTR,               &
+                    iCoarse,                &
                     iFine
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
@@ -193,13 +201,15 @@ CONTAINS
 !################################################################################!
 SUBROUTINE XCFC_Calc_Source_Vector_TypeB( iU, iVB, iEU, iEL )
 
-INTEGER, INTENT(IN), DIMENSION(3)       ::  iU
-INTEGER, INTENT(IN)                     ::  iVB
-INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU
-INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL
+INTEGER, INTENT(IN), DIMENSION(3)       ::  iU          ! Variable Reference Numbers
+INTEGER, INTENT(IN)                     ::  iVB         ! Variable Array Reference Number
+INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU         ! Upper Element Triplet
+INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL         ! Lower Element Triplet
 
 INTEGER                                 ::  re, te, pe
 INTEGER,             DIMENSION(3)       ::  iE
+
+
 
 #ifdef POSEIDON_AMREX_FLAG
 
@@ -238,6 +248,7 @@ INTEGER, INTENT(IN), OPTIONAL                   ::  Level_Option
 
 INTEGER                                         ::  rd, tpd, td, pd, i
 
+INTEGER                                         ::  FEM_Elem
 REAL(KIND = idp)                                ::  DROT,     &
                                                     DTOT
 
@@ -246,6 +257,8 @@ REAL(KIND = idp)                                ::  DROTb, DTOTb
 INTEGER                                         ::  Level
 INTEGER                                         ::  iCE(3)
 INTEGER                                         ::  iRE(3)
+
+
 
 IF (Present(Level_Option)) THEN
     Level = Level_Option
@@ -256,22 +269,25 @@ END IF
 
 #ifdef POSEIDON_AMREX_FLAG
 
-
+!PRINT*,"A"
 DO i = 1,3
     iCE(i) = Find_Coarsest_Parent(iE(i), Level)
-    iRE(i) = 2.0_idp*MOD(iE(i),Level_Ratio(Level))
+    iRE(i) = 2.0_idp*MOD(iE(i),Level_Ratios(Level))
 END DO
 
+FEM_Elem = FEM_Elem_Map(iE(1),Level)
 
-DROT = Level_dx(Level,1)/2.0_idp
+DROT = drlocs(FEM_Elem)/2.0_idp
 DTOT = Level_dx(Level,2)/2.0_idp
 
-CUR_R_LOCS(:) = DROT * (Int_R_Locations(:) + 1.0_idp + iE(1)*2.0_idp)
+CUR_R_LOCS(:) = DROT * (Int_R_Locations(:) + 1.0_idp) + rlocs(FEM_Elem)
 CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iE(2)*2.0_idp)
+
+
 
 #else
 
-
+FEM_Elem = iE(1)
 DROT = 0.5_idp * (rlocs(iE(1)+1) - rlocs(iE(1)))
 DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
 
@@ -283,10 +299,13 @@ CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
 
 
 
+
+
+!PRINT*,"B"
 R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
-    tpd = FP_tpd_Map(td,pd)
+    tpd = Map_To_tpd(td,pd)
     TP_Sin_Val(tpd)    = DSIN(CUR_T_LOCS(td))
     TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(CUR_T_LOCS(td))
 END DO
@@ -300,11 +319,21 @@ END DO
 
 !            PRINT*,R_Square
 !            PRINT*,TP_Sin_Val
+
+
+#ifdef POSEIDON_AMREX_FLAG
+!PRINT*,"C"
+CALL Calc_Int_Weights_AMReX( DROT, DTOT,                    &
+                             R_Square, TP_Sin_Val,          &
+                             R_Int_Weights, TP_Int_Weights, &
+                             Level  )
+
+#else
 CALL Calc_Int_Weights( DROT, DTOT,                  &
                        R_Square, TP_Sin_Val,        &
                        R_Int_Weights, TP_Int_Weights )
 
-
+#endif
 
 CALL Calc_XCFC_CurVals_TypeB( iU, iVB,          &
                               iE,               &
@@ -314,9 +343,9 @@ CALL Calc_XCFC_CurVals_TypeB( iU, iVB,          &
 
 
 
-
-CALL Create_XCFC_Vector_TypeB( iE, iU, iVB, Level )
-
+!PRINT*,"D"
+CALL Create_XCFC_Vector_TypeB( iE, iU, iVB, Level, FEM_Elem )
+!PRINT*,"E",Level,iE
 
 
 END SUBROUTINE XCFC_Calc_Source_Vector_On_Element_TypeB
@@ -330,12 +359,13 @@ END SUBROUTINE XCFC_Calc_Source_Vector_On_Element_TypeB
 !                  Create_XCFC_Vector_TypeB                                     !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Create_XCFC_Vector_TypeB( iE, iU, iVB, Level )
+SUBROUTINE Create_XCFC_Vector_TypeB( iE, iU, iVB, Level, FEM_Elem )
 
 INTEGER, INTENT(IN), DIMENSION(3)                   ::  iE
 INTEGER, INTENT(IN), DIMENSION(3)                   ::  iU
 INTEGER, INTENT(IN)                                 ::  iVB
 INTEGER, INTENT(IN)                                 ::  Level
+INTEGER, INTENT(IN)                                 ::  FEM_Elem
 
 INTEGER                                             ::  ui, rd, d, lm_loc
 INTEGER                                             ::  Current_i_Location
@@ -346,9 +376,9 @@ INTEGER                                             ::  iCT
 
 #ifdef POSEIDON_AMREX_FLAG
 
-iCT = 2**(level+1) + mod(iE(1),2**level) - 2
-!PRINT*,iCT,iE(1),2**(level+1),mod(iE(1),2**level)
-
+! replace level with (level - iIRL)?
+!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+iCT = 0
 
 DO ui = iU(1),iU(3)
 DO lm_loc = 1,LM_LENGTH
@@ -362,18 +392,44 @@ DO d = 0,DEGREE
                 + SUM( SourceTerm( :, rd, ui )                  &
                     * Ylm_Elem_CC_Values( :, lm_loc )           &
                     * TP_Int_Weights(:)                     )   &
-                * Lagpoly_MltiLayer_Table( d, rd, 0, iCT )      &
+                * Lagpoly_MultiLayer_Table( d, rd, 0, iCT )     &
                 * R_Int_Weights(rd)
+
+!        IF ( ui == iU(1) ) THEN
+!            PRINT*,level,iE,d,rd
+!            PRINT*,SUM( SourceTerm( :, rd, ui )             &
+!            * Ylm_Elem_CC_Values( :, lm_loc )               &
+!            * TP_Int_Weights(:)                     ),      &
+!            Lagpoly_MultiLayer_Table( d, rd, 0, iCT ),      &
+!            R_Int_Weights(rd)
+!        END IF
+
 
     END DO  ! rd Loop
 
-    Current_i_Location = FP_Array_Map_TypeB(ui,iVB,                             &
-                                            Find_Coarsest_Parent(iE(1),Level),  &
-                                            d, lm_loc                           )
+
+
+    Current_i_Location = FP_Array_Map_TypeB(ui,iVB,     &
+                                            FEM_Elem,   &
+                                            d, lm_loc   )
+
+
+!    IF ( ui == iU(1) ) THEN
+!        PRINT*,level,FEM_Elem,d,Current_i_Location,REAL(RHS_Tmp,idp)
+!    END IF
+
+!    IF ( ui == iU(1) ) THEN
+!        PRINT*,level,iE,d,Current_i_Location                            &
+!                ,REAL(FP_Source_Vector_B(Current_i_Location,iVB),idp),REAL(RHS_TMP,idp),      &
+!                REAL(FP_Source_Vector_B(Current_i_Location,iVB) + RHS_TMP,idp)
+!    END IF
 
     FP_Source_Vector_B(Current_i_Location,iVB)          &
         = FP_Source_Vector_B(Current_i_Location,iVB)    &
         + RHS_TMP
+
+
+
 
 !    PRINT*,Current_i_Location,FP_Source_Vector_B(Current_i_Location,iVB)
 END DO  ! d Loop
@@ -385,12 +441,12 @@ END DO  ! ui Loop
 
 #else
 
+
+
 DO ui = iU(1),iU(3)
 DO lm_loc = 1,LM_LENGTH
-
-
 DO d = 0,DEGREE
-
+    
 
     RHS_TMP = 0.0_idp
     DO rd = 1,NUM_R_QUAD_POINTS
@@ -401,10 +457,25 @@ DO d = 0,DEGREE
                 * Lagrange_Poly_Table(d, rd, 0)                     &
                 * R_Int_Weights(rd)
 
+!        IF ( ui == iU(1) ) THEN
+!            PRINT*,Level,iE,d,rd
+!            PRINT*,SUM( SourceTerm( :, rd, ui )             &
+!            * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))       &
+!            * TP_Int_Weights(:)                     ),      &
+!            Lagrange_Poly_Table(d, rd, 0),                      &
+!            R_Int_Weights(rd)
+!        END IF
+
 
     END DO  ! rd Loop
     
     Current_i_Location = FP_Array_Map_TypeB(ui,iVB,iE(1),d,lm_loc)
+
+!    IF ( ui == iU(1) ) THEN
+!        PRINT*,Level,FEM_Elem,d,Current_i_Location,REAL(RHS_Tmp,idp)
+!    END IF
+
+
 
     FP_Source_Vector_B(Current_i_Location,iVB)          &
         = FP_Source_Vector_B(Current_i_Location,iVB)    &
@@ -470,6 +541,9 @@ IF ( iVB == iVB_X ) THEN
     END DO ! tpd
     END DO ! rd
 
+
+!    PRINT*,Level, iE
+
     DO ui = iU(1),iU(3)
         CALL Get_Physical_Source( PhysSrc(:,:,ui-5), ui-3, iE )
         
@@ -481,13 +555,15 @@ IF ( iVB == iVB_X ) THEN
 !            END IF
 !            CALL MPI_Barrier(Poseidon_Comm_World, ierr)
 !        END DO
-!        PRINT*,"f(:,:,ui-5)"
+!        PRINT*,"f(:,:,ui-5)",ui
 !        PRINT*,f(:,:,ui-5)
 !        PRINT*,"PhysSrc(:,:,ui-5)"
 !        PRINT*,PhysSrc(:,:,ui-5)
         SourceTerm(:,:,ui) = 8.0_idp * pi * GR_Source_Scalar * f(:,:,ui-5)*PhysSrc(:,:,ui-5)
-    END DO
 
+    END DO
+!    PRINT*,Level, iE
+!    PRINT*,SourceTerm(:,:,iU(1))
    
 
 ELSE IF ( iVB == iVB_S ) THEN
@@ -604,14 +680,17 @@ INTEGER                                         ::  lvl
 
 
 
-FP_Source_Vector_B(:,iVB) = 0.0_idp
-DO lvl = 0,nLevels-1
 
-!    PRINT*,"Beginning Level ",lvl
+
+
+FP_Source_Vector_B(:,iVB) = 0.0_idp
+DO lvl = 0,AMReX_Num_Levels-1
+
+
     !
     !   MakeFineMask
     !
-    IF ( lvl < nLevels-1 ) THEN
+    IF ( lvl < AMReX_Num_Levels-1 ) THEN
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Source(lvl)%ba,        &
                                   MF_Source(lvl)%dm,        &
@@ -633,15 +712,21 @@ DO lvl = 0,nLevels-1
     !
     !   Build mfiter
     !
-    CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .false. )
+!    PRINT*,"Before mfiter build"
+    CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .true. )
+
+!    PRINT*,"Before DO WHile"
     DO WHILE(mfi%next())
 
+!        PRINT*,"Before PTRs"
         Source_PTR => MF_Source(lvl)%dataPtr(mfi)
         Mask_PTR   => Level_Mask%dataPtr(mfi)
-        Box = mfi%tilebox()
 
+!        PRINT*,"Before Box and nComp"
+        Box = mfi%tilebox()
         nComp =  MF_Source(lvl)%ncomp()
 
+!        PRINT*,"Before lo hi"
         iEL = Box%lo
         iEU = Box%hi
 
@@ -661,11 +746,13 @@ DO lvl = 0,nLevels-1
                 !
                 ! Initalize Ylm Table on Elem
                 !
+!                PRINT*,"Before Initialize_Ylm_Tables_on_Elem",lvl,re,te,pe
                 CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
 
                 iE = [re,te,pe]
                 
                 CALL XCFC_Calc_Source_Vector_On_Element_TypeB( iU, iVB, iE, lvl )
+!                PRINT*,"After XCFC_Calc_Source_Vector_On_Element_TypeB"
             END IF
         END DO ! pe
         END DO ! te
@@ -673,9 +760,11 @@ DO lvl = 0,nLevels-1
 
     END DO
 
-    
+!    pRINT*,"Before Destroys"
     CALL amrex_mfiter_destroy(mfi)
+!    PRINT*,"Between Destroys"
     CALL amrex_imultifab_destroy( Level_Mask )
+!    PRINT*,"After Destroys"
 
 END DO ! lvl
 

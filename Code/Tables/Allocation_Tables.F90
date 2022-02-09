@@ -65,12 +65,15 @@ USE Variables_Tables, &
                     Ylm_Elem_dp_Values,     &
                     Ylm_Elem_CC_Values,     &
                     Level_dx,               &
-                    LagPoly_MltiLayer_Table, &
+                    Level_Ratios,           &
+                    LagPoly_MultiLayer_Table, &
                     LagPoly_Num_Tables
 
-USE Variables_AMReX_Multifabs, &
-            ONLY :  MaxGridSizeX2,          &
-                    nLevels
+USE Variables_AMReX_Core, &
+            ONLY :  AMReX_Max_Grid_Size,          &
+                    AMReX_Num_Levels
+
+
 
 
 IMPLICIT NONE
@@ -97,7 +100,7 @@ ALLOCATE( Ylm_Sqrt_Table( -L_Limit:L_Limit, 0:L_Limit ) )
 ALLOCATE( rBT_NormedLegendre(   -L_Limit:L_Limit,           &
                                 -1:L_Limit,                 &
                                 1:Num_T_Quad_Points,        &
-                                0:MaxGridSizeX2-1       )   )
+                                0:AMReX_Max_Grid_Size(2)-1 )   )
 
 !ALLOCATE( rBT_NormedLegendre_dt(-L_Limit:L_Limit,           &
 !                                -1:L_Limit,                 &
@@ -119,12 +122,13 @@ ALLOCATE( Ylm_Elem_CC_Values(   1:Num_TP_Quad_Points,       &
                                 1:LM_Length            )   )
 
 
-ALLOCATE( LagPoly_MltiLayer_Table(  0:DEGREE,               &
+ALLOCATE( LagPoly_MultiLayer_Table( 0:DEGREE,               &
                                     1:NUM_R_QUAD_POINTS,    &
                                     0:1,                    &
                                     0:LagPoly_Num_Tables-1  )   )
 
-ALLOCATE( Level_dx( 0:nLevels-1, 3 ) )
+ALLOCATE( Level_dx( 0:AMReX_Num_Levels-1, 3 ) )
+ALLOCATE( Level_Ratios(0:AMReX_Num_Levels) )
 
 
 #else
@@ -197,7 +201,7 @@ DEALLOCATE( Ylm_Elem_dp_Values )
 DEALLOCATE( Ylm_Elem_CC_Values )
 
 
-DEALLOCATE( LagPoly_MltiLayer_Table )
+DEALLOCATE( LagPoly_MultiLayer_Table )
 
 DEALLOCATE( Level_dx )
 

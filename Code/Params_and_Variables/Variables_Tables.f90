@@ -66,8 +66,10 @@ COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Elem_dt_Valu
 COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Elem_dp_Values
 COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Elem_CC_Values
 
-REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  LagPoly_MltiLayer_Table
+REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  LagPoly_MultiLayer_Table
 INTEGER,        PUBLIC                                      ::  LagPoly_Num_Tables
-COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Level_dx
+REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Level_dx
+INTEGER,        PUBLIC, ALLOCATABLE, DIMENSION(:)           ::  Level_Ratios
+
 
 END MODULE Variables_Tables

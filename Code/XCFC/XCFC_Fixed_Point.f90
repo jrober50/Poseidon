@@ -245,6 +245,8 @@ DEALLOCATE( Work )
 
 
 
+!PRINT*,FP_Coeff_Vector_A(:,:,iU)
+
 END SUBROUTINE XCFC_Fixed_Point
 
 

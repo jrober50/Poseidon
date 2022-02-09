@@ -67,8 +67,6 @@ USE Variables_FP, &
 USE Allocation_FP, &
             ONLY :  Allocate_FP
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_LM_Map
 
 USE FP_Functions_Results,   &
             ONLY :  Calc_FP_Values_At_Location,  &
@@ -76,10 +74,6 @@ USE FP_Functions_Results,   &
 
 USE FP_Intialize_Matrices, &
             ONLY :  Initialize_FP_Matrices
-
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In
-
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &

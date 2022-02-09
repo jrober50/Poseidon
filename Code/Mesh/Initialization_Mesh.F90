@@ -18,38 +18,39 @@ MODULE Initialization_Mesh                                                      
 !===================================!
 
 USE Poseidon_Kinds_Module, &
-                    ONLY : idp
+            ONLY : idp
 
 USE Poseidon_Parameters, &
-                    ONLY :  Verbose_Flag
+            ONLY :  Verbose_Flag
 
 USE Variables_Mesh, &
-                    ONLY :  Num_R_Elements,         &
-                            Num_T_Elements,         &
-                            Num_P_Elements,         &
-                            Num_Loc_R_Elements,     &
-                            Num_Loc_T_Elements,     &
-                            Num_Loc_P_Elements,     &
-                            R_Inner,                &
-                            R_Outer,                &
-                            R_Coarsen_Factor,       &
-                            T_Coarsen_Factor,       &
-                            P_Coarsen_Factor,       &
-                            rlocs,                  &
-                            tlocs,                  &
-                            plocs,                  &
-                            drlocs,                 &
-                            dtlocs,                 &
-                            dplocs,                 &
-                            Radial_Mesh_Set_Flag,   &
-                            Theta_Mesh_Set_Flag,    &
-                            Phi_Mesh_Set_Flag,      &
-                            locs_Set,               &
-                            dlocs_Set
+            ONLY :  Num_R_Elements,         &
+                    Num_T_Elements,         &
+                    Num_P_Elements,         &
+                    Num_Loc_R_Elements,     &
+                    Num_Loc_T_Elements,     &
+                    Num_Loc_P_Elements,     &
+                    R_Inner,                &
+                    R_Outer,                &
+                    R_Coarsen_Factor,       &
+                    T_Coarsen_Factor,       &
+                    P_Coarsen_Factor,       &
+                    rlocs,                  &
+                    tlocs,                  &
+                    plocs,                  &
+                    drlocs,                 &
+                    dtlocs,                 &
+                    dplocs,                 &
+                    Radial_Mesh_Set_Flag,   &
+                    Theta_Mesh_Set_Flag,    &
+                    Phi_Mesh_Set_Flag,      &
+                    locs_Set,               &
+                    dlocs_Set
 
    
 USE Functions_Mesh, &
-                    ONLY :  Generate_Defined_Coarse_Mesh
+            ONLY :  Generate_Defined_Coarse_Mesh
+
 
 
 IMPLICIT NONE
@@ -67,6 +68,7 @@ SUBROUTINE Initialize_Mesh()
 IF ( Verbose_Flag ) THEN
     PRINT*,"-Initializing Mesh. "
 END IF
+
 
 IF ( ( locs_Set(1) .EQV. .FALSE. ) .AND. ( dlocs_Set(1) .EQV. .FALSE. ) ) THEN
     PRINT*,"!*  Fatal Error in Poseidon   *!"
@@ -105,6 +107,8 @@ THETA_MESH_SET_FLAG = .TRUE.
 CALL Generate_Defined_Coarse_Mesh(NUM_P_ELEMENTS, NUM_P_ELEMENTS, P_Coarsen_Factor,     &
                                   0.0_idp, 3, plocs, dplocs)
 PHI_MESH_SET_FLAG = .TRUE.
+
+
 
 
 END SUBROUTINE Initialize_Mesh
@@ -185,6 +189,24 @@ END IF
 
 
 END SUBROUTINE OPEN_NEW_FILE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

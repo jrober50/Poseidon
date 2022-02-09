@@ -53,7 +53,7 @@ USE amrex_bc_types_module, ONLY: &
   amrex_bc_foextrap, &
   amrex_bc_bogus
 
-USE Variables_AMReX_Multifabs, &
+USE Variables_Driver_AMReX, &
             ONLY :  xL,                 &
                     xR,                 &
                     coord_sys,          &
@@ -73,8 +73,7 @@ USE Variables_AMReX_Multifabs, &
                     t_old,              &
                     dt,                 &
                     lo_Bc,              &
-                    hi_bc,              &
-                    Level_Ratio
+                    hi_bc
 
 #endif
 
@@ -140,14 +139,6 @@ ALLOCATE( hi_bc(1:amrex_spacedim,1) )
 
 lo_bc = amrex_bc_bogus
 hi_bc = amrex_bc_bogus
-
-
-ALLOCATE( Level_Ratio(0:nLevels) )
-DO lvl = 0,nLevels
-    Level_Ratio(lvl) = 2**lvl
-END DO
-
-
 
 
 #endif

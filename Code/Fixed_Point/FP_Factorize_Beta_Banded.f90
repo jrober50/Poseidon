@@ -99,9 +99,7 @@ USE Variables_BC, &
                     OUTER_CFA_BC_TYPE
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_Beta_Array_Map,          &
-                    FP_FEM_Node_Map,            &
-                    FP_LM_Map
+            ONLY :  FP_Beta_Array_Map
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                 &

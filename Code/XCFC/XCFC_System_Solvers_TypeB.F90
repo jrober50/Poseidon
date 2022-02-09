@@ -78,8 +78,6 @@ USE FP_Functions_BC,  &
                     Dirichlet_BC_CHOL,          &
                     Neumann_BC_CCS
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_LM_Map
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon,              &
@@ -172,7 +170,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 !    PRINT*,"Work_Vec"
 !    PRINT*,Work_Vec
-
+!    PRINT*,"+++++++++++++++++++++++++++++++++++"
 
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
@@ -198,10 +196,15 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
     FP_Coeff_Vector_B(:,iVB) = Work_Vec(:)
 
+!    PRINT*,"Coeff Vec"
+!    PRINT*,FP_Coeff_Vector_B(:,iVB)
+
+
     DEALLOCATE( Work_Vec )
 END IF
 
-
+!PRINT*,"Stopping in XCFC_System_Solvers_TypeB"
+!STOP
 
 
 

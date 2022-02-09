@@ -51,8 +51,8 @@ USE amrex_multifab_module,  ONLY: &
 USE amrex_tagbox_module, ONLY: &
   amrex_tagboxarray
 
-USE Variables_AMReX_Multifabs,  &
-ONLY :  MF_Source,      &
+USE Variables_Driver_AMReX,  &
+ONLY :  MF_Driver_Source,      &
         MF_Src_nComps,  &
         MF_Src_nGhost
 #endif
@@ -99,23 +99,25 @@ TYPE(amrex_mfiter)                              :: mfi
 TYPE(amrex_box)                                 :: BX
 REAL(amrex_real),   CONTIGUOUS, POINTER         :: p(:,:,:,:)
 
+
 BA = pba
 DM = pdm
 
 !t_new(lev) = time
 !t_old(lev) = time - 1.e200_amrex_real
-
 CALL VF_Clear_Level(lev)
 
-CALL amrex_multifab_build( MF_Source(lev), BA, DM, MF_Src_nComps, MF_Src_nGhost )
+!PRINT*,MF_Src_nComps, MF_Src_nGhost
 
+CALL amrex_multifab_build( MF_Driver_Source(lev), BA, DM, MF_Src_nComps, MF_Src_nGhost )
 
 ! Fill New Level with Source Data !
-CALL amrex_mfiter_build(mfi, MF_Source(lev))
+CALL amrex_mfiter_build(mfi, MF_Driver_Source(lev))
+
 
 DO WHILE (mfi%next())
     BX = mfi%tilebox()
-    p  => MF_Source(lev)%dataptr(mfi)
+    p  => MF_Driver_Source(lev)%dataptr(mfi)
 
     CALL Poseidon_Init_Data_On_Level(lev,           &
                                      BX%lo, BX%hi,  &
@@ -160,9 +162,9 @@ DM = pdm
 
 CALL VF_Clear_Level(lev)
 
-CALL amrex_multifab_build( MF_Source(lev), BA, DM, MF_Src_nComps, MF_Src_nGhost )
+CALL amrex_multifab_build( MF_Driver_Source(lev), BA, DM, MF_Src_nComps, MF_Src_nGhost )
 
-CALL FillCoarsePatch(lev, Time, MF_Source(lev))
+CALL FillCoarsePatch(lev, Time, MF_Driver_Source(lev))
 
 
 END SUBROUTINE VF_Make_New_Level_From_Coarse
@@ -185,25 +187,25 @@ TYPE(c_ptr),        INTENT(IN), VALUE           ::  pba, pdm
 
 TYPE(amrex_boxarray)                            :: BA
 TYPE(amrex_distromap)                           :: DM
-TYPE(amrex_multifab)                            :: New_MF_Source
+TYPE(amrex_multifab)                            :: New_MF_Driver_Source
 
 BA = pba
 DM = pdm
 
-CALL amrex_multifab_build(New_MF_Source, BA, DM, MF_Src_nComps, 0)
+CALL amrex_multifab_build(New_MF_Driver_Source, BA, DM, MF_Src_nComps, 0)
 
-CALL FillPatch(lev, time, New_MF_Source)
+CALL FillPatch(lev, time, New_MF_Driver_Source)
 
 CALL VF_Clear_Level(lev)
 
 !t_new(lev) = time
 !t_old(lev) = time - 1.e200_amrex_real
 
-CALL amrex_multifab_build(MF_Source(lev), BA, DM, MF_Src_nComps, MF_Src_nGhost )
+CALL amrex_multifab_build(MF_Driver_Source(lev), BA, DM, MF_Src_nComps, MF_Src_nGhost )
 
-CALL MF_Source(lev)%copy(New_MF_Source, 1, 1, MF_Src_nComps, 0)
+CALL MF_Driver_Source(lev)%copy(New_MF_Driver_Source, 1, 1, MF_Src_nComps, 0)
 
-CALL amrex_multifab_destroy(New_MF_Source)
+CALL amrex_multifab_destroy(New_MF_Driver_Source)
 
 
 END  SUBROUTINE VF_Remake_Level
@@ -224,7 +226,7 @@ SUBROUTINE VF_Clear_Level(lev) bind(c)
 
 INTEGER,            INTENT(IN), VALUE           ::  lev
 
-CALL amrex_multifab_destroy(MF_Source(lev))
+CALL amrex_multifab_destroy(MF_Driver_Source(lev))
 
 END SUBROUTINE VF_Clear_Level
 
@@ -256,12 +258,12 @@ CHARACTER(KIND=c_char), CONTIGUOUS, POINTER     ::  TagArr(:,:,:,:)
 
 Tag = cp
 
-CALL amrex_mfiter_build( mfi, MF_Source(lev), Tiling = AMReX_Tiling)
+CALL amrex_mfiter_build( mfi, MF_Driver_Source(lev), Tiling = AMReX_Tiling)
 DO WHILE( mfi%next() )
 
     BX = mfi%tilebox()
 
-    Src     => MF_Source(lev)%dataptr(mfi)
+    Src     => MF_Driver_Source(lev)%dataptr(mfi)
     TagArr  => Tag%dataptr(mfi)
     CALL Tag_Source_Elements( lev,                              &
                               BX%lo, BX%hi,                     &

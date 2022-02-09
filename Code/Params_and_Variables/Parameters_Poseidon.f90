@@ -42,14 +42,15 @@ INTEGER, PUBLIC, PARAMETER          ::  STF_MAPPING_FLAG = 2
 
 
 
-INTEGER, PUBLIC                     ::  POSEIDON_FRAME      = 1
-INTEGER, PUBLIC                     ::  CUR_ITERATION       = 1
-INTEGER, PUBLIC                     ::  MAX_ITERATIONS      = 20
+INTEGER, PUBLIC                     ::  POSEIDON_FRAME          = 1
+INTEGER, PUBLIC                     ::  CUR_ITERATION           = 1
+INTEGER, PUBLIC                     ::  MAX_ITERATIONS          = 20
+INTEGER, PUBLIC, PARAMETER          ::  MAX_ITERATIONS_Default  = 20
 
 INTEGER, PUBLIC                     ::  CONVERGENCE_FLAG     = 0
 INTEGER, PUBLIC                     ::  Convergence_Type     = 2
 REAL(KIND =idp), PUBLIC             ::  CONVERGENCE_CRITERIA = 1.0E-8_idp
-
+REAL(KIND =idp), PUBLIC, PARAMETER  ::  CONVERGENCE_CRITERIA_Default = 1.0E-8_idp
 
 INTEGER, PUBLIC                     ::  INITIAL_GUESS_FLAG
 
@@ -70,6 +71,7 @@ LOGICAL, PUBLIC                     ::  Verbose_Flag = .FALSE.
 
 LOGICAL, PUBLIC                     ::  Poisson_Mode = .FALSE.
 
+LOGICAL, PUBLIC                     ::  Poseidon_Remesh_Flag = .TRUE.
 
 CHARACTER(17), DIMENSION(3), PUBLIC, PARAMETER        ::  &
 Convergence_Type_Names = ['L_One Error Norm ',     &

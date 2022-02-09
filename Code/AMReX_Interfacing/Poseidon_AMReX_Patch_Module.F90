@@ -51,9 +51,9 @@ USE amrex_fillpatch_module, ONLY: &
   amrex_fillcoarsepatch
 
 
-USE Variables_AMReX_Multifabs,  &
-            ONLY :  MF_Source,      &
-                    GM_Source,      &
+USE Variables_Driver_AMReX,  &
+            ONLY :  MF_Driver_Source,      &
+                    GM_Driver_Source,      &
                     MF_Src_nComps,  &
                     MF_Src_nGhost,  &
                     lo_bc,          &
@@ -93,14 +93,14 @@ INTEGER                                     ::  nComp
 !INTEGER :: lo_bc(amrex_spacedim,MF_Src_nComps) = amrex_bc_int_dir
 !INTEGER :: hi_bc(amrex_spacedim,MF_Src_nComps) = amrex_bc_int_dir
 
-nComp = MF_Source(Level)%nComp()
+nComp = MF_Driver_Source(Level)%nComp()
 
 
 IF ( Level == 0 ) THEN
 
-    CALL amrex_fillpatch( Src,  t_old(Level),  MF_Source(Level),    &
-                                t_new(Level),  MF_Source(Level),    &
-                                GM_Source(Level), FillPhysicalBC,   &
+    CALL amrex_fillpatch( Src,  t_old(Level),  MF_Driver_Source(Level),    &
+                                t_new(Level),  MF_Driver_Source(Level),    &
+                                GM_Driver_Source(Level), FillPhysicalBC,   &
                                 Time,                               &
                                 sComp,                              &
                                 dComp,                              &
@@ -109,12 +109,12 @@ IF ( Level == 0 ) THEN
 ELSE
 
 
-    CALL amrex_fillpatch( Src,  t_old(Level-1),  MF_Source(Level-1),    &
-                                t_new(Level-1),  MF_Source(Level-1),    &
-                                GM_Source(Level-1), FillPhysicalBC,     &
-                                t_old(Level),  MF_Source(Level),        &
-                                t_new(Level),  MF_Source(Level),        &
-                                GM_Source(Level), FillPhysicalBC,       &
+    CALL amrex_fillpatch( Src,  t_old(Level-1),  MF_Driver_Source(Level-1),    &
+                                t_new(Level-1),  MF_Driver_Source(Level-1),    &
+                                GM_Driver_Source(Level-1), FillPhysicalBC,     &
+                                t_old(Level),  MF_Driver_Source(Level),        &
+                                t_new(Level),  MF_Driver_Source(Level),        &
+                                GM_Driver_Source(Level), FillPhysicalBC,       &
                                 Time,                                   &
                                 sComp,                                  &
                                 dComp,                                  &
@@ -153,10 +153,10 @@ INTEGER                                     ::  nComp
 !INTEGER :: lo_bc(amrex_spacedim,MF_Src_nComps) = amrex_bc_int_dir
 !INTEGER :: hi_bc(amrex_spacedim,MF_Src_nComps) = amrex_bc_int_dir
 
-nComp = MF_Source(Level)%nComp()
+nComp = MF_Driver_Source(Level)%nComp()
 
-CALL amrex_fillcoarsepatch(Src, t_old(Level-1),  MF_Source(Level-1),    &
-                                t_new(Level-1),  MF_Source(Level-1),    &
+CALL amrex_fillcoarsepatch(Src, t_old(Level-1),  MF_Driver_Source(Level-1),    &
+                                t_new(Level-1),  MF_Driver_Source(Level-1),    &
                                 amrex_geom(Level-1), FillPhysicalBC,    &
                                 amrex_geom(Level), FillPhysicalBC,      &
                                 Time,                                   &

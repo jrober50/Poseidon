@@ -79,8 +79,8 @@ USE Variables_Mesh, &
                     R_Outer
 
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_tpd_Map
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_tpd
 
 USE Komar_Mass_Utilities_Module, &
             ONLY :  Calc_Val_and_Drv_On_Edge_TypeA, &
@@ -223,7 +223,7 @@ rSqr = rVal*rVal
 
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
-    tpd = FP_tpd_Map(td,pd)
+    tpd = Map_To_tpd(td,pd)
     TP_Sin_Val(tpd)    = DSIN(ctlocs(td))
     TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(ctlocs(td))
 END DO
@@ -263,7 +263,7 @@ INTEGER                                                     ::  tpd, td, pd
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
 
-   tpd = FP_tpd_Map(td,pd)
+   tpd = Map_To_tpd(td,pd)
    Int_Weights( tpd) = R_SQUARE                                 &
                      * DTOT * SIN_VAL(tpd) * INT_T_WEIGHTS(td)  &
                      * INT_P_WEIGHTS(pd)
@@ -406,7 +406,7 @@ END DO ! i
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
 
-    tpd = FP_tpd_Map(td,pd)
+    tpd = Map_To_tpd(td,pd)
 
 !    PRINT*,"Cur_Vals",Cur_Val_psi(tpd),Cur_Val_Alphapsi(tpd)
 !    PRINT*,"Cur_Drvs",Cur_Drv_Psi(tpd,1), Cur_DRV_Alphapsi(tpd,1)

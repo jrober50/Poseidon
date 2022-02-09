@@ -57,9 +57,8 @@ USE Variables_Quadrature, &
                     NUM_TP_QUAD_POINTS,         &
                     Num_Quad_DOF
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_FEM_Node_Map,    &
-                    FP_tpd_Map
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_tpd
 
 USE Quadrature_Mapping_Functions, &
             ONLY :  Quad_Map
@@ -131,7 +130,7 @@ IF ( iU == 1 ) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd  = FP_tpd_Map(td,pd)
+        tpd  = Map_To_tpd(td,pd)
         Here = Quad_Map(rd,td,pd)
         Source(tpd,rd) = Block_Source_E(Here,iE(1),iE(2),iE(3))
 
@@ -146,12 +145,14 @@ ELSEIF ( iU == 2 ) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd  = FP_tpd_Map(td,pd)
+        tpd  = Map_To_tpd(td,pd)
         Here = Quad_Map(rd,td,pd)
         Source(tpd,rd) = Block_Source_E(Here,iE(1),iE(2),iE(3))                &
                        + 2.0_idp*Block_Source_S(Here,iE(1),iE(2),iE(3))
 
-
+!        PRINT*,iE, rd,td,pd
+!        PRINT*,Block_Source_E(Here,iE(1),iE(2),iE(3)),                &
+!                2.0_idp*Block_Source_S(Here,iE(1),iE(2),iE(3))
 
     END DO ! pd
     END DO ! td
@@ -163,8 +164,10 @@ ELSEIF ( iU == 3) THEN
    DO td = 1,NUM_T_QUAD_POINTS
    DO pd = 1,NUM_P_QUAD_POINTS
 
-       tpd  = FP_tpd_Map(td,pd)
+       tpd  = Map_To_tpd(td,pd)
        Here = Quad_Map(rd,td,pd)
+
+!        PRINT*,iE,rd,td,pd,Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
        Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
 
    END DO ! pd
@@ -177,7 +180,7 @@ ELSE IF ( iU == 4) THEN
    DO td = 1,NUM_T_QUAD_POINTS
    DO pd = 1,NUM_P_QUAD_POINTS
 
-       tpd  = FP_tpd_Map(td,pd)
+       tpd  = Map_To_tpd(td,pd)
        Here = Quad_Map(rd,td,pd)
        Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),2)
 
@@ -192,7 +195,7 @@ ELSE IF ( iU == 5 ) THEN
    DO td = 1,NUM_T_QUAD_POINTS
    DO pd = 1,NUM_P_QUAD_POINTS
 
-       tpd  = FP_tpd_Map(td,pd)
+       tpd  = Map_To_tpd(td,pd)
        Here = Quad_Map(rd,td,pd)
        Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),3)
 
@@ -233,7 +236,7 @@ IF ( iU == 1 ) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd = FP_tpd_Map(td,pd)
+        tpd = Map_To_tpd(td,pd)
         Here = (iS_E-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
         Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
 !        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here)
@@ -248,13 +251,15 @@ ELSEIF ( iU == 2 ) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd = FP_tpd_Map(td,pd)
+        tpd = Map_To_tpd(td,pd)
         Here = (iS_E-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
         There = (iS_S-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
         Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)  &
                     + 2.0_idp*Source_PTR(iE(1),iE(2),iE(3),There)
 
-
+!        PRINT*,iE, rd,td,pd
+!        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here),              &
+!                2.0_idp*Source_PTR(iE(1),iE(2),iE(3),There)
     END DO ! pd
     END DO ! td
     END DO ! rd
@@ -265,10 +270,11 @@ ELSE IF ( iU == 3) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd = FP_tpd_Map(td,pd)
+        tpd = Map_To_tpd(td,pd)
         Here = (iS_S1-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
 !        PRINT*,"Here ",Here,iE(1),iE(2),iE(3)
+!        PRINT*,iE,rd,td,pd,Source_PTR(iE(1),iE(2),iE(3),Here)
         Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
 !        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here)
 !        PRINT*,"myID ",myID_Poseidon," - ",Source(tpd,rd)
@@ -283,7 +289,7 @@ ELSE IF ( iU == 4) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd = FP_tpd_Map(td,pd)
+        tpd = Map_To_tpd(td,pd)
         Here = (iS_S2-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
         Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
@@ -299,7 +305,7 @@ ELSE IF ( iU == 5 ) THEN
     DO td = 1,NUM_T_QUAD_POINTS
     DO pd = 1,NUM_P_QUAD_POINTS
 
-        tpd = FP_tpd_Map(td,pd)
+        tpd = Map_To_tpd(td,pd)
         Here = (iS_S3-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
         Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)

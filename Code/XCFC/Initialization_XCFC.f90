@@ -67,20 +67,12 @@ USE Variables_FP, &
 USE Allocation_XCFC, &
             ONLY :  Allocate_XCFC
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_LM_Map
-
 USE FP_Functions_Results,   &
             ONLY :  Calc_FP_Values_At_Location,  &
                     Calc_1D_CFA_Values_FP
 
 USE FP_Intialize_Matrices, &
             ONLY :  Initialize_FP_Matrices
-
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In
-
-
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -144,13 +136,25 @@ ELSE
 END IF
 
 NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
-
-
 CALL Create_Eq_Maps()
 
-Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
+
 Beta_Diagonals = Beta_Elem_Prob_Dim
 Beta_Bandwidth = 2*Beta_Diagonals+1
+
+
+
+
+
+#ifdef POSEIDON_AMREX_FLAG
+
+
+
+#else
+
+
+Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
+
 
 
 CALL Allocate_XCFC()
@@ -159,6 +163,8 @@ CALL TimerStart( Timer_XCFC_Matrix_Init )
 CALL Initialize_FP_Matrices()
 CALL TimerStop( Timer_XCFC_Matrix_Init )
 
+
+#endif
 
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP

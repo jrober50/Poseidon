@@ -27,7 +27,7 @@ USE Poseidon_Kinds_Module, &
                     ONLY : idp
 
 USE Poseidon_Numbers_Module, &
-                    ONLY : pi
+                    ONLY : pi, twopi
 
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
@@ -53,7 +53,12 @@ USE Variables_Quadrature, &
                     Int_P_Locations
 
 USE Variables_Mesh, &
-            ONLY :  rlocs,                  &
+            ONLY :  R_Inner,                &
+                    R_Outer,                &
+                    Num_R_Elements,         &
+                    Num_T_Elements,         &
+                    Num_P_Elements,         &
+                    rlocs,                  &
                     tlocs,                  &
                     plocs
 
@@ -79,7 +84,8 @@ USE Variables_Tables, &
                     Ylm_Elem_dp_Values,     &
                     Ylm_Elem_CC_Values,     &
                     Level_dx,               &
-                    LagPoly_MltiLayer_Table,&
+                    Level_Ratios,            &
+                    LagPoly_MultiLayer_Table,&
                     LagPoly_Num_Tables
 
 USE Variables_Functions, &
@@ -99,17 +105,17 @@ USE Functions_Math, &
                     Norm_Factor,            &
                     Sqrt_Factor
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_tpd_Map
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_tpd
 
 
 USE Allocation_Tables, &
             ONLY :  Allocate_Tables
 
-USE Variables_AMReX_Multifabs, &
-            ONLY :  MaxGridSizeX2,          &
-                    nLevels
 
+USE Variables_AMReX_Core, &
+            ONLY :  AMReX_Max_Grid_Size,          &
+                    AMReX_Num_Levels
 
 IMPLICIT NONE
 
@@ -128,20 +134,21 @@ IF ( Verbose_Flag ) THEN
     PRINT*,"-Initializing Basis Function Tables. "
 END IF
 
-LagPoly_Num_Tables = 2**(nLevels+1) - 1  ! Sum of power of 2
+LagPoly_Num_Tables = 2**(AMReX_Num_Levels+1) - 1  ! Sum of power of 2
 
-
-CALL Allocate_Tables()
-CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
 
 
 #ifdef POSEIDON_AMREX_FLAG
 
+    CALL Allocate_Tables()
+    CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
     CALL Initialize_Ylm_Norm_Tables_AMReX()
-    CALL Initialize_Level_dx_Table()
+    CALL Initialize_Level_Tables()
 
 #else
 
+    CALL Allocate_Tables()
+    CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
     CALL Initialize_Ylm_Tables()
 
 #endif
@@ -248,7 +255,7 @@ DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
      !                                                          !
     Global_pe = Block_P_Begin + pe
     P_Locations = Map_From_X_Space(plocs(Global_pe), plocs(Global_pe + 1), INT_P_LOCATIONS)
-
+    
 
     DO te = 0,NUM_T_ELEMS_PER_BLOCK-1
 
@@ -404,7 +411,7 @@ Local_Locations = Initialize_LGL_Quadrature_Locations(Ord)
 
 
 #ifdef POSEIDON_AMREX_FLAG
-DO lvl = 0,nLevels-1
+DO lvl = 0,AMReX_Num_Levels-1
 iNLE = 2**lvl-1
 DO elem = 0,iNLE
 
@@ -417,21 +424,24 @@ DO elem = 0,iNLE
     Local_R(:) = Map_From_X_Space(ra, rb, Int_R_Locations(:))
 
 
-
     DO Eval_Point = 1,Num_R_Quad_Points
         
 
         Lagrange_Poly_Values = Lagrange_Poly(Local_R(Eval_Point), Ord, Local_Locations)
         Lagrange_DRV_Values  = Lagrange_Poly_Deriv(Local_R(Eval_Point), Ord, Local_Locations)
 
-        LagPoly_MltiLayer_Table( :, Eval_Point, 0, Cur_Table) = Lagrange_Poly_Values
-        LagPoly_MltiLayer_Table( :, Eval_Point, 1, Cur_Table) = Lagrange_DRV_Values
+        LagPoly_MultiLayer_Table( :, Eval_Point, 0, Cur_Table) = Lagrange_Poly_Values
+        LagPoly_MultiLayer_Table( :, Eval_Point, 1, Cur_Table) = Lagrange_DRV_Values
 
 
     END DO
 
 END DO
 END DO
+
+
+
+
 #endif
 
 
@@ -533,7 +543,7 @@ INTEGER                                             ::  lm, teb
 REAL(idp), DIMENSION(-L_Limit:L_Limit,              &
                      0:L_Limit,                     &
                      1:Num_T_Quad_Points,           &
-                     0:MaxGridSizeX2-1      )       ::  LegPoly_Table
+                     0:AMReX_Max_Grid_Size(2)-1 )   ::  LegPoly_Table
 
 
 
@@ -623,6 +633,8 @@ teb = iTE - iEL(2)
 tlocs = Level_dx(Level,2)/2.0_idp * (Int_T_Locations(:) + 1.0_idp + 2.0_idp*iTE )
 plocs = Level_dx(Level,3)/2.0_idp * (Int_P_Locations(:) + 1.0_idp + 2.0_idp*iPE )
 
+
+
 Csc_Val = 1.0_idp/DSIN(tlocs(:))
 Cot_Val = 1.0_idp/DTAN(tlocs(:))
 
@@ -644,7 +656,7 @@ DO pd = 1,Num_P_Quad_Points
 DO l  = 0,L_Limit
 DO m  = -l,l
 
-    tpd = FP_Tpd_Map(td,pd)
+    tpd = Map_To_tpd(td,pd)
     lm = LM_Location(l,m)
 
 
@@ -691,31 +703,37 @@ END SUBROUTINE Initialize_Ylm_Tables_on_Elem
 !          Initialize_Level_dx_Table                                !
 !                                                                   !
  !#################################################################!
-SUBROUTINE Initialize_Level_dx_Table()
+SUBROUTINE Initialize_Level_Tables()
 
 INTEGER                 ::  lvl
 REAL(idp)               ::  dr, dt, dp
 
 
-dr = rlocs(1)-rlocs(0)
-dt = tlocs(1)-tlocs(0)
-dp = plocs(1)-plocs(0)
+dr = (R_Outer-R_Inner)/Num_R_Elements
+dt = pi/Num_T_Elements
+dp = TwoPi/Num_P_Elements
 
 
-DO lvl = 0,nLevels-1
+DO lvl = 0,AMReX_Num_Levels-1
     Level_dx(lvl,1) = dr/2.0_idp**lvl
 END DO
 
-DO lvl = 0,nLevels-1
+DO lvl = 0,AMReX_Num_Levels-1
     Level_dx(lvl,2) = dt/2.0_idp**lvl
 END DO
 
-DO lvl = 0,nLevels-1
+DO lvl = 0,AMReX_Num_Levels-1
     Level_dx(lvl,3) = dp/2.0_idp**lvl
 END DO
 
+DO lvl = 0,AMReX_Num_Levels-1
+    Level_Ratios(lvl) = 2**lvl
+END DO
 
-END SUBROUTINE Initialize_Level_dx_Table
+
+
+
+END SUBROUTINE Initialize_Level_Tables
 
 
 

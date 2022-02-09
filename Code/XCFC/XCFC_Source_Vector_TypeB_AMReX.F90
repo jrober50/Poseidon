@@ -149,8 +149,7 @@ USE Variables_AMReX_Multifabs, &
                     BA_Source,  &
                     DM_Source,  &
                     GM_Source,  &
-                    nLevels,    &
-                    Level_Ratio
+                    nLevels
 
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,         &
