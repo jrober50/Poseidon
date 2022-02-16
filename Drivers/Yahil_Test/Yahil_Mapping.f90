@@ -18,7 +18,7 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
-USE Poseidon_Units_Module, &
+USE Units_Module, &
             ONLY :  C_Square,        &
                     Set_Units,       &
                     Centimeter,      &
@@ -28,12 +28,15 @@ USE Initialization_Poseidon, &
             ONLY :  Initialize_Poseidon
 
 
+USE Poseidon_XCFC_Interface_Module, &
+            ONLY : Poseidon_Return_ExtrinsicCurvature
+
+
 USE Variables_IO, &
             ONLY :  Write_Results_R_Samps,      &
                     Write_Results_T_Samps,      &
                     File_Suffix,                &
-                    Report_Flags,               &
-                    iRF_Time
+                    Report_Flags
 
 
 USE Variables_MPI, &
@@ -84,8 +87,7 @@ USE FP_IO_Module, &
 
 USE Poseidon_Utilities_Module, &
             ONLY :  Poseidon_Calc_ADM_Mass,         &
-                    Poseidon_Calc_ADM_Mass_Parts,   &
-                    Poseidon_Calc_Komar_Mass
+                    Poseidon_Calc_ADM_Mass_Parts
 
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
@@ -96,19 +98,19 @@ USE Driver_SetBC_Module, &
 USE Driver_SetGuess_Module, &
             ONLY :  Driver_SetGuess
 
-USE Timer_IO_Module, &
-            ONLY :  Output_Time_Report
-
-USE Timer_Routines_Module, &
-            ONLY :  TimerStart,     &
-                    TimerStop
-
-USE Timer_Variables_Module, &
-            ONLY :  Timer_Driver_SetSource,     &
-                    Timer_Driver_SetBC,         &
-                    Timer_Driver_SetGuess,      &
-                    Timer_Driver_Run,           &
-                    Timer_Driver_Extra
+!USE Timer_IO_Module, &
+!            ONLY :  Output_Time_Report
+!
+!USE Timer_Routines_Module, &
+!            ONLY :  TimerStart,     &
+!                    TimerStop
+!
+!USE Timer_Variables_Module, &
+!            ONLY :  Timer_Driver_SetSource,     &
+!                    Timer_Driver_SetBC,         &
+!                    Timer_Driver_SetGuess,      &
+!                    Timer_Driver_Run,           &
+!                    Timer_Driver_Extra
 
 USE MPI
 
@@ -209,6 +211,9 @@ REAL(idp)                                               ::  ADM_Curve
 
 REAL(idp)                                               ::  Komar_Mass
 
+
+REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Output_Kij
+
 CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
 
@@ -235,8 +240,8 @@ T_Index_Max         =  1
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  1
-RE_Index_Max        =  1
+RE_Index_Min        =  2
+RE_Index_Max        =  2
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -260,7 +265,7 @@ Dimension_Input     = 3
 Max_Iterations      = 10
 CC_Option           = 1.0E-10_idp
 
-Mesh_Type           = 6                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
 Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
@@ -326,7 +331,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     ALLOCATE( dy_c(1:NE(2)) )
     ALLOCATE( dz_c(1:NE(3)) )
 
-
+    ALLOCATE( Output_Kij(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3),1:6) )
 
 
     Input_R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
@@ -353,7 +358,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         Zoom = 1.032034864238313_idp )
 
 
-    PRINT*,x_e
 
     !############################################################!
     !#                                                          #!
@@ -398,7 +402,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
-    CALL TimerStart( Timer_Driver_SetSource )
+!    CALL TimerStart( Timer_Driver_SetSource )
 
     Yahil_Params = [Time_Values(T_Index), Kappa, Gamma, 0.0_idp]
     CALL Driver_SetSource(  NE, NQ,             &
@@ -412,7 +416,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                             myID,               &
                             Yahil_Params        )
 
-    CALL TimerStop( Timer_Driver_SetSource )
+!    CALL TimerStop( Timer_Driver_SetSource )
 
 
 
@@ -422,11 +426,11 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#          Calculate and Set Boundary Conditions           #!
     !#                                                          #!
     !############################################################!
-    CALL TimerStart( Timer_Driver_SetBC )
+!    CALL TimerStart( Timer_Driver_SetBC )
 
     CALL Driver_SetBC( NE, x_e )
 
-    CALL TimerStop( Timer_Driver_SetBC )
+!    CALL TimerStop( Timer_Driver_SetBC )
 
 
 
@@ -439,7 +443,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#              Calculate and Set Initial Guess             #!
     !#                                                          #!
     !############################################################!
-    CALL TimerStart( Timer_Driver_SetGuess )
+!    CALL TimerStart( Timer_Driver_SetGuess )
 
     CALL Driver_SetGuess(   NE, NQ,             &
                             dx_c, x_e,          &
@@ -450,7 +454,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                             Right_Limit,        &
                             Guess_Type          )
 
-    CALL TimerStop( Timer_Driver_SetGuess )
+!    CALL TimerStop( Timer_Driver_SetGuess )
 
 
     !############################################################!
@@ -458,14 +462,14 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                         Run Poseidon                     #!
     !#                                                          #!
     !############################################################!
-    CALL TimerStart( Timer_Driver_Run )
+!    CALL TimerStart( Timer_Driver_Run )
 
     Call Poseidon_Run()
 
 
-    CALL TimerStop( Timer_Driver_Run )
+!    CALL TimerStop( Timer_Driver_Run )
 
-    CALL TimerStart( Timer_Driver_Extra  )
+!    CALL TimerStart( Timer_Driver_Extra  )
 
 !    CALL Poseidon_Calc_ADM_Mass( ADM_Mass )
 !    CALL Poseidon_Calc_ADM_Mass_Parts( ADM_MassB, ADM_Phys, ADM_Curve)
@@ -494,10 +498,16 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-    CALL TimerStop( Timer_Driver_Extra )
+!    CALL TimerStop( Timer_Driver_Extra )
 
 
-
+    CALL Poseidon_Return_ExtrinsicCurvature( NE, NQ,                &
+                                             Input_R_Quad,          &
+                                             Input_T_Quad,          &
+                                             Input_P_Quad,          &
+                                             Left_Limit,            &
+                                             Right_Limit,           &
+                                             Output_Kij             )
 
 
 
@@ -517,6 +527,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     DEALLOCATE( x_c, y_c, z_c )
     DEALLOCATE( dx_c, dy_c, dz_c )
 
+    DEALLOCATE( Output_Kij )
 
 
 END DO ! L_Limit

@@ -172,7 +172,6 @@ Block_P_Begin = (myID_Shell/NUM_BLOCK_THETA_ROWS)*NUM_P_ELEMS_PER_BLOCK
 M_POWER_TABLE(0) = 1.0_idp
 IF ( L_LIMIT > 0 ) THEN
     DO m = 1, L_LIMIT
-
         M_POWER_TABLE(m) = -1.0_idp*M_POWER_TABLE(m-1)
         M_POWER_TABLE(-m) = -1.0_idp*M_POWER_TABLE(m-1)
     END DO

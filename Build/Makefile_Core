@@ -1,7 +1,9 @@
-include $(POSEIDON_DIR)/Build/Makefile_Path
-include $(POSEIDON_DIR)/Build/Makefile_Rules
-include $(POSEIDON_DIR)/Build/Makefile_Include
-include $(POSEIDON_DIR)/Build/Makefile_Dictionary
+POSEIDON_ACTIVE_DIR = $(POSEIDON_DEV_DIR)
+
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Path
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Rules
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Include
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Dictionary
 
 
 

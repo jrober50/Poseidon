@@ -29,7 +29,7 @@ MODULE Driver_SetSource_Module                                              !##!
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Poseidon_Units_Module, &
+USE Units_Module, &
             ONLY :  C_Square
 
 USE Poseidon_Parameters, &
@@ -43,16 +43,16 @@ USE Source_Input_Module, &
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
-
-USE Timer_Routines_Module, &
-            ONLY :  TimerStart,     &
-                    TimerSTop
-
-
-USE Timer_Variables_Module, &
-            ONLY :  Timer_Driver_SetSource_InitTest,        &
-                    Timer_Driver_SetSource_SetSource,       &
-                    Timer_Driver_SetSource_Scale
+!
+!USE Timer_Routines_Module, &
+!            ONLY :  TimerStart,     &
+!                    TimerSTop
+!
+!
+!USE Timer_Variables_Module, &
+!            ONLY :  Timer_Driver_SetSource_InitTest,        &
+!                    Timer_Driver_SetSource_SetSource,       &
+!                    Timer_Driver_SetSource_Scale
 
 
 IMPLICIT NONE
@@ -115,7 +115,7 @@ ALLOCATE( Local_S(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
 ALLOCATE( Local_Si(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1, 1:3)  )
 
 
-CALL TimerStart( Timer_Driver_SetSource_InitTest )
+!CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
 CALL Initialize_Yahil_Sources( Yahil_Params(1),        &
                                 Yahil_Params(2),        &
@@ -136,7 +136,7 @@ CALL Initialize_Yahil_Sources( Yahil_Params(1),        &
 !Print*,x_e
 
 
-CALL TimerStop( Timer_Driver_SetSource_InitTest )
+!CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
 !
 !DO pe = 1,NE(3)
@@ -148,7 +148,7 @@ CALL TimerStop( Timer_Driver_SetSource_InitTest )
 !END DO ! pe
 
 
-CALL TimerStart( Timer_Driver_SetSource_Scale )
+!CALL TimerStart( Timer_Driver_SetSource_Scale )
 IF ( Solver_Type == 3 ) THEN
 
 
@@ -191,7 +191,7 @@ IF ( Solver_Type == 3 ) THEN
 
 
  END IF
-CALL TimerStop( Timer_Driver_SetSource_Scale )
+!CALL TimerStop( Timer_Driver_SetSource_Scale )
 !
 !DO pe = 1,NE(3)
 !DO te = 1,NE(2)
@@ -206,7 +206,7 @@ CALL TimerStop( Timer_Driver_SetSource_Scale )
 !PRINT*,"Stopping in Driver_SetSource"
 !STOP
 
-CALL TimerStart( Timer_Driver_SetSource_SetSource )
+!CALL TimerStart( Timer_Driver_SetSource_SetSource )
 
 
 CALL Poseidon_Input_Sources(    myID, myID, myID,               &
@@ -231,7 +231,7 @@ IF ( .FALSE. ) THEN
  
 END IF
 
-CALL TimerStop( Timer_Driver_SetSource_SetSource )
+!CALL TimerStop( Timer_Driver_SetSource_SetSource )
 
 DEALLOCATE( Local_E, Local_S, Local_Si )
 

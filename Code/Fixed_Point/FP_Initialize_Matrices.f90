@@ -201,7 +201,6 @@ CALL Calculate_Angular_Terms()
 
 CALL Calculate_Laplace_Matrix()
 CALL Calculate_MVL_Banded()
-
 DEALLOCATE( Cur_T_Locs )
 DEALLOCATE( Cur_P_Locs )
 
