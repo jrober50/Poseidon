@@ -144,6 +144,8 @@ END IF
 
 CALL Deallocate_XCFC_Source_Variables()
 
+
+
 IF (myID_Poseidon == MasterID_Poseidon ) THEN
     CALL Output_Final_Results()
 END IF

@@ -217,6 +217,7 @@ CALL TimerStop(  Timer_XCFC_Shift_LinearSolve )
 
 CALL TimerStop( Timer_XCFC_Shift )
 
+PRINT*,"HERE"
 END SUBROUTINE XCFC_Shift_Solve
 
 

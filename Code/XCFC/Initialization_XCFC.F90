@@ -52,7 +52,9 @@ USE Variables_Mesh, &
 USE Variables_Functions, &
             ONLY :  LM_Location,                   &
                     Calc_3D_Values_At_Location,    &
-                    Calc_1D_CFA_Values
+                    Calc_1D_CFA_Values,             &
+                    Calc_Var_At_Loc_A,              &
+                    Calc_Var_At_Loc_B
 
 USE Variables_FP, &
             ONLY :  CFA_EQ_Flags,               &
@@ -82,7 +84,9 @@ USE Timer_Variables_Module, &
             ONLY :  Timer_XCFC_Initialization,      &
                     Timer_XCFC_Matrix_Init
 
-
+USE FP_Functions_Results, &
+            ONLY :  Calc_Var_At_Location_Type_A,    &
+                    Calc_Var_At_Location_Type_B
 
 
 
@@ -169,7 +173,8 @@ CALL TimerStop( Timer_XCFC_Matrix_Init )
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
-
+Calc_Var_At_Loc_A => Calc_Var_At_Location_Type_A
+Calc_Var_At_Loc_B => Calc_Var_At_Location_Type_B
 
 CALL TimerStop( Timer_XCFC_Initialization )
 

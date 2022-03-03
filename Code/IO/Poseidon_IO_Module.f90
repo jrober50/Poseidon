@@ -390,7 +390,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
                                                                 P_Holder
 
 REAL(idp), DIMENSION(6)                          ::  Units
-
+REAL(idp)                                                   ::  CF
 
 116 FORMAT (A,A,A,A,A,A)
 
@@ -403,7 +403,6 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
 
     ALLOCATE( Filenames(1:Num_Files) )
     ALLOCATE( File_IDs(1:Num_Files) )
-
 
 
 
@@ -432,7 +431,6 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
 !            PRINT*,Coefficient_Vector(i)
 !        END DO
 
-
     DO i = 1,Num_Files
         CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i), 200 )
     END DO
@@ -442,7 +440,6 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
     NUM_THETA_RAYS = WRITE_RESULTS_T_SAMPS
     NUM_PHI_RAYS = WRITE_RESULTS_P_SAMPS
     
-
 
     ! Create Radial Spacing !
     ALLOCATE( Output_rc(1:NUM_RADIAL_SAMPLES) )
@@ -479,12 +476,10 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
 
 
     ! Allocate Data Holders !
-
     ALLOCATE( Var_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES,1:6) )
     ALLOCATE( R_Holder(1:NUM_RADIAL_SAMPLES) )
     ALLOCATE( T_Holder(1:NUM_THETA_RAYS) )
     ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
-
 
 
     ! Calculate Output
@@ -510,13 +505,16 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
 !        END IF
 !        Var_Holder(k,j,i,3:5) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
 
-        Var_Holder(k,j,i,1) = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_CF)
-        Var_Holder(k,j,i,2) = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_LF)/Var_Holder(k,j,i,1)
+
+        CF = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_CF)
+
+        Var_Holder(k,j,i,1) = CF
+        Var_Holder(k,j,i,2) = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_LF)/CF
         Var_Holder(k,j,i,3) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S1, iVB_S)
         Var_Holder(k,j,i,4) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S2, iVB_S)
         Var_Holder(k,j,i,5) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S3, iVB_S)
         Var_Holder(k,j,i,6) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_X1, iVB_X)
-    
+
         R_Holder(i) = output_re(i)
         T_Holder(j) = THETA_VAL
         P_Holder(k) = PHI_VAL
@@ -526,7 +524,6 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
     END DO ! i Loop
     END DO ! j Loop
     END DO ! k Loop
-
 
 
 
@@ -542,7 +539,6 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
     Units = 1.0_idp
     Units(3) = Shift_Units
     ! Write Output Value Files
-
 
     Here = 5
     DO i = 1,5
@@ -569,7 +565,6 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
 
 
 END IF
-
 
 
 END SUBROUTINE OUTPUT_FINAL_RESULTS

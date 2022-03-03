@@ -177,4 +177,3 @@ PROCEDURE(Calc_Var_At_Location_B_Pointer), POINTER      ::  Calc_Var_At_Loc_B =>
 
 
 END MODULE Variables_Functions
-
