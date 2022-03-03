@@ -46,6 +46,20 @@ USE amrex_amrcore_module, ONLY: &
   amrex_ref_ratio, &
   amrex_max_level
 
+
+USE Poseidon_Units_Module, &
+            ONLY :  Grav_Constant_G,    &
+                    Speed_of_Light,     &
+                    C_Square,           &
+                    GR_Source_Scalar,   &
+                    Centimeter,         &
+                    Second,             &
+                    Millisecond,         &
+                    Erg,                &
+                    Gram,               &
+                    E_Units
+
+
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
                     AMReX_Num_Levels
@@ -95,9 +109,10 @@ USE Poseidon_MPI_Utilities_Module, &
 USE Variables_Yahil, &
             ONLY :  SelfSim_T,              &
                     SelfSim_Kappa,          &
-                    SelfSim_Gamma
+                    SelfSim_Gamma,          &
+                    Central_E
 
-USE Poseidon_AMReX_Virtual_Functions_Module, &
+USE Driver_AMReX_Virtual_Functions_Module, &
             ONLY :  VF_Make_New_Level_From_Scratch, &
                     VF_Make_New_Level_From_Coarse,  &
                     VF_Remake_Level,                &
@@ -114,6 +129,9 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
+
+USE SelfSimilar_Module, &
+            ONLY :  Calc_Yahil_Central_E
 
 USE MPI
 
@@ -142,20 +160,40 @@ INTEGER                                                 ::  Num_DOF
 
 
 INTEGER                                                 ::  Level
-
+REAL(idp)                                               ::  Kappa_wUnits
 
 IF ( Verbose_Flag ) THEN
     WRITE(*,'(A)')"-Creating AMReX Source Variables"
 END IF
 
 
+
+
+
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
+PRINT*,Yahil_Params(1), Millisecond
 SelfSim_T     = Yahil_Params(1)
 SelfSim_Kappa = Yahil_Params(2)
 SelfSim_Gamma = Yahil_Params(3)
+
+Kappa_wUnits = SelfSim_Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**SelfSim_Gamma)
+
+Central_E = Calc_Yahil_Central_E(SelfSim_T, SelfSim_Kappa, SelfSim_Gamma)
+
+
+IF ( Verbose_Flag ) THEN
+    WRITE(*,'(A)')'------------- Test Parameters ----------------'
+    WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
+    WRITE(*,'(A,ES12.5,A)') ' - Yahil Time      : ', SelfSim_T,' ms'
+    WRITE(*,'(A,ES12.5)')   ' - Kappa           : ', Kappa_wUnits
+    WRITE(*,'(A,ES12.5)')   ' - Gamma           : ', SelfSim_Gamma
+    WRITE(*,'(A,ES12.5,A)') ' - Central E       : ', Central_E/E_Units," Erg/cm^3"
+    WRITE(*,'(/)')
+END IF
+
 
 
 CALL amrex_init_virtual_functions &

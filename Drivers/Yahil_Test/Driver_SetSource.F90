@@ -44,6 +44,10 @@ USE Source_Input_Module, &
 USE Variables_Functions, &
             ONLY :  Potential_Solution
 
+USE Variables_IO, &
+            ONLY :  Write_Flags,        &
+                    iWF_Source
+
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
                     TimerSTop
@@ -54,6 +58,11 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
+USE Quadrature_Mapping_Functions, &
+            ONLY :  Quad_Map
+
+USE Poseidon_IO_Module, &
+            ONLY :  Output_Poseidon_Sources_3D
 
 IMPLICIT NONE
 
@@ -97,7 +106,7 @@ INTEGER                                                 ::  Num_DOF
 INTEGER                                                 ::  Here
 
 INTEGER                                                 ::  re, te, pe
-INTEGER                                                 ::  rq, tq, pq
+INTEGER                                                 ::  rd, td, pd
 REAL(idp), DIMENSION(1:NQ(1))                           ::  Cur_R_Locs
 
 REAL(idp)                                               ::  Psi_Holder
@@ -159,21 +168,19 @@ IF ( Solver_Type == 3 ) THEN
 
     Cur_R_Locs = dx_c(re)*(R_Quad(:) - Left_Limit) + x_e(re-1)
 
-    DO rq = 1,NQ(1)
+    DO rd = 1,NQ(1)
 
     Psi_Holder = 1.0_idp    &
-               - 0.5_idp*Potential_Solution(cur_r_locs(rq), 0.0_idp, 0.0_idp)/C_Square
+               - 0.5_idp*Potential_Solution(cur_r_locs(rd), 0.0_idp, 0.0_idp)/C_Square
     Psi_Power  = Psi_Holder**6
 
 
 !    PRINT*,re,te,pe, Psi_Holder,x_e(re-1)
 
-    DO pq = 1,NQ(3)
-    DO tq = 1,NQ(2)
+    DO pd = 1,NQ(3)
+    DO td = 1,NQ(2)
 
-        here = (pq-1)*NQ(1)*NQ(2)   &
-             + (tq-1)*NQ(1)         &
-             + rq
+        here = Quad_Map(rd,td,pd)
 
         Local_E(Here,re-1,te-1,pe-1) = Local_E(Here,re-1,te-1,pe-1)*Psi_Power
         Local_S(Here,re-1,te-1,pe-1) = Local_S(Here,re-1,te-1,pe-1)*Psi_Power
@@ -220,7 +227,7 @@ CALL Poseidon_Input_Sources(    myID, myID, myID,               &
 
 
 
-IF ( .FALSE. ) THEN
+IF ( Write_Flags(iWF_Source) > 0 ) THEN
 
     CALL Output_Poseidon_Sources_3D( Local_E, Local_S, Local_Si,     &
                                      NE(1), NE(2), NE(3),            &

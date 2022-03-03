@@ -76,6 +76,11 @@ USE Poseidon_MPI_Utilities_Module, &
                         MPI_Master_Print,       &
                         MPI_All_Print
 
+#ifdef POSEIDON_AMREX_FLAG
+use amrex_fort_module, &
+                ONLY :  amrex_spacedim
+#endif
+
 IMPLICIT NONE
 
 
@@ -167,11 +172,15 @@ ELSEIF ( iU == 3) THEN
        tpd  = Map_To_tpd(td,pd)
        Here = Quad_Map(rd,td,pd)
 
-!        PRINT*,iE,rd,td,pd,Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
+!       PRINT*,iE,rd,td,pd,Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
        Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
 
    END DO ! pd
    END DO ! td
+!
+!    PRINT*,iE,rd
+!    PRINT*,Source(:,rd)
+
    END DO ! rd
 
 ELSE IF ( iU == 4) THEN
@@ -225,6 +234,22 @@ INTEGER                                                         :: rd, td, pd, t
 INTEGER                                                         :: Here, There
 
 INTEGER                                                         :: ierr
+INTEGER                                                         ::  iEOff(3)
+
+
+#ifdef POSEIDON_AMREX_FLAG
+IF ( amrex_spacedim == 1 ) THEN
+    iEoff(2:3) = 1
+ELSEIF ( amrex_spacedim == 2) THEN
+    iEoff(2)   = iE(2)
+    iEoff(3)   = 1
+ELSEIF ( amrex_spacedim == 3 ) THEN
+    iEoff(2:3) = iE(2:3)
+END IF
+#else
+    iEOff(2:3) = iE(2:3)
+    PRINT*,"Warining Get_Physical Source_AMReX is being called with the POSEIDON_AMREX_FLAG = False."
+#endif
 
 !PRINT*,"In Physical_Source_AMReX, MyID ",myID_Poseidon," - ",iE(1),iE(2),iE(3)
 !CALL MPI_Barrier(Poseidon_Comm_World, ierr )
@@ -238,7 +263,7 @@ IF ( iU == 1 ) THEN
 
         tpd = Map_To_tpd(td,pd)
         Here = (iS_E-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
-        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
+        Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
 !        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here)
 
     END DO ! pd
@@ -254,8 +279,8 @@ ELSEIF ( iU == 2 ) THEN
         tpd = Map_To_tpd(td,pd)
         Here = (iS_E-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
         There = (iS_S-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
-        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)  &
-                    + 2.0_idp*Source_PTR(iE(1),iE(2),iE(3),There)
+        Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)  &
+                    + 2.0_idp*Source_PTR(iE(1),iEOff(2),iEOff(3),There)
 
 !        PRINT*,iE, rd,td,pd
 !        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here),              &
@@ -273,11 +298,7 @@ ELSE IF ( iU == 3) THEN
         tpd = Map_To_tpd(td,pd)
         Here = (iS_S1-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
-!        PRINT*,"Here ",Here,iE(1),iE(2),iE(3)
-!        PRINT*,iE,rd,td,pd,Source_PTR(iE(1),iE(2),iE(3),Here)
-        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
-!        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here)
-!        PRINT*,"myID ",myID_Poseidon," - ",Source(tpd,rd)
+        Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
 
     END DO ! pd
     END DO ! td
@@ -292,7 +313,7 @@ ELSE IF ( iU == 4) THEN
         tpd = Map_To_tpd(td,pd)
         Here = (iS_S2-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
-        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
+        Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
 
 
     END DO ! pd
@@ -308,7 +329,7 @@ ELSE IF ( iU == 5 ) THEN
         tpd = Map_To_tpd(td,pd)
         Here = (iS_S3-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
-        Source(tpd,rd) = Source_PTR(iE(1),iE(2),iE(3),Here)
+        Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
         
 
     END DO ! pd

@@ -42,6 +42,8 @@ LOGICAL, PUBLIC                                         ::  SelfSim_Allocated = 
 
 INTEGER                                                 ::  OUTPUT_PRIMATIVES_FLAG = 0
 
+REAL(KIND=idp), PUBLIC                                  ::  Central_E
+
 
 END MODULE Variables_Yahil
 

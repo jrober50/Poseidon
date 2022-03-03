@@ -110,6 +110,9 @@ USE Timer_Variables_Module, &
                     Timer_Driver_Run,           &
                     Timer_Driver_Extra
 
+USE Poseidon_XCFC_Interface_Module, &
+            ONLY : Poseidon_Return_ExtrinsicCurvature
+
 USE MPI
 
 
@@ -189,6 +192,7 @@ INTEGER                                                 ::  T_Index_Max
 REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
 
+INTEGER                                                 ::  AMReX_Levels
 INTEGER                                                 ::  Max_Iterations
 REAL(idp)                                               ::  CC_Option
 
@@ -208,6 +212,8 @@ REAL(idp)                                               ::  ADM_Phys
 REAL(idp)                                               ::  ADM_Curve
 
 REAL(idp)                                               ::  Komar_Mass
+REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Output_Kij
+
 
 CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
@@ -224,7 +230,7 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "G"
 Solver_Type         = 3
 
-RE_Table            = (/ 18, 128, 160, 240, 320, 400, 600, 256, 512 /)
+RE_Table            = (/ 128, 256, 384, 512, 640, 768, 896, 1024, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
@@ -235,14 +241,17 @@ T_Index_Max         =  1
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  1
-RE_Index_Max        =  1
+RE_Index_Min        =  4
+RE_Index_Max        =  4
 
 Degree_Min          =  1
 Degree_Max          =  1
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
+
+AMReX_Levels        =  1
+
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
@@ -260,17 +269,18 @@ Dimension_Input     = 3
 Max_Iterations      = 10
 CC_Option           = 1.0E-10_idp
 
-Mesh_Type           = 6                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 6                        ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
+Domain_Edge(2)      = 1E9_idp                   ! Outer Radius (cm)
+
 
 
 NE(1)               = 128 ! 1.5*128                       ! Number of Radial Elements
-NE(2)               = 2                        ! Number of Theta Elements
-NE(3)               = 2                        ! Number of Phi Elements
+NE(2)               = 1                        ! Number of Theta Elements
+NE(3)               = 1                        ! Number of Phi Elements
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 5                        ! Number of Theta Quadrature Points
+NQ(2)               = 1                        ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
@@ -305,12 +315,14 @@ DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     
+    IF ( Mesh_Type == 6 ) THEN
+        NE(1) = INT(RE_Table(RE_Index)*(1.0_idp + REAL((AMReX_Levels-1),idp)/2.0_idp))
+    ELSE
+        NE(1) = RE_Table(RE_Index)
+    END IF
+    NQ(3) = 2*L_Limit_Input + 1
 
-
-    NE(1) = RE_Table(RE_Index)
-!    NQ(3) = 2*L_Limit_Input + 1
-
-    Suffix_Tail = Letter_Table(Mesh_Type)
+    Suffix_Tail = Letter_Table(T_Index)
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -326,6 +338,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     ALLOCATE( dy_c(1:NE(2)) )
     ALLOCATE( dz_c(1:NE(3)) )
 
+    ALLOCATE( Output_Kij(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3),1:6) )
 
 
 
@@ -350,10 +363,10 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         x_e, x_c, dx_c,    &
                         y_e, y_c, dy_c,    &
                         z_e, z_c, dz_c,     &
-                        Zoom = 1.032034864238313_idp )
+                        Zoom = 1.032034864238313_idp,   &
+                        Levels_In = AMReX_Levels       )
 
-
-    PRINT*,x_e
+    
 
     !############################################################!
     !#                                                          #!
@@ -382,12 +395,12 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
            Verbose_Option              = Verbose,                       &
            WriteAll_Option             = .FALSE.,                       &
            Print_Setup_Option          = .TRUE.,                        &
-           Write_Setup_Option          = .FALSE.,                       &
+           Write_Setup_Option          = .TRUE.,                       &
            Print_Results_Option        = Print_Results_Flag,            &
            Write_Results_Option        = .TRUE.,                        &
            Print_Timetable_Option      = .TRUE.,                       &
-           Write_Timetable_Option      = .FALSE.,                       &
-           Write_Sources_Option        = .FALSE.                        )
+           Write_Timetable_Option      = .TRUE.,                       &
+           Write_Sources_Option        = .TRUE.                        )
 
 
 
@@ -497,7 +510,13 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     CALL TimerStop( Timer_Driver_Extra )
 
 
-
+    CALL Poseidon_Return_ExtrinsicCurvature( NE, NQ,                &
+                                             Input_R_Quad,          &
+                                             Input_T_Quad,          &
+                                             Input_P_Quad,          &
+                                             Left_Limit,            &
+                                             Right_Limit,           &
+                                             Output_Kij             )
 
 
 

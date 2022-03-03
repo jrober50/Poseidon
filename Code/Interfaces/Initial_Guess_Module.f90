@@ -97,7 +97,6 @@ REAL(idp), INTENT(IN)                                                           
 REAL(idp), INTENT(IN)                                                               :: Right_Limit
 
 
-
 IF ( Method_Flag == 1 ) THEN
 
     CALL NR_Input_Guess( Psi_Guess,                                  &
@@ -110,7 +109,7 @@ IF ( Method_Flag == 1 ) THEN
 
 
 ELSE IF ( Method_Flag >= 2 ) THEN
-    PRINT*,"Before FP_Input_Guess"
+
     CALL FP_Input_Guess( Psi_Guess,                                  &
                          AlphaPsi_Guess,                             &
                          Beta_Guess,                                 &

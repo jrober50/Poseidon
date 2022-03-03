@@ -66,6 +66,15 @@ USE Variables_FP, &
             ONLY :  FP_Coeff_Vector_A,          &
                     FP_Coeff_Vector_B
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X2
 
 USE FP_Functions_Mapping, &
             ONLY :  FP_Array_Map_TypeB
@@ -74,8 +83,9 @@ USE Functions_Domain_Maps, &
             ONLY :  Map_To_tpd,                 &
                     Map_To_FEM_Node
 
-USE Poseidon_AMReX_Multilayer_Utilities_Module, &
-            ONLY :  Find_Coarsest_Parent
+USE Functions_Mesh, &
+            ONLY :  FEM_Elem_Map
+
 
 
 IMPLICIT NONE
@@ -151,9 +161,9 @@ INTEGER,   INTENT(IN)                                       ::  Level
 
 
 INTEGER                                                     ::  tpd, td, pd
-REAL(idp)                                                   ::  Int_P_Weight
+!REAL(idp)                                                   ::  Int_P_Weight
 
-Int_P_Weight = (2*pi/(Num_P_Elements*2**Level))/Num_P_Quad_Points
+!Int_P_Weight = (2*pi/(Num_P_Elements*2**Level))/Num_P_Quad_Points
 
 
                          !                                                 !
@@ -172,10 +182,9 @@ DO pd = 1,NUM_P_QUAD_POINTS
    tpd = Map_To_tpd(td,pd)
    tpWeights( tpd ) = SIN_VAL(tpd)                   &
                     * DTOT * INT_T_WEIGHTS(td)      &
-                    * Int_P_Weight
+                    * Int_P_Weights(pd)
 
-
-
+!    PRINT*,tpWeights(tpd),SIN_VAL(tpd)
 END DO
 END DO
 
@@ -209,7 +218,7 @@ INTEGER                                     :: iRE, iCT
 
 !PRINT*,"1A"
 #ifdef POSEIDON_AMREX_FLAG
-    iRE = Find_Coarsest_Parent(iE(1),Level)
+    iRE = FEM_Elem_Map(iE(1),Level)
 #else
     iRE = iE(1)
 #endif
@@ -225,13 +234,9 @@ END DO ! d
 
 
 
-#if POSEIDON_AMREX_FLAG
+
 !PRINT*,"3A"
-iCT = 2**level + mod(iE(1),2**level) - 1
-
-!PRINT*,iCT, iE(1),Level,mod(iE(1),2**level)
-!PRINT*,LagPoly_MultiLayer_Table( :, :, 0, iCT)
-
+iCT = 0
 
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
@@ -240,34 +245,23 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     DO d = 0,DEGREE
 
 
- 
+#if POSEIDON_AMREX_FLAG
+
         TMP_Val = TMP_Val                               &
             + SUM( FP_Coeff_Vector_A( Here(d), :, iU )  &
                    * Ylm_Elem_Values( :, tpd )   )      &
             * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
 
-    END DO  ! d
-
-    Val(tpd,rd)       = REAL(TMP_Val, KIND = idp)
-
-END DO ! td
-END DO ! rd
-
-
 #else
 
-
-DO rd = 1,NUM_R_QUAD_POINTS
-DO tpd = 1,NUM_TP_QUAD_POINTS
-    
-    TMP_Val = 0.0_idp
-    DO d = 0,DEGREE
 
         TMP_Val = TMP_Val                                   &
             + SUM( FP_Coeff_Vector_A( Here(d), :, iU )      &
                    * Ylm_Values( :, tpd, iE(2), iE(3) ) )   &
             * Lagrange_Poly_Table( d, rd, 0 )
 
+#endif
+
 
     END DO  ! d
 
@@ -276,7 +270,8 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 END DO ! td
 END DO ! rd
 
-#endif
+
+
 
 END SUBROUTINE Calc_Val_On_Elem_TypeA
 
@@ -305,7 +300,7 @@ INTEGER                                     ::  iRE, iCT
 
 
 #ifdef POSEIDON_AMREX_FLAG
-    iRE = Find_Coarsest_Parent(iE(1),Level)
+    iRE = FEM_Elem_Map(iE(1),Level)
 #else
     iRE = iE(1)
 #endif
@@ -313,8 +308,11 @@ INTEGER                                     ::  iRE, iCT
 
 
 
-#if POSEIDON_AMREX_FLAG
-iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+
+!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+iCT = 0
+
+
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
@@ -323,6 +321,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
    DO d = 0,DEGREE
        Here = Map_To_FEM_Node(iRE,d)
 
+#if POSEIDON_AMREX_FLAG
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                    + SUM( FP_Coeff_Vector_A( Here, :, iU )      &
@@ -341,26 +340,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                          * Ylm_Elem_dp_Values( :, tpd )     )   &
                    * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
 
-   END DO  ! d
-
-   Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
-   Drv(tpd,rd,2)       = REAL(TMP_Drv(2), KIND = idp)
-   Drv(tpd,rd,3)       = REAL(TMP_Drv(2), KIND = idp)
-
-END DO ! td
-END DO ! rd
-
-
 #else
-
-
-DO rd = 1,NUM_R_QUAD_POINTS
-DO tpd = 1,NUM_TP_QUAD_POINTS
-
-   
-   TMP_Drv = 0.0_idp
-   DO d = 0,DEGREE
-       Here = Map_To_FEM_Node(iRE,d)
 
        TMP_Drv(1) = TMP_Drv(1)                                      &
                   + SUM( FP_Coeff_Vector_A( Here, :, iU )           &
@@ -379,6 +359,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                         * Ylm_dp_Values( :, tpd, iE(2), iE(3))   )  &
                   * Lagrange_Poly_Table( d, rd, 0)
 
+#endif
 
 
    END DO  ! d
@@ -390,7 +371,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 END DO ! td
 END DO ! rd
 
-#endif
+
 
 
 END SUBROUTINE Calc_Drv_On_Elem_TypeA
@@ -421,15 +402,17 @@ INTEGER                                     ::  iRE, iCT
 
 
 #ifdef POSEIDON_AMREX_FLAG
-    iRE = Find_Coarsest_Parent(iE(1),Level)
+    iRE = FEM_Elem_Map(iE(1),Level)
 #else
     iRE = iE(1)
 #endif
 
 
 
-#ifdef POSEIDON_AMREX_FLAG
-iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+
+!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+iCT = 0
+
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
@@ -438,6 +421,8 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
    DO d = 0,DEGREE
        Here = Map_To_FEM_Node(iRE,d)
 
+
+#ifdef POSEIDON_AMREX_FLAG
         TMP_Val = TMP_Val                                       &
             + SUM( FP_Coeff_Vector_A( Here, :, iU )             &
                    * Ylm_Elem_Values( :, tpd )   )              &
@@ -461,28 +446,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                          * Ylm_Elem_dp_Values( :, tpd )     )   &
                    * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
 
-   END DO  ! d
-
-   Val(tpd,rd)         = REAL(TMP_Val,    KIND = idp)
-   Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
-   Drv(tpd,rd,2)       = REAL(TMP_Drv(2), KIND = idp)
-   Drv(tpd,rd,3)       = REAL(TMP_Drv(2), KIND = idp)
-
-END DO ! td
-END DO ! rd
-
-
-
-
 #else
-DO rd = 1,NUM_R_QUAD_POINTS
-DO tpd = 1,NUM_TP_QUAD_POINTS
-
-   TMP_Val = 0.0_idp
-   TMP_Drv = 0.0_idp
-   DO d = 0,DEGREE
-       Here = Map_To_FEM_Node(iRE,d)
-
 
        TMP_Val = TMP_Val                                        &
                + SUM( FP_Coeff_Vector_A( Here, :, iU )          &
@@ -507,6 +471,10 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                         * Ylm_dp_Values( :, tpd, iE(2), iE(3))   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
 
+#endif
+
+
+
    END DO  ! d
 
    Val(tpd,rd)         = REAL(TMP_Val,    KIND = idp)
@@ -517,7 +485,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 END DO ! td
 END DO ! rd
 
-#endif
+
 
 
 
@@ -559,15 +527,17 @@ INTEGER                                     ::  iRE, iCT
 
 
 #ifdef POSEIDON_AMREX_FLAG
-    iRE = Find_Coarsest_Parent(iE(1),Level)
+    iRE = FEM_Elem_Map(iE(1),Level)
 #else
     iRE = iE(1)
 #endif
 
 
 
-#ifdef POSEIDON_AMREX_FLAG
-iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+
+!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+iCT = 0
+
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
@@ -577,38 +547,23 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
         Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
+
+
+#ifdef POSEIDON_AMREX_FLAG
 
         TMP_Val = TMP_Val                                   &
                + SUM( FP_Coeff_Vector_B( Here:There, iVB )  &
                        * Ylm_Elem_Values( :, tpd )      )   &
                * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
-    END DO  ! d
-
-    Val(tpd,rd)       = REAL(TMP_Val, KIND = idp)
-
-END DO ! td
-END DO ! rd
-
-
-
-
 
 #else
-
-DO rd = 1,NUM_R_QUAD_POINTS
-DO tpd = 1,NUM_TP_QUAD_POINTS
-
-   
-    TMP_Val = 0.0_idp
-    DO d = 0,DEGREE
-
-        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
-        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
 
         TMP_Val = TMP_Val                                   &
                + SUM( FP_Coeff_Vector_B( Here:There, iVB )  &
                        * Ylm_Values( :, tpd, iE(2), iE(3) )   )   &
                * Lagrange_Poly_Table( d, rd, 0 )
+#endif
+
 
     END DO  ! d
 
@@ -618,7 +573,7 @@ END DO ! td
 END DO ! rd
 
 
-#endif
+
 
 END SUBROUTINE Calc_Val_On_Elem_TypeB
 
@@ -648,14 +603,17 @@ INTEGER                                     ::  iRE, iCT
 
 
 #ifdef POSEIDON_AMREX_FLAG
-    iRE = Find_Coarsest_Parent(iE(1),Level)
+    iRE = FEM_Elem_Map(iE(1),Level)
 #else
     iRE = iE(1)
 #endif
 
 
-#ifdef POSEIDON_AMREX_FLAG
-iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+
+!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+iCT = 0
+
+
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
@@ -665,6 +623,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
         Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
 
+#ifdef POSEIDON_AMREX_FLAG
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
@@ -682,27 +641,8 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
                         * Ylm_Elem_dp_Values( :, tpd )      )   &
                   * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
-    END DO  ! d
-
-    Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
-    Drv(tpd,rd,2)       = REAL(TMP_Drv(2), KIND = idp)
-    Drv(tpd,rd,3)       = REAL(TMP_Drv(2), KIND = idp)
-
-END DO ! td
-END DO ! rd
-
-
-
 
 #else
-DO rd = 1,NUM_R_QUAD_POINTS
-DO tpd = 1,NUM_TP_QUAD_POINTS
-
-   
-    TMP_Drv = 0.0_idp
-    DO d = 0,DEGREE
-        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
-        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
@@ -721,6 +661,9 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                         * Ylm_dp_Values( :, tpd, iE(2), iE(3))   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
 
+#endif
+
+
     END DO  ! d
 
     Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
@@ -730,7 +673,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 END DO ! td
 END DO ! rd
 
-#endif
+
 
 
 END SUBROUTINE Calc_Drv_On_Elem_TypeB
@@ -764,15 +707,14 @@ INTEGER                                     ::  iRE, iCT
 
 
 #ifdef POSEIDON_AMREX_FLAG
-    iRE = Find_Coarsest_Parent(iE(1),Level)
+    iRE = FEM_Elem_Map(iE(1),Level)
 #else
     iRE = iE(1)
 #endif
-!PRINT*,Level,iE,iRE
 
 
-#ifdef POSEIDON_AMREX_FLAG
-iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
+iCT = 0
 
 
 
@@ -785,15 +727,12 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     DO d = 0,DEGREE
         Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
-
         
-
+#ifdef POSEIDON_AMREX_FLAG
         TMP_Val = TMP_Val                                       &
                + SUM( FP_Coeff_Vector_B( Here:There, iVB )      &
                        * Ylm_Elem_Values( :, tpd )          )   &
                * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
-
-!        PRINT*,Here, There,FP_Coeff_Vector_B( Here:There, iVB )
 
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
@@ -808,35 +747,13 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                         * Ylm_Elem_dt_Values( :, tpd )      )   &
                   * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
 
+
         TMP_Drv(3) = TMP_Drv(3)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
                         * Ylm_Elem_dp_Values( :, tpd )      )   &
                   * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
-   END DO  ! d
-
-   Val(tpd,rd)         = REAL(TMP_Val,    KIND = idp)
-   Drv(tpd,rd,1)       = REAL(TMP_Drv(1), KIND = idp)
-   Drv(tpd,rd,2)       = REAL(TMP_Drv(2), KIND = idp)
-   Drv(tpd,rd,3)       = REAL(TMP_Drv(2), KIND = idp)
-
-END DO ! td
-END DO ! rd
-
-
-
-
-
 
 #else
-DO rd = 1,NUM_R_QUAD_POINTS
-DO tpd = 1,NUM_TP_QUAD_POINTS
-
-    TMP_Val = 0.0_idp
-    TMP_Drv = 0.0_idp
-    DO d = 0,DEGREE
-        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
-        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
-
 
         TMP_Val = TMP_Val                                       &
                + SUM( FP_Coeff_Vector_B( Here:There, iVB )      &
@@ -844,7 +761,6 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                * Lagrange_Poly_Table( d, rd, 0 )
 
 
-!        PRINT*,Here,There,FP_Coeff_Vector_B( Here:There, iVB )
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
@@ -852,16 +768,22 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                   * Lagrange_Poly_Table( d, rd, 1 )             &
                   / DROT
 
-
         TMP_Drv(2) = TMP_Drv(2)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
                         * Ylm_dt_Values( :, tpd, iE(2), iE(3))   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
 
+
+
         TMP_Drv(3) = TMP_Drv(3)                                 &
                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
                         * Ylm_dp_Values( :, tpd, iE(2), iE(3))   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
+
+
+
+#endif
+
 
    END DO  ! d
 
@@ -874,7 +796,7 @@ END DO ! td
 END DO ! rd
 
 
-#endif
+
 
 
 

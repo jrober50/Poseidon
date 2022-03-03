@@ -81,6 +81,9 @@ USE Timer_VAriables_Module, &
             ONLY :  Timer_Core_Init_Test_Problem
 
 
+USE Quadrature_Mapping_Functions, &
+            ONLY :  Quad_Map
+
 IMPLICIT NONE
 
 CONTAINS
@@ -227,6 +230,8 @@ END IF
 
 t = t_in*Millisecond
 
+PRINT*,t_in,Millisecond
+
 R_Factor = SQRT(Kappa_wUnits)                                &
         *(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))       &
         *((t)**(2.0_idp-gamma))
@@ -259,7 +264,7 @@ IF ( SELFSIM_V_SWITCH == 1 ) THEN
     Input_V = 0.0_idp
 END IF
 
-
+!Input_V = 0.0_idp
 !PRINT*,"Delta_R"
 !print*,Delta_R
 !print*,"r_locs"
@@ -610,13 +615,20 @@ M_FACTOR = kappa**(3.0_idp/2.0_idp)                             &
          * t**(4.0_idp- 3.0_idp* gamma )
 
 
+!PRINT*,D_Factor,V_Factor,X_Factor,M_Factor
+
+
+!PRINT*,Input_R_Quad
+
 DO pe = 0,NUM_P_ELEM-1
 DO te = 0,NUM_T_ELEM-1
 
     line_min = 1
     DO re = 0,NUM_R_ELEM-1
         CUR_R_LOCS(:) = Delta_R(Re+1) * (INPUT_R_QUAD(:)+0.5_idp) + r_locs(re)
-
+    
+!        PRINT*,re,Delta_R(re+1)
+!        PRINT*,Cur_R_Locs
 
         DO rd = 1,NUM_NODES(1)
             xloc = CUR_R_LOCS(rd)*X_Factor
@@ -657,15 +669,13 @@ DO te = 0,NUM_T_ELEM-1
             Si = Density*Specific_Enthalpy*LF_sqr*Velocity/C_Square
             S  = Density*Specific_Enthalpy*LF_sqr*vsqr/C_Square + 3.0_idp* Pressure
 
-!            PRINT*,re,E,S,Si
+!            PRINT*,re,rd,cur_r_locs(rd),E,S,Si
 !            PRINT*,re,Velocity
 
             DO pd = 1,NUM_NODES(3)
             DO td = 1,NUM_NODES(2)
 
-                nd = (pd-1)*NUM_NODES(2)*NUM_NODES(1)   &
-                   + (td-1)*NUM_NODES(1)                &
-                   + rd
+                nd = Quad_Map(rd,td,pd)
 
                 Input_E(nd, re,te,pe) = E
                 Input_Si(nd, re, te, pe, 1) = Si
@@ -781,9 +791,12 @@ X_Factor = kappa**(-0.5_idp)                               &
         *(Grav_Constant_G**((gamma-1.0_idp)/2.0_idp))       &
         *((t)**(gamma-2.0_idp))
 
+
+
 line_min = 1
 DO re = 0,NUM_R_ELEM-1
     CUR_R_LOCS(:) = Delta_R(Re+1) * (INPUT_R_QUAD(:)+0.5_idp) + r_locs(re)
+
 
 
     DO rd = 1,NUM_NODES(1)
@@ -816,9 +829,7 @@ DO pd = 1,NUM_NODES(3)
 DO td = 1,NUM_NODES(2)
 DO rd = 1,Num_Nodes(1)
 
-    nd = (pd-1)*NUM_NODES(2)*NUM_NODES(1)   &
-       + (td-1)*NUM_NODES(1)                &
-       + rd
+    nd = Quad_Map(rd,td,pd)
 
     Output_D(nd, re,:,:) = D_Holder(re*Num_Nodes(1)+rd)
 
@@ -1360,48 +1371,152 @@ END FUNCTION Find_Line
 
 
 
-!+503+##################################################################!
-!                                                                       !
-!                                                                       !
-!#######################################################################!
-SUBROUTINE Find_Line_SUB( x, x_list, list_len )
 
-REAL( idp), INTENT(IN)                             :: x
-REAL( idp), DIMENSION(1:List_Len), INTENT(IN)      :: x_list(list_len)
-INTEGER, INTENT(IN)                                 :: list_len
-
-INTEGER                                     :: up, down, mid
-INTEGER                                     :: Find_Line
+!+101+###########################################################################!
+!                                                                                !
+!                  Initialize_Yahil_Sources                                           !
+!                                                                                !
+!################################################################################!
+FUNCTION Calc_Yahil_Central_E( t_in, gamma, kappa )
 
 
-up = list_len+1
-down = 1
-DO WHILE (up - down > 1)
-    mid = (up + down)/2
-    IF ( (x_list(list_len)>=x_list(1)).eqv.(x>=x_list(mid)) ) THEN
-        down = mid
-    ELSE
-        up = mid
-    END IF
+REAL(idp),  INTENT(IN)                      ::  t_in
+REAL(idp),  INTENT(IN)                      ::  kappa
+REAL(idp),  INTENT(IN)                      ::  gamma
+
+REAL(idp)                                   ::  Calc_Yahil_Central_E
+
+
+REAL(idp)                                   ::  t
+
+
+REAL(idp), DIMENSION(:),ALLOCATABLE         ::  Input_X,    &
+                                                Input_D,    &
+                                                Input_V,    &
+                                                Input_M
+
+REAL(idp)                                   ::  Density, Velocity
+
+REAL(idp)                                   ::  Pressure, Energy
+REAL(idp)                                   ::  vsqr, LF_sqr
+REAL(idp)                                   ::  E
+
+
+REAL(idp)                                   ::  D_FACTOR,               &
+                                                V_FACTOR
+
+REAL(idp)                                   ::  Specific_Enthalpy
+
+REAL(idp)                                   ::  Kappa_WUnits
+
+CHARACTER(LEN=128)                          :: line
+
+INTEGER                                     :: NUM_LINES
+INTEGER                                     :: CUR_LINE
+
+
+INTEGER                                     :: nread
+INTEGER                                     :: istat
+
+
+
+
+
+101 FORMAT (a128)
+
+
+nread = 42
+OPEN(UNIT=nread, FILE='../../Input/YahilHomologousCollapse_Gm_130.dat', STATUS='OLD', IOSTAT=istat)
+IF ( istat .NE. 0 ) THEN
+    PRINT*,"Could not open 'Input/YahilHomologousCollapse_Gm_130.dat'. "
+END IF
+REWIND(nread)
+NUM_LINES = 0
+DO
+    READ(nread, *, IOSTAT=istat) line
+    IF ( istat .NE. 0 ) EXIT
+    NUM_LINES = NUM_LINES + 1
+END DO
+NUM_LINES = NUM_LINES -1
+
+
+
+ALLOCATE( Input_X(1:NUM_LINES), Input_D(1:NUM_LINES), Input_V(1:NUM_LINES) )
+ALLOCATE( Input_M(1:NUM_LINES) )
+
+NUM_ENTRIES = NUM_LINES
+
+
+
+
+
+REWIND(nread)
+CUR_LINE = 1
+READ(nread,*)
+DO
+
+    READ(nread, 101, IOSTAT=istat) line
+    IF ( istat .NE. 0 ) EXIT
+
+
+    READ(line,*) Input_X(CUR_LINE), Input_D(CUR_LINE), Input_V(CUR_LINE), Input_M(CUR_LINE)
+    CUR_LINE = CUR_LINE + 1
+    
 END DO
 
-IF ( x == x_list(1) ) THEN
-    PRINT*,"First in Line"
-    Find_Line = 1
-ELSEIF ( x == x_list(list_len) ) THEN
-    PRINT*,"Last in Line"
-    Find_Line = list_len - 1
-ELSEIF ( down == List_len ) THEN
-    PRINT*,"Capped Out"
-    Find_Line = List_len - 1
-ELSE
-    PRINT*,"Else"
-    Find_Line = down
-END IF
+CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
 
-PRINT*,"Find_Line_Sub",Find_Line
 
-END SUBROUTINE Find_Line_SUB
+
+t = t_in*Millisecond
+
+Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
+
+
+D_FACTOR = 1.0_idp/(Grav_Constant_G*t*t )
+
+V_FACTOR = SQRT(kappa)                          &
+         * Grav_Constant_G**((1.0_idp-gamma)/2.0_idp)  &
+         * t**(1.0_idp- gamma)
+
+
+! Interpolate Self-Similar Values to Input locations
+Density  = INPUT_D(1)*D_FACTOR
+Velocity = INPUT_V(1)*V_FACTOR
+
+
+! Calculate Usable Quantities
+Pressure = kappa * Density**gamma
+Energy = Pressure/(gamma - 1.0_idp)
+
+Specific_Enthalpy = C_Square + (Energy + Pressure)/Density
+
+            
+vsqr = Velocity*Velocity
+LF_sqr = 1.0_idp/(1.0_idp- vsqr/C_Square)
+            
+
+!  Calculate CFA Input Values
+Calc_Yahil_Central_E  = Density*Specific_Enthalpy*LF_sqr - Pressure
+
+
+
+
+
+
+
+
+END FUNCTION  Calc_Yahil_Central_E
+
+
+
+
+
+
+
+
+
+
 
 
 

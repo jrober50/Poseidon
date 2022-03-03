@@ -168,7 +168,8 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
     Work_Vec = FP_Source_Vector_B(:,iVB)
 
-!    PRINT*,"Work_Vec"
+
+!    PRINT*,"Work_Vec, Type B"
 !    PRINT*,Work_Vec
 !    PRINT*,"+++++++++++++++++++++++++++++++++++"
 
@@ -220,7 +221,6 @@ CALL MPI_BCAST_Coeffs_TypeB(iVB,                     &
 
 
 #endif
-
 
 
 END SUBROUTINE XCFC_Solve_System_TypeB

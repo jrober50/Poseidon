@@ -142,15 +142,11 @@ IF ( ANY(CFA_Eq_Flags(iU_S1:iU_S3) == 1) ) THEN
 END IF
 
 
-
-
 CALL Deallocate_XCFC_Source_Variables()
-
 
 IF (myID_Poseidon == MasterID_Poseidon ) THEN
     CALL Output_Final_Results()
 END IF
-
 
 END SUBROUTINE XCFC_Method
 
@@ -202,9 +198,7 @@ CALL XCFC_Lapse_Solve()
 
 CALL XCFC_Shift_Solve()
 
-
 CALL Deallocate_XCFC_Source_Variables()
-
 
 CALL Output_Final_Results()
 

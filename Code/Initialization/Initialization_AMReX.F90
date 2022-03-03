@@ -131,6 +131,9 @@ USE Variables_MPI, &
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
 
+USE amrex_fort_module, &
+            ONLY :  amrex_spacedim
+
 USE amrex_box_module,   &
             ONLY:   amrex_box
 
@@ -332,7 +335,10 @@ CALL Init_IO_Params(WriteAll_Option,            &
                     Write_Results_Option,       &
                     Print_Timetable_Option,     &
                     Write_Timetable_Option,     &
-                    Write_Sources_Option        )
+                    Write_Sources_Option,       &
+                    Suffix_Flag_Option,         &
+                    Suffix_Tail_Option,         &
+                    Frame_Option                )
 
 
 
@@ -532,7 +538,17 @@ INTEGER, DIMENSION(3)                           ::  ELo, EHi
 INTEGER                                         ::  iLeaf  = 1
 INTEGER                                         ::  iTrunk = 0
 
+INTEGER, DIMENSION(3)                           ::  EOff
 
+
+IF ( amrex_spacedim == 1 ) THEN
+    Eoff(2:3) = 1
+ELSEIF ( amrex_spacedim == 2) THEN
+    Eoff(2)   = 0
+    Eoff(3)   = 1
+ELSEIF ( amrex_spacedim == 3 ) THEN
+    Eoff(2:3) = 0
+END IF
 
 iLeafElementsPerLvl = 0
 
@@ -576,8 +592,9 @@ DO lvl = 0,AMReX_Num_Levels-1
 
         ELo = Box%lo
         EHi = Box%hi
-        IF (( ELo(2) == 0 ) .AND. (Elo(3) == 0 )) THEN
-            iLeafElementsPerLvl(lvl) = iLeafElementsPerLvl(lvl) + SUM(Mask(:,0,0,:))
+
+        IF (( ELo(2) == EOff(2)) .AND. (Elo(3) == EOff(3) )) THEN
+            iLeafElementsPerLvl(lvl) = iLeafElementsPerLvl(lvl) + SUM(Mask(:,EOff(2),EOff(3),:))
         END IF
     END DO
     iNumLeafElements = Sum(iLeafElementsPerLvl)
@@ -624,6 +641,18 @@ INTEGER, CONTIGUOUS, POINTER                    :: Mask(:,:,:,:)
 
 INTEGER                                         :: iLeaf = 1
 INTEGER                                         :: iTrunk   = 0
+
+INTEGER, DIMENSION(3)                           ::  EOff
+
+
+IF ( amrex_spacedim == 1 ) THEN
+    Eoff(2:3) = 1
+ELSEIF ( amrex_spacedim == 2) THEN
+    Eoff(2)   = 0
+    Eoff(3)   = 1
+ELSEIF ( amrex_spacedim == 3 ) THEN
+    Eoff(2:3) = 0
+END IF
 
 
 
@@ -672,12 +701,12 @@ DO lvl = 0,AMReX_Num_Levels-1
         ELo = Box%lo
         EHi = Box%hi
 
-        IF (( ELo(2) == 0 ) .AND. (Elo(3) == 0 )) THEN
+        IF (( ELo(2) == EOff(2)) .AND. (Elo(3) == EOff(3) )) THEN
         DO RE = ELo(1), EHi(1)
             
             Here = SUM(iLeafElementsPerLvl(0:lvl-1) ) + Offset
 
-            IF ( SUM(Mask(RE,0,0,:)) == iLeaf ) THEN
+            IF ( SUM(Mask(RE,EOff(2),EOff(3),:)) == iLeaf ) THEN
                 FindLoc_Table(Here) = RE
                 Offset = Offset + 1
             END IF
@@ -695,8 +724,8 @@ DO lvl = 0,AMReX_Num_Levels-1
 
 END DO
 
-PRINT*,"FindLoc_Table"
-PRINT*,FindLoc_Table
+!PRINT*,"FindLoc_Table"
+!PRINT*,FindLoc_Table
 
 #endif
 END SUBROUTINE Create_Findloc_Table
@@ -754,8 +783,8 @@ DO elem = iNumLeafElements-1,0,-1
                                             ! Here-1 must be used as the array index.
 END DO
 
-PRINT*,"FEM_Elem_Table"
-PRINT*,FEM_Elem_Table
+!PRINT*,"FEM_Elem_Table"
+!PRINT*,FEM_Elem_Table
 
 
 #endif

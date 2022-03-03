@@ -5,7 +5,7 @@ POSEIDON = \
   $(MESH)            \
   $(QUAD)            \
   $(FUNCTIONS)       \
-  $(POSEIDON2AMREX)  \
+  $(AMREX_UTILITIES) \
   $(MPI)             \
   $(TABLES)          \
   $(IO)              \

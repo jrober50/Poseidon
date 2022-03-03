@@ -41,113 +41,126 @@ MODULE Poseidon_IO_Module                                                       
 
 
 USE Poseidon_Kinds_Module, &
-                    ONLY : idp
+            ONLY : idp
 
 USE Poseidon_Numbers_Module, &
-                    ONLY : pi
+            ONLY : pi
 
 USE Poseidon_Units_Module, &
-                    ONLY :  C_Square,       &
-                            Gram,           &
-                            Centimeter,     &
-                            Kilometer,      &
-                            Erg,            &
-                            Second,         &
-                            GravPot_Units,  &
-                            E_Units,        &
-                            S_Units,        &
-                            Si_Units,       &
-                            Shift_Units
+            ONLY :  C_Square,       &
+                    Gram,           &
+                    Centimeter,     &
+                    Kilometer,      &
+                    Erg,            &
+                    Second,         &
+                    GravPot_Units,  &
+                    E_Units,        &
+                    S_Units,        &
+                    Si_Units,       &
+                    Shift_Units
 
-
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,      &
+                    iU_LF,      &
+                    iU_S1,      &
+                    iU_S2,      &
+                    iU_S3,      &
+                    iU_X1,      &
+                    iU_X2,      &
+                    iU_X3,      &
+                    iVB_S,      &
+                    iVB_X
 
 USE Poseidon_Parameters, &
-                    ONLY :  DEGREE,                 &
-                            L_LIMIT,                &
-                            Num_CFA_Vars,           &
-                            Domain_Dim,             &
-                            CUR_ITERATION,          &
-                            Poseidon_Frame,         &
-                            Convergence_Type,       &
-                            Convergence_Flag,       &
-                            Max_Iterations
+            ONLY :  DEGREE,                 &
+                    L_LIMIT,                &
+                    Num_CFA_Vars,           &
+                    Domain_Dim,             &
+                    CUR_ITERATION,          &
+                    Poseidon_Frame,         &
+                    Convergence_Type,       &
+                    Convergence_Flag,       &
+                    Max_Iterations
 
 USE Variables_MPI, &
-                    ONLY :  myID_Poseidon
+            ONLY :  myID_Poseidon
 
 USE Variables_Derived, &
-                    ONLY :  Num_R_Nodes
+            ONLY :  Num_R_Nodes
 
 
 USE Variables_Mesh, &
-                    ONLY :  NUM_R_ELEMENTS,         &
-                            rlocs,                  &
-                            tlocs,                  &
-                            R_Inner,                &
-                            R_Outer
+            ONLY :  NUM_R_ELEMENTS,         &
+                    rlocs,                  &
+                    tlocs,                  &
+                    R_Inner,                &
+                    R_Outer
 
 USE Variables_IO, &
-                    ONLY :  Write_Flags,            &
-                            Report_Flags,           &
-                            Report_IDs,             &
-                            Iter_Time_Table,        &
-                            Frame_Time_Table,       &
-                            Run_Time_Table,         &
-                            Write_Results_R_Samps,  &
-                            Write_Results_T_Samps,  &
-                            Write_Results_P_Samps,  &
-                            Total_Run_Iters,        &
-                            Iter_Report_Num_Samples,&
-                            Iter_Time_Table,        &
-                            Frame_Residual_Table,   &
-                            Frame_Update_Table,     &
-                            Iteration_Histogram,    &
-                            File_Suffix,            &
-                            iWF_Source,             &
-                            iWF_Results,            &
-                            iRF_Run,                &
-                            iRF_Frame,              &
-                            iRF_Time,               &
-                            iRF_Iter
+            ONLY :  Write_Flags,            &
+                    Report_Flags,           &
+                    Report_IDs,             &
+                    Iter_Time_Table,        &
+                    Frame_Time_Table,       &
+                    Run_Time_Table,         &
+                    Write_Results_R_Samps,  &
+                    Write_Results_T_Samps,  &
+                    Write_Results_P_Samps,  &
+                    Total_Run_Iters,        &
+                    Iter_Report_Num_Samples,&
+                    Iter_Time_Table,        &
+                    Frame_Residual_Table,   &
+                    Frame_Update_Table,     &
+                    Iteration_Histogram,    &
+                    File_Suffix,            &
+                    iWF_Source,             &
+                    iWF_Results,            &
+                    iRF_Run,                &
+                    iRF_Frame,              &
+                    iRF_Time,               &
+                    iRF_Iter
 
 
 USE Variables_Yahil, &
-                    ONLY :  SelfSim_T
+            ONLY :  SelfSim_T
 
 USE Variables_Functions, &
-                    ONLY :  Potential_Solution,         &
-                            Shift_Solution,             &
-                            Calc_3D_Values_at_Location, &
-                            Calc_1D_CFA_Values
+            ONLY :  Potential_Solution,         &
+                    Shift_Solution,             &
+                    Calc_3D_Values_at_Location, &
+                    Calc_1D_CFA_Values,         &
+                    Calc_Var_At_Loc_A,          &
+                    Calc_Var_At_Loc_B
 
 USE Functions_Quadrature, &
-                    ONLY :  Initialize_LG_Quadrature_Locations,     &
-                            Initialize_LGL_Quadrature_Locations
+            ONLY :  Initialize_LG_Quadrature_Locations,     &
+                    Initialize_LGL_Quadrature_Locations
 
 
 USE Functions_Mesh, &
-                    ONLY :  Create_Logarithmic_1D_Mesh,             &
-                            Create_Uniform_1D_Mesh
+            ONLY :  Create_Logarithmic_1D_Mesh,             &
+                    Create_Uniform_1D_Mesh
 
 USE Poseidon_IO_Parameters, &
-                    ONLY :  Poseidon_Reports_Dir,                           &
-                            Poseidon_IterReports_Dir,                       &
-                            Poseidon_Objects_Dir,                           &
-                            Poseidon_Mesh_Dir,                              &
-                            Poseidon_LinSys_Dir,                            &
-                            Poseidon_Results_Dir,                           &
-                            Poseidon_Sources_Dir,                           &
-                            CFA_ShortVars
+            ONLY :  Poseidon_Reports_Dir,                           &
+                    Poseidon_IterReports_Dir,                       &
+                    Poseidon_Objects_Dir,                           &
+                    Poseidon_Mesh_Dir,                              &
+                    Poseidon_LinSys_Dir,                            &
+                    Poseidon_Results_Dir,                           &
+                    Poseidon_Sources_Dir,                           &
+                    CFA_ShortVars
 
 USE Functions_Info,   &
-                    ONLY  : PQ_ITERATIONS_MAX
+            ONLY  : PQ_ITERATIONS_MAX
 
 USE IO_File_Routines_Module, &
-                    ONLY :  Open_New_File,                  &
-                            Open_Existing_File
+            ONLY :  Open_New_File,                  &
+                    Open_Existing_File
 
 USE Variables_FP, &
-                    ONLY :  CFA_Eq_Flags
+            ONLY :  CFA_Eq_Flags
+
 
 
 IMPLICIT NONE
@@ -376,7 +389,7 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
                                                                 T_Holder,           &
                                                                 P_Holder
 
-REAL(idp), DIMENSION(Num_CFA_Vars)                          ::  Units
+REAL(idp), DIMENSION(6)                          ::  Units
 
 
 116 FORMAT (A,A,A,A,A,A)
@@ -386,7 +399,7 @@ REAL(idp), DIMENSION(Num_CFA_Vars)                          ::  Units
 IF ( Write_Flags(iWF_Results) > 1 ) THEN
 
 
-    Num_Files = 4 + SUM(CFA_Eq_Flags)
+    Num_Files = 4 + SUM(CFA_Eq_Flags)+1
 
     ALLOCATE( Filenames(1:Num_Files) )
     ALLOCATE( File_IDs(1:Num_Files) )
@@ -402,12 +415,13 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
     Here = 5
     DO i = 1,5
         IF ( CFA_Eq_Flags(i) == 1 ) THEN
-           WRITE(Filenames(Here),116)                &
+            Here = 5 + i - 1
+            WRITE(Filenames(Here),116)                &
                     Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
-            Here = Here + 1
         END IF
     END DO
-
+    WRITE(Filenames(Num_Files),116)                &
+    Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(6)),"_",TRIM(File_Suffix),".out"
 
 
 
@@ -466,7 +480,7 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
 
     ! Allocate Data Holders !
 
-    ALLOCATE( Var_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES,1:5) )
+    ALLOCATE( Var_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES,1:6) )
     ALLOCATE( R_Holder(1:NUM_RADIAL_SAMPLES) )
     ALLOCATE( T_Holder(1:NUM_THETA_RAYS) )
     ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
@@ -483,19 +497,26 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
         PHI_VAL = k*DELTA_PHI
         THETA_VAL = (j-1)*DELTA_THETA
 
-        CALL Calc_3D_Values_At_Location( output_re(i), THETA_VAL, PHI_VAL,           &
-                                         Return_Psi, Return_AlphaPsi,                &
-                                         Return_Beta1, Return_Beta2, Return_Beta3    )
+!        CALL Calc_3D_Values_At_Location( output_re(i), THETA_VAL, PHI_VAL,           &
+!                                         Return_Psi, Return_AlphaPsi,                &
+!                                         Return_Beta1, Return_Beta2, Return_Beta3    )
+!!
+!!
+!        Var_Holder(k,j,i,1) = Return_Psi
+!        IF ( Return_Psi == 0.0_idp ) THEN
+!            Var_Holder(k,j,i,2) = 0.0_idp
+!        ELSE
+!            Var_Holder(k,j,i,2) = Return_AlphaPsi/Return_Psi
+!        END IF
+!        Var_Holder(k,j,i,3:5) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
 
-
-        Var_Holder(k,j,i,1) = Return_Psi
-        IF ( Return_Psi == 0.0_idp ) THEN
-            Var_Holder(k,j,i,2) = 0.0_idp
-        ELSE
-            Var_Holder(k,j,i,2) = Return_AlphaPsi/Return_Psi
-        END IF
-        Var_Holder(k,j,i,3:5) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
-
+        Var_Holder(k,j,i,1) = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_CF)
+        Var_Holder(k,j,i,2) = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_LF)/Var_Holder(k,j,i,1)
+        Var_Holder(k,j,i,3) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S1, iVB_S)
+        Var_Holder(k,j,i,4) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S2, iVB_S)
+        Var_Holder(k,j,i,5) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S3, iVB_S)
+        Var_Holder(k,j,i,6) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_X1, iVB_X)
+    
         R_Holder(i) = output_re(i)
         T_Holder(j) = THETA_VAL
         P_Holder(k) = PHI_VAL
@@ -538,9 +559,16 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
     END DO
 
 
+    DO k = 1,NUM_PHI_RAYS
+    DO j = 1,NUM_THETA_RAYS
+
+        WRITE(File_IDs(Num_Files),*)Var_Holder(k,j,:,6)/Units(3)
+
+    END DO ! j Loop
+    END DO ! k Loop
+
 
 END IF
-
 
 
 
@@ -712,7 +740,6 @@ REAL(KIND = idp)                                                        ::  Delt
 
 116 FORMAT (A,A,A,A)
 
-
 IF ( Write_Flags(iWF_Source) == 1 ) THEN
     Num_Files = 6
 
@@ -838,25 +865,40 @@ REAL(KIND = idp)                                                        ::  Delt
 REAL(KIND = idp)                                                        ::  Dt_Over_DX
 
 
+INTEGER                                                                 ::  iSF_E     = 1
+INTEGER                                                                 ::  iSF_S     = 2
+INTEGER                                                                 ::  iSF_S1    = 3
+INTEGER                                                                 ::  iSF_X1    = 4
+INTEGER                                                                 ::  iSF_Dim   = 5
+INTEGER                                                                 ::  iSF_RLocs = 6
+INTEGER                                                                 ::  iSF_TLocs = 7
+INTEGER                                                                 ::  iSF_PLocs = 8
+INTEGER                                                                 ::  iSF_Time  = 9
+
 
 
 116 FORMAT (A,A,A,A)
 
+
 IF ( Write_Flags(iWF_Source) == 2 ) THEN
-    Num_Files = 8
+    Num_Files = 9
 
     ALLOCATE( Filenames(1:Num_Files) )
     ALLOCATE( File_IDs(1:Num_Files) )
 
-    WRITE(Filenames(1),116) Poseidon_Sources_Dir,"Sources_E_",trim(File_Suffix),".out"
-    WRITE(Filenames(2),116) Poseidon_Sources_Dir,"Sources_S_",trim(File_Suffix),".out"
-    WRITE(Filenames(3),116) Poseidon_Sources_Dir,"Sources_S1_",trim(File_Suffix),".out"
-    WRITE(Filenames(4),116) Poseidon_Sources_Dir,"Sources_Dimensions_",trim(File_Suffix),".out"
-    WRITE(Filenames(5),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",trim(File_Suffix),".out"
-    WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Theta_Locs_",trim(File_Suffix),".out"
-    WRITE(Filenames(7),116) Poseidon_Sources_Dir,"Sources_Phi_Locs_",trim(File_Suffix),".out"
 
-    WRITE(Filenames(8),116) Poseidon_Sources_Dir,"Sources_Time_",trim(File_Suffix),".out"
+
+
+    WRITE(Filenames(iSF_E),116) Poseidon_Sources_Dir,"Sources_E_",trim(File_Suffix),".out"
+    WRITE(Filenames(iSF_S),116) Poseidon_Sources_Dir,"Sources_S_",trim(File_Suffix),".out"
+    WRITE(Filenames(iSF_S1),116) Poseidon_Sources_Dir,"Sources_S1_",trim(File_Suffix),".out"
+    WRITE(Filenames(iSF_X1),116) Poseidon_Sources_Dir,"Sources_S1_",trim(File_Suffix),".out"
+    WRITE(Filenames(iSF_Dim),116) Poseidon_Sources_Dir,"Sources_Dimensions_",trim(File_Suffix),".out"
+    WRITE(Filenames(iSF_Rlocs),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",trim(File_Suffix),".out"
+    WRITE(Filenames(iSF_Tlocs),116) Poseidon_Sources_Dir,"Sources_Theta_Locs_",trim(File_Suffix),".out"
+    WRITE(Filenames(iSF_Plocs),116) Poseidon_Sources_Dir,"Sources_Phi_Locs_",trim(File_Suffix),".out"
+
+    WRITE(Filenames(iSF_Time),116) Poseidon_Sources_Dir,"Sources_Time_",trim(File_Suffix),".out"
 
     !WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Theta_Locs_",Poseidon_Frame,".out"
     !WRITE(Filenames(7),116) Poseidon_Sources_Dir,"Sources_Phi_Locs_",Poseidon_Frame,".out"

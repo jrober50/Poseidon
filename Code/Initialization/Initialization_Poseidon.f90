@@ -273,22 +273,12 @@ ELSE
     Verbose_Flag = .FALSE.
 END IF
 
-IF ( Verbose_Flag .EQV. .TRUE. ) THEN
+IF ( Verbose_Flag ) THEN
     PRINT*,"Initializing Poseidon..."
 END IF
 
 
-!
-!   Verbose Options
-!
-CALL Init_IO_Params(WriteAll_Option,            &
-                    Print_Setup_Option,         &
-                    Write_Setup_Option,         &
-                    Print_Results_Option,       &
-                    Write_Results_Option,       &
-                    Print_Timetable_Option,     &
-                    Write_Timetable_Option,     &
-                    Write_Sources_Option        )
+
 
 
 
@@ -439,7 +429,20 @@ END IF
 CALL Initialize_Mesh( )
 
 
-
+!
+!   Verbose Options
+!
+CALL Init_IO_Params(WriteAll_Option,            &
+                    Print_Setup_Option,         &
+                    Write_Setup_Option,         &
+                    Print_Results_Option,       &
+                    Write_Results_Option,       &
+                    Print_Timetable_Option,     &
+                    Write_Timetable_Option,     &
+                    Write_Sources_Option,       &
+                    Suffix_Flag_Option,         &
+                    Suffix_Tail_Option,         &
+                    Frame_Option                )
 
 
 

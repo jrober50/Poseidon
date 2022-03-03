@@ -20,56 +20,62 @@ MODULE IO_Setup_Report_Module                                                   
 !===================================!
 
 USE Poseidon_Kinds_Module, &
-                ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Numbers_Module, &
-                ONLY :  pi
+            ONLY :  pi
 
 USE Poseidon_Units_Module, &
-                ONLY :  Set_Units
+            ONLY :  Set_Units
 
 USE Poseidon_Parameters, &
-                ONLY :  Domain_Dim,             &
-                        Degree,                 &
-                        L_Limit,                &
-                        Method_Flag,            &
-                        Verbose_Flag,           &
-                        Convergence_Criteria,   &
-                        Num_CFA_Vars,           &
-                        Max_Iterations,         &
-                        Poisson_Mode
+            ONLY :  Domain_Dim,             &
+                    Degree,                 &
+                    L_Limit,                &
+                    Method_Flag,            &
+                    Verbose_Flag,           &
+                    Convergence_Criteria,   &
+                    Num_CFA_Vars,           &
+                    Max_Iterations,         &
+                    Poisson_Mode
 
 USE Poseidon_IO_Parameters, &
-                ONLY :  Method_Names,           &
-                        Poseidon_Reports_Dir
+            ONLY :  Method_Names,           &
+                    Poseidon_Reports_Dir
 
 USE Variables_MPI, &
-                ONLY :  myID_Poseidon,          &
-                        MasterID_Poseidon
+            ONLY :  myID_Poseidon,          &
+                    MasterID_Poseidon
 
 USE Variables_Mesh, &
-                ONLY :  Num_R_Elements,         &
-                        Num_T_Elements,         &
-                        Num_P_Elements,         &
-                        R_Inner,                &
-                        R_Outer
+            ONLY :  Num_R_Elements,         &
+                    Num_T_Elements,         &
+                    Num_P_Elements,         &
+                    R_Inner,                &
+                    R_Outer
 
 USE Variables_Quadrature, &
-                ONLY :  Num_R_Quad_Points,      &
-                        Num_T_Quad_Points,      &
-                        Num_P_Quad_Points
+            ONLY :  Num_R_Quad_Points,      &
+                    Num_T_Quad_Points,      &
+                    Num_P_Quad_Points
 
 USE Variables_FP,   &
-                ONLY :  FP_Anderson_M
+            ONLY :  FP_Anderson_M
 
 USE Variables_IO, &
-                ONLY :  Report_Flags,           &
-                        Report_IDs,             &
-                        File_Suffix,            &
-                        iRF_Setup
+            ONLY :  Report_Flags,           &
+                    Report_IDs,             &
+                    File_Suffix,            &
+                    iRF_Setup
 
 USE IO_File_Routines_Module, &
-                ONLY :  Open_New_File
+            ONLY :  Open_New_File
+
+
+USE Variables_AMReX_Core, &
+            ONLY :  AMReX_Max_Level,        &
+                    iNumLeafElements
+
 
 IMPLICIT NONE
 
@@ -248,6 +254,31 @@ END SUBROUTINE Output_NL_Solver_Report
 
 
 
+
+
+
+!+201+##################################################################!
+!                                                                       !
+!       PRINT_AMReX_Setup                                              !
+!                                                                       !
+!#######################################################################!
+SUBROUTINE PRINT_AMReX_Setup( )
+
+1400 FORMAT(/)
+1401 FORMAT('--------------- AMReX PARAMETERS ---------------')
+1402 FORMAT(' Maximum Level of Refinement = ',I5.1)
+1403 FORMAT(' # of Coarse Radial Elements = ',I5.1)
+1404 FORMAT(' # of Leaf Radial Elements   = ',I5.1)
+
+WRITE(*,1400)
+WRITE(*,1401)
+WRITE(*,1402)AMReX_Max_Level
+!WRITE(*,1403)
+WRITE(*,1404)iNumLeafElements
+WRITE(*,1400)
+
+
+END SUBROUTINE PRINT_AMReX_Setup
 
 
 

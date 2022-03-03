@@ -95,6 +95,13 @@ USE Variables_FP, &
             ONLY :  FP_Coeff_Vector_A,      &
                     FP_Coeff_Vector_B
 
+USE Variables_Mesh, &
+ONLY :  Num_R_Elements,         &
+        Num_T_Elements,         &
+        Num_P_Elements,         &
+        rlocs,                  &
+        drlocs
+
 USE MPI
 
 
@@ -166,8 +173,6 @@ REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
 REAL(idp), DIMENSION(3)                                 ::  Yahil_Params
 
-CHARACTER(len=60)                                       ::  AMReX_Profile_Input
-
 
 INTEGER                                                 ::  Max_Iterations
 REAL(idp)                                               ::  CC_Option
@@ -202,11 +207,11 @@ Solver_Type         = 3
 
 RE_Table            = (/ 32, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.15_idp, 0.05_idp /)
+Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  1
-T_Index_Max         =  1
+T_Index_Min         =  5
+T_Index_Max         =  5
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -241,21 +246,19 @@ Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
 Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
 
-NE(1)               = 128                       ! Number of Radial Elements
+NE(1)               = 128                      ! Number of Radial Elements
 NE(2)               = 1                        ! Number of Theta Elements
-NE(3)               = 1                         ! Number of Phi Elements
+NE(3)               = 1                        ! Number of Phi Elements
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 5                        ! Number of Theta Quadrature Points
-NQ(3)               = 5                         ! Number of Phi Quadrature Points
+NQ(2)               = 1                        ! Number of Theta Quadrature Points
+NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
 Verbose             = .TRUE.
 !Verbose             = .FALSE.
 Suffix_Input        = "Params"
 
-!AMReX_Profile_Input = 'SingleLayer'
-AMReX_Profile_Input = 'TwoLayer'
 
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
@@ -366,11 +369,11 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             Write_Setup_Option                  = .FALSE.,              &
             Print_Results_Option                = .TRUE.,               &
             Write_Results_Option                = .TRUE.,               &
-            Print_Timetable_Option              = .FALSE.,              &
-            Write_Timetable_Option              = .FALSE.,              &
+            Print_Timetable_Option              = .TRUE.,               &
+            Write_Timetable_Option              = .TRUE.,               &
             Write_Sources_Option                = .FALSE.,              &
-           Suffix_Flag_Option                   = Suffix_Input,         &
-           Suffix_Tail_Option                   = Suffix_Tail           )
+            Suffix_Flag_Option                   = Suffix_Input,        &
+            Suffix_Tail_Option                   = Suffix_Tail          )
 
 
 
@@ -392,14 +395,24 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     CALL Driver_SetBC( x_e(NE(1)) )
 
 
+
     !############################################################!
     !#                                                          #!
     !#              Calculate and Set Initial Guess             #!
     !#                                                          #!
     !############################################################!
 !    PRINT*,"Before Driver_SetGuess"
+
+    ! These values are established during source input.
+    ! As the original NE accounts for only the coarsest level,
+    ! we need to do this to get the total number of leaf elements
+    NE(1) = Num_R_Elements
+    NE(2) = Num_T_Elements
+    NE(3) = Num_P_Elements
+
+
     CALL Driver_SetGuess(   NE, NQ,         &
-                            dx_c, x_e,      &
+                            drlocs, rlocs,      &
                             Input_R_Quad,   &
                             Input_T_Quad,   &
                             Input_P_Quad,   &

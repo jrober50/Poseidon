@@ -152,6 +152,7 @@ DO re = 1,Input_RE
         END DO ! rq
 
         Here = (re-1)*Degree + rqb + 1
+
         FP_Coeff_Vector_A(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
 
         Here = FP_Array_Map_TypeB(iU_S1,iVB_S,re-1,rqb,1)

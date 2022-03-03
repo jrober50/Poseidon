@@ -101,7 +101,6 @@ IF ( MATRIX_FORMAT == 'Full' ) THEN
 
 ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 
-    
 
     ALLOCATE( Laplace_Matrix_VAL(0:Laplace_NNZ-1, 0:L_LIMIT,1:Num_Matrices) )
     ALLOCATE( Laplace_Matrix_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )

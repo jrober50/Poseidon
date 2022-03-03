@@ -214,6 +214,7 @@ CALL TimerStart( Timer_XCFC_Shift_LinearSolve )
 CALL XCFC_Solve_System_TypeB( iU, iVB )
 CALL TimerStop(  Timer_XCFC_Shift_LinearSolve )
 
+
 CALL TimerStop( Timer_XCFC_Shift )
 
 END SUBROUTINE XCFC_Shift_Solve

@@ -119,6 +119,7 @@ INTEGER                                         :: LM_loc, Here, There
 DO LM_loc = 1,LM_Length
     Here  = (lm_loc-1)*Num_R_Nodes + 1
     There = lm_loc*Num_R_Nodes
+
     Vector(here:there) = FP_Coeff_Vector_A(:,lm_loc,iU)
 END DO
 

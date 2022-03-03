@@ -162,7 +162,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
-
+    
 
     PRINT*,"Before Acceleration"
     CALL Coeff_To_Vector_TypeA( GVector(:,mk), iU )
@@ -193,7 +193,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         END DO
     END IF
     FVectorM = GVectorM - UVector(:)
-
 
 
 

@@ -43,9 +43,9 @@ LOGICAL, PUBLIC                                 ::  AMReX_Tiling = .TRUE.
 
 LOGICAL, PUBLIC                                 ::  AMReX_Regrid_Flag = .TRUE.
 
-INTEGER, PUBLIC                                 ::  AMReX_Max_Level
-INTEGER, PUBLIC                                 ::  AMReX_Num_Levels
-INTEGER, PUBLIC, DIMENSION(3)                   ::  AMReX_Max_Grid_Size
+INTEGER, PUBLIC                                 ::  AMReX_Max_Level     = -1
+INTEGER, PUBLIC                                 ::  AMReX_Num_Levels    = -1
+INTEGER, PUBLIC, DIMENSION(3)                   ::  AMReX_Max_Grid_Size = -1
 
 INTEGER, PUBLIC                                 ::  iFRL    ! FEM Refinement Level
 INTEGER, PUBLIC                                 ::  iFEME   ! Num FEM Elements
@@ -53,6 +53,8 @@ INTEGER, PUBLIC                                 ::  iFEME   ! Num FEM Elements
 INTEGER, PUBLIC                                 ::  iIRL    ! Integral Refinement Level
 INTEGER, PUBLIC                                 ::  iINTE   ! Num Integral Elements
 
+
+INTEGER, PUBLIC                                 ::  AMReX_Dims
 
 INTEGER, PUBLIC                                 ::  iNumLeafElements
 INTEGER, PUBLIC, DIMENSION(:), ALLOCATABLE      ::  iLeafElementsPerLvl

@@ -80,9 +80,11 @@ USE Variables_Mesh, &
             ONLY :  Num_R_Elements
 
 USE Variables_Functions, &
-            ONLY :  LM_Location,                   &
-                    Calc_3D_Values_At_Location,    &
-                    Calc_1D_CFA_Values
+            ONLY :  LM_Location,                    &
+                    Calc_3D_Values_At_Location,     &
+                    Calc_1D_CFA_Values,             &
+                    Calc_Var_At_Loc_A,              &
+                    Calc_Var_At_Loc_B
 
 USE Variables_FP, &
             ONLY :  CFA_EQ_Flags,               &
@@ -101,8 +103,9 @@ USE Allocation_Mesh, &
             ONLY :  Allocate_Mesh
 
 USE FP_Functions_Results,   &
-            ONLY :  Calc_FP_Values_At_Location,  &
+            ONLY :  Calc_FP_Values_At_Location, &
                     Calc_1D_CFA_Values_FP
+                
 
 USE FP_Intialize_Matrices, &
             ONLY :  Initialize_FP_Matrices
@@ -131,6 +134,13 @@ USE Initialization_Mesh_AMReX_Module, &
 
 USE Initialization_XCFC, &
             ONLY :  Create_Eq_Maps
+
+USE IO_Setup_Report_Module, &
+            ONLY :  PRINT_AMReX_Setup
+
+USE FP_Functions_Results, &
+            ONLY :  Calc_Var_At_Location_Type_A,    &
+                    Calc_Var_At_Location_Type_B
 
 IMPLICIT NONE
 
@@ -187,7 +197,12 @@ CALL Create_Eq_Maps()
 
 CALL Initialize_AMReX_Maps()
 
+
+CALL PRINT_AMReX_Setup()
+
+
 Num_R_Elements = iNumLeafElements
+
 
 
 ! Determine Derived Varaibles
@@ -218,9 +233,13 @@ CALL TimerStop( Timer_XCFC_Matrix_Init )
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
-
+Calc_Var_At_Loc_A => Calc_Var_At_Location_Type_A
+Calc_Var_At_Loc_B => Calc_Var_At_Location_Type_B
 
 CALL TimerStop( Timer_XCFC_Initialization )
+
+
+
 
 
 

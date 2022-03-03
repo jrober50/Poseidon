@@ -117,6 +117,12 @@ USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,          &
                     AMReX_Num_Levels
 
+#ifdef POSEIDON_AMREX_FLAG
+USE amrex_fort_module, &
+            ONLY :  amrex_spacedim
+#endif
+
+
 IMPLICIT NONE
 
 CONTAINS
@@ -708,6 +714,10 @@ SUBROUTINE Initialize_Level_Tables()
 INTEGER                 ::  lvl
 REAL(idp)               ::  dr, dt, dp
 
+#ifndef POSEIDON_AMREX_FLAG
+INTEGER                 ::  amrex_spacedim = 3
+#endif
+
 
 dr = (R_Outer-R_Inner)/Num_R_Elements
 dt = pi/Num_T_Elements
@@ -718,18 +728,31 @@ DO lvl = 0,AMReX_Num_Levels-1
     Level_dx(lvl,1) = dr/2.0_idp**lvl
 END DO
 
-DO lvl = 0,AMReX_Num_Levels-1
-    Level_dx(lvl,2) = dt/2.0_idp**lvl
-END DO
 
-DO lvl = 0,AMReX_Num_Levels-1
-    Level_dx(lvl,3) = dp/2.0_idp**lvl
-END DO
 
+IF ( amrex_spacedim < 2 ) THEN
+    Level_dx(:,2) = dt
+ELSE
+    DO lvl = 0,AMReX_Num_Levels-1
+        Level_dx(lvl,2) = dt/2.0_idp**lvl
+    END DO
+END IF
+
+
+
+IF ( amrex_spacedim < 3 ) THEN
+    Level_dx(:,3) = dp
+ELSE
+    DO lvl = 0,AMReX_Num_Levels-1
+        Level_dx(lvl,3) = dp/2.0_idp**lvl
+    END DO
+END IF
+
+
+! Level Ratios !
 DO lvl = 0,AMReX_Num_Levels-1
     Level_Ratios(lvl) = 2**lvl
 END DO
-
 
 
 

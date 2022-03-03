@@ -488,6 +488,8 @@ END DO
 DO rd = 1,Num_R_Quad_Points
 DO tpd = 1,Num_TP_Quad_Points
 
+!    PRINT*,CUR_DRV_X( tpd, rd, 1, 2 ),CUR_DRV_X( tpd, rd, 2, 1 ),R_SQUARE(rd)
+
     Ahat_Array(tpd, rd, 2, 1) =  CUR_DRV_X( tpd, rd, 1, 2 )                                     &
                                 +  CUR_DRV_X( tpd, rd, 2, 1 )/R_SQUARE(rd)
 

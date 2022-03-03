@@ -101,7 +101,6 @@ USE Functions_Domain_Maps, &
 
 USE XCFC_Functions_Calc_Values_Module, &
             ONLY :  Calc_Int_Weights,               &
-                    Calc_Int_Weights_AMReX,         &
                     Calc_Val_On_Elem_TypeB,         &
                     Calc_Val_And_Drv_On_Elem_TypeA, &
                     Calc_Val_And_Drv_On_Elem_TypeB
@@ -152,14 +151,16 @@ USE Functions_Mesh, &
 use amrex_base_module
 
 USE amrex_box_module,   &
-            ONLY:   amrex_box
+            ONLY :  amrex_box
 
 USE amrex_boxarray_module, &
-            ONLY:   amrex_boxarray
+            ONLY :  amrex_boxarray
 
+use amrex_fort_module, &
+            ONLY :  amrex_spacedim
 
 USE amrex_multifab_module,  &
-            ONLY:   amrex_multifab,         &
+            ONLY :  amrex_multifab,         &
                     amrex_multifab_build,   &
                     amrex_imultifab_build,  &
                     amrex_imultifab_destroy
@@ -257,6 +258,10 @@ REAL(KIND = idp)                                ::  DROTb, DTOTb
 INTEGER                                         ::  Level
 INTEGER                                         ::  iCE(3)
 INTEGER                                         ::  iRE(3)
+INTEGER                                         ::  iEOff(3)
+
+
+
 
 
 
@@ -270,6 +275,16 @@ END IF
 #ifdef POSEIDON_AMREX_FLAG
 
 !PRINT*,"A"
+IF ( amrex_spacedim == 1 ) THEN
+    iEoff(2:3) = 0
+ELSEIF ( amrex_spacedim == 2) THEN
+    iEoff(2)   = iE(2)
+    iEoff(3)   = 0
+ELSEIF ( amrex_spacedim == 3 ) THEN
+    iEoff(2:3) = iE(2:3)
+END IF
+
+
 DO i = 1,3
     iCE(i) = Find_Coarsest_Parent(iE(i), Level)
     iRE(i) = 2.0_idp*MOD(iE(i),Level_Ratios(Level))
@@ -281,7 +296,7 @@ DROT = drlocs(FEM_Elem)/2.0_idp
 DTOT = Level_dx(Level,2)/2.0_idp
 
 CUR_R_LOCS(:) = DROT * (Int_R_Locations(:) + 1.0_idp) + rlocs(FEM_Elem)
-CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iE(2)*2.0_idp)
+CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
 
 
 
@@ -317,23 +332,13 @@ DO rd = 1,NUM_R_QUAD_POINTS
     TP_RSIN_SQUARE(:,rd) = R_SQUARE(rd)*TP_SIN_SQUARE(:)
 END DO
 
-!            PRINT*,R_Square
-!            PRINT*,TP_Sin_Val
 
 
-#ifdef POSEIDON_AMREX_FLAG
-!PRINT*,"C"
-CALL Calc_Int_Weights_AMReX( DROT, DTOT,                    &
-                             R_Square, TP_Sin_Val,          &
-                             R_Int_Weights, TP_Int_Weights, &
-                             Level  )
-
-#else
 CALL Calc_Int_Weights( DROT, DTOT,                  &
                        R_Square, TP_Sin_Val,        &
                        R_Int_Weights, TP_Int_Weights )
 
-#endif
+
 
 CALL Calc_XCFC_CurVals_TypeB( iU, iVB,          &
                               iE,               &
@@ -374,7 +379,7 @@ COMPLEX(KIND = idp)                                 ::  RHS_TMP
 INTEGER                                             ::  iCT
 
 
-#ifdef POSEIDON_AMREX_FLAG
+
 
 ! replace level with (level - iIRL)?
 !iCT = 2**(level+1) - mod(iE(1),2**level) - 2
@@ -388,6 +393,10 @@ DO d = 0,DEGREE
     RHS_TMP = 0.0_idp
 
     DO rd = 1,NUM_R_QUAD_POINTS
+
+
+#ifdef POSEIDON_AMREX_FLAG
+
         RHS_TMP = RHS_TMP                                       &
                 + SUM( SourceTerm( :, rd, ui )                  &
                     * Ylm_Elem_CC_Values( :, lm_loc )           &
@@ -396,13 +405,53 @@ DO d = 0,DEGREE
                 * R_Int_Weights(rd)
 
 !        IF ( ui == iU(1) ) THEN
-!            PRINT*,level,iE,d,rd
+!            PRINT*,level,iE,lm_loc,d,rd
+
+!            PRINT*,SourceTerm( :, rd, ui )
+!            PRINT*,"++++++++++++++++++++++"
+!            PRINT*,Ylm_Elem_CC_Values( :, lm_loc )
+!            PRINT*,"======================"
+!            PRINT*,TP_Int_Weights(:)
+!            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
+
 !            PRINT*,SUM( SourceTerm( :, rd, ui )             &
 !            * Ylm_Elem_CC_Values( :, lm_loc )               &
 !            * TP_Int_Weights(:)                     ),      &
 !            Lagpoly_MultiLayer_Table( d, rd, 0, iCT ),      &
 !            R_Int_Weights(rd)
 !        END IF
+
+#else
+
+
+        RHS_TMP =  RHS_TMP                                          &
+                + SUM( SourceTerm( :, rd, ui )                      &
+                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+                       * TP_Int_Weights(:)                     )    &
+                * Lagrange_Poly_Table(d, rd, 0)                     &
+                * R_Int_Weights(rd)
+
+!        IF ( ui == iU(1) ) THEN
+!            PRINT*,Level,iE,lm_loc,d,rd
+
+!            PRINT*,SourceTerm( :, rd, ui )
+!            PRINT*,"++++++++++++++++++++++"
+!            PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
+!            PRINT*,"======================"
+!            PRINT*,TP_Int_Weights(:)
+!            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
+
+
+!            PRINT*,SUM( SourceTerm( :, rd, ui )             &
+!            * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))       &
+!            * TP_Int_Weights(:)                     ),      &
+!            Lagrange_Poly_Table(d, rd, 0),                      &
+!            R_Int_Weights(rd)
+!        END IF
+
+
+
+#endif
 
 
     END DO  ! rd Loop
@@ -414,16 +463,6 @@ DO d = 0,DEGREE
                                             d, lm_loc   )
 
 
-!    IF ( ui == iU(1) ) THEN
-!        PRINT*,level,FEM_Elem,d,Current_i_Location,REAL(RHS_Tmp,idp)
-!    END IF
-
-!    IF ( ui == iU(1) ) THEN
-!        PRINT*,level,iE,d,Current_i_Location                            &
-!                ,REAL(FP_Source_Vector_B(Current_i_Location,iVB),idp),REAL(RHS_TMP,idp),      &
-!                REAL(FP_Source_Vector_B(Current_i_Location,iVB) + RHS_TMP,idp)
-!    END IF
-
     FP_Source_Vector_B(Current_i_Location,iVB)          &
         = FP_Source_Vector_B(Current_i_Location,iVB)    &
         + RHS_TMP
@@ -436,57 +475,6 @@ END DO  ! d Loop
 END DO  ! lm_loc Loop
 END DO  ! ui Loop
 
-
-
-
-#else
-
-
-
-DO ui = iU(1),iU(3)
-DO lm_loc = 1,LM_LENGTH
-DO d = 0,DEGREE
-    
-
-    RHS_TMP = 0.0_idp
-    DO rd = 1,NUM_R_QUAD_POINTS
-        RHS_TMP =  RHS_TMP                                          &
-                + SUM( SourceTerm( :, rd, ui )                      &
-                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
-                       * TP_Int_Weights(:)                     )    &
-                * Lagrange_Poly_Table(d, rd, 0)                     &
-                * R_Int_Weights(rd)
-
-!        IF ( ui == iU(1) ) THEN
-!            PRINT*,Level,iE,d,rd
-!            PRINT*,SUM( SourceTerm( :, rd, ui )             &
-!            * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))       &
-!            * TP_Int_Weights(:)                     ),      &
-!            Lagrange_Poly_Table(d, rd, 0),                      &
-!            R_Int_Weights(rd)
-!        END IF
-
-
-    END DO  ! rd Loop
-    
-    Current_i_Location = FP_Array_Map_TypeB(ui,iVB,iE(1),d,lm_loc)
-
-!    IF ( ui == iU(1) ) THEN
-!        PRINT*,Level,FEM_Elem,d,Current_i_Location,REAL(RHS_Tmp,idp)
-!    END IF
-
-
-
-    FP_Source_Vector_B(Current_i_Location,iVB)          &
-        = FP_Source_Vector_B(Current_i_Location,iVB)    &
-        + RHS_TMP
-
-!    PRINT*,Current_i_Location,FP_Source_Vector_B(Current_i_Location,iVB)
-END DO  ! d Loop
-END DO  ! lm_loc Loop
-END DO  ! ui Loop
-
-#endif
 
 
 
@@ -555,15 +543,19 @@ IF ( iVB == iVB_X ) THEN
 !            END IF
 !            CALL MPI_Barrier(Poseidon_Comm_World, ierr)
 !        END DO
-!        PRINT*,"f(:,:,ui-5)",ui
-!        PRINT*,f(:,:,ui-5)
-!        PRINT*,"PhysSrc(:,:,ui-5)"
-!        PRINT*,PhysSrc(:,:,ui-5)
+!        IF ( ui == iU(1) ) THEN
+!        DO rd = 1,Num_R_Quad_Points
+!            PRINT*,"f(:,:,ui-5)",ui
+!            PRINT*,f(:,rd,ui-5)
+!            PRINT*,"PhysSrc(:,:,ui-5)"
+!            PRINT*,PhysSrc(:,rd,ui-5)
+!        END DO
+!        END IF
         SourceTerm(:,:,ui) = 8.0_idp * pi * GR_Source_Scalar * f(:,:,ui-5)*PhysSrc(:,:,ui-5)
 
     END DO
 !    PRINT*,Level, iE
-!    PRINT*,SourceTerm(:,:,iU(1))
+!    PRINT*,PhysSrc(:,:,iU(1)-5)
    
 
 ELSE IF ( iVB == iVB_S ) THEN
@@ -633,6 +625,19 @@ ELSE IF ( iVB == iVB_S ) THEN
     END DO
 
 
+!    IF ( .TRUE. ) THEN
+!    DO rd = 1,Num_R_Quad_Points
+!        ui = 1
+!        PRINT*,"Cur_Val_AlphaPsi",iE
+!        PRINT*,Cur_Val_AlphaPsi(:,rd)
+!        PRINT*,"Cur_Val_Psi"
+!        pRINT*,Cur_Val_Psi(:,rd)
+!        PRINT*,"PhysSrc(:,:,ui)"
+!        PRINT*,PhysSrc(:,rd,ui)
+!        PRINT*,"SourceTerm"
+!        PRINT*,SourceTerm(:,rd,iU(ui))
+!    END DO
+!    END IF
 
 
 ELSE
@@ -684,7 +689,7 @@ INTEGER                                         ::  lvl
 
 
 FP_Source_Vector_B(:,iVB) = 0.0_idp
-DO lvl = 0,AMReX_Num_Levels-1
+DO lvl = AMReX_Num_Levels-1,0,-1
 
 
     !

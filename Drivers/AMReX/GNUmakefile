@@ -13,8 +13,8 @@ HDF5_LIB       = $(HDF5_HOME)/lib
 
 USE_F_INTERFACES = TRUE
 
-#DEBUG     = FALSE
-DEBUG     = TRUE
+DEBUG     = FALSE
+#DEBUG     = TRUE
 
 USE_MPI   = TRUE
 USE_OMP   = FALSE
@@ -22,7 +22,7 @@ USE_OMP   = FALSE
 #MEM_PROFILE  = FALSE
 #TINY_PROFILE = FALSE
 
-DIM       = 3
+DIM       = 1
 
 EBASE     = AMReX_Mapping
 
@@ -51,11 +51,17 @@ include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 # Include directories and source files needed from Poseidon
 include /Users/nickroberts/Poseidon/Build/Make.Poseidon
 include Makefile_Driver
+include Makefile_Path
+include AMReX_Routines/Makefile_AMReX_Routines
+
 f90EXE_sources += $(DRIVER_f90)
+
+F90EXE_sources += $(DRIVER_AMREX_ROUTINES)
 F90EXE_sources += $(DRIVER_F90)
 
 
 DEFINES += $(POSEIDON_DEFS)
+
 
 # Include rules for compilation
 include $(AMREX_HOME)/Tools/GNUMake/Make.rules

@@ -190,7 +190,9 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
         WORK_VEC = -FP_Source_Vector_A(:,lm_loc,iU)
         WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_Map(iU))
 
-
+!        PRINT*,"Work_Vec, Type A l = ",l," m = ",m
+!        PRINT*,Work_Vec
+!        PRINT*,"+++++++++++++++++++++++++++++++++++"
 
         CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                 Factored_NNZ,               &
@@ -232,6 +234,8 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
         FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,iU)
         FP_Coeff_Vector_A( :,lm_loc,iU) = WORK_VEC(:)
+
+!        PRINT*,FP_Coeff_Vector_A( :,lm_loc,iU)
 
 
     END DO  ! m Loop
@@ -282,7 +286,7 @@ END IF
 
 
 
-PRINT*,FP_Coeff_Vector_A( :,1,iU)
+!PRINT*,FP_Coeff_Vector_A( :,1,iU)
 
 
 

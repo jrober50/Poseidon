@@ -41,10 +41,7 @@ USE Poseidon_Numbers_Module, &
 
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE,                     &
-                    L_Limit,                    &
-                    Num_CFA_Vars,               &
-                    Poseidon_Initialized_Flag,  &
+            ONLY :  Num_CFA_Vars,               &
                     Poseidon_Frame,             &
                     Poisson_Mode,               &
                     Method_Flag

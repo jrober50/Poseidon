@@ -36,6 +36,12 @@ USE Variables_AMReX_Core, &
                     FEM_Elem_Table,     &
                     Table_Offsets
 
+USE Poseidon_Units_Module, &
+            ONLY :  C_Square,        &
+                    Set_Units,       &
+                    Centimeter,      &
+                    Gram
+
 IMPLICIT NONE
 
 CONTAINS
@@ -58,7 +64,8 @@ SUBROUTINE Create_3D_Mesh(  Mesh_Type,                  &
                             z_e, z_c, dz_c,             &
                             Zoom,                       &
                             nc, Core_Radius,            &
-                            SemiMajor,SemiMinor         )
+                            SemiMajor,SemiMinor,        &
+                            Levels_In                   )
 
 INTEGER,                            INTENT(IN)              ::  Mesh_Type
 
@@ -84,9 +91,11 @@ REAL(KIND = idp),                   INTENT(IN), OPTIONAL    ::  Core_Radius
 
 REAL(KIND = idp),                   INTENT(IN), OPTIONAL    ::  SemiMajor
 REAL(KIND = idp),                   INTENT(IN), OPTIONAL    ::  SemiMinor
+INTEGER         ,                   INTENT(IN), OPTIONAL    ::  Levels_In
+
 
 INTEGER                                                     ::  ns
-
+INTEGER                                                     ::  Levels_Out
 INTEGER                                                     ::  Error_Num
 
 
@@ -239,11 +248,20 @@ CASE( 5 ) ! MacLaurin Split
 CASE( 6 )  ! AMReX Mimic
 
 
-CALL Create_AMReX_Mimic_3D_Mesh( Inner_Radius, Outer_Radius,       &
-                                 nx, ny, nz,                       &
-                                 x_e, x_c, dx_c,                   &
-                                 y_e, y_c, dy_c,                   &
-                                 z_e, z_c, dz_c                    )
+
+    IF ( PRESENT(Levels_In) ) THEN
+        Levels_Out = Levels_In
+    ELSE
+        Levels_Out = 1
+    END IF
+
+
+    CALL Create_AMReX_Mimic_3D_Mesh( Inner_Radius, Outer_Radius,        &
+                                     nx, ny, nz,                        &
+                                     x_e, x_c, dx_c,                    &
+                                     y_e, y_c, dy_c,                    &
+                                     z_e, z_c, dz_c,                    &
+                                     Levels_Out                         )
 
 
 
@@ -1020,16 +1038,17 @@ END SUBROUTINE Create_MacLaurin_1D_Mesh
 !   Creates a uniform radial mesh.                                                  !
 !                                                                                   !
 !###################################################################################!
-SUBROUTINE Create_AMReX_Mimic_3D_Mesh( Inner_Radius, Outer_Radius,       &
-                                        nx, ny, nz,                       &
-                                        x_e, x_c, dx_c,                   &
-                                        y_e, y_c, dy_c,                   &
-                                        z_e, z_c, dz_c                    )
+SUBROUTINE Create_AMReX_Mimic_3D_Mesh( Inner_Radius, Outer_Radius,      &
+                                        nx, ny, nz,                     &
+                                        x_e, x_c, dx_c,                 &
+                                        y_e, y_c, dy_c,                 &
+                                        z_e, z_c, dz_c,                 &
+                                        Levels_In                       )
 
 
 
-REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Radius,           &
-                                                            Outer_Radius
+REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Radius
+REAL(KIND = idp),   INTENT(IN)                          ::  Outer_Radius
 
 INTEGER,            INTENT(IN)                          ::  nx, ny, nz
 
@@ -1045,12 +1064,13 @@ REAL(KIND = idp), DIMENSION(0:nz),  INTENT(OUT)         ::  z_e
 REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  z_c
 REAL(KIND = idp), DIMENSION(1:nz),  INTENT(OUT)         ::  dz_c
 
+INTEGER,            INTENT(IN)                          ::  Levels_In
 
 
 
-CALL Create_AMReX_Mimic_Mesh( Inner_Radius, Outer_Radius,                    &
-                                nx, x_e, x_c, dx_c                          )
-
+CALL Create_AMReX_Mimic_Mesh( Inner_Radius, Outer_Radius,   &
+                                nx, x_e, x_c, dx_c,         &
+                                Levels_In                   )
 ! Create Uniform Theta Mesh !
 CALL Create_Uniform_1D_Mesh( 0.0_idp, pi, ny, y_e, y_c, dy_c )
 
@@ -1068,10 +1088,11 @@ END SUBROUTINE Create_AMReX_Mimic_3D_Mesh
 !                                                                       !
  !#####################################################################!
 SUBROUTINE Create_AMReX_Mimic_Mesh( Inner_Edge, Outer_Edge,     &
-                                    nx, x_e, x_c, dx_c          )
+                                    nx, x_e, x_c, dx_c,         &
+                                    Levels_In                   )
 
-REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Edge, &
-                                                            Outer_Edge
+REAL(KIND = idp),   INTENT(IN)                          ::  Inner_Edge
+REAL(KIND = idp),   INTENT(IN)                          ::  Outer_Edge
 
 INTEGER,            INTENT(IN)                          ::  nx
 
@@ -1079,43 +1100,62 @@ REAL(KIND = idp), DIMENSION(0:nx),  INTENT(OUT)         ::  x_e
 REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  x_c
 REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
 
-INTEGER                                                 ::  Third
-INTEGER                                                 ::  TwoThirds
-INTEGER                                                 ::  Break
+INTEGER,            INTENT(IN)                          ::  Levels_In
+
+
+INTEGER                                                 ::  cnx
+INTEGER                                                 ::  Level
 
 INTEGER                                                 ::  i
-REAL(idp)                                               ::  dxs, dxl
+REAL(idp)                                               ::  dxl
 
-Third       = nx/3
-TwoThirds   = 2*nx/3
-Break       = TwoThirds
+INTEGER, DIMENSION(0:Levels_In)                         ::  Break
 
 
+cnx = INT( nx/( 1.0_idp + (Levels_In-1.0_idp)/2.0_idp) )
+dxl = (Outer_Edge-Inner_Edge)/cnx
 
 
+Break(0) = 0
+DO level = 1,Levels_In
+    Break(level) = cnx+(level-1)*cnx/2
+END DO
 
-dxl         = (Outer_Edge-Inner_Edge)/TwoThirds
-dxs         = dxl/2.0_idp
+PRINT*,break
+
+DO level = 0,Levels_In-1
+    dx_c(Break(level)+1:Break(level+1)) = dxl/2**(Levels_In-Level-1)
+END DO
 
 x_e(0) = Inner_Edge
-DO i = 1,Break
-
-    x_e(i) = x_e(i-1) + dxs
-    x_c(i) = x_e(i) + dxs/2.0_idp
-    dx_c(i) = dxs
-
-
+DO i = 1,nx
+    x_e(i) = Inner_Edge + SUM( dx_c(1:i) )
+    x_c(i) = x_e(i) - dx_c(i)/2.0_idp
 END DO
 
 
-DO i = Break+1,nx
 
-    x_e(i) = x_e(i-1) + dxl
-    x_c(i) = x_e(i) + dxl/2.0_idp
-    dx_c(i) = dxl
 
-END DO
 
+
+!x_e(0) = Inner_Edge
+!DO i = 1,Break
+!
+!    x_e(i) = x_e(i-1) + dxs
+!    x_c(i) = x_e(i) + dxs/2.0_idp
+!    dx_c(i) = dxs
+!
+!
+!END DO
+!
+!
+!DO i = Break+1,nx
+!
+!    x_e(i) = x_e(i-1) + dxl
+!    x_c(i) = x_e(i) + dxl/2.0_idp
+!    dx_c(i) = dxl
+!
+!END DO
 
 
 

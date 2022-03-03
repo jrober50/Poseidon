@@ -175,7 +175,9 @@ CALL Poseidon_Input_Guess(  Psi_Guess,          &
                             RightLimit          )
 
 
-
+DEALLOCATE( Psi_Guess )
+DEALLOCATE( AlphaPsi_Guess )
+DEALLOCATE( Beta_Guess )
 
 END SUBROUTINE Driver_SetGuess
 
