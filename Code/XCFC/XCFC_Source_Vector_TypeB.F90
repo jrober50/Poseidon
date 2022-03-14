@@ -193,6 +193,7 @@ USE MPI
 
 IMPLICIT NONE
 
+REAL(idp)           :: E_Mass
 
 CONTAINS
 !+101+###########################################################################!
@@ -229,6 +230,11 @@ INTEGER,             DIMENSION(3)       ::  iE
 
 #endif
 
+!IF ( iVB == iVB_X ) THEN
+!    PRINT*,"*********************"
+!    PRINT*,"E_Mass ",E_Mass
+!    PRINT*,"*********************"
+!END IF
 
 
 END SUBROUTINE XCFC_Calc_Source_Vector_TypeB
@@ -342,7 +348,7 @@ CALL Calc_Int_Weights( DROT, DTOT,                  &
 
 CALL Calc_XCFC_CurVals_TypeB( iU, iVB,          &
                               iE,               &
-                              DROT,DTOT,        &
+                              DROT, DTOT,       &
                               Level             )
 
 
@@ -378,12 +384,13 @@ INTEGER                                             ::  Current_i_Location
 COMPLEX(KIND = idp)                                 ::  RHS_TMP
 INTEGER                                             ::  iCT
 
-
+REAL(idp)                                           ::  mass_tmp
 
 
 ! replace level with (level - iIRL)?
 !iCT = 2**(level+1) - mod(iE(1),2**level) - 2
 iCT = 0
+
 
 DO ui = iU(1),iU(3)
 DO lm_loc = 1,LM_LENGTH
@@ -391,6 +398,7 @@ DO d = 0,DEGREE
 
 
     RHS_TMP = 0.0_idp
+    Mass_TMP = 0.0_idp
 
     DO rd = 1,NUM_R_QUAD_POINTS
 
@@ -403,6 +411,14 @@ DO d = 0,DEGREE
                     * TP_Int_Weights(:)                     )   &
                 * Lagpoly_MultiLayer_Table( d, rd, 0, iCT )     &
                 * R_Int_Weights(rd)
+
+
+        MASS_TMP = MASS_TMP                                     &
+                + SUM( SourceTerm( :, rd, ui )                  &
+                    * Ylm_Elem_CC_Values( :, lm_loc )           &
+                    * TP_Int_Weights(:)                     )   &
+                * R_Int_Weights(rd)
+
 
 !        IF ( ui == iU(1) ) THEN
 !            PRINT*,level,iE,lm_loc,d,rd
@@ -429,6 +445,13 @@ DO d = 0,DEGREE
                        * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
                        * TP_Int_Weights(:)                     )    &
                 * Lagrange_Poly_Table(d, rd, 0)                     &
+                * R_Int_Weights(rd)
+
+
+        MASS_TMP = MASS_TMP                                         &
+                + SUM( SourceTerm( :, rd, ui )                      &
+                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+                       * TP_Int_Weights(:)                     )    &
                 * R_Int_Weights(rd)
 
 !        IF ( ui == iU(1) ) THEN
@@ -468,13 +491,12 @@ DO d = 0,DEGREE
         + RHS_TMP
 
 
-
+    E_Mass = E_Mass + Mass_TMP
 
 !    PRINT*,Current_i_Location,FP_Source_Vector_B(Current_i_Location,iVB)
 END DO  ! d Loop
 END DO  ! lm_loc Loop
 END DO  ! ui Loop
-
 
 
 
@@ -686,7 +708,7 @@ INTEGER                                         ::  lvl
 
 
 
-
+E_Mass = 0.0_idp
 
 FP_Source_Vector_B(:,iVB) = 0.0_idp
 DO lvl = AMReX_Num_Levels-1,0,-1
@@ -776,6 +798,7 @@ END DO ! lvl
 
 #endif
 
+PRINT*,"E_Mass",E_Mass
 
 END SUBROUTINE XCFC_AMReX_Calc_Source_Vector_TypeB
 

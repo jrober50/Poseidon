@@ -38,6 +38,9 @@ USE Poseidon_Parameters, &
                     L_Limit,            &
                     Poisson_Mode
 
+USE Poseidon_IO_Parameters, &
+            ONLY :  CFA_Var_Names
+
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,     &
                     rlocs
@@ -51,7 +54,9 @@ USE Variables_Poisson, &
 
 
 USE Variables_Functions, &
-            ONLY :  Calc_3D_Values_At_Location
+            ONLY :  Calc_3D_Values_At_Location,     &
+                    Calc_Var_At_Loc_A,              &
+                    Calc_Var_At_Loc_B
 
 USE Variables_Mesh, &
             ONLY :  R_Inner,        &
@@ -81,7 +86,10 @@ USE Timer_Variables_Module, &
 IMPLICIT NONE
 
 
-
+INTERFACE Print_Single_Var_Results
+    MODULE PROCEDURE Print_Single_Var_Results_A
+    MODULE PROCEDURE Print_Single_Var_Results_B
+END INTERFACE Print_Single_Var_Results
 
 !*F&S*==========================================!
 !                                               !
@@ -360,6 +368,159 @@ Calculate_Potential_At_Location = REAL( potential )
 
 
 END FUNCTION Calculate_Potential_At_Location
+
+
+
+
+
+
+
+
+
+
+
+!+302+##########################################################################!
+!                                                                               !
+!                   Print_Results                                               !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Print_Single_Var_Results_A( iU )
+
+INTEGER, INTENT(IN)                                     ::  iU
+
+INTEGER                                                 ::  i
+REAL(KIND = idp)                                        ::  r, theta, phi
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_e
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_c, dx_c
+
+REAL(KIND = idp)                                        ::  Return_Psi
+REAL(KIND = idp)                                        ::  Return_AlphaPsi
+REAL(KIND = idp)                                        ::  Return_Beta1
+REAL(KIND = idp)                                        ::  Return_Beta2
+REAL(KIND = idp)                                        ::  Return_Beta3
+
+REAL(idp)                                               ::  Value
+
+INTEGER                                                 ::  Num_Samples = 20
+
+
+110 FORMAT (11X,A1,24X,A)
+111 FORMAT (ES22.15,3X,ES22.15,3X)
+
+
+
+ALLOCATE( x_e(0:Num_Samples) )
+ALLOCATE( x_c(1:Num_Samples) )
+ALLOCATE( dx_c(1:Num_Samples) )
+
+IF ( R_Outer - R_Inner > 1000.0_idp ) THEN
+    Call Create_Logarithmic_1D_Mesh( R_Inner,           &
+                                     R_Outer,           &
+                                     Num_Samples,       &
+                                     x_e, x_c, dx_c     )
+ELSE
+
+    CALL Create_Uniform_1D_Mesh( R_Inner, R_Outer, Num_Samples, x_e, x_c, dx_c )
+
+END IF
+
+
+theta = 0.5_idp * pi
+phi = 0.5_idp * pi
+
+
+WRITE(*,'(A,F4.2,A,F4.2,A)')"Results taken along ray, theta = ",theta/pi," Pi Radians, Phi = ",phi/pi," Pi Radians"
+WRITE(*,110)"r",CFA_Var_Names(iU)
+
+
+DO i = 0,Num_Samples
+
+    r = x_e(i)
+
+    Value = Calc_Var_At_Loc_A(r, theta, phi, iU)
+
+    WRITE(*,111) r/Centimeter, Value
+
+END DO
+
+
+
+
+END SUBROUTINE Print_Single_Var_Results_A
+
+
+
+
+
+!+302+##########################################################################!
+!                                                                               !
+!                   Print_Results                                               !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Print_Single_Var_Results_B( iU, iVB)
+
+INTEGER, INTENT(IN)                                     ::  iU
+INTEGER, INTENT(IN)                                     ::  iVB
+
+INTEGER                                                 ::  i
+REAL(KIND = idp)                                        ::  r, theta, phi
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_e
+REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_c, dx_c
+
+REAL(KIND = idp)                                        ::  Return_Psi
+REAL(KIND = idp)                                        ::  Return_AlphaPsi
+REAL(KIND = idp)                                        ::  Return_Beta1
+REAL(KIND = idp)                                        ::  Return_Beta2
+REAL(KIND = idp)                                        ::  Return_Beta3
+
+REAL(idp)                                               ::  Value
+
+INTEGER                                                 ::  Num_Samples = 20
+
+
+
+110 FORMAT (11X,A1,16X,A)
+111 FORMAT (ES22.15,3X,ES22.15,3X)
+
+
+
+ALLOCATE( x_e(0:Num_Samples) )
+ALLOCATE( x_c(1:Num_Samples) )
+ALLOCATE( dx_c(1:Num_Samples) )
+
+IF ( R_Outer - R_Inner > 1000.0_idp ) THEN
+    Call Create_Logarithmic_1D_Mesh( R_Inner,           &
+                                     R_Outer,           &
+                                     Num_Samples,       &
+                                     x_e, x_c, dx_c     )
+ELSE
+
+    CALL Create_Uniform_1D_Mesh( R_Inner, R_Outer, Num_Samples, x_e, x_c, dx_c )
+
+END IF
+
+
+theta = 0.5_idp * pi
+phi = 0.5_idp * pi
+
+
+WRITE(*,'(A,F4.2,A,F4.2,A)')"Results taken along ray, theta = ",theta/pi," Pi Radians, Phi = ",phi/pi," Pi Radians"
+WRITE(*,110)"r",CFA_Var_Names(iU)
+
+
+DO i = 0,Num_Samples
+
+    r = x_e(i)
+
+    Value = Calc_Var_At_Loc_B(r, theta, phi, iU, iVB)
+
+    WRITE(*,111) r/Centimeter, Value
+
+END DO
+
+
+END SUBROUTINE Print_Single_Var_Results_B
+
 
 
 END MODULE IO_Print_Results

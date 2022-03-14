@@ -213,7 +213,7 @@ Num_R_Nodesp1       = Num_R_Nodes + 1
 VAR_DIM             = LM_LENGTH*NUM_R_NODES
 PROB_DIM            = NUM_CFA_VARS*VAR_DIM
 Beta_Prob_Dim       = 3*Var_Dim
-Beta_Diagonals = Beta_Elem_Prob_Dim
+Beta_Diagonals = Beta_Elem_Prob_Dim-1
 Beta_Bandwidth = 2*Beta_Diagonals+1
 
 Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1

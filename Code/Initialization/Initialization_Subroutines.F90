@@ -230,7 +230,7 @@ IF ( PRESENT(Suffix_Flag_Option) ) THEN
 
     IF ( Suffix_Flag_Option == "Params") THEN
 
-        WRITE(File_Suffix,'(A,I4.4,A,I3.3,A,I2.2,A,I2.2)')             &
+        WRITE(File_Suffix,'(A,I5.5,A,I3.3,A,I2.2,A,I2.2)')             &
             "RE",Num_R_Elements,"_TE",Num_T_Elements,"_D",Degree,"_L",L_Limit
 
     ELSEIF ( SUffix_Flag_Option == "Frame") THEN

@@ -24,52 +24,53 @@ MODULE XCFC_Solvers_Main_Module                                                 
 
 
 USE Poseidon_Parameters, &
-        ONLY :  Verbose_Flag
+            ONLY :  Verbose_Flag
 
 USE Parameters_Variable_Indices, &
-        ONLY :  iVB_X,                      &
-                iVB_S,                      &
-                iU_CF,                      &
-                iU_LF,                      &
-                iU_S1,                      &
-                iU_S2,                      &
-                iU_S3,                      &
-                iU_X1,                      &
-                iU_X2,                      &
-                iU_X3
+            ONLY :  iVB_X,                      &
+                    iVB_S,                      &
+                    iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X3
 
 USE Variables_Mesh, &
-        ONLY :  NUM_R_ELEMENTS,             &
-                NUM_T_ELEMENTS,             &
-                NUM_P_ELEMENTS
+            ONLY :  NUM_R_ELEMENTS,             &
+                    NUM_T_ELEMENTS,             &
+                    NUM_P_ELEMENTS
 
 
 
 USE XCFC_Fixed_Point_Module, &
-        ONLY :  XCFC_Fixed_Point
+            ONLY :  XCFC_Fixed_Point
 
 USE XCFC_Source_Vector_TypeB_Module, &
-        ONLY :  XCFC_Calc_Source_Vector_TypeB
+            ONLY :  XCFC_Calc_Source_Vector_TypeB
 
 USE XCFC_System_Solvers_TypeB_Module, &
-        ONLY :  XCFC_Solve_System_TypeB
+            ONLY :  XCFC_Solve_System_TypeB
 
 
 USE Timer_Routines_Module, &
-        ONLY :  TimerStart,                     &
-                TimerStop
+            ONLY :  TimerStart,                     &
+                    TimerStop
 
 USE Timer_Variables_Module, &
-        ONLY :  Timer_XCFC_X,                   &
-                Timer_XCFC_X_SourceVector,      &
-                Timer_XCFC_X_LinearSolve,       &
-                Timer_XCFC_Shift,               &
-                Timer_XCFC_Shift_SourceVector,  &
-                Timer_XCFC_Shift_LinearSolve,   &
-                Timer_XCFC_Lapse,               &
-                Timer_XCFC_ConFactor
+            ONLY :  Timer_XCFC_X,                   &
+                    Timer_XCFC_X_SourceVector,      &
+                    Timer_XCFC_X_LinearSolve,       &
+                    Timer_XCFC_Shift,               &
+                    Timer_XCFC_Shift_SourceVector,  &
+                    Timer_XCFC_Shift_LinearSolve,   &
+                    Timer_XCFC_Lapse,               &
+                    Timer_XCFC_ConFactor
 
-
+USE IO_Print_Results, &
+            ONLY :  Print_Single_Var_Results
 
 IMPLICIT NONE
 
@@ -112,7 +113,7 @@ CALL TimerStop(  Timer_XCFC_X_LinearSolve )
 
 CALL TimerStop( Timer_XCFC_X )
 
-
+!CALL Print_Single_Var_Results( iU_X1, iVB_X )
 
 IF ( .FALSE. ) THEN
     PRINT*,"Stopping at the end of XCFC_x_Solve"
@@ -217,7 +218,8 @@ CALL TimerStop(  Timer_XCFC_Shift_LinearSolve )
 
 CALL TimerStop( Timer_XCFC_Shift )
 
-PRINT*,"HERE"
+!CALL Print_Single_Var_Results( iU_S1, iVB_S )
+
 END SUBROUTINE XCFC_Shift_Solve
 
 

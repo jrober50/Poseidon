@@ -143,7 +143,7 @@ NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
 CALL Create_Eq_Maps()
 
 
-Beta_Diagonals = Beta_Elem_Prob_Dim
+Beta_Diagonals = Beta_Elem_Prob_Dim-1
 Beta_Bandwidth = 2*Beta_Diagonals+1
 
 

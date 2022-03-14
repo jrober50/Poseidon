@@ -781,8 +781,8 @@ DO ui = 3,5
     END IF
 
     IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
-
     
+
         DO lm = 1,LM_Length
 
             IF ( lm == 1 ) THEN
@@ -790,21 +790,17 @@ DO ui = 3,5
             ELSE
                 BC_Value = 0.0_idp
             END IF
-
+            
 
             DO d = DEGREE-shift,0,-1
                 
                 Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui-2,lm)
                 
-                Work_Vec(Row) = Work_Vec(Row) - Last_Column_Beta_Storage(lm,Degree,ui-2)*BC_Value
+                Work_Vec(Row) = Work_Vec(Row) - Last_Column_Beta_Storage(lm,d,ui-2)*BC_Value
 
-
-    !            PRINT*,d,Row,Work_Vec(Row),BC_Value,Last_Column_Beta_Storage(1,d,ui-2)
 
             END DO  ! d
 
-
-        
         
             Row = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui-2,lm)
             WORK_VEC(Row) = BC_Value
@@ -819,6 +815,7 @@ DO ui = 3,5
     END IF
 
 END DO ! ui Loop
+
 
 END SUBROUTINE DIRICHLET_BC_Beta_Banded
 

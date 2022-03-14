@@ -158,7 +158,7 @@ CALL MPI_RTM_Source_TypeB(  iVB,                    &
 
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
-    
+
     IF ( .NOT. Beta_Factorized_Flag ) THEN
         CALL Factorize_Beta_Banded()
     END IF
@@ -169,12 +169,9 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     Work_Vec = FP_Source_Vector_B(:,iVB)
 
 
-!    PRINT*,"Work_Vec, Type B"
-!    PRINT*,Work_Vec
-!    PRINT*,"+++++++++++++++++++++++++++++++++++"
-
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
+
 
 
     CALL ZGBTRS( 'N',                   &
@@ -185,7 +182,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                  Beta_MVL_Banded,       &
                  3*Beta_Diagonals+1,    &
                  Beta_IPIV,             &
-                 -Work_Vec,             &
+                 Work_Vec,             &
                  Beta_Prob_Dim,         &
                  INFO                   )
 
@@ -196,9 +193,6 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 
     FP_Coeff_Vector_B(:,iVB) = Work_Vec(:)
-
-!    PRINT*,"Coeff Vec"
-!    PRINT*,FP_Coeff_Vector_B(:,iVB)
 
 
     DEALLOCATE( Work_Vec )

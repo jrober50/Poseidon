@@ -146,6 +146,11 @@ CALL TimerStart( Timer_XCFC_Type_B_Factorization )
 !   But to apply the BCs we will need values from the original matrix,
 !   so those values are stored before we modify the matrix.
 !
+
+!PRINT*,"Beta_MVL_Banded in Factorize_Beta_Banded"
+!PRINT*,Beta_MVL_Banded
+
+
 CALL DIRICHLET_BC_Beta_Banded_Mat()
 
 
@@ -153,13 +158,9 @@ CALL Jacobi_PC_MVL_Banded()
 
 
 
+!PRINT*,"Beta_MVL_Banded in Factorize_Beta_Banded"
+!PRINT*,REAL(Beta_MVL_Banded, kind = idp)
 
-NORM = 0.0_idp
-DO i = 1,Beta_Prob_Dim
-
-    NORM = MAX( NORM, ABS(SUM(Beta_MVL_Banded(:,i) ) ) )
-
-END DO
 
 
 
@@ -181,7 +182,24 @@ ELSE
 END IF
 
 
+
+!PRINT*,"Beta_MVL_Banded in Factorize_Beta_Banded"
+!PRINT*,REAL(Beta_MVL_Banded, kind = idp)
+
+
+
+
+
+
 IF ( Verbose_Flag ) THEN
+
+    NORM = 0.0_idp
+    DO i = 1,Beta_Prob_Dim
+
+        NORM = MAX( NORM, ABS(SUM(Beta_MVL_Banded(:,i) ) ) )
+
+    END DO
+
     CALL ZGBCON( '1',                   &
                  Beta_Prob_Dim,         &
                  Beta_Diagonals,        &
@@ -200,15 +218,14 @@ IF ( Verbose_Flag ) THEN
             PRINT*,"RCOND = ",RCOND_One," Norm = ",Norm
     END IF
 END IF
-!PRINT*,"STOPing in Factorize_Beta_Banded"
-!STOP
-
-
 
 
 CALL TimerStop( Timer_XCFC_Type_B_Factorization )
 
 
+
+!PRINT*,"STOPing in Factorize_Beta_Banded"
+!STOP
 
 END SUBROUTINE Factorize_Beta_Banded
 
@@ -485,12 +502,13 @@ DO ui = 1,3
         ! Save the needed values first
         !
 
+
+        Col = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,1)
         DO d = 0,Degree
         DO lm = 1,LM_Length
 
             Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui,lm)+Beta_Bandwidth
-            Col = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,1)
- 
+            
             Last_Column_Beta_Storage(lm,d,ui) = Beta_MVL_Banded(Row-Col,Col)
     
         END DO ! l Loop
@@ -510,11 +528,14 @@ DO ui = 1,3
                 Col = FP_Beta_Array_Map(Num_R_Elements-1,dp,uj,lp)
 
                 Beta_MVL_Banded(Row-Col,Col) = 0.0_idp
+            
 
             END DO ! lp
             END DO ! dp
             END DO ! uj
         END DO ! l Loop
+
+
 
 
 

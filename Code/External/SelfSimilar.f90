@@ -230,7 +230,6 @@ END IF
 
 t = t_in*Millisecond
 
-PRINT*,t_in,Millisecond
 
 R_Factor = SQRT(Kappa_wUnits)                                &
         *(Grav_Constant_G**((1.0_idp-gamma)/2.0_idp))       &

@@ -26,7 +26,8 @@ USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
 USE Poseidon_Units_Module, &
-            ONLY :  Set_Units
+            ONLY :  Set_Units,              &
+                    Centimeter
 
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
@@ -150,8 +151,8 @@ INTEGER, INTENT(IN)                                 ::  Report_ID
 
 
 1415 FORMAT(/'----------------- Domain Limits ---------------')
-1416 FORMAT(' Inner Radius = ',ES12.4E3)
-1417 FORMAT(' Outer Radius = ',ES12.4E3)
+1416 FORMAT(' Inner Radius = ',ES12.4E3,' cm')
+1417 FORMAT(' Outer Radius = ',ES12.4E3,' cm')
 
 
 
@@ -171,8 +172,9 @@ IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3)) THEN
     WRITE(*,1412)Num_T_Quad_Points
     WRITE(*,1413)Num_P_Quad_Points
     WRITE(*,1415)
-    WRITE(*,1416)R_INNER
-    WRITE(*,1417)R_Outer
+    WRITE(*,1416)R_Inner/Centimeter
+    WRITE(*,1417)R_Outer/Centimeter
+    WRITE(*,1400)
 END IF
 
 IF ( Report_ID .NE. -1 ) THEN
