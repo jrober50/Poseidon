@@ -128,13 +128,9 @@ ALLOCATE( Work(1:LWORK) )
 
 
 
-PRINT*,"Before XCFC_Calc_Source_Vector_TypeA"
 CALL XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
 
-!PRINT*,FP_Source_Vector_A(:,:,iU)
 
-!PRINT*,"Stopping in XCFC_Fixed_Point"
-!STOP
 
 Cur_Iteration = 0
 CONVERGED     = .FALSE.
@@ -154,7 +150,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
-    PRINT*,"Before XCFC_Solve_System_TypeA"
+
     !
     !   Solve Systems
     !
@@ -164,7 +160,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
     
 
-    PRINT*,"Before Acceleration"
+!    PRINT*,"Before Acceleration"
     CALL Coeff_To_Vector_TypeA( GVector(:,mk), iU )
     FVector(:,mk) = GVector(:,mk) - UVector(:)
 

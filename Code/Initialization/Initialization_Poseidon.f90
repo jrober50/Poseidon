@@ -164,7 +164,7 @@ USE Timer_Routines_Module, &
 
 USE Timer_Variables_Module, &
             ONLY :  Timer_Poisson_Matrix_Init,      &
-                    Timer_Core_Initialization
+                    Timer_Initialization_Core
 
 
 USE Initialization_Subroutines, &
@@ -264,7 +264,7 @@ LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Sources_Op
 
 
 CALL Init_Timers
-CALL TimerStart( Timer_Core_Initialization )
+CALL TimerStart( Timer_Initialization_Core )
 
 
 IF ( PRESENT( Verbose_Option ) ) THEN
@@ -462,9 +462,6 @@ IF ( Poisson_Mode ) THEN
     !                                                       !
     !=======================================================!
 
-    CALL Init_Timers()
-    CALL TimerStart( Timer_Core_Initialization )
-
 
     LM_Location => CFA_3D_LM_Map
     CALL Initialize_Derived()
@@ -481,7 +478,6 @@ IF ( Poisson_Mode ) THEN
     CALL TimerStop(  Timer_Poisson_Matrix_Init )
 
 
-    CALL TimerStop( Timer_Core_Initialization )
 
 
 ELSE
@@ -574,7 +570,7 @@ END IF
 CALL Output_Setup_Report()
 
 
-CALL TimerStop( Timer_Core_Initialization )
+CALL TimerStop( Timer_Initialization_Core )
 
 
 END SUBROUTINE Initialize_Poseidon

@@ -115,7 +115,7 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_XCFC_Initialization,      &
+            ONLY :  Timer_Initialization_XCFC, &
                     Timer_XCFC_Matrix_Init
 
 USE Variables_AMReX_Core, &
@@ -183,7 +183,15 @@ INTEGER                 :: hi(3)
 INTEGER                 :: Num_Boxes
 
 ! Determine Radial Base Variables from Multifab
-PRINT*,"In Initialization_XCFC_with_AMReX"
+IF ( Verbose_Flag ) THEN
+    PRINT*,"In Initialization_XCFC_with_AMReX"
+END IF
+
+
+CALL TimerStart(Timer_Initialization_XCFC)
+
+
+
 
 IF ( PRESENT(CFA_EQ_Flags_Input) ) THEN
     CFA_EQ_Flags = CFA_EQ_Flags_Input
@@ -198,8 +206,9 @@ CALL Create_Eq_Maps()
 CALL Initialize_AMReX_Maps()
 
 
-CALL PRINT_AMReX_Setup()
-
+IF ( Verbose_Flag ) THEN
+    CALL PRINT_AMReX_Setup()
+END IF
 
 Num_R_Elements = iNumLeafElements
 
@@ -225,10 +234,14 @@ CALL Determine_AMReX_Mesh()
 ! Allocate Arrays
 CALL Allocate_XCFC()
 
+
 ! Construct Matrices
 CALL TimerStart( Timer_XCFC_Matrix_Init )
 CALL Initialize_FP_Matrices()
 CALL TimerStop( Timer_XCFC_Matrix_Init )
+
+
+
 
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
@@ -236,12 +249,11 @@ Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 Calc_Var_At_Loc_A => Calc_Var_At_Location_Type_A
 Calc_Var_At_Loc_B => Calc_Var_At_Location_Type_B
 
-CALL TimerStop( Timer_XCFC_Initialization )
 
 
 
 
-
+CALL TimerStop(Timer_Initialization_XCFC)
 
 
 END SUBROUTINE  Initialization_XCFC_with_AMReX

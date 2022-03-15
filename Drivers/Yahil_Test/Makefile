@@ -1,3 +1,5 @@
+include ../../Build/Makefile_Core
+
 TEST_NAME    =Yahil_Test
 
 

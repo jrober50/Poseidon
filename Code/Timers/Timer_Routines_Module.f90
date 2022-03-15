@@ -63,8 +63,11 @@ Timer_Poseidon                      = 0.0_idp
 Timer_Core_Init_Test_Problem        = 0.0_idp
 Timer_Core_PrintResults             = 0.0_idp
 Timer_Core_Utilities                = 0.0_idp
-Timer_Core_Initialization           = 0.0_idp
 
+
+Timer_Initialization_Total           = 0.0_idp
+Timer_Initialization_Core           = 0.0_idp
+Timer_Initialization_XCFC           = 0.0_idp
 
 Timer_Poisson_Matrix_Init           = 0.0_idp
 Timer_Poisson_SourceInput           = 0.0_idp
@@ -86,7 +89,7 @@ Timer_GR_SourceInput_PartB          = 0.0_idp
 Timer_XCFC_Initialization           = 0.0_idp
 Timer_XCFC_Matrix_Init              = 0.0_idp
 Timer_XCFC_Matrix_Cholesky          = 0.0_idp
-Timer_XCFC_Type_B_Factorization     = 0.0_idp
+Timer_XCFC_Banded_Factorization     = 0.0_idp
 
 Timer_XCFC_X                        = 0.0_idp
 Timer_XCFC_X_SourceVector           = 0.0_idp
@@ -137,6 +140,31 @@ CALL TimerStop( Timer_Total )
 
 
 Timer_Poseidon = Timer_Total - Timer_Core_Init_Test_Problem
+
+
+! Matrix factorizations occur at two different times.
+! Here the seperate factorization time are added to create a total.
+Timer_XCFC_Matrix_Factorization = Timer_XCFC_Matrix_Cholesky        &
+                                + Timer_XCFC_Banded_Factorization
+
+Timer_Initialization_Total = Timer_Initialization_Core      &
+                           + Timer_Initialization_XCFC
+
+
+! The first call to the X system and CF system contain factorization calls.
+! Therefore we subtract those times out to get the time for just the source create
+! and linear solve(s)
+Timer_XCFC_X            = Timer_XCFC_X                      &
+                        - Timer_XCFC_Banded_Factorization
+
+Timer_XCFC_X_LinearSolve = Timer_XCFC_X_LinearSolve         &
+                         - Timer_XCFC_Banded_Factorization
+
+Timer_XCFC_ConFactor    = Timer_XCFC_ConFactor              &
+                        - Timer_XCFC_Matrix_Cholesky
+
+
+
 
 
 

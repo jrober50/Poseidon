@@ -18,17 +18,12 @@ USE Poseidon_Kinds_Module, &
 USE Initialization_Poseidon, &
                 ONLY :  Initialize_Poseidon
 
-USE Variables_IO, &
-                ONLY :  Write_Results_Flag
 
 USE Variables_MPI, &
                 ONLY :  ierr
 
 USE Variables_Functions, &
                 ONLY :  Potential_Solution
-
-USE Functions_FP, &
-                ONLY :  Laplace_Test_Sol
 
 USE Functions_Mesh, &
                 ONLY :  Create_3D_Mesh
@@ -42,7 +37,7 @@ USE Poseidon_Main_Module, &
                 ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions,   &
                         Poseidon_Close
 
-USE FP_Method_Module, &
+USE FP_System_Solvers_Module, &
                 ONLY :  Solve_FP_System
 
 USE MPI
@@ -89,6 +84,8 @@ INTEGER                                                 ::  L_Limit, L_Limit_Min
 INTEGER                                                 ::  Num_RE
 INTEGER, DIMENSION(:), ALLOCATABLE                      ::  RE_Table
 
+LOGICAL                                                 ::  Print_Results_Flag
+
 
 CALL MPI_INIT(ierr)
 
@@ -134,7 +131,7 @@ NQ(1) = 10        ! Number of Radial Quadrature Points
 NQ(2) = 5         ! Number of Theta Quadrature Points
 NQ(3) = 5         ! Number of Phi Quadrature Points
 
-
+Print_Results_Flag  = .TRUE.
 
 
 DO RE_Index = RE_Index_Min, RE_Index_Max
@@ -179,11 +176,18 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
             !        dr_Option               = dx_c,                 &
             !        dt_Option               = dy_c,                 &
             !        dp_Option               = dz_c                  &
-                    Solver_Type_Option       = Solver_Type,         &
+                    Method_Flag_Option       = Solver_Type,         &
                     CFA_Eq_Flags_Option      = CFA_Eqs,             &
                     Suffix_Flag_Option       = Suffix_Flag_Input,   &
-                    Verbose_Option           = Verbose              )
-
+                    Verbose_Option           = Verbose,                       &
+                    WriteAll_Option             = .FALSE.,                       &
+                    Print_Setup_Option          = .TRUE.,                        &
+                    Write_Setup_Option          = .TRUE.,                       &
+                    Print_Results_Option        = Print_Results_Flag,            &
+                    Write_Results_Option        = .TRUE.,                        &
+                    Print_Timetable_Option      = .TRUE.,                       &
+                    Write_Timetable_Option      = .TRUE.,                       &
+                    Write_Sources_Option        = .TRUE.     )
 
 
 
@@ -205,7 +209,7 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
 
 
 
-            IF ( Write_Results_Flag == 1 ) THEN
+            IF ( .TRUE. ) THEN
                 CALL Output_Run_Report()
                 CALL Output_Final_Results()
             END IF

@@ -99,7 +99,7 @@ USE Timer_Routines_Module, &
 
 USE Timer_Variables_Module, &
             ONLY :  Timer_Poisson_Matrix_Init,      &
-                    Timer_Core_Initialization
+                    Timer_Initialization_Core
 
 
 USE Functions_Mapping, &
@@ -243,7 +243,7 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  Frame_Option
 
 
 CALL Init_Timers
-CALL TimerStart( Timer_Core_Initialization )
+CALL TimerStart( Timer_Initialization_Core )
 
 
 
@@ -402,11 +402,11 @@ IF ( Verbose_Flag ) THEN
     PRINT*,"Poseidon Initialization Complete"
 END IF
 
+IF ( Verbose_Flag ) THEN
+    CALL Output_Setup_Report()
+END IF
 
-CALL Output_Setup_Report()
-
-
-CALL TimerStop( Timer_Core_Initialization )
+CALL TimerStop( Timer_Initialization_Core )
 
 
 
@@ -777,9 +777,9 @@ END DO
 ! gives its location in FEM_Elem_Table iNumLeafElements-2. This process repeats
 ! until all values in FEM_Elem_Table are full.
 DO elem = iNumLeafElements-1,0,-1
-    Here = maxloc(Tmp_Array(:),dim=1)
-    FEM_Elem_Table(Here-1) = elem           ! Since the arrays start their indexing at 0,
-    Tmp_Array(Here-1)      = -1             ! and the Fortran standard is to start at 1,
+    Here = maxloc(Tmp_Array(:),dim=1)-1
+    FEM_Elem_Table(Here) = elem             ! Since the arrays start their indexing at 0,
+    Tmp_Array(Here)      = -1               ! and the Fortran standard is to start at 1,
                                             ! Here-1 must be used as the array index.
 END DO
 

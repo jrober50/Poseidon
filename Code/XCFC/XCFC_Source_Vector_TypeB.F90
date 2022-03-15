@@ -798,7 +798,7 @@ END DO ! lvl
 
 #endif
 
-PRINT*,"E_Mass",E_Mass
+!PRINT*,"E_Mass",E_Mass
 
 END SUBROUTINE XCFC_AMReX_Calc_Source_Vector_TypeB
 

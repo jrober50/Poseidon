@@ -79,6 +79,15 @@ USE Initialization_XCFC_with_AMReX_Module, &
 
 #endif
 
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,     &
+                    TimerSTop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_GR_SourceInput
+
+
 use mpi
 
 
@@ -115,6 +124,9 @@ TYPE(amrex_box)                                     :: Box
 
 
 
+
+
+CALL TimerStart(Timer_GR_SourceInput)
 DO level = 0,AMReX_Num_Levels-1
 
     CALL amrex_multifab_build(  MF_Source(level),           &
@@ -122,18 +134,28 @@ DO level = 0,AMReX_Num_Levels-1
                                 MF_Src_Input(Level)%DM,     &
                                 MF_Src_nComps, 1                        )
 
-    PRINT*,"To Do : Interpolate between Source quadrature points."
+
+    
+!    PRINT*,"To Do : Interpolate between Source quadrature points."
     MF_Source(Level)=MF_Src_Input(Level)
 END DO
+ CALL TimerStop(Timer_GR_SourceInput)
+
+
+
+
+
+
 
 
 
 
 IF ( Poseidon_Remesh_Flag ) THEN
-
     Call Initialization_XCFC_with_AMReX()
-
 END IF
+
+
+
 
 
 

@@ -96,7 +96,6 @@ SUBROUTINE Output_Setup_Report()
 CHARACTER(LEN = 100)                                ::  Report_Name
 INTEGER                                             ::  Suggested_Number = 400
 
-PRINT*, "In Output_Setup_Report",myID_Poseidon
 IF (myID_Poseidon == MasterID_Poseidon ) THEN
 
 

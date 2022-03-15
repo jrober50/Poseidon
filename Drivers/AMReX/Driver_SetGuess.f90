@@ -158,7 +158,6 @@ END IF
 
 !    CALL Poseidon_Init_FlatGuess()
 
-Print*,"Before Poseidon_Input_Guess"
 CALL Poseidon_Input_Guess(  Psi_Guess,          &
                             AlphaPsi_Guess,     &
                             Beta_Guess,         &

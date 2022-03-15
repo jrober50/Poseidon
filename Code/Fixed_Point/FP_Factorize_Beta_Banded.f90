@@ -106,7 +106,7 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_XCFC_Type_B_Factorization
+            ONLY :  Timer_XCFC_Banded_Factorization
 
 
 USE MPI
@@ -140,7 +140,7 @@ INTEGER                                                 :: i
 IF ( Verbose_Flag ) THEN
     PRINT*,"--In Factorize_Beta_Banded."
 END IF
-CALL TimerStart( Timer_XCFC_Type_B_Factorization )
+CALL TimerStart( Timer_XCFC_Banded_Factorization )
 
 !   Dirichlet BCs modify the stiffness matrix so we modify it now.
 !   But to apply the BCs we will need values from the original matrix,
@@ -155,11 +155,6 @@ CALL DIRICHLET_BC_Beta_Banded_Mat()
 
 
 CALL Jacobi_PC_MVL_Banded()
-
-
-
-!PRINT*,"Beta_MVL_Banded in Factorize_Beta_Banded"
-!PRINT*,REAL(Beta_MVL_Banded, kind = idp)
 
 
 
@@ -220,7 +215,7 @@ IF ( Verbose_Flag ) THEN
 END IF
 
 
-CALL TimerStop( Timer_XCFC_Type_B_Factorization )
+CALL TimerStop( Timer_XCFC_Banded_Factorization )
 
 
 

@@ -255,8 +255,8 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
 Suffix_Input        = "Params"
 
 
@@ -277,12 +277,10 @@ CALL amrex_amrcore_init()
 
 CALL Init_AMReX_Parameters()
 
+!Domain_Edge = Domain_Edge*Centimeter
 
-
-Domain_Edge = Domain_Edge*Centimeter
-
-
-
+Domain_Edge(1) = xL(1)*Centimeter
+Domain_Edge(2) = xR(1)*Centimeter
 
 DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
@@ -329,10 +327,9 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     CALL Open_Run_Report_File()
 
-
     CALL Create_3D_Mesh( Mesh_Type,         &
-                        xL(1),    &
-                        xR(1),    &
+                        Domain_Edge(1),    &
+                        Domain_Edge(2),    &
                         NE(1),             &
                         NE(2),             &
                         NE(3),             &

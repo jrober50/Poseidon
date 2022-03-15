@@ -1,6 +1,7 @@
 VARIABLES = \
   Parameters_Poseidon.f90    \
   Parameters_Variable_Indices.f90 \
+  Parameters_IO.f90          \
   Variables_BC.f90           \
   Variables_Derived.f90      \
   Variables_Flags.f90        \

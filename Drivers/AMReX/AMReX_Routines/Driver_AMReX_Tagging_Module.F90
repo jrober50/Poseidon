@@ -283,9 +283,9 @@ Half_Decade_Table = [ 1,5,10,50,100,500,1000,5000,10000,50000,100000 ]
 
 Num_DOF = nComps/5
 
-!E_Level_Threshold = Central_E/10**(AMReX_Max_Level-Level)
+E_Level_Threshold = Central_E/10**(AMReX_Max_Level-Level)
 
-E_Level_Threshold = Central_E/Half_Decade_Table(Level)
+!E_Level_Threshold = Central_E/Half_Decade_Table(Level)
 
 !PRINT*,"Level ",level," Threshold ",E_Level_Threshold," Central E ",Central_E
 

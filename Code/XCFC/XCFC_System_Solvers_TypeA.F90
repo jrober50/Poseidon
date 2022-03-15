@@ -54,8 +54,7 @@ USE Variables_FP,  &
                     Beta_Diagonals,             &
                     Beta_MVL_Banded,            &
                     Beta_IPIV,                  &
-                    Beta_Factorized_Flag,       &
-                    MCF_Flag,              &
+                    MCF_Flag,                   &
                     Factored_NNZ,               &
                     Laplace_Factored_Val,       &
                     Laplace_Factored_Col,       &
@@ -67,11 +66,6 @@ USE Poseidon_Cholesky_Module,   &
             ONLY :  CCS_Back_Substitution,          &
                     CCS_Forward_Substitution,       &
                     Cholesky_Factorization
-
-
-USE FP_Factorize_Beta_Banded, &
-            ONLY :  Factorize_Beta_Banded,          &
-                    Jacobi_PC_MVL_Banded_Vector
 
 USE FP_Functions_BC,  &
             ONLY :  DIRICHLET_BC_Beta_Banded,       &

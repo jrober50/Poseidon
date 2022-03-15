@@ -34,8 +34,10 @@ REAL(idp), PUBLIC   ::  Timer_Poseidon
 REAL(idp), PUBLIC   ::  Timer_Core_Init_Test_Problem
 REAL(idp), PUBLIC   ::  Timer_Core_PrintResults
 REAL(idp), PUBLIC   ::  Timer_Core_Utilities
-REAL(idp), PUBLIC   ::  Timer_Core_Initialization
 
+REAL(idp), PUBLIC   ::  Timer_Initialization_Total
+REAL(idp), PUBLIC   ::  Timer_Initialization_Core
+REAL(idp), PUBLIC   ::  Timer_Initialization_XCFC
 
 REAL(idp), PUBLIC   ::  Timer_Poisson_Matrix_Init
 REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput
@@ -54,8 +56,11 @@ REAL(idp), PUBLIC   ::  Timer_GR_SourceInput_PartB
 
 REAL(idp), PUBLIC   ::  Timer_XCFC_Initialization
 REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Init
+
+
+REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Factorization
 REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Cholesky
-REAL(idp), PUBLIC   ::  Timer_XCFC_Type_B_Factorization
+REAL(idp), PUBLIC   ::  Timer_XCFC_Banded_Factorization
 
 REAL(idp), PUBLIC   ::  Timer_XCFC_X
 REAL(idp), PUBLIC   ::  Timer_XCFC_X_SourceVector

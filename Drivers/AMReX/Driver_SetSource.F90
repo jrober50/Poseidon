@@ -174,7 +174,6 @@ CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
-PRINT*,Yahil_Params(1), Millisecond
 SelfSim_T     = Yahil_Params(1)
 SelfSim_Kappa = Yahil_Params(2)
 SelfSim_Gamma = Yahil_Params(3)
@@ -221,21 +220,23 @@ IF ( Verbose_Flag ) THEN
 END IF
 
 
-!PRINT*,"nLevels",nlevels
 ALLOCATE( MF_Driver_Source(0:nLevels-1) )
 CALL amrex_init_from_scratch( 0.0_idp )
 
 
+CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
-!PRINT*,"After amrex_init_from_scratch"
+
+
+
+
+
 
 
 CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source, MF_Src_nComps, nLevels )
-!DEALLOCATE(MF_Driver_Source)
 
 
-!PRINT*,"After Poseidon_Input_Sources_AMREX"
-CALL TimerStop( Timer_Driver_SetSource_InitTest )
+
 
 
 
@@ -247,9 +248,6 @@ CALL TimerStop( Timer_Driver_SetSource_InitTest )
 !PRINT*,"Stopping in Driver_SetSource"
 !STOP
 
-
-
-!DEALLOCATE(MF_Driver_Source)
 
 
 

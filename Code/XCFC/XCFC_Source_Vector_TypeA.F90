@@ -677,7 +677,6 @@ INTEGER, DIMENSION(3)                           ::  iEL, iEU
 INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl
 
-PRINT*,"In XCFC_AMReX_Calc_Source_Vector_TypeA"
 
 FP_Source_Vector_A(:,:,iU) = 0.0_idp
 

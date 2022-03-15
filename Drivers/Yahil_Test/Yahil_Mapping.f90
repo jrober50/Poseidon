@@ -230,19 +230,19 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "G"
 Solver_Type         = 3
 
-RE_Table            = (/ 128, 256, 384, 512, 640, 768, 896, 1024, 256, 512 /)
+RE_Table            = (/ 64, 128, 256, 384, 512, 640, 768, 896, 4096, 768 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  1
-T_Index_Max         =  1
+T_Index_Min         =  5
+T_Index_Max         =  5
 
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  4
-RE_Index_Max        =  4
+RE_Index_Min        =  9
+RE_Index_Max        =  9
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -269,13 +269,13 @@ Dimension_Input     = 3
 Max_Iterations      = 10
 CC_Option           = 1.0E-10_idp
 
-Mesh_Type           = 6                        ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1E9_idp                   ! Outer Radius (cm)
+Domain_Edge(2)      = 1E8_idp                   ! Outer Radius (cm)
 
 
 
-NE(1)               = 128 ! 1.5*128                       ! Number of Radial Elements
+NE(1)               = 128 ! 1.5*128            ! Number of Radial Elements
 NE(2)               = 1                        ! Number of Theta Elements
 NE(3)               = 1                        ! Number of Phi Elements
 
@@ -322,7 +322,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(T_Index)
+    Suffix_Tail = Letter_Table(Mesh_Type)
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
