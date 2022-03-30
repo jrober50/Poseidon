@@ -51,7 +51,7 @@ USE Poseidon_Units_Module, &
                     Erg,                &
                     Gram
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  NUM_ENTRIES,        &
                     SELFSIM_R_VALS,     &
                     SELFSIM_POT_VALS,   &

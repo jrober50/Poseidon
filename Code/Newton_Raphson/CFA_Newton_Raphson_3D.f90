@@ -123,8 +123,11 @@ USE CFA_3D_Master_Build_Module, &
 USE Poseidon_IO_Module, &
                     ONLY :  Clock_In,                           &
                             OPEN_ITER_REPORT_FILE,              &
-                            CLOSE_ITER_REPORT_FILE,             &
-                            OUTPUT_FINAL_RESULTS
+                            CLOSE_ITER_REPORT_FILE
+
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
+
 
 USE IO_Linear_System, &
                     ONLY :  OUTPUT_JACOBIAN_MATRIX,             &
@@ -311,7 +314,7 @@ Iteration_Histogram(Cur_Iteration-1) = Iteration_Histogram(Cur_Iteration-1) + 1
 
 
 
-CALL OUTPUT_FINAL_RESULTS()
+CALL Write_Final_Results()
 
 IF ( Write_Flags(2)== 1 ) THEN
     !*!

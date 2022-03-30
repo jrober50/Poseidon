@@ -338,4 +338,31 @@ weights(:) = (2.0_idp*pi/PE)/Ord
 END SUBROUTINE Initialize_Trapezoid_Quadrature
 
 
+
+
+
+!+201+##################################################################!
+!                                                                       !
+!   Initialize_Trapezoid_Quadrature - Calculate the Trapezoid Rule      !
+!                              quadrature node locations and weights.   !
+!                                                                       !
+!#######################################################################!
+FUNCTION Initialize_Trapezoid_Quadrature_Locations(Ord)
+
+INTEGER, INTENT(IN)                                     ::  Ord
+
+REAL(KIND = idp), DIMENSION(1:Ord)                      ::  Initialize_Trapezoid_Quadrature_Locations
+
+INTEGER                                                 ::  j
+
+
+
+DO j = 0,Ord-1
+    Initialize_Trapezoid_Quadrature_Locations (j+1) = -1.0_idp + REAL(2.0_idp*j,idp)/REAL(Ord,idp)
+END DO
+
+
+END FUNCTION Initialize_Trapezoid_Quadrature_Locations
+
+
 END MODULE Functions_Quadrature

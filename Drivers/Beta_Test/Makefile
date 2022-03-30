@@ -47,19 +47,19 @@ MPI_MODE        =ON
 #MPI_MODE       =OFF
 
 
-Beta    : $(POSEIDON)
+Beta    : $(POSEIDON_o)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Laplace_Test_Beta.f90  -o $(OBJ)/Laplace_Test_Beta.o
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Beta.x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
-Mapping : $(POSEIDON)
+Mapping : $(POSEIDON_o)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Beta_Mapping.f90  -o $(OBJ)/Beta_Mapping.o
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Beta_Mapping.x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
-Upscale : $(POSEIDON)
+Upscale : $(POSEIDON_o)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Upscale_Coeffs_Test.f90  -o $(OBJ)/Upscale_Coeffs_Test.o
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Upscale.x

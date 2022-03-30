@@ -45,7 +45,7 @@ USE Variables_Functions, &
 USE FP_Functions_Results , &
             ONLY : Calc_1D_CFA_Values_FP
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  SelfSim_V_Switch
 
 USE Poseidon_IO_Parameters, &
@@ -63,10 +63,12 @@ USE Functions_Mapping, &
 
 USE Poseidon_IO_Module, &
             ONLY :  Open_Run_Report_File,       &
-                    Output_Final_Results,       &
                     Open_New_File,              &
                     OPEN_FILE_INQUISITION,      &
                     Output_Poseidon_Sources_3D
+
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
@@ -203,7 +205,7 @@ REAL(idp), DIMENSION(4)                                 ::  Yahil_Params
 
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
-REAL(idp), DIMENSION(1:6)                               ::  Time_Values
+REAL(idp), DIMENSION(1:7)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
 
 REAL(idp)                                               ::  ADM_Mass
@@ -230,19 +232,19 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "G"
 Solver_Type         = 3
 
-RE_Table            = (/ 64, 128, 256, 384, 512, 640, 768, 896, 4096, 768 /)
+RE_Table            = (/ 64, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
+Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  5
-T_Index_Max         =  5
+T_Index_Min         =  6
+T_Index_Max         =  6
 
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  9
-RE_Index_Max        =  9
+RE_Index_Min        =  5
+RE_Index_Max        =  5
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -250,7 +252,7 @@ Degree_Max          =  1
 L_Limit_Min         =  0
 L_Limit_Max         =  0
 
-AMReX_Levels        =  1
+AMReX_Levels        =  0
 
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
@@ -266,12 +268,12 @@ SelfSim_V_Switch    =  0
 
 Dimension_Input     = 3
 
-Max_Iterations      = 10
-CC_Option           = 1.0E-10_idp
+Max_Iterations      = 1000
+CC_Option           = 1.0E-15_idp
 
 Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1E8_idp                   ! Outer Radius (cm)
+Domain_Edge(2)      = 1E9_idp                   ! Outer Radius (cm)
 
 
 
@@ -284,10 +286,10 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
-Print_Results_Flag  = .TRUE.
-!Print_Results_Flag  = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
+!Print_Results_Flag  = .TRUE.
+Print_Results_Flag  = .FALSE.
 Suffix_Input        = "Params"
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
@@ -322,7 +324,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(Mesh_Type)
+    Suffix_Tail = Letter_Table(T_Index)
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -394,13 +396,13 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
            Anderson_M_Option           = Anderson_M_Values(M_Index),    &
            Verbose_Option              = Verbose,                       &
            WriteAll_Option             = .FALSE.,                       &
-           Print_Setup_Option          = .TRUE.,                        &
-           Write_Setup_Option          = .TRUE.,                       &
+           Print_Setup_Option          = .FALSE.,                        &
+           Write_Setup_Option          = .FALSE.,                       &
            Print_Results_Option        = Print_Results_Flag,            &
-           Write_Results_Option        = .TRUE.,                        &
-           Print_Timetable_Option      = .TRUE.,                       &
-           Write_Timetable_Option      = .TRUE.,                       &
-           Write_Sources_Option        = .TRUE.                        )
+           Write_Results_Option        = .FALSE.,                        &
+           Print_Timetable_Option      = .FALSE.,                       &
+           Write_Timetable_Option      = .FALSE.,                       &
+           Write_Sources_Option        = .FALSE.                        )
 
 
 
@@ -503,6 +505,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 !        WRITE(*,'(A,ES18.12,A)')"ADM Sum  : ", (ADM_Phys + ADM_Curve) / Gram, " grams"
         
         CALL Print_Results()
+        CALL Write_Final_Results()
     END IF
 
 

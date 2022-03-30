@@ -153,8 +153,7 @@ USE Linear_Solvers_And_Preconditioners, &
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In,                           &
                     OPEN_ITER_REPORT_FILE,              &
-                    CLOSE_ITER_REPORT_FILE,             &
-                    OUTPUT_FINAL_RESULTS
+                    CLOSE_ITER_REPORT_FILE
 
 USE Functions_Domain_Maps, &
             ONLY :  Map_To_lm

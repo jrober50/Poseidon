@@ -64,8 +64,6 @@ USE Variables_IO, &
 USE IO_Print_Results, &
             ONLY :  Print_Results
 
-USE Poseidon_IO_Module, &
-            ONLY :  Output_Final_Results
 
 USE XCFC_Solvers_Main_Module ,  &
             ONLY :  XCFC_X_Solve,               &
@@ -146,9 +144,6 @@ CALL Deallocate_XCFC_Source_Variables()
 
 
 
-IF (myID_Poseidon == MasterID_Poseidon ) THEN
-    CALL Output_Final_Results()
-END IF
 
 END SUBROUTINE XCFC_Method
 
@@ -202,7 +197,6 @@ CALL XCFC_Shift_Solve()
 
 CALL Deallocate_XCFC_Source_Variables()
 
-CALL Output_Final_Results()
 
 END SUBROUTINE XCFC_Method_New
 
@@ -300,7 +294,6 @@ CALL Deallocate_XCFC_Source_Variables()
 
 
 
-CALL Output_Final_Results()
 
 
 END SUBROUTINE XCFC_Method_Part2

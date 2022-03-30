@@ -3,13 +3,20 @@ geometry.prob_lo     = 0.0 0.0 0.0 # Lower domain size
 geometry.prob_hi     = 100000000 3.1415926535897931 6.2831853071795862 # Upper domain size
 geometry.is_periodic = 00 00 01    # Periodicity. 0 (no), 1 (yes)
 
-amr.n_cell            = 4096 01 01 # Number of cells in each dimension
-amr.max_grid_size_x   = 32
-amr.max_grid_size_y   = 2
-amr.max_grid_size_z   = 2
-amr.blocking_factor_x = 4
+amr.n_cell            = 256 01 01 # Number of cells in each dimension
+amr.max_grid_size_x   = 8
+amr.max_grid_size_y   = 4
+amr.max_grid_size_z   = 4
+amr.blocking_factor_x = 8
 amr.blocking_factor_y = 4
 amr.blocking_factor_z = 4
-amr.max_level         = 0
+amr.max_level         = 8
 
 amr.n_error_buf       = 0
+
+
+
+poseidon.n_quad       = 5 1 1    # Number of quadrature points
+poseidon.degree       = 1
+poseidon.llimit       = 0
+poseidon.andersonm    = 3

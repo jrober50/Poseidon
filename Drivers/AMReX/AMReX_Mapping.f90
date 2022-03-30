@@ -210,8 +210,8 @@ Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  5
-T_Index_Max         =  5
+T_Index_Min         =  6
+T_Index_Max         =  6
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -241,8 +241,8 @@ Dimension_Input     = 3
 Max_Iterations      = 10
 CC_Option           = 1.0E-10_idp
 
-Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
-Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
+Mesh_Type           = 1                        ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Domain_Edge(1)      = 0.0_idp                  ! Inner Radius (cm)
 Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
 
@@ -255,8 +255,8 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 Suffix_Input        = "Params"
 
 

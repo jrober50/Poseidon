@@ -20,7 +20,6 @@ MODULE Poseidon_IO_Module                                                       
 !##!    +301+   OPEN_FRAME_REPORT_FILE                                              !##!
 !##!    +303+   CLOSE_FRAME_REPORT_FILE                                             !##!
 !##!                                                                                !##!
-!##!    +401+   OUTPUT_FINAL_RESULTS                                                !##!
 !##!    +402+   OUTPUT_PETSC_REPORT                                                 !##!
 !##!    +403+   OUTPUT_STF_ELEM_BLOCK_MATRIX                                        !##!
 !##!                                                                                !##!
@@ -121,7 +120,7 @@ USE Variables_IO, &
                     iRF_Iter
 
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  SelfSim_T
 
 USE Variables_Functions, &
@@ -347,227 +346,7 @@ END SUBROUTINE CLOSE_ITER_REPORT_FILE
 
 
 
- !+401+############################################################################!
-!                                                                                   !
-!                           OUTPUT_FINAL_RESULTS                                    !
-!                                                                                   !
- !#################################################################################!
-SUBROUTINE OUTPUT_FINAL_RESULTS()
 
-
-CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
-INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
-INTEGER                                                     ::  Num_Files
-
-
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,          &
-                                                                Output_rc,          &
-                                                                Output_dr
-
-REAL(KIND = idp)                                            ::  Return_Psi,         &
-                                                                Return_AlphaPsi,    &
-                                                                Return_Beta1,       &
-                                                                Return_Beta2,       &
-                                                                Return_Beta3
-
-INTEGER                                                     ::  i, j, k, Here
-
-INTEGER                                                     ::  NUM_THETA_RAYS,     &
-                                                                NUM_PHI_RAYS,       &
-                                                                NUM_RADIAL_SAMPLES
-
-
-REAL(KIND = idp)                                            ::  DELTA_THETA,        &
-                                                                THETA_VAL
-
-REAL(KIND = idp)                                            ::  DELTA_PHI,        &
-                                                                PHI_VAL
-
-
-REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE           ::  Var_Holder
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,           &
-                                                                T_Holder,           &
-                                                                P_Holder
-
-REAL(idp), DIMENSION(6)                          ::  Units
-REAL(idp)                                                   ::  CF
-
-116 FORMAT (A,A,A,A,A,A)
-
-
-
-IF ( Write_Flags(iWF_Results) > 1 ) THEN
-
-
-    Num_Files = 4 + SUM(CFA_Eq_Flags)+1
-
-    ALLOCATE( Filenames(1:Num_Files) )
-    ALLOCATE( File_IDs(1:Num_Files) )
-
-
-
-
-    WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(3),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
-    WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
-    Here = 5
-    DO i = 1,5
-        IF ( CFA_Eq_Flags(i) == 1 ) THEN
-            Here = 5 + i - 1
-            WRITE(Filenames(Here),116)                &
-                    Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
-        END IF
-    END DO
-    WRITE(Filenames(Num_Files),116)                &
-    Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(6)),"_",TRIM(File_Suffix),".out"
-
-
-
-
-
-
-!        DO i = 0,PROB_DIM-1
-!            PRINT*,Coefficient_Vector(i)
-!        END DO
-
-    DO i = 1,Num_Files
-        CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i), 200 )
-    END DO
-
-
-    NUM_RADIAL_SAMPLES = WRITE_RESULTS_R_SAMPS
-    NUM_THETA_RAYS = WRITE_RESULTS_T_SAMPS
-    NUM_PHI_RAYS = WRITE_RESULTS_P_SAMPS
-    
-
-    ! Create Radial Spacing !
-    ALLOCATE( Output_rc(1:NUM_RADIAL_SAMPLES) )
-    ALLOCATE( Output_dr(1:NUM_RADIAL_SAMPLES) )
-    ALLOCATE( Output_re(0:NUM_RADIAL_SAMPLES) )
-
-    IF ( R_OUTER/(R_Inner+1.0_idp) > 1E3 ) THEN
-        CALL Create_Logarithmic_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,     &
-                                         output_re, output_rc, output_dr     )
-    ELSE
-        CALL Create_Uniform_1D_Mesh( R_INNER, R_OUTER, NUM_RADIAL_SAMPLES,     &
-                                     output_re, output_rc, output_dr     )
-    END IF
-
-    ! Create Output Spacing
-    ! Pull Number of Samples From Parameters !
-
-    !  Create Phi Spacing !
-    IF ( NUM_PHI_RAYS == 1 ) THEN
-        DELTA_PHI = pi/2.0_idp
-!        DELTA_PHI = 0.0_idp
-    ELSE
-        DELTA_PHI = 2.0_idp*pi/(NUM_PHI_RAYS-1)
-    END IF
-
-    ! Create Theta Spacing
-    IF ( NUM_THETA_RAYS == 1 ) THEN
-        DELTA_THETA = pi
-!            DELTA_PHI = 0.0_idp
-    ELSE
-        DELTA_THETA = pi/(NUM_THETA_RAYS-1)
-    END IF
-
-
-
-    ! Allocate Data Holders !
-    ALLOCATE( Var_Holder(1:NUM_PHI_RAYS, 1:NUM_THETA_RAYS, 1:NUM_RADIAL_SAMPLES,1:6) )
-    ALLOCATE( R_Holder(1:NUM_RADIAL_SAMPLES) )
-    ALLOCATE( T_Holder(1:NUM_THETA_RAYS) )
-    ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
-
-
-    ! Calculate Output
-    DO k = 1,NUM_PHI_RAYS
-    DO j = 1,NUM_THETA_RAYS
-    DO i = 1,NUM_RADIAL_SAMPLES
-
-
-
-        PHI_VAL = k*DELTA_PHI
-        THETA_VAL = (j-1)*DELTA_THETA
-
-!        CALL Calc_3D_Values_At_Location( output_re(i), THETA_VAL, PHI_VAL,           &
-!                                         Return_Psi, Return_AlphaPsi,                &
-!                                         Return_Beta1, Return_Beta2, Return_Beta3    )
-!!
-!!
-!        Var_Holder(k,j,i,1) = Return_Psi
-!        IF ( Return_Psi == 0.0_idp ) THEN
-!            Var_Holder(k,j,i,2) = 0.0_idp
-!        ELSE
-!            Var_Holder(k,j,i,2) = Return_AlphaPsi/Return_Psi
-!        END IF
-!        Var_Holder(k,j,i,3:5) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
-
-
-        CF = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_CF)
-
-        Var_Holder(k,j,i,1) = CF
-        Var_Holder(k,j,i,2) = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_LF)/CF
-        Var_Holder(k,j,i,3) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S1, iVB_S)
-        Var_Holder(k,j,i,4) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S2, iVB_S)
-        Var_Holder(k,j,i,5) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S3, iVB_S)
-        Var_Holder(k,j,i,6) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_X1, iVB_X)
-
-        R_Holder(i) = output_re(i)
-        T_Holder(j) = THETA_VAL
-        P_Holder(k) = PHI_VAL
-
-
-
-    END DO ! i Loop
-    END DO ! j Loop
-    END DO ! k Loop
-
-
-
-    ! Write Output Location Files
-    WRITE(File_IDs(1),*)Num_Radial_Samples, Num_Theta_Rays, Num_Phi_Rays
-    WRITE(File_IDs(2),*)R_Holder/Centimeter
-    WRITE(File_IDs(3),*)T_Holder
-    WRITE(File_IDs(4),*)P_Holder
-
-
-    
-    
-    Units = 1.0_idp
-    Units(3) = Shift_Units
-    ! Write Output Value Files
-
-    Here = 5
-    DO i = 1,5
-        IF ( CFA_Eq_Flags(i) == 1 ) THEN
-            DO k = 1,NUM_PHI_RAYS
-            DO j = 1,NUM_THETA_RAYS
-    
-                WRITE(File_IDs(Here),*)Var_Holder(k,j,:,i)/Units(i)
-
-            END DO ! j Loop
-            END DO ! k Loop
-            Here = Here + 1
-        END IF
-    END DO
-
-
-    DO k = 1,NUM_PHI_RAYS
-    DO j = 1,NUM_THETA_RAYS
-
-        WRITE(File_IDs(Num_Files),*)Var_Holder(k,j,:,6)/Units(3)
-
-    END DO ! j Loop
-    END DO ! k Loop
-
-
-END IF
-
-
-END SUBROUTINE OUTPUT_FINAL_RESULTS
 
 
 
@@ -883,11 +662,9 @@ IF ( Write_Flags(iWF_Source) == 2 ) THEN
 
 
 
-
     WRITE(Filenames(iSF_E),116) Poseidon_Sources_Dir,"Sources_E_",trim(File_Suffix),".out"
     WRITE(Filenames(iSF_S),116) Poseidon_Sources_Dir,"Sources_S_",trim(File_Suffix),".out"
     WRITE(Filenames(iSF_S1),116) Poseidon_Sources_Dir,"Sources_S1_",trim(File_Suffix),".out"
-    WRITE(Filenames(iSF_X1),116) Poseidon_Sources_Dir,"Sources_S1_",trim(File_Suffix),".out"
     WRITE(Filenames(iSF_Dim),116) Poseidon_Sources_Dir,"Sources_Dimensions_",trim(File_Suffix),".out"
     WRITE(Filenames(iSF_Rlocs),116) Poseidon_Sources_Dir,"Sources_Radial_Locs_",trim(File_Suffix),".out"
     WRITE(Filenames(iSF_Tlocs),116) Poseidon_Sources_Dir,"Sources_Theta_Locs_",trim(File_Suffix),".out"
@@ -907,38 +684,14 @@ IF ( Write_Flags(iWF_Source) == 2 ) THEN
 
     
 
-    WRITE(File_IDs(4),* )Local_RE_Dim, Local_TE_Dim, Local_PE_DIM
-    WRITE(File_IDs(4),* )Local_RQ_Dim, Local_TQ_Dim, Local_PQ_DIM
-    WRITE(File_IDs(8),* )SELFSIM_T
+    WRITE(File_IDs(iSF_Dim),* )Local_RE_Dim, Local_TE_Dim, Local_PE_DIM
+    WRITE(File_IDs(iSF_Dim),* )Local_RQ_Dim, Local_TQ_Dim, Local_PQ_DIM
+!    WRITE(File_IDs(8),* )SELFSIM_T
 
 
     Delta_X = Right_Limit - Left_Limit
     
-!    DO re = 0,Local_RE_Dim-1
-!    DO te = 0,Local_TE_Dim-1
-!    DO pe = 0,Local_PE_Dim-1
-!
-!        DO rd = 1,Local_RQ_Dim
-!        DO td = 1,Local_TQ_Dim
-!        DO pd = 1,Local_PQ_Dim
-!
-!            tpd = (rd-1)*Local_TQ_Dim*Local_PQ_Dim      &
-!                + (td-1)*Local_PQ_Dim                   &
-!                + pd
-!
-!
-!            WRITE(File_IDs(1),*) Local_E(tpd,re,te,pe)/E_Units
-!            WRITE(File_IDs(2),*) Local_S(tpd,re,te,pe)/S_Units
-!            WRITE(File_IDs(3),*) Local_Si(tpd,re,te,pe,1)/Si_Units
-!
-!        END DO  ! pd
-!        END DO  ! td
-!        END DO  ! rd
-!
-!
-!    END DO  ! PE
-!    END DO  ! TE
-!    END DO  ! RE
+
 
     DO pe = 0,Local_PE_Dim-1
     DO pd = 1,Local_PQ_Dim
@@ -953,9 +706,9 @@ IF ( Write_Flags(iWF_Source) == 2 ) THEN
                 + pd
 
             
-            WRITE(File_IDs(1),*) Local_E(tpd,re,te,pe)/E_Units
-            WRITE(File_IDs(2),*) Local_S(tpd,re,te,pe)/S_Units
-            WRITE(File_IDs(3),*) Local_Si(tpd,re,te,pe,1)/Si_Units
+            WRITE(File_IDs(iSF_E),*) Local_E(tpd,re,te,pe)/E_Units
+            WRITE(File_IDs(iSF_S),*) Local_S(tpd,re,te,pe)/S_Units
+            WRITE(File_IDs(iSF_S1),*) Local_Si(tpd,re,te,pe,1)/Si_Units
 
         END DO  ! pd
         END DO  ! td
@@ -973,7 +726,7 @@ IF ( Write_Flags(iWF_Source) == 2 ) THEN
         Dr_Over_Dx = (rlocs(re+1) - rlocs(re))/Delta_X
         CUR_R_LOCS(:) = Dr_Over_Dx * (INPUT_R_QUAD(:)-Left_Limit) + rlocs(re)
         DO rd = 1,Local_RQ_Dim
-            WRITE(File_IDs(5),*) CUR_R_LOCS(rd)/Centimeter
+            WRITE(File_IDs(iSF_Rlocs),*) CUR_R_LOCS(rd)/Centimeter
         END DO
     END DO
 
@@ -981,13 +734,13 @@ IF ( Write_Flags(iWF_Source) == 2 ) THEN
         Dt_Over_Dx = (tlocs(te+1) - tlocs(te))/Delta_X
         CUR_T_LOCS(:) = Dt_Over_Dx * (Input_T_Quad(:)-Left_Limit) + tlocs(te)
         DO td = 1,Local_TQ_Dim
-            WRITE(File_IDs(6),*) CUR_T_LOCS(td)
+            WRITE(File_IDs(iSF_Tlocs),*) CUR_T_LOCS(td)
         END DO
     END DO
 
     DO pe = 0,Local_PE_Dim-1
     DO pd = 1,Local_PQ_Dim
-        WRITE(File_IDs(7),*) Input_P_Quad(pd)
+        WRITE(File_IDs(iSF_Plocs),*) Input_P_Quad(pd)
     END DO
     END DO
     

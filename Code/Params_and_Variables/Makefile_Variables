@@ -14,9 +14,9 @@ VARIABLES = \
   Variables_Quadrature.f90   \
   Variables_Tables.f90       \
   Variables_Source.f90       \
-  Variables_Yahil.f90        \
+  Variables_External.f90     \
   Variables_Poisson.f90      \
-  Variables_Driver_AMReX.F90    \
+  Variables_Driver_AMReX.F90 \
   Variables_AMReX_Core.F90   \
   Variables_AMReX_Source.f90
 

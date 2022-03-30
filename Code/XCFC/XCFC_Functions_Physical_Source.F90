@@ -299,7 +299,6 @@ ELSE IF ( iU == 3) THEN
         Here = (iS_S1-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
 
         Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
-
     END DO ! pd
     END DO ! td
     END DO ! rd

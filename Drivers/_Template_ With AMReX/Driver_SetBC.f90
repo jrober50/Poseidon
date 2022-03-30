@@ -63,9 +63,9 @@ END IF
 
 
 
-Psi_BC          = 0.0_idp
-AlphaPsi_BC     = 0.0_idp
-Shift_Vector_BC = -1.0E2_idp
+Psi_BC          = 1.0_idp
+AlphaPsi_BC     = 1.0_idp
+Shift_Vector_BC = 0.0_idp
 
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)

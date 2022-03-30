@@ -40,7 +40,7 @@ USE Poseidon_Units_Module, &
 USE Variables_Functions, &
         ONLY :  Potential_Solution
 
-USE Variables_Yahil, &
+USE Variables_External, &
         ONLY :  SelfSim_T,              &
                 SelfSim_Kappa,          &
                 SelfSim_Gamma,          &

@@ -11,4 +11,4 @@ F90EXE_sources   += $(filter %.F90,$(POSEIDON))
 CEXE_sources     += $(filter %.cpp,$(POSEIDON))
 
 
-
+DEFINES += $(POSEIDON_DEFS)

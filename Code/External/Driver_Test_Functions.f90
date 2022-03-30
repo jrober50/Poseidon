@@ -69,7 +69,7 @@ USE DRIVER_Parameters, &
                         
 
 
-USE Variables_Yahil, &
+USE Variables_External, &
                 ONLY :  SELFSIM_T,                              &
                         SELFSIM_KAPPA,                          &
                         SELFSIM_GAMMA,                          &

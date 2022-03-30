@@ -81,9 +81,6 @@ USE Variables_IO, &
                             Write_Flags
 
 
-USE Variables_Yahil, &
-                    ONLY :  SelfSim_T
-
 USE Variables_Functions, &
                     ONLY :  Potential_Solution,         &
                             Shift_Solution,             &

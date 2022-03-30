@@ -106,7 +106,7 @@ USE Poseidon_MPI_Utilities_Module, &
                     MPI_Master_Print,       &
                     MPI_All_Print
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  SelfSim_T,              &
                     SelfSim_Kappa,          &
                     SelfSim_Gamma,          &
@@ -133,6 +133,11 @@ USE Timer_Variables_Module, &
 USE SelfSimilar_Module, &
             ONLY :  Calc_Yahil_Central_E
 
+
+USE Functions_Quadrature, &
+            ONLY :  Initialize_LG_Quadrature_Locations,         &
+                    Initialize_Trapezoid_Quadrature_Locations
+
 USE MPI
 
 IMPLICIT NONE
@@ -157,6 +162,12 @@ INTEGER,    INTENT(IN)                                  ::  nLevels_Input
 
 INTEGER                                                 ::  nVars_Source
 INTEGER                                                 ::  Num_DOF
+
+
+REAL(idp),  DIMENSION(NQ(1))                            ::  R_Quad
+REAL(idp),  DIMENSION(NQ(2))                            ::  T_Quad
+REAL(idp),  DIMENSION(NQ(3))                            ::  P_Quad
+REAL(idp),  DIMENSION(2)                                ::  xL
 
 
 INTEGER                                                 ::  Level
@@ -229,16 +240,27 @@ CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
 
 
+xL(1) = -1.0_idp
+xL(2) = +1.0_idp
+R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
+T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
+P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
+
+CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source,    &   ! Source Multifab
+                                   MF_Src_nComps,       &   ! Number of Comps in Multifab
+                                   nLevels,             &   ! AMReX Levels
+                                   NQ,                  &   ! Number Quadrature Points, DIM(3)
+                                   R_Quad,              &   ! Radial Quadrature Locations, DIM(NQ(1))
+                                   T_Quad,              &   ! Theta Quadrature Locations, DIM(NQ(2))
+                                   P_Quad,              &   ! Phi Quadrature Locations, DIM(NQ(3))
+                                   xL                   )   ! Quadrature Ref Element Limits, DIM(2)
 
 
 
 
-CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source, MF_Src_nComps, nLevels )
-
-
-
-
-
+!CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source,    &   ! Source Multifab
+!                                   MF_Src_nComps,       &   ! Number of Comps in Multifab
+!                                   nLevels              )   ! AMReX Levels
 
 
 

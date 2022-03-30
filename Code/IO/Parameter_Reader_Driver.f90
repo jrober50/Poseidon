@@ -25,7 +25,7 @@ MODULE DRIVER_Params_Read_Module                                                
 USE Poseidon_Kinds_Module, &
             ONLY : idp
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  SelfSim_Start_T,            &
                     SelfSim_End_T,              &
                     SelfSim_Num_Frames,         &

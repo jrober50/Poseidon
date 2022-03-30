@@ -78,6 +78,7 @@ ABSTRACT INTERFACE
     SUBROUTINE Calc_1D_Array_Pointer(   Num_RE_Input, Num_RQ_Input, RQ_Input,   &
                                         Left_Limit, Right_Limit,                &
                                         CFA_Lapse, CFA_ConFactor, CFA_Shift     )
+
         INTEGER, INTENT(IN)                                         ::  Num_RE_Input,   &
                                                                         Num_RQ_Input
 

@@ -75,7 +75,7 @@ USE Variables_Quadrature, &
                     Num_Quad_DOF
 
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  SelfSim_T,              &
                     SelfSim_Kappa,          &
                     SelfSim_Gamma

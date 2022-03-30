@@ -32,7 +32,7 @@ USE Poseidon_Kinds_Module, &
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  SELFSIM_R_VALS,     &
                     SELFSIM_POT_VALS,   &
                     SELFSIM_SHIFT_VALs, &

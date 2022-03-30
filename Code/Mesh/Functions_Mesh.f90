@@ -1111,17 +1111,24 @@ REAL(idp)                                               ::  dxl
 
 INTEGER, DIMENSION(0:Levels_In)                         ::  Break
 
+cnx = 128
+!cnx = INT( nx/( 1.0_idp + (Levels_In-1.0_idp)/2.0_idp) )
 
-cnx = INT( nx/( 1.0_idp + (Levels_In-1.0_idp)/2.0_idp) )
-dxl = (Outer_Edge-Inner_Edge)/cnx
 
+
+!Break(0) = 0
+!DO level = 1,Levels_In
+!    Break(level) = cnx+(level-1)*cnx/2
+!END DO
 
 Break(0) = 0
-DO level = 1,Levels_In
-    Break(level) = cnx+(level-1)*cnx/2
-END DO
+Break(1) = 16
+Break(2) = 48
+Break(3) = 156
 
-PRINT*,break
+dxl = (Outer_Edge-Inner_Edge)/cnx
+
+PRINT*,dxl,(Outer_Edge-Inner_Edge),cnx
 
 DO level = 0,Levels_In-1
     dx_c(Break(level)+1:Break(level+1)) = dxl/2**(Levels_In-Level-1)
@@ -1132,31 +1139,6 @@ DO i = 1,nx
     x_e(i) = Inner_Edge + SUM( dx_c(1:i) )
     x_c(i) = x_e(i) - dx_c(i)/2.0_idp
 END DO
-
-
-
-
-
-
-!x_e(0) = Inner_Edge
-!DO i = 1,Break
-!
-!    x_e(i) = x_e(i-1) + dxs
-!    x_c(i) = x_e(i) + dxs/2.0_idp
-!    dx_c(i) = dxs
-!
-!
-!END DO
-!
-!
-!DO i = Break+1,nx
-!
-!    x_e(i) = x_e(i-1) + dxl
-!    x_c(i) = x_e(i) + dxl/2.0_idp
-!    dx_c(i) = dxl
-!
-!END DO
-
 
 
 END SUBROUTINE Create_AMReX_Mimic_Mesh

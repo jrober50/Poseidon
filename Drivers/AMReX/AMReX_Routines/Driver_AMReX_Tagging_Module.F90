@@ -54,7 +54,7 @@ USE Variables_Mesh, &
                     NUM_T_ELEMENTS,             &
                     NUM_P_ELEMENTS
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  Central_E
 
 
@@ -100,7 +100,7 @@ CHARACTER(KIND=c_char), INTENT(INOUT)   ::  Tag(TLo(1):THi(1),  &
                                                 TLo(3):THi(3),  &
                                                 TLo(4):THi(4)   )
 
-INTEGER                                 ::  Tag_Style = 2
+INTEGER                                 ::  Tag_Style = 3
 
 
 IF ( Tag_Style == 1 ) THEN
@@ -127,6 +127,19 @@ ELSE IF ( Tag_Style == 2 ) THEN
                         SetTag, ClearTag,   &
                         Tag                 )
 
+
+ELSE IF ( Tag_Style == 3 ) THEN
+
+    CALL Tag_By_Numbers( Level,              &
+                         BLo, BHi,           & ! Current Box Bounds
+                         SLo, SHi,           & ! Src Bounds
+                         TLo, THi,           & ! Tag Bounds
+                         nComps,             &
+                         Src,                & ! Pointer to Source Data
+                         SetTag, ClearTag,   &
+                         Tag                 )
+
+
 END IF
 
 
@@ -145,9 +158,9 @@ END SUBROUTINE Tag_Source_Elements
 
 
 
- !+101+################################################################!
+ !+201+################################################################!
 !                                                                       !
-!          Tag_Source_Elements                                          !
+!          Tag_By_Half                                                  !
 !                                                                       !
  !#####################################################################!
 SUBROUTINE Tag_By_Half( Level,              &
@@ -235,9 +248,9 @@ END SUBROUTINE Tag_By_Half
 
 
 
-!+101+################################################################!
+ !+202+################################################################!
 !                                                                       !
-!          Tag_Source_Elements                                          !
+!          Tag_By_Source                                                !
 !                                                                       !
  !#####################################################################!
 SUBROUTINE Tag_By_Source( Level,              &
@@ -322,6 +335,83 @@ END DO ! pe
 
 END SUBROUTINE Tag_By_Source
 
+
+
+
+
+
+
+ !+203+################################################################!
+!                                                                       !
+!          Tag_By_Numbers                                               !
+!                                                                       !
+ !#####################################################################!
+SUBROUTINE Tag_By_Numbers( Level,              &
+                          BLo, BHi,           & ! Current Box Bounds
+                          SLo, SHi,           & ! Src Bounds
+                          TLo, THi,           & ! Tag Bounds
+                          nComps,             &
+                          Src,                & ! Pointer to Source Data
+                          SetTag, ClearTag,   &
+                          Tag                 )
+
+
+INTEGER,                INTENT(IN)      ::  Level
+INTEGER,                INTENT(IN)      ::  BLo(3), BHi(3)
+INTEGER,                INTENT(IN)      ::  SLo(3), SHi(3)
+INTEGER,                INTENT(IN)      ::  TLo(4), THi(4)
+INTEGER,                INTENT(IN)      ::  nComps
+REAL(idp),              INTENT(IN)      ::  Src(SLo(1):SHi(1),  &
+                                                SLo(2):SHi(2),  &
+                                                SLo(3):SHi(3),  &
+                                                nComps          )
+
+CHARACTER(KIND=c_char), INTENT(IN)      ::  SetTag
+CHARACTER(KIND=c_char), INTENT(IN)      ::  ClearTag
+
+CHARACTER(KIND=c_char), INTENT(INOUT)   ::  Tag(TLo(1):THi(1),  &
+                                                TLo(2):THi(2),  &
+                                                TLo(3):THi(3),  &
+                                                TLo(4):THi(4)   )
+
+
+INTEGER                                 ::  re, te, pe
+
+INTEGER, DIMENSION(0:8)                 ::  EtR_Table
+
+
+
+IF ( Num_R_Elements == 64 ) THEN
+    EtR_Table = (/ 48, 64, 96, 96, 96, 96, 96, 64, 0 /)             ! 64 Level 0 elements
+ELSE IF ( Num_R_Elements == 128 ) THEN
+    EtR_Table = (/ 96, 128, 192, 192, 192, 192, 192, 128, 0 /)      ! 128 Level 0 elements
+ELSE IF ( Num_R_Elements == 256 ) THEN
+    EtR_Table = (/ 192, 256, 384, 384, 384, 384, 384, 256, 0 /)     ! 256 Level 0 elements
+END IF
+
+DO pe = BLo(3),BHi(3)
+DO te = BLo(2),BHi(2)
+DO re = BLo(1),BHi(1)
+    
+
+    
+    IF ( re < EtR_Table(Level) ) THEN
+        Tag(re,te,pe,1) = SetTag
+    ELSE
+        Tag(re,te,pe,1) = ClearTag
+    END IF
+
+
+
+
+END DO ! re
+END DO ! te
+END DO ! pe
+
+
+
+
+END SUBROUTINE Tag_By_Numbers
 
 
 

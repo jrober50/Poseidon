@@ -414,22 +414,22 @@ DO d = 0,DEGREE
                * LagPoly_MultiLayer_Table( d, rd, 0, iCT)            &
                * R_Int_Weights(rd)
 
-        IF ( iU == iU_CF ) THEN
+!        IF ( iU == iU_CF ) THEN
 !            PRINT*,level,iE,d,rd
-
+!
 !            PRINT*,SourceTerm( :, rd, iU )
 !            PRINT*,"++++++++++++++++++++++"
 !            PRINT*,Ylm_Elem_CC_Values( :, lm_loc )
 !            PRINT*,"======================"
 !            PRINT*,TP_Int_Weights(:)
 !            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
-
+!
 !            PRINT*,SUM( SourceTerm( :, rd, iU )             &
 !            * Ylm_Elem_CC_Values( :, lm_loc )               &
 !            * TP_Int_Weights(:)                     ),      &
 !            Lagpoly_MultiLayer_Table( d, rd, 0, iCT ),      &
 !            R_Int_Weights(rd)
-        END IF
+!        END IF
 
 
 #else
@@ -444,14 +444,14 @@ DO d = 0,DEGREE
 
         IF ( iU == iU_CF ) THEN
 !            PRINT*,level,iE,d,rd
-
+!
 !            PRINT*,SourceTerm( :, rd, iU )
 !            PRINT*,"++++++++++++++++++++++"
 !            PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
 !            PRINT*,"======================"
 !            PRINT*,TP_Int_Weights(:)
 !            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
-
+!
 !            PRINT*,SUM( SourceTerm( :, rd, iU )             &
 !            * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))       &
 !            * TP_Int_Weights(:)                     ),      &
