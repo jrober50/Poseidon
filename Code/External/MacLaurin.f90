@@ -30,7 +30,7 @@ MODULE MacLaurin_Module                                                         
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  Grav_Constant_G,        &
                     Gram,                  &
                     Centimeter,             &
@@ -47,7 +47,8 @@ USE Variables_MPI, &
                     MasterID_Poseidon
 
 USE  Variables_IO, &
-            ONLY :  Report_Flags
+            ONLY :  Report_Flags,           &
+                    iRF_Setup
 
 USE Functions_Mapping, &
             ONLY :  Map_To_X_Space,         &
@@ -56,6 +57,17 @@ USE Functions_Mapping, &
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
+
+USE Quadrature_Mapping_Functions,   &
+            ONLY :  Quad_Map
+
+
+USE Variables_External, &
+            ONLY :  MacLaurin_SemiMinor,    &
+                    MacLaurin_SemiMajor,    &
+                    MacLaurin_Ecc,          &
+                    MacLaurin_SphereType,   &
+                    MacLaurin_Rho
 
 IMPLICIT NONE
 
@@ -183,7 +195,7 @@ BB = B*B
 CC = C*C
 
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
-IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
+IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3) ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : MacLaurin Spheroid'
     WRITE(*,'(A,A)')      ' - Spheroid Type  :  ', Spheroid_Name
@@ -201,7 +213,6 @@ Energy   = 0.0_idp
 !Pressure = kappa * Density**Gamma
 !Energy   = Pressure / (Gamma - 1.0_dip )
 Spec_Ent = C_Square + (Energy + Pressure)/Density
-
 
 
 DO re = 1,Num_Elem(1)
@@ -223,9 +234,8 @@ DO pe = 1,Num_Elem(3)
     DO td = 1,Num_Quad(2)
     DO pd = 1,Num_Quad(3)
 
-        Here = (rd-1) * Num_Quad(3) * Num_Quad(2)       &
-             + (td-1) * Num_Quad(3)                     &
-             + pd
+        Here = Quad_Map(rd, td, pd, Num_Quad )
+
 
         Value = ( rsqr(rd) * cossqr_p(pd) * sinsqr_t(td) ) / AA      &
               + ( rsqr(rd) * sinsqr_p(pd) * sinsqr_t(td) ) / BB      &
@@ -238,7 +248,6 @@ DO pe = 1,Num_Elem(3)
         ELSE
             Output_E(Here,re-1,te-1,pe-1) = 0.0_idp
         END IF
-
     END DO ! pd
     END DO ! td
     END DO ! rd
@@ -536,6 +545,173 @@ END Subroutine MacLaurin_Potential_Sub
 
 
 
+!+201+##########################################################
+!
+!   MacLaurin_Potential - Calulates the potential at a given location for the MacLaurin Spheriod
+!
+!################################################################
+SUBROUTINE MacLaurin_Potential_Sub_B(r, theta, phi, pot)
+
+
+REAL(KIND = idp), INTENT(IN)                                ::  r, theta, phi
+REAL(KIND = idp), INTENT(OUT)                               ::  Pot
+
+
+REAL(KIND = idp)                                            ::  X, Y, Z
+REAL(KIND = idp)                                            ::  XX, YY, ZZ
+REAL(KIND = idp)                                            ::  VAL, &
+                                                                rsqr,                &
+                                                                ecc, eccsqr, eccmod, &
+                                                                Parta, Partb, Partc, &
+                                                                lambda, POTENTIAL
+
+IF ( MacLaurin_SphereType == 'P') THEN
+!    Spheroid_Type_Flag  = 2
+!    Spheroid_Name       = 'Prolate'
+
+    A = MacLaurin_SemiMajor
+    B = MacLaurin_SemiMinor
+    C = B
+    
+ELSE
+!    Spheroid_Type_Flag  = 1
+!    Spheroid_Name       = 'Oblate '
+
+    A = MacLaurin_SemiMajor
+    B = A
+    C = MacLaurin_SemiMinor
+
+END IF
+
+
+AA = A*A
+BB = B*B
+CC = C*C
+
+
+!   Calculate Eccentricity !
+ecc =   sqrt(1 - CC/AA)
+
+IF ( MacLaurin_SemiMajor == MacLaurin_SemiMinor ) THEN
+
+    IF ( r >= MacLaurin_SemiMajor ) THEN
+
+!        POTENTIAL = -GM/r
+
+    ELSE
+
+    END IF
+
+ELSE
+
+    eccsqr = ecc*ecc
+
+    !   Calculate Cartesian Coordinates
+    X = r * cos(phi) * sin(theta)
+    Y = r * sin(phi) * sin(theta)
+    Z = r * cos(theta)
+
+    XX = X*X
+    YY = Y*Y
+    ZZ = Z*Z
+
+
+    VAL = XX/AA + YY/BB + ZZ/CC
+    !
+    !   VAL > 1 -> point is outside.  VAL <= 1 -> point is inside
+    !
+
+    IF (VAL .LE. 1.0_idp) THEN
+
+        !
+        !   Equations for potential inside homegenous spheroid
+        !
+        !       REF:    Ellipsoidal Figures of Equilibrium - Chandrasekhar - Chapter 3
+        !
+        IF ( MacLaurin_SphereType == 'O') THEN
+
+            eccmod = sqrt(1- eccsqr)/(eccsqr*ecc)*ASIN(ecc)
+
+            Parta = eccmod - (1 - eccsqr)/eccsqr
+
+            Partb = 2/eccsqr - 2*eccmod
+
+
+            POTENTIAL = -pi*Grav_Constant_G*MacLaurin_Rho * ((2*AA - XX - YY)*Parta + (CC - ZZ)*Partb)
+
+
+        ELSE IF (MacLaurin_SphereType == 'P') THEN
+
+            eccmod = (1 - eccsqr)/(eccsqr*ecc) * LOG((1+ecc)/(1-ecc))
+
+            Parta = eccmod - 2*(1 - eccsqr)/eccsqr
+
+            Partb = 1/eccsqr - 0.5_idp*eccmod
+
+
+            POTENTIAL = pi*Grav_Constant_G*MacLaurin_Rho*(2*CC - YY - ZZ)*Partb + (AA - XX)*Parta
+
+
+        END IF
+
+
+    ELSE IF (VAL > 1.0_idp) THEN
+
+        !
+        !   Equations for potential outside homegenous spheroid
+        !
+        !       REF:    Ellipsoidal Figures of Equilibrium - Chandrasekhar - Chapter 3 -
+        !
+        lambda = MacLaurin_Root_Finder_B(r, theta, phi)
+
+        rsqr = XX + YY
+
+        Parta = (sqrt(1-eccsqr)/(eccsqr*ecc))*asin(ecc) - (1-eccsqr)/eccsqr;
+
+        Partb = 2/eccsqr - 2*((1-eccsqr)/(ecc*eccsqr))*asin(ecc);
+
+        Partc = pi/sqrt(AA-CC) - 2/sqrt(AA-CC)*atan(sqrt((CC+lambda)/(AA-CC)));
+
+
+        IF ( MacLaurin_SphereType == 'O' ) THEN
+
+
+
+
+            POTENTIAL = -pi*Grav_Constant_G*MacLaurin_Rho                                  &
+                        * AA * C                                                    &
+                        * ( (1 + rsqr/(2*(CC-AA)) - ZZ/(CC-AA))*Partc                    &
+                            - rsqr*sqrt(CC+lambda)/((CC-AA)*(AA+lambda))              &
+                            - ZZ*( 2/((AA+lambda)*sqrt(CC+lambda))                  &
+                                   - 2*sqrt(CC+lambda)/((CC-AA)*(AA+lambda)) ) );
+
+
+        ELSE IF ( MacLaurin_SphereType == 'P') THEN
+
+
+            POTENTIAL = -pi*Grav_Constant_G*MacLaurin_Rho                                   &
+                      * A * CC                                                              &
+                      * ( - Parta                                                           &
+                          - Partb                                                           &
+                          + ( XX )                                                          &
+                            * ( (1.5*A - 0.5*C + lambda)*Partb*Partb + Parta/(A - C) )      &
+                          + (YY + ZZ)                                                       &
+                            * ( (1.5*C - 0.5*A + lambda)*Partc*Partc + Parta/(A - C) ) )
+
+
+
+        END IF
+
+
+    END IF
+
+END IF
+
+Pot  = POTENTIAL
+
+END Subroutine MacLaurin_Potential_Sub_B
+
+
 !+301+###########################################################################!
 !                                                                                !
 !                               MacLaurin_Radius                                 !
@@ -631,7 +807,57 @@ MacLaurin_Root_Finder = 0.5 * ( - LenA + sqrt(LenA*LenA - 4*LenB))
 END FUNCTION MacLaurin_Root_Finder
 
 
+!+302+#################################################################
+!
+!   MacLaurin_Root_Finder
+!
+!#######################################################################
+PURE FUNCTION MacLaurin_Root_Finder_B( r, theta, phi )
 
+
+REAL(KIND = idp),   INTENT(IN)                      ::  r, theta, phi
+
+REAL(KIND = idp)                                    ::  MacLaurin_Root_Finder_B
+
+REAL(KIND = idp)                                    ::  rsqr, xsqr, ysqr, zsqr
+
+REAL(KIND = idp)                                    ::  LenA, LenB
+
+!! r^2  !!
+rsqr = r * r
+
+
+!! x^2 = r^2 * cos(theta)^2 * sin(phi)^2 !!
+xsqr = rsqr * cos(phi) * cos(phi)* sin(theta) * sin(theta)
+
+!! y^2 = r^2 * sin(theta)^2 * sin(phi)^2 !!
+ysqr = rsqr * sin(phi) * sin(phi)* sin(theta) * sin(theta)
+
+!! z^2 = r^2 * cos(phi)^2  !!
+zsqr = rsqr * cos(theta) * cos(theta)
+
+
+
+LenA = AA + CC - xsqr - ysqr - zsqr
+
+
+IF ( MacLaurin_SphereType == 'O' ) THEN
+
+    LenB = AA*(CC - zsqr) - CC*(xsqr + ysqr)
+
+ELSE IF ( MacLaurin_SphereType == 'P' ) THEN
+
+    LenB = CC*(AA - xsqr) - AA*(ysqr + zsqr)
+
+END IF
+
+
+MacLaurin_Root_Finder_B = 0.5 * ( - LenA + sqrt(LenA*LenA - 4*LenB))
+
+
+
+
+END FUNCTION MacLaurin_Root_Finder_B
 
 
 

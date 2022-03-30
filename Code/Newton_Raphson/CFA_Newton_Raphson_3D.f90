@@ -50,11 +50,10 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                     ONLY : pi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
                     ONLY :  C_Square,                   &
                             Centimeter,                 &
                             Meter,                      &
-                            Second,                     &
                             GravPot_Units,              &
                             Shift_Units
 
@@ -72,7 +71,9 @@ USE Variables_IO, &
                             Frame_Update_Table,         &
                             Iter_Time_Table,            &
                             Total_Run_Iters,            &
-                            Iteration_Histogram
+                            Iteration_Histogram,        &
+                            iRF_Frame,                  &
+                            iRF_Iter
 
 USE Variables_Mesh, &
                     ONLY :  Num_R_Elements,             &
@@ -122,8 +123,11 @@ USE CFA_3D_Master_Build_Module, &
 USE Poseidon_IO_Module, &
                     ONLY :  Clock_In,                           &
                             OPEN_ITER_REPORT_FILE,              &
-                            CLOSE_ITER_REPORT_FILE,             &
-                            OUTPUT_FINAL_RESULTS
+                            CLOSE_ITER_REPORT_FILE
+
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
+
 
 USE IO_Linear_System, &
                     ONLY :  OUTPUT_JACOBIAN_MATRIX,             &
@@ -310,7 +314,7 @@ Iteration_Histogram(Cur_Iteration-1) = Iteration_Histogram(Cur_Iteration-1) + 1
 
 
 
-CALL OUTPUT_FINAL_RESULTS()
+CALL Write_Final_Results()
 
 IF ( Write_Flags(2)== 1 ) THEN
     !*!
@@ -752,14 +756,14 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
 
 FILE_ID = -1
-IF ( Report_Flags(2) == 1 ) THEN
+IF ( Report_Flags(iRF_Frame) == 1 ) THEN
 
-    FILE_ID(0) = Report_IDs(2)
+    FILE_ID(0) = Report_IDs(iRF_Frame)
 
 END IF
 
-IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
-    FILE_ID(1) = Report_IDs(3)
+IF (( Report_Flags(iRF_Iter) == 2) .OR. (Report_Flags(iRF_Iter) == 3) ) THEN
+    FILE_ID(1) = Report_IDs(iRF_Iter)
 END IF
 
 
@@ -815,7 +819,7 @@ END DO
 IF ( ASSOCIATED(Potential_Solution) ) THEN
 
     ! Write Results Table Header to Screen
-    IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
+    IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
         IF ( Rank == 0 ) THEN
             PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
             WRITE(*,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
@@ -849,7 +853,7 @@ IF ( ASSOCIATED(Potential_Solution) ) THEN
 
 
         ! Write Results to Screen
-        IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
+        IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
             IF ( Rank == 0 ) THEN
                 WRITE(*,111) r/Centimeter,              &
                              Analytic_Val,              &
@@ -879,7 +883,7 @@ IF ( ASSOCIATED(Potential_Solution) ) THEN
 ELSE
 
     ! Write Results Table Header to Screen
-    IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
+    IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
         IF ( Rank == 0 ) THEN
             PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
             WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
@@ -909,7 +913,7 @@ ELSE
 
 
         ! Write Results to Screen
-        IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
+        IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
             IF ( Rank == 0 ) THEN
                 WRITE(*,111) r/Centimeter,              &
                              PsiPot_Val,                &
@@ -941,7 +945,7 @@ END IF
 
 
 
-WRITE( Report_IDs(3), '(4/)')
+WRITE( Report_IDs(iRF_Iter), '(4/)')
 
 END SUBROUTINE OUTPUT_ITERATION_REPORT
 
@@ -974,12 +978,12 @@ INTEGER                                                 ::  MaxA_Loc
 REAL(KIND = idp)                                        ::  Ratio_Real, Ratio_Imag
 
 FILE_ID = -1
-IF ( Report_Flags(2) == 1 ) THEN
-    FILE_ID(0) = Report_IDs(2)
+IF ( Report_Flags(iRF_Frame) == 1 ) THEN
+    FILE_ID(0) = Report_IDs(iRF_Frame)
 END IF
 
-IF (( Report_Flags(3) == 2) .OR. (Report_Flags(3) == 3) ) THEN
-    FILE_ID(1) = Report_IDs(3)
+IF (( Report_Flags(iRF_Iter) == 2) .OR. (Report_Flags(iRF_Iter) == 3) ) THEN
+    FILE_ID(1) = Report_IDs(iRF_Iter)
 END IF
 
 
@@ -1052,7 +1056,7 @@ IF (myID_Poseidon == 0) THEN
 
 
 !   Output data to screen
-    IF (( Report_Flags(2) == 1) .OR. (Report_Flags(2) == 3) ) THEN
+    IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
 
         WRITE(*,'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(NR_Update_Vector)) ",MAXVAL(ABS(NR_Update_Vector)),   &
                                               "  Criteria ",Convergence_Criteria

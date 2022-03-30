@@ -65,14 +65,15 @@ USE Functions_Mapping, &
                             CFA_3D_LM_Map
 
 
+
 IMPLICIT NONE
 
 CONTAINS
- !+101+################################################################################!
-!                                                                                       !
-!       Initialize_Mesh                                                                 !
-!                                                                                       !
- !#####################################################################################!
+ !+101+####################################################!
+!                                                           !
+!       Initialize_Derived                                  !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Initialize_Derived()
 
 IF ( Verbose_Flag ) THEN
@@ -131,6 +132,74 @@ NUM_OFF_DIAGONALS = ULM_LENGTH*(DEGREE + 1) - 1
 
 
 END SUBROUTINE Initialize_Derived
+
+
+
+
+
+
+
+
+
+
+ !+201+####################################################!
+!                                                           !
+!       Initialize_Derived_AMReX                            !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Initialize_Derived_AMReX
+
+IF ( Verbose_Flag ) THEN
+    PRINT*,"-Initializing Derived Quantities. "
+END IF
+
+IF ( DOMAIN_DIM == 1 ) THEN
+
+    LM_LENGTH = 1
+    Matrix_Location => CFA_1D_Matrix_Map
+    LM_Location => CFA_1D_LM_Map
+
+ELSE IF ( DOMAIN_DIM == 2 ) THEN
+
+    LM_LENGTH = L_LIMIT + 1
+    Matrix_Location => CFA_2D_Matrix_Map
+    LM_Location => CFA_2D_LM_Map
+
+ELSE IF ( DOMAIN_DIM == 3 ) THEN
+
+    LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
+    Matrix_Location => CFA_3D_Matrix_Map
+    LM_Location => CFA_3D_LM_Map
+
+END IF
+
+
+
+
+
+!
+!   VAR_DIM - Length of vector required to hold coefficients for 1 variable.
+!
+ELEM_VAR_DIM        = LM_LENGTH*(DEGREE + 1)
+
+
+!
+!   PROB_DIM - Length of vector required to hold coefficients for all variables
+!
+ULM_LENGTH          = NUM_CFA_VARS*LM_LENGTH
+ELEM_PROB_DIM       = NUM_CFA_VARS*ELEM_VAR_DIM
+ELEM_PROB_DIM_SQR   = ELEM_PROB_DIM*ELEM_PROB_DIM
+
+
+Beta_Elem_Prob_Dim  = 3*Elem_Var_Dim
+
+
+NUM_OFF_DIAGONALS   = ULM_LENGTH*(DEGREE + 1) - 1
+
+
+
+END SUBROUTINE Initialize_Derived_AMReX
+
 
 
 

@@ -41,7 +41,7 @@ USE Poseidon_Numbers_Module, &
                         ONLY :  pi
 
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
                 ONLY :  C_Square,           &
                         Grav_Constant_G
 
@@ -69,7 +69,7 @@ USE DRIVER_Parameters, &
                         
 
 
-USE Variables_Yahil, &
+USE Variables_External, &
                 ONLY :  SELFSIM_T,                              &
                         SELFSIM_KAPPA,                          &
                         SELFSIM_GAMMA,                          &

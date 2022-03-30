@@ -27,30 +27,33 @@ MODULE SubJacobian_Functions_Module_1D                                          
 !                                   !
 !===================================!
 
-USE Units_Module, &
-                ONLY :  GR_Source_Scalar
+USE Poseidon_Units_Module, &
+            ONLY :  GR_Source_Scalar
 
 USE Poseidon_Kinds_Module, &
-                ONLY :  idp
+            ONLY :  idp
                         
 
 USE Poseidon_Numbers_Module, &
-                ONLY :  pi,                 &
-                        TwoPi,              &
-                        OneThird,           &
-                        TwoThirds,          &
-                        FourThirds
+            ONLY :  pi,                 &
+                    TwoPi,              &
+                    OneThird,           &
+                    TwoThirds,          &
+                    FourThirds
 
 USE Variables_Quadrature, &
-                ONLY :  NUM_R_QUAD_POINTS,          &
-                        NUM_T_QUAD_POINTS,          &
-                        NUM_P_QUAD_POINTS,          &
-                        NUM_TP_QUAD_POINTS
+            ONLY :  NUM_R_QUAD_POINTS,          &
+                    NUM_T_QUAD_POINTS,          &
+                    NUM_P_QUAD_POINTS,          &
+                    NUM_TP_QUAD_POINTS
 
 USE Variables_Source, &
-                ONLY :  Block_Source_E,             &
-                        Block_Source_S,             &
-                        Block_Source_Si
+            ONLY :  Block_Source_E,             &
+                    Block_Source_S,             &
+                    Block_Source_Si
+
+USE Quadrature_Mapping_Functions, &
+            ONLY :  Quad_Map
 
 CONTAINS
 
@@ -111,10 +114,15 @@ REAL(KIND = idp), INTENT(IN)                                            ::  JCBN
 REAL(KIND = idp)                                                        ::  REUSED_VALUE
 REAL(KIND = idp)                                                        ::  R_SQR
 
-!PRINT*,"Calc_EQ1_SubJacobian Has been altered"
+
+INTEGER                         :: Here
+
+Here = Quad_Map(rd,td,pd)
 
 REUSED_VALUE = PSI_POWER(7)/(16.0_idp* ALPHAPSI_POWER(2) )
 R_SQR        = CUR_R_LOCS(rd)*CUR_R_LOCS(rd)
+
+
 
 
 ! d F_1 / d u_1
@@ -122,7 +130,7 @@ R_SQR        = CUR_R_LOCS(rd)*CUR_R_LOCS(rd)
 SubJacobian_EQ1_Term( tpd, rd, 1)= 10.0_idp*pi                                              &
                                         * GR_Source_Scalar                                  &
                                         * PSI_POWER(4)                                      &
-                                        * Block_Source_E(rd, td, pd, re, te, pe)            &
+                                        * Block_Source_E(Here, re, te, pe)            &
                                  + (7.0_idp/16.0_idp)                                       &
                                         * PSI_POWER(6)/ALPHAPSI_POWER(2)                    &
                                         * JCBN_BIGK_VALUE
@@ -212,6 +220,11 @@ REAL(KIND = idp), INTENT(IN)                                            ::  JCBN
 REAL(KIND = idp)                                                        ::  REUSED_VALUE
 REAL(KIND = idp)                                                        ::  R_SQR
 
+INTEGER                         :: Here
+
+Here = Quad_Map(rd,td,pd)
+
+
 REUSED_VALUE = (-7.0_idp* PSI_POWER(6))/(16.0_idp* ALPHAPSI_POWER(1) )
 R_SQR        = CUR_R_LOCS(rd)*CUR_R_LOCS(rd)
 
@@ -219,8 +232,8 @@ R_SQR        = CUR_R_LOCS(rd)*CUR_R_LOCS(rd)
 ! d F_2 / d u_1
 SubJacobian_EQ2_Term(tpd, rd, 1) = -8.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3)             &
                                     * GR_Source_Scalar                                          &
-                                    * ( Block_Source_E(rd, td, pd, re, te, pe)                  &
-                                        + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe) )    &
+                                    * ( Block_Source_E(Here, re, te, pe)                  &
+                                        + 2.0_idp * Block_Source_S(HEre, re, te, pe) )    &
                                     - (42.0_idp / 16.0_idp )                                    &
                                         * PSI_POWER(5)/ALPHAPSI_POWER(1)                        &
                                         * JCBN_BIGK_VALUE
@@ -229,8 +242,8 @@ SubJacobian_EQ2_Term(tpd, rd, 1) = -8.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER
 ! d F_2 / d u_2
 SubJacobian_EQ2_Term(tpd, rd, 2) = -TwoPi * PSI_POWER(4)                                        &
                                     * GR_Source_Scalar                                          &
-                                    *( Block_Source_E(rd, td, pd, re, te, pe)                   &
-                                        + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe) )    &
+                                    *( Block_Source_E(Here, re, te, pe)                   &
+                                        + 2.0_idp * Block_Source_S(Here, re, te, pe) )    &
                                     + (7.0_idp / 16.0_idp)                                      &
                                         * PSI_POWER(6)/ALPHAPSI_POWER(2)                        &
                                         * JCBN_BIGK_VALUE
@@ -315,12 +328,14 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:3)                            ::  JCBN
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  JCBN_kappa_Array
 
 
+INTEGER                         :: Here
 
+Here = Quad_Map(rd,td,pd)
 
 ! d F_3 / d u_1 Non-Derivative Term
 SubJacobian_EQ3_Term( tpd, rd, 1) =  - 48.0_idp * pi                                    &
                                         * GR_Source_Scalar                              &
-                                        * Block_Source_Si(rd, td, pd, re, te, pe, 1)    &
+                                        * Block_Source_Si(Here, re, te, pe, 1)    &
                                         * ALPHAPSI_POWER(1)                             &
                                         * PSI_POWER(2)                                  &
                                      - CUR_DRV_PSI(tpd, rd, 1 )/ PSI_POWER(2)           &
@@ -338,7 +353,7 @@ SubJacobian_EQ3_Term( tpd, rd, 3:4) = 0.0_idp
 ! d F_3 / d u_2 Non-Derivative Term
 SubJacobian_EQ3_Term( tpd, rd, 5) = -16.0_idp * pi                                      &
                                             * GR_Source_Scalar                          &
-                                            * Block_Source_Si(rd,td,pd,re,te,pe,1)      &
+                                            * Block_Source_Si(Here,re,te,pe,1)      &
                                             * PSI_POWER(3)                              &
                                     - CUR_DRV_ALPHAPSI(tpd, rd, 1 )/ALPHAPSI_POWER(2)   &
                                             *JCBN_kappa_Array(1,1)
@@ -573,20 +588,22 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  JCBN
 
 REAL(KIND = idp)                                                        ::  Beta_Source_Prefix
 
+INTEGER                         :: Here
 
+Here = Quad_Map(rd,td,pd)
 
 !PRINT*,"Calc_RHS_Terms has been altered"
 
 
 
 
-RHS_Terms(tpd, rd, 1) = - TwoPi * GR_Source_Scalar * Block_Source_E(rd, td, pd, re, te, pe) * PSI_POWER(5)   &
+RHS_Terms(tpd, rd, 1) = - TwoPi * GR_Source_Scalar * Block_Source_E(Here, re, te, pe) * PSI_POWER(5)   &
                          - PSI_POWER(7)/ (16.0_idp * ALPHAPSI_POWER(2)) * JCBN_BIGK_VALUE
 
 
 RHS_Terms(tpd, rd, 2) = TwoPi * ALPHAPSI_POWER(1) * PSI_POWER(4)                             &
-                * GR_Source_Scalar * ( Block_Source_E(rd, td, pd, re, te, pe)                   &
-                                       + 2.0_idp * Block_Source_S(rd, td, pd, re, te, pe)  )    &
+                * GR_Source_Scalar * ( Block_Source_E(Here, re, te, pe)                   &
+                                       + 2.0_idp * Block_Source_S(Here, re, te, pe)  )    &
                 + 7.0_idp*PSI_POWER(6)/ (16.0_idp * ALPHAPSI_POWER(1)) * JCBN_BIGK_VALUE
 
 
@@ -599,7 +616,7 @@ RHS_Terms(tpd, rd, 2) = TwoPi * ALPHAPSI_POWER(1) * PSI_POWER(4)                
 
 Beta_Source_Prefix = 12.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
 
-RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix   * Block_Source_Si(rd, td, pd, re, te, pe, 1)           &
+RHS_Terms(tpd, rd, 3) = Beta_Source_Prefix   * Block_Source_Si(Here, re, te, pe, 1)           &
                       + JCBN_n_ARRAY(1)                 * CUR_DRV_BETA(tpd, rd, 1, 1)    &
                       - JCBN_n_ARRAY(1)/CUR_R_LOCS(rd)  * CUR_VAL_BETA(tpd, rd, 1)
 

@@ -28,7 +28,7 @@ MODULE Driver_SetGuess_Module                                                !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  C_Square
 
 USE Variables_Functions, &
@@ -174,7 +174,9 @@ CALL Poseidon_Input_Guess(  Psi_Guess,          &
                             RightLimit          )
 
 
-
+DEALLOCATE( Psi_Guess )
+DEALLOCATE( AlphaPsi_Guess )
+DEALLOCATE( Beta_Guess )
 
 END SUBROUTINE Driver_SetGuess
 

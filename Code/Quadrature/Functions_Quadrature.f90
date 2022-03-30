@@ -312,12 +312,14 @@ END FUNCTION Initialize_LG_Quadrature_Locations
 !                              quadrature node locations and weights.   !
 !                                                                       !
 !#######################################################################!
-SUBROUTINE Initialize_Trapezoid_Quadrature(Ord, xloc, weights)
+SUBROUTINE Initialize_Trapezoid_Quadrature(Ord, PE, xloc, weights)
 
-INTEGER, INTENT(IN)                                     ::  Ord
+INTEGER, INTENT(IN)                                     ::  Ord, PE
 REAL(KIND = idp), INTENT(INOUT), DIMENSION(1:Ord)       ::  xloc, weights
 
 INTEGER                                                 ::  j
+
+
 
 DO j = 0,Ord-1
 !    xloc(j+1) = -pi + (2.0_idp*pi/Ord) * j
@@ -328,12 +330,39 @@ END DO
 !PRINT*,"plocs"
 !PRINT*,xloc
 
-weights(:) = 2.0_idp*pi/Ord
+weights(:) = (2.0_idp*pi/PE)/Ord
 
 !PRINT*,"Weights"
 !print*,weights
 
 END SUBROUTINE Initialize_Trapezoid_Quadrature
+
+
+
+
+
+!+201+##################################################################!
+!                                                                       !
+!   Initialize_Trapezoid_Quadrature - Calculate the Trapezoid Rule      !
+!                              quadrature node locations and weights.   !
+!                                                                       !
+!#######################################################################!
+FUNCTION Initialize_Trapezoid_Quadrature_Locations(Ord)
+
+INTEGER, INTENT(IN)                                     ::  Ord
+
+REAL(KIND = idp), DIMENSION(1:Ord)                      ::  Initialize_Trapezoid_Quadrature_Locations
+
+INTEGER                                                 ::  j
+
+
+
+DO j = 0,Ord-1
+    Initialize_Trapezoid_Quadrature_Locations (j+1) = -1.0_idp + REAL(2.0_idp*j,idp)/REAL(Ord,idp)
+END DO
+
+
+END FUNCTION Initialize_Trapezoid_Quadrature_Locations
 
 
 END MODULE Functions_Quadrature

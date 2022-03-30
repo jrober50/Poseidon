@@ -30,7 +30,7 @@ USE Poseidon_Numbers_Module, &
             ONLY :  TwoPi,          &
                     Pi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  GR_Source_Scalar
 
 USE Poseidon_Parameters, &
@@ -57,6 +57,9 @@ USE Variables_Source, &
             ONLY :  Block_Source_E,             &
                     Block_Source_S,             &
                     Block_Source_Si
+
+USE Quadrature_Mapping_Functions, &
+            ONLY :  Quad_Map
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -172,13 +175,14 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:3)                            ::  n_AR
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  Kappa_Array
 
 REAL(KIND = idp)                                                        ::  Beta_Source_Prefix
+INTEGER                                                                 ::  Here
 
-
+Here = Quad_Map(rd, td, pd)
 
 
 Source_Terms(tpd, rd, iU_CF) = - TwoPi                                      &
                                 * GR_Source_Scalar                          &
-                                * Block_Source_E(rd, td, pd, re, te, pe)    &
+                                * Block_Source_E(Here, re, te, pe)    &
                                 * PSI_POWER(5)                              &
                              - PSI_POWER(7)                                 &
                                 / ( 16.0_idp * ALPHAPSI_POWER(2) )          &
@@ -192,9 +196,9 @@ Source_Terms(tpd, rd, iU_LF) = TwoPi                                            
                                 * ALPHAPSI_POWER(1)                                         &
                                 * PSI_POWER(4)                                              &
                                 * GR_Source_Scalar                                          &
-                                    * ( Block_Source_E(rd, td, pd, re, te, pe)              &
+                                    * ( Block_Source_E(Here, re, te, pe)              &
                                         + 2.0_idp                                           &
-                                            * Block_Source_S(rd, td, pd, re, te, pe)  )     &
+                                            * Block_Source_S(Here, re, te, pe)  )     &
                              + 7.0_idp                                                      &
                                 * PSI_POWER(6)                                              &
                                 / ( 16.0_idp * ALPHAPSI_POWER(1) )                          &
@@ -206,25 +210,25 @@ Source_Terms(tpd, rd, iU_LF) = TwoPi                                            
 
 Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
 
-Source_Terms(tpd, rd, iU_S1) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 1)      &
+Source_Terms(tpd, rd, iU_S1) = Beta_Source_Prefix * Block_Source_Si(Here, re, te, pe, 1)      &
                              + Kappa_Array(1,1) * n_Array(1)                                        &
                              + Kappa_Array(2,1) * n_Array(2)                                        &
                              + Kappa_Array(3,1) * n_Array(3)
 
 
-Source_Terms(tpd, rd, iU_S2) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 2)      &
+Source_Terms(tpd, rd, iU_S2) = Beta_Source_Prefix * Block_Source_Si(Here, re, te, pe, 2)      &
                              + Kappa_Array(1,2) * n_Array(1)                                        &
                              + Kappa_Array(2,2) * n_Array(2)                                        &
                              + Kappa_Array(3,2) * n_Array(3)
 
 
-Source_Terms(tpd, rd, iU_S3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 3)      &
+Source_Terms(tpd, rd, iU_S3) = Beta_Source_Prefix * Block_Source_Si(Here, re, te, pe, 3)      &
                              + Kappa_Array(1,3) * n_Array(1)                                        &
                              + Kappa_Array(2,3) * n_Array(2)                                        &
                              + Kappa_Array(3,3) * n_Array(3)
 
 !PRINT*,"~~~~~~~~~~~"
-!PRINT*,Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 3),      &
+!PRINT*,Beta_Source_Prefix * Block_Source_Si(Here, re, te, pe, 3),      &
 !                            Kappa_Array(1,3) * n_Array(1),                                        &
 !                            Kappa_Array(2,3) * n_Array(2),                                        &
 !                            Kappa_Array(3,3) * n_Array(3)
@@ -266,14 +270,15 @@ REAL(KIND = idp), INTENT(IN), DIMENSION(1:3)                            ::  n_AR
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  Kappa_Array
 
 REAL(KIND = idp)                                                        ::  Beta_Source_Prefix
+INTEGER                                                                 ::  Here
 
-type(amrex_mfiter) :: mfi
+
 
 
 
 Source_Terms(tpd, rd, 1) = - TwoPi                                      &
                             * GR_Source_Scalar                          &
-                            * Block_Source_E(rd, td, pd, re, te, pe)    &
+                            * Block_Source_E(Here, re, te, pe)    &
                             * PSI_POWER(5)                              &
                          - PSI_POWER(7)                                 &
                             / ( 16.0_idp * ALPHAPSI_POWER(2) )          &
@@ -287,9 +292,9 @@ Source_Terms(tpd, rd, 2) = TwoPi                                                
                             * ALPHAPSI_POWER(1)                                         &
                             * PSI_POWER(4)                                              &
                             * GR_Source_Scalar                                          &
-                                * ( Block_Source_E(rd, td, pd, re, te, pe)              &
+                                * ( Block_Source_E(Here, re, te, pe)              &
                                     + 2.0_idp                                           &
-                                        * Block_Source_S(rd, td, pd, re, te, pe)  )     &
+                                        * Block_Source_S(Here, re, te, pe)  )     &
                          + 7.0_idp                                                      &
                             * PSI_POWER(6)                                              &
                             / ( 16.0_idp * ALPHAPSI_POWER(1) )                          &
@@ -301,19 +306,19 @@ Source_Terms(tpd, rd, 2) = TwoPi                                                
 
 Beta_Source_Prefix = 16.0_idp * pi * ALPHAPSI_POWER(1) * PSI_POWER(3) * GR_Source_Scalar
 
-Source_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 1)      &
+Source_Terms(tpd, rd, 3) = Beta_Source_Prefix * Block_Source_Si(Here, re, te, pe, 1)      &
                          + Kappa_Array(1,1) * n_Array(1)                                        &
                          + Kappa_Array(2,1) * n_Array(2)                                        &
                          + Kappa_Array(3,1) * n_Array(3)
 
 
-Source_Terms(tpd, rd, 4) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 2)      &
+Source_Terms(tpd, rd, 4) = Beta_Source_Prefix * Block_Source_Si(Here, re, te, pe, 2)      &
                          + Kappa_Array(1,2) * n_Array(1)                                        &
                          + Kappa_Array(2,2) * n_Array(2)                                        &
                          + Kappa_Array(3,2) * n_Array(3)
 
 
-Source_Terms(tpd, rd, 5) = Beta_Source_Prefix * Block_Source_Si(rd, td, pd, re, te, pe, 3)      &
+Source_Terms(tpd, rd, 5) = Beta_Source_Prefix * Block_Source_Si(Here, re, te, pe, 3)      &
                          + Kappa_Array(1,3) * n_Array(1)                                        &
                          + Kappa_Array(2,3) * n_Array(2)                                        &
                          + Kappa_Array(3,3) * n_Array(3)

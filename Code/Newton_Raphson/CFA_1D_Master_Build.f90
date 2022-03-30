@@ -49,9 +49,6 @@ USE MPI
 
 USE OMP_LIB
 
-USE Units_Module, &
-                ONLY :  GR_Source_Scalar,   &
-                        Speed_of_Light
 
 
 USE Poseidon_Kinds_Module, &
@@ -768,7 +765,6 @@ REAL(KIND = idp)                                                        ::  JCBN
 !$OMP           RSIN_SQUARE, R_SQUARE, R_CUBED,                         &
 !$OMP           SIN_VAL, SIN_SQUARE, COTAN_VAL, COS_VAL,                &
 !$OMP           CSC_VAL, CSC_SQUARE,                                    &
-!$OMP           GR_Source_Scalar,                                       &
 !$OMP           NUM_OFF_DIAGONALS,                                      &
 !$OMP           RHS_TERMS,                                              &
 !$OMP           Block_SOURCE_E, Block_SOURCE_S, Block_SOURCE_Si,        &
@@ -943,22 +939,22 @@ DO d = 0,DEGREE
 
         RHS_TMP(1) =  RHS_TMP(1)                                            &
                         + SUM( RHS_TERMS( :, rd, 1 )                    )   &
-                        * Lagrange_Poly_Table(d, rd, 0)                     &
+                        * Lagrange_Poly_Table( d, rd, 0)                    &
                         * R_Int_Weights(rd)
 
 
         RHS_TMP(2) =  RHS_TMP(2)                                            &
                         + SUM( RHS_TERMS( :, rd, 2 )                    )   &
-                        * Lagrange_Poly_Table(d, rd, 0)                     &
+                        * Lagrange_Poly_Table( d, rd, 0)                    &
                         * R_Int_Weights(rd)
 
 
         RHS_TMP(3) =  RHS_TMP(3)                                            &
                         + SUM( RHS_TERMS( :, rd, 3 )                    )   &
-                        * Lagrange_Poly_Table(d, rd, 0)                     &
+                        * Lagrange_Poly_Table( d, rd, 0)                    &
                         * R_Int_Weights(rd)                                 &
                         + OneThird * SUM( Beta_DRV_Trace(:,rd)          )   &
-                        * Lagrange_Poly_Table(d, rd, 1 )/ DELTAR_OVERTWO    &
+                        * Lagrange_Poly_Table( d, rd, 1 )/ DELTAR_OVERTWO   &
                         * R_Int_Weights(rd)
 
 

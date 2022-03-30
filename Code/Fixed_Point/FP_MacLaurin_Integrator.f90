@@ -29,17 +29,13 @@ MODULE FP_MacLaurin_Integrator_Module                                           
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Units_Module, &
-            ONLY :  Grav_Constant_G,        &
-                    Gram,                  &
-                    Centimeter,             &
-                    C_Square
+USE Poseidon_Units_Module, &
+            ONLY :  C_Square,           &
+                    GR_Source_Scalar
 
 USE Poseidon_Numbers_Module, &
             ONLY :  pi, twopi
 
-USE Units_Module, &
-            ONLY :  GR_Source_Scalar
 
 USE Poseidon_Parameters, &
             ONLY :  Degree,                     &

@@ -21,9 +21,9 @@ USE Poseidon_Kinds_Module,  &
 IMPLICIT NONE
 
 
-REAL(idp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE      ::  Block_Source_E
-REAL(idp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE      ::  Block_Source_S
-REAL(idp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE    ::  Block_Source_Si
+REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE      ::  Block_Source_E
+REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE      ::  Block_Source_S
+REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE    ::  Block_Source_Si
 
 
 

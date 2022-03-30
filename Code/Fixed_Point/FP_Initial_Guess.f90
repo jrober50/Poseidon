@@ -34,9 +34,6 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
-USE Units_Module, &
-            ONLY :  C_Square
-
 USE Poseidon_Parameters, &
             ONLY :  DOMAIN_DIM,             &
                     DEGREE,                 &
@@ -68,8 +65,7 @@ USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_FEM_Node_Map,        &
-                    FP_Beta_Array_Map,      &
+            ONLY :  FP_Beta_Array_Map,      &
                     FP_Array_Map_TypeB
 
 IMPLICIT NONE
@@ -156,6 +152,7 @@ DO re = 1,Input_RE
         END DO ! rq
 
         Here = (re-1)*Degree + rqb + 1
+
         FP_Coeff_Vector_A(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
 
         Here = FP_Array_Map_TypeB(iU_S1,iVB_S,re-1,rqb,1)

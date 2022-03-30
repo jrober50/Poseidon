@@ -78,6 +78,7 @@ ABSTRACT INTERFACE
     SUBROUTINE Calc_1D_Array_Pointer(   Num_RE_Input, Num_RQ_Input, RQ_Input,   &
                                         Left_Limit, Right_Limit,                &
                                         CFA_Lapse, CFA_ConFactor, CFA_Shift     )
+
         INTEGER, INTENT(IN)                                         ::  Num_RE_Input,   &
                                                                         Num_RQ_Input
 
@@ -139,5 +140,41 @@ ABSTRACT INTERFACE
 END INTERFACE
 PROCEDURE(Shift_Function_Pointer), POINTER              ::   Shift_Solution => NULL()
 
-END MODULE Variables_Functions
 
+
+
+
+
+
+
+
+
+ABSTRACT INTERFACE
+    FUNCTION Calc_Var_At_Location_A_Pointer(r, theta, phi, iU )
+        REAL(KIND = KIND(1.D0))                             ::  Calc_Var_At_Location_A_Pointer
+        REAL(KIND = KIND(1.D0)),  INTENT(IN)                ::  r, theta, phi
+        INTEGER,    INTENT(IN)                              ::  iU
+
+    END FUNCTION Calc_Var_At_Location_A_Pointer
+END INTERFACE
+
+ABSTRACT INTERFACE
+    FUNCTION Calc_Var_At_Location_B_Pointer(r, theta, phi, iU, iVB )
+        REAL(KIND = KIND(1.D0))                             ::  Calc_Var_At_Location_B_Pointer
+        REAL(KIND = KIND(1.D0)),  INTENT(IN)                ::  r, theta, phi
+        INTEGER,    INTENT(IN)                              ::  iU, iVB
+
+    END FUNCTION Calc_Var_At_Location_B_Pointer
+END INTERFACE
+
+
+PROCEDURE(Calc_Var_At_Location_A_Pointer), POINTER      ::  Calc_Var_At_Loc_A => NULL()
+PROCEDURE(Calc_Var_At_Location_B_Pointer), POINTER      ::  Calc_Var_At_Loc_B => NULL()
+
+
+
+
+
+
+
+END MODULE Variables_Functions

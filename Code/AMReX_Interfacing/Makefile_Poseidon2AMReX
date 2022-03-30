@@ -1,4 +1,0 @@
-POSEIDON2AMREX = \
-  Poseidon_AMReX_Input_Parsing.F90   \
-  Poseidon_AMReX_Utilities.F90       \
-

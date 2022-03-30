@@ -4,29 +4,6 @@ include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Path
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Rules
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Include
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Dictionary
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_List
 
 
-
-
-POSEIDON = \
-  $(COMMON)          \
-  $(VARIABLES)       \
-  $(VPRINT)          \
-  $(POSEIDON2AMREX)  \
-  $(MESH)            \
-  $(QUAD)            \
-  $(FUNCTIONS)       \
-  $(MPI)             \
-  $(TABLES)          \
-  $(IO)              \
-  $(LINEAR_SOLVERS)  \
-  $(NR)              \
-  $(FP)              \
-  $(XCFC)            \
-  $(EXTERNAL)        \
-  $(INIT)            \
-  $(UTILITIES)       \
-  $(INTERFACES)      \
-
-
-POSEIDON_o = $(addsuffix .o,$(basename $(POSEIDON)))

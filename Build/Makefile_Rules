@@ -3,3 +3,8 @@
 
 %.o: %.f90
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $< -o $(OBJ)/$@
+
+%.o: %.cpp
+	$(CC) -c $(FLAGS)  $< -o $(OBJ)/$@
+
+

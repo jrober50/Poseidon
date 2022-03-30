@@ -32,7 +32,7 @@ USE Poseidon_Kinds_Module, &
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  SELFSIM_R_VALS,     &
                     SELFSIM_POT_VALS,   &
                     SELFSIM_SHIFT_VALs, &
@@ -58,18 +58,14 @@ SUBROUTINE Allocate_SelfSim(Num_Entries)
 INTEGER, INTENT(IN)                             ::  Num_Entries
 
 
-IF ( .NOT. ALLOCATED(SELFSIM_R_VALS) ) THEN
+IF ( SelfSim_Allocated ) THEN
+    WRITE(*,'(A)')'Warning attempting to reallocate Selfsim Variables.'
+ELSE
     ALLOCATE( SELFSIM_R_VALS(0:NUM_ENTRIES) )
-END IF
-IF ( .NOT. ALLOCATED(SELFSIM_POT_VALS) ) THEN
     ALLOCATE( SELFSIM_POT_VALS(0:NUM_ENTRIES) )
-END IF
-IF ( .NOT. ALLOCATED(SELFSIM_SHIFT_VALS ) ) THEN
     ALLOCATE( SELFSIM_SHIFT_VALS(0:Num_R_Elements+1) )
+    SelfSim_Allocated = .TRUE.
 END IF
-
-SelfSim_Allocated = .TRUE.
-
 
 END SUBROUTINE Allocate_SelfSim
 

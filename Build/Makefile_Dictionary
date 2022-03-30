@@ -15,11 +15,19 @@ EXT	= F90
 
 ### Fortran Compiler
 
-FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90
+FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90 -cpp
 FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
 FORT_MacBook 	   = /usr/local/openmpi/bin/mpif90
 FORT_Rhea	   = mpifort
 FORT_BlueWaters    = ftn
+
+
+
+
+### C Compiler
+
+CC_NicksMacBook    = /usr/local/openmpi/bin/mpic++
+
 
 
 
@@ -146,7 +154,8 @@ MPI_OFF                     =
 
 #### LAPACK
 
-LAPACK_NicksMacBook     = -framework Accelerate
+LAPACK_NicksMacBook     = -lblas -llapack
+#LAPACK_NicksMacBook     = -framework Accelerate
 LAPACK_sjdunham         = -framework Accelerate -fallow-argument-mismatch
 LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl
@@ -182,12 +191,12 @@ PETSC_COMP	=$(PETSC_DEF_FLAG_$(PETSC_MODE)) $(PETSC_$(MACHINE_NAME)_$(PETSC_MODE
 HDF5_COMP       =$(HDF5_$(MACHINE_NAME)_$(HDF5_MODE))
 MPI_COMP        =$(MPI_$(MPI_MODE))
 FORT		=$(FORT_$(MACHINE_NAME)) $(PETSC_COMP) $(AMREX_COMP) $(HDF5_COMP) $(OPENMP_COMP) $(MPI_COMP)  $(LAPACK_$(MACHINE_NAME))
+CC              =$(CC_$(MACHINE_NAME)) 
 INCLUDE_LINKER	=$(INCLUDE_LINKER_$(COMP_$(MACHINE_NAME)))
 OUTPUT_LINKER	=$(OUTPUT_LINKER_$(COMP_$(MACHINE_NAME)))
 DRIVER_OBJ	=$(OBJ)/d.main_$(DIMENSION).o
 
 POSEIDON_DEFS   =$(AMREX_DEF_FLAG_$(AMREX_MODE)) $(PETSC_DEF_FLAG_$(PETSC_MODE)) 
-
 
 
 

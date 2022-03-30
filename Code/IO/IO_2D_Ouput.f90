@@ -30,11 +30,9 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                     ONLY : pi
 
-USE Units_Module, &
-                    ONLY :  C_Square,       &
-                            Gram,           &
+USE Poseidon_Units_Module, &
+                    ONLY :  Gram,           &
                             Centimeter,     &
-                            Kilometer,      &
                             Erg,            &
                             Second,         &
                             GravPot_Units,  &
@@ -82,9 +80,6 @@ USE Variables_IO, &
                             File_Suffix,            &
                             Write_Flags
 
-
-USE Variables_Yahil, &
-                    ONLY :  SelfSim_T
 
 USE Variables_Functions, &
                     ONLY :  Potential_Solution,         &

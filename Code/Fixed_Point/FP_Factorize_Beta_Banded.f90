@@ -99,9 +99,14 @@ USE Variables_BC, &
                     OUTER_CFA_BC_TYPE
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_Beta_Array_Map,          &
-                    FP_FEM_Node_Map,            &
-                    FP_LM_Map
+            ONLY :  FP_Beta_Array_Map
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                 &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_XCFC_Banded_Factorization
 
 
 USE MPI
@@ -135,27 +140,22 @@ INTEGER                                                 :: i
 IF ( Verbose_Flag ) THEN
     PRINT*,"--In Factorize_Beta_Banded."
 END IF
-
-timer(1) = MPI_Wtime()
+CALL TimerStart( Timer_XCFC_Banded_Factorization )
 
 !   Dirichlet BCs modify the stiffness matrix so we modify it now.
 !   But to apply the BCs we will need values from the original matrix,
 !   so those values are stored before we modify the matrix.
 !
+
+!PRINT*,"Beta_MVL_Banded in Factorize_Beta_Banded"
+!PRINT*,Beta_MVL_Banded
+
+
 CALL DIRICHLET_BC_Beta_Banded_Mat()
 
 
 CALL Jacobi_PC_MVL_Banded()
 
-
-
-
-NORM = 0.0_idp
-DO i = 1,Beta_Prob_Dim
-
-    NORM = MAX( NORM, ABS(SUM(Beta_MVL_Banded(:,i) ) ) )
-
-END DO
 
 
 
@@ -177,7 +177,24 @@ ELSE
 END IF
 
 
+
+!PRINT*,"Beta_MVL_Banded in Factorize_Beta_Banded"
+!PRINT*,REAL(Beta_MVL_Banded, kind = idp)
+
+
+
+
+
+
 IF ( Verbose_Flag ) THEN
+
+    NORM = 0.0_idp
+    DO i = 1,Beta_Prob_Dim
+
+        NORM = MAX( NORM, ABS(SUM(Beta_MVL_Banded(:,i) ) ) )
+
+    END DO
+
     CALL ZGBCON( '1',                   &
                  Beta_Prob_Dim,         &
                  Beta_Diagonals,        &
@@ -196,11 +213,14 @@ IF ( Verbose_Flag ) THEN
             PRINT*,"RCOND = ",RCOND_One," Norm = ",Norm
     END IF
 END IF
+
+
+CALL TimerStop( Timer_XCFC_Banded_Factorization )
+
+
+
 !PRINT*,"STOPing in Factorize_Beta_Banded"
 !STOP
-
-timer(2) = MPI_Wtime()
-CALL Clock_In(Timer(2)-Timer(1),19)
 
 END SUBROUTINE Factorize_Beta_Banded
 
@@ -477,12 +497,13 @@ DO ui = 1,3
         ! Save the needed values first
         !
 
+
+        Col = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,1)
         DO d = 0,Degree
         DO lm = 1,LM_Length
 
             Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui,lm)+Beta_Bandwidth
-            Col = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,1)
- 
+            
             Last_Column_Beta_Storage(lm,d,ui) = Beta_MVL_Banded(Row-Col,Col)
     
         END DO ! l Loop
@@ -502,11 +523,14 @@ DO ui = 1,3
                 Col = FP_Beta_Array_Map(Num_R_Elements-1,dp,uj,lp)
 
                 Beta_MVL_Banded(Row-Col,Col) = 0.0_idp
+            
 
             END DO ! lp
             END DO ! dp
             END DO ! uj
         END DO ! l Loop
+
+
 
 
 

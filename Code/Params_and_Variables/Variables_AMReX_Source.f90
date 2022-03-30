@@ -12,6 +12,7 @@ MODULE Variables_AMReX_Source                                                   
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
    !################################################################################!
 
+USE iso_c_binding
 
 USE Poseidon_Kinds_Module,  &
             ONLY : idp
@@ -19,8 +20,11 @@ USE Poseidon_Kinds_Module,  &
 
 IMPLICIT NONE
 
+INTEGER(c_int), PARAMETER                               ::  iCoarse = 0
+INTEGER(c_int), PARAMETER                               ::  iFine   = 1
 
 REAL(idp), CONTIGUOUS, POINTER                          :: Source_PTR(:,:,:,:)
+INTEGER,   CONTIGUOUS, POINTER                          :: Mask_PTR(:,:,:,:)
 
 
 END MODULE Variables_AMReX_Source

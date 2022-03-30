@@ -119,8 +119,8 @@ USE FP_IO_Module, &
 USE IO_Convergence_Output,  &
             ONLY :  Output_Convergence_Reports
 
-USE Poseidon_IO_Module, &
-            ONLY :  Output_Final_Results
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 USE Poseidon_Cholesky_Module,   &
             ONLY :  Cholesky_Factorization,         &
@@ -135,12 +135,7 @@ USE Linear_Solvers_And_Preconditioners, &
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In,                           &
                     OPEN_ITER_REPORT_FILE,              &
-                    CLOSE_ITER_REPORT_FILE,             &
-                    OUTPUT_FINAL_RESULTS
-
-USE FP_Functions_Mapping, &
-            ONLY :  FP_LM_Map,                      &
-                    FP_Array_Map
+                    CLOSE_ITER_REPORT_FILE
 
 USE FP_System_Solvers_Module,   &
             ONLY :  Solve_FP_System,                &
@@ -400,7 +395,7 @@ CALL Deallocate_FP_Source_Variables()
 
 
 
-CALL Output_Final_Results()
+CALL Write_Final_Results()
 CALL Output_FP_Timetable()
 CALL Output_Convergence_Reports()
 

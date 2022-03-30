@@ -1,5 +1,6 @@
 QUAD = \
   Allocation_Quadrature.f90     \
   Functions_Quadrature.f90      \
+  Quadrature_Mapping_Functions.f90 \
   Initialization_Quadrature.f90 \
 

@@ -24,72 +24,68 @@ MODULE XCFC_System_Solvers_TypeA_Module                                      !##
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-        ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Parameters, &
-        ONLY :  DEGREE,                     &
-                L_LIMIT,                    &
-                Verbose_Flag
+            ONLY :  DEGREE,                     &
+                    L_LIMIT,                    &
+                    Verbose_Flag
 
 USE Parameters_Variable_Indices, &
-        ONLY :  iVB_X,                      &
-                iVB_S,                      &
-                iU_X1,                      &
-                iU_X2,                      &
-                iU_X3,                      &
-                iU_S1,                      &
-                iU_S2,                      &
-                iU_S3
+            ONLY :  iU_CF,                      &
+                    iU_LF
 
 USE Variables_Derived, &
-        ONLY :  Beta_Prob_Dim,              &
-                Num_R_Nodes,                &
-                LM_Length
+            ONLY :  Beta_Prob_Dim,              &
+                    Num_R_Nodes,                &
+                    LM_Length
 
 USE Variables_MPI, &
-        ONLY :  myID_Poseidon,              &
-                MasterID_Poseidon,          &
-                Poseidon_Comm_World,        &
-                nPROCS_Poseidon
+            ONLY :  myID_Poseidon,              &
+                    MasterID_Poseidon,          &
+                    Poseidon_Comm_World,        &
+                    nPROCS_Poseidon
 
 USE Variables_FP,  &
-        ONLY :  FP_Coeff_Vector_A,            &
-                FP_Coeff_Vector_B,          &
-                FP_Source_Vector_A,         &
-                FP_Source_Vector_B,         &
-                Beta_Diagonals,             &
-                Beta_MVL_Banded,            &
-                Beta_IPIV,                  &
-                Beta_Factorized_Flag,       &
-                MCF_Flag,              &
-                Factored_NNZ,               &
-                Laplace_Factored_Val,       &
-                Laplace_Factored_Col,       &
-                Laplace_Factored_Row,       &
-                FP_Update_Vector,           &
-                CFA_Var_Map
+            ONLY :  FP_Coeff_Vector_A,            &
+                    FP_Coeff_Vector_B,          &
+                    FP_Source_Vector_A,         &
+                    FP_Source_Vector_B,         &
+                    Beta_Diagonals,             &
+                    Beta_MVL_Banded,            &
+                    Beta_IPIV,                  &
+                    MCF_Flag,                   &
+                    Factored_NNZ,               &
+                    Laplace_Factored_Val,       &
+                    Laplace_Factored_Col,       &
+                    Laplace_Factored_Row,       &
+                    FP_Update_Vector,           &
+                    CFA_Var_Map
 
 USE Poseidon_Cholesky_Module,   &
-        ONLY :  CCS_Back_Substitution,          &
-                CCS_Forward_Substitution,       &
-                Cholesky_Factorization
-
-
-USE FP_Factorize_Beta_Banded, &
-        ONLY :  Factorize_Beta_Banded,          &
-                Jacobi_PC_MVL_Banded_Vector
+            ONLY :  CCS_Back_Substitution,          &
+                    CCS_Forward_Substitution,       &
+                    Cholesky_Factorization
 
 USE FP_Functions_BC,  &
-        ONLY :  DIRICHLET_BC_Beta_Banded,       &
-                Dirichlet_BC_CHOL,              &
-                Neumann_BC_CCS
+            ONLY :  DIRICHLET_BC_Beta_Banded,       &
+                    Dirichlet_BC_CHOL,              &
+                    Neumann_BC_CCS
 
-USE FP_Functions_Mapping, &
-        ONLY :  FP_LM_Map
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_lm
 
 USE MPI_Communication_TypeA_Module,             &
-        ONLY :  MPI_RTM_Source_TypeA,           &
-                MPI_BCast_Coeffs_TypeA
+            ONLY :  MPI_RTM_Source_TypeA,           &
+                    MPI_BCast_Coeffs_TypeA
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                     &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_XCFC_Lapse_LinearSolve,   &
+                    Timer_XCFC_ConFactor_LinearSolve
 
 IMPLICIT NONE
 
@@ -119,9 +115,9 @@ INTEGER                                                         ::  Upper_Limit
 
 
 IF ( Verbose_Flag ) THEN
-    IF( iU == 1 ) THEN
+    IF( iU == iU_CF ) THEN
         WRITE(*,'(A)')"--In XCFC Iteration, Begining Conformal Factor System Solve.", myID_Poseidon
-    ELSE IF ( iU == 2 ) THEN
+    ELSE IF ( iU == iU_LF ) THEN
         WRITE(*,'(A)')"--In XCFC Iteration, Begining Lapse Function System Solve."
     ELSE
         WRITE(*,'(A)')"Incompatable iU value passed to XCFC_Solve_System_TypeA."
@@ -150,7 +146,11 @@ END IF
 
 
 
-
+IF ( iU == iU_CF ) THEN
+    CALL TimerStart( Timer_XCFC_ConFactor_LinearSolve)
+ELSEIF ( iU == iU_LF ) THEN
+    CALL TimerStart( Timer_XCFC_Lapse_LinearSolve)
+END IF
 
 
 
@@ -180,11 +180,13 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     DO l = 0,L_LIMIT
     DO m = -l,l
 
-        lm_loc = FP_LM_Map(l,m)
+        lm_loc = Map_To_lm(l,m)
         WORK_VEC = -FP_Source_Vector_A(:,lm_loc,iU)
         WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_Map(iU))
 
-
+!        PRINT*,"Work_Vec, Type A l = ",l," m = ",m
+!        PRINT*,Work_Vec
+!        PRINT*,"+++++++++++++++++++++++++++++++++++"
 
         CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                 Factored_NNZ,               &
@@ -208,7 +210,6 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 
 
-
         CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
                                         Factored_NNZ,                   &
                                         WORK_ELEM_VAL,                  &
@@ -227,6 +228,8 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
         FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,iU)
         FP_Coeff_Vector_A( :,lm_loc,iU) = WORK_VEC(:)
+
+!        PRINT*,FP_Coeff_Vector_A( :,lm_loc,iU)
 
 
     END DO  ! m Loop
@@ -264,6 +267,21 @@ CALL MPI_BCAST_Coeffs_TypeA(iU,                     &
 !END DO
 
 #endif
+
+
+
+
+IF ( iU == iU_CF ) THEN
+    CALL TimerStop( Timer_XCFC_ConFactor_LinearSolve)
+ELSEIF ( iU == iU_LF ) THEN
+    CALL TimerStop( Timer_XCFC_Lapse_LinearSolve)
+END IF
+
+
+
+
+!PRINT*,FP_Coeff_Vector_A( :,1,iU)
+
 
 
 

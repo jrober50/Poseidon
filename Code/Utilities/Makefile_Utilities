@@ -1,5 +1,14 @@
-UTILITIES = \
+ADM = \
   ADM_Mass.f90           \
   ADM_Mass_In_Parts.f90  \
+ 
+KOMAR = \
+  Komar_Mass_Utilities.f90 \
+  Komar_Mass.f90           \
+
+
+UTILITIES =\
+  $(ADM)                 \
+  $(KOMAR)               \
   Poseidon_Utilities.f90 \
 

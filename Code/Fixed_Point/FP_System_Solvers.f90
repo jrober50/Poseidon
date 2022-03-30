@@ -46,13 +46,6 @@ USE Parameters_Variable_Indices, &
                     iU_S3,                        &
                     iVB_S
 
-USE Units_Module, &
-            ONLY :  C_Square,                   &
-                    Centimeter,                 &
-                    Meter,                      &
-                    Second,                     &
-                    GravPot_Units,              &
-                    Shift_Units
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution,         &
@@ -153,17 +146,18 @@ USE Linear_Solvers_And_Preconditioners, &
                     Jacobi_Conditioning_Beta
 
 USE Poseidon_IO_Module, &
-            ONLY :  Clock_In,                           &
-                    OPEN_ITER_REPORT_FILE,              &
-                    CLOSE_ITER_REPORT_FILE,             &
-                    OUTPUT_FINAL_RESULTS
+            ONLY :  Clock_In,                       &
+                    OPEN_ITER_REPORT_FILE,          &
+                    CLOSE_ITER_REPORT_FILE
 
 USE FP_Functions_Mapping, &
-            ONLY :  FP_LM_Map,                      &
-                    FP_FEM_Node_Map,                &
-                    FP_Beta_Array_Map,              &
+            ONLY :  FP_Beta_Array_Map,              &
                     FP_Array_Map_TypeB,             &
                     FP_Array_Map
+
+USE Functions_Domain_Maps, &
+                ONLY :  Map_To_lm,                  &
+                        Map_To_FEM_Node
 
 USE FP_Factorize_Beta_Banded, &
             ONLY :  Factorize_Beta_Banded,          &
@@ -252,7 +246,7 @@ IF (LINEAR_SOLVER =='Full') THEN
         DO l = 0,L_LIMIT
         DO m = -l,l
 
-            lm_loc   = FP_LM_Map(l,m)
+            lm_loc   = Map_To_lm(l,m)
             WORK_MAT = Laplace_Matrix_Full(:,:,l)
             WORK_VEC = FP_Source_Vector_A(:,lm_loc,ui)
 
@@ -300,7 +294,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
         DO m = -l,l
 
 
-            lm_loc = FP_LM_Map(l,m)
+            lm_loc = Map_To_lm(l,m)
             WORK_VEC = -FP_Source_Vector_A(:,lm_loc,ui)
             WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_MAP(ui))
 
@@ -464,7 +458,7 @@ IF (LINEAR_SOLVER =='Full') THEN
     DO l = 1,LM_Length
 
         Here    = FP_Beta_Array_Map(re,d,ui,l)
-        There   = FP_FEM_Node_Map(re,d)
+        There   = Map_To_FEM_Node(re,d)
         Thither = FP_Array_Map_TypeB(ui,iVB_S,re,d,l)
 
         FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector_B(Thither,iVB_S)
@@ -543,7 +537,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     DO l = 1,LM_Length
 
         Here    = FP_Beta_Array_Map(re,d,ui,l)
-        There   = FP_FEM_Node_Map(re,d)
+        There   = Map_To_FEM_Node(re,d)
         Thither = FP_Array_Map_TypeB(ui+2,iVB_S,re,d,l)
 
         FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector_B(Thither,iVB_S)

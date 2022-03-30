@@ -29,7 +29,7 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                         ONLY :  pi, eps
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
                         ONLY :  Grav_Constant_G,        &
                                 C_Square
 

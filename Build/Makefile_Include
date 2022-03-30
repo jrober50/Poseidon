@@ -1,7 +1,7 @@
 include $(POSEIDON_ACTIVE_DIR)/Code/Common/Makefile_Common
 include $(POSEIDON_ACTIVE_DIR)/Code/Params_and_Variables/Makefile_Variables
-include $(POSEIDON_ACTIVE_DIR)/Code/VPRINT/Makefile_VPRINT
-include $(POSEIDON_ACTIVE_DIR)/Code/AMReX_Interfacing/Makefile_Poseidon2AMReX
+include $(POSEIDON_ACTIVE_DIR)/Code/Timers/Makefile_Timers
+include $(POSEIDON_ACTIVE_DIR)/Code/AMReX_Utilities/Makefile_AMReX_Utilities
 include $(POSEIDON_ACTIVE_DIR)/Code/Mesh/Makefile_Mesh
 include $(POSEIDON_ACTIVE_DIR)/Code/Quadrature/Makefile_Quadrature
 include $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules/Makefile_Functions

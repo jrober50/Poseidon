@@ -1,5 +1,7 @@
 INIT = \
-  Allocation_Core.F90         \
-  Initialization_Derived.f90  \
-  Initialization_Poseidon.f90 \
+  Allocation_Core.F90            \
+  Initialization_Subroutines.F90 \
+  Initialization_Derived.f90     \
+  Initialization_AMReX.F90       \
+  Initialization_Poseidon.f90    \
  

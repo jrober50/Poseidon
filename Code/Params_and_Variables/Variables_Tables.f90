@@ -45,7 +45,31 @@ COMPLEX(KIND = idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)        :: Ylm_CC_DP
 !   Lagrange_Poly Table                                             !
 !                                                                   !
 !===================================================================!
-REAL(KIND = idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)             :: Lagrange_Poly_Table
-REAL(KIND = idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:,:)         :: LPT_LPT
+REAL(idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)            :: Lagrange_Poly_Table
+REAL(idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:,:)        :: LPT_LPT
+
+
+
+!===================================================================!
+!                                                                   !
+!   AMReX Tables                                                    !
+!                                                                   !
+!===================================================================!
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Sqrt_Table
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Norm_Table
+REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  rBT_NormedLegendre
+!REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  rBT_NormedLegendre_dt
+!REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  rBT_NormedLegendre_CC
+
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Elem_Values
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Elem_dt_Values
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Elem_dp_Values
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Elem_CC_Values
+
+REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  LagPoly_MultiLayer_Table
+INTEGER,        PUBLIC                                      ::  LagPoly_Num_Tables
+REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Level_dx
+INTEGER,        PUBLIC, ALLOCATABLE, DIMENSION(:)           ::  Level_Ratios
+
 
 END MODULE Variables_Tables

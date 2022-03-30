@@ -3,8 +3,8 @@ $(OBJ)                                          \
 $(POSEIDON_ACTIVE_DIR)/Code:                           \
 $(POSEIDON_ACTIVE_DIR)/Code/Common:                    \
 $(POSEIDON_ACTIVE_DIR)/Code/Params_and_Variables:      \
-$(POSEIDON_ACTIVE_DIR)/Code/VPRINT:                    \
-$(POSEIDON_ACTIVE_DIR)/Code/AMReX_Interfacing:         \
+$(POSEIDON_ACTIVE_DIR)/Code/Timers:                    \
+$(POSEIDON_ACTIVE_DIR)/Code/AMReX_Utilities:           \
 $(POSEIDON_ACTIVE_DIR)/Code/Mesh:                      \
 $(POSEIDON_ACTIVE_DIR)/Code/Quadrature                 \
 $(POSEIDON_ACTIVE_DIR)/Code/Tables:                    \
@@ -17,7 +17,9 @@ $(POSEIDON_ACTIVE_DIR)/Code/Fixed_Point:               \
 $(POSEIDON_ACTIVE_DIR)/Code/XCFC:                      \
 $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules:          \
 $(POSEIDON_ACTIVE_DIR)/Code/Initialization:            \
+$(POSEIDON_ACTIVE_DIR)/Code/Source_Input:              \
 $(POSEIDON_ACTIVE_DIR)/Code/Interfaces:                \
+$(POSEIDON_ACTIVE_DIR)/Code/Poisson:                   \
 $(POSEIDON_ACTIVE_DIR)/Code/Newton_Raphson:            \
 $(POSEIDON_ACTIVE_DIR)/Code/Params_And_Variables:      \
 $(POSEIDON_ACTIVE_DIR)/Code/Utilities:                 \

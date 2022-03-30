@@ -39,15 +39,11 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                     ONLY : pi
 
-USE Units_Module, &
-            ONLY :  Set_Units
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE,                     &
-                    L_Limit,                    &
-                    Num_CFA_Vars,               &
-                    Poseidon_Initialized_Flag,  &
+            ONLY :  Num_CFA_Vars,               &
                     Poseidon_Frame,             &
+                    Poisson_Mode,               &
                     Method_Flag
 
 
@@ -71,10 +67,14 @@ USE Variables_Flags, &
             
 
 USE Variables_BC, &
-            ONLY :  INNER_CFA_BC_VALUES,                            &
-                    OUTER_CFA_BC_VALUES,                            &
-                    INNER_CFA_BC_TYPE,                              &
-                    OUTER_CFA_BC_TYPE
+            ONLY :  INNER_CFA_BC_VALUES,            &
+                    OUTER_CFA_BC_VALUES,            &
+                    INNER_CFA_BC_TYPE,              &
+                    OUTER_CFA_BC_TYPE,              &
+                    INNER_Poisson_BC_VALUE,         &
+                    OUTER_Poisson_BC_VALUE,         &
+                    INNER_Poisson_BC_TYPE,          &
+                    OUTER_Poisson_BC_TYPE
 
 
 USE Functions_Mesh, &
@@ -84,6 +84,11 @@ USE Functions_Mesh, &
 USE Allocation_Core, &
             ONLY :  Deallocate_Poseidon_CFA_Variables
 
+USE Allocation_Poisson, &
+            ONLY :  Deallocate_Poseidon_Poisson_Variables
+
+USE Poisson_Main_Module, &
+            ONLY :  Poisson_Solve
 
 USE CFA_Newton_Raphson_3D_Module, &
             ONLY :  CFA_Newton_Raphson_3D
@@ -114,7 +119,10 @@ USE Allocation_XCFC, &
 
 USE Allocation_SelfSimilar, &
             ONLY : Deallocate_SelfSim
-USE mpi
+
+USE Timer_Routines_Module, &
+            ONLY : Finalize_Timers
+
 
 
 
@@ -151,8 +159,12 @@ LOGICAL                                             ::  Readiness_Flag
 Readiness_Flag = .TRUE.
 
 IF ( Readiness_Flag ) THEN
+
+    IF ( Poisson_Mode .eqv. .TRUE. ) THEN
+
+        CALL Poisson_Solve()
     
-    IF ( Method_Flag == 1 ) THEN
+    ELSE IF ( Method_Flag == 1 ) THEN
 
         CALL CFA_Newton_Raphson_3D()
 
@@ -205,23 +217,34 @@ END SUBROUTINE Poseidon_Run
 SUBROUTINE Poseidon_Close()
 
 
-
-!!!!  Deallocate Data Space !!!!
-CALL Deallocate_Poseidon_CFA_Variables
-
 CALL Deallocate_Mesh()
-CALL Deallocate_Quadrature()
-CALL Deallocate_Tables()
 
-CALL Deallocate_SelfSim()
 
-IF ( Method_Flag == 1 ) THEN
-    CALL Deallocate_NR
-ELSE IF ( Method_Flag == 2 ) THEN
-    CALL Deallocate_FP
-ELSE IF ( Method_Flag == 3 ) THEN
-    CALL Deallocate_XCFC
+IF ( Poisson_Mode ) THEN
+    Call Deallocate_Poseidon_Poisson_Variables
+
+ELSE
+    !!!!  Deallocate Data Space !!!!
+    CALL Deallocate_Poseidon_CFA_Variables
+
+    CALL Deallocate_Quadrature()
+    CALL Deallocate_Tables()
+
+    CALL Deallocate_SelfSim()
+
+    IF ( Method_Flag == 1 ) THEN
+        CALL Deallocate_NR
+    ELSE IF ( Method_Flag == 2 ) THEN
+        CALL Deallocate_FP
+    ELSE IF ( Method_Flag == 3 ) THEN
+        CALL Deallocate_XCFC
+    END IF
+
 END IF
+
+
+CALL Finalize_Timers()
+
 
 
 Test_Space_Allocated_Flag = .FALSE.
@@ -235,6 +258,8 @@ PHI_MESH_SET_FLAG = .FALSE.
 
 INNER_BC_SET_FLAG = .FALSE.
 OUTER_BC_SET_FLAG = .FALSE.
+
+
 
 
 END SUBROUTINE Poseidon_Close
@@ -432,6 +457,64 @@ END SUBROUTINE Poseidon_CFA_Set_Uniform_Boundary_Conditions
 
 
 
+ !+105+####################################################################################!
+!                                                                                           !
+!      Poseidon_Poisson_Set_Boundary_Condtion                                               !
+!                                                                                           !
+!-------------------------------------------------------------------------------------------!
+!                                                                                           !
+!   Set boundary condition values for the system.  This needs to be done once, but can be   !
+!   repeatedly used if the boundary conditions are changed.                                 !
+!                                                                                           !
+!-------------------------------------------------------------------------------------------!
+!                                                                                           !
+!   Input Variables     :                                                                   !
+!                                                                                           !
+!           BC_Location_Input       -   "I" for Inner Boundary                              !
+!                                       "O" for Outer Boundary                              !
+!                                                                                           !
+!           BC_Type_Input           -   "D" for Dirichlet Boundary Condition                !
+!                                       "N" for Neumann Boundary Condition                  !
+!                                                                                           !
+!           BC_Value_Input          -   For a Dirichlet Boundary Condition specify the      !
+!                                           Newtonian potential at the boundary.            !
+!                                       For a Neumann Boundary Condition specify the        !
+!                                           radial derivative of the potential at the       !
+!                                           boundary.                                       !
+!                                                                                           !
+ !#########################################################################################!
+SUBROUTINE Poseidon_Poisson_Set_Uniform_Boundary_Conditions(BC_Location_Input,      &
+                                                            BC_Type_Input,          &
+                                                            BC_Value_Input          )
+
+
+
+CHARACTER(LEN = 1), INTENT(IN)          ::  BC_Location_Input
+CHARACTER(LEN = 1), INTENT(IN)          ::  BC_Type_Input
+REAL(KIND = idp),   INTENT(IN)          ::  BC_Value_Input
+
+
+
+IF (    BC_Location_Input == "I"    ) THEN
+
+    INNER_Poisson_BC_TYPE  = BC_Type_Input
+    INNER_Poisson_BC_VALUE = BC_Value_Input
+
+ELSE IF (    BC_Location_Input == "O"    ) THEN
+
+    OUTER_Poisson_BC_TYPE  = BC_Type_Input
+    OUTER_Poisson_BC_VALUE = BC_Value_Input
+
+
+END IF
+
+
+
+
+
+
+
+END SUBROUTINE Poseidon_Poisson_Set_Uniform_Boundary_Conditions
 
 
 

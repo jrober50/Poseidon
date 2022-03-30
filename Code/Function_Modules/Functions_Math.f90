@@ -186,22 +186,18 @@ ELSE
 
                         tmp(i) = (1/(xlocs(i) - xlocs(k)))*(1/(xlocs(i) - xlocs(l)))
 
-                        !print*,"tmp A ",i, k, l, tmp(i)
 
                         DO j = 0,Ord
 
                             IF (j .NE. i .AND. j .NE. k .AND. j .NE. l) THEN
 
                                 tmp(i) = tmp(i) * (x - xlocs(j))/(xlocs(i) - xlocs(j))
-                                !print*,"tmp B ",i, k, l, j, tmp(i)
 
                             END IF
 
                         END DO  ! j Loop
 
                         tmp2(i) = tmp2(i) + tmp(i)
-
-                        !print*,"tmp A",j, i, tmp2(i)
 
                     END IF
 
@@ -303,6 +299,75 @@ END FUNCTION Legendre_Poly
 
 
 
+ !+201+################################################################!
+!                                                                       !
+!   Legendre_Poly - Calculates the value of the Legendre Polynomial     !
+!                   P^m_l(cos(theta))                                   !
+!                                                                       !
+ !#####################################################################!
+FUNCTION Legendre_Poly_Array(l,m,num_points,theta)
+
+
+!  Returns array that conatins the values P^m_n(cos(theta)) for n = 0:l
+!  If m > n then returns 0 as the poly doesn't exist there.
+
+INTEGER, INTENT(IN)                                     :: l,m, num_points
+REAL(KIND = idp),  INTENT(IN), DIMENSION(1:num_points)  :: theta
+REAL(KIND = idp), DIMENSION(0:l,1:num_points)           :: Legendre_Poly_Array
+
+INTEGER                                         :: i, n
+REAL(KIND = idp)                                :: factor, normfactor
+REAL(KIND = idp), DIMENSION(1:num_points)       :: costheta, sqrfactor
+REAL(KIND = idp), DIMENSION(0:l,1:num_points)   :: Plm
+
+
+n = abs(m)
+costheta = DCOS(theta)
+sqrfactor = sqrt(1.0_idp - costheta*costheta)
+
+
+
+Plm(:,:) = 0.0_idp
+
+IF (n <= l) THEN
+
+    Plm(n,:) = 1.0_idp
+    factor = 1.0_idp
+
+    DO i = 1,n
+        Plm(n,:) = -Plm(n,:)*factor*sqrfactor(:)
+        factor = factor + 2.0_idp
+    END DO
+END IF
+
+IF (n + 1 <= l) THEN
+    Plm(n+1,:) = costheta(:)*(2.0_idp*n + 1.0_idp) * Plm(n,:)
+END IF
+
+
+DO i = n+2,l
+
+    Plm(i,:) = ( ( 2*i - 1)*costheta(:)*Plm(i-1,:) + (-i - n +1)*Plm(i-2,:) )/(i - n)
+
+END DO
+
+
+
+DO i = 0,l
+    If (m < 0) THEN
+        normfactor = ((-1)**n)*(1.0_idp*Factorial(l-n))/(1.0_idp*Factorial(l+n))
+
+        Legendre_Poly_Array(l,:) = normfactor*Plm(l,:)
+    ELSE
+        Legendre_Poly_Array(l,:) = Plm(l,:)
+    END IF
+END DO ! i Loop
+
+
+END FUNCTION Legendre_Poly_Array
+
+
+
 
 
 
@@ -317,9 +382,20 @@ PURE ELEMENTAL FUNCTION Norm_Factor(l,m)
 INTEGER, INTENT(IN)         :: l,m
 REAL(KIND = idp)            :: Norm_Factor
 
+REAL(KIND = idp)            ::  Real_L
+REAL(KIND = idp)            ::  Real_M
+
+Real_L = REAL( l, Kind = idp)
+Real_M = REAL( m, Kind = idp)
+
 
 !Norm_Factor = 1.0_idp
-Norm_Factor = sqrt( ( ( 2.0_idp * l + 1.0_idp) * Factorial(l - m))/( 4.0_idp * pi * Factorial(l + m)))
+Norm_Factor = sqrt( ( 2.0_idp * Real_L + 1.0_idp)               &
+                    * REAL( Factorial(l-m), Kind = idp )        &
+                    /( 4.0_idp                                  &
+                        * pi                                    &
+                        * REAL(Factorial(l+m), Kind = idp) )    &
+                    )
 
 
 END FUNCTION Norm_Factor
@@ -327,7 +403,34 @@ END FUNCTION Norm_Factor
 
 
 
- !+203+################################################################!
+
+ !+203+####################################################!
+!                                                           !
+!       Sqrt_Factor - Calculate normalization factor for    !
+!                       spherical harmonic derivatives      !
+!                                                           !
+ !#########################################################!
+PURE ELEMENTAL FUNCTION Sqrt_Factor(l,m)
+
+INTEGER, INTENT(IN)         :: l,m
+REAL(KIND = idp)            :: Sqrt_Factor
+
+REAL(KIND = idp)            ::  Real_L
+REAL(KIND = idp)            ::  Real_M
+
+Real_L = REAL( l, Kind = idp)
+Real_M = REAL( m, Kind = idp)
+
+!Norm_Factor = 1.0_idp
+Sqrt_Factor = sqrt( ( 2.0_idp * Real_L + 1.0_idp ) / ( 2.0_idp * Real_L + 1.0_idp )     &
+                     * ( Real_L - Real_M ) * (Real_L + Real_M ) )
+
+END FUNCTION Sqrt_Factor
+
+
+
+
+ !+204+################################################################!
 !                                                                       !
 !       Factorial - Calulcates N!, for use in Legendre_Poly             !
 !                                                                       !

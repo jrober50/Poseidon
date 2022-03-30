@@ -25,20 +25,23 @@ MODULE CHIMERA_HDF5_Module                                                      
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-                        ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Numbers_Module, &
-                        ONLY :  pi, eps
+            ONLY :  pi, eps
 
-USE Units_Module, &
-                        ONLY :  C_Square
+USE Poseidon_Units_Module, &
+            ONLY :  C_Square
+
+USE Quadrature_Mapping_Functions, &
+            ONLY : Quad_Map
 
 USE Variables_IO, &
-                        ONLY :  Write_Flags
+            ONLY :  Write_Flags
 
 USE CHIMERA_TEST_FUNCS_Module,  &
-                        ONLY :  INIT_CHIMERA_POTENTIAL, &
-                                INIT_CHIMERA_SHIFT_VAL
+            ONLY :  INIT_CHIMERA_POTENTIAL, &
+                    INIT_CHIMERA_SHIFT_VAL
 
 USE HDF5_IO_Module
 USE MPI
@@ -294,9 +297,7 @@ DO k = k_lower, k_upper
     DO td = 1, Num_Quad(2)
     DO pd = 1, Num_Quad(3)
 
-        here = (rd-1) * Num_Quad(3)*Num_Quad(2)             &
-             + (td-1) * Num_Quad(3)                                  &
-             + pd
+        Here = Quad_Map(rd,td,pd,Num_Quad)
 
         Output_E(here,i-1,j-1,k-1) = Reusable_Value - Pressure(k,j,i)
         Output_S(here,i-1,j-1,k-1) = Reusable_Value*V_Square/C_Square + 3.0_idp * Pressure(k,j,i)

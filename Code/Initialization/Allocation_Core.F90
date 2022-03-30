@@ -42,6 +42,7 @@ USE Variables_Quadrature, &
                     Num_T_Quad_Points,      &
                     Num_P_Quad_Points,      &
                     Num_TP_Quad_Points,     &
+                    Num_Quad_DOF,           &
                     Local_Node_Locations
 
 USE Variables_MPI, &
@@ -74,16 +75,14 @@ USE Variables_Source, &
                     Block_Source_Si
 
 #ifdef POSEIDON_AMREX_FLAG
-USE Variables_AMReX_Multifabs, &
+USE Variables_AMReX_Core, &
             ONLY :  MF_Source,              &
                     BA_Source,              &
                     DM_Source,              &
-                    Geom_Source
+                    GM_Source,              &
+                    iLeafElementsPerLvl,    &
+                    AMReX_Num_Levels
 #endif
-
-
-USE Variables_AMReX_Core, &
-            ONLY :  AMREX_Levels
 
 IMPLICIT NONE
 
@@ -101,35 +100,33 @@ SUBROUTINE Allocate_Poseidon_CFA_Variables()
 
 
 
+#ifdef POSEIDON_AMREX_FLAG
 
+ALLOCATE( MF_Source(0:AMReX_Num_Levels-1))
+ALLOCATE( BA_Source(0:AMReX_Num_Levels-1))
+ALLOCATE( DM_Source(0:AMReX_Num_Levels-1))
+ALLOCATE( GM_Source(0:AMReX_Num_Levels-1))
 
-ALLOCATE(Block_Source_E(    1:NUM_R_QUAD_POINTS,        &
-                            1:NUM_T_QUAD_POINTS,        &
-                            1:NUM_P_QUAD_POINTS,        &
+ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
+
+#else
+
+ALLOCATE(Block_Source_E(    1:Num_Quad_DOF,             &
                             0:NUM_R_ELEMS_PER_BLOCK-1,  &
                             0:NUM_T_ELEMS_PER_BLOCK-1,  &
                             0:NUM_P_ELEMS_PER_BLOCK-1   )   )
 
-ALLOCATE(Block_Source_S(    1:NUM_R_QUAD_POINTS,        &
-                            1:NUM_T_QUAD_POINTS,        &
-                            1:NUM_P_QUAD_POINTS,        &
+ALLOCATE(Block_Source_S(    1:Num_Quad_DOF,             &
                             0:NUM_R_ELEMS_PER_BLOCK-1,  &
                             0:NUM_T_ELEMS_PER_BLOCK-1,  &
                             0:NUM_P_ELEMS_PER_BLOCK-1   )   )
 
-ALLOCATE(Block_Source_Si(   1:NUM_R_QUAD_POINTS,        &
-                            1:NUM_T_QUAD_POINTS,        &
-                            1:NUM_P_QUAD_POINTS,        &
+ALLOCATE(Block_Source_Si(   1:Num_Quad_DOF,             &
                             0:NUM_R_ELEMS_PER_BLOCK-1,  &
                             0:NUM_T_ELEMS_PER_BLOCK-1,  &
                             0:NUM_P_ELEMS_PER_BLOCK-1,  &
                             1:3          )   )
 
-#ifdef POSEIDON_AMREX_FLAG
-ALLOCATE( MF_Source(0:AMReX_Levels-1))
-ALLOCATE( BA_Source(0:AMReX_Levels-1))
-ALLOCATE( DM_Source(0:AMReX_Levels-1))
-ALLOCATE( Geom_Source(0:AMReX_Levels-1))
 #endif
 
 
@@ -169,13 +166,23 @@ END SUBROUTINE Allocate_Poseidon_CFA_Variables
 !################################################################################!
 SUBROUTINE Deallocate_Poseidon_CFA_Variables()
 
+#ifdef POSEIDON_AMREX_FLAG
 
+
+DEALLOCATE( MF_Source )
+DEALLOCATE( BA_Source )
+DEALLOCATE( DM_Source )
+DEALLOCATE( GM_Source )
+
+DEALLOCATE( iLeafElementsPerLvl )
+
+#else
 
 
 DEALLOCATE( Block_Source_E )
 DEALLOCATE( Block_Source_S )
 DEALLOCATE( Block_Source_Si )
-
+#endif
 
 
 DEALLOCATE( ITER_TIME_TABLE )

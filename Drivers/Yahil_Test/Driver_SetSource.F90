@@ -29,7 +29,7 @@ MODULE Driver_SetSource_Module                                              !##!
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  C_Square
 
 USE Poseidon_Parameters, &
@@ -43,17 +43,27 @@ USE Source_Input_Module, &
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
-!
-!USE Timer_Routines_Module, &
-!            ONLY :  TimerStart,     &
-!                    TimerSTop
-!
-!
-!USE Timer_Variables_Module, &
-!            ONLY :  Timer_Driver_SetSource_InitTest,        &
-!                    Timer_Driver_SetSource_SetSource,       &
-!                    Timer_Driver_SetSource_Scale
 
+
+USE Variables_IO, &
+            ONLY :  Write_Flags,        &
+                    iWF_Source
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,     &
+                    TimerSTop
+
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_Driver_SetSource_InitTest,        &
+                    Timer_Driver_SetSource_SetSource,       &
+                    Timer_Driver_SetSource_Scale
+
+USE Quadrature_Mapping_Functions, &
+            ONLY :  Quad_Map
+
+USE Poseidon_IO_Module, &
+            ONLY :  Output_Poseidon_Sources_3D
 
 IMPLICIT NONE
 
@@ -97,7 +107,8 @@ INTEGER                                                 ::  Num_DOF
 INTEGER                                                 ::  Here
 
 INTEGER                                                 ::  re, te, pe
-INTEGER                                                 ::  rq, tq, pq
+INTEGER                                                 ::  rd, td, pd
+
 REAL(idp), DIMENSION(1:NQ(1))                           ::  Cur_R_Locs
 
 REAL(idp)                                               ::  Psi_Holder
@@ -115,7 +126,7 @@ ALLOCATE( Local_S(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
 ALLOCATE( Local_Si(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1, 1:3)  )
 
 
-!CALL TimerStart( Timer_Driver_SetSource_InitTest )
+CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
 CALL Initialize_Yahil_Sources( Yahil_Params(1),        &
                                 Yahil_Params(2),        &
@@ -129,26 +140,11 @@ CALL Initialize_Yahil_Sources( Yahil_Params(1),        &
 
 
 
-!print*,NE(1), NE(2), NE(3)
-!
-!Print*,dx_c
-!
-!Print*,x_e
 
+CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
-!CALL TimerStop( Timer_Driver_SetSource_InitTest )
+CALL TimerStart( Timer_Driver_SetSource_Scale )
 
-!
-!DO pe = 1,NE(3)
-!DO te = 1,NE(2)
-!DO re = 1,NE(1)
-!print*,Local_Si(:,re-1,te-1,pe-1,1)
-!END DO ! re
-!END DO ! te
-!END DO ! pe
-
-
-!CALL TimerStart( Timer_Driver_SetSource_Scale )
 IF ( Solver_Type == 3 ) THEN
 
 
@@ -159,21 +155,22 @@ IF ( Solver_Type == 3 ) THEN
 
     Cur_R_Locs = dx_c(re)*(R_Quad(:) - Left_Limit) + x_e(re-1)
 
-    DO rq = 1,NQ(1)
+    DO rd = 1,NQ(1)
 
     Psi_Holder = 1.0_idp    &
-               - 0.5_idp*Potential_Solution(cur_r_locs(rq), 0.0_idp, 0.0_idp)/C_Square
+               - 0.5_idp*Potential_Solution(cur_r_locs(rd), 0.0_idp, 0.0_idp)/C_Square
+
     Psi_Power  = Psi_Holder**6
 
 
 !    PRINT*,re,te,pe, Psi_Holder,x_e(re-1)
 
-    DO pq = 1,NQ(3)
-    DO tq = 1,NQ(2)
 
-        here = (pq-1)*NQ(1)*NQ(2)   &
-             + (tq-1)*NQ(1)         &
-             + rq
+    DO pd = 1,NQ(3)
+    DO td = 1,NQ(2)
+
+        here = Quad_Map(rd,td,pd)
+
 
         Local_E(Here,re-1,te-1,pe-1) = Local_E(Here,re-1,te-1,pe-1)*Psi_Power
         Local_S(Here,re-1,te-1,pe-1) = Local_S(Here,re-1,te-1,pe-1)*Psi_Power
@@ -191,22 +188,11 @@ IF ( Solver_Type == 3 ) THEN
 
 
  END IF
-!CALL TimerStop( Timer_Driver_SetSource_Scale )
-!
-!DO pe = 1,NE(3)
-!DO te = 1,NE(2)
-!DO re = 1,NE(1)
-!    PRINT*,RE,te,pe
-!    print*,Local_E(:,re-1,te-1,pe-1)
-!END DO ! re
-!END DO ! te
-!END DO ! pe
+
+CALL TimerStop( Timer_Driver_SetSource_Scale )
 
 
-!PRINT*,"Stopping in Driver_SetSource"
-!STOP
-
-!CALL TimerStart( Timer_Driver_SetSource_SetSource )
+CALL TimerStart( Timer_Driver_SetSource_SetSource )
 
 
 CALL Poseidon_Input_Sources(    myID, myID, myID,               &
@@ -220,7 +206,8 @@ CALL Poseidon_Input_Sources(    myID, myID, myID,               &
 
 
 
-IF ( .FALSE. ) THEN
+
+IF ( Write_Flags(iWF_Source) > 0 ) THEN
 
     CALL Output_Poseidon_Sources_3D( Local_E, Local_S, Local_Si,     &
                                      NE(1), NE(2), NE(3),            &
@@ -231,7 +218,8 @@ IF ( .FALSE. ) THEN
  
 END IF
 
-!CALL TimerStop( Timer_Driver_SetSource_SetSource )
+
+CALL TimerStop( Timer_Driver_SetSource_SetSource )
 
 DEALLOCATE( Local_E, Local_S, Local_Si )
 

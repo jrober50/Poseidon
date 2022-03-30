@@ -44,14 +44,6 @@ USE Parameters_Variable_Indices, &
                     iVB_S
 
 
-USE Units_Module, &
-            ONLY :  C_Square,                   &
-                    Centimeter,                 &
-                    Meter,                      &
-                    Second,                     &
-                    GravPot_Units,              &
-                    Shift_Units
-
 USE Variables_Functions, &
             ONLY :  Potential_Solution,         &
                     Calc_3D_Values_At_Location
@@ -161,12 +153,10 @@ USE Linear_Solvers_And_Preconditioners, &
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In,                           &
                     OPEN_ITER_REPORT_FILE,              &
-                    CLOSE_ITER_REPORT_FILE,             &
-                    OUTPUT_FINAL_RESULTS
+                    CLOSE_ITER_REPORT_FILE
 
-USE FP_Functions_Mapping, &
-            ONLY :  FP_LM_Map,                          &
-                    FP_Beta_Array_Map
+USE Functions_Domain_Maps, &
+            ONLY :  Map_To_lm
 
 
 
@@ -273,7 +263,7 @@ IF ( Matrix_Format == 'Full' ) THEN
 
             DO l = 0,L_Limit
                 DO m = -l,l
-                    lm_loc  = FP_LM_Map(l,m)
+                    lm_loc  = Map_To_lm(l,m)
                     map_loc = CFA_MAT_Map(CFA_EQ_Map(ui))
 
                     WORK_MAT = Laplace_Matrix_Full(:,:,l)
@@ -387,7 +377,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                 DO m = -l,l
 
 
-                    lm_loc = FP_LM_Map(l,m)
+                    lm_loc = Map_To_lm(l,m)
 
 
                     WORK_VEC = -FP_Source_Vector_A(:,lm_loc,ui)

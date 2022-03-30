@@ -18,7 +18,7 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  C_Square,        &
                     Set_Units,       &
                     Centimeter,      &
@@ -36,7 +36,8 @@ USE Variables_IO, &
             ONLY :  Write_Results_R_Samps,      &
                     Write_Results_T_Samps,      &
                     File_Suffix,                &
-                    Report_Flags
+                    Report_Flags,               &
+                    iRF_Time
 
 
 USE Variables_MPI, &
@@ -48,7 +49,7 @@ USE Variables_Functions, &
 USE FP_Functions_Results , &
             ONLY : Calc_1D_CFA_Values_FP
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  SelfSim_V_Switch
 
 USE Poseidon_IO_Parameters, &
@@ -66,10 +67,12 @@ USE Functions_Mapping, &
 
 USE Poseidon_IO_Module, &
             ONLY :  Open_Run_Report_File,       &
-                    Output_Final_Results,       &
                     Open_New_File,              &
                     OPEN_FILE_INQUISITION,      &
                     Output_Poseidon_Sources_3D
+
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
@@ -87,7 +90,35 @@ USE FP_IO_Module, &
 
 USE Poseidon_Utilities_Module, &
             ONLY :  Poseidon_Calc_ADM_Mass,         &
-                    Poseidon_Calc_ADM_Mass_Parts
+                    Poseidon_Calc_ADM_Mass_Parts,   &
+                    Poseidon_Calc_Komar_Mass
+
+USE Driver_SetSource_Module, &
+            ONLY :  Driver_SetSource
+
+USE Driver_SetBC_Module, &
+            ONLY :  Driver_SetBC
+
+USE Driver_SetGuess_Module, &
+            ONLY :  Driver_SetGuess
+
+USE Timer_IO_Module, &
+            ONLY :  Output_Time_Report
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,     &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_Driver_SetSource,     &
+                    Timer_Driver_SetBC,         &
+                    Timer_Driver_SetGuess,      &
+                    Timer_Driver_Run,           &
+                    Timer_Driver_Extra
+
+USE Poseidon_XCFC_Interface_Module, &
+            ONLY : Poseidon_Return_ExtrinsicCurvature
+
 
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
@@ -191,6 +222,7 @@ INTEGER                                                 ::  T_Index_Max
 REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
 
+INTEGER                                                 ::  AMReX_Levels
 INTEGER                                                 ::  Max_Iterations
 REAL(idp)                                               ::  CC_Option
 
@@ -201,7 +233,7 @@ REAL(idp), DIMENSION(4)                                 ::  Yahil_Params
 
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
-REAL(idp), DIMENSION(1:6)                               ::  Time_Values
+REAL(idp), DIMENSION(1:7)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
 
 REAL(idp)                                               ::  ADM_Mass
@@ -210,9 +242,8 @@ REAL(idp)                                               ::  ADM_Phys
 REAL(idp)                                               ::  ADM_Curve
 
 REAL(idp)                                               ::  Komar_Mass
-
-
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Output_Kij
+
 
 CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
@@ -229,25 +260,29 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "G"
 Solver_Type         = 3
 
-RE_Table            = (/ 18, 128, 160, 240, 320, 400, 600, 256, 512 /)
+
+RE_Table            = (/ 64, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
+Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  1
-T_Index_Max         =  1
+T_Index_Min         =  6
+T_Index_Max         =  6
 
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  2
-RE_Index_Max        =  2
+RE_Index_Min        =  5
+RE_Index_Max        =  5
 
 Degree_Min          =  1
 Degree_Max          =  1
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
+
+AMReX_Levels        =  0
+
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
@@ -262,27 +297,30 @@ SelfSim_V_Switch    =  0
 
 Dimension_Input     = 3
 
-Max_Iterations      = 10
-CC_Option           = 1.0E-10_idp
+Max_Iterations      = 1000
+CC_Option           = 1.0E-15_idp
 
-Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
+Domain_Edge(2)      = 1E9_idp                   ! Outer Radius (cm)
 
 
-NE(1)               = 128 ! 1.5*128                       ! Number of Radial Elements
-NE(2)               = 2                        ! Number of Theta Elements
-NE(3)               = 2                        ! Number of Phi Elements
+
+
+NE(1)               = 128 ! 1.5*128            ! Number of Radial Elements
+NE(2)               = 1                        ! Number of Theta Elements
+NE(3)               = 1                        ! Number of Phi Elements
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 5                        ! Number of Theta Quadrature Points
+NQ(2)               = 1                        ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
-Print_Results_Flag  = .TRUE.
-!Print_Results_Flag  = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
+!Print_Results_Flag  = .TRUE.
+Print_Results_Flag  = .FALSE.
+
 Suffix_Input        = "Params"
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
@@ -310,12 +348,14 @@ DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     
+    IF ( Mesh_Type == 6 ) THEN
+        NE(1) = INT(RE_Table(RE_Index)*(1.0_idp + REAL((AMReX_Levels-1),idp)/2.0_idp))
+    ELSE
+        NE(1) = RE_Table(RE_Index)
+    END IF
+    NQ(3) = 2*L_Limit_Input + 1
 
-
-    NE(1) = RE_Table(RE_Index)
-!    NQ(3) = 2*L_Limit_Input + 1
-
-    Suffix_Tail = Letter_Table(Mesh_Type)
+    Suffix_Tail = Letter_Table(T_Index)
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -355,8 +395,10 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         x_e, x_c, dx_c,    &
                         y_e, y_c, dy_c,    &
                         z_e, z_c, dz_c,     &
-                        Zoom = 1.032034864238313_idp )
+                        Zoom = 1.032034864238313_idp,   &
+                        Levels_In = AMReX_Levels       )
 
+    
 
 
     !############################################################!
@@ -385,11 +427,11 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
            Anderson_M_Option           = Anderson_M_Values(M_Index),    &
            Verbose_Option              = Verbose,                       &
            WriteAll_Option             = .FALSE.,                       &
-           Print_Setup_Option          = .TRUE.,                        &
+           Print_Setup_Option          = .FALSE.,                        &
            Write_Setup_Option          = .FALSE.,                       &
            Print_Results_Option        = Print_Results_Flag,            &
-           Write_Results_Option        = .TRUE.,                        &
-           Print_Timetable_Option      = .TRUE.,                       &
+           Write_Results_Option        = .FALSE.,                        &
+           Print_Timetable_Option      = .FALSE.,                       &
            Write_Timetable_Option      = .FALSE.,                       &
            Write_Sources_Option        = .FALSE.                        )
 
@@ -402,7 +444,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
-!    CALL TimerStart( Timer_Driver_SetSource )
+
+    CALL TimerStart( Timer_Driver_SetSource )
 
     Yahil_Params = [Time_Values(T_Index), Kappa, Gamma, 0.0_idp]
     CALL Driver_SetSource(  NE, NQ,             &
@@ -416,7 +459,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                             myID,               &
                             Yahil_Params        )
 
-!    CALL TimerStop( Timer_Driver_SetSource )
+    CALL TimerStop( Timer_Driver_SetSource )
 
 
 
@@ -426,11 +469,11 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#          Calculate and Set Boundary Conditions           #!
     !#                                                          #!
     !############################################################!
-!    CALL TimerStart( Timer_Driver_SetBC )
+    CALL TimerStart( Timer_Driver_SetBC )
 
     CALL Driver_SetBC( NE, x_e )
 
-!    CALL TimerStop( Timer_Driver_SetBC )
+    CALL TimerStop( Timer_Driver_SetBC )
 
 
 
@@ -443,7 +486,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#              Calculate and Set Initial Guess             #!
     !#                                                          #!
     !############################################################!
-!    CALL TimerStart( Timer_Driver_SetGuess )
+    CALL TimerStart( Timer_Driver_SetGuess )
 
     CALL Driver_SetGuess(   NE, NQ,             &
                             dx_c, x_e,          &
@@ -454,7 +497,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                             Right_Limit,        &
                             Guess_Type          )
 
-!    CALL TimerStop( Timer_Driver_SetGuess )
+
+    CALL TimerStop( Timer_Driver_SetGuess )
 
 
     !############################################################!
@@ -462,14 +506,15 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                         Run Poseidon                     #!
     !#                                                          #!
     !############################################################!
-!    CALL TimerStart( Timer_Driver_Run )
+    CALL TimerStart( Timer_Driver_Run )
 
     Call Poseidon_Run()
 
 
-!    CALL TimerStop( Timer_Driver_Run )
 
-!    CALL TimerStart( Timer_Driver_Extra  )
+    CALL TimerStop( Timer_Driver_Run )
+
+    CALL TimerStart( Timer_Driver_Extra  )
 
 !    CALL Poseidon_Calc_ADM_Mass( ADM_Mass )
 !    CALL Poseidon_Calc_ADM_Mass_Parts( ADM_MassB, ADM_Phys, ADM_Curve)
@@ -494,11 +539,13 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 !        WRITE(*,'(A,ES18.12,A)')"ADM Sum  : ", (ADM_Phys + ADM_Curve) / Gram, " grams"
         
         CALL Print_Results()
+        CALL Write_Final_Results()
     END IF
 
 
 
-!    CALL TimerStop( Timer_Driver_Extra )
+
+    CALL TimerStop( Timer_Driver_Extra )
 
 
     CALL Poseidon_Return_ExtrinsicCurvature( NE, NQ,                &
@@ -526,8 +573,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     DEALLOCATE( x_e, y_e, z_e )
     DEALLOCATE( x_c, y_c, z_c )
     DEALLOCATE( dx_c, dy_c, dz_c )
-
     DEALLOCATE( Output_Kij )
+
 
 
 END DO ! L_Limit

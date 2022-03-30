@@ -24,12 +24,12 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
                ONLY :  pi
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
                ONLY :  Set_Units,      &
                        Centimeter
 
-USE Initialization_Poseidon, &
-               ONLY :  Initialize_Poseidon
+USE Initialization_AMReX, &
+               ONLY :  Initialize_Poseidon_with_AMReX
 
 
 USE Variables_IO, &
@@ -79,6 +79,28 @@ USE Variables_MPI, &
                         MasterID_Poseidon,  &
                         nPROCS_Poseidon,    &
                         Poseidon_Comm_World
+
+USE Variables_Driver_AMReX, &
+                ONLY :  xL,                 &
+                        xR,                 &
+                        nCells,             &
+                        MaxGridSizeX,       &
+                        nLevels
+
+USE Variables_AMReX_Core, &
+            ONLY :  MF_Source,          &
+                    AMReX_Num_Levels
+
+USE Variables_FP, &
+            ONLY :  FP_Coeff_Vector_A,      &
+                    FP_Coeff_Vector_B
+
+USE Variables_Mesh, &
+ONLY :  Num_R_Elements,         &
+        Num_T_Elements,         &
+        Num_P_Elements,         &
+        rlocs,                  &
+        drlocs
 
 USE MPI
 
@@ -155,12 +177,17 @@ REAL(idp), DIMENSION(3)                                 ::  Yahil_Params
 INTEGER                                                 ::  Max_Iterations
 REAL(idp)                                               ::  CC_Option
 
+INTEGER                                                 ::  IRL
+INTEGER                                                 ::  IFL
+
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
 REAL(idp), DIMENSION(1:6)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
 
 INTEGER                                                 ::  i
+INTEGER                                                 ::  Level
+
 
 CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
@@ -180,11 +207,11 @@ Solver_Type         = 3
 
 RE_Table            = (/ 32, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.15_idp, 0.05_idp /)
+Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  1
-T_Index_Max         =  1
+T_Index_Min         =  6
+T_Index_Max         =  6
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -197,6 +224,9 @@ Degree_Max          =  1
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
+
+IFL                 =  0
+IRL                 =  0
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 
@@ -211,23 +241,25 @@ Dimension_Input     = 3
 Max_Iterations      = 10
 CC_Option           = 1.0E-10_idp
 
-Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
-Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
+Mesh_Type           = 1                        ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Domain_Edge(1)      = 0.0_idp                  ! Inner Radius (cm)
 Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
 
-NE(1)               = 128                       ! Number of Radial Elements
+NE(1)               = 128                      ! Number of Radial Elements
 NE(2)               = 1                        ! Number of Theta Elements
-NE(3)               = 1                         ! Number of Phi Elements
+NE(3)               = 1                        ! Number of Phi Elements
 
-NQ(1)               = 10                        ! Number of Radial Quadrature Points
-NQ(2)               = 1                         ! Number of Theta Quadrature Points
-NQ(3)               = 1                         ! Number of Phi Quadrature Points
+NQ(1)               = 5                        ! Number of Radial Quadrature Points
+NQ(2)               = 1                        ! Number of Theta Quadrature Points
+NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
 Verbose             = .TRUE.
 !Verbose             = .FALSE.
 Suffix_Input        = "Params"
+
+
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
 
@@ -245,12 +277,10 @@ CALL amrex_amrcore_init()
 
 CALL Init_AMReX_Parameters()
 
+!Domain_Edge = Domain_Edge*Centimeter
 
-
-Domain_Edge = Domain_Edge*Centimeter
-
-
-
+Domain_Edge(1) = xL(1)*Centimeter
+Domain_Edge(2) = xR(1)*Centimeter
 
 DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
@@ -258,10 +288,11 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
 DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
-    NE(1) = RE_Table(RE_Index)
+!    NE(1) = RE_Table(RE_Index)
+    NE = nCells
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(Solver_Type)
+    Suffix_Tail = Letter_Table(nLevels)
 
 
 
@@ -296,7 +327,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     CALL Open_Run_Report_File()
 
-
     CALL Create_3D_Mesh( Mesh_Type,         &
                         Domain_Edge(1),    &
                         Domain_Edge(2),    &
@@ -308,45 +338,39 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         z_e, z_c, dz_c,     &
                         Zoom = 1.032034864238313_idp )
 
-
+    
     !############################################################!
     !#                                                          #!
     !#                   Initialize Poseidon                    #!
     !#                                                          #!
     !############################################################!
-    CALL Initialize_Poseidon &
-       (   Dimensions_Option           = Dimension_Input,  &
-           FEM_Degree_Option           = Degree_Input,     &
-           L_Limit_Option              = L_Limit_Input,    &
-           Units_Option                = Units_Input,      &
-           Domain_Edge_Option          = Domain_Edge,      &
-           NE_Option                   = NE,               &
-           NQ_Option                   = NQ,               &
-           r_Option                    = x_e,              &
-           t_Option                    = y_e,              &
-           p_Option                    = z_e,              &
-    !        dr_Option                   = dx_c,             &
-    !        dt_Option                   = dy_c,             &
-    !        dp_Option                   = dz_c              &
-           Suffix_Flag_Option          = Suffix_Input,    &
-           Suffix_Tail_Option          = Suffix_Tail,     &
-           Method_Flag_Option          = Solver_Type,     &
-           CFA_Eq_Flags_Option         = CFA_Eqs,         &
-           Max_Iterations_Option       = Max_Iterations,  &
-           Convergence_Criteria_Option = CC_Option,  &
-           Anderson_M_Option           = Anderson_M_Values(M_Index),   &
-           nProcs_Option               = nPROCS,            &
-           AMReX_Mode_Option           = .TRUE.,            &
-           AMReX_Levels_Option         = 1,                 &
-           Verbose_Option              = Verbose,           &
-           WriteAll_Option             = .FALSE.,           &
-           Print_Setup_Option          = .TRUE.,            &
-           Write_Setup_Option          = .FALSE.,           &
-           Print_Results_Option        = .TRUE.,            &
-           Write_Results_Option        = .TRUE.,           &
-           Print_Timetable_Option      = .FALSE.,            &
-           Write_Timetable_Option      = .FALSE.,           &
-           Write_Sources_Option        = .FALSE.             )
+    CALL Initialize_Poseidon_with_AMReX &
+       (    FEM_Degree_Option                   = Degree_Input,         &
+            L_Limit_Option                      = L_Limit_Input,        &
+            Units_Option                        = Units_Input,          &
+            Domain_Edge_Option                  = Domain_Edge,          &
+            Coarse_NE_Option                    = NE,                   &
+            NQ_Option                           = NQ,                   &
+            Max_Iterations_Option               = Max_Iterations,       &
+            Convergence_Criteria_Option         = CC_Option,            &
+            Anderson_M_Option                   = Anderson_M_Values(M_Index),   &
+            CFA_Eq_Flags_Option                 = CFA_Eqs,              &
+            AMReX_Max_Levels_Option             = nlevels-1,            &
+            AMReX_Max_Grid_Size_Option          = MaxGridSizeX,         &
+            AMReX_FEM_Refinement_Option         = IFL,                  &
+            AMReX_Integral_Refinement_Option    = IRL,                  &
+            Poisson_Mode_Option                 = .FALSE.,              &
+            Verbose_Option                      = Verbose,              &
+            WriteAll_Option                     = .FALSE.,              &
+            Print_Setup_Option                  = .TRUE.,               &
+            Write_Setup_Option                  = .FALSE.,              &
+            Print_Results_Option                = .TRUE.,               &
+            Write_Results_Option                = .TRUE.,               &
+            Print_Timetable_Option              = .TRUE.,               &
+            Write_Timetable_Option              = .TRUE.,               &
+            Write_Sources_Option                = .FALSE.,              &
+            Suffix_Flag_Option                   = Suffix_Input,        &
+            Suffix_Tail_Option                   = Suffix_Tail          )
 
 
 
@@ -356,15 +380,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
-    CALL Driver_SetSource(  NE, NQ,                 &
-                            dx_c, x_e, y_e,         &
-                            Input_R_Quad,           &
-                            Input_T_Quad,           &
-                            Input_P_Quad,           &
-                            Left_Limit,             &
-                            Right_Limit,            &
-                            Yahil_Params,           &
-                            Solver_Type             )
+    CALL Driver_SetSource(  NQ, Yahil_Params, nLevels )
 
 
     !############################################################!
@@ -372,7 +388,9 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#          Calculate and Set Boundary Conditions           #!
     !#                                                          #!
     !############################################################!
-    CALL Driver_SetBC( x_e(NE(1)))
+!    PRINT*,"Before Driver_SetBC"
+    CALL Driver_SetBC( x_e(NE(1)) )
+
 
 
     !############################################################!
@@ -380,8 +398,18 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#              Calculate and Set Initial Guess             #!
     !#                                                          #!
     !############################################################!
+!    PRINT*,"Before Driver_SetGuess"
+
+    ! These values are established during source input.
+    ! As the original NE accounts for only the coarsest level,
+    ! we need to do this to get the total number of leaf elements
+    NE(1) = Num_R_Elements
+    NE(2) = Num_T_Elements
+    NE(3) = Num_P_Elements
+
+
     CALL Driver_SetGuess(   NE, NQ,         &
-                            dx_c, x_e,      &
+                            drlocs, rlocs,      &
                             Input_R_Quad,   &
                             Input_T_Quad,   &
                             Input_P_Quad,   &
@@ -394,9 +422,11 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                         Run Poseidon                     #!
     !#                                                          #!
     !############################################################!
+!    PRINT*,"Before Poseidon_Run"
+
     Call Poseidon_Run()
 
-
+!    PRINT*,FP_Coeff_Vector_A
 
     !############################################################!
     !#                                                          #!

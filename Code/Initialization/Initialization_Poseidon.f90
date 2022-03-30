@@ -19,131 +19,157 @@ MODULE Initialization_Poseidon                                                  
 !===================================!
 
 USE Poseidon_Kinds_Module, &
-                ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Numbers_Module, &
-                ONLY :  pi
+            ONLY :  pi
 
-USE Units_Module, &
-                ONLY :  Set_Units
+USE Poseidon_Units_Module, &
+            ONLY :  Set_Units
 
 USE Poseidon_Parameters, &
-                ONLY :  Domain_Dim,             &
-                        Degree,                 &
-                        L_Limit,                &
-                        Method_Flag,            &
-                        Verbose_Flag,           &
-                        Convergence_Criteria,   &
-                        Num_CFA_Vars,           &
-                        Max_Iterations
+            ONLY :  Domain_Dim,             &
+                    Degree,                 &
+                    L_Limit,                &
+                    Method_Flag,            &
+                    Verbose_Flag,           &
+                    Convergence_Criteria,   &
+                    Num_CFA_Vars,           &
+                    Max_Iterations,         &
+                    Poisson_Mode
 
 USE Variables_IO, &
-                ONLY :  Report_Flags,           &
-                        Report_IDs,             &
-                        Write_Flags,            &
-                        File_Suffix
+            ONLY :  Report_Flags,           &
+                    Report_IDs,             &
+                    iRF_Setup,              &
+                    iRF_Time,               &
+                    iWF_Source,             &
+                    iWF_Results,            &
+                    Write_Flags,            &
+                    File_Suffix
 
 USE Variables_Functions, &
-                ONLY :  LM_Location
+            ONLY :  LM_Location
 
 USE Variables_FP, &
-                ONLY :  FP_Anderson_M
+            ONLY :  FP_Anderson_M
 
 USE Variables_Quadrature, &
-                ONLY :  Num_R_Quad_Points,      &
-                        Num_T_Quad_Points,      &
-                        Num_P_Quad_Points,      &
-                        Num_TP_Quad_Points,     &
-                        Num_Quad_DOF
+            ONLY :  Num_R_Quad_Points,      &
+                    Num_T_Quad_Points,      &
+                    Num_P_Quad_Points,      &
+                    Num_TP_Quad_Points,     &
+                    Num_Quad_DOF
 
 USE Variables_Mesh, &
-                ONLY :  Num_R_Elements,         &
-                        Num_T_Elements,         &
-                        Num_P_Elements,         &
-                        Num_Loc_R_Elements,     &
-                        Num_Loc_T_Elements,     &
-                        Num_Loc_P_Elements,     &
-                        rlocs,                  &
-                        tlocs,                  &
-                        plocs,                  &
-                        drlocs,                 &
-                        dtlocs,                 &
-                        dplocs,                 &
-                        R_Inner,                &
-                        R_Outer,                &
-                        R_Coarsen_Factor,       &
-                        T_Coarsen_Factor,       &
-                        P_Coarsen_Factor,       &
-                        locs_set,               &
-                        dlocs_set
+            ONLY :  Num_R_Elements,         &
+                    Num_T_Elements,         &
+                    Num_P_Elements,         &
+                    Num_Loc_R_Elements,     &
+                    Num_Loc_T_Elements,     &
+                    Num_Loc_P_Elements,     &
+                    rlocs,                  &
+                    tlocs,                  &
+                    plocs,                  &
+                    drlocs,                 &
+                    dtlocs,                 &
+                    dplocs,                 &
+                    R_Inner,                &
+                    R_Outer,                &
+                    R_Coarsen_Factor,       &
+                    T_Coarsen_Factor,       &
+                    P_Coarsen_Factor,       &
+                    locs_set,               &
+                    dlocs_set
 
 USE Variables_Derived, &
-                ONLY :  Prob_Dim,               &
-                        Block_Prob_Dim,         &
-                        SubShell_Prob_Dim,      &
-                        Elem_Prob_Dim_Sqr,      &
-                        Var_Dim,                &
-                        Block_Var_Dim,          &
-                        Num_Off_Diagonals,      &
-                        ULM_Length,             &
-                        Num_R_Nodes
+            ONLY :  Prob_Dim,               &
+                    Block_Prob_Dim,         &
+                    SubShell_Prob_Dim,      &
+                    Elem_Prob_Dim_Sqr,      &
+                    Var_Dim,                &
+                    Block_Var_Dim,          &
+                    Num_Off_Diagonals,      &
+                    ULM_Length,             &
+                    Num_R_Nodes
                 
 USE Variables_MPI, &
-                ONLY :  myID_Poseidon,          &
-                        nProcs_Poseidon,        &
-                        Num_Blocks_Per_Shell,   &
-                        Num_R_Elems_Per_Block,  &
-                        Num_T_Elems_Per_Block,  &
-                        Num_P_Elems_Per_Block,  &
-                        Num_R_Elems_Per_Shell,  &
-                        Num_Shells,             &
-                        Num_SubShells,          &
-                        Num_SubShells_Per_Shell
+            ONLY :  myID_Poseidon,          &
+                    nProcs_Poseidon,        &
+                    Num_Blocks_Per_Shell,   &
+                    Num_R_Elems_Per_Block,  &
+                    Num_T_Elems_Per_Block,  &
+                    Num_P_Elems_Per_Block,  &
+                    Num_R_Elems_Per_Shell,  &
+                    Num_Shells,             &
+                    Num_SubShells,          &
+                    Num_SubShells_Per_Shell
 
 USE Variables_AMReX_Core, &
-                ONLY :  AMReX_Levels,           &
-                        AMReX_Mode
+            ONLY :  AMReX_Mode
 
 
 USE Allocation_Core, &
-                ONLY :  Allocate_Poseidon_CFA_Variables
+            ONLY :  Allocate_Poseidon_CFA_Variables
+
+USE Allocation_Poisson, &
+            ONLY :  Allocate_Poseidon_Poisson_Variables
 
 USE Allocation_Mesh, &
-                ONLY :  Allocate_Mesh
+            ONLY :  Allocate_Mesh
 
 USE Initialization_Mesh, &
-                ONLY :  Initialize_Mesh
+            ONLY :  Initialize_Mesh
 
 USE Initialization_Quadrature, &
-                ONLY :  Initialize_Quadrature
+            ONLY :  Initialize_Quadrature
 
 USE Initialization_MPI, &
-                ONLY :  Initialize_MPI
+            ONLY :  Initialize_MPI
 
 USE Initialization_Tables, &
-                ONLY :  Initialize_Tables
+            ONLY :  Initialize_Tables
 
 USE Initialization_Derived, &
-                ONLY :  Initialize_Derived
+            ONLY :  Initialize_Derived
 
 USE Initialization_FP, &
-                ONLY :  Initialize_FP
+            ONLY :  Initialize_FP
 
 USE Initialization_XCFC, &
-                ONLY :  Initialize_XCFC
+            ONLY :  Initialize_XCFC
 
 USE Initialization_NR, &
-                ONLY :  Initialize_NR
+            ONLY :  Initialize_NR
 
 USE Functions_Mapping, &
-                ONLY :  CFA_3D_LM_Map
+            ONLY :  CFA_3D_LM_Map
 
 USE Poseidon_IO_Module, &
-                ONLY :  Output_Mesh,            &
-                        Output_Nodal_Mesh
+            ONLY :  Output_Mesh,            &
+                    Output_Nodal_Mesh
 
 USE IO_Setup_Report_Module, &
-                ONLY :  Output_Setup_Report
+            ONLY :  Output_Setup_Report
+
+USE Poisson_Matrix_Routines,    &
+            ONLY :  Initialize_Stiffness_Matrix
+
+USE Timer_Routines_Module, &
+            ONLY :  Init_Timers,                    &
+                    Finalize_Timers,                &
+                    TimerStart,                     &
+                    TimerStop
+
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_Poisson_Matrix_Init,      &
+                    Timer_Initialization_Core
+
+
+USE Initialization_Subroutines, &
+            ONLY :  Init_Fixed_Point_Params,        &
+                    Init_IO_Params
 
 IMPLICIT NONE
 
@@ -177,8 +203,8 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
                                 Max_Iterations_Option,                  &
                                 Convergence_Criteria_Option,            &
                                 Anderson_M_Option,                      &
+                                Poisson_Mode_Option,                    &
                                 AMReX_Mode_Option,                      &
-                                AMReX_Levels_Option,                    &
                                 Verbose_Option,                         &
                                 WriteAll_Option,                        &
                                 Print_Setup_Option,                     &
@@ -223,7 +249,7 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  Max_Iterations_O
 
 REAL(idp),               INTENT(IN), OPTIONAL               ::  Convergence_Criteria_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Anderson_M_Option
-INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Levels_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Poisson_Mode_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  AMReX_Mode_Option
 
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Verbose_Option
@@ -236,152 +262,24 @@ LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Timetable_
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Timetable_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Sources_Option
 
+
+CALL Init_Timers
+CALL TimerStart( Timer_Initialization_Core )
+
+
 IF ( PRESENT( Verbose_Option ) ) THEN
     Verbose_Flag = Verbose_Option
 ELSE
     Verbose_Flag = .FALSE.
 END IF
 
-IF ( Verbose_Flag .EQV. .TRUE. ) THEN
+IF ( Verbose_Flag ) THEN
     PRINT*,"Initializing Poseidon..."
 END IF
 
 
-!
-!   Verbose Options
-!
-IF ( Verbose_Flag ) THEN
-    Report_Flags = 1
-    Write_Flags  = 1
-ELSE
-    Report_Flags = 0
-    Write_Flags  = 0
-END IF
-
-IF ( PRESENT( WriteAll_Option) ) THEN
-    Report_Flags = Report_Flags + 2
-    Write_Flags = Write_Flags + 2
-END IF
 
 
-
-
-IF ( PRESENT(Print_Setup_Option) ) THEN
-    IF ( Print_Setup_Option ) THEN
-        IF (Report_Flags(4) > 1 ) THEN
-            Report_Flags(4) = 3
-        ELSE
-            Report_Flags(4) = 1
-        END IF
-    ELSE
-        IF (Report_Flags(4) > 1 ) THEN
-            Report_Flags(4) = 2
-        ELSE
-            Report_Flags(4) = 0
-        END IF
-    END IF
-END IF
-
-
-IF ( PRESENT(Write_Setup_Option) ) THEN
-    IF ( Write_Setup_Option ) THEN
-        IF (Report_Flags(4) < 2 ) THEN
-            Report_Flags(4) = Report_Flags(4) + 2
-        END IF
-    ELSE
-        IF ( Report_Flags(4) > 1 ) THEN
-            Report_Flags(4) = Report_Flags(4) - 2
-        END IF
-    END IF
-END IF
-
-
-
-
-
-IF ( PRESENT(Print_Results_Option) ) THEN
-    IF ( Print_Results_Option ) THEN
-        IF (Write_Flags(5) > 1 ) THEN
-            Write_Flags(5) = 3
-        ELSE
-            Write_Flags(5) = 1
-        END IF
-    ELSE
-        IF (Write_Flags(5) > 1 ) THEN
-            Write_Flags(5) = 2
-        ELSE
-            Write_Flags(5) = 0
-        END IF
-    END IF
-END IF
-
-
-IF ( PRESENT(Write_Results_Option) ) THEN
-    IF ( Write_Results_Option ) THEN
-        IF (Write_Flags(5) < 2 ) THEN
-            Write_Flags(5) = Write_Flags(5) + 2
-        END IF
-    ELSE
-        IF ( Write_Flags(5) > 1 ) THEN
-            Write_Flags(5) = Write_Flags(5) - 2
-        END IF
-    END IF
-END IF
-
-
-
-
-
-
-
-IF ( PRESENT(Print_Timetable_Option) ) THEN
-    IF ( Print_Timetable_Option ) THEN
-        IF (Report_Flags(5) > 1 ) THEN
-            Report_Flags(5) = 3
-        ELSE
-            Report_Flags(5) = 1
-        END IF
-    ELSE
-        IF (Report_Flags(5) > 1 ) THEN
-            Report_Flags(5) = 2
-        ELSE
-            Report_Flags(5) = 0
-        END IF
-    END IF
-END IF
-
-IF ( PRESENT(Write_Timetable_Option) ) THEN
-    IF ( Write_Timetable_Option ) THEN
-        IF (Report_Flags(5) < 2 ) THEN
-            Report_Flags(5) = Report_Flags(4) + 2
-        END IF
-    ELSE
-        IF ( Report_Flags(5) > 1 ) THEN
-            Report_Flags(5) = Report_Flags(4) - 2
-        END IF
-    END IF
-END IF
-
-
-
-IF ( PRESENT(Write_Sources_Option) ) THEN
-    IF ( Write_Sources_Option ) THEN
-        Write_Flags(4) = 2
-    ELSE
-        Write_Flags(4) = 0
-    END IF
-END IF
-
-
-
-
-IF ( PRESENT( Max_Iterations_Option ) ) THEN
-    Max_Iterations = Max_Iterations_Option
-END IF
-
-IF ( PRESENT( Convergence_Criteria_Option) ) THEN
-    Convergence_Criteria = Convergence_Criteria_Option
-END IF
 
 
 
@@ -390,6 +288,9 @@ IF ( PRESENT( Units_Option ) ) THEN
 ELSE
     CALL Set_Units("G")
 END IF
+
+
+
 
 IF ( PRESENT( FEM_Degree_Option ) ) THEN
     Degree = FEM_Degree_Option
@@ -405,32 +306,23 @@ ELSE
 END IF
 
 
-IF ( PRESENT(Anderson_M_Option) ) THEN
-    FP_Anderson_M = Anderson_M_Option
-END IF
 
-IF ( PRESENT(AMReX_Mode_Option) ) THEN
-    AMReX_Mode = AMReX_Mode_Option
+
+
+
+
+
+IF ( PRESENT( Dimensions_Option ) ) THEN
+    Domain_Dim = Dimensions_Option
 ELSE
-    AMReX_Mode = .FALSE.
-END IF
-
-
-
-IF ( PRESENT(AMReX_Levels_Option) ) THEN
-    AMReX_Levels = AMReX_Levels_Option
-ELSE
-    AMReX_Levels = 1
+    Domain_Dim = 3
 END IF
 
 
 
 
-IF ( PRESENT(nProcs_Option) ) THEN
-    nProcs_Poseidon = nProcs_Option
-ELSE
-    nProcs_Poseidon = 1
-END IF
+
+
 
 IF ( PRESENT( NQ_Option ) ) THEN
     Num_R_Quad_Points = NQ_Option(1)
@@ -443,6 +335,13 @@ ELSE
 END IF
 Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
 Num_Quad_DOF       = Num_R_Quad_Points*Num_TP_Quad_Points
+
+
+
+
+
+
+
 
 
 
@@ -530,73 +429,127 @@ END IF
 CALL Initialize_Mesh( )
 
 
+!
+!   Verbose Options
+!
+CALL Init_IO_Params(WriteAll_Option,            &
+                    Print_Setup_Option,         &
+                    Write_Setup_Option,         &
+                    Print_Results_Option,       &
+                    Write_Results_Option,       &
+                    Print_Timetable_Option,     &
+                    Write_Timetable_Option,     &
+                    Write_Sources_Option,       &
+                    Suffix_Flag_Option,         &
+                    Suffix_Tail_Option,         &
+                    Frame_Option                )
 
 
 
-IF ( PRESENT( Method_Flag_Option ) ) THEN
-    Method_Flag = Method_Flag_Option
+
+
+IF ( PRESENT(Poisson_Mode_Option) ) THEN
+    Poisson_Mode = Poisson_Mode_Option
 ELSE
-    Method_Flag = 2
+    Poisson_Mode = .FALSE.
 END IF
 
 
+IF ( Poisson_Mode ) THEN
+    !=======================================================!
+    !                                                       !
+    !               Initialize Poisson Solver               !
+    !                                                       !
+    !=======================================================!
 
-IF ( PRESENT(Suffix_Flag_Option) ) THEN
+
+    LM_Location => CFA_3D_LM_Map
+    CALL Initialize_Derived()
+    CALL Initialize_MPI()
+    CALL Initialize_Quadrature()
+!    CALL Initialize_Tables()
+
+    CALL Allocate_Poseidon_Poisson_Variables()
 
 
-    IF ( Suffix_Flag_Option == "Params") THEN
 
-        WRITE(File_Suffix,'(A,I4.4,A,I3.3,A,I2.2,A,I2.2)')             &
-            "RE",Num_R_Elements,"_TE",Num_T_Elements,"_D",Degree,"_L",L_Limit
+    CALL TimerStart( Timer_Poisson_Matrix_Init )
+    CALL Initialize_Stiffness_Matrix()
+    CALL TimerStop(  Timer_Poisson_Matrix_Init )
 
-    ELSEIF ( SUffix_Flag_Option == "Frame") THEN
-        
-        IF ( PRESENT(Frame_Option) ) THEN
-            WRITE(File_Suffix,'(I5.5)') Frame_Option
-        ELSE
-            WRITE(File_Suffix,'(I5.5)') 1
-        END IF
+
+
+
+ELSE
+    !=======================================================!
+    !                                                       !
+    !           Initialize CFA/XCFC Metric Solver           !
+    !                                                       !
+    !=======================================================!
+
+
+    CALL Init_Fixed_Point_Params( Max_Iterations_Option,          &
+                                  Convergence_Criteria_Option,    &
+                                  Anderson_M_Option               )
+
+
+
+
+
+
+    IF ( PRESENT(nProcs_Option) ) THEN
+        nProcs_Poseidon = nProcs_Option
+    ELSE
+        nProcs_Poseidon = 1
     END IF
-ELSE
-    WRITE(File_Suffix,'(I5.5)') 1
-END IF
 
 
-IF ( PRESENT(Suffix_Tail_Option) ) THEN
-    WRITE(File_Suffix,'(A,A,A)') TRIM(File_Suffix),"_",Suffix_Tail_Option
-
-END IF
-
+    IF ( PRESENT(AMReX_Mode_Option) ) THEN
+        AMReX_Mode = AMReX_Mode_Option
+    ELSE
+        AMReX_Mode = .FALSE.
+    END IF
 
 
 
-IF ( PRESENT( Dimensions_Option ) ) THEN
-    Domain_Dim = Dimensions_Option
-ELSE
-    Domain_Dim = 3
-END IF
+    LM_Location => CFA_3D_LM_Map
 
 
 
-LM_Location => CFA_3D_LM_Map
+    IF ( PRESENT( Method_Flag_Option ) ) THEN
+        Method_Flag = Method_Flag_Option
+    ELSE
+        Method_Flag = 2
+    END IF
 
 
 
-CALL Initialize_Derived()
-CALL Initialize_MPI()
-CALL Allocate_Poseidon_CFA_Variables()
-CALL Initialize_Quadrature()
-
-CALL Initialize_Tables()
 
 
-IF ( Method_Flag == 1 ) THEN
-    CALL Initialize_NR(CFA_EQ_Flags_Option)
-ELSE IF ( Method_Flag == 2 ) THEN
-    CALL Initialize_FP(CFA_EQ_Flags_Option)
-ELSE IF ( Method_Flag == 3 ) THEN
-    CALL Initialize_XCFC(CFA_EQ_Flags_Option)
-END IF
+
+    CALL Initialize_Derived()
+    CALL Initialize_MPI()
+    CALL Allocate_Poseidon_CFA_Variables()
+    CALL Initialize_Quadrature()
+
+    CALL Initialize_Tables()
+
+
+    IF ( Method_Flag == 1 ) THEN
+        CALL Initialize_NR(CFA_EQ_Flags_Option)
+    ELSE IF ( Method_Flag == 2 ) THEN
+        CALL Initialize_FP(CFA_EQ_Flags_Option)
+    ELSE IF ( Method_Flag == 3 ) THEN
+        CALL Initialize_XCFC(CFA_EQ_Flags_Option)
+    END IF
+
+
+
+
+END IF ! Not Poisson Mode
+
+
+
 
 
 
@@ -617,10 +570,39 @@ END IF
 CALL Output_Setup_Report()
 
 
-
+CALL TimerStop( Timer_Initialization_Core )
 
 
 END SUBROUTINE Initialize_Poseidon
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -639,6 +621,10 @@ SUBROUTINE Initialize_Poseidon_From_File()
 
 
 END SUBROUTINE Initialize_Poseidon_From_File
+
+
+
+
 
 
 

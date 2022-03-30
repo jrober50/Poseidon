@@ -55,8 +55,9 @@ USE Variables_FP, &
             ONLY :  FP_Anderson_M
 
 USE Variables_FP, &
-ONLY :  FP_Coeff_Vector_A,          &
-        FP_Coeff_Vector_B
+            ONLY :  FP_Coeff_Vector_A,          &
+                    FP_Coeff_Vector_B,          &
+                    FP_Source_Vector_A
 
 USE XCFC_Source_Vector_TypeA_Module, &
             ONLY :  XCFC_Calc_Source_Vector_TypeA
@@ -127,9 +128,7 @@ ALLOCATE( Work(1:LWORK) )
 
 
 
-
 CALL XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
-
 
 
 
@@ -159,11 +158,11 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
+    
 
+!    PRINT*,"Before Acceleration"
     CALL Coeff_To_Vector_TypeA( GVector(:,mk), iU )
     FVector(:,mk) = GVector(:,mk) - UVector(:)
-
-
 
 
 
@@ -190,7 +189,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         END DO
     END IF
     FVectorM = GVectorM - UVector(:)
-
 
 
 
@@ -242,7 +240,24 @@ DEALLOCATE( Work )
 
 
 
+!PRINT*,FP_Coeff_Vector_A(:,:,iU)
+
 END SUBROUTINE XCFC_Fixed_Point
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
