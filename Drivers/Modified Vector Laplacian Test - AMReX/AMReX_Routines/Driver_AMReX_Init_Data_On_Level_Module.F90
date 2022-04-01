@@ -87,9 +87,9 @@ REAL(idp),              INTENT(INOUT)       ::  Src(SLo(1):SHi(1),  &
 
 
 CALL TimerStart( Timer_Core_Init_Test_Problem )
-PRINT*,"Here"
+
 Src = 0.0_idp
-PRINT*,"There"
+
 CALL TimerStop( Timer_Core_Init_Test_Problem )
 
 

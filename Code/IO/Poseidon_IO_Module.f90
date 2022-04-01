@@ -642,12 +642,11 @@ REAL(KIND = idp)                                                        ::  Dt_O
 INTEGER                                                                 ::  iSF_E     = 1
 INTEGER                                                                 ::  iSF_S     = 2
 INTEGER                                                                 ::  iSF_S1    = 3
-INTEGER                                                                 ::  iSF_X1    = 4
-INTEGER                                                                 ::  iSF_Dim   = 5
-INTEGER                                                                 ::  iSF_RLocs = 6
-INTEGER                                                                 ::  iSF_TLocs = 7
-INTEGER                                                                 ::  iSF_PLocs = 8
-INTEGER                                                                 ::  iSF_Time  = 9
+INTEGER                                                                 ::  iSF_Dim   = 4
+INTEGER                                                                 ::  iSF_RLocs = 5
+INTEGER                                                                 ::  iSF_TLocs = 6
+INTEGER                                                                 ::  iSF_PLocs = 7
+INTEGER                                                                 ::  iSF_Time  = 8
 
 
 
@@ -655,12 +654,12 @@ INTEGER                                                                 ::  iSF_
 
 
 IF ( Write_Flags(iWF_Source) == 2 ) THEN
-    Num_Files = 9
+    Num_Files = 8
 
     ALLOCATE( Filenames(1:Num_Files) )
     ALLOCATE( File_IDs(1:Num_Files) )
 
-
+    
 
     WRITE(Filenames(iSF_E),116) Poseidon_Sources_Dir,"Sources_E_",trim(File_Suffix),".out"
     WRITE(Filenames(iSF_S),116) Poseidon_Sources_Dir,"Sources_S_",trim(File_Suffix),".out"
@@ -675,7 +674,7 @@ IF ( Write_Flags(iWF_Source) == 2 ) THEN
     !WRITE(Filenames(6),116) Poseidon_Sources_Dir,"Sources_Theta_Locs_",Poseidon_Frame,".out"
     !WRITE(Filenames(7),116) Poseidon_Sources_Dir,"Sources_Phi_Locs_",Poseidon_Frame,".out"
 
-
+    
 
     File_IDs = [(161 + i, i=1,Num_Files)]
     DO i = 1,Num_Files

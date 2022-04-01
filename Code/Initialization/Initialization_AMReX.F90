@@ -605,7 +605,8 @@ DO lvl = 0,AMReX_Num_Levels-1
     DEALLOCATE( mypmap )
 END DO
 
-PRINT*,"Num_Leaf_Elements",iLeafElementsPerLvl
+!PRINT*,"Num Leaf Elements per Level ",iLeafElementsPerLvl
+
 
 #endif
 END SUBROUTINE Count_The_Leafs

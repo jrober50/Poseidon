@@ -100,6 +100,8 @@ INTEGER                                                     ::  Error_Num
 
 
 
+PRINT*,"Mesh_TYPe",Mesh_Type
+
 SELECT CASE (Mesh_Type)
 CASE( 1 ) ! Uniform Mesh
 
@@ -1109,9 +1111,9 @@ INTEGER                                                 ::  Level
 INTEGER                                                 ::  i
 REAL(idp)                                               ::  dxl
 
-INTEGER, DIMENSION(0:Levels_In)                         ::  Break
+INTEGER, DIMENSION(0:10)                         ::  Break
 
-cnx = 128
+cnx = 8
 !cnx = INT( nx/( 1.0_idp + (Levels_In-1.0_idp)/2.0_idp) )
 
 
@@ -1122,13 +1124,10 @@ cnx = 128
 !END DO
 
 Break(0) = 0
-Break(1) = 16
-Break(2) = 48
-Break(3) = 156
+Break(1) = 4
+Break(2) = 10
 
 dxl = (Outer_Edge-Inner_Edge)/cnx
-
-PRINT*,dxl,(Outer_Edge-Inner_Edge),cnx
 
 DO level = 0,Levels_In-1
     dx_c(Break(level)+1:Break(level+1)) = dxl/2**(Levels_In-Level-1)
@@ -1139,6 +1138,7 @@ DO i = 1,nx
     x_e(i) = Inner_Edge + SUM( dx_c(1:i) )
     x_c(i) = x_e(i) - dx_c(i)/2.0_idp
 END DO
+
 
 
 END SUBROUTINE Create_AMReX_Mimic_Mesh

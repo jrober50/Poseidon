@@ -1,9 +1,11 @@
 # For use with GNUmake for AMREX compilation.
+POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
 
-include $(POSEIDON_DIR)/Build/Makefile_Include
-include $(POSEIDON_DIR)/Build/Makefile_Dictionary
-include $(POSEIDON_DIR)/Build/Makefile_Path
-include $(POSEIDON_DIR)/Build/Makefile_List
+
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Include
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Dictionary
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Path
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_List
 
 
 f90EXE_sources   += $(filter %.f90,$(POSEIDON))

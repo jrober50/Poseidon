@@ -315,8 +315,10 @@ DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
 CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
 CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
 
-
 #endif
+
+
+
 
 
 
@@ -429,6 +431,11 @@ DO d = 0,DEGREE
 !            * TP_Int_Weights(:)                     ),      &
 !            Lagpoly_MultiLayer_Table( d, rd, 0, iCT ),      &
 !            R_Int_Weights(rd)
+!            PRINT*,""
+!            PRINT*,""
+!            PRINT*,""
+!            PRINT*,""
+!            PRINT*,""
 !        END IF
 
 
@@ -442,7 +449,7 @@ DO d = 0,DEGREE
                * Lagrange_Poly_Table( d, rd, 0)                     &
                * R_Int_Weights(rd)
 
-        IF ( iU == iU_CF ) THEN
+!        IF ( iU == iU_CF ) THEN
 !            PRINT*,level,iE,d,rd
 !
 !            PRINT*,SourceTerm( :, rd, iU )
@@ -457,7 +464,12 @@ DO d = 0,DEGREE
 !            * TP_Int_Weights(:)                     ),      &
 !            Lagrange_Poly_Table( d, rd, 0),                 &
 !            R_Int_Weights(rd)
-        END IF
+!            PRINT*,""
+!            PRINT*,""
+!            PRINT*,""
+!            PRINT*,""
+!            PRINT*,""
+!        END IF
 
 
 #endif
@@ -472,7 +484,8 @@ DO d = 0,DEGREE
         + RHS_TMP
 
     
-!    PRINT*,Current_i_Location,FP_Source_Vector_A(Current_i_Location,lm_loc,iU)
+!    PRINT*,"*",iE,FEM_Elem,d,lm_loc,Current_i_Location, &
+!                FP_Source_Vector_A(Current_i_Location,lm_loc,iU),RHS_TMP
 
 END DO  ! d Loop
 END DO  ! lm_loc Loop
