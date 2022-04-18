@@ -122,10 +122,10 @@ END IF
 
 
 ALLOCATE( FP_Source_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
-ALLOCATE( FP_Source_Vector_B(1:Beta_Prob_Dim,1) )
+ALLOCATE( FP_Source_Vector_B(1:Beta_Prob_Dim,1:2) )
 
 ALLOCATE( FP_Coeff_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:5)         )
-ALLOCATE( FP_Coeff_Vector_B(1:Beta_Prob_Dim,1) )
+ALLOCATE( FP_Coeff_Vector_B(1:Beta_Prob_Dim,1:2) )
 
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
 

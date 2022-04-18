@@ -78,8 +78,11 @@ USE Functions_Math, &
                     Lagrange_Poly,                  &
                     Norm_Factor
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
+
+USE Maps_Quadrature, &
+            ONLY :  Quad_Map
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -89,8 +92,7 @@ USE Timer_Variables_Module, &
             ONLY :  Timer_Poisson_SourceVector_Subparts,          &
                     Timer_Poisson_SourceVector_Main
 
-USE Quadrature_Mapping_Functions, &
-            ONLY :  Quad_Map
+
 
 IMPLICIT NONE
 

@@ -2,16 +2,17 @@ POSEIDON = \
   $(COMMON)          \
   $(VARIABLES)       \
   $(TIMERS)          \
+  $(MAPS)            \
   $(MESH)            \
   $(QUAD)            \
   $(FUNCTIONS)       \
   $(AMREX_UTILITIES) \
   $(MPI)             \
   $(TABLES)          \
+  $(RETURN_ROUTINES) \
   $(IO)              \
   $(LINEAR_SOLVERS)  \
   $(POISSON)         \
-  $(NR)              \
   $(FP)              \
   $(XCFC)            \
   $(EXTERNAL)        \

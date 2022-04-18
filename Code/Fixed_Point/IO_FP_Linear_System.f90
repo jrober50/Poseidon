@@ -30,7 +30,8 @@ USE Poseidon_Kinds_Module, &
 
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
-                    L_LIMIT
+                    L_LIMIT,                    &
+                    CFA_Eq_Flags
 
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_LinSys_Dir
@@ -73,11 +74,10 @@ USE Functions_Quadrature, &
 USE Variables_FP, &
             ONLY :  Matrix_Format,              &
                     Laplace_Matrix_Beta,        &
-                    CFA_EQ_Flags,               &
                     CFA_EQ_Map,                 &
                     CFA_Mat_Map
 
-USE IO_File_Routines_Module, &
+USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File
 
 

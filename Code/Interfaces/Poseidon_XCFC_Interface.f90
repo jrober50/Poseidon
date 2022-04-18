@@ -55,25 +55,23 @@ USE Variables_FP, &
                     FP_Coeff_Vector_B
 
 USE Variables_Mesh, &
-        ONLY :  rlocs,              &
-                tlocs,              &
-                plocs
+            ONLY :  rlocs,              &
+                    tlocs,              &
+                    plocs
 
 USE Variables_Mesh, &
-        ONLY :  rlocs,              &
-                tlocs,              &
-                plocs
+            ONLY :  rlocs,              &
+                    tlocs,              &
+                    plocs
 
-USE FP_Functions_Mapping, &
-        ONLY :  FP_Array_Map_TypeB
+USE Maps_Fixed_Point, &
+            ONLY :  FP_Array_Map_TypeB
 
-USE Functions_Domain_Maps, &
-        ONLY :  Map_To_tpd
+USE Maps_Quadrature, &
+            ONLY :  Map_To_tpd
 
-
-USE Functions_Domain_Maps, &
-            ONLY :  Map_To_tpd,     &
-                    Map_To_FEM_Node
+USE Maps_Domain, &
+            ONLY :  Map_To_FEM_Node
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
@@ -141,9 +139,9 @@ END SUBROUTINE Poseidon_XCFC_Run_Part2
 !                                                                                           !
 !###########################################################################################!
 SUBROUTINE Poseidon_Return_ConFactor(   NE, NQ,                 &
-                                        RQ_Input,           &
-                                        TQ_Input,           &
-                                        PQ_Input,           &
+                                        RQ_Input,               &
+                                        TQ_Input,               &
+                                        PQ_Input,               &
                                         Left_Limit,             &
                                         Right_Limit,            &
                                         Return_ConFactor        )
@@ -181,31 +179,31 @@ DO pe = 1,NE(3)
 DO te = 1,NE(2)
 DO re = 1,NE(1)
 
+DO pd = 1,NQ(3)
+DO td = 1,NQ(2)
+DO rd = 1,NQ(1)
 
-    DO pd = 1,NQ(3)
-    DO td = 1,NQ(2)
-    DO rd = 1,NQ(1)
+    tpd = Map_To_tpd(td,pd)
+    LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
+    Tmp_U_Value = 0.0_idp
 
-        tpd = Map_To_tpd(td,pd)
-        LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
-        Tmp_U_Value = 0.0_idp
+    DO lm = 1,LM_Length
+    DO d = 0,DEGREE
 
-        DO lm = 1,LM_Length
-        DO d = 0,DEGREE
+        Current_Location = Map_To_FEM_Node(re-1,d)
+        Tmp_U_Value = Tmp_U_Value + FP_Coeff_Vector_A(Current_Location,lm,iU_CF)  &
+                                  * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
-            Current_Location = Map_To_FEM_Node(re-1,d)
-            Tmp_U_Value = Tmp_U_Value + FP_Coeff_Vector_A(Current_Location,lm,iU_CF)  &
-                                      * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
+    END DO ! d Loop
+    END DO ! lm Loop
 
-        END DO ! d Loop
-        END DO ! lm Loop
+    Here = rd + (td-1)*NQ(1) + (pd-1)*NQ(1)*NQ(2)
+    Return_ConFactor(Here,re,te,pe) = REAL(Tmp_U_Value, KIND = idp)
 
-        Here = rd + (td-1)*NQ(1) + (pd-1)*NQ(1)*NQ(2)
-        Return_ConFactor(Here,re,te,pe) = REAL(Tmp_U_Value, KIND = idp)
 
-    END DO ! rd Loop
-    END DO ! td Loop
-    END DO ! pd Loop
+END DO ! rd Loop
+END DO ! td Loop
+END DO ! pd Loop
 
 END DO ! re Loop
 END DO ! te Loop
@@ -213,6 +211,8 @@ END DO ! pe Loop
 
 
 END SUBROUTINE Poseidon_Return_ConFactor
+
+
 
 
 
@@ -646,7 +646,7 @@ DO rd = 1,NQ(1)
                         + Reusable_Vals(3)*Tmp_Val(2)       &
                         + Reusable_Vals(4)*Tmp_Val(3)  ), Kind = idp    )
 
-    PRINT*,Trace(1), Trace(2)
+!    PRINT*,Trace(1), Trace(2)
 
 !    PRINT*,Trace(1),                                     &
 !            REAL(3.0_idp*(  Reusable_Vals(1)                  &

@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Functions_Mapping                                                            !##!
+MODULE Maps_Legacy                                                                  !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -11,9 +11,6 @@ MODULE Functions_Mapping                                                        
 !##!================================================================================!##!
 !##!                                                                                !##!
 !##!    Contains:                                                                   !##!
-!##!                                                                                !##!
-!##!    +101+   Map_To_X_Space                                                      !##!
-!##!    +102+   Map_From_X_Space                                                    !##!
 !##!                                                                                !##!
 !##!    +201+   CFA_Matrix_Map                                                      !##!
 !##!    +202+   CFA_1D_Matrix_Map                                                   !##!
@@ -55,48 +52,6 @@ IMPLICIT NONE
 
 CONTAINS
 
-
-
-
-!+101+##########################################################!
-!                                                               !
-!      Map_To_X_Space - maps r value between ra, and rb to x    !
-!                   space such that x in [-1,1].                !
-!                                                               !
-!###############################################################!
-PURE ELEMENTAL FUNCTION Map_To_X_Space(ra, rb, r)
-
-REAL(KIND = idp)                            ::  Map_To_X_Space
-REAL(KIND = idp), intent(in)                ::  ra, rb
-REAL(KIND = idp), intent(in)                ::  r
-
-Map_To_X_Space = (2.0_idp*(r - ra))/(rb - ra) - 1.0_idp
-
-
-END FUNCTION Map_To_X_Space
-
-
-
-
-
-
-
-!+102+##########################################################!
-!                                                               !
-!      Map_From_X_Space - maps x value between -1, and 1 to r   !
-!                   space such that r in [ra,rb].               !
-!                                                               !
-!###############################################################!
-PURE ELEMENTAL FUNCTION Map_From_X_Space(ra, rb, x)
-
-REAL(KIND = idp)                            ::  Map_From_X_Space
-REAL(KIND = idp), intent(in)                ::  ra, rb
-REAL(KIND = idp), intent(in)                ::  x
-
-Map_From_X_Space = ((rb - ra) * (x+1.0_idp))/2.0_idp  + ra
-
-
-END FUNCTION Map_From_X_Space
 
 
 
@@ -286,5 +241,5 @@ END FUNCTION CFA_ALL_Matrix_Map
 
 
 
-END MODULE Functions_Mapping
+END MODULE Maps_Legacy
 

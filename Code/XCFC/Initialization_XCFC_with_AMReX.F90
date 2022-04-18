@@ -58,6 +58,7 @@ USE Poseidon_Parameters, &
                     L_LIMIT,                &
                     Num_CFA_Eqs,            &
                     Num_CFA_Vars,           &
+                    CFA_Eq_Flags,           &
                     Verbose_Flag
 
 USE Variables_Derived, &
@@ -82,13 +83,10 @@ USE Variables_Mesh, &
 USE Variables_Functions, &
             ONLY :  LM_Location,                    &
                     Calc_3D_Values_At_Location,     &
-                    Calc_1D_CFA_Values,             &
-                    Calc_Var_At_Loc_A,              &
-                    Calc_Var_At_Loc_B
+                    Calc_1D_CFA_Values
 
 USE Variables_FP, &
-            ONLY :  CFA_EQ_Flags,               &
-                    CFA_EQ_Map,                 &
+            ONLY :  CFA_EQ_Map,                 &
                     CFA_Var_Map,                &
                     CFA_Mat_Map,                &
                     Laplace_NNZ,                &
@@ -102,7 +100,7 @@ USE Allocation_XCFC, &
 USE Allocation_Mesh, &
             ONLY :  Allocate_Mesh
 
-USE FP_Functions_Results,   &
+USE Return_Functions_FP,   &
             ONLY :  Calc_FP_Values_At_Location, &
                     Calc_1D_CFA_Values_FP
                 
@@ -138,7 +136,7 @@ USE Initialization_XCFC, &
 USE IO_Setup_Report_Module, &
             ONLY :  PRINT_AMReX_Setup
 
-USE FP_Functions_Results, &
+USE Return_Functions_FP, &
             ONLY :  Calc_Var_At_Location_Type_A,    &
                     Calc_Var_At_Location_Type_B
 
@@ -154,10 +152,7 @@ CONTAINS
 !              Initialization_XCFC_with_AMReX                       !
 !                                                                   !
  !#################################################################!
-SUBROUTINE  Initialization_XCFC_with_AMReX( CFA_EQ_Flags_Input )
-
-
-INTEGER, DIMENSION(5), INTENT(IN), OPTIONAL             ::  CFA_EQ_Flags_Input
+SUBROUTINE  Initialization_XCFC_with_AMReX( )
 
 
 
@@ -189,18 +184,6 @@ END IF
 
 
 CALL TimerStart(Timer_Initialization_XCFC)
-
-
-
-
-IF ( PRESENT(CFA_EQ_Flags_Input) ) THEN
-    CFA_EQ_Flags = CFA_EQ_Flags_Input
-ELSE
-    CFA_EQ_Flags = [1,1,1,0,0]
-END IF
-
-NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
-CALL Create_Eq_Maps()
 
 
 CALL Initialize_AMReX_Maps()
@@ -246,8 +229,6 @@ CALL TimerStop( Timer_XCFC_Matrix_Init )
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
-Calc_Var_At_Loc_A => Calc_Var_At_Location_Type_A
-Calc_Var_At_Loc_B => Calc_Var_At_Location_Type_B
 
 
 

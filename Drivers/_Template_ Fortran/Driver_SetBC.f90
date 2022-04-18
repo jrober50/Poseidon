@@ -26,7 +26,7 @@ MODULE Driver_SetBC_Module                                                   !##
 USE Poseidon_Kinds_Module, &
         ONLY :  idp
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
         ONLY :  C_Square
 
 USE Variables_Functions, &

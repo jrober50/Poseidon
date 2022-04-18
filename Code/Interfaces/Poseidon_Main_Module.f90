@@ -1,4 +1,4 @@
-   !################################################################################!
+    !################################################################################!
  !/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\!
 !######################################################################################!
 !##!                                                                                !##!
@@ -90,8 +90,8 @@ USE Allocation_Poisson, &
 USE Poisson_Main_Module, &
             ONLY :  Poisson_Solve
 
-USE CFA_Newton_Raphson_3D_Module, &
-            ONLY :  CFA_Newton_Raphson_3D
+!USE CFA_Newton_Raphson_3D_Module, &
+!            ONLY :  CFA_Newton_Raphson_3D
 
 USE FP_AndersonM_Module, &
             ONLY : Fixed_Point_AndersonM
@@ -108,8 +108,8 @@ USE Allocation_Quadrature, &
 USE Allocation_Tables, &
             ONLY : Deallocate_Tables
 
-USE Allocation_NR, &
-            ONLY : Deallocate_NR
+!USE Allocation_NR, &
+!            ONLY : Deallocate_NR
 
 USE Allocation_FP, &
             ONLY : Deallocate_FP
@@ -165,8 +165,10 @@ IF ( Readiness_Flag ) THEN
         CALL Poisson_Solve()
     
     ELSE IF ( Method_Flag == 1 ) THEN
+        WRITE(*,'(A)')"The Newton-Raphson method is not currently available in Poseidon. STOPING"
+        STOP
 
-        CALL CFA_Newton_Raphson_3D()
+!        CALL CFA_Newton_Raphson_3D()
 
     ELSE IF ( Method_Flag == 2 ) THEN
 
@@ -233,7 +235,9 @@ ELSE
     CALL Deallocate_SelfSim()
 
     IF ( Method_Flag == 1 ) THEN
-        CALL Deallocate_NR
+        WRITE(*,'(A)')"The Newton-Raphson method is not currently available in Poseidon. STOPING"
+        STOP
+!        CALL Deallocate_NR
     ELSE IF ( Method_Flag == 2 ) THEN
         CALL Deallocate_FP
     ELSE IF ( Method_Flag == 3 ) THEN

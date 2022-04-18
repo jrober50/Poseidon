@@ -54,9 +54,11 @@ USE Variables_Poisson, &
 
 
 USE Variables_Functions, &
-            ONLY :  Calc_3D_Values_At_Location,     &
-                    Calc_Var_At_Loc_A,              &
-                    Calc_Var_At_Loc_B
+            ONLY :  Calc_3D_Values_At_Location
+
+USE Return_Routines_Main, &
+            ONLY :  Calc_Var_At_Location
+
 
 USE Variables_Mesh, &
             ONLY :  R_Inner,        &
@@ -70,7 +72,8 @@ USE Functions_Mesh, &
 USE Functions_Math, &
             ONLY :  Lagrange_Poly,      &
                     Spherical_Harmonic
-USE Functions_Mapping, &
+
+USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
 
 USE Functions_Quadrature, &
@@ -437,7 +440,7 @@ DO i = 0,Num_Samples
 
     r = x_e(i)
 
-    Value = Calc_Var_At_Loc_A(r, theta, phi, iU)
+    Value = Calc_Var_At_Location(r, theta, phi, iU)
 
     WRITE(*,111) r/Centimeter, Value
 
@@ -488,13 +491,14 @@ ALLOCATE( x_e(0:Num_Samples) )
 ALLOCATE( x_c(1:Num_Samples) )
 ALLOCATE( dx_c(1:Num_Samples) )
 
+
+
 IF ( R_Outer - R_Inner > 1000.0_idp ) THEN
     Call Create_Logarithmic_1D_Mesh( R_Inner,           &
                                      R_Outer,           &
                                      Num_Samples,       &
                                      x_e, x_c, dx_c     )
 ELSE
-
     CALL Create_Uniform_1D_Mesh( R_Inner, R_Outer, Num_Samples, x_e, x_c, dx_c )
 
 END IF
@@ -512,7 +516,7 @@ DO i = 0,Num_Samples
 
     r = x_e(i)
 
-    Value = Calc_Var_At_Loc_B(r, theta, phi, iU, iVB)
+    Value = Calc_Var_At_Location(r, theta, phi, iU, iVB)
 
     WRITE(*,111) r/Centimeter, Value
 

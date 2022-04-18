@@ -56,7 +56,7 @@ USE Variables_Functions, &
                     ONLY :  Matrix_Location,            &
                             LM_Location
 
-USE Functions_Mapping, &
+USE Maps_Legacy, &
                     ONLY :  CFA_1D_Matrix_Map,      &
                             CFA_2D_Matrix_Map,      &
                             CFA_3D_Matrix_Map,      &

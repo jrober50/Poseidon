@@ -28,7 +28,6 @@ MODULE Driver_SetGuess_Module                                                !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-
 USE Poseidon_Units_Module, &
             ONLY :  C_Square
 
@@ -48,7 +47,7 @@ CONTAINS
 
 !+101+##########################################################################!
 !                                                                               !
-!     Driver_SetGuess                                                			!
+!     Driver_SetGuess                                                            !
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Driver_SetGuess( NE, NQ,                     &
@@ -131,8 +130,8 @@ ELSE IF ( Guess_Type == 3 ) THEN
 !     Lapse function Coefficients in 1D correspond to the value of the function
 !     at the location of the FEM nodes.  These have been perturbed.
 
-    Perturbation    = 0.0_idp
-    Beta_Guess      = 0.0_idp
+    Perturbation        =  -0.01_idp
+    Beta_Guess = 0.0_idp
 
 
      DO re = 1,NE(1)
@@ -157,7 +156,7 @@ ELSE IF ( Guess_Type == 3 ) THEN
 END IF
 
 
-!CALL Poseidon_Init_FlatGuess()
+!    CALL Poseidon_Init_FlatGuess()
 
 CALL Poseidon_Input_Guess(  Psi_Guess,          &
                             AlphaPsi_Guess,     &
@@ -182,3 +181,4 @@ END SUBROUTINE Driver_SetGuess
 
 
 END MODULE Driver_SetGuess_Module
+

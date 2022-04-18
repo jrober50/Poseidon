@@ -37,7 +37,8 @@ USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
                     NUM_CFA_EQs,                &
-                    NUM_CFA_VARs
+                    NUM_CFA_VARs,               &
+                    CFA_Eq_Flags
 
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,                      &
@@ -85,8 +86,7 @@ USE Variables_FP, &
                     FP_Coeff_Vector_B,          &
                     FP_Source_Vector_A,         &
                     FP_Source_Vector_B,         &
-                    CFA_EQ_Map,                 &
-                    CFA_EQ_Flags
+                    CFA_EQ_Map
 
 USE Functions_Jacobian, &
             ONLY :  JCBN_kappa_FUNCTION_3D_ALL,     &
@@ -96,14 +96,14 @@ USE Functions_Jacobian, &
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB,         &
                     FP_Array_Map
 
-USE Functions_Domain_Maps, &
+USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node
 
 USE FP_Source_Terms_Module, &

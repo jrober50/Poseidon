@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE IO_File_Routines_Module                                                      !##!
+MODULE Poseidon_File_Routines_Module                                                !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -181,4 +181,4 @@ END SUBROUTINE OPEN_EXISTING_FILE
 
 
 
-END MODULE IO_File_Routines_Module
+END MODULE Poseidon_File_Routines_Module

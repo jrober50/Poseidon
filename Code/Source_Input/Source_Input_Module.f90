@@ -51,7 +51,7 @@ USE Timer_Variables_Module, &
                     Timer_GR_SourceInput_PartA,        &
                     Timer_GR_SourceInput_PartB
 
-USE Quadrature_Mapping_Functions, &
+USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
 

@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Functions_Mapping                                                         !##!
+MODULE NR_Mapping_Functions                                                         !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -46,12 +46,12 @@ CONTAINS
 
 !+201+###########################################################################!
 !                                                                                !
-!                  FP_Array_Map                                                  !
+!                  NR_Beta_Array_Map                                                  !
 !                                                                                !
 !################################################################################!
-PURE FUNCTION FP_Array_Map(re,d,ui,lm_loc, m_opt)
+PURE FUNCTION NR_Array_Map(re,d,ui,lm_loc, m_opt)
 
-INTEGER                                     ::  FP_Array_Map
+INTEGER                                     ::  NR_Array_Map
 
 INTEGER, INTENT(IN)                         ::  re
 INTEGER, INTENT(IN)                         ::  d
@@ -62,90 +62,41 @@ INTEGER, INTENT(IN), OPTIONAL               ::  m_opt
 
 IF ( PRESENT(m_opt) ) THEN
 
-    FP_Array_Map = (re*Degree + d) * 5 * LM_Length   &
+    NR_Array_Map = (re*Degree + d) * 5 * LM_Length   &
                  + (ui - 1) * LM_Length              &
-                 + lm_loc*(lm_loc+1) + m_opt + 1
+                 + lm_loc*(lm_loc+1) + m_opt
 
 
 ELSE
-    FP_Array_Map = (re*Degree + d) * 5 * LM_Length   &
+    NR_Array_Map = (re*Degree + d) * 5 * LM_Length   &
                  + (ui - 1) * LM_Length              &
                  + lm_loc
 
 END IF
 
 
-END FUNCTION FP_Array_Map
+END FUNCTION NR_Array_Map
 
 
-!+201+###########################################################################!
-!                                                                                !
-!                  FP_Beta_Array_Map                                             !
-!                                                                                !
-!################################################################################!
-PURE FUNCTION FP_Beta_Array_Map(re,d,ui,lm_loc, m_opt)
-
-INTEGER                                     ::  FP_Beta_Array_Map
-
-INTEGER, INTENT(IN)                         ::  re
-INTEGER, INTENT(IN)                         ::  d
-INTEGER, INTENT(IN)                         ::  ui
-INTEGER, INTENT(IN)                         ::  lm_loc
-INTEGER, INTENT(IN), OPTIONAL               ::  m_opt
-
-
-IF ( PRESENT(m_opt) ) THEN
-
-    FP_Beta_Array_Map = (re*Degree + d) * 3 * LM_Length   &
-                      + (ui - 1) * LM_Length              &
-                      + lm_loc*(lm_loc+1) + m_opt + 1
-
-
-ELSE
-    FP_Beta_Array_Map = (re*Degree + d) * 3 * LM_Length   &
-                      + (ui - 1) * LM_Length              &
-                      + lm_loc
-
-END IF
-
-
-END FUNCTION FP_Beta_Array_Map
 
 
 
 !+201+###########################################################################!
 !                                                                                !
-!                  FP_Beta_Array_Map                                                  !
+!                  NR_Vector_Map                                                  !
 !                                                                                !
 !################################################################################!
-PURE FUNCTION FP_X_Array_Map(re,d,ui,lm_loc, m_opt)
+PURE FUNCTION NR_FEM_Node_Map( re, d )
 
-INTEGER                                     ::  FP_X_Array_Map
+INTEGER                                     :: NR_FEM_Node_Map
 
-INTEGER, INTENT(IN)                         ::  re
-INTEGER, INTENT(IN)                         ::  d
-INTEGER, INTENT(IN)                         ::  ui
-INTEGER, INTENT(IN)                         ::  lm_loc
-INTEGER, INTENT(IN), OPTIONAL               ::  m_opt
+INTEGER, INTENT(IN)                         :: re, d
 
 
-IF ( PRESENT(m_opt) ) THEN
-
-    FP_X_Array_Map = (re*Degree + d) * 3 * LM_Length   &
-                      + (ui - 6) * LM_Length              &
-                      + lm_loc*(lm_loc+1) + m_opt + 1
+NR_FEM_Node_Map = re*DEGREE + d + 1
 
 
-ELSE
-    FP_X_Array_Map = (re*Degree + d) * 3 * LM_Length   &
-                      + (ui - 6) * LM_Length              &
-                      + lm_loc
-
-END IF
-
-
-END FUNCTION FP_X_Array_Map
-
+END FUNCTION NR_FEM_Node_Map
 
 
 
@@ -154,64 +105,44 @@ END FUNCTION FP_X_Array_Map
 
 !+201+###########################################################################!
 !                                                                                !
-!                  FP_Beta_Array_Map                                                  !
+!                  NR_Vector_Map                                                  !
 !                                                                                !
 !################################################################################!
-FUNCTION FP_Array_Map_TypeB(ui,iVB,re,d,lm_loc, m_opt)
+PURE FUNCTION NR_LM_Map( l, m )
 
-INTEGER                                     ::  FP_Array_Map_TypeB
+INTEGER                                     :: NR_LM_Map
 
-INTEGER, INTENT(IN)                         ::  ui
-INTEGER, INTENT(IN)                         ::  iVB
-INTEGER, INTENT(IN)                         ::  re
-INTEGER, INTENT(IN)                         ::  d
-INTEGER, INTENT(IN)                         ::  lm_loc
-INTEGER, INTENT(IN), OPTIONAL               ::  m_opt
-
-INTEGER                                     ::  Offset
-
-Offset = 3*iVB
+INTEGER, INTENT(IN)                         :: l, m
 
 
-IF ( PRESENT(m_opt) ) THEN
-
-    FP_Array_Map_TypeB = (re*Degree + d) * 3 * LM_Length   &
-                       + (ui - Offset) * LM_Length         &
-                       + lm_loc*(lm_loc+1) + m_opt + 1
+NR_LM_Map = l*(l+1) + m + 1
 
 
-ELSE
-
-    FP_Array_Map_TypeB = (re*Degree + d) * 3 * LM_Length   &
-                       + (ui - Offset) * LM_Length         &
-                       + lm_loc
-
-
-END IF
-
-
-END FUNCTION FP_Array_Map_TypeB
+END FUNCTION NR_LM_Map
 
 
 
 
+!+201+###########################################################################!
+!                                                                                !
+!                  NR_Vector_Map                                                  !
+!                                                                                !
+!################################################################################!
+PURE FUNCTION NR_tpd_Map( td, pd )
+
+INTEGER                                     :: NR_tpd_Map
+
+INTEGER, INTENT(IN)                         :: td, pd
+
+
+NR_tpd_Map = (td-1)*Num_P_Quad_Points + pd
+
+
+END FUNCTION NR_tpd_Map
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-END MODULE FP_Functions_Mapping
+END MODULE NR_Mapping_Functions
 
 

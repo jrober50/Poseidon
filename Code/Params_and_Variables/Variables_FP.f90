@@ -67,7 +67,6 @@ COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  Last_Column_Beta_Sto
 
 
 ! Flags & Maps
-INTEGER, DIMENSION(1:5)                                 ::  CFA_EQ_Flags
 INTEGER, DIMENSION(1:5)                                 ::  CFA_EQ_Map
 INTEGER, DIMENSION(1:5)                                 ::  CFA_Var_Map
 INTEGER, DIMENSION(1:5)                                 ::  CFA_MAT_Map

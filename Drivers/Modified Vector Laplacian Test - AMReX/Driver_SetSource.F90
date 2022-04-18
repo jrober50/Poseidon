@@ -119,6 +119,10 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
+USE Functions_Quadrature, &
+            ONLY :  Initialize_LG_Quadrature_Locations,         &
+                    Initialize_Trapezoid_Quadrature_Locations
+
 
 USE MPI
 
@@ -140,6 +144,11 @@ SUBROUTINE Driver_SetSource( NQ )
 INTEGER,    INTENT(IN), DIMENSION(3)                    ::  NQ
 
 
+REAL(idp),  DIMENSION(NQ(1))                            ::  R_Quad
+REAL(idp),  DIMENSION(NQ(2))                            ::  T_Quad
+REAL(idp),  DIMENSION(NQ(3))                            ::  P_Quad
+REAL(idp),  DIMENSION(2)                                ::  xL
+
 INTEGER                                                 ::  Num_DOF
 INTEGER                                                 ::  nVars_Source
 
@@ -149,9 +158,7 @@ IF ( Verbose_Flag ) THEN
 END IF
 
 
-PRINT*,"Before timer"
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
-PRINT*,"After Timer"
 
 
 CALL amrex_init_virtual_functions &
@@ -168,10 +175,8 @@ MF_Src_nComps   = nVars_Source*Num_DOF
 MF_Src_nGhost   = 0
 
 
-PRINT*,"Before Allocate", nLevels, MF_Src_nComps
 ALLOCATE( MF_Driver_Source(0:nLevels-1) )
 
-PRINT*,"Before init"
 CALL amrex_init_from_scratch( 0.0_idp )
 
 
@@ -179,7 +184,21 @@ CALL amrex_init_from_scratch( 0.0_idp )
 IF ( Verbose_Flag ) THEN
     WRITE(*,'(A)')"In Driver, Inputing AMReX Source Variables."
 END IF
-CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source, MF_Src_nComps, nLevels )
+
+xL(1) = -1.0_idp
+xL(2) = +1.0_idp
+R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
+T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
+P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
+
+CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source,    &
+                                   MF_Src_nComps,       &
+                                   nLevels,             &
+                                   NQ,                  &
+                                   R_Quad,              &
+                                   T_Quad,              &
+                                   P_Quad,              &
+                                   xL                   )
 
 
 CALL TimerStop( Timer_Driver_SetSource_InitTest )

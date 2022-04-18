@@ -41,10 +41,9 @@ USE Poseidon_Parameters, &
                     Convergence_Criteria,   &
                     Num_CFA_Vars,           &
                     Max_Iterations,         &
-                    Poisson_Mode
-
-
-
+                    Poisson_Mode,           &
+                    CFA_EQ_Flags,           &
+                    Num_CFA_Eqs
 
 USE Allocation_Core, &
             ONLY :  Allocate_Poseidon_CFA_Variables
@@ -70,7 +69,9 @@ USE Variables_Functions, &
             ONLY :  LM_Location
 
 USE Initialization_XCFC, &
-            ONLY :  Initialize_XCFC
+            ONLY :  Initialize_XCFC,        &
+                    Create_EQ_Maps
+
 
 USE Initialization_Quadrature, &
             ONLY :  Initialize_Quadrature
@@ -102,10 +103,8 @@ USE Timer_Variables_Module, &
                     Timer_Initialization_Core
 
 
-USE Functions_Mapping, &
+USE Maps_Legacy, &
             ONLY :  CFA_3D_LM_Map
-
-
 
 
 USE Variables_AMReX_Source, &
@@ -318,7 +317,7 @@ IF ( PRESENT( NQ_Option ) ) THEN
     Num_P_Quad_Points = NQ_Option(3)
 ELSE
     Num_R_Quad_Points = 10
-    Num_T_Quad_Points = 20
+    Num_T_Quad_Points = 10
     Num_P_Quad_Points = 2*L_Limit + 1
 END IF
 Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
@@ -379,6 +378,17 @@ ELSE
                                   Convergence_Criteria_Option,    &
                                   Anderson_M_Option               )
 
+
+
+
+    IF ( PRESENT(CFA_Eq_Flags_Option) ) THEN
+        CFA_EQ_Flags = CFA_Eq_Flags_Option
+    ELSE
+        CFA_EQ_Flags = [1,1,1,0,0]
+    END IF
+
+    NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
+    CALL Create_Eq_Maps()
 
     LM_Location => CFA_3D_LM_Map
 

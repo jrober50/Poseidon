@@ -49,14 +49,7 @@ USE Variables_Mesh, &
 
 USE Variables_FP, &
             ONLY :  FP_Coeff_Vector_A,      &
-                    FP_Coeff_Vector_B,      &
-                    CFA_EQ_Flags
-
-
-
-USE Functions_Mapping, &
-            ONLY :  Map_From_X_Space,   &
-                    Map_To_X_Space
+                    FP_Coeff_Vector_B
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
@@ -64,9 +57,13 @@ USE Functions_Quadrature, &
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map,      &
                     FP_Array_Map_TypeB
+
+USE Maps_X_Space, &
+            ONLY :  Map_From_X_Space,   &
+                    Map_To_X_Space
 
 IMPLICIT NONE
 

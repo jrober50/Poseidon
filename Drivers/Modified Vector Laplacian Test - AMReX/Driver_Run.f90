@@ -30,8 +30,8 @@ USE Variables_MPI, &
             ONLY :  myID_Poseidon,              &
                     MasterID_Poseidon
 
-USE Poseidon_IO_Module, &
-            ONLY :  Output_Final_Results
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 USE XCFC_Solvers_Main_Module ,  &
             ONLY :  XCFC_X_Solve
@@ -70,7 +70,7 @@ CALL Deallocate_XCFC_Source_Variables()
 
 
 IF (myID_Poseidon == MasterID_Poseidon ) THEN
-    CALL Output_Final_Results()
+    CALL Write_Final_Results()
 END IF
 
 

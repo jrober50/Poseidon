@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Functions_Results                                                         !##!
+MODULE Return_Functions_FP                                                         !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -53,17 +53,9 @@ USE Variables_Derived, &
             ONLY :  LM_Length,              &
                     ULM_Length
 
-USE Variables_Functions, &
-            ONLY : Matrix_Location
-
 USE Variables_FP, &
             ONLY :  FP_Coeff_Vector_A,      &
                     FP_Coeff_Vector_B
-
-
-
-USE Functions_Mapping,    &
-            ONLY :  Map_To_X_Space
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations,    &
@@ -73,27 +65,23 @@ USE Functions_Math, &
             ONLY :  Lagrange_Poly,          &
                     Spherical_Harmonic
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB, &
                     FP_Array_Map
 
-USE Functions_Domain_Maps, &
+USE Maps_Domain, &
             ONLY :  Map_To_lm,          &
                     Map_To_FEM_Node
+
+
+USE Maps_X_Space,    &
+            ONLY :  Map_To_X_Space
+
 
 IMPLICIT NONE
 
 
-INTERFACE Calc_Var_At_Location
-    MODULE PROCEDURE Calc_Var_At_Location_Type_A
-    MODULE PROCEDURE Calc_Var_At_Location_Type_B
-END INTERFACE Calc_Var_At_Location
 
-
-INTERFACE Calc_Values_Here_XCFC
-    MODULE PROCEDURE Calc_Values_Here_A
-    MODULE PROCEDURE Calc_Values_Here_B
-END INTERFACE Calc_Values_Here_XCFC
 
 
 CONTAINS
@@ -138,9 +126,9 @@ IF ( r == rlocs(0) ) THEN
 
 
     LagP    = 0.0_idp
-    LagP(1) = 1.0_idp
+    LagP(0) = 1.0_idp
 
-    CALL Calc_Values_Here( 0, theta, phi, LagP, Tmp_U_Value )
+    CALL Calc_Values_Here_All( 0, theta, phi, LagP, Tmp_U_Value )
 
 
 ELSE
@@ -155,7 +143,7 @@ ELSE
         LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
 
         
-        CALL Calc_Values_Here( re, theta, phi, LagP, Tmp_U_Value )
+        CALL Calc_Values_Here_All( re, theta, phi, LagP, Tmp_U_Value )
 
         EXIT
     END IF
@@ -166,7 +154,7 @@ ELSE
         LagP         = 0.0_idp
         LagP(DEGREE) = 1.0_idp
 
-        CALL Calc_Values_Here( Num_R_Elements-1, theta, phi, LagP, Tmp_U_Value )
+        CALL Calc_Values_Here_All( Num_R_Elements-1, theta, phi, LagP, Tmp_U_Value )
 
     END IF
 
@@ -311,7 +299,7 @@ IF ( r == rlocs(0) ) THEN
     LagP    = 0.0_idp
     LagP(1) = 1.0_idp
 
-    Tmp_U_Value = Calc_Values_Here_A( 0, theta, phi, LagP, iU )
+    Tmp_U_Value = Calc_Values_Here_Type_A( 0, theta, phi, LagP, iU )
 
 
 ELSE
@@ -327,7 +315,7 @@ ELSE
         LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
 
         
-        Tmp_U_Value = Calc_Values_Here_A( re, theta, phi, LagP, iU )
+        Tmp_U_Value = Calc_Values_Here_Type_A( re, theta, phi, LagP, iU )
 
         EXIT
     END IF
@@ -338,7 +326,7 @@ ELSE
         LagP         = 0.0_idp
         LagP(DEGREE) = 1.0_idp
 
-        Tmp_U_Value = Calc_Values_Here_A( Num_R_Elements-1, theta, phi, LagP, iU )
+        Tmp_U_Value = Calc_Values_Here_Type_A( Num_R_Elements-1, theta, phi, LagP, iU )
 
     END IF
 
@@ -389,7 +377,7 @@ IF ( r == rlocs(0) ) THEN
     LagP    = 0.0_idp
     LagP(1) = 1.0_idp
 
-    Tmp_U_Value = Calc_Values_Here_B( 0, theta, phi, LagP, iU, iVB )
+    Tmp_U_Value = Calc_Values_Here_Type_B( 0, theta, phi, LagP, iU, iVB )
 
 
 ELSE
@@ -403,7 +391,7 @@ ELSE
         r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
         LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
 
-        Tmp_U_Value = Calc_Values_Here_B( re, theta, phi, LagP, iU, iVB )
+        Tmp_U_Value = Calc_Values_Here_Type_B( re, theta, phi, LagP, iU, iVB )
 
 
         EXIT
@@ -415,7 +403,7 @@ ELSE
         LagP         = 0.0_idp
         LagP(DEGREE) = 1.0_idp
 
-        Tmp_U_Value = Calc_Values_Here_B( Num_R_Elements-1, theta, phi, LagP, iU, iVB )
+        Tmp_U_Value = Calc_Values_Here_Type_B( Num_R_Elements-1, theta, phi, LagP, iU, iVB )
 
     END IF
 
@@ -439,7 +427,7 @@ END FUNCTION Calc_Var_At_Location_Type_B
 !                  Calc_1D_CFA_Values_FP          !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_Values_Here( re, theta, phi, LagP, Tmp_U_Value )
+SUBROUTINE Calc_Values_Here_All( re, theta, phi, LagP, Tmp_U_Value )
 
 INTEGER,                        INTENT(IN)                      ::  re
 REAL(idp),                      INTENT(IN)                      ::  theta, phi
@@ -462,9 +450,11 @@ DO d = 0,DEGREE
 
 
     Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                    + FP_Coeff_Vector_A(Loc_RED,Loc_LM,u)     &
+                    + FP_Coeff_Vector_A(Loc_RED,Loc_LM,u)   &
                     * Spherical_Harmonic(l,m,theta,phi)     &
                     * LagP(d)
+
+
 !    IF ( u == iU_CF) THEN
 !        PRINT*,"A",Loc_RED,Loc_LM,re,d
 !        PRINT*,FP_Coeff_Vector_A(Loc_RED,Loc_LM,u),  &
@@ -498,7 +488,7 @@ END DO  !   l Loop
 END DO  !   u Loop
 
 
-END SUBROUTINE Calc_Values_Here
+END SUBROUTINE Calc_Values_Here_All
 
 
 
@@ -509,9 +499,9 @@ END SUBROUTINE Calc_Values_Here
 !                  Calc_1D_CFA_Values_FP          !
 !                                                                                !
 !################################################################################!
-FUNCTION Calc_Values_Here_A( re, theta, phi, LagP, iU )
+FUNCTION Calc_Values_Here_Type_A( re, theta, phi, LagP, iU )
 
-REAL(idp)                                               ::  Calc_Values_Here_A
+REAL(idp)                                               ::  Calc_Values_Here_Type_A
 INTEGER,                        INTENT(IN)              ::  re
 REAL(idp),                      INTENT(IN)              ::  theta, phi
 REAL(idp), DIMENSION(0:DEGREE), INTENT(IN)              ::  LagP
@@ -548,9 +538,9 @@ END DO  !   m Loop
 END DO  !   l Loop
 
 
-Calc_Values_Here_A = REAL( Tmp_U_Value, KIND = idp )
+Calc_Values_Here_Type_A = REAL( Tmp_U_Value, KIND = idp )
 
-END FUNCTION Calc_Values_Here_A
+END FUNCTION Calc_Values_Here_Type_A
 
 
 
@@ -560,10 +550,10 @@ END FUNCTION Calc_Values_Here_A
 !                  Calc_1D_CFA_Values_FP          !
 !                                                                                !
 !################################################################################!
-FUNCTION Calc_Values_Here_B( re, theta, phi, LagP, iU, iVB )
+FUNCTION Calc_Values_Here_Type_B( re, theta, phi, LagP, iU, iVB )
 
 
-REAL(idp)                                                       ::  Calc_Values_Here_B
+REAL(idp)                                                       ::  Calc_Values_Here_Type_B
 INTEGER,                        INTENT(IN)                      ::  re
 REAL(idp),                      INTENT(IN)                      ::  theta, phi
 REAL(idp), DIMENSION(0:DEGREE), INTENT(IN)                      ::  LagP
@@ -594,15 +584,15 @@ END DO  !   m Loop
 END DO  !   l Loop
 
 
-Calc_Values_Here_B = REAL( Tmp_U_Value, KIND = idp)
+Calc_Values_Here_Type_B = REAL( Tmp_U_Value, KIND = idp)
 
-END FUNCTION Calc_Values_Here_B
-
-
+END FUNCTION Calc_Values_Here_Type_B
 
 
 
 
 
-END MODULE FP_Functions_Results
+
+
+END MODULE Return_Functions_FP
 

@@ -72,7 +72,7 @@ USE FP_Functions_BC,  &
                     Dirichlet_BC_CHOL,              &
                     Neumann_BC_CCS
 
-USE Functions_Domain_Maps, &
+USE Maps_Domain, &
             ONLY :  Map_To_lm
 
 USE MPI_Communication_TypeA_Module,             &

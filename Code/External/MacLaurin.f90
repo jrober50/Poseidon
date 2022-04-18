@@ -50,17 +50,17 @@ USE  Variables_IO, &
             ONLY :  Report_Flags,           &
                     iRF_Setup
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
             ONLY :  Map_To_X_Space,         &
                     Map_From_X_Space
+
+USE Maps_Quadrature,   &
+            ONLY :  Quad_Map
+
 
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
-
-USE Quadrature_Mapping_Functions,   &
-            ONLY :  Quad_Map
-
 
 USE Variables_External, &
             ONLY :  MacLaurin_SemiMinor,    &

@@ -91,12 +91,15 @@ USE Functions_Jacobian, &
 USE Poseidon_IO_Module, &
             ONLY :  Clock_In
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
 
-USE Functions_Domain_Maps, &
+USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node,            &
-                    Map_To_tpd
+                    FEM_Elem_Map
+
+USE Maps_Quadrature, &
+            ONLY :  Map_To_tpd
 
 
 USE XCFC_Functions_Calc_Values_Module, &
@@ -142,10 +145,6 @@ USE Initialization_Tables, &
             ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
                     Initialize_Ylm_Tables_On_Elem
 
-USE Functions_Mesh, &
-            ONLY :  FEM_Elem_Map
-
-
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -167,10 +166,7 @@ USE amrex_multifab_module,  &
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,              &
-                    AMReX_Num_Levels,       &
-                    Findloc_Table,      &
-                    FEM_Elem_Table,     &
-                    Table_Offsets
+                    AMReX_Num_Levels
 
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,             &

@@ -28,7 +28,7 @@ MODULE Driver_SetGuess_Module                                                !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Units_Module, &
+USE Poseidon_Units_Module, &
             ONLY :  C_Square
 
 USE Variables_Functions, &
@@ -37,6 +37,8 @@ USE Variables_Functions, &
 USE Initial_Guess_Module, &
             ONLY :  Poseidon_Input_Guess
 
+USE Poseidon_Parameters, &
+            ONLY :  Verbose_Flag
 
 IMPLICIT NONE
 
@@ -96,6 +98,9 @@ ALLOCATE( AlphaPsi_Guess(1:Num_DOF,0:NE(1)-1,0:NE(2)-1, 0:NE(3)-1 )  )
 ALLOCATE( Beta_Guess(1:Num_DOF,0:NE(1)-1,0:NE(2)-1, 0:NE(3)-1, 3 )  )
 
 
+IF ( Verbose_Flag ) THEN
+    WRITE(*,'(A)')"-Creating Initial Guess"
+END IF
 
 IF ( Guess_Type == 1 ) THEN
 
@@ -157,6 +162,12 @@ END IF
 
 
 !    CALL Poseidon_Init_FlatGuess()
+
+
+
+IF ( Verbose_Flag ) THEN
+    WRITE(*,'(A)')"-Setting Initial Guess"
+END IF
 
 CALL Poseidon_Input_Guess(  Psi_Guess,          &
                             AlphaPsi_Guess,     &

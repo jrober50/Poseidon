@@ -79,7 +79,8 @@ USE Poseidon_Parameters, &
                     Poseidon_Frame,         &
                     Convergence_Type,       &
                     Convergence_Flag,       &
-                    Max_Iterations
+                    Max_Iterations,         &
+                    CFA_Eq_Flags
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
@@ -127,9 +128,7 @@ USE Variables_Functions, &
             ONLY :  Potential_Solution,         &
                     Shift_Solution,             &
                     Calc_3D_Values_at_Location, &
-                    Calc_1D_CFA_Values,         &
-                    Calc_Var_At_Loc_A,          &
-                    Calc_Var_At_Loc_B
+                    Calc_1D_CFA_Values
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations,     &
@@ -153,12 +152,10 @@ USE Poseidon_IO_Parameters, &
 USE Functions_Info,   &
             ONLY  : PQ_ITERATIONS_MAX
 
-USE IO_File_Routines_Module, &
+USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File,                  &
                     Open_Existing_File
 
-USE Variables_FP, &
-            ONLY :  CFA_Eq_Flags
 
 
 

@@ -94,9 +94,6 @@ USE Variables_Functions, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
 
-USE Functions_Mapping, &
-            ONLY :  Map_From_X_Space
-
 USE Functions_Math, &
             ONLY :  Lagrange_Poly,          &
                     Lagrange_Poly_Deriv,    &
@@ -105,8 +102,11 @@ USE Functions_Math, &
                     Norm_Factor,            &
                     Sqrt_Factor
 
-USE Functions_Domain_Maps, &
+USE Maps_Quadrature, &
             ONLY :  Map_To_tpd
+
+USE Maps_X_Space, &
+            ONLY :  Map_From_X_Space
 
 
 USE Allocation_Tables, &
@@ -546,6 +546,8 @@ INTEGER,                 INTENT(IN)                 ::  Level
 INTEGER                                             ::  te, l, m
 INTEGER                                             ::  lm, teb
 
+REAL(idp), DIMENSION(1:Num_T_Quad_Points)           ::  Cur_T_Locs
+
 REAL(idp), DIMENSION(-L_Limit:L_Limit,              &
                      0:L_Limit,                     &
                      1:Num_T_Quad_Points,           &
@@ -561,15 +563,17 @@ REAL(idp), DIMENSION(-L_Limit:L_Limit,              &
 !
 !
 
+
+!PRINT*,"A2",ALLOCATED(rBT_NormedLegendre),ALLOCATED(Int_T_Locations)
 rBT_NormedLegendre = 0.0_idp
-!PRINT*,"A"
 DO te = iEL(2), iEU(2)
     teb = te-iEL(2)
-    tlocs = Level_dx(Level,2)/2.0_idp * (Int_T_Locations(:) + 1.0_idp + 2.0_idp*te )
+    Cur_T_locs = Level_dx(Level,2)/2.0_idp * (Int_T_Locations(:) + 1.0_idp + 2.0_idp*te )
+
     DO l = 0,L_LIMIT
     DO m = -l,l
 
-        LegPoly_Table(m, l, :, teb) = Legendre_Poly(l,m,Num_T_Quad_Points,tlocs)
+        LegPoly_Table(m, l, :, teb) = Legendre_Poly(l,m,Num_T_Quad_Points,Cur_T_Locs)
 
     END DO ! m Loop
     END DO ! l Loop
@@ -577,7 +581,7 @@ END DO ! te Loop
 
 
 
-!PRINT*,"B"
+!PRINT*,"B2"
 DO te = iEL(2), iEU(2)
 DO l = 0,L_LIMIT
 DO m = -l,l
@@ -593,7 +597,7 @@ DO m = -l,l
 END DO ! m Loop
 END DO ! l Loop
 END DO ! te Loop
-!PRINT*,"C"
+!PRINT*,"C2"
 
 
 

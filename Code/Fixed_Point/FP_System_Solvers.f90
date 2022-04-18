@@ -72,6 +72,7 @@ USE Poseidon_Parameters, &
                     Convergence_Criteria,       &
                     Convergence_Flag,           &
                     NUM_CFA_EQs,                &
+                    CFA_Eq_Flags,               &
                     Verbose_Flag
 
 USE Variables_MPI, &
@@ -98,7 +99,6 @@ USE Variables_FP,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
-                    CFA_EQ_Flags,               &
                     CFA_Eq_Map,                 &
                     CFA_Var_Map,                &
                     CFA_MAT_Map,                &
@@ -150,12 +150,12 @@ USE Poseidon_IO_Module, &
                     OPEN_ITER_REPORT_FILE,          &
                     CLOSE_ITER_REPORT_FILE
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map,              &
                     FP_Array_Map_TypeB,             &
                     FP_Array_Map
 
-USE Functions_Domain_Maps, &
+USE Maps_Domain, &
                 ONLY :  Map_To_lm,                  &
                         Map_To_FEM_Node
 

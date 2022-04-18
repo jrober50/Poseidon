@@ -36,7 +36,9 @@ USE Poseidon_Parameters, &
                     Convergence_Criteria,   &
                     Num_CFA_Vars,           &
                     Max_Iterations,         &
-                    Poisson_Mode
+                    Poisson_Mode,           &
+                    CFA_EQ_Flags,           &
+                    Num_CFA_Eqs
 
 USE Variables_IO, &
             ONLY :  Report_Flags,           &
@@ -134,15 +136,16 @@ USE Initialization_Derived, &
             ONLY :  Initialize_Derived
 
 USE Initialization_FP, &
-            ONLY :  Initialize_FP
+            ONLY :  Initialize_FP,          &
+                    Create_Eq_Maps
 
 USE Initialization_XCFC, &
             ONLY :  Initialize_XCFC
 
-USE Initialization_NR, &
-            ONLY :  Initialize_NR
+!USE Initialization_NR, &
+!            ONLY :  Initialize_NR
 
-USE Functions_Mapping, &
+USE Maps_Legacy, &
             ONLY :  CFA_3D_LM_Map
 
 USE Poseidon_IO_Module, &
@@ -495,7 +498,14 @@ ELSE
 
 
 
+    IF ( PRESENT(CFA_Eq_Flags_Option) ) THEN
+        CFA_EQ_Flags = CFA_Eq_Flags_Option
+    ELSE
+        CFA_EQ_Flags = [1,1,1,0,0]
+    END IF
 
+    NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
+    CALL Create_Eq_Maps()
 
     IF ( PRESENT(nProcs_Option) ) THEN
         nProcs_Poseidon = nProcs_Option
@@ -536,11 +546,13 @@ ELSE
 
 
     IF ( Method_Flag == 1 ) THEN
-        CALL Initialize_NR(CFA_EQ_Flags_Option)
+        WRITE(*,'(A)')"The Newton-Raphson method is currently unavailable in Poseidon.  STOPING"
+        STOP
+!        CALL Initialize_NR(CFA_EQ_Flags_Option)
     ELSE IF ( Method_Flag == 2 ) THEN
-        CALL Initialize_FP(CFA_EQ_Flags_Option)
+        CALL Initialize_FP()
     ELSE IF ( Method_Flag == 3 ) THEN
-        CALL Initialize_XCFC(CFA_EQ_Flags_Option)
+        CALL Initialize_XCFC()
     END IF
 
 
@@ -571,7 +583,6 @@ CALL Output_Setup_Report()
 
 
 CALL TimerStop( Timer_Initialization_Core )
-
 
 END SUBROUTINE Initialize_Poseidon
 

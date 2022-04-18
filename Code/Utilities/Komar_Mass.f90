@@ -79,7 +79,7 @@ USE Variables_Mesh, &
                     R_Outer
 
 
-USE Functions_Domain_Maps, &
+USE Maps_Quadrature, &
             ONLY :  Map_To_tpd
 
 USE Komar_Mass_Utilities_Module, &

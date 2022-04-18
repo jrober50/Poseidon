@@ -54,7 +54,7 @@ USE Variables_Mesh, &
                     NUM_T_ELEMENTS,             &
                     NUM_P_ELEMENTS
 
-USE Variables_Yahil, &
+USE Variables_External, &
             ONLY :  Central_E
 
 
@@ -100,7 +100,7 @@ CHARACTER(KIND=c_char), INTENT(INOUT)   ::  Tag(TLo(1):THi(1),  &
                                                 TLo(3):THi(3),  &
                                                 TLo(4):THi(4)   )
 
-INTEGER                                 ::  Tag_Style = 2
+INTEGER                                 ::  Tag_Style = 1
 
 
 IF ( Tag_Style == 1 ) THEN

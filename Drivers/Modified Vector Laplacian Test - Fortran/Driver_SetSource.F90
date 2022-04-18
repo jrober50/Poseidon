@@ -58,7 +58,7 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
-USE Quadrature_Mapping_Functions, &
+USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
 USE Poseidon_IO_Module, &
@@ -80,7 +80,6 @@ SUBROUTINE Driver_SetSource( NE, NQ,                    &
                              dx_c, x_e, y_e,            &
                              R_Quad, T_Quad, P_Quad,    &
                              Left_Limit, Right_Limit,   &
-                             Solver_Type,               &
                              myID,                      &
                              Yahil_Params               )
 
@@ -98,7 +97,6 @@ REAL(idp), INTENT(IN), DIMENSION(1:NQ(3))               ::  P_Quad
 REAL(idp), INTENT(IN)                                   ::  Left_Limit
 REAL(idp), INTENT(IN)                                   ::  Right_Limit
 
-INTEGER,   INTENT(IN)                                   ::  Solver_Type
 INTEGER,   INTENT(IN)                                   ::  myID
 REAL(idp), INTENT(IN), DIMENSION(4)                     ::  Yahil_Params
 

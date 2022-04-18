@@ -11,6 +11,8 @@ Tests/.DS_Store
 *.out
 *.out
 *.png
+*.dSYM
+
 ~$ConditionNumber.xlsx
 
 # Object files

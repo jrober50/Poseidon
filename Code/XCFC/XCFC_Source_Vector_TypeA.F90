@@ -92,9 +92,12 @@ USE Variables_FP, &
 USE Functions_Jacobian, &
            ONLY :  Calc_Ahat
 
-USE Functions_Domain_Maps, &
-           ONLY :  Map_To_FEM_Node,            &
-                   Map_To_tpd
+USE Maps_Domain, &
+            ONLY :  Map_To_FEM_Node,            &
+                    FEM_Elem_Map
+
+USE Maps_Quadrature, &
+            ONLY :  Map_To_tpd
 
 
 
@@ -141,9 +144,6 @@ USE Timer_Variables_Module, &
 USE MPI
 
 
-USE Functions_Mesh, &
-            ONLY :  FEM_Elem_Map
-
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -162,10 +162,7 @@ USE amrex_multifab_module,  &
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
-                    AMReX_Num_Levels,   &
-                    Findloc_Table,      &
-                    FEM_Elem_Table,     &
-                    Table_Offsets
+                    AMReX_Num_Levels
 
 
 USE Variables_AMReX_Source, &

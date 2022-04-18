@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Functions_Results                                                     !##!
+MODULE Maps_AMReX                                                            !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -37,8 +37,22 @@ CONTAINS
 !                                                     				!
 !                                                                               !
 !###############################################################################!
+PURE INTEGER FUNCTION AMReX_nCOMP_Map( iU, rd, td, pd, NQ )
+
+INTEGER,                                        INTENT(IN)  ::  iU
+INTEGER,                                        INTENT(IN)  ::  rd
+INTEGER,                                        INTENT(IN)  ::  td
+INTEGER,                                        INTENT(IN)  ::  pd
+INTEGER,    DIMENSION(3),                       INTENT(IN)  ::  NQ
+
+
+AMReX_nCOMP_Map = (iU-1)*NQ(1)*NQ(2)*NQ(3)          &
+                + (pd-1)*NQ(1)*NQ(2)                &
+                + (td-1)*NQ(1)                      &
+                +  rd
+
+END FUNCTION AMReX_nCOMP_Map
 
 
 
-
-END MODULE
+END MODULE Maps_AMReX

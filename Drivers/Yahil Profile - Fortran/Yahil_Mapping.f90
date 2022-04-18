@@ -46,7 +46,7 @@ USE Variables_MPI, &
 USE Variables_Functions, &
             ONLY :  Potential_Solution
 
-USE FP_Functions_Results , &
+USE Return_Functions_FP, &
             ONLY : Calc_1D_CFA_Values_FP
 
 USE Variables_External, &
@@ -55,14 +55,13 @@ USE Variables_External, &
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_Results_Dir
 
-
 USE Functions_Mesh, &
             ONLY :  Create_3D_Mesh
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
 USE Poseidon_IO_Module, &
@@ -538,8 +537,10 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 !        WRITE(*,'(A,ES18.12,A)')"ADM Crve : ", ADM_Curve / Gram, " grams"
 !        WRITE(*,'(A,ES18.12,A)')"ADM Sum  : ", (ADM_Phys + ADM_Curve) / Gram, " grams"
         
-        CALL Print_Results()
-        CALL Write_Final_Results()
+!        CALL Print_Results()
+!        CALL Write_Final_Results()
+
+        CALL Output_Time_Report()
     END IF
 
 

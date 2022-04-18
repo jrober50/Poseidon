@@ -60,7 +60,6 @@ USE Variables_FP, &
                     Laplace_Factored_VAL,       &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
-                    CFA_EQ_Flags,               &
                     CFA_EQ_Map,                 &
                     CFA_Mat_Map,                &
                     MCF_Flag,                   &
@@ -75,21 +74,21 @@ USE Poseidon_Cholesky_Module,   &
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map
 
-USE Functions_Domain_Maps, &
+USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node,            &
                     Map_To_lm
+
+USE Maps_X_Space, &
+            ONLY :  Map_From_X_Space
 
 USE Functions_Math, &
             ONLY :  Lagrange_Poly,              &
                     Lagrange_Poly_Deriv,        &
                     Legendre_Poly,              &
                     Norm_Factor
-
-USE Functions_Mapping, &
-            ONLY :  Map_From_X_Space
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations,    &
@@ -854,7 +853,7 @@ END DO  ! re Loop
 
 
 
-! At this point Laplace Matrix_Beta contains the discretized Laplace operator for the three
+! At this point Laplace Matrix_Beta contains the discretized scalr Laplace operator for the three
 ! Beta components.  To test set up three Poisson/Laplace problems and assign one to each
 ! Beta component.  There is no coupling yet, so this should solve the three independently.
 
@@ -1023,6 +1022,7 @@ DO d = 0,Degree
 
     DO lm_loc = 1,LM_Length
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
+
 
         Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
                                       - SUM( dRdR_Factor(:, d, dp) )/3.0_idp        &

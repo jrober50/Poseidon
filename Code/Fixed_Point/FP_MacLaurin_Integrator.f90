@@ -104,14 +104,14 @@ USE Poseidon_IO_Module, &
             ONLY :  Clock_In
 
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_FEM_Node_Map,            &
                     FP_Beta_Array_Map,          &
                     FP_Array_Map,               &
                     FP_LM_Map,                  &
                     FP_tpd_Map
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
             ONLY :  Map_To_X_Space,         &
                     Map_From_X_Space
 

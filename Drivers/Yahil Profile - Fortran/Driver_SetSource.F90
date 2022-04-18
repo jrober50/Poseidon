@@ -59,7 +59,7 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
-USE Quadrature_Mapping_Functions, &
+USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
 USE Poseidon_IO_Module, &

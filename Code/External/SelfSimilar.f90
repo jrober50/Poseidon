@@ -81,7 +81,7 @@ USE Timer_VAriables_Module, &
             ONLY :  Timer_Core_Init_Test_Problem
 
 
-USE Quadrature_Mapping_Functions, &
+USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
 IMPLICIT NONE
@@ -221,6 +221,7 @@ CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
 
 IF ( .TRUE. ) THEN
     Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
+    PRINT*,Kappa_wUnits,(Erg/Centimeter**3),(Gram/Centimeter**3)**Gamma, Gamma
 ELSE
     Kappa_wUnits = 18.394097187796024_idp
     PRINT*,"Kappa_wUnits over written.",Kappa_wUnits
@@ -1376,7 +1377,7 @@ END FUNCTION Find_Line
 !                  Initialize_Yahil_Sources                                           !
 !                                                                                !
 !################################################################################!
-FUNCTION Calc_Yahil_Central_E( t_in, gamma, kappa )
+FUNCTION Calc_Yahil_Central_E( t_in, kappa, gamma )
 
 
 REAL(idp),  INTENT(IN)                      ::  t_in
@@ -1466,14 +1467,17 @@ END DO
 CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
 
 
-
 t = t_in*Millisecond
 
-Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
+IF ( .TRUE. ) THEN
+    Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
+ELSE
+    Kappa_wUnits = 18.394097187796024_idp
+    PRINT*,"Kappa_wUnits over written.",Kappa_wUnits
+END IF
 
 
 D_FACTOR = 1.0_idp/(Grav_Constant_G*t*t )
-
 V_FACTOR = SQRT(kappa)                          &
          * Grav_Constant_G**((1.0_idp-gamma)/2.0_idp)  &
          * t**(1.0_idp- gamma)
@@ -1483,14 +1487,13 @@ V_FACTOR = SQRT(kappa)                          &
 Density  = INPUT_D(1)*D_FACTOR
 Velocity = INPUT_V(1)*V_FACTOR
 
-
 ! Calculate Usable Quantities
 Pressure = kappa * Density**gamma
 Energy = Pressure/(gamma - 1.0_idp)
 
 Specific_Enthalpy = C_Square + (Energy + Pressure)/Density
 
-            
+
 vsqr = Velocity*Velocity
 LF_sqr = 1.0_idp/(1.0_idp- vsqr/C_Square)
             

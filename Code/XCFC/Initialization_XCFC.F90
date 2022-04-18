@@ -40,6 +40,7 @@ USE Poseidon_Parameters, &
                     DEGREE,                 &
                     L_LIMIT,                &
                     Num_CFA_Eqs,            &
+                    CFA_Eq_Flags,           &
                     Verbose_Flag
 
 USE Variables_Derived, &
@@ -52,13 +53,10 @@ USE Variables_Mesh, &
 USE Variables_Functions, &
             ONLY :  LM_Location,                   &
                     Calc_3D_Values_At_Location,    &
-                    Calc_1D_CFA_Values,             &
-                    Calc_Var_At_Loc_A,              &
-                    Calc_Var_At_Loc_B
+                    Calc_1D_CFA_Values
 
 USE Variables_FP, &
-            ONLY :  CFA_EQ_Flags,               &
-                    CFA_EQ_Map,                 &
+            ONLY :  CFA_EQ_Map,                 &
                     CFA_Var_Map,                &
                     CFA_Mat_Map,                &
                     Laplace_NNZ,                &
@@ -69,7 +67,10 @@ USE Variables_FP, &
 USE Allocation_XCFC, &
             ONLY :  Allocate_XCFC
 
-USE FP_Functions_Results,   &
+USE Return_Routines_Main, &
+            ONLY :  Calc_Var_At_Location
+
+USE Return_Functions_FP,   &
             ONLY :  Calc_FP_Values_At_Location,  &
                     Calc_1D_CFA_Values_FP
 
@@ -83,10 +84,6 @@ USE Timer_Routines_Module, &
 USE Timer_Variables_Module, &
             ONLY :  Timer_XCFC_Initialization,      &
                     Timer_XCFC_Matrix_Init
-
-USE FP_Functions_Results, &
-            ONLY :  Calc_Var_At_Location_Type_A,    &
-                    Calc_Var_At_Location_Type_B
 
 
 
@@ -118,9 +115,8 @@ CONTAINS
 !===========================================================================================!
 !                                                                                           !
  !#########################################################################################!
-SUBROUTINE Initialize_XCFC( CFA_EQ_Flags_Input )
+SUBROUTINE Initialize_XCFC( )
 
-INTEGER, DIMENSION(5), INTENT(IN), OPTIONAL             ::  CFA_EQ_Flags_Input
 
 REAL(idp), Dimension(1:2)                               ::  Timer
 
@@ -130,17 +126,9 @@ IF ( Verbose_Flag ) THEN
 END IF
 CALL TimerStart( Timer_XCFC_Initialization )
 
-!
-!   CFA_EQ_Flags = Turns on/off which equations are solved.
-!
-IF ( PRESENT(CFA_EQ_Flags_Input) ) THEN
-    CFA_EQ_Flags = CFA_EQ_Flags_Input
-ELSE
-    CFA_EQ_Flags = [1,1,1,0,0]
-END IF
 
-NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
-CALL Create_Eq_Maps()
+
+
 
 
 Beta_Diagonals = Beta_Elem_Prob_Dim-1
@@ -173,8 +161,6 @@ CALL TimerStop( Timer_XCFC_Matrix_Init )
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
-Calc_Var_At_Loc_A => Calc_Var_At_Location_Type_A
-Calc_Var_At_Loc_B => Calc_Var_At_Location_Type_B
 
 CALL TimerStop( Timer_XCFC_Initialization )
 

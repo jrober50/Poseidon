@@ -23,8 +23,14 @@ MODULE Driver_SetSource_Module                                              !##!
 !           Dependencies            !
 !                                   !
 !===================================!
+USE Poseidon_Kinds_Module, &
+            ONLY :  idp
 
-use amrex_base_module
+USE Poseidon_Parameters, &
+            ONLY :  Verbose_Flag
+
+
+USE amrex_base_module
 
 USE amrex_box_module,       ONLY: &
   amrex_box
@@ -84,13 +90,6 @@ USE Poseidon_AMReX_MakeFineMask_Module, &
 
 USE Driver_SourceProfiles_Module, &
             ONLY :  Load_AMReX_Profile
-
-
-USE Poseidon_Kinds_Module, &
-            ONLY :  idp
-
-USE Poseidon_Parameters, &
-            ONLY :  Verbose_Flag
 
 
 USE Variables_MPI, &
@@ -180,7 +179,6 @@ END IF
 
 
 
-
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -189,7 +187,9 @@ SelfSim_T     = Yahil_Params(1)
 SelfSim_Kappa = Yahil_Params(2)
 SelfSim_Gamma = Yahil_Params(3)
 
+
 Kappa_wUnits = SelfSim_Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**SelfSim_Gamma)
+
 
 Central_E = Calc_Yahil_Central_E(SelfSim_T, SelfSim_Kappa, SelfSim_Gamma)
 
@@ -203,7 +203,6 @@ IF ( Verbose_Flag ) THEN
     WRITE(*,'(A,ES12.5,A)') ' - Central E       : ', Central_E/E_Units," Erg/cm^3"
     WRITE(*,'(/)')
 END IF
-
 
 
 CALL amrex_init_virtual_functions &

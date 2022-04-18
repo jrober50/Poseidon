@@ -59,6 +59,7 @@ USE Poseidon_Parameters, &
                     Convergence_Criteria,       &
                     Convergence_Flag,           &
                     NUM_CFA_EQs,                &
+                    CFA_Eq_Flags,               &
                     Verbose_Flag
 
 
@@ -81,7 +82,6 @@ USE Variables_FP,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
-                    CFA_EQ_Flags,               &
                     CFA_Eq_Map,                 &
                     CFA_MAT_Map,                &
                     Laplace_NNZ,                &

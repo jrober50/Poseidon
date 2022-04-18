@@ -68,8 +68,11 @@ USE Variables_Mesh, &
                     R_Outer
 
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
+
+USE Maps_Domain, &
+            ONLY :  Map_TO_FEM_Node
 
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
@@ -89,8 +92,7 @@ USE Functions_Math, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
 
-USE Functions_Domain_Maps, &
-            ONLY :  Map_TO_FEM_Node
+
 
 IMPLICIT NONE
 

@@ -1,7 +1,4 @@
-include ../../Build/Makefile_Core
-include Makefile_Driver
-
-TEST_NAME    =Empty
+DRIVER_NAME    =Driver_HCT_Fortran
 
 
 ## Select Number of Processes (Mostly for MacBook)
@@ -11,10 +8,10 @@ NPROCS=1
 ## Select Machine
 
 MACHINE_NAME    =NicksMacBook
-#MACHINE_NAME    = sjdunham
-#MACHINE_NAME    =MacBook
-#MACHINE_NAME    =Rhea
-#MACHINE_NAME    =BlueWaters
+#MACHINE_NAME = sjdunham
+#MACHINE_NAME   =MacBook
+#MACHINE_NAME   =Rhea
+#MACHINE_NAME   =BlueWaters
 
 
 ## Select Mode
@@ -32,8 +29,8 @@ OPENMP_MODE     =OFF
 
 ## Compile with PETSc
 
-PETSC_MODE      =ON
-#PETSC_MODE     =OFF
+#PETSC_MODE      =ON
+PETSC_MODE     =OFF
 
 
 ## Compile with HDF5
@@ -47,17 +44,22 @@ HDF5_MODE       =ON
 MPI_MODE        =ON
 #MPI_MODE       =OFF
 
+AMREX_MODE      =OFF
 
 
-main : $(POSEIDON_o) $(Driver_o)
+include ../../Build/Makefile_Core
+include Makefile_Driver
+
+
+Main : $(POSEIDON_o) $(DRIVER_o)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(TEST_NAME)_Mapping.f90  -o $(OBJ)/$(TEST_NAME)_Mapping.o
-	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/$(TEST_NAME)_Mapping.x
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(DRIVER_NAME).f90  -o $(OBJ)/$(DRIVER_NAME).o
+	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/$(DRIVER_NAME).x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 
 run : 
-	./$(BIN)/$(TEST_NAME)_Mapping.x
+	./$(BIN)/$(DRIVER_NAME).x
 
 
 clean:

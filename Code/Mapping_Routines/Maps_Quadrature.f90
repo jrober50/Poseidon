@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Quadrature_Mapping_Functions                                          !##!
+MODULE Maps_Quadrature                                          !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -107,4 +107,29 @@ END FUNCTION Quad_Map_Long_Array
 
 
 
-END MODULE Quadrature_Mapping_Functions
+
+
+
+
+!+103+###########################################################################!
+!                                                                                !
+!                  FP_Vector_Map                                                  !
+!                                                                                !
+!################################################################################!
+PURE FUNCTION Map_To_tpd( td, pd )
+
+INTEGER                                     :: Map_To_tpd
+
+INTEGER, INTENT(IN)                         :: td, pd
+
+
+Map_To_tpd = (td-1)*Num_P_Quad_Points + pd
+
+
+END FUNCTION Map_To_tpd
+
+
+
+
+
+END MODULE Maps_Quadrature

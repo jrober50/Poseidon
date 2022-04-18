@@ -35,8 +35,8 @@ USE Poseidon_Parameters, &
 USE FP_Initial_Guess_Module, &
             ONLY : FP_Input_Guess
 
-USE NR_Initial_Guess_Module, &
-            ONLY : NR_Input_Guess
+!USE NR_Initial_Guess_Module, &
+!            ONLY : NR_Input_Guess
 
 USE Variables_Mesh, &
         ONLY :  NUM_R_ELEMENTS,             &
@@ -98,14 +98,15 @@ REAL(idp), INTENT(IN)                                                           
 
 
 IF ( Method_Flag == 1 ) THEN
-
-    CALL NR_Input_Guess( Psi_Guess,                                  &
-                         AlphaPsi_Guess,                             &
-                         Beta_Guess,                                 &
-                         Input_RE, Input_TE, Input_PE,               &
-                         Input_RQ, Input_TQ, Input_PQ,               &
-                         Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
-                         Left_Limit, Right_Limit                     )
+    WRITE(*,'(A)')"The Newton-Raphson method is not currently available in Poseidon. STOPING"
+    STOP
+!    CALL NR_Input_Guess( Psi_Guess,                                  &
+!                         AlphaPsi_Guess,                             &
+!                         Beta_Guess,                                 &
+!                         Input_RE, Input_TE, Input_PE,               &
+!                         Input_RQ, Input_TQ, Input_PQ,               &
+!                         Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
+!                         Left_Limit, Right_Limit                     )
 
 
 ELSE IF ( Method_Flag >= 2 ) THEN
@@ -171,14 +172,16 @@ Beta_Guess = 0.0_idp
 
 
 IF ( Method_Flag == 1 ) THEN
+    WRITE(*,'(A)')"The Newton-Raphson method is not currently available in Poseidon. STOPING"
+    STOP
 
-    CALL NR_Input_Guess( Psi_Guess,                                  &
-                         AlphaPsi_Guess,                             &
-                         Beta_Guess,                                 &
-                         Num_R_Elements, Num_R_Elements, Num_R_Elements,               &
-                         NUM_R_QUAD_POINTS, NUM_T_QUAD_POINTS, NUM_P_QUAD_POINTS,               &
-                         INT_R_LOCATIONS, INT_T_LOCATIONS, INT_P_LOCATIONS,   &
-                         Left_Limit, Right_Limit                     )
+!    CALL NR_Input_Guess( Psi_Guess,                                  &
+!                         AlphaPsi_Guess,                             &
+!                         Beta_Guess,                                 &
+!                         Num_R_Elements, Num_R_Elements, Num_R_Elements,               &
+!                         NUM_R_QUAD_POINTS, NUM_T_QUAD_POINTS, NUM_P_QUAD_POINTS,               &
+!                         INT_R_LOCATIONS, INT_T_LOCATIONS, INT_P_LOCATIONS,   &
+!                         Left_Limit, Right_Limit                     )
 
 
 ELSE IF ( Method_Flag >= 2 ) THEN

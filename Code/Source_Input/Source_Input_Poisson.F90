@@ -53,7 +53,7 @@ USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature,           &
                     Initialize_LG_Quadrature_Locations
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
 
 USE Functions_Math, &

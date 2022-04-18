@@ -63,7 +63,7 @@ USE Variables_MPI, &
                     ONLY :  NUM_R_ELEMS_PER_BLOCK
 
 
-USE IO_File_Routines_Module, &
+USE Poseidon_File_Routines_Module, &
                     ONLY :  Open_New_File,                  &
                             Open_Existing_File
 

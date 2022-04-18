@@ -58,7 +58,7 @@ USE Variables_Source, &
                     Block_Source_S,             &
                     Block_Source_Si
 
-USE Quadrature_Mapping_Functions, &
+USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
 #ifdef POSEIDON_AMREX_FLAG

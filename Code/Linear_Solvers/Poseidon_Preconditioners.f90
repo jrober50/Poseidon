@@ -44,7 +44,7 @@ USE Variables_Derived, &
                     Elem_Prob_Dim_Sqr,          &
                     BLOCK_PROB_DIM
 
-USE Functions_Mapping, &
+USE Maps_Legacy, &
             ONLY :  CFA_ALL_Matrix_Map
 
 USE Functions_Quadrature, &
@@ -189,3 +189,4 @@ END DO  ! re
 END SUBROUTINE Jacobi_Type_B_PC
 
 END MODULE Poseidon_Preconditioner_Module
+

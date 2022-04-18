@@ -169,10 +169,11 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     Work_Vec = FP_Source_Vector_B(:,iVB)
 
 
+
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
-
+!    PRINT*,Work_Vec
 
     CALL ZGBTRS( 'N',                   &
                  Beta_Prob_Dim,         &
@@ -190,7 +191,8 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
         print*,"ZGBTRS has failed with INFO = ",INFO
     END IF
 
-
+!    PRINT*,"Coeff_Vec"
+!    PRINT*,Work_Vec
 
     FP_Coeff_Vector_B(:,iVB) = Work_Vec(:)
 

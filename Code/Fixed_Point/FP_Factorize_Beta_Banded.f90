@@ -77,7 +77,6 @@ USE Variables_FP, &
                     Beta_IPIV,                  &
                     Beta_MVL_Banded,            &
                     Beta_MVL_Diagonal,          &
-                    CFA_EQ_Flags,               &
                     CFA_EQ_Map,                 &
                     CFA_Mat_Map,                &
                     First_Column_Beta_Storage,  &
@@ -98,7 +97,7 @@ USE Variables_BC, &
                     INNER_CFA_BC_TYPE,          &
                     OUTER_CFA_BC_TYPE
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map
 
 USE Timer_Routines_Module, &

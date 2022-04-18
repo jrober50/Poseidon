@@ -40,6 +40,7 @@ USE Poseidon_Parameters, &
                     DEGREE,                 &
                     L_LIMIT,                &
                     Num_CFA_Eqs,            &
+                    CFA_Eq_Flags,           &
                     Verbose_Flag
 
 USE Variables_Derived, &
@@ -55,8 +56,7 @@ USE Variables_Functions, &
                     Calc_1D_CFA_Values
 
 USE Variables_FP, &
-            ONLY :  CFA_EQ_Flags,               &
-                    CFA_EQ_Map,                 &
+            ONLY :  CFA_EQ_Map,                 &
                     CFA_Var_Map,                &
                     CFA_Mat_Map,                &
                     Laplace_NNZ,                &
@@ -68,7 +68,7 @@ USE Allocation_FP, &
             ONLY :  Allocate_FP
 
 
-USE FP_Functions_Results,   &
+USE Return_Functions_FP,   &
             ONLY :  Calc_FP_Values_At_Location,  &
                     Calc_1D_CFA_Values_FP
 
@@ -127,20 +127,6 @@ IF ( Verbose_Flag ) THEN
 END IF
 CALL TimerStart( Timer_FP_Initialization )
 
-
-!
-!   CFA_EQ_Flags = Turns on/off which equations are solved.
-!
-IF ( PRESENT(CFA_EQ_Flags_Input) ) THEN
-    CFA_EQ_Flags = CFA_EQ_Flags_Input
-ELSE
-    CFA_EQ_Flags = [1,1,1,0,0]
-END IF
-
-NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
-
-
-CALL Create_Eq_Maps()
 
 Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
 Beta_Diagonals = Beta_Elem_Prob_Dim

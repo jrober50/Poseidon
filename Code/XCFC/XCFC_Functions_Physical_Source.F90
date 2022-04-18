@@ -57,11 +57,9 @@ USE Variables_Quadrature, &
                     NUM_TP_QUAD_POINTS,         &
                     Num_Quad_DOF
 
-USE Functions_Domain_Maps, &
-            ONLY :  Map_To_tpd
-
-USE Quadrature_Mapping_Functions, &
-            ONLY :  Quad_Map
+USE Maps_Quadrature, &
+            ONLY :  Quad_Map,                   &
+                    Map_To_tpd
 
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR

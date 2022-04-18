@@ -18,9 +18,6 @@ USE Poseidon_Kinds_Module, &
 USE Initialization_Poseidon, &
                 ONLY :  Initialize_Poseidon
 
-USE Variables_IO, &
-                ONLY :  Write_Results_Flag
-
 USE Variables_MPI, &
                 ONLY :  ierr
 
@@ -36,8 +33,11 @@ USE Functions_Mesh, &
                 ONLY :  Create_3D_Mesh
 
 USE Poseidon_IO_Module, &
-                ONLY :  Open_Run_Report_File,       &
-                        Output_Final_Results
+                ONLY :  Open_Run_Report_File
+                        
+
+USE IO_Write_Final_Results, &
+                ONLY :  Write_Final_Results
 
 USE IO_Print_Results, &
                 ONLY :  Print_Results
@@ -195,15 +195,11 @@ PRINT*,"System Solved. "
 Call Output_Coeffs_Beta( FP_Coeff_Vector_Beta, Beta_Prob_Dim)
 
 
-IF (Verbose .EQV. .TRUE. ) THEN
+IF ( Verbose ) THEN
     CALL Print_Results()
+    CALL Write_Final_Results()
 END IF
 
-
-Write_Results_Flag = 1
-IF ( Write_Results_Flag == 1 ) THEN
-    CALL Output_Final_Results()
-END IF
 
 CALL Poseidon_Close()
 

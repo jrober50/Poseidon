@@ -28,7 +28,8 @@ USE Poseidon_Kinds_Module, &
             ONLY : idp
 
 USE Poseidon_Parameters, &
-            ONLY :  Verbose_Flag
+            ONLY :  Verbose_Flag,               &
+                    CFA_Eq_Flags
 
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,                      &
@@ -54,8 +55,7 @@ USE Variables_Derived, &
 
 USE Variables_FP,  &
             ONLY :  FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B,          &
-                    CFA_EQ_Flags
+                    FP_Coeff_Vector_B
 
 USE Variables_IO, &
             ONLY :  Write_Flags,                &

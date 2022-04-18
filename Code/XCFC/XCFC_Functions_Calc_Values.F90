@@ -76,17 +76,15 @@ USE Parameters_Variable_Indices, &
                     iU_X2,                      &
                     iU_X2
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
 
-USE Functions_Domain_Maps, &
-            ONLY :  Map_To_tpd,                 &
-                    Map_To_FEM_Node
+USE Maps_Domain, &
+            ONLY :  Map_To_FEM_Node,            &
+                    FEM_Elem_Map
 
-USE Functions_Mesh, &
-            ONLY :  FEM_Elem_Map
-
-
+USE Maps_Quadrature, &
+            ONLY :  Map_To_tpd
 
 IMPLICIT NONE
 

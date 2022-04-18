@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Functions_Domain_Maps                                           	     !##!
+MODULE Maps_Domain                                                     	     !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -34,6 +34,10 @@ USE Variables_Quadrature, &
                     Num_T_Quad_Points,          &
                     Num_P_Quad_Points
 
+USE Variables_AMReX_Core, &
+            ONLY :  Findloc_Table,      &
+                    FEM_Elem_Table,     &
+                    Table_Offsets
 
 
 IMPLICIT NONE
@@ -85,43 +89,35 @@ END FUNCTION Map_To_lm
 
 
 
-!+103+###########################################################################!
-!                                                                                !
-!                  FP_Vector_Map                                                  !
-!                                                                                !
-!################################################################################!
-PURE FUNCTION Map_To_tpd( td, pd )
+ !+701+################################################################!
+!                                                                       !
+!                   FEM_Elem_Map                                        !
+!                                                                       !
+ !#####################################################################!
+INTEGER FUNCTION FEM_Elem_Map( AMReX_Elem_Num, AMReX_Level )
 
-INTEGER                                     :: Map_To_tpd
+INTEGER, INTENT(IN)             ::  AMReX_Elem_Num
+INTEGER, INTENT(IN)             ::  AMReX_Level
 
-INTEGER, INTENT(IN)                         :: td, pd
-
-
-Map_To_tpd = (td-1)*Num_P_Quad_Points + pd
-
-
-END FUNCTION Map_To_tpd
+INTEGER                         ::  Here
+INTEGER                         ::  There
+INTEGER                         ::  Index
 
 
+Here  = Table_Offsets(AMReX_Level)
+There = Table_Offsets(AMReX_Level+1)-1
+
+Index = Findloc(Findloc_Table(Here:There), AMReX_Elem_Num, DIM=1)
 
 
-!+103+###########################################################################!
-!                                                                                !
-!                  FP_Vector_Map                                                  !
-!                                                                                !
-!################################################################################!
-PURE FUNCTION Map_To_rtpd( rd, td, pd )
+! Since the arrays start their indexing at 0,
+! and the Fortran standard is to start at 1,
+! Index-1 must be used as the array index.
+FEM_Elem_Map = FEM_Elem_Table(Index+ Table_Offsets(AMReX_Level)-1)
+                                            
 
-INTEGER                                     :: Map_To_rtpd
-
-INTEGER, INTENT(IN)                         :: rd, td, pd
-
-
-Map_To_rtpd = 0
-
-END FUNCTION Map_To_rtpd
+END FUNCTION FEM_Elem_Map
 
 
 
-
-END MODULE Functions_Domain_Maps
+END MODULE Maps_Domain

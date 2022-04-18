@@ -72,7 +72,7 @@ USE Variables_BC, &
                     INNER_CFA_BC_TYPE,          &
                     OUTER_CFA_BC_TYPE
 
-USE FP_Functions_Mapping, &
+USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map
 
 
@@ -742,36 +742,24 @@ DO ui = 3,5
     
     IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
-
         BC_Value = sqrt(4.0_idp*pi)*Inner_CFA_BC_VALUES(ui)
-
 
         DO d =  1,DEGREE
 
             Row = FP_Beta_Array_Map(Num_R_Elements-1, d, ui-2, 0, 0)
-
             Work_Vec(Row) = Work_Vec(Row) - First_Column_Beta_Storage(0,d,ui-2)*BC_Value
-            
-
+        
         END DO  ! d
 
 
         Row = (ui - 3) * LM_Length + 1
         WORK_VEC(Row) = BC_Value
 
-
-
-
         !!! MODIFY MATRIX !!!
 
         !!! ALREADY DONE IN Initalization !!
 
-
     END IF
-
-
-
-
 
 
 
@@ -779,6 +767,8 @@ DO ui = 3,5
     IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
         shift = 1
     END IF
+
+    
 
     IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
     
@@ -792,12 +782,12 @@ DO ui = 3,5
             END IF
             
 
+
             DO d = DEGREE-shift,0,-1
                 
                 Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui-2,lm)
                 
                 Work_Vec(Row) = Work_Vec(Row) - Last_Column_Beta_Storage(lm,d,ui-2)*BC_Value
-
 
             END DO  ! d
 

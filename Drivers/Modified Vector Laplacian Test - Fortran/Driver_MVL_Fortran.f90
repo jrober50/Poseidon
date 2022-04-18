@@ -42,11 +42,8 @@ USE Variables_MPI, &
 USE Variables_Functions, &
             ONLY :  Potential_Solution
 
-USE FP_Functions_Results , &
+USE Return_Functions_FP , &
             ONLY : Calc_1D_CFA_Values_FP
-
-USE Variables_Yahil, &
-            ONLY :  SelfSim_V_Switch
 
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_Results_Dir
@@ -71,15 +68,14 @@ USE Functions_Mesh, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
 USE Poseidon_IO_Module, &
-            ONLY :  Open_Run_Report_File,       &
-                    Output_Final_Results,       &
-                    Open_New_File,              &
-                    OPEN_FILE_INQUISITION,      &
-                    Output_Poseidon_Sources_3D
+            ONLY :  Open_Run_Report_File
+
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
@@ -173,7 +169,7 @@ REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_P_Quad
 REAL(idp)                                               ::  Left_Limit
 REAL(idp)                                               ::  Right_Limit
 
-
+INTEGER                                                 ::  i
 
 INTEGER                                                 ::  myID
 
@@ -246,7 +242,9 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "U"
 Solver_Type         = 3
 
-RE_Table            = (/ 10, 512, 3072, 4096, 5120, 17920, 512, 256, 512, 768 /)
+i                   = 0
+
+RE_Table            = (/ 10, 512, 1024, 4096, 5120, 17920, 512, 256, 512, 768 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
@@ -257,8 +255,8 @@ T_Index_Max         =  5
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  1
-RE_Index_Max        =  1
+RE_Index_Min        =  4
+RE_Index_Max        =  4
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -275,8 +273,6 @@ Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbati
 Kappa               = 953946015514834.4
 Gamma               = 1.30_idp
 
-SelfSim_V_Switch    =  0
-
 !Suffix_Tail         = "A"
 !Convergence_Criteria = 1.0E-8_idp
 
@@ -287,7 +283,7 @@ CC_Option           = 1.0E-10_idp
 
 Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 1.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1E5_idp                   ! Outer Radius (cm)
+Domain_Edge(2)      = 1.0E5_idp                   ! Outer Radius (cm)
 
 
 
@@ -318,7 +314,7 @@ Write_Results_T_Samps = 1
 CALL Set_Units(Units_Input)
 
 
-
+Domain_Edge(2) = Domain_Edge(2)/(10**i)
 Domain_Edge = Domain_Edge*Centimeter
 
 
@@ -338,7 +334,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(Mesh_Type)
+    Suffix_Tail = Letter_Table(i+1)
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -382,7 +378,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         Zoom = 1.032034864238313_idp,   &
                         Levels_In = AMReX_Levels       )
 
-    
+
+!    PRINT*,x_E
 
     !############################################################!
     !#                                                          #!
@@ -437,7 +434,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                             Input_P_Quad,       &
                             Left_Limit,         &
                             Right_Limit,        &
-                            Solver_Type,        &
                             myID,               &
                             Yahil_Params        )
 
@@ -453,7 +449,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !############################################################!
     CALL TimerStart( Timer_Driver_SetBC )
 
-    CALL Driver_SetBC( NE, x_e )
+    CALL Driver_SetBC( NE, x_e, i )
 
     CALL TimerStop( Timer_Driver_SetBC )
 
@@ -513,6 +509,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
         CALL Print_Single_Var_Results( iU_X1, iVB_X )
 
+
+        CALL Write_Final_Results((/ 1, 1, 1, 1, 1 /))
 
     END IF
 

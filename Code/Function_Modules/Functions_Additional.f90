@@ -47,7 +47,7 @@ USE Functions_Math, &
             ONLY :  Legendre_Poly,      &
                     Spherical_Harmonic
 
-USE Functions_Mapping,  &
+USE Maps_X_Space,  &
             ONLY :  Map_From_X_Space
 
 USE Functions_Quadrature, &

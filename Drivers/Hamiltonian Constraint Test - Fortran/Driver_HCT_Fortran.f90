@@ -13,82 +13,76 @@ PROGRAM HCT_Mapping                                                             
    !################################################################################!
 
 USE Poseidon_Kinds_Module, &
-                ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Numbers_Module, &
-                ONLY :  pi
+            ONLY :  pi
 
-USE Units_Module, &
-                ONLY :  C_Square,       &
-                        Set_Units,      &
-                        Centimeter,     &
-                        Gram
+USE Poseidon_Units_Module, &
+            ONLY :  C_Square,       &
+                    Set_Units,      &
+                    Centimeter,     &
+                    Gram
 
 USE Initialization_Poseidon, &
-                ONLY :  Initialize_Poseidon
+            ONLY :  Initialize_Poseidon
 
 USE Variables_IO, &
-                ONLY :  Write_Results_Flag,         &
-                        Write_Results_R_Samps,      &
-                        Write_Results_T_Samps,      &
-                        File_Suffix
+            ONLY :  Write_Results_R_Samps,      &
+                    Write_Results_T_Samps,      &
+                    File_Suffix
 
 USE Variables_MPI, &
-                ONLY :  ierr
-
-USE Variables_FP, &
-                ONLY :  FP_Coeff_Vector,            &
-                        FP_Coeff_Vector_Beta,       &
-                        FP_Source_Vector_Beta
-
-USE Poseidon_IO_Parameters, &
-                ONLY :  Poseidon_Results_Dir
-
+            ONLY :  ierr
 
 USE Functions_Mesh, &
-                ONLY :  Create_3D_Mesh
+            ONLY :  Create_3D_Mesh
 
 USE Functions_Quadrature, &
-                ONLY :  Initialize_LG_Quadrature_Locations
+            ONLY :  Initialize_LG_Quadrature_Locations
 
-USE Functions_Mapping, &
-                ONLY :  Map_From_X_Space
-
-USE Poseidon_IO_Module, &
-                ONLY :  Open_Run_Report_File,       &
-                        Output_Final_Results,       &
-                        Open_New_File,              &
-                        OPEN_FILE_INQUISITION
+USE Maps_X_Space, &
+            ONLY :  Map_From_X_Space
 
 USE IO_Print_Results, &
-                ONLY :  Print_Results
+            ONLY :  Print_Results
+
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
+
 
 USE IO_Convergence_Output, &
-                ONLY :  Output_Convergence_Data
+            ONLY :  Output_Convergence_Reports
 
 USE Poseidon_Main_Module, &
-                ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions,       &
-                        Poseidon_Run,                                       &
-                        Poseidon_Close
-
-USE FP_Method_Module, &
-                ONLY :  Solve_FP_System,        &
-                        Solve_FP_System_Beta
-
-USE FP_Initial_Guess_Module, &
-                ONLY :  Init_FP_Guess_Flat,     &
-                        Init_FP_Guess_Informed, &
-                        Input_FP_Guess
+            ONLY :  Poseidon_Run,                                       &
+                    Poseidon_Close
 
 USE FP_IO_Module, &
                 ONLY :  Output_FP_Timetable
 
+USE Driver_SetSource_Module, &
+            ONLY :  Driver_SetSource
 
-USE Source_Input_Module, &
-                ONLY :  Poseidon_Input_Sources
+USE Driver_SetBC_Module, &
+            ONLY :  Driver_SetBC
 
+USE Driver_SetGuess_Module, &
+            ONLY :  Driver_SetGuess
 
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,     &
+                    TimerStop
 
+USE Timer_Variables_Module, &
+            ONLY :  Timer_Driver_SetSource,     &
+                    Timer_Driver_SetBC,         &
+                    Timer_Driver_SetGuess,      &
+                    Timer_Driver_Run,           &
+                    Timer_Driver_Extra
+
+USE Poseidon_IO_Module, &
+            ONLY :  Open_Run_Report_File
 
 
 USE MPI
@@ -122,6 +116,7 @@ REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_e, y_e, z_e
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_c, y_c, z_c
 
 LOGICAL                                                 ::  Verbose
+LOGICAL                                                 ::  Print_Results_Flag
 LOGICAL                                                 ::  Flat_Guess
 
 INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
@@ -136,17 +131,9 @@ CHARACTER(LEN=10)                                       ::  Suffix_Input
 CHARACTER(LEN=1)                                        ::  Suffix_Tail
 
 REAL(idp)                                               ::  Alpha
-REAL(idp)                                               ::  Beta
-REAL(idp)                                               ::  C
-REAL(idp)                                               ::  rho_o
-REAL(idp)                                               ::  uaR
-REAL(idp)                                               ::  fofalpha
-
 REAL(idp)                                               ::  Star_Radius
 
-REAL(idp)                                               ::  Psi_BC
 
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Cur_R_Locs
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_T_Quad
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_P_Quad
@@ -166,6 +153,8 @@ INTEGER                                                 ::  myID
 INTEGER                                                 ::  re, rq, i
 
 INTEGER                                                 ::  Guess_Type
+INTEGER                                                 ::  AMReX_Levels
+REAL(idp)                                               ::  CC_Option
 
 INTEGER, DIMENSION(:), ALLOCATABLE                      ::  RE_Table
 
@@ -191,12 +180,10 @@ INTEGER                                                 ::  Tolerance_Index_Max
 
 REAL(idp)                                               ::  Perturbation
 
-INTEGER                                                 ::  HCT_Fileid
-CHARACTER(LEN = 100)                                    ::  HCT_Filename
-
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 REAL(idp), DIMENSION(1:7)                               ::  Tolerance_Values
 CHARACTER(LEN=1), DIMENSION(1:7)                        ::  Tolerance_Letters
+
 
 CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
@@ -231,11 +218,11 @@ Degree_Max          =  1
 L_Limit_Min         =  0
 L_Limit_Max         =  0
 
-Guess_Type          =  3            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
+Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
 
 Alpha               =  sqrt(5.0_idp)
-Star_Radius         =  1.0E+9_idp               ! (cm)
+Star_Radius         =  1.0E+10_idp               ! (cm)
 
 !Suffix_Tail         = "A"
 !Convergence_Criteria = 1.0E-8_idp
@@ -243,6 +230,8 @@ Star_Radius         =  1.0E+9_idp               ! (cm)
 Dimension_Input     = 3
 
 Max_Iterations      = 3
+CC_Option           = 1.0E-10_idp
+
 
 Mesh_Type           = 1
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
@@ -258,8 +247,10 @@ NQ(2)               = 2                         ! Number of Theta Quadrature Poi
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-!Verbose             = .FALSE.
 Verbose             = .TRUE.
+!Verbose             = .FALSE.
+Print_Results_Flag  = .TRUE.
+!Print_Results_Flag  = .FALSE.
 Suffix_Input        = "Params"
 
 CFA_Eqs = (/ 1, 0, 0, 0, 0 /)
@@ -291,18 +282,13 @@ DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     NE(1) = RE_Table(RE_Index)
+    NQ(3) = 2*L_Limit_Input + 1
     Suffix_Tail = Tolerance_Letters(Tol_Index)
 
 
 
-    WRITE(*,'(A,I4.4,A,I1.1,A,ES28.15)')" # RE       : ", NE(1),          &
-                                        " FEM Degree : ", Degree_Input,  &
-                                        " Tolerance  : ", Tolerance_Values(Tol_Index)
-
-
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
-    ALLOCATE( Cur_R_Locs(1:NQ(1)) )
     ALLOCATE( Input_R_Quad(1:NQ(1)) )
     ALLOCATE( Input_T_Quad(1:NQ(2)) )
     ALLOCATE( Input_P_Quad(1:NQ(3)) )
@@ -346,7 +332,9 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                          NE(3),             &
                          x_e, x_c, dx_c,    &
                          y_e, y_c, dy_c,    &
-                         z_e, z_c, dz_c     )
+                         z_e, z_c, dz_c,     &
+                         Zoom = 1.032034864238313_idp,   &
+                         Levels_In = AMReX_Levels       )
 
 !    DO re = 0,NE(1)
 !
@@ -364,27 +352,32 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     CALL Initialize_Poseidon &
-        (   Dimensions_Option           = Dimension_Input,               &
-            FEM_Degree_Option           = Degree_Input,                  &
-            L_Limit_Option              = L_Limit_Input,                 &
-            Units_Option                = Units_Input,                   &
-            Domain_Edge_Option          = Domain_Edge,                   &
-            NE_Option                   = NE,                            &
-            NQ_Option                   = NQ,                            &
-            r_Option                    = x_e,                           &
-            t_Option                    = y_e,                           &
-            p_Option                    = z_e,                           &
-    !        dr_Option                   = dx_c,                          &
-    !        dt_Option                   = dy_c,                          &
-    !        dp_Option                   = dz_c                           &
-            Suffix_Flag_Option          = Suffix_Input,                 &
-            Suffix_Tail_Option          = Suffix_Tail,                  &
-            Solver_Type_Option          = Solver_Type,                  &
-            CFA_Eq_Flags_Option         = CFA_Eqs,                      &
-            Max_Iterations_Option       = Max_Iterations,               &
-            Convergence_Criteria_Option = Tolerance_Values(Tol_Index),  &
-            Anderson_M_Option           = Anderson_M_Values(M_Index),   &
-            Verbose_Option              = Verbose                       )
+       (   Dimensions_Option           = Dimension_Input,               &
+           FEM_Degree_Option           = Degree_Input,                  &
+           L_Limit_Option              = L_Limit_Input,                 &
+           Units_Option                = Units_Input,                   &
+           Domain_Edge_Option          = Domain_Edge,                   &
+           NE_Option                   = NE,                            &
+           NQ_Option                   = NQ,                            &
+           r_Option                    = x_e,                           &
+           t_Option                    = y_e,                           &
+           p_Option                    = z_e,                           &
+           Suffix_Flag_Option          = Suffix_Input,                  &
+           Suffix_Tail_Option          = Suffix_Tail,                   &
+           Method_Flag_Option          = Solver_Type,                   &
+           CFA_Eq_Flags_Option         = CFA_Eqs,                       &
+           Max_Iterations_Option       = Max_Iterations,                &
+           Convergence_Criteria_Option = CC_Option,                     &
+           Anderson_M_Option           = Anderson_M_Values(M_Index),    &
+           Verbose_Option              = Verbose,                       &
+           WriteAll_Option             = .FALSE.,                       &
+           Print_Setup_Option          = .TRUE.,                        &
+           Write_Setup_Option          = .TRUE.,                       &
+           Print_Results_Option        = Print_Results_Flag,            &
+           Write_Results_Option        = .TRUE.,                        &
+           Print_Timetable_Option      = .FALSE.,                       &
+           Write_Timetable_Option      = .TRUE.,                       &
+           Write_Sources_Option        = .TRUE.                        )
 
 
 
@@ -396,50 +389,20 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
+    CALL TimerStart( Timer_Driver_SetSource )
 
+    CALL Driver_SetSource(  NE, NQ,             &
+                            dx_c, x_e, y_e,     &
+                            Input_R_Quad,       &
+                            Input_T_Quad,       &
+                            Input_P_Quad,       &
+                            Left_Limit,         &
+                            Right_Limit,        &
+                            myID,               &
+                            Alpha,              &
+                            Star_Radius         )
 
-    WRITE(HCT_Filename,'(A,A,A,A)') Poseidon_Results_Dir,"HCT_Params_",TRIM(File_Suffix),".out"
-    Call Open_New_File(HCT_Filename,HCT_Fileid)
-    WRITE(HCT_Fileid,'(2ES22.15)') Alpha, Star_Radius/Centimeter
-    CLOSE( HCT_Fileid)
-
-
-    fofalpha            =  Alpha**5/(1.0_idp+Alpha*Alpha)**3
-
-    rho_o               =  (3.0_idp/(2.0_idp*pi*Star_Radius*Star_Radius) )*fofalpha*fofalpha
-    uaR                 =  sqrt(Alpha/((1.0_idp+Alpha*Alpha)*Star_Radius))
-    C                   =  1.0_idp/sqrt(sqrt( (2.0_idp/3.0_idp)*pi*rho_o  ) )
-    Beta                =  (C*uaR-1.0_idp)*Star_Radius
-
-
-    DO re = 1,NE(1)
-        Cur_R_Locs(:) = dx_c(re)*(Input_R_Quad(:) + Left_Limit)+  x_e(re)
-
-        DO rq = 1,NQ(1)
-
-            IF ( cur_r_locs(rq) .LE. Star_Radius ) THEN
-                Local_E(rq, re-1, 0, 0) = rho_o
-    !            Print*,Local_E(rq, re-1, 0, 0)
-            ELSE
-                Local_E(rq, re-1, 0, 0) = 0.0_idp
-            END IF
-!            PRINT*,Cur_r_locs(rq), STar_radius,Local_E(rq, re-1, 0, 0)
-        END DO ! rq
-    END DO ! re
-
-
-    Local_S  = 0.0_idp
-    Local_Si = 0.0_idp
-
-    CALL Poseidon_Input_Sources(    myID, myID, myID,                           &
-                                    Local_E, Local_S, Local_Si,                 &
-                                    NE(1), NE(2), NE(3),                        &
-                                    NQ(1), NQ(2), NQ(3),                        &
-                                    Input_R_Quad, Input_T_Quad, Input_P_Quad,   &
-                                    Left_Limit, Right_Limit                     )
-
-
-
+    CALL TimerStop( Timer_Driver_SetSource )
 
 
 
@@ -452,22 +415,11 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#          Calculate and Set Boundary Conditions           #!
     !#                                                          #!
     !############################################################!
+    CALL TimerStart( Timer_Driver_SetBC )
 
-    Psi_BC = HCT_Solution( Domain_Edge(2), Alpha, Beta, C, Star_Radius )
+    CALL Driver_SetBC( Domain_Edge(2), Alpha, Star_Radius )
 
-    PRINT*,"Psi_BC ",Psi_BC
-    INNER_BC_TYPES = (/"N", "N","N","N","N"/)
-    OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
-
-
-    INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
-    OUTER_BC_VALUES = (/Psi_BC,  0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
-
-
-    CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
-    CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
-
-
+    CALL TimerStop( Timer_Driver_SetBC )
 
 
 
@@ -480,69 +432,19 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#              Calculate and Set Initial Guess             #!
     !#                                                          #!
     !############################################################!
+    CALL TimerStart( Timer_Driver_SetGuess )
 
-    IF ( Guess_Type == 1 ) THEN
+    CALL Driver_SetGuess(   NE, NQ,             &
+                            dx_c, x_e,          &
+                            Input_R_Quad,       &
+                            Input_T_Quad,       &
+                            Input_P_Quad,       &
+                            Left_Limit,         &
+                            Right_Limit,        &
+                            Guess_Type          )
 
-        CALL Init_FP_Guess_flat()
-    END IF
+    CALL TimerStop( Timer_Driver_SetGuess )
 
-
-    IF ( Guess_Type == 2 ) THEN
-    !     Lapse function Coefficients in 1D correspond to the value of the function
-    !     at the location of the FEM nodes.
-
-        DO re = 1,NE(1)
-            Cur_R_Locs(:) = dx_c(re)*(Input_R_Quad(:) + Left_Limit)+  x_e(re)
-            DO rq = 1,NQ(1)
-
-                Psi_Guess(rq, re-1, 0, 0) = HCT_Solution( Cur_R_Locs(rq), Alpha, Beta, C, Star_Radius )
-    !            PRINT*,Cur_R_locs(rq),Test_Solution(rq, re-1,0,0)
-
-            END DO ! rq
-        END DO ! re
-
-        AlphaPsi_Guess = 0.0_idp
-        Beta_Guess = 0.0_idp
-
-        CALL Input_FP_Guess( Psi_Guess,                                  &
-                             AlphaPsi_Guess,                             &
-                             Beta_Guess,                                 &
-                             NE(1), NE(2), NE(3),                       &
-                             NQ(1), NQ(2), NQ(3),                       &
-                             Input_R_Quad, Input_T_Quad, Input_P_Quad,  &
-                             Left_Limit, Right_Limit                    )
-
-    END IF
-
-
-IF ( Guess_Type == 3 ) THEN
-!     Lapse function Coefficients in 1D correspond to the value of the function
-!     at the location of the FEM nodes.  These have been perturbed.
-
-    DO re = 1,NE(1)
-        Cur_R_Locs(:) = dx_c(re)*(Input_R_Quad(:) + Left_Limit)+  x_e(re)
-        DO rq = 1,NQ(1)
-
-            Psi_Guess(rq, re-1, 0, 0)                                   &
-                = HCT_Perturbed_Solution( Cur_R_Locs(rq), Alpha, Beta, C,   &
-                                          Star_Radius, Perturbation, Domain_Edge(2)  )
-!            PRINT*,Cur_R_locs(rq), Psi_Guess(rq, re-1,0,0)
-
-        END DO ! rq
-    END DO ! re
-    AlphaPsi_Guess = 0.0_idp
-    Beta_Guess = 0.0_idp
-
-
-    CALL Input_FP_Guess( Psi_Guess,                                  &
-                         AlphaPsi_Guess,                             &
-                         Beta_Guess,                                 &
-                         NE(1), NE(2), NE(3),                       &
-                         NQ(1), NQ(2), NQ(3),                       &
-                         Input_R_Quad, Input_T_Quad, Input_P_Quad,  &
-                         Left_Limit, Right_Limit                    )
-
-END IF
 
 
 
@@ -571,8 +473,8 @@ END IF
 
 
     !Write_Results_Flag = 1
-    IF ( Write_Results_Flag == 1 ) THEN
-        CALL Output_Convergence_Data()
+    IF ( .FALSE. ) THEN
+!        CALL Output_Convergence_Reports()
         CALL Output_Final_Results()
         CALL Output_FP_Timetable()
     END IF
@@ -590,7 +492,6 @@ END IF
 
     CALL Poseidon_Close()
 
-    DEALLOCATE( Cur_R_Locs )
     DEALLOCATE( Input_R_Quad )
     DEALLOCATE( Input_T_Quad )
     DEALLOCATE( Input_P_Quad )

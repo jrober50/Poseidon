@@ -28,6 +28,18 @@ USE Poseidon_Units_Module, &
            ONLY :  Set_Units,      &
                    Centimeter
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iVB_X,                      &
+                    iVB_S,                      &
+                    iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X3
+
 USE Initialization_AMReX, &
             ONLY :  Initialize_Poseidon_with_AMReX
 
@@ -47,7 +59,7 @@ USE Functions_Mesh, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
            ONLY :  Map_From_X_Space
 
 USE Poseidon_IO_Module, &
@@ -74,6 +86,12 @@ USE Driver_SetGuess_Module, &
 
 USE FP_IO_Module, &
             ONLY :  Output_FP_Timetable
+
+USE IO_Print_Results, &
+            ONLY :  Print_Single_Var_Results
+
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 USE Poseidon_AMReX_Input_Parsing_Module, &
             ONLY : Init_AMReX_Parameters
@@ -206,7 +224,7 @@ ALLOCATE( RE_Table(1:9) )
 !#                      Test Parameters                     #!
 !#                                                          #!
 !############################################################!
-Units_Input         = "G"
+Units_Input         = "U"
 Solver_Type         = 3
 
 RE_Table            = (/ 32, 128, 160, 240, 320, 400, 600, 256, 512 /)
@@ -265,7 +283,7 @@ Suffix_Input        = "Params"
 
 
 
-CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
+CFA_Eqs =  (/ 0, 0, 0, 0, 0 /)
 
 
 Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
@@ -283,8 +301,8 @@ CALL Init_AMReX_Parameters()
 
 
 
-Domain_Edge = Domain_Edge*Centimeter
-
+Domain_Edge(1) = xL(1)*Centimeter
+Domain_Edge(2) = xR(1)*Centimeter
 
 
 
@@ -439,14 +457,13 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     IF (Verbose .EQV. .TRUE. ) THEN
-        CALL MPI_Barrier(Poseidon_Comm_World, ierr )
-        DO i = 0,nPROCS_Poseidon-1
-            IF (myID_Poseidon == i ) THEN
-                PRINT*,"Final Results ",myID_Poseidon
-                CALL Print_Results()
-            END IF
-            CALL MPI_Barrier(Poseidon_Comm_World, ierr)
-        END DO
+        WRITE(*,'(A)')" Final Results "
+
+
+        CALL Print_Single_Var_Results( iU_X1, iVB_X )
+
+
+        CALL Write_Final_Results((/ 1, 1, 1, 1, 1 /))
     END IF
 
 

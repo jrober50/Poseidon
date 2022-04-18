@@ -125,12 +125,13 @@ IF ( r == rlocs(0) ) THEN
     DO u = 1,NUM_CFA_VARS
         DO l = 0,L_Limit
             DO m = -M_VALUES(l),M_VALUES(l)
-        
-
 
                 TMP_VALUE_A = Spherical_Harmonic(l,m,theta,phi)
                 Current_Location =  Matrix_Location( u, l, m, 0, 0 )
-                Tmp_U_Value(u) = Tmp_U_Value(u) + NR_Coeff_Vector(Current_Location) * TMP_VALUE_A
+
+                Tmp_U_Value(u) = Tmp_U_Value(u)                         &
+                                + NR_Coeff_Vector(Current_Location)     &
+                                * TMP_VALUE_A
                 
                 
             END DO ! m Loop

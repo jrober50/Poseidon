@@ -31,11 +31,6 @@ USE Variables_Mesh, &
             ONLY :  locs_Set,   &
                     dlocs_Set
 
-USE Variables_AMReX_Core, &
-            ONLY :  Findloc_Table,      &
-                    FEM_Elem_Table,     &
-                    Table_Offsets
-
 USE Poseidon_Units_Module, &
             ONLY :  C_Square,        &
                     Set_Units,       &
@@ -98,9 +93,6 @@ INTEGER                                                     ::  ns
 INTEGER                                                     ::  Levels_Out
 INTEGER                                                     ::  Error_Num
 
-
-
-PRINT*,"Mesh_TYPe",Mesh_Type
 
 SELECT CASE (Mesh_Type)
 CASE( 1 ) ! Uniform Mesh
@@ -539,6 +531,8 @@ REAL(KIND = idp), DIMENSION(1:nx),  INTENT(OUT)         ::  dx_c
 INTEGER                                                 ::  i
 
 dx_c(1:nx) = (Outer_Edge - Inner_Edge)/REAL(nx, KIND = idp)
+
+
 
 x_e(0) = Inner_Edge
 DO i = 1,nx
@@ -1148,39 +1142,6 @@ END SUBROUTINE Create_AMReX_Mimic_Mesh
 
 
 
-
-
-
-
-
- !+701+################################################################!
-!                                                                       !
-!                   FEM_Elem_Map                                        !
-!                                                                       !
- !#####################################################################!
-INTEGER FUNCTION FEM_Elem_Map( AMReX_Elem_Num, AMReX_Level )
-
-INTEGER, INTENT(IN)             ::  AMReX_Elem_Num
-INTEGER, INTENT(IN)             ::  AMReX_Level
-
-INTEGER                         ::  Here
-INTEGER                         ::  There
-INTEGER                         ::  Index
-
-
-Here  = Table_Offsets(AMReX_Level)
-There = Table_Offsets(AMReX_Level+1)-1
-
-Index = Findloc(Findloc_Table(Here:There), AMReX_Elem_Num, DIM=1)
-
-
-! Since the arrays start their indexing at 0,
-! and the Fortran standard is to start at 1,
-! Index-1 must be used as the array index.
-FEM_Elem_Map = FEM_Elem_Table(Index+ Table_Offsets(AMReX_Level)-1)
-                                            
-
-END FUNCTION FEM_Elem_Map
 
 
 END MODULE Functions_Mesh

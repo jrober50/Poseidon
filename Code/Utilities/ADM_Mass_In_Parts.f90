@@ -70,11 +70,9 @@ USE Variables_Mesh, &
 USE Variables_Source, &
             ONLY :  Block_Source_E
 
-USE Functions_Domain_Maps, &
-            ONLY :  Map_To_tpd
-
-USE Quadrature_Mapping_Functions, &
-            ONLY :  Quad_Map
+USE Maps_Quadrature, &
+            ONLY :  Map_To_tpd,                 &
+                    Quad_Map
 
 USE XCFC_Functions_Calc_Values_Module, &
             ONLY :  Calc_Val_On_Elem_TypeA,         &

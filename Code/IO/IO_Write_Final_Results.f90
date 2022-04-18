@@ -63,7 +63,8 @@ USE Poseidon_Parameters, &
                     Poseidon_Frame,         &
                     Convergence_Type,       &
                     Convergence_Flag,       &
-                    Max_Iterations
+                    Max_Iterations,         &
+                    CFA_Eq_Flags
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
@@ -111,9 +112,10 @@ USE Variables_Functions, &
             ONLY :  Potential_Solution,         &
                     Shift_Solution,             &
                     Calc_3D_Values_at_Location, &
-                    Calc_1D_CFA_Values,         &
-                    Calc_Var_At_Loc_A,          &
-                    Calc_Var_At_Loc_B
+                    Calc_1D_CFA_Values
+
+USE Return_Routines_Main, &
+            ONLY :  Calc_Var_at_Location
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations,     &
@@ -137,12 +139,10 @@ USE Poseidon_IO_Parameters, &
 USE Functions_Info,   &
             ONLY  : PQ_ITERATIONS_MAX
 
-USE IO_File_Routines_Module, &
+USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File,                  &
                     Open_Existing_File
 
-USE Variables_FP, &
-            ONLY :  CFA_Eq_Flags
 
 
 
@@ -159,7 +159,11 @@ CONTAINS
 !          Write_Final_Results                                              !
 !                                                                           !
  !#########################################################################!
-SUBROUTINE Write_Final_Results()
+SUBROUTINE Write_Final_Results( Output_Locations_Flag, CFA_Eq_Overide )
+
+
+INTEGER,    INTENT(IN), OPTIONAL                            ::  Output_Locations_Flag
+INTEGER,    INTENT(IN), OPTIONAL,   DIMENSION(1:5)          ::  CFA_Eq_Overide
 
 
 CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
@@ -199,14 +203,31 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
 REAL(idp), DIMENSION(6)                          ::  Units
 REAL(idp)                                                   ::  CF
 
+INTEGER, DIMENSION(1:5)                                     ::  CFA_Eq_Flag_Used
+INTEGER                                                     ::  Output_Locations_Mode
+
 116 FORMAT (A,A,A,A,A,A)
+
+
+IF ( PRESENT(CFA_Eq_Overide) ) THEN
+    CFA_Eq_Flag_Used = CFA_Eq_Overide
+ELSE
+    CFA_Eq_Flag_Used = CFA_Eq_Flags
+END IF
+
+IF ( PRESENT(Output_Locations_Flag) ) THEN
+    Output_Locations_Mode = 1  ! Default is radially nodal, angularly uniform.
+ELSE
+    Output_Locations_Mode = Output_Locations_Flag
+END IF
+
 
 
 
 IF ( Write_Flags(iWF_Results) > 1 ) THEN
 
 
-    Num_Files = 4 + SUM(CFA_Eq_Flags)+1
+    Num_Files = 4 + SUM(CFA_Eq_Flag_Used)+1
 
     ALLOCATE( Filenames(1:Num_Files) )
     ALLOCATE( File_IDs(1:Num_Files) )
@@ -220,7 +241,7 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
     WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
     Here = 5
     DO i = 1,5
-        IF ( CFA_Eq_Flags(i) == 1 ) THEN
+        IF ( CFA_Eq_Flag_Used(i) == 1 ) THEN
             Here = 5 + i - 1
             WRITE(Filenames(Here),116)                &
                     Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
@@ -241,6 +262,10 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
     DO i = 1,Num_Files
         CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i), 200 )
     END DO
+
+
+
+    
 
 
     NUM_RADIAL_SAMPLES = WRITE_RESULTS_R_SAMPS
@@ -313,14 +338,14 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
 !        Var_Holder(k,j,i,3:5) = (/ Return_Beta1, Return_Beta2, Return_Beta3 /)
 
 
-        CF = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_CF)
+        CF = Calc_Var_at_Location(Output_re(i),theta_Val,phi_val, iU_CF)
 
         Var_Holder(k,j,i,1) = CF
-        Var_Holder(k,j,i,2) = Calc_Var_At_Loc_A(Output_re(i),theta_Val,phi_val, iU_LF)/CF
-        Var_Holder(k,j,i,3) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S1, iVB_S)
-        Var_Holder(k,j,i,4) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S2, iVB_S)
-        Var_Holder(k,j,i,5) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_S3, iVB_S)
-        Var_Holder(k,j,i,6) = Calc_Var_At_Loc_B(Output_re(i),theta_Val,phi_val, iU_X1, iVB_X)
+        Var_Holder(k,j,i,2) = Calc_Var_at_Location(Output_re(i),theta_Val,phi_val, iU_LF)/CF
+        Var_Holder(k,j,i,3) = Calc_Var_at_Location(Output_re(i),theta_Val,phi_val, iU_S1, iVB_S)
+        Var_Holder(k,j,i,4) = Calc_Var_at_Location(Output_re(i),theta_Val,phi_val, iU_S2, iVB_S)
+        Var_Holder(k,j,i,5) = Calc_Var_at_Location(Output_re(i),theta_Val,phi_val, iU_S3, iVB_S)
+        Var_Holder(k,j,i,6) = Calc_Var_at_Location(Output_re(i),theta_Val,phi_val, iU_X1, iVB_X)
 
         R_Holder(i) = output_re(i)
         T_Holder(j) = THETA_VAL
@@ -349,7 +374,7 @@ IF ( Write_Flags(iWF_Results) > 1 ) THEN
 
     Here = 5
     DO i = 1,5
-        IF ( CFA_Eq_Flags(i) == 1 ) THEN
+        IF ( CFA_Eq_Flag_Used(i) == 1 ) THEN
             DO k = 1,NUM_PHI_RAYS
             DO j = 1,NUM_THETA_RAYS
     
@@ -375,6 +400,14 @@ END IF
 
 
 END SUBROUTINE Write_Final_Results
+
+
+
+
+
+
+
+
 
 
 

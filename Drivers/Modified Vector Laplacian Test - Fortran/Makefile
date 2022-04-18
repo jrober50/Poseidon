@@ -1,4 +1,4 @@
-DRIVER_NAME    =MVL_Driver
+DRIVER_NAME    =Driver_MVL_Fortran
 
 
 ## Select Number of Processes (Mostly for MacBook)
@@ -51,7 +51,7 @@ include ../../Build/Makefile_Core
 include Makefile_Driver
 
 
-Mapping : $(POSEIDON_o) $(DRIVER_o)
+Main : $(POSEIDON_o) $(DRIVER_o)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(DRIVER_NAME).f90  -o $(OBJ)/$(DRIVER_NAME).o
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/$(DRIVER_NAME).x

@@ -24,10 +24,19 @@ MODULE Driver_SetBC_Module                                                   !##
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-            ONLY :  idp
+        ONLY :  idp
 
 USE Poseidon_Parameters, &
-            ONLY :  Verbose_Flag
+        ONLY :  Verbose_Flag
+
+USE Poseidon_Numbers_Module, &
+        ONLY :  pi
+
+USE Poseidon_Units_Module, &
+        ONLY :  C_Square
+
+USE Variables_Functions, &
+        ONLY :  Potential_Solution
 
 USE Poseidon_Main_Module, &
         ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions
@@ -45,7 +54,12 @@ CONTAINS
 !   Driver_SetBC                                                                !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Driver_SetBC( )
+SUBROUTINE Driver_SetBC( Domain_Edge, Alpha, Star_Radius )
+
+REAL(idp), INTENT(IN)                                   ::  Domain_Edge
+REAL(idp), INTENT(IN)                                   ::  Alpha
+REAL(idp), INTENT(IN)                                   ::  Star_Radius
+
 
 REAL(idp)                                               ::  Psi_BC
 REAL(idp)                                               ::  AlphaPsi_BC
@@ -56,16 +70,29 @@ CHARACTER(LEN=1), DIMENSION(1:5)                        ::  OUTER_BC_TYPES
 REAL(idp), DIMENSION(1:5)                               ::  INNER_BC_VALUES
 REAL(idp), DIMENSION(1:5)                               ::  OUTER_BC_VALUES
 
+REAL(idp)                                               ::  Beta
+REAL(idp)                                               ::  C
+REAL(idp)                                               ::  rho_o
+REAL(idp)                                               ::  uaR
+REAL(idp)                                               ::  fofalpha
+
 
 IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A)')"In Driver, Setting Boundary Conditions."
+    WRITE(*,'(A)')"-Calculating Boundary Conditions."
 END IF
 
+fofalpha            =  Alpha**5/(1.0_idp+Alpha*Alpha)**3
+
+rho_o               =  (3.0_idp/(2.0_idp*pi*Star_Radius*Star_Radius) )*fofalpha*fofalpha
+uaR                 =  sqrt(Alpha/((1.0_idp+Alpha*Alpha)*Star_Radius))
+C                   =  1.0_idp/sqrt(sqrt( (2.0_idp/3.0_idp)*pi*rho_o  ) )
+Beta                =  (C*uaR-1.0_idp)*Star_Radius
 
 
-Psi_BC          = 1.0_idp
+Psi_BC          = HCT_Solution( Domain_Edge, Alpha, Beta, C, Star_Radius )
 AlphaPsi_BC     = 1.0_idp
 Shift_Vector_BC = 0.0_idp
+
 
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)
@@ -76,9 +103,12 @@ INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
 
+IF ( Verbose_Flag ) THEN
+    WRITE(*,'(A)')"-Setting Boundary Conditions"
+END IF
+
 CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
 CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
-
 
 
 END SUBROUTINE Driver_SetBC
@@ -89,6 +119,33 @@ END SUBROUTINE Driver_SetBC
 
 
 
+!############################################################!
+!#                                                          #!
+!#                   HCT_Solution Function                  #!
+!#                                                          #!
+!############################################################!
+REAL FUNCTION HCT_Solution( r, Alpha, Beta, C, Star_Radius )
+
+REAL(idp), INTENT(IN)                      ::   r
+REAL(idp), INTENT(IN)                      ::   Alpha
+REAL(idp), INTENT(IN)                      ::   Beta
+REAL(idp), INTENT(IN)                      ::   C
+REAL(idp), INTENT(IN)                      ::   Star_Radius
+
+
+IF ( r .LE. Star_Radius ) THEN
+
+    HCT_Solution = C*SQRT( (Alpha*Star_Radius)/(r*r + (Alpha*Star_Radius)**2 ) )
+
+ELSE
+
+    HCT_Solution = Beta/r + 1.0_idp
+
+END IF
+
+ 
+
+END FUNCTION HCT_Solution
 
 END MODULE Driver_SetBC_Module
 
