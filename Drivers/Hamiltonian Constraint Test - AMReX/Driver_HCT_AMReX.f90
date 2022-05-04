@@ -171,9 +171,15 @@ INTEGER                                                 ::  T_Index
 INTEGER                                                 ::  T_Index_Min
 INTEGER                                                 ::  T_Index_Max
 
-REAL(idp)                                               ::  Kappa
-REAL(idp)                                               ::  Gamma
-REAL(idp), DIMENSION(3)                                 ::  Yahil_Params
+INTEGER                                                 ::  Tol_Index
+INTEGER                                                 ::  Tolerance_Index_Min
+INTEGER                                                 ::  Tolerance_Index_Max
+
+INTEGER                                                 ::  External_Iter
+INTEGER                                                 ::  External_Iter_Max
+
+REAL(idp)                                               ::  Alpha
+REAL(idp)                                               ::  Star_Radius
 
 CHARACTER(len=60)                                       ::  AMReX_Profile_Input
 
@@ -183,7 +189,7 @@ REAL(idp)                                               ::  CC_Option
 
 INTEGER                                                 ::  IRL
 INTEGER                                                 ::  IFL
-
+REAL(idp), DIMENSION(1:7)                               ::  Tolerance_Values
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
 REAL(idp), DIMENSION(1:6)                               ::  Time_Values
@@ -209,10 +215,9 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "G"
 Solver_Type         = 3
 
-RE_Table            = (/ 32, 128, 160, 240, 320, 400, 600, 256, 512 /)
-Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
-L_Values            = (/ 5, 10 /)
+RE_Table          = (/ 32, 64, 128, 256, 512, 1024, 2048, 1000 /)
+Anderson_M_Values = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
+Tolerance_Values  = (/ 1.0E-6, 1.0E-8, 1.0E-10, 1.0E-12, 1.0E-14, 1.0E-16, 1.0E-30 /)
 
 T_Index_Min         =  5
 T_Index_Max         =  5
@@ -234,8 +239,8 @@ IRL                 =  0
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 
-Kappa               = 953946015514834.4
-Gamma               = 1.30_idp
+Alpha               =  sqrt(5.0_idp)
+Star_Radius         =  1.0E+5_idp               ! (cm)
 
 !Suffix_Tail         = "A"
 !Convergence_Criteria = 1.0E-8_idp
@@ -263,8 +268,6 @@ Verbose             = .TRUE.
 !Verbose             = .FALSE.
 Suffix_Input        = "Params"
 
-!AMReX_Profile_Input = 'SingleLayer'
-AMReX_Profile_Input = 'TwoLayer'
 
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)

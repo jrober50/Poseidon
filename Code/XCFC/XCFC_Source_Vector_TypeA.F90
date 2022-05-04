@@ -168,8 +168,8 @@ USE Variables_AMReX_Core, &
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,         &
                     Mask_PTR,           &
-                    iCoarse,            &
-                    iFine
+                    iTrunk,             &
+                    iLeaf
 
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
@@ -447,8 +447,8 @@ DO d = 0,DEGREE
                * R_Int_Weights(rd)
 
 !        IF ( iU == iU_CF ) THEN
-!            PRINT*,level,iE,d,rd
-!
+!            PRINT*,iE(1),d,rd, RHS_TMP
+!!
 !            PRINT*,SourceTerm( :, rd, iU )
 !            PRINT*,"++++++++++++++++++++++"
 !            PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
@@ -461,11 +461,6 @@ DO d = 0,DEGREE
 !            * TP_Int_Weights(:)                     ),      &
 !            Lagrange_Poly_Table( d, rd, 0),                 &
 !            R_Int_Weights(rd)
-!            PRINT*,""
-!            PRINT*,""
-!            PRINT*,""
-!            PRINT*,""
-!            PRINT*,""
 !        END IF
 
 
@@ -631,12 +626,16 @@ IF ( iU == iU_CF ) THEN
 !    PRINT*,PhysSrc(:,:)
 !    PRINT*,"3"
 !    PRINT*,AA_Array(:,:)
-    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar / Cur_Val_Psi(:,:)   &
+!    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar / Cur_Val_Psi(:,:)   &
+!                        * PhysSrc(:,:)                                  &
+!                      -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
+!                        * AA_Array(:,:)
+
+
+    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar * Cur_Val_Psi(:,:)**5   &
                         * PhysSrc(:,:)                                  &
                       -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
                         * AA_Array(:,:)
-
-
 
 ELSEIF ( iU == iU_LF ) THEN
 
@@ -698,7 +697,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                                   MF_Source(lvl)%ba,        &
                                   MF_Source(lvl)%dm,        &
                                   MF_Source(lvl+1)%ba,      &
-                                  iCoarse, iFine            )
+                                  iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -706,7 +705,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                                     MF_Source(lvl)%dm,      &
                                     1,                      &
                                     0                       )
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
 
@@ -732,7 +731,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
             
-            IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
                 CALL Initialize_Ylm_Tables_On_Elem( te, pe, iEL, lvl )
                 iE = [re,te,pe]
                 CALL XCFC_Calc_Source_Vector_On_Element_TypeA( iU, iE, lvl )

@@ -82,8 +82,8 @@ USE Variables_Driver_AMReX, &
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,         &
                     Mask_PTR,           &
-                    iCoarse,            &
-                    iFine
+                    iLeaf,            &
+                    iTrunk
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
@@ -433,7 +433,7 @@ DO lvl = 0,AMReX_Num_Levels-1
                                   MF_Source(lvl)%ba,        &
                                   MF_Source(lvl)%dm,        &
                                   MF_Source(lvl+1)%ba,      &
-                                  iCoarse, iFine   )
+                                  iLeaf, iTrunk   )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -441,7 +441,7 @@ DO lvl = 0,AMReX_Num_Levels-1
                                     MF_Source(lvl)%dm,      &
                                     1,                      &
                                     0                       )
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
     CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .false. )

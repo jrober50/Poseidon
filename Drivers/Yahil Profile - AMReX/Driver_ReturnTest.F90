@@ -80,12 +80,73 @@ USE Functions_Quadrature, &
                     Initialize_Trapezoid_Quadrature_Locations
 
 USE Variables_AMReX_Source, &
-            ONLY :  iCoarse,                &
-                    iFine
+            ONLY :  iLeaf,                &
+                    iTrunk
 
 USE Return_Functions_AMReX, &
             ONLY :  Poseidon_Return_ConFactor_AMReX,    &
                     Poseidon_Return_All_AMReX
+
+USE Variables_Quadrature, &
+ONLY :  NUM_R_QUAD_POINTS,          &
+        NUM_T_QUAD_POINTS,          &
+        NUM_P_QUAD_POINTS,          &
+        NUM_TP_QUAD_POINTS,         &
+        INT_R_LOCATIONS,            &
+        INT_T_LOCATIONS,            &
+        INT_P_LOCATIONS
+
+USE Variables_IO, &
+ONLY :  Write_Flags,            &
+        Report_Flags,           &
+        Report_IDs,             &
+        Iter_Time_Table,        &
+        Frame_Time_Table,       &
+        Run_Time_Table,         &
+        Write_Results_R_Samps,  &
+        Write_Results_T_Samps,  &
+        Write_Results_P_Samps,  &
+        Total_Run_Iters,        &
+        Iter_Report_Num_Samples,&
+        Iter_Time_Table,        &
+        Frame_Residual_Table,   &
+        Frame_Update_Table,     &
+        Iteration_Histogram,    &
+        File_Suffix
+
+USE Poseidon_IO_Parameters, &
+ONLY :  Poseidon_Reports_Dir,                           &
+        Poseidon_IterReports_Dir,                       &
+        Poseidon_Objects_Dir,                           &
+        Poseidon_Mesh_Dir,                              &
+        Poseidon_LinSys_Dir,                            &
+        Poseidon_Results_Dir,                           &
+        Poseidon_Sources_Dir,                           &
+        CFA_ShortVars
+
+USE Variables_Mesh, &
+ONLY :  Num_P_Elements,             &
+        rlocs,                      &
+        drlocs,                     &
+        tlocs,                      &
+        plocs
+
+USE Maps_Domain, &
+ONLY :  Map_To_FEM_Node,            &
+        FEM_Elem_Map
+
+USE Variables_Tables, &
+ONLY :  Ylm_CC_Values,              &
+        Ylm_Elem_CC_Values,         &
+        Lagrange_Poly_Table,        &
+        Lagpoly_MultiLayer_Table,   &
+        Level_dx,                   &
+        Level_Ratios
+
+
+USE Poseidon_File_Routines_Module, &
+ONLY :  Open_New_File,                  &
+        Open_Existing_File
 
 IMPLICIT NONE
 
@@ -186,6 +247,9 @@ CALL Poseidon_Return_ALL_AMReX( NQ,                   &
 
 !CALL Output_All_Variables( nLevels, NQ, MF_Results )
 
+!CALL Write_Final_Results_Kij( nLevels, NQ, MF_Results )
+
+
 END SUBROUTINE Return_Test
 
 
@@ -236,7 +300,7 @@ DO lvl = nLevels-1,0,-1
                                   MF_Results(lvl)%ba,        &
                                   MF_Results(lvl)%dm,        &
                                   MF_Results(lvl+1)%ba,      &
-                                  iCoarse, iFine            )
+                                  iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -244,7 +308,7 @@ DO lvl = nLevels-1,0,-1
                                     MF_Results(lvl)%dm,      &
                                     1,                      &
                                     0                       )
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
 
@@ -267,7 +331,7 @@ DO lvl = nLevels-1,0,-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
 
-            IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
             DO pd = 1,NQ(3)
             DO td = 1,NQ(2)
@@ -344,7 +408,7 @@ DO lvl = nLevels-1,0,-1
                                   MF_Results(lvl)%ba,        &
                                   MF_Results(lvl)%dm,        &
                                   MF_Results(lvl+1)%ba,      &
-                                  iCoarse, iFine            )
+                                  iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -352,7 +416,7 @@ DO lvl = nLevels-1,0,-1
                                     MF_Results(lvl)%dm,      &
                                     1,                      &
                                     0                       )
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
 
@@ -375,7 +439,7 @@ DO lvl = nLevels-1,0,-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
 
-            IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
             DO pd = 1,NQ(3)
             DO td = 1,NQ(2)
@@ -414,6 +478,215 @@ END DO ! lvl
 END SUBROUTINE Output_ALL_Variables
 
 
+
+
+
+ !+401+####################################################################!
+!                                                                           !
+!          Write_Final_Results                                              !
+!                                                                           !
+ !#########################################################################!
+SUBROUTINE Write_Final_Results_Kij( nLevels, NQ, MF_Results )
+
+INTEGER,                INTENT(IN)              ::  nLevels
+INTEGER, DIMENSION(3),  INTENT(IN)              ::  NQ
+TYPE(amrex_multifab),   INTENT(IN)              ::  MF_Results(0:nLevels-1)
+
+INTEGER                                         ::  lvl
+TYPE(amrex_mfiter)                              ::  mfi
+TYPE(amrex_box)                                 ::  Box
+TYPE(amrex_imultifab)                           ::  Level_Mask
+INTEGER                                         ::  nComp
+INTEGER, DIMENSION(3)                           ::  iEL, iEU
+INTEGER,    CONTIGUOUS, POINTER                 ::  Mask_PTR(:,:,:,:)
+REAL(idp),  CONTIGUOUS, POINTER                 ::  Results_PTR(:,:,:,:)
+
+INTEGER                                         ::  re, te, pe
+INTEGER                                         ::  rd, td, pd
+INTEGER                                         ::  Here
+INTEGER                                         ::  Num_Quad
+INTEGER                                         ::  iU
+
+INTEGER,    DIMENSION(3)                        ::  iEoff
+REAL(idp), DIMENSION(3)                         ::  Gamma
+
+CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
+INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
+INTEGER                                                     ::  Num_Files
+
+REAL(idp), DIMENSION(1:NQ(1))                   ::  Cur_R_Locs
+REAL(idp), DIMENSION(1:NQ(2))                   ::  Cur_T_Locs
+
+REAL(idp)                                       ::  DROT
+REAL(idp)                                       ::  DTOT
+REAL(idp)                                       ::  DPOT
+
+INTEGER                                         ::  FEM_Elem
+INTEGER                                         ::  i
+
+REAL(idp)                                       ::  Trace
+
+116 FORMAT (A,A,A,A,A,A)
+
+Num_Files = 1
+ALLOCATE( Filenames(1:Num_Files) )
+ALLOCATE( File_IDs(1:Num_Files) )
+
+WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Kij_",TRIM(File_Suffix),".out"
+
+DO i = 1,Num_Files
+    CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i), 250 )
+END DO
+
+
+Num_Quad = NQ(1)*NQ(2)*NQ(3)
+
+
+DO lvl = nLevels-1,0,-1
+
+    !
+    !   MakeFineMask
+    !
+    IF ( lvl < nLevels-1 ) THEN
+        CALL AMReX_MakeFineMask(  Level_Mask,               &
+                                  MF_Results(lvl)%ba,        &
+                                  MF_Results(lvl)%dm,        &
+                                  MF_Results(lvl+1)%ba,      &
+                                  iLeaf, iTrunk            )
+    ELSE
+        ! Create Level_Mask all equal to 1
+        CALL amrex_imultifab_build( Level_Mask,             &
+                                    MF_Results(lvl)%ba,      &
+                                    MF_Results(lvl)%dm,      &
+                                    1,                      &
+                                    0                       )
+        CALL Level_Mask%SetVal(iLeaf)
+    END IF
+
+
+    CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
+
+    DO WHILE(mfi%next())
+
+        Results_PTR => MF_Results(lvl)%dataPtr(mfi)
+        Mask_PTR   => Level_Mask%dataPtr(mfi)
+
+        Box = mfi%tilebox()
+        nComp =  MF_Results(lvl)%ncomp()
+
+        iEL = Box%lo
+        iEU = Box%hi
+
+
+
+        DO re = iEL(1),iEU(1)
+        DO te = iEL(2),iEU(2)
+        DO pe = iEL(3),iEU(3)
+
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
+
+            IF ( amrex_spacedim == 1 ) THEN
+                iEoff(2:3) = 0
+            ELSEIF ( amrex_spacedim == 2) THEN
+                iEoff(2)   = te
+                iEoff(3)   = 0
+            ELSEIF ( amrex_spacedim == 3 ) THEN
+                iEoff(2) = te
+                iEoff(3) = pe
+            END IF
+
+
+            FEM_Elem = FEM_Elem_Map(re,Lvl)
+
+            DROT = drlocs(FEM_Elem)/2.0_idp
+            DTOT = Level_dx(Lvl,2)/2.0_idp
+
+            CUR_R_LOCS(:) = DROT * (Int_R_Locations(:) + 1.0_idp) + rlocs(FEM_Elem)
+            CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
+
+            DO pd = 1,NQ(3)
+            DO td = 1,NQ(2)
+            DO rd = 1,NQ(1)
+
+                Gamma(1) = Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_CF, rd, td, pd, NQ ))**4
+                Gamma(2) = Gamma(1)/Cur_R_Locs(rd)**2
+                Gamma(3) = Gamma(2)/DSIN(Cur_T_Locs(td))**2
+
+                Trace = Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))/Gamma(1)    &
+                      + Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))/Gamma(2)    &
+                      + Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))/Gamma(3)
+            
+                PRINT*,Trace
+
+            END DO ! rd Loop
+            END DO ! td Loop
+            END DO ! pd Loop
+
+            END IF
+
+        END DO ! pe
+        END DO ! te
+        END DO ! re
+
+    END DO
+
+    CALL amrex_mfiter_destroy(mfi)
+    CALL amrex_imultifab_destroy( Level_Mask )
+
+END DO ! lvl
+
+
+
+
+
+
+
+
+
+END SUBROUTINE Write_Final_Results_Kij
+
+
+
+
+ !+202+########################################################!
+!                                                               !
+!       Poseidon_Return_AMReX_Extrinsic_Curvature               !
+!                                                               !
+ !#############################################################!
+PURE FUNCTION AMReX_nCOMP_Map( iU, rd, td, pd, NQ )
+
+INTEGER, INTENT(IN)                         ::  iU
+INTEGER, INTENT(IN)                         ::  rd
+INTEGER, INTENT(IN)                         ::  td
+INTEGER, INTENT(IN)                         ::  pd
+INTEGER, DIMENSION(3),  INTENT(IN)          ::  NQ
+
+INTEGER                                     ::  AMReX_nCOMP_Map
+
+INTEGER                                     ::  Here
+INTEGER                                     ::  Num_QP
+
+! CF = 1
+! LF = 2
+! S1 = 3
+! S2 = 4
+! S3 = 5
+! K11 = 6
+! K12 = 7
+! K13 = 8
+! K22 = 9
+! K23 = 10
+! K33 = 11
+
+Here = (pd-1)*NQ(1)*NQ(2)   &
+     + (td-1)*NQ(1)         &
+     + rd
+Num_QP = NQ(1)*NQ(2)*NQ(3)
+
+AMReX_nCOMP_Map = (iU-1)*Num_QP + Here
+
+
+END FUNCTION AMReX_nCOMP_Map
 
 
 END MODULE Driver_ReturnTest

@@ -220,12 +220,12 @@ END IF
 !   Begin Method
 !
 
-IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
-    PR = .TRUE.
-    WRITE(*,'(A)')"Initial Guess Values"
-    CALL Print_Results()
-    PRINT*," "
-END IF
+!IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
+!    PR = .TRUE.
+!    WRITE(*,'(A)')"Initial Guess Values"
+!    CALL Print_Results()
+!    PRINT*," "
+!END IF
 
 
 

@@ -117,25 +117,20 @@ COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Work
 LOGICAL                                                 ::  PR = .FALSE.
 INTEGER                                                 ::  Cur_Iteration
 LOGICAL                                                 ::  CONVERGED
-
 M = FP_Anderson_M
 LWORK = 2*M
 
 iEL = [0, 0, 0]
 iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
-
 ALLOCATE( Work(1:LWORK) )
-
 
 
 CALL XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
 
 
-
 Cur_Iteration = 0
 CONVERGED     = .FALSE.
 DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
-
 
 
     Cur_Iteration = Cur_Iteration+1
@@ -147,7 +142,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     ELSE
         CALL Coeff_To_Vector_TypeA( UVector, iU )
     END IF
-
 
 
 
@@ -220,11 +214,11 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     
 
 
-    IF ( PR ) THEN
-        WRITE(*,'(A,I3.3,A)')'Iteration ',Cur_Iteration,' Results'
-        CALL Print_Results()
-        PRINT*," "
-    END IF
+!    IF ( PR ) THEN
+!        WRITE(*,'(A,I3.3,A)')'Iteration ',Cur_Iteration,' Results'
+!        CALL Print_Results()
+!        PRINT*," "
+!    END IF
 
 
     IF ( Verbose_Flag ) THEN

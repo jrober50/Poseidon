@@ -188,6 +188,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 !        PRINT*,Work_Vec
 !        PRINT*,"+++++++++++++++++++++++++++++++++++"
 
+!        STOP
         CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                 Factored_NNZ,               &
                                 l,                          &

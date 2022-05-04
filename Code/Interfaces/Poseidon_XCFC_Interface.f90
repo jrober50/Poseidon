@@ -473,9 +473,9 @@ Gamma(1) = 1.0_idp
 Christoffel = 0.0_idp
 
 
-DO pe = 1,NE(3)
-DO te = 1,NE(2)
-DO re = 1,NE(1)
+DO pe = 1,NE(3)-1
+DO te = 1,NE(2)-1
+DO re = 1,NE(1)-1
 
 DROT = 0.5_idp * (rlocs(re) - rlocs(re-1))
 DTOT = 0.5_idp * (tlocs(te) - tlocs(te-1))
@@ -556,10 +556,11 @@ DO rd = 1,NQ(1)
 
 
     ! Ahat^11
-    Tmp_A(1) = 2.0_idp * Gamma(1) * Tmp_Drv(1,1) + Reusable_Vals(1)                  &
-             +(2.0_idp * Gamma(1)*Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val(1) &
-             +(2.0_idp * Gamma(1)*Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val(2) &
-             +(2.0_idp * Gamma(1)*Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val(3)
+    Tmp_A(1) = Gamma(1)                                                         &
+             * ( 2.0_idp * Tmp_Drv(1,1) - Reusable_Vals(1)                      &
+               +(2.0_idp * Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val(1)   &
+               +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val(2)   &
+               +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val(3)   )
 
     Return_Kij(Here,re,te,pe,1) = Tmp_A(1)/(Gamma(1)*Gamma(1))
 
@@ -598,10 +599,11 @@ DO rd = 1,NQ(1)
 
 
     ! Ahat^22
-    Tmp_A(4) = 2.0_idp * Gamma(2) * Tmp_Drv(2,2) + Reusable_Vals(1)                      &
-             +(2.0_idp * Gamma(2)*Christoffel(2,2,1) - Reusable_Vals(2) )*Tmp_Val(1)     &
-             +(2.0_idp * Gamma(2)*Christoffel(2,2,2) - Reusable_Vals(3) )*Tmp_Val(2)     &
-             +(2.0_idp * Gamma(2)*Christoffel(2,2,3) - Reusable_Vals(4) )*Tmp_Val(3)
+    Tmp_A(4) = Gamma(2)                                                             &
+             * ( 2.0_idp * Tmp_Drv(2,2) - Reusable_Vals(1)                          &
+               +(2.0_idp * Christoffel(2,2,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
+               +(2.0_idp * Christoffel(2,2,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
+               +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
      Return_Kij(Here,re,te,pe,4) = Tmp_A(4)/(Gamma(2)*Gamma(2))
 
 
@@ -623,10 +625,11 @@ DO rd = 1,NQ(1)
 
 
     ! Ahat^33
-    Tmp_A(6) = 2.0_idp * Gamma(3) * Tmp_Drv(3,3) + Reusable_Vals(1)                      &
-             +(2.0_idp * Gamma(3)*Christoffel(3,3,1) - Reusable_Vals(2) )*Tmp_Val(1)     &
-             +(2.0_idp * Gamma(3)*Christoffel(3,3,2) - Reusable_Vals(3) )*Tmp_Val(2)     &
-             +(2.0_idp * Gamma(3)*Christoffel(3,3,3) - Reusable_Vals(4) )*Tmp_Val(3)
+    Tmp_A(6) = Gamma(3)                                                             &
+             * ( 2.0_idp * Tmp_Drv(3,3) - Reusable_Vals(1)                          &
+               +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
+               +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
+               +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
      Return_Kij(Here,re,te,pe,6) = Tmp_A(6)/(Gamma(3)*Gamma(3))
 
 
@@ -646,13 +649,6 @@ DO rd = 1,NQ(1)
                         + Reusable_Vals(3)*Tmp_Val(2)       &
                         + Reusable_Vals(4)*Tmp_Val(3)  ), Kind = idp    )
 
-!    PRINT*,Trace(1), Trace(2)
-
-!    PRINT*,Trace(1),                                     &
-!            REAL(3.0_idp*(  Reusable_Vals(1)                  &
-!               + Reusable_Vals(2)*Tmp_Val(1)       &
-!               + Reusable_Vals(3)*Tmp_Val(2)       &
-!               + Reusable_Vals(4)*Tmp_Val(3)  ), Kind = idp    ), Trace(2)
 
 
 

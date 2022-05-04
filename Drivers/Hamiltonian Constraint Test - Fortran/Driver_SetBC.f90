@@ -88,8 +88,8 @@ uaR                 =  sqrt(Alpha/((1.0_idp+Alpha*Alpha)*Star_Radius))
 C                   =  1.0_idp/sqrt(sqrt( (2.0_idp/3.0_idp)*pi*rho_o  ) )
 Beta                =  (C*uaR-1.0_idp)*Star_Radius
 
-
-Psi_BC          = HCT_Solution( Domain_Edge, Alpha, Beta, C, Star_Radius )
+Psi_BC          = 1.0250_idp
+!Psi_BC          = HCT_Solution( Domain_Edge, Alpha, Beta, C, Star_Radius )
 AlphaPsi_BC     = 1.0_idp
 Shift_Vector_BC = 0.0_idp
 

@@ -131,9 +131,67 @@ REAL(idp),              INTENT(INOUT)       ::  Src(SLo(1):SHi(1),  &
                                                     nComps          )
 
 
+
+INTEGER                                     ::  re, te, pe
+INTEGER                                     ::  rd, td, pd
+INTEGER                                     ::  Num_DOF
+
+
+REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  cur_r_locs
+REAL(idp)                                   ::  DROT
+
+
+
 CALL TimerStart( Timer_Core_Init_Test_Problem )
 
-Src = 0.0_idp
+
+
+fofalpha            =  Alpha**5/(1.0_idp+Alpha*Alpha)**3
+rho_o               =  (3.0_idp/(2.0_idp*pi*Star_Radius*Star_Radius) )*fofalpha*fofalpha
+
+
+DROT = Level_dx(Level,1)/2.0_idp
+Num_DOF = nComps/5
+
+DO pe = BLo(3),BHi(3)
+DO te = BLo(2),BHi(2)
+
+line_min = 1
+DO re = BLo(1),BHi(1)
+
+    Cur_r_locs(:) = DROT * (Int_R_Locations(:) + 1.0_idp + re*2.0_idp)
+    
+
+    DO pd = 1,NQ(3)
+    DO td = 1,NQ(2)
+    DO rd = 1,NQ(1)
+
+
+        Here = (pd-1)*NQ(1)*NQ(2)       &
+             + (td-1)*NQ(1)             &
+             + rd
+
+        IF ( cur_r_locs(rq) .LE. Star_Radius ) THEN
+            Local_E(re,te,pe,0*Num_DOF+Here) = rho_o
+        ELSE
+            Local_E(Here, re-1, te-1, pe-1) = 0.0_idp
+        END IF
+
+    END DO ! rq
+    END DO ! tq
+    END DO ! pq
+
+END DO ! re
+END DO ! te
+END DO ! pe
+
+
+
+
+
+
+
+
 
 CALL TimerStop( Timer_Core_Init_Test_Problem )
 

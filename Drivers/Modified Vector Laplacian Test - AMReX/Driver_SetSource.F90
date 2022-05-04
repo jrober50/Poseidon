@@ -73,12 +73,6 @@ USE Variables_Driver_AMReX, &
                     StepNo,             &
                     nLevels
 
-USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR,         &
-                    Mask_PTR,           &
-                    iCoarse,            &
-                    iFine
-
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
 

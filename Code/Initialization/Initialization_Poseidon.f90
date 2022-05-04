@@ -53,9 +53,6 @@ USE Variables_IO, &
 USE Variables_Functions, &
             ONLY :  LM_Location
 
-USE Variables_FP, &
-            ONLY :  FP_Anderson_M
-
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
                     Num_T_Quad_Points,      &

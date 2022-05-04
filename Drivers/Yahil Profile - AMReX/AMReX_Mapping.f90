@@ -183,7 +183,6 @@ REAL(idp)                                               ::  CC_Option
 INTEGER                                                 ::  IRL
 INTEGER                                                 ::  IFL
 
-INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
 REAL(idp), DIMENSION(1:6)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
@@ -200,6 +199,7 @@ CALL MPI_COMM_SIZE(MPI_COMM_WORLD, nPROCS,ierr)
 ALLOCATE( RE_Table(1:9) )
 
 
+
 !############################################################!
 !#                                                          #!
 !#                      Test Parameters                     #!
@@ -209,7 +209,7 @@ Units_Input         = "G"
 Solver_Type         = 3
 
 RE_Table            = (/ 32, 128, 160, 240, 320, 400, 600, 256, 512 /)
-Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
+
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
@@ -268,7 +268,6 @@ CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
 
 
 Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
-
 
 Write_Results_R_Samps = 256
 Write_Results_T_Samps = 1
@@ -356,7 +355,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             NQ_Option                           = NQ,                   &
             Max_Iterations_Option               = Max_Iterations,       &
             Convergence_Criteria_Option         = CC_Option,            &
-            Anderson_M_Option                   = Anderson_M_Values(M_Index),   &
+            Anderson_M_Option                   = M_Index,              &
             CFA_Eq_Flags_Option                 = CFA_Eqs,              &
             AMReX_Max_Levels_Option             = nlevels-1,            &
             AMReX_Max_Grid_Size_Option          = MaxGridSizeX,         &

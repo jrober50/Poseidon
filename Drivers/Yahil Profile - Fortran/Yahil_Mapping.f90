@@ -260,7 +260,7 @@ Units_Input         = "G"
 Solver_Type         = 3
 
 
-RE_Table            = (/ 64, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
+RE_Table            = (/ 10, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
@@ -271,8 +271,8 @@ T_Index_Max         =  5
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  2
-RE_Index_Max        =  2
+RE_Index_Min        =  1
+RE_Index_Max        =  1
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -537,8 +537,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 !        WRITE(*,'(A,ES18.12,A)')"ADM Crve : ", ADM_Curve / Gram, " grams"
 !        WRITE(*,'(A,ES18.12,A)')"ADM Sum  : ", (ADM_Phys + ADM_Curve) / Gram, " grams"
         
-!        CALL Print_Results()
-!        CALL Write_Final_Results()
+        CALL Print_Results()
+        CALL Write_Final_Results()
 
         CALL Output_Time_Report()
     END IF

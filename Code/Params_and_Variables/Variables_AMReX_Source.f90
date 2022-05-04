@@ -20,8 +20,8 @@ USE Poseidon_Kinds_Module,  &
 
 IMPLICIT NONE
 
-INTEGER(c_int), PARAMETER                               ::  iCoarse = 0
-INTEGER(c_int), PARAMETER                               ::  iFine   = 1
+INTEGER(c_int), PARAMETER                               ::  iTrunk = 0
+INTEGER(c_int), PARAMETER                               ::  iLeaf   = 1
 
 REAL(idp), CONTIGUOUS, POINTER                          :: Source_PTR(:,:,:,:)
 INTEGER,   CONTIGUOUS, POINTER                          :: Mask_PTR(:,:,:,:)

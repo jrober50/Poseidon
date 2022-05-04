@@ -63,8 +63,8 @@ USE Variables_Mesh, &
                     plocs
 
 USE Variables_AMReX_Source, &
-            ONLY :  iCoarse,                &
-                    iFine
+            ONLY :  iLeaf,                &
+                    iTrunk
 
 USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
@@ -360,7 +360,7 @@ DO lvl = nLevels-1,0,-1
                                   MF_Results(lvl)%ba,        &
                                   MF_Results(lvl)%dm,        &
                                   MF_Results(lvl+1)%ba,      &
-                                  iCoarse, iFine            )
+                                  iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -368,7 +368,7 @@ DO lvl = nLevels-1,0,-1
                                     MF_Results(lvl)%dm,      &
                                     1,                      &
                                     0                       )
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
 
@@ -391,7 +391,7 @@ DO lvl = nLevels-1,0,-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
             
-            IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
             iRE = FEM_Elem_Map(re,lvl)
             CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
 
@@ -510,7 +510,7 @@ DO lvl = nLevels-1,0,-1
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
                                   MF_Results(lvl+1)%ba,     &
-                                  iCoarse, iFine            )
+                                  iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -518,7 +518,7 @@ DO lvl = nLevels-1,0,-1
                                     MF_Results(lvl)%dm,     &
                                     1,                      &  ! ncomp = 1
                                     0                       )  ! nghost = 0
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
     CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
@@ -541,7 +541,7 @@ DO lvl = nLevels-1,0,-1
         DO pe = iEL(3),iEU(3)
 
 
-            IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
                 iRE = FEM_Elem_Map(re,lvl)
 
                 CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
@@ -708,7 +708,7 @@ DO lvl = nLevels-1,0,-1
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
                                   MF_Results(lvl+1)%ba,     &
-                                  iCoarse, iFine            )
+                                  iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -716,7 +716,7 @@ DO lvl = nLevels-1,0,-1
                                     MF_Results(lvl)%dm,     &
                                     1,                      &  ! ncomp = 1
                                     0                       )  ! nghost = 0
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
     CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
@@ -739,7 +739,7 @@ DO lvl = nLevels-1,0,-1
         DO pe = iEL(3),iEU(3)
 
 
-        IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+        IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
             iRE = FEM_Elem_Map(re,lvl)
 
             CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
@@ -823,11 +823,11 @@ DO lvl = nLevels-1,0,-1
 
 
                 ! Ahat^11
-                Tmp_A(1) = Gamma(1)                                                                 &
-                         * ( 2.0_idp * Tmp_Drv_B(1,1) - Reusable_Vals(1)                            &
-                           +(2.0_idp * Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val_B(1,iVB_X)   &
-                           +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val_B(2,iVB_X)   &
-                           +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val_B(3,iVB_X)   )
+                Tmp_A(1) = Gamma(1)                                                         &
+                         * ( 2.0_idp * Tmp_Drv(1,1) - Reusable_Vals(1)                      &
+                           +(2.0_idp * Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val(1)   &
+                           +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val(2)   &
+                           +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val(3)   )
 
                 
 
@@ -866,11 +866,11 @@ DO lvl = nLevels-1,0,-1
 
 
                 ! Ahat^22
-                Tmp_A(4) = Gamma(2)                                                                     &
-                         * ( 2.0_idp * Tmp_Drv_B(2,2) - Reusable_Vals(1)                                &
-                           +(2.0_idp * Christoffel(2,2,1) - Reusable_Vals(2) ) * Tmp_Val_B(1,iVB_X)     &
-                           +(2.0_idp * Christoffel(2,2,2) - Reusable_Vals(3) ) * Tmp_Val_B(2,iVB_X)     &
-                           +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
+                Tmp_A(4) = Gamma(2)                                                             &
+                         * ( 2.0_idp * Tmp_Drv(2,2) - Reusable_Vals(1)                          &
+                           +(2.0_idp * Christoffel(2,2,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
+                           +(2.0_idp * Christoffel(2,2,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
+                           +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
                  
 
 
@@ -892,11 +892,11 @@ DO lvl = nLevels-1,0,-1
 
 
                 ! Ahat^33
-                Tmp_A(6) = Gamma(3)                                                                     &
-                         * ( 2.0_idp * Tmp_Drv_B(3,3) - Reusable_Vals(1)                                &
-                           +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val_B(1,iVB_X)     &
-                           +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val_B(2,iVB_X)     &
-                           +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
+                Tmp_A(6) = Gamma(3)                                                             &
+                         * ( 2.0_idp * Tmp_Drv(3,3) - Reusable_Vals(1)                          &
+                           +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
+                           +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
+                           +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
 
 
 
@@ -1048,7 +1048,7 @@ DO lvl = 0,nLevels-1
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
                                   MF_Results(lvl+1)%ba,     &
-                                  iCoarse, iFine            )
+                                  iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -1056,7 +1056,7 @@ DO lvl = 0,nLevels-1
                                     MF_Results(lvl)%dm,     &
                                     1,                      &  ! ncomp = 1
                                     0                       )  ! nghost = 0
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
 
@@ -1082,7 +1082,7 @@ DO lvl = 0,nLevels-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
 
-        IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+        IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
             iRE = FEM_Elem_Map(re,lvl)
 
             CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )

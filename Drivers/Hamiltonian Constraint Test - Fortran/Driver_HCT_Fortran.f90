@@ -50,7 +50,6 @@ USE IO_Print_Results, &
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
 
-
 USE IO_Convergence_Output, &
             ONLY :  Output_Convergence_Reports
 
@@ -59,7 +58,7 @@ USE Poseidon_Main_Module, &
                     Poseidon_Close
 
 USE FP_IO_Module, &
-                ONLY :  Output_FP_Timetable
+            ONLY :  Output_FP_Timetable
 
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
@@ -69,6 +68,9 @@ USE Driver_SetBC_Module, &
 
 USE Driver_SetGuess_Module, &
             ONLY :  Driver_SetGuess
+
+USE Driver_ConFactor_Loop_Module, &
+            ONLY :  Driver_ConFactor_Loop
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
@@ -83,6 +85,10 @@ USE Timer_Variables_Module, &
 
 USE Poseidon_IO_Module, &
             ONLY :  Open_Run_Report_File
+
+
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 
 USE MPI
@@ -150,6 +156,8 @@ REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Beta_Guess
 
 INTEGER                                                 ::  myID
 
+INTEGER                                                 ::  Iter_Max
+
 INTEGER                                                 ::  re, rq, i
 
 INTEGER                                                 ::  Guess_Type
@@ -178,6 +186,10 @@ INTEGER                                                 ::  Tol_Index
 INTEGER                                                 ::  Tolerance_Index_Min
 INTEGER                                                 ::  Tolerance_Index_Max
 
+INTEGER                                                 ::  External_Iter
+INTEGER                                                 ::  External_Iter_Max
+
+
 REAL(idp)                                               ::  Perturbation
 
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
@@ -197,23 +209,25 @@ ALLOCATE( RE_Table(1:9) )
 !#                                                          #!
 !############################################################!
 Units_Input         = "G"
-Solver_Type         = 2
+Solver_Type         = 3
 
-RE_Table          = (/ 80, 160, 240, 320, 400, 600, 800, 1000 /)
+RE_Table          = (/ 32, 64, 128, 256, 512, 1024, 2048, 1000 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Tolerance_Values  = (/ 1E-6, 1E-8, 1E-10, 1E-12, 1E-14, 1E-16, 1E-30 /)
+Tolerance_Values  = (/ 1.0E-6, 1.0E-8, 1.0E-10, 1.0E-12, 1.0E-14, 1.0E-16, 1.0E-30 /)
 
-Tolerance_Index_Min = 4
-Tolerance_Index_Max = 4
+Tolerance_Index_Min =  6
+Tolerance_Index_Max =  6
+
+External_Iter_Max   =  500
 
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  3
-RE_Index_Max        =  3
+RE_Index_Min        =  7
+RE_Index_Max        =  7
 
 Degree_Min          =  1
-Degree_Max          =  1
+Degree_Max          =  4
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
@@ -222,15 +236,15 @@ Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Edu
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
 
 Alpha               =  sqrt(5.0_idp)
-Star_Radius         =  1.0E+10_idp               ! (cm)
+Star_Radius         =  1.0E+5_idp               ! (cm)
 
 !Suffix_Tail         = "A"
 !Convergence_Criteria = 1.0E-8_idp
 
 Dimension_Input     = 3
 
-Max_Iterations      = 3
-CC_Option           = 1.0E-10_idp
+Max_Iterations      = 100
+CC_Option           = 1.0E-16_idp
 
 
 Mesh_Type           = 1
@@ -243,18 +257,18 @@ NE(2)               = 1                         ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
 NQ(1)               = 10                        ! Number of Radial Quadrature Points
-NQ(2)               = 2                         ! Number of Theta Quadrature Points
+NQ(2)               = 1                         ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
-Print_Results_Flag  = .TRUE.
-!Print_Results_Flag  = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
+!Print_Results_Flag  = .TRUE.
+Print_Results_Flag  = .FALSE.
 Suffix_Input        = "Params"
 
-CFA_Eqs = (/ 1, 0, 0, 0, 0 /)
-
+!CFA_Eqs = (/ 1, 0, 0, 0, 0 /)
+CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
 
 Tolerance_Letters = (/ "A","B","C","D","E","F","G" /)
 
@@ -271,10 +285,10 @@ Domain_Edge = Domain_Edge*Centimeter
 
 
 DO Tol_Index = Tolerance_Index_Min, Tolerance_Index_Max
-
-if ( Tol_Index == 6 ) then
-    cycle
-end if
+!
+!if ( Tol_Index == 6 ) then
+!    cycle
+!end if
 
 DO M_Index = M_Index_Min, M_Index_Max
 DO RE_Index = RE_Index_Min, RE_Index_Max
@@ -336,15 +350,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                          Zoom = 1.032034864238313_idp,   &
                          Levels_In = AMReX_Levels       )
 
-!    DO re = 0,NE(1)
-!
-!        IF ( x_e(re) ==  Star_Radius) then
-!            PRINT*,x_e(re), Star_Radius,"Here"
-!        ELSE
-!            PRINT*,x_e(re), Star_Radius
-!        END IF
-!
-!    END DO
+
 
     !############################################################!
     !#                                                          #!
@@ -382,6 +388,25 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
+
+
+        !############################################################!
+        !#                                                          #!
+        !#              Calculate and Set Initial Guess             #!
+        !#                                                          #!
+        !############################################################!
+        CALL TimerStart( Timer_Driver_SetGuess )
+
+        CALL Driver_SetGuess(   NE, NQ,             &
+                                dx_c, x_e,          &
+                                Input_R_Quad,       &
+                                Input_T_Quad,       &
+                                Input_P_Quad,       &
+                                Left_Limit,         &
+                                Right_Limit,        &
+                                Guess_Type          )
+
+        CALL TimerStop( Timer_Driver_SetGuess )
 
 
     !############################################################!
@@ -427,25 +452,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-    !############################################################!
-    !#                                                          #!
-    !#              Calculate and Set Initial Guess             #!
-    !#                                                          #!
-    !############################################################!
-    CALL TimerStart( Timer_Driver_SetGuess )
-
-    CALL Driver_SetGuess(   NE, NQ,             &
-                            dx_c, x_e,          &
-                            Input_R_Quad,       &
-                            Input_T_Quad,       &
-                            Input_P_Quad,       &
-                            Left_Limit,         &
-                            Right_Limit,        &
-                            Guess_Type          )
-
-    CALL TimerStop( Timer_Driver_SetGuess )
-
-
 
 
 
@@ -457,8 +463,24 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     Call Poseidon_Run()
 
 
+    
 
-
+    !############################################################!
+    !#                                                          #!
+    !#                          Loop Solve                      #!
+    !#                                                          #!
+    !############################################################!
+    CALL Driver_ConFactor_Loop( NE, NQ,                    &
+                                dx_c, x_e, y_e,            &
+                                Input_R_Quad,               &
+                                Input_T_Quad,               &
+                                Input_P_Quad,               &
+                                Left_Limit, Right_Limit,    &
+                                myID,                       &
+                                Alpha,                      &
+                                Star_Radius,                &
+                                Tolerance_Values(5),        &
+                                External_Iter_Max           )
 
 
     !############################################################!
@@ -467,15 +489,15 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
 
-    IF (Verbose .EQV. .TRUE. ) THEN
+    IF ( Verbose ) THEN
         CALL Print_Results()
     END IF
 
 
     !Write_Results_Flag = 1
-    IF ( .FALSE. ) THEN
+    IF ( .TRUE. ) THEN
 !        CALL Output_Convergence_Reports()
-        CALL Output_Final_Results()
+        CALL Write_Final_Results()
         CALL Output_FP_Timetable()
     END IF
 

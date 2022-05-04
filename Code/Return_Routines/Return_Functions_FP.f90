@@ -295,9 +295,8 @@ Tmp_U_Value = 0.0_idp
 
 IF ( r == rlocs(0) ) THEN
 
-
     LagP    = 0.0_idp
-    LagP(1) = 1.0_idp
+    LagP(0) = 1.0_idp
 
     Tmp_U_Value = Calc_Values_Here_Type_A( 0, theta, phi, LagP, iU )
 
@@ -375,7 +374,7 @@ IF ( r == rlocs(0) ) THEN
 
 
     LagP    = 0.0_idp
-    LagP(1) = 1.0_idp
+    LagP(0) = 1.0_idp
 
     Tmp_U_Value = Calc_Values_Here_Type_B( 0, theta, phi, LagP, iU, iVB )
 
@@ -576,7 +575,6 @@ DO d = 0,DEGREE
                 + FP_Coeff_Vector_B(Loc_RED,iVB)        &
                 * Spherical_Harmonic(l,m,theta,phi)     &
                 * LagP(d)
-
 
 
 END DO  !   d Loop

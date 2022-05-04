@@ -204,7 +204,7 @@ DEALLOCATE( Ylm_Elem_CC_Values )
 DEALLOCATE( LagPoly_MultiLayer_Table )
 
 DEALLOCATE( Level_dx )
-
+DEALLOCATE( Level_Ratios )
 
 #else
 

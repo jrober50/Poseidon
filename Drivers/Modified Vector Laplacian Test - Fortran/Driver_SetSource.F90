@@ -80,8 +80,7 @@ SUBROUTINE Driver_SetSource( NE, NQ,                    &
                              dx_c, x_e, y_e,            &
                              R_Quad, T_Quad, P_Quad,    &
                              Left_Limit, Right_Limit,   &
-                             myID,                      &
-                             Yahil_Params               )
+                             myID                       )
 
 INTEGER, INTENT(IN), DIMENSION(3)                       ::  NE
 INTEGER, INTENT(IN), DIMENSION(3)                       ::  NQ
@@ -98,7 +97,6 @@ REAL(idp), INTENT(IN)                                   ::  Left_Limit
 REAL(idp), INTENT(IN)                                   ::  Right_Limit
 
 INTEGER,   INTENT(IN)                                   ::  myID
-REAL(idp), INTENT(IN), DIMENSION(4)                     ::  Yahil_Params
 
 INTEGER                                                 ::  Num_DOF
 INTEGER                                                 ::  Here

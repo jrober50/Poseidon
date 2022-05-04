@@ -141,9 +141,7 @@ IF ( Verbose_Flag ) THEN
     PRINT*,"Begining Conformal Factor system. "
 END IF
 CALL TimerStart( Timer_XCFC_ConFactor )
-
 CALL XCFC_Fixed_Point(iU_CF)
-
 CALL TimerStop( Timer_XCFC_ConFactor )
 
 IF ( .FALSE. ) THEN

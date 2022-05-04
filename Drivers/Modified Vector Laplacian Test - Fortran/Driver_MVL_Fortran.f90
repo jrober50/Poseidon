@@ -197,10 +197,6 @@ INTEGER                                                 ::  M_Index
 INTEGER                                                 ::  M_Index_Min
 INTEGER                                                 ::  M_Index_Max
 
-INTEGER                                                 ::  T_Index
-INTEGER                                                 ::  T_Index_Min
-INTEGER                                                 ::  T_Index_Max
-
 REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
 
@@ -211,11 +207,9 @@ REAL(idp)                                               ::  CC_Option
 REAL(idp)                                               ::  Perturbation
 REAL(idp)                                               ::  Offset
 
-REAL(idp), DIMENSION(4)                                 ::  Yahil_Params
 
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
-REAL(idp), DIMENSION(1:6)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
 
 REAL(idp)                                               ::  ADM_Mass
@@ -242,29 +236,23 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "U"
 Solver_Type         = 3
 
-i                   = 0
 
-RE_Table            = (/ 10, 512, 1024, 4096, 5120, 17920, 512, 256, 512, 768 /)
+RE_Table            = (/ 32, 64, 128, 256, 512, 1024, 512, 256, 512, 768 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
-
-T_Index_Min         =  5
-T_Index_Max         =  5
-
-M_Index_Min         =  3
-M_Index_Max         =  3
 
 RE_Index_Min        =  4
 RE_Index_Max        =  4
 
-Degree_Min          =  1
-Degree_Max          =  1
+Degree_Min          =  2
+Degree_Max          =  2
+
+M_Index_Min         =  3
+M_Index_Max         =  3
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
 
-AMReX_Levels        =  1
 
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
@@ -283,7 +271,7 @@ CC_Option           = 1.0E-10_idp
 
 Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 1.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1.0E5_idp                   ! Outer Radius (cm)
+Domain_Edge(2)      = 2.0_idp                   ! Outer Radius (cm)
 
 
 
@@ -296,8 +284,8 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
 Suffix_Input        = "Params"
@@ -321,7 +309,6 @@ Domain_Edge = Domain_Edge*Centimeter
 CALL Open_Run_Report_File()
 
 DO M_Index = M_Index_Min, M_Index_Max
-DO T_Index = T_Index_Min, T_Index_Max
 DO RE_Index = RE_Index_Min, RE_Index_Max
 DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
@@ -334,7 +321,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(i+1)
+    Suffix_Tail = Letter_Table(Mesh_Type)
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -426,7 +413,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !############################################################!
     CALL TimerStart( Timer_Driver_SetSource )
 
-    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma, 0.0_idp]
     CALL Driver_SetSource(  NE, NQ,             &
                             dx_c, x_e, y_e,     &
                             Input_R_Quad,       &
@@ -434,8 +420,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                             Input_P_Quad,       &
                             Left_Limit,         &
                             Right_Limit,        &
-                            myID,               &
-                            Yahil_Params        )
+                            myID                )
 
     CALL TimerStop( Timer_Driver_SetSource )
 
@@ -506,14 +491,12 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     IF ((Print_Results_Flag .EQV. .TRUE.) .OR. (Verbose .EQV. .TRUE. )) THEN
         WRITE(*,'(A)')" Final Results "
 
-
         CALL Print_Single_Var_Results( iU_X1, iVB_X )
 
 
-        CALL Write_Final_Results((/ 1, 1, 1, 1, 1 /))
-
     END IF
 
+    CALL Write_Final_Results(CFA_Eq_Overide = (/ 1, 1, 1, 1, 1 /))
 
 
     CALL TimerStop( Timer_Driver_Extra )
@@ -539,12 +522,11 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     DEALLOCATE( x_c, y_c, z_c )
     DEALLOCATE( dx_c, dy_c, dz_c )
 
-
+    DEALLOCATE( Output_Kij )
 
 END DO ! L_Limit
 END DO ! Degree_Index
 END DO ! RE_Index
-END DO ! T_Index
 END DO ! M_Index
 
 

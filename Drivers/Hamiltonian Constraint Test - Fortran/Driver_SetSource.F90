@@ -110,7 +110,6 @@ INTEGER                                                 ::  there, var
 
 INTEGER                                                 ::  Num_DOF
 
-
 REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Local_E
 REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Local_S
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Local_Si
@@ -121,14 +120,13 @@ INTEGER                                                 ::  HCT_Fileid
 CHARACTER(LEN = 100)                                    ::  HCT_Filename
 
 
-REAL(idp)                                               ::  Beta
-REAL(idp)                                               ::  C
-REAL(idp)                                               ::  rho_o
-REAL(idp)                                               ::  uaR
 REAL(idp)                                               ::  fofalpha
+REAL(idp)                                               ::  rho_o
+
 
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
+
 
 ALLOCATE( Local_E(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
 ALLOCATE( Local_S(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
@@ -156,26 +154,38 @@ CLOSE( HCT_Fileid)
 fofalpha            =  Alpha**5/(1.0_idp+Alpha*Alpha)**3
 
 rho_o               =  (3.0_idp/(2.0_idp*pi*Star_Radius*Star_Radius) )*fofalpha*fofalpha
-uaR                 =  sqrt(Alpha/((1.0_idp+Alpha*Alpha)*Star_Radius))
-C                   =  1.0_idp/sqrt(sqrt( (2.0_idp/3.0_idp)*pi*rho_o  ) )
-Beta                =  (C*uaR-1.0_idp)*Star_Radius
+
 
 
 DO re = 1,NE(1)
+DO te = 1,NE(2)
+DO pe = 1,NE(3)
     Cur_R_Locs(:) = dx_c(re)*(R_Quad(:) + LeftLimit)+  x_e(re)
 
+    DO pq = 1,NQ(3)
+    DO tq = 1,NQ(2)
     DO rq = 1,NQ(1)
 
+
+        Here = (pq-1)*NQ(1)*NQ(2)       &
+             + (tq-1)*NQ(1)             &
+             + rq
+
         IF ( cur_r_locs(rq) .LE. Star_Radius ) THEN
-            Local_E(rq, re-1, 0, 0) = rho_o
+
+            Local_E(Here, re-1, te-1, pe-1) = rho_o
 !            Print*,Local_E(rq, re-1, 0, 0)
         ELSE
-            Local_E(rq, re-1, 0, 0) = 0.0_idp
+            Local_E(Here, re-1, te-1, pe-1) = 0.0_idp
         END IF
 !            PRINT*,Cur_r_locs(rq), STar_radius,Local_E(rq, re-1, 0, 0)
-    END DO ! rq
-END DO ! re
 
+    END DO ! rq
+    END DO ! tq
+    END DO ! pq
+END DO ! pe
+END DO ! te
+END DO ! re
 
 Local_S  = 0.0_idp
 Local_Si = 0.0_idp
@@ -197,9 +207,6 @@ CALL Poseidon_Input_Sources(myID,                           &
                             LeftLimit, RightLimit           )
 
 
-
-
-PRINT*,"After Poseidon_Input_Source"
 
 
 IF ( .FALSE. ) THEN

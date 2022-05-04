@@ -71,8 +71,8 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.rules
 
 
 
-.PHONY : clean_poseidon
-clean_poseidon :
+.PHONY : clean_output
+clean_output :
 	rm -f $(OUT)/*.out
 	rm -f $(OUT)/Results/*.out
 	rm -f $(OUT)/Reports/*.out

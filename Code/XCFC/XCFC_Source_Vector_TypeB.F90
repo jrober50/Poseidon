@@ -171,8 +171,8 @@ USE Variables_AMReX_Core, &
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,             &
                     Mask_PTR,               &
-                    iCoarse,                &
-                    iFine
+                    iLeaf,                &
+                    iTrunk
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
@@ -718,7 +718,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                                   MF_Source(lvl)%ba,        &
                                   MF_Source(lvl)%dm,        &
                                   MF_Source(lvl+1)%ba,      &
-                                  iCoarse, iFine            )
+                                  iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -726,7 +726,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                                     MF_Source(lvl)%dm,      &
                                     1,                      &
                                     0                       )
-        CALL Level_Mask%SetVal(iCoarse)
+        CALL Level_Mask%SetVal(iLeaf)
     END IF
 
 
@@ -764,7 +764,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
 
-            IF ( Mask_PTR(RE,TE,PE,1) == iCoarse ) THEN
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
                 !
                 ! Initalize Ylm Table on Elem
