@@ -110,8 +110,8 @@ USE Maps_Legacy, &
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,             &
                     Mask_PTR,               &
-                    iCoarse,                &
-                    iFine
+                    iTrunk,                &
+                    iLeaf
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
@@ -651,8 +651,6 @@ INTEGER, DIMENSION(3)                           ::  ELo, EHi
 
 INTEGER, CONTIGUOUS, POINTER                    :: Mask(:,:,:,:)
 
-INTEGER                                         :: iLeaf = 1
-INTEGER                                         :: iTrunk   = 0
 
 INTEGER, DIMENSION(3)                           ::  EOff
 
