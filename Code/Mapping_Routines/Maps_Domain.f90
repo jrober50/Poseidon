@@ -113,7 +113,7 @@ Index = Findloc(Findloc_Table(Here:There), AMReX_Elem_Num, DIM=1)
 ! Since the arrays start their indexing at 0,
 ! and the Fortran standard is to start at 1,
 ! Index-1 must be used as the array index.
-FEM_Elem_Map = FEM_Elem_Table(Index+ Table_Offsets(AMReX_Level)-1)
+FEM_Elem_Map = FEM_Elem_Table(Index+Table_Offsets(AMReX_Level)-1)
                                             
 
 END FUNCTION FEM_Elem_Map

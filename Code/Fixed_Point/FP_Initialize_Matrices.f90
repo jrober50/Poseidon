@@ -151,8 +151,8 @@ SUBROUTINE Initialize_FP_Matrices()
 ! Phi    : Using Trapezoid rule quadrature. m + 1 for exact integration of exp(-i*m*phi).
 !           Max m is defined by the product of exp(i*L_Limit*Phi)*exp(i*L_Limit*Phi) = exp(i*(2*L_Limit)*Phi)
 !
-!Int_R_Deg  = 4*Degree - 1
-INT_R_Deg  = 5
+Int_R_Deg  = 4*Degree - 1
+!INT_R_Deg  = 5
 Int_T_Deg  = 15
 Int_P_Deg  = 2*L_LIMIT + 1
 

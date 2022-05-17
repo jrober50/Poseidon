@@ -129,7 +129,7 @@ CONTAINS
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_AMREX( MF_SRC_Input,          &
+SUBROUTINE Poseidon_Input_Sources_AMREX( MF_Src_Input,          &
                                          MF_Src_nComps,         &
                                          Num_Levels,            &
                                          Input_NQ,              &
@@ -138,7 +138,7 @@ SUBROUTINE Poseidon_Input_Sources_AMREX( MF_SRC_Input,          &
                                          Input_P_Quad,          &
                                          Input_xL               )
 
-TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:Num_Levels-1)
+TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_nComps
 INTEGER,                                INTENT(IN)  ::  Num_Levels
 
@@ -549,13 +549,13 @@ END SUBROUTINE Poseidon_Input_Sources1_AMREX
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources2_AMREX( MF_SRC_Input,          &
-                                         MF_Src_nComps,         &
-                                         Num_Levels,            &
-                                         Input_NQ,              &
-                                         Input_R_Quad,          &
-                                         Input_T_Quad,          &
-                                         Input_P_Quad,          &
-                                         Input_xL               )
+                                          MF_Src_nComps,         &
+                                          Num_Levels,            &
+                                          Input_NQ,              &
+                                          Input_R_Quad,          &
+                                          Input_T_Quad,          &
+                                          Input_P_Quad,          &
+                                          Input_xL               )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_nComps
@@ -612,7 +612,7 @@ My_DOF    = Num_R_Quad_Points*Num_T_Quad_Points*Num_P_Quad_Points
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
-ALLOCATE(Translation_Matrix(1:Their_DOF, 1:My_DOF))
+ALLOCATE( Translation_Matrix(1:Their_DOF, 1:My_DOF) )
 ALLOCATE( R_Lag_Poly_Values(1:Input_NQ(1),1:NUM_R_QUAD_POINTS) )
 ALLOCATE( T_Lag_Poly_Values(1:Input_NQ(2),1:NUM_T_QUAD_POINTS) )
 ALLOCATE( P_Lag_Poly_Values(1:Input_NQ(3),1:NUM_P_QUAD_POINTS) )
