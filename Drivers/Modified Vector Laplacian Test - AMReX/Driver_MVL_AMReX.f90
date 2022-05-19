@@ -263,7 +263,7 @@ NE(1)               = 128                      ! Number of Radial Elements
 NE(2)               = 1                        ! Number of Theta Elements
 NE(3)               = 1                        ! Number of Phi Elements
 
-NQ(1)               = 5                        ! Number of Radial Quadrature Points
+NQ(1)               = 10                        ! Number of Radial Quadrature Points
 NQ(2)               = 1                        ! Number of Theta Quadrature Points
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
@@ -302,6 +302,7 @@ DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     NE = nCells
+
     NQ(3) = 2*L_Limit_Input + 1
 
     Suffix_Tail = Letter_Table(nLevels)
@@ -358,18 +359,14 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     CALL Initialize_Poseidon_with_AMReX &
-       (    FEM_Degree_Option                   = Degree_Input,         &
-            L_Limit_Option                      = L_Limit_Input,        &
+       (    Source_NQ                           = NQ,                   &
+            Source_xL                           = [Left_Limit, Right_Limit],      &
+            Source_RQ_xlocs                     = Input_R_Quad,         &
+            Source_TQ_xlocs                     = Input_T_Quad,         &
+            Source_PQ_xlocs                     = Input_P_Quad,         &
             Units_Option                        = Units_Input,          &
-            Domain_Edge_Option                  = Domain_Edge,          &
-            Coarse_NE_Option                    = NE,                   &
-            NQ_Option                           = NQ,                   &
-            Max_Iterations_Option               = Max_Iterations,       &
-            Convergence_Criteria_Option         = CC_Option,            &
-            Anderson_M_Option                   = Anderson_M_Values(M_Index),   &
+            Integration_NQ_Option               = NQ,                   &
             CFA_Eq_Flags_Option                 = CFA_Eqs,              &
-            AMReX_Max_Levels_Option             = nlevels-1,            &
-            AMReX_Max_Grid_Size_Option          = MaxGridSizeX,         &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
             Poisson_Mode_Option                 = .FALSE.,              &
@@ -384,6 +381,9 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             Write_Sources_Option                = .FALSE.,              &
             Suffix_Flag_Option                   = Suffix_Input,        &
             Suffix_Tail_Option                   = Suffix_Tail          )
+
+
+
 
 
 

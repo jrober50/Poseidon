@@ -211,9 +211,9 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "G"
 Solver_Type         = 3
 
-RE_Table          = (/ 32, 64, 128, 256, 512, 1024, 2048, 1000 /)
+RE_Table          = (/ 2, 4, 6, 8, 16, 32, 512, 1024 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Tolerance_Values  = (/ 1.0E-6, 1.0E-8, 1.0E-10, 1.0E-12, 1.0E-14, 1.0E-16, 1.0E-30 /)
+Tolerance_Values  = (/ 1.0E-6, 1.0E-8, 1.0E-10, 1.0E-12, 1.0E-14, 1.0E-15, 1.0E-30 /)
 
 Tolerance_Index_Min =  6
 Tolerance_Index_Max =  6
@@ -223,8 +223,8 @@ External_Iter_Max   =  500
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  7
-RE_Index_Max        =  7
+RE_Index_Min        =  1
+RE_Index_Max        =  6
 
 Degree_Min          =  1
 Degree_Max          =  4
@@ -497,7 +497,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !Write_Results_Flag = 1
     IF ( .TRUE. ) THEN
 !        CALL Output_Convergence_Reports()
-        CALL Write_Final_Results()
+        CALL Write_Final_Results( Output_Locations_Flag = 2)
         CALL Output_FP_Timetable()
     END IF
 

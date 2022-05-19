@@ -276,7 +276,6 @@ END IF
 
 #ifdef POSEIDON_AMREX_FLAG
 
-!PRINT*,"A"
 IF ( amrex_spacedim == 1 ) THEN
     iEoff(2:3) = 0
 ELSEIF ( amrex_spacedim == 2) THEN
@@ -318,7 +317,6 @@ CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
 
 
 
-!PRINT*,"B"
 R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
@@ -335,11 +333,9 @@ DO rd = 1,NUM_R_QUAD_POINTS
 END DO
 
 
-
 CALL Calc_Int_Weights( DROT, DTOT,                  &
                        R_Square, TP_Sin_Val,        &
                        R_Int_Weights, TP_Int_Weights )
-
 
 
 CALL Calc_XCFC_CurVals_TypeB( iU, iVB,          &
@@ -350,9 +346,7 @@ CALL Calc_XCFC_CurVals_TypeB( iU, iVB,          &
 
 
 
-!PRINT*,"D"
 CALL Create_XCFC_Vector_TypeB( iE, iU, iVB, Level, FEM_Elem )
-!PRINT*,"E",Level,iE
 
 
 END SUBROUTINE XCFC_Calc_Source_Vector_On_Element_TypeB
@@ -418,7 +412,7 @@ DO d = 0,DEGREE
 
 !        IF ( ui == iU(1) ) THEN
 !            PRINT*,level,iE,lm_loc,d,rd
-
+!
 !            PRINT*,SourceTerm( :, rd, ui )
 !            PRINT*,"++++++++++++++++++++++"
 !            PRINT*,Ylm_Elem_CC_Values( :, lm_loc )
@@ -452,7 +446,7 @@ DO d = 0,DEGREE
 
 !        IF ( ui == iU(1) ) THEN
 !            PRINT*,Level,iE,lm_loc,d,rd
-
+!
 !            PRINT*,SourceTerm( :, rd, ui )
 !            PRINT*,"++++++++++++++++++++++"
 !            PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
@@ -549,7 +543,7 @@ IF ( iVB == iVB_X ) THEN
 
 
 !    PRINT*,Level, iE
-
+!    PRINT*,"A1"
     DO ui = iU(1),iU(3)
         CALL Get_Physical_Source( PhysSrc(:,:,ui-5), ui-3, iE )
         
@@ -569,6 +563,14 @@ IF ( iVB == iVB_X ) THEN
 !            PRINT*,PhysSrc(:,rd,ui-5)
 !        END DO
 !        END IF
+!        PRINT*,"B1"
+!        PRINT*,pi
+!        PRINT*,GR_Source_Scalar
+!        PRINT*,f(:,:,ui-5)
+!        PRINT*," "
+!        PRINT*,PhysSrc(:,:,ui-5)
+!        PRINT*,""
+!        PRINT*, 8.0_idp * pi * GR_Source_Scalar * f(:,:,ui-5)*PhysSrc(:,:,ui-5)
         SourceTerm(:,:,ui) = 8.0_idp * pi * GR_Source_Scalar * f(:,:,ui-5)*PhysSrc(:,:,ui-5)
 
     END DO
@@ -666,7 +668,6 @@ ELSE
     WRITE(*,'(A,I2.2)')" Value    : ",iVB
 
 END IF
-
 
 
 
@@ -773,7 +774,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                 CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
 
                 iE = [re,te,pe]
-                
+!                PRINT*,"Before XCFC_Calc_Source_Vector_On_Element_TypeB"
                 CALL XCFC_Calc_Source_Vector_On_Element_TypeB( iU, iVB, iE, lvl )
 !                PRINT*,"After XCFC_Calc_Source_Vector_On_Element_TypeB"
             END IF

@@ -91,7 +91,7 @@ USE Variables_Quadrature, &
                     ONLY :  Num_R_Quad_Points,      &
                             Num_T_Quad_Points,      &
                             Num_P_Quad_Points,      &
-                            Num_Quad_DOF
+                            Local_Quad_DOF
 
 IMPLICIT NONE
 
@@ -231,7 +231,7 @@ IF ( INT_PARAMS(34) .NE. -1 ) THEN
     Method_Flag                 = INT_PARAMS(34)
 END IF
 
-NUM_QUAD_DOF    = NUM_R_QUAD_POINTS   &
+Local_Quad_DOF    = NUM_R_QUAD_POINTS   &
                 * NUM_T_QUAD_POINTS   &
                 * NUM_P_QUAD_POINTS
 

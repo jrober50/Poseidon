@@ -67,9 +67,6 @@ USE Variables_FP, &
 USE Allocation_XCFC, &
             ONLY :  Allocate_XCFC
 
-USE Return_Routines_Main, &
-            ONLY :  Calc_Var_At_Location
-
 USE Return_Functions_FP,   &
             ONLY :  Calc_FP_Values_At_Location,  &
                     Calc_1D_CFA_Values_FP

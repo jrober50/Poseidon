@@ -93,7 +93,7 @@ USE Timer_Variables_Module, &
 USE Variables_Functions, &
             ONLY :  Potential_Solution
 
-USE Quadrature_Mapping_Functions, &
+USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
 IMPLICIT NONE

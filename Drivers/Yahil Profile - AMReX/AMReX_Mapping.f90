@@ -213,8 +213,8 @@ RE_Table            = (/ 32, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  6
-T_Index_Max         =  6
+T_Index_Min         =  5
+T_Index_Max         =  5
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -347,18 +347,14 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     CALL Initialize_Poseidon_with_AMReX &
-       (    FEM_Degree_Option                   = Degree_Input,         &
-            L_Limit_Option                      = L_Limit_Input,        &
+       (    Source_NQ                           = NQ,                   &
+            Source_xL                           = [Left_Limit, Right_Limit],    &
+            Source_RQ_xlocs                     = Input_R_Quad,         &
+            Source_TQ_xlocs                     = Input_T_Quad,         &
+            Source_PQ_xlocs                     = Input_P_Quad,         &
             Units_Option                        = Units_Input,          &
-            Domain_Edge_Option                  = Domain_Edge,          &
-            Coarse_NE_Option                    = NE,                   &
-            NQ_Option                           = NQ,                   &
-            Max_Iterations_Option               = Max_Iterations,       &
-            Convergence_Criteria_Option         = CC_Option,            &
-            Anderson_M_Option                   = M_Index,              &
+            Integration_NQ_Option               = NQ,                   &
             CFA_Eq_Flags_Option                 = CFA_Eqs,              &
-            AMReX_Max_Levels_Option             = nlevels-1,            &
-            AMReX_Max_Grid_Size_Option          = MaxGridSizeX,         &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
             Poisson_Mode_Option                 = .FALSE.,              &
@@ -382,7 +378,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
-    CALL Driver_SetSource(  NQ, Yahil_Params, nLevels )
+    CALL Driver_SetSource(  Yahil_Params, nLevels )
 
 
     !############################################################!
@@ -448,7 +444,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-    CALL Return_Test(nLevels, NQ, MF_Source)
+!    CALL Return_Test(nLevels, NQ, MF_Source)
 
 
 

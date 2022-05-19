@@ -63,7 +63,7 @@ USE Variables_Quadrature, &
                     Num_T_Quad_Points,      &
                     Num_P_Quad_Points,      &
                     Num_TP_Quad_Points,     &
-                    Num_Quad_DOF
+                    Local_Quad_DOF
 
 USE Variables_Functions, &
             ONLY :  LM_Location
@@ -85,7 +85,8 @@ USE Initialization_Derived, &
 USE Initialization_Subroutines, &
             ONLY :  Init_Fixed_Point_Params,        &
                     Init_IO_Params,                 &
-                    Init_AMReX_Params
+                    Init_AMReX_Params,              &
+                    Set_Caller_Quadrature
 
 
 USE IO_Setup_Report_Module, &
@@ -126,6 +127,8 @@ USE Variables_MPI, &
             ONLY :  myID_Poseidon
 
 
+USE Poseidon_AMReX_Input_Parsing_Module, &
+            ONLY : Init_AMReX_Parameters_From_Input_File
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -171,23 +174,21 @@ CONTAINS
 
 
 
+
  !+101+############################################################!
 !                                                                   !
 !          Initialize_Poseidon_with_AMReX                           !
 !                                                                   !
  !#################################################################!
-SUBROUTINE Initialize_Poseidon_with_AMReX(  FEM_Degree_Option,                  &
-                                            L_Limit_Option,                     &
+SUBROUTINE Initialize_Poseidon_with_AMReX(  Source_NQ,                          &
+                                            Source_xL,                          &
+                                            Source_RQ_xlocs,                    &
+                                            Source_TQ_xlocs,                    &
+                                            Source_PQ_xlocs,                    &
                                             Units_Option,                       &
-                                            Domain_Edge_Option,                 &
-                                            Coarse_NE_Option,                   &
-                                            NQ_Option,                          &
-                                            Max_Iterations_Option,              &
+                                            Integration_NQ_Option,              &
                                             Convergence_Criteria_Option,        &
-                                            Anderson_M_Option,                  &
                                             CFA_Eq_Flags_Option,                &
-                                            AMReX_Max_Levels_Option,            &
-                                            AMReX_Max_Grid_Size_Option,         &
                                             AMReX_FEM_Refinement_Option,        &
                                             AMReX_Integral_Refinement_Option,   &
                                             Poisson_Mode_Option,                &
@@ -204,23 +205,20 @@ SUBROUTINE Initialize_Poseidon_with_AMReX(  FEM_Degree_Option,                  
                                             Suffix_Tail_Option,                 &
                                             Frame_Option                        )
 
-CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Units_Option
-
-INTEGER,                 INTENT(IN), OPTIONAL               ::  FEM_Degree_Option
-INTEGER,                 INTENT(IN), OPTIONAL               ::  L_Limit_Option
-
-REAL(idp), DIMENSION(2), INTENT(IN), OPTIONAL               ::  Domain_Edge_Option
-INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  Coarse_NE_Option
-INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  NQ_Option
-
-INTEGER,                 INTENT(IN), OPTIONAL               ::  Max_Iterations_Option
-REAL(idp),               INTENT(IN), OPTIONAL               ::  Convergence_Criteria_Option
-INTEGER,                 INTENT(IN), OPTIONAL               ::  Anderson_M_Option
-INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL               ::  CFA_EQ_Flags_Option
 
 
-INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Max_Levels_Option
-INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  AMReX_Max_Grid_Size_Option
+INTEGER,    DIMENSION(3),               INTENT(IN)              ::  Source_NQ
+REAL(idp),  DIMENSION(2),               INTENT(IN)              ::  Source_xL
+REAL(idp),  DIMENSION(Source_NQ(1)),    INTENT(IN)              ::  Source_RQ_xlocs
+REAL(idp),  DIMENSION(Source_NQ(2)),    INTENT(IN)              ::  Source_TQ_xlocs
+REAL(idp),  DIMENSION(Source_NQ(3)),    INTENT(IN)              ::  Source_PQ_xlocs
+
+
+CHARACTER(LEN=1),        INTENT(IN), OPTIONAL                   ::  Units_Option
+INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL                   ::  Integration_NQ_Option
+REAL(idp),               INTENT(IN), OPTIONAL                   ::  Convergence_Criteria_Option
+INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL                   ::  CFA_EQ_Flags_Option
+
 INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_FEM_Refinement_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Integral_Refinement_Option
 
@@ -245,7 +243,9 @@ CALL Init_Timers
 CALL TimerStart( Timer_Initialization_Core )
 
 
-
+#ifdef POSEIDON_AMREX_FLAG
+DOMAIN_DIM = amrex_spacedim
+#endif
 
 
 IF ( PRESENT( Verbose_Option ) ) THEN
@@ -261,6 +261,14 @@ END IF
 AMReX_Mode = .TRUE.
 
 
+CALL Init_AMReX_Parameters_From_Input_File()
+
+
+
+
+
+
+
 IF ( PRESENT( Units_Option ) ) THEN
     CALL Set_Units(Units_Option)
 ELSE
@@ -268,60 +276,17 @@ ELSE
 END IF
 
 
-IF ( PRESENT( FEM_Degree_Option ) ) THEN
-    Degree = FEM_Degree_Option
+IF ( PRESENT( Integration_NQ_Option ) ) THEN
+    Num_R_Quad_Points = Integration_NQ_Option(1)
+    Num_T_Quad_Points = Integration_NQ_Option(2)
+    Num_P_Quad_Points = Integration_NQ_Option(3)
 ELSE
-    Degree = 1
-END IF
-
-
-IF ( PRESENT( L_Limit_Option ) ) THEN
-    L_Limit = L_Limit_Option
-ELSE
-    L_Limit = 0
-END IF
-
-
-
-IF ( .FALSE. ) THEN
-!    Domain_Dim = Dimensions_Option
-ELSE
-    Domain_Dim = 3
-END IF
-
-
-IF ( PRESENT( Domain_Edge_Option ) ) THEN
-    R_Inner = Domain_Edge_Option(1)
-    R_Outer = Domain_Edge_Option(2)
-ELSE
-    R_Inner = 0.0_idp
-    R_Outer = 1.0_idp
-END IF
-
-
-IF ( PRESENT( Coarse_NE_Option ) ) THEN
-    Num_R_Elements = Coarse_NE_Option(1)
-    Num_T_Elements = Coarse_NE_Option(2)
-    Num_P_Elements = Coarse_NE_Option(3)
-ELSE
-    Num_R_Elements = 1
-    Num_T_Elements = 1
-    Num_P_Elements = 1
-END IF
-
-
-
-IF ( PRESENT( NQ_Option ) ) THEN
-    Num_R_Quad_Points = NQ_Option(1)
-    Num_T_Quad_Points = NQ_Option(2)
-    Num_P_Quad_Points = NQ_Option(3)
-ELSE
-    Num_R_Quad_Points = 10
-    Num_T_Quad_Points = 10
+    Num_R_Quad_Points = 2*Degree + 2
+    Num_T_Quad_Points = 8
     Num_P_Quad_Points = 2*L_Limit + 1
 END IF
 Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
-Num_Quad_DOF       = Num_R_Quad_Points*Num_TP_Quad_Points
+Local_Quad_DOF     = Num_R_Quad_Points*Num_TP_Quad_Points
 
 
 
@@ -342,10 +307,10 @@ CALL Init_IO_Params(WriteAll_Option,            &
 
 
 
-CALL Init_AMReX_Params( AMReX_Max_Levels_Option,            &
-                        AMReX_Max_Grid_Size_Option,         &
-                        AMReX_FEM_Refinement_Option,        &
-                        AMReX_Integral_Refinement_Option    )
+!CALL Init_AMReX_Params( AMReX_Max_Levels_Option,            &
+!                        AMReX_Max_Grid_Size_Option,         &
+!                        AMReX_FEM_Refinement_Option,        &
+!                        AMReX_Integral_Refinement_Option    )
 
 
 
@@ -374,9 +339,9 @@ ELSE
     Method_Flag = 3
 
 
-    CALL Init_Fixed_Point_Params( Max_Iterations_Option,          &
-                                  Convergence_Criteria_Option,    &
-                                  Anderson_M_Option               )
+!    CALL Init_Fixed_Point_Params( Max_Iterations_Option,          &
+!                                  Convergence_Criteria_Option,    &
+!                                  Anderson_M_Option               )
 
 
 
@@ -404,6 +369,14 @@ ELSE
 
 
 END IF ! Not Poisson Mode
+
+
+CALL Set_Caller_Quadrature( Source_NQ,          &
+                            Source_xL,          &
+                            Source_RQ_xlocs,    &
+                            Source_TQ_xlocs,    &
+                            Source_PQ_xlocs     )
+
 
 
 

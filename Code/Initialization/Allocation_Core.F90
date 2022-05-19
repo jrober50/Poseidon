@@ -42,7 +42,7 @@ USE Variables_Quadrature, &
                     Num_T_Quad_Points,      &
                     Num_P_Quad_Points,      &
                     Num_TP_Quad_Points,     &
-                    Num_Quad_DOF,           &
+                    Local_Quad_DOF,           &
                     Local_Node_Locations
 
 USE Variables_MPI, &
@@ -111,17 +111,17 @@ ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
 
 #else
 
-ALLOCATE(Block_Source_E(    1:Num_Quad_DOF,             &
+ALLOCATE(Block_Source_E(    1:Local_Quad_DOF,             &
                             0:NUM_R_ELEMS_PER_BLOCK-1,  &
                             0:NUM_T_ELEMS_PER_BLOCK-1,  &
                             0:NUM_P_ELEMS_PER_BLOCK-1   )   )
 
-ALLOCATE(Block_Source_S(    1:Num_Quad_DOF,             &
+ALLOCATE(Block_Source_S(    1:Local_Quad_DOF,             &
                             0:NUM_R_ELEMS_PER_BLOCK-1,  &
                             0:NUM_T_ELEMS_PER_BLOCK-1,  &
                             0:NUM_P_ELEMS_PER_BLOCK-1   )   )
 
-ALLOCATE(Block_Source_Si(   1:Num_Quad_DOF,             &
+ALLOCATE(Block_Source_Si(   1:Local_Quad_DOF,             &
                             0:NUM_R_ELEMS_PER_BLOCK-1,  &
                             0:NUM_T_ELEMS_PER_BLOCK-1,  &
                             0:NUM_P_ELEMS_PER_BLOCK-1,  &

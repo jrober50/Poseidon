@@ -153,6 +153,8 @@ IF ( Verbose_Flag ) THEN
     PRINT*,"-Initializing Derived Quantities. "
 END IF
 
+
+
 IF ( DOMAIN_DIM == 1 ) THEN
 
     LM_LENGTH = 1

@@ -3,13 +3,21 @@ geometry.prob_lo     = 1.0 0.0 0.0 # Lower domain size
 geometry.prob_hi     = 2.0 3.1415926535897931 6.2831853071795862 # Upper domain size
 geometry.is_periodic = 00 00 01    # Periodicity. 0 (no), 1 (yes)
 
-amr.n_cell            = 1024 01 01 # Number of cells in each dimension
+amr.n_cell            = 02 01 01 # Number of cells in each dimension
 amr.max_grid_size_x   = 32
 amr.max_grid_size_y   = 2
 amr.max_grid_size_z   = 2
 amr.blocking_factor_x = 4
 amr.blocking_factor_y = 4
 amr.blocking_factor_z = 4
-amr.max_level         = 3
+amr.max_level         = 0
 
 amr.n_error_buf       = 0
+
+
+poseidon.fem_degree   = 1
+poseidon.l_limit      = 0
+
+poseidon.max_fp_iters      = 10
+poseidon.anderson_m        = 3
+Poseidon.converge_criteria = 1.0e-10

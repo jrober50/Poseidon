@@ -71,8 +71,7 @@ USE Variables_Quadrature, &
             ONLY :  INT_R_LOCATIONS,            &
                     NUM_R_QUAD_POINTS,          &
                     NUM_T_QUAD_POINTS,          &
-                    NUM_P_QUAD_POINTS,          &
-                    Num_Quad_DOF
+                    NUM_P_QUAD_POINTS
 
 
 USE Variables_External, &
@@ -101,6 +100,17 @@ USE Variables_Functions, &
 
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
+
+
+USE Variables_Interface, &
+            ONLY :  Caller_Set,                     &
+                    Caller_nLevels,                 &
+                    Caller_NQ,                      &
+                    Caller_Quad_DOF,                &
+                    Caller_xL,                      &
+                    Caller_RQ_xlocs,                &
+                    Caller_TQ_xlocs,                &
+                    Caller_PQ_xlocs
 
 IMPLICIT NONE
 
@@ -163,9 +173,10 @@ REAL(idp)                                   ::  Kappa_WUnits
 REAL(idp)                                   ::  E_Units
 
 REAL(idp)                                   ::  x
+REAL(idp)                                   ::  xwidth
 REAL(idp)                                   ::  xloc
 REAL(idp), DIMENSION(0:1)                   ::  xlocs
-REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  cur_r_locs
+REAL(idp), DIMENSION(1:Caller_NQ(1))        ::  cur_r_locs
 REAL(idp)                                   ::  DROT
 REAL(idp), DIMENSION(0:1)                   ::  LagPoly_Vals
 
@@ -189,7 +200,8 @@ REAL(idp)                                   ::  Si
 REAL(idp)                                   ::  E
 
 101 FORMAT (a128)
-!
+
+
 CALL TimerStart( Timer_Core_Init_Test_Problem )
 
 
@@ -264,8 +276,7 @@ Input_R = R_Factor*Input_X
 
 E_Units = Erg/Centimeter**3
 
-xlocs(0) = -1.0_idp
-xlocs(1) = 1.0_idp
+
 
 
 D_Factor = 1.0_idp/(Grav_Constant_G*t*t )
@@ -300,12 +311,21 @@ Newtonian_Potential(0) = Newtonian_Potential(1)                 &
                        /(2*Input_R(1))
 
 
-DROT = Level_dx(Level,1)/2.0_idp
+
 
 Num_DOF = nComps/5
 
 
 !PRINT*,Int_R_Locations/2.0_idp
+
+
+
+xlocs(0) = -1.0_idp
+xlocs(1) = +1.0_idp
+xwidth  = Caller_xL(2)-Caller_xL(1)
+
+DROT = Level_dx(Level,1)/xwidth
+
 
 DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
@@ -313,7 +333,7 @@ DO te = BLo(2),BHi(2)
 line_min = 1
 DO re = BLo(1),BHi(1)
 
-    Cur_r_locs(:) = DROT * (Int_R_Locations(:) + 1.0_idp + re*2.0_idp)
+    Cur_R_Locs(:) = DROT * (Caller_RQ_xlocs(:) + 1.0_idp + re*xwidth)
     
 !    PRINT*,re,DROT*2.0_idp
 !    PRINT*,Cur_R_Locs
@@ -321,7 +341,7 @@ DO re = BLo(1),BHi(1)
 
     DO rd = 1,Num_R_Quad_Points
 
-        xloc = CUR_R_LOCS(rd)*X_Factor
+        xloc = Cur_R_Locs(rd)*X_Factor
         cur_line = Find_Line(xloc, Input_X, NUM_LINES)
 
         x = MAP_TO_X_SPACE(Input_X(Cur_Line),Input_X(Cur_Line+1),xloc)

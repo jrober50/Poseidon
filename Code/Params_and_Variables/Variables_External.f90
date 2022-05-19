@@ -40,7 +40,7 @@ INTEGER, PUBLIC                                         :: SELFSIM_V_SWITCH = 0
 
 LOGICAL, PUBLIC                                         ::  SelfSim_Allocated = .FALSE.
 
-INTEGER                                                 ::  OUTPUT_PRIMATIVES_FLAG = 0
+INTEGER                                                 ::  OUTPUT_PRIMATIVES_FLAG = 1
 
 REAL(KIND=idp), PUBLIC                                  ::  Central_E
 

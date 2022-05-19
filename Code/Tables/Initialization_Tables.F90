@@ -667,7 +667,7 @@ DO l  = 0,L_Limit
 DO m  = -l,l
 
     tpd = Map_To_tpd(td,pd)
-    lm = LM_Location(l,m)
+    lm = LM_Location(l,m)+1
 
 
     Ylm_Elem_Values( lm, tpd )      = rBT_NormedLegendre(m,l,td,teb)           &

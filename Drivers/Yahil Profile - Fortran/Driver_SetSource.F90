@@ -38,7 +38,10 @@ USE Poseidon_Parameters, &
 USE SelfSimilar_Module, &
             ONLY :  Initialize_Yahil_Sources
 
-USE Source_Input_Module, &
+!USE Source_Input_Module, &
+!            ONLY :  Poseidon_Input_Sources
+
+USE Poseidon_Source_Input_Module, &
             ONLY :  Poseidon_Input_Sources
 
 USE Variables_Functions, &
@@ -195,15 +198,23 @@ CALL TimerStop( Timer_Driver_SetSource_Scale )
 CALL TimerStart( Timer_Driver_SetSource_SetSource )
 
 
-CALL Poseidon_Input_Sources(    myID, myID, myID,               &
-                                Local_E, Local_S, Local_Si,     &
-                                NE(1), NE(2), NE(3),            &
-                                NQ(1), NQ(2), NQ(3),            &
-                                R_Quad, T_Quad, P_Quad,         &
-                                Left_Limit, Right_Limit         )
+!CALL Poseidon_Input_Sources(    myID, myID, myID,               &
+!                                Local_E, Local_S, Local_Si,     &
+!                                NE(1), NE(2), NE(3),            &
+!                                NQ(1), NQ(2), NQ(3),            &
+!                                R_Quad, T_Quad, P_Quad,         &
+!                                Left_Limit, Right_Limit         )
 
 
-
+CALL Poseidon_Input_Sources( Local_E,                    &
+                             Local_Si,                   &
+                             Local_S,                    &
+                             NE,                         &
+                             NQ,                         &
+                             R_Quad,                     &
+                             T_Quad,                     &
+                             P_Quad,                     &
+                             [Left_Limit, Right_Limit]   )
 
 
 

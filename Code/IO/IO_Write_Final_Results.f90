@@ -117,7 +117,7 @@ USE Variables_Functions, &
                     Calc_3D_Values_at_Location, &
                     Calc_1D_CFA_Values
 
-USE Return_Routines_Main, &
+USE Poseidon_Return_Routines_Module, &
             ONLY :  Calc_Var_at_Location
 
 USE Functions_Quadrature, &

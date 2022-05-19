@@ -59,8 +59,8 @@ USE Driver_SetSource_Module, &
 USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Run
 
-USE Poseidon_XCFC_Interface_Module, &
-            ONLY :  Poseidon_Return_ConFactor
+USE Poseidon_Return_Routines, &
+            ONLY :  Poseidon_Return_Conformal_Factor
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
@@ -174,13 +174,13 @@ CLOSE( HCT_Fileid)
 
 
 
-CALL Poseidon_Return_ConFactor( NE, NQ,                 &
-                                R_Quad,                 &
-                                T_Quad,                 &
-                                P_Quad,                 &
-                                LeftLimit,              &
-                                RightLimit,             &
-                                ConFactor_New        )
+CALL Poseidon_Return_Conformal_Factor( NE, NQ,                 &
+                                        R_Quad,                 &
+                                        T_Quad,                 &
+                                        P_Quad,                 &
+                                        LeftLimit,              &
+                                        RightLimit,             &
+                                        ConFactor_New        )
 
 
 !WRITE(*,'(A)') "Before ConFactor Loops "
@@ -263,13 +263,13 @@ DO WHILE ( Flag )
     Call Poseidon_Run()
 
 
-    CALL Poseidon_Return_ConFactor( NE, NQ,                 &
-                                    R_Quad,                 &
-                                    T_Quad,                 &
-                                    P_Quad,                 &
-                                    LeftLimit,              &
-                                    RightLimit,             &
-                                    ConFactor_New        )
+    CALL Poseidon_Return_Conformal_Factor( NE, NQ,                 &
+                                            R_Quad,                 &
+                                            T_Quad,                 &
+                                            P_Quad,                 &
+                                            LeftLimit,              &
+                                            RightLimit,             &
+                                            ConFactor_New        )
 
     Difference = abs(ConFactor_New - ConFactor_Old)
     Max_Difference = maxval(Difference)

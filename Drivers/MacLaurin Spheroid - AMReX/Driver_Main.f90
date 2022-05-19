@@ -46,7 +46,7 @@ USE Functions_Mesh, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
 USE Poseidon_IO_Module, &

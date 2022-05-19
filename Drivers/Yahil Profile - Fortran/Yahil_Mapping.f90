@@ -28,8 +28,8 @@ USE Initialization_Poseidon, &
             ONLY :  Initialize_Poseidon
 
 
-USE Poseidon_XCFC_Interface_Module, &
-            ONLY : Poseidon_Return_ExtrinsicCurvature
+USE Poseidon_Return_Routines_Module, &
+            ONLY : Poseidon_Return_Extrinsic_Curvature
 
 
 USE Variables_IO, &
@@ -114,9 +114,6 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetGuess,      &
                     Timer_Driver_Run,           &
                     Timer_Driver_Extra
-
-USE Poseidon_XCFC_Interface_Module, &
-            ONLY : Poseidon_Return_ExtrinsicCurvature
 
 
 USE Driver_SetSource_Module, &
@@ -260,13 +257,13 @@ Units_Input         = "G"
 Solver_Type         = 3
 
 
-RE_Table            = (/ 10, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
+RE_Table            = (/ 32, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  5
-T_Index_Max         =  5
+T_Index_Min         =  2
+T_Index_Max         =  2
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -301,7 +298,7 @@ CC_Option           = 1.0E-15_idp
 
 Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1E8_idp                   ! Outer Radius (cm)
+Domain_Edge(2)      = 1.0E10_idp                   ! Outer Radius (cm)
 
 
 
@@ -549,13 +546,13 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     CALL TimerStop( Timer_Driver_Extra )
 
 
-!    CALL Poseidon_Return_ExtrinsicCurvature( NE, NQ,                &
-!                                             Input_R_Quad,          &
-!                                             Input_T_Quad,          &
-!                                             Input_P_Quad,          &
-!                                             Left_Limit,            &
-!                                             Right_Limit,           &
-!                                             Output_Kij             )
+    CALL Poseidon_Return_Extrinsic_Curvature( NE, NQ,                &
+                                              Input_R_Quad,          &
+                                              Input_T_Quad,          &
+                                              Input_P_Quad,          &
+                                              Left_Limit,            &
+                                              Right_Limit,           &
+                                              Output_Kij             )
 
 
 

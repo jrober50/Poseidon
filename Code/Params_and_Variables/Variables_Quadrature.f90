@@ -24,7 +24,7 @@ INTEGER, PUBLIC                      ::  NUM_T_QUAD_POINTS
 INTEGER, PUBLIC                      ::  NUM_P_QUAD_POINTS
 INTEGER, PUBLIC                      ::  NUM_TP_QUAD_POINTS
 
-INTEGER, PUBLIC                      ::  NUM_QUAD_DOF
+INTEGER, PUBLIC                      ::  Local_Quad_DOF
 
 
 REAL(idp), PUBLIC, PARAMETER         ::  xLeftLimit  = -1.0_idp

@@ -58,7 +58,7 @@ USE Variables_Quadrature, &
                     Num_T_Quad_Points,      &
                     Num_P_Quad_Points,      &
                     Num_TP_Quad_Points,     &
-                    Num_Quad_DOF
+                    Local_Quad_DOF
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
@@ -334,7 +334,7 @@ ELSE
     Num_P_Quad_Points = 2*L_Limit + 1
 END IF
 Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
-Num_Quad_DOF       = Num_R_Quad_Points*Num_TP_Quad_Points
+Local_Quad_DOF     = Num_R_Quad_Points*Num_TP_Quad_Points
 
 
 

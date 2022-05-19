@@ -7,6 +7,7 @@ VARIABLES = \
   Variables_Flags.f90        \
   Variables_NR.f90           \
   Variables_FP.f90           \
+  Variables_Interface.f90    \
   Variables_Functions.f90    \
   Variables_IO.f90           \
   Variables_Mesh.f90         \

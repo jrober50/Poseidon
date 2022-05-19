@@ -76,6 +76,12 @@ USE Variables_BC, &
                     INNER_Poisson_BC_TYPE,          &
                     OUTER_Poisson_BC_TYPE
 
+USE Variables_Interface, &
+            ONLY :  Caller_Set,                     &
+                    Caller_RQ_xlocs,                &
+                    Caller_TQ_xlocs,                &
+                    Caller_PQ_xlocs,                &
+                    Translation_Matrix
 
 USE Functions_Mesh, &
             ONLY :  Generate_Defined_Mesh
@@ -220,6 +226,14 @@ SUBROUTINE Poseidon_Close()
 
 
 CALL Deallocate_Mesh()
+
+IF ( Caller_Set ) THEN
+    DEALLOCATE( Caller_RQ_xlocs )
+    DEALLOCATE( Caller_TQ_xlocs )
+    DEALLOCATE( Caller_PQ_xlocs )
+    DEALLOCATE( Translation_Matrix )
+    Caller_Set = .FALSE.
+END IF
 
 
 IF ( Poisson_Mode ) THEN

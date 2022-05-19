@@ -76,7 +76,7 @@ USE Variables_AMReX_Core, &
 USE Variables_Tables,   &
             ONLY :  Level_DX
 
-USE Quadrature_Mapping_Functions, &
+USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
 

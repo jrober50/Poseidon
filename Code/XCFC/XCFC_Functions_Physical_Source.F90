@@ -55,7 +55,7 @@ USE Variables_Quadrature, &
                     NUM_T_QUAD_POINTS,          &
                     NUM_P_QUAD_POINTS,          &
                     NUM_TP_QUAD_POINTS,         &
-                    Num_Quad_DOF
+                    Local_Quad_DOF
 
 USE Maps_Quadrature, &
             ONLY :  Quad_Map,                   &
@@ -249,7 +249,7 @@ END IF
     PRINT*,"Warining Get_Physical Source_AMReX is being called with the POSEIDON_AMREX_FLAG = False."
 #endif
 
-!PRINT*,"In Physical_Source_AMReX, MyID ",myID_Poseidon," - ",iE(1),iE(2),iE(3)
+!PRINT*,"In Physical_Source_AMReX, MyID ",myID_Poseidon," - ",iE(1),iE(2),iE(3),iU
 !CALL MPI_Barrier(Poseidon_Comm_World, ierr )
 
 IF ( iU == 1 ) THEN
@@ -260,7 +260,7 @@ IF ( iU == 1 ) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = Map_To_tpd(td,pd)
-        Here = (iS_E-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
+        Here = (iS_E-1)*Local_Quad_DOF + Quad_Map(rd,td,pd)
         Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
 !        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here)
 
@@ -275,14 +275,11 @@ ELSEIF ( iU == 2 ) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = Map_To_tpd(td,pd)
-        Here = (iS_E-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
-        There = (iS_S-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
+        Here = (iS_E-1)*Local_Quad_DOF + Quad_Map(rd,td,pd)
+        There = (iS_S-1)*Local_Quad_DOF + Quad_Map(rd,td,pd)
         Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)  &
                     + 2.0_idp*Source_PTR(iE(1),iEOff(2),iEOff(3),There)
 
-!        PRINT*,iE, rd,td,pd
-!        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here),              &
-!                2.0_idp*Source_PTR(iE(1),iE(2),iE(3),There)
     END DO ! pd
     END DO ! td
     END DO ! rd
@@ -294,7 +291,7 @@ ELSE IF ( iU == 3) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = Map_To_tpd(td,pd)
-        Here = (iS_S1-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
+        Here = (iS_S1-1)*Local_Quad_DOF + Quad_Map(rd,td,pd)
 
         Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
     END DO ! pd
@@ -308,10 +305,9 @@ ELSE IF ( iU == 4) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = Map_To_tpd(td,pd)
-        Here = (iS_S2-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
+        Here = (iS_S2-1)*Local_Quad_DOF + Quad_Map(rd,td,pd)
 
         Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
-
 
     END DO ! pd
     END DO ! td
@@ -324,7 +320,7 @@ ELSE IF ( iU == 5 ) THEN
     DO pd = 1,NUM_P_QUAD_POINTS
 
         tpd = Map_To_tpd(td,pd)
-        Here = (iS_S3-1)*NUM_Quad_DOF + Quad_Map(rd,td,pd)
+        Here = (iS_S3-1)*Local_Quad_DOF + Quad_Map(rd,td,pd)
 
         Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
         

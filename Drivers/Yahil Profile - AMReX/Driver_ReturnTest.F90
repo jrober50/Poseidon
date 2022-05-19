@@ -83,70 +83,70 @@ USE Variables_AMReX_Source, &
             ONLY :  iLeaf,                &
                     iTrunk
 
-USE Return_Functions_AMReX, &
-            ONLY :  Poseidon_Return_ConFactor_AMReX,    &
-                    Poseidon_Return_All_AMReX
+USE Poseidon_Return_Routines_Module, &
+            ONLY :  Poseidon_Return_Conformal_Factor,    &
+                    Poseidon_Return_All
 
 USE Variables_Quadrature, &
-ONLY :  NUM_R_QUAD_POINTS,          &
-        NUM_T_QUAD_POINTS,          &
-        NUM_P_QUAD_POINTS,          &
-        NUM_TP_QUAD_POINTS,         &
-        INT_R_LOCATIONS,            &
-        INT_T_LOCATIONS,            &
-        INT_P_LOCATIONS
+            ONLY :  NUM_R_QUAD_POINTS,          &
+                    NUM_T_QUAD_POINTS,          &
+                    NUM_P_QUAD_POINTS,          &
+                    NUM_TP_QUAD_POINTS,         &
+                    INT_R_LOCATIONS,            &
+                    INT_T_LOCATIONS,            &
+                    INT_P_LOCATIONS
 
 USE Variables_IO, &
-ONLY :  Write_Flags,            &
-        Report_Flags,           &
-        Report_IDs,             &
-        Iter_Time_Table,        &
-        Frame_Time_Table,       &
-        Run_Time_Table,         &
-        Write_Results_R_Samps,  &
-        Write_Results_T_Samps,  &
-        Write_Results_P_Samps,  &
-        Total_Run_Iters,        &
-        Iter_Report_Num_Samples,&
-        Iter_Time_Table,        &
-        Frame_Residual_Table,   &
-        Frame_Update_Table,     &
-        Iteration_Histogram,    &
-        File_Suffix
+            ONLY :  Write_Flags,            &
+                    Report_Flags,           &
+                    Report_IDs,             &
+                    Iter_Time_Table,        &
+                    Frame_Time_Table,       &
+                    Run_Time_Table,         &
+                    Write_Results_R_Samps,  &
+                    Write_Results_T_Samps,  &
+                    Write_Results_P_Samps,  &
+                    Total_Run_Iters,        &
+                    Iter_Report_Num_Samples,&
+                    Iter_Time_Table,        &
+                    Frame_Residual_Table,   &
+                    Frame_Update_Table,     &
+                    Iteration_Histogram,    &
+                    File_Suffix
 
 USE Poseidon_IO_Parameters, &
-ONLY :  Poseidon_Reports_Dir,                           &
-        Poseidon_IterReports_Dir,                       &
-        Poseidon_Objects_Dir,                           &
-        Poseidon_Mesh_Dir,                              &
-        Poseidon_LinSys_Dir,                            &
-        Poseidon_Results_Dir,                           &
-        Poseidon_Sources_Dir,                           &
-        CFA_ShortVars
+            ONLY :  Poseidon_Reports_Dir,                           &
+                    Poseidon_IterReports_Dir,                       &
+                    Poseidon_Objects_Dir,                           &
+                    Poseidon_Mesh_Dir,                              &
+                    Poseidon_LinSys_Dir,                            &
+                    Poseidon_Results_Dir,                           &
+                    Poseidon_Sources_Dir,                           &
+                    CFA_ShortVars
 
 USE Variables_Mesh, &
-ONLY :  Num_P_Elements,             &
-        rlocs,                      &
-        drlocs,                     &
-        tlocs,                      &
-        plocs
+            ONLY :  Num_P_Elements,             &
+                    rlocs,                      &
+                    drlocs,                     &
+                    tlocs,                      &
+                    plocs
 
 USE Maps_Domain, &
-ONLY :  Map_To_FEM_Node,            &
-        FEM_Elem_Map
+            ONLY :  Map_To_FEM_Node,            &
+                    FEM_Elem_Map
 
 USE Variables_Tables, &
-ONLY :  Ylm_CC_Values,              &
-        Ylm_Elem_CC_Values,         &
-        Lagrange_Poly_Table,        &
-        Lagpoly_MultiLayer_Table,   &
-        Level_dx,                   &
-        Level_Ratios
+            ONLY :  Ylm_CC_Values,              &
+                    Ylm_Elem_CC_Values,         &
+                    Lagrange_Poly_Table,        &
+                    Lagpoly_MultiLayer_Table,   &
+                    Level_dx,                   &
+                    Level_Ratios
 
 
 USE Poseidon_File_Routines_Module, &
-ONLY :  Open_New_File,                  &
-        Open_Existing_File
+            ONLY :  Open_New_File,                  &
+                    Open_Existing_File
 
 IMPLICIT NONE
 
@@ -224,28 +224,37 @@ R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
 T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
 P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
 
-CALL Poseidon_Return_ConFactor_AMReX( NQ,                   &
-                                      R_Quad,               &
-                                      T_Quad,               &
-                                      P_Quad,               &
-                                      xL(1),                &
-                                      xL(2),                &
-                                      nLevels,              &
-                                      MF_Results            )
+!CALL Poseidon_Return_Conformal_Factor(NQ,                   &
+!                                      R_Quad,               &
+!                                      T_Quad,               &
+!                                      P_Quad,               &
+!                                      xL(1),                &
+!                                      xL(2),                &
+!                                      nLevels,              &
+!                                      MF_Results            )
+
+CALL Poseidon_Return_Conformal_Factor( MF_Results )
+
+
 
 !CALL Output_Variable( nLevels, NQ, MF_Results, iU_CF )
 
 
-CALL Poseidon_Return_ALL_AMReX( NQ,                   &
-                                R_Quad,               &
-                                T_Quad,               &
-                                P_Quad,               &
-                                xL(1),                &
-                                xL(2),                &
-                                nLevels,              &
-                                MF_Results            )
+!CALL Poseidon_Return_ALL(   NQ,                   &
+!                            R_Quad,               &
+!                            T_Quad,               &
+!                            P_Quad,               &
+!                            xL(1),                &
+!                            xL(2),                &
+!                            nLevels,              &
+!                            MF_Results            )
 
-!CALL Output_All_Variables( nLevels, NQ, MF_Results )
+
+
+CALL Poseidon_Return_ALL( MF_Results )
+
+
+CALL Output_All_Variables( nLevels, NQ, MF_Results )
 
 !CALL Write_Final_Results_Kij( nLevels, NQ, MF_Results )
 

@@ -87,9 +87,8 @@ USE Variables_MPI, &
             ONLY :  myID_Poseidon,      &
                     Poseidon_Comm_World
 
-USE Source_Input_AMReX, &
-            ONLY :  Poseidon_Input_Sources_AMREX
-
+USE Poseidon_Source_Input_Module, &
+            ONLY :  Poseidon_Input_Sources
 
 USE Poseidon_MPI_Utilities_Module, &
             ONLY :  STOP_MPI,               &
@@ -132,16 +131,18 @@ CONTAINS
 !     Driver_SetSource                                                			!
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Driver_SetSource( NQ )
+SUBROUTINE Driver_SetSource( NQ,            &
+                             R_Quad,        &
+                             T_Quad,        &
+                             P_Quad,        &
+                             xL             )
 
 
-INTEGER,    INTENT(IN), DIMENSION(3)                    ::  NQ
-
-
-REAL(idp),  DIMENSION(NQ(1))                            ::  R_Quad
-REAL(idp),  DIMENSION(NQ(2))                            ::  T_Quad
-REAL(idp),  DIMENSION(NQ(3))                            ::  P_Quad
-REAL(idp),  DIMENSION(2)                                ::  xL
+INTEGER,    DIMENSION(3),       INTENT(IN)              ::  NQ
+REAL(idp),  DIMENSION(NQ(1)),   INTENT(IN)              ::  R_Quad
+REAL(idp),  DIMENSION(NQ(2)),   INTENT(IN)              ::  T_Quad
+REAL(idp),  DIMENSION(NQ(3)),   INTENT(IN)              ::  P_Quad
+REAL(idp),  DIMENSION(2),       INTENT(IN)              ::  xL
 
 INTEGER                                                 ::  Num_DOF
 INTEGER                                                 ::  nVars_Source
@@ -179,21 +180,20 @@ IF ( Verbose_Flag ) THEN
     WRITE(*,'(A)')"In Driver, Inputing AMReX Source Variables."
 END IF
 
-xL(1) = -1.0_idp
-xL(2) = +1.0_idp
-R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
-T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
-P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
 
-CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source,    &
-                                   MF_Src_nComps,       &
-                                   nLevels,             &
-                                   NQ,                  &
-                                   R_Quad,              &
-                                   T_Quad,              &
-                                   P_Quad,              &
-                                   xL                   )
 
+!CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source,    &
+!                                   MF_Src_nComps,       &
+!                                   nLevels,             &
+!                                   NQ,                  &
+!                                   R_Quad,              &
+!                                   T_Quad,              &
+!                                   P_Quad,              &
+!                                   xL                   )
+
+
+CALL Poseidon_Input_Sources( MF_Driver_Source,    &
+                             MF_Src_nComps        )
 
 CALL TimerStop( Timer_Driver_SetSource_InitTest )
 

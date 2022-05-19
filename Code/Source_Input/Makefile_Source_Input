@@ -1,5 +1,7 @@
 SOURCE_INPUT = \
   Source_Input_Poisson.F90   \
   Source_Input_AMReX.F90     \
+  Source_Input_Native.F90    \
   Source_Input_Module.f90    \
+  Source_Input_Main.F90      \
 

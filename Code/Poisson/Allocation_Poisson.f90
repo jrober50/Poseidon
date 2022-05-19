@@ -49,7 +49,7 @@ USE Variables_Mesh, &
 
 
 USE Variables_Quadrature, &
-            ONLY :  Num_Quad_DOF
+            ONLY :  Local_Quad_DOF
 
 USE Variables_Derived, &
             ONLY :  LM_Length,          &
@@ -71,7 +71,7 @@ SUBROUTINE Allocate_Poseidon_Poisson_Variables
 
 ALLOCATE( Source_Vector(0:NUM_R_NODES-1, 1:LM_Length) )
 ALLOCATE( Coefficient_Vector(0:NUM_R_NODES-1, -L_LIMIT:L_LIMIT, 0:L_LIMIT) )
-ALLOCATE( Source_Terms( 1:Num_Quad_DOF,         &
+ALLOCATE( Source_Terms( 1:Local_Quad_DOF,         &
                         0:NUM_R_ELEMENTS-1,     &
                         0:NUM_T_ELEMENTS-1,     &
                         0:NUM_P_ELEMENTS-1)     )
