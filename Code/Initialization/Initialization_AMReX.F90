@@ -611,7 +611,6 @@ INTEGER                         :: lvl
 INTEGER                         :: numBoxes
 
 TYPE(amrex_mfiter)                              ::  mfi
-TYPE(amrex_boxarray)                            ::  BA
 TYPE(amrex_box)                                 ::  Box
 TYPE(amrex_distromap)                           ::  DM
 TYPE(amrex_imultifab)                           ::  Level_Mask
@@ -619,7 +618,7 @@ INTEGER, ALLOCATABLE                            ::  mypmap(:)
 
 INTEGER                                         ::  Here
 INTEGER                                         ::  Offset
-INTEGER                                         ::  RE, TE, PE
+INTEGER                                         ::  RE
 INTEGER, DIMENSION(3)                           ::  ELo, EHi
 
 INTEGER, CONTIGUOUS, POINTER                    :: Mask(:,:,:,:)
@@ -727,7 +726,6 @@ SUBROUTINE Create_FEM_Elem_Table()
 
 
 INTEGER, DIMENSION(0:iNumLeafElements-1)        ::  Tmp_Array
-INTEGER                                         ::  Index
 INTEGER                                         ::  lvl
 INTEGER                                         ::  elem
 INTEGER                                         ::  Here

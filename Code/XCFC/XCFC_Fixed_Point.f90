@@ -114,7 +114,6 @@ COMPLEX(idp),DIMENSION(FP_Anderson_M)                   :: Alpha
 
 COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Work
 
-LOGICAL                                                 ::  PR = .FALSE.
 INTEGER                                                 ::  Cur_Iteration
 LOGICAL                                                 ::  CONVERGED
 M = FP_Anderson_M

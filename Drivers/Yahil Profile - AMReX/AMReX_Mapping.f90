@@ -87,16 +87,8 @@ USE Variables_Driver_AMReX, &
                 ONLY :  xL,                 &
                         xR,                 &
                         nCells,             &
-                        MaxGridSizeX,       &
                         nLevels
 
-USE Variables_AMReX_Core, &
-            ONLY :  MF_Source,          &
-                    AMReX_Num_Levels
-
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,      &
-                    FP_Coeff_Vector_B
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &

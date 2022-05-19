@@ -562,7 +562,7 @@ INTEGER,                        INTENT(IN)                      ::  iVB
 
 COMPLEX(idp)                                                    ::  Tmp_U_Value
 INTEGER                                                         ::  l, m, d
-INTEGER                                                         ::  Loc_RED, Loc_LM
+INTEGER                                                         ::  Loc_RED
 
 
 Tmp_U_Value = 0.0_idp

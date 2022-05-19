@@ -115,7 +115,6 @@ CONTAINS
 SUBROUTINE Initialize_XCFC( )
 
 
-REAL(idp), Dimension(1:2)                               ::  Timer
 
 
 IF ( Verbose_Flag ) THEN
@@ -125,26 +124,17 @@ CALL TimerStart( Timer_XCFC_Initialization )
 
 
 
-
-
-
 Beta_Diagonals = Beta_Elem_Prob_Dim-1
 Beta_Bandwidth = 2*Beta_Diagonals+1
-
-
 
 
 
 #ifdef POSEIDON_AMREX_FLAG
 
 
-
 #else
 
-
 Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-
-
 
 CALL Allocate_XCFC()
 

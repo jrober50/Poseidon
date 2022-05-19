@@ -396,12 +396,6 @@ REAL(KIND = idp)                                        ::  r, theta, phi
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_e
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_c, dx_c
 
-REAL(KIND = idp)                                        ::  Return_Psi
-REAL(KIND = idp)                                        ::  Return_AlphaPsi
-REAL(KIND = idp)                                        ::  Return_Beta1
-REAL(KIND = idp)                                        ::  Return_Beta2
-REAL(KIND = idp)                                        ::  Return_Beta3
-
 REAL(idp)                                               ::  Value
 
 INTEGER                                                 ::  Num_Samples = 20
@@ -470,11 +464,6 @@ REAL(KIND = idp)                                        ::  r, theta, phi
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_e
 REAL(KIND = idp), DIMENSION(:), ALLOCATABLE             ::  x_c, dx_c
 
-REAL(KIND = idp)                                        ::  Return_Psi
-REAL(KIND = idp)                                        ::  Return_AlphaPsi
-REAL(KIND = idp)                                        ::  Return_Beta1
-REAL(KIND = idp)                                        ::  Return_Beta2
-REAL(KIND = idp)                                        ::  Return_Beta3
 
 REAL(idp)                                               ::  Value
 

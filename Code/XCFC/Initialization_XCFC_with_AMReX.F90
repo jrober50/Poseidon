@@ -155,28 +155,6 @@ CONTAINS
 SUBROUTINE  Initialization_XCFC_with_AMReX( )
 
 
-
-Integer                 :: Level
-type(amrex_boxarray)    :: BA
-type(amrex_box)         :: BX
-type(c_ptr)             :: BX_ptr
-INTEGER(c_int)          :: i, j
-
-TYPE(amrex_mfiter)                              ::  mfi
-TYPE(amrex_box)                                 ::  Box
-
-TYPE(amrex_imultifab)                           ::  Level_Mask
-
-INTEGER                                         ::  re, te, pe
-INTEGER, DIMENSION(3)                           ::  iE
-INTEGER, DIMENSION(3)                           ::  EHi, ELo
-INTEGER                                         ::  nComp
-INTEGER                                         ::  lvl
-
-INTEGER                 :: lo(3)
-INTEGER                 :: hi(3)
-INTEGER                 :: Num_Boxes
-
 ! Determine Radial Base Variables from Multifab
 IF ( Verbose_Flag ) THEN
     PRINT*,"In Initialization_XCFC_with_AMReX"

@@ -512,9 +512,7 @@ REAL(idp),  CONTIGUOUS, POINTER                 ::  Results_PTR(:,:,:,:)
 
 INTEGER                                         ::  re, te, pe
 INTEGER                                         ::  rd, td, pd
-INTEGER                                         ::  Here
 INTEGER                                         ::  Num_Quad
-INTEGER                                         ::  iU
 
 INTEGER,    DIMENSION(3)                        ::  iEoff
 REAL(idp), DIMENSION(3)                         ::  Gamma
@@ -528,7 +526,6 @@ REAL(idp), DIMENSION(1:NQ(2))                   ::  Cur_T_Locs
 
 REAL(idp)                                       ::  DROT
 REAL(idp)                                       ::  DTOT
-REAL(idp)                                       ::  DPOT
 
 INTEGER                                         ::  FEM_Elem
 INTEGER                                         ::  i

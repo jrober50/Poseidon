@@ -181,7 +181,7 @@ REAL(idp),  DIMENSION(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3),1:6), INTENT(OUT) ::  
 
 INTEGER                                                         ::  re, te, pe
 INTEGER                                                         ::  rd, td, pd, tpd
-INTEGER                                                         ::  d, lm
+INTEGER                                                         ::  d
 INTEGER                                                         ::  Here, There
 INTEGER                                                         ::  i, j
 
@@ -210,7 +210,6 @@ COMPLEX(idp), DIMENSION(6)                                      ::  Tmp_A
 
 COMPLEX(idp)                                                    ::  Trace(2)
 
-INTEGER                                                         ::  Current_Location
 INTEGER                                                         ::  iVB
 INTEGER, DIMENSION(3)                                           ::  iU
 
@@ -496,7 +495,7 @@ TYPE(amrex_multifab),                           INTENT(INOUT)   ::  MF_Results(0
  INTEGER                                                 ::  iRE
  INTEGER                                                 ::  re, te, pe
  INTEGER                                                 ::  rd, td, pd, tpd
- INTEGER                                                 ::  d, lm
+ INTEGER                                                 ::  d
  INTEGER                                                 ::  i, j, lvl
  INTEGER                                                 ::  nComp
  INTEGER                                                 ::  Here, There
@@ -532,10 +531,6 @@ TYPE(amrex_multifab),                           INTENT(INOUT)   ::  MF_Results(0
  COMPLEX(idp), DIMENSION(4)                                      ::  Reusable_Vals
  COMPLEX(idp), DIMENSION(6)                                      ::  Tmp_A
 
-
- COMPLEX(idp)                                                    ::  Trace(2)
-
- INTEGER                                                         ::  Current_Location
  INTEGER                                                         ::  iVB
  INTEGER, DIMENSION(3)                                           ::  iU
 

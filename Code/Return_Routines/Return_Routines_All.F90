@@ -383,11 +383,7 @@ COMPLEX(idp), DIMENSION(1:3,1:3)                                ::  TMP_Drv_B
 COMPLEX(idp), DIMENSION(1:4)                                    ::  Reusable_Vals
 COMPLEX(idp), DIMENSION(1:6)                                    ::  Tmp_A
 
-
-COMPLEX(idp)                                                    ::  Trace(2)
-
 INTEGER                                                         ::  Current_Location
-
 INTEGER                                                         ::  Num_DOF
 
 

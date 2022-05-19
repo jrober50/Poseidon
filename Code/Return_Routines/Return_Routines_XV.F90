@@ -165,22 +165,8 @@ REAL(idp),                                                  INTENT(IN)  ::  Righ
 
 REAL(idp),  DIMENSION(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3),1:3), INTENT(OUT) ::  Return_X
 
+INTEGER                                                         ::  iU, iVB
 
-INTEGER                                                         ::  re, te, pe
-INTEGER                                                         ::  rd, td, pd, tpd
-INTEGER                                                         ::  d, lm, Here, iU, iVB
-
-REAL(KIND = idp)                                                ::  Quad_Span
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  Local_Locations
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
-REAL(KIND = idp), DIMENSION(1:NQ(1))                            ::  CUR_X_LOCS
-COMPLEX(KIND = idp)                                             ::  TMP_U_Value
-INTEGER                                                         ::  Current_Location
-
-Quad_Span = Right_Limit - Left_Limit
-
-Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
-CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 iVB = iVB_X
 DO iU = iU_X1, iU_X3

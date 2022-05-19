@@ -485,7 +485,6 @@ INTEGER                                             ::  Local_R
 INTEGER                                             ::  Local_T
 INTEGER                                             ::  Local_P
 
-INTEGER                                             ::  Input_R
 INTEGER                                             ::  Input_T
 INTEGER                                             ::  Input_P
 

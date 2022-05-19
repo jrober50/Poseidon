@@ -268,7 +268,7 @@ SUBROUTINE PRINT_AMReX_Setup( )
 1400 FORMAT(/)
 1401 FORMAT('--------------- AMReX PARAMETERS ---------------')
 1402 FORMAT(' Maximum Level of Refinement = ',I5.1)
-1403 FORMAT(' # of Coarse Radial Elements = ',I5.1)
+!1403 FORMAT(' # of Coarse Radial Elements = ',I5.1)
 1404 FORMAT(' # of Leaf Radial Elements   = ',I5.1)
 
 WRITE(*,1400)

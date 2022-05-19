@@ -174,37 +174,7 @@ INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
 INTEGER                                                     ::  Num_Files
 
 
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,          &
-                                                                Output_rc,          &
-                                                                Output_dr
-
-REAL(KIND = idp)                                            ::  Return_Psi,         &
-                                                                Return_AlphaPsi,    &
-                                                                Return_Beta1,       &
-                                                                Return_Beta2,       &
-                                                                Return_Beta3
-
-INTEGER                                                     ::  i, j, k, Here
-
-INTEGER                                                     ::  NUM_THETA_RAYS,     &
-                                                                NUM_PHI_RAYS,       &
-                                                                NUM_RADIAL_SAMPLES
-
-
-REAL(KIND = idp)                                            ::  DELTA_THETA,        &
-                                                                THETA_VAL
-
-REAL(KIND = idp)                                            ::  DELTA_PHI,        &
-                                                                PHI_VAL
-
-
-REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE           ::  Var_Holder
-REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,           &
-                                                                T_Holder,           &
-                                                                P_Holder
-
-REAL(idp), DIMENSION(6)                          ::  Units
-REAL(idp)                                                   ::  CF
+INTEGER                                                     ::  i, Here
 
 INTEGER, DIMENSION(1:5)                                     ::  CFA_Eq_Flag_Used
 INTEGER                                                     ::  Output_Locations_Mode
@@ -303,12 +273,6 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  Output_re,      
                                                                 Output_rc,          &
                                                                 Output_dr
 
-REAL(KIND = idp)                                            ::  Return_Psi,         &
-                                                                Return_AlphaPsi,    &
-                                                                Return_Beta1,       &
-                                                                Return_Beta2,       &
-                                                                Return_Beta3
-
 INTEGER                                                     ::  i, j, k, Here
 
 INTEGER                                                     ::  NUM_THETA_RAYS,     &
@@ -316,11 +280,8 @@ INTEGER                                                     ::  NUM_THETA_RAYS, 
                                                                 NUM_RADIAL_SAMPLES
 
 
-REAL(KIND = idp)                                            ::  DELTA_THETA,        &
-                                                                THETA_VAL
-
-REAL(KIND = idp)                                            ::  DELTA_PHI,        &
-                                                                PHI_VAL
+REAL(KIND = idp)                                            ::  DELTA_THETA
+REAL(KIND = idp)                                            ::  DELTA_PHI
 
 
 REAL(KIND = idp), DIMENSION(:,:,:,:), ALLOCATABLE           ::  Var_Holder
@@ -329,16 +290,11 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
                                                                 P_Holder
 
 REAL(idp)                                                   ::  DROT
-REAL(idp)                                                   ::  DTOT
-REAL(idp)                                                   ::  DPOT
 
 REAL(idp), DIMENSION(0:Degree)                              ::  Node_X_Locs
 
 REAL(idp), DIMENSION(6)                                     ::  Units
 REAL(idp)                                                   ::  CF
-
-
-116 FORMAT (A,A,A,A,A,A)
 
 
 IF ( OL_Flag == 1 ) THEN

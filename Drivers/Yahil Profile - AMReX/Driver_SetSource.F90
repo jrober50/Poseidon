@@ -168,7 +168,6 @@ INTEGER,    INTENT(IN)                                  ::  nLevels_Input
 INTEGER                                                 ::  nVars_Source
 
 
-INTEGER                                                 ::  Level
 REAL(idp)                                               ::  Kappa_wUnits
 
 IF ( Verbose_Flag ) THEN
@@ -408,7 +407,6 @@ TYPE(amrex_box)                                 ::  Box
 TYPE(amrex_imultifab)                           ::  Level_Mask
 
 INTEGER                                         ::  re, te, pe
-INTEGER, DIMENSION(3)                           ::  iE
 INTEGER, DIMENSION(3)                           ::  iEL, iEU
 INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl

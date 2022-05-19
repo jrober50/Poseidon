@@ -316,7 +316,7 @@ TYPE(amrex_multifab),                       INTENT(INOUT)  ::  MF_Results(0:nLev
 INTEGER                                                 ::  iRE
 INTEGER                                                 ::  re, te, pe
 INTEGER                                                 ::  rd, td, pd, tpd
-INTEGER                                                 ::  d, lm
+INTEGER                                                 ::  d
 INTEGER                                                 ::  lvl
 
 REAL(KIND = idp)                                        ::  Quad_Span

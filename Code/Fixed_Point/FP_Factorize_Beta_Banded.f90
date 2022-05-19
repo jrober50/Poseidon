@@ -132,7 +132,6 @@ REAL(idp),      DIMENSION(Beta_Prob_Dim)                :: RWORK
 REAL(idp)                                               :: RCOND_One
 REAL(idp)                                               :: NORM
 
-REAL(idp),      DIMENSION(2)                            :: Timer
 INTEGER                                                 :: i
 
 

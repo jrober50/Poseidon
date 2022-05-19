@@ -120,7 +120,7 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                      ::  WORK_VEC
 
 INTEGER                                                             ::  Lower_Limit
 INTEGER                                                             ::  Upper_Limit
-INTEGER                                                             ::  ierr, i
+INTEGER                                                             ::  ierr
 
 
 
