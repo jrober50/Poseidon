@@ -129,7 +129,7 @@ END SUBROUTINE Poseidon_Return_CF_Native
 !                                   of the Conformal Factor at the desired locations.       !
 !                                                                                           !
 !###########################################################################################!
-SUBROUTINE Poseidon_Return_CF_Native_Caller( Return_ConFactor        )
+SUBROUTINE Poseidon_Return_CF_Native_Caller( Return_ConFactor )
 
 
 REAL(idp),  DIMENSION( Caller_Quad_DOF,                 &

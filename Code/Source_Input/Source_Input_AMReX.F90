@@ -41,6 +41,7 @@ USE amrex_multifab_module,  ONLY: &
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,         &
                     Poseidon_Remesh_Flag, &
+                    Source_Remesh_Flag, &
                     Verbose_Flag
 
 
@@ -272,15 +273,19 @@ END DO  !   Local_P Loop
 
 
 
+IF ( Source_Remesh_Flag ) THEN
+    DO level = 0,AMReX_Num_Levels-1
+
+        CALL amrex_multifab_build(  MF_Source(level),           &
+                                    MF_Src_Input(Level)%BA,     &
+                                    MF_Src_Input(Level)%DM,     &
+                                    MF_Src_nComps, 1                        )
+
+        Source_Remesh_Flag = .FALSE.
+    END DO
+END IF
+
 DO level = 0,AMReX_Num_Levels-1
-
-    CALL amrex_multifab_build(  MF_Source(level),           &
-                                MF_Src_Input(Level)%BA,     &
-                                MF_Src_Input(Level)%DM,     &
-                                MF_Src_nComps, 1                        )
-
-
-
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
 
     DO WHILE(mfi%next())
@@ -341,7 +346,7 @@ END SUBROUTINE Poseidon_Input_Sources_AMREX
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_AMREX_Caller( MF_Src_Input,       &
-                                                 MF_Src_nComps       )
+                                                MF_Src_nComps       )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:Caller_nLevels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_nComps
@@ -366,16 +371,18 @@ INTEGER                                             ::  Local_Here
 
 
 
+IF ( Source_Remesh_Flag ) THEN
+    DO level = 0,AMReX_Num_Levels-1
 
+        CALL amrex_multifab_build(  MF_Source(level),           &
+                                    MF_Src_Input(Level)%BA,     &
+                                    MF_Src_Input(Level)%DM,     &
+                                    MF_Src_nComps, 1                        )
+        Source_Remesh_Flag = .FALSE.
+    END DO
+END IF
 
 DO level = 0,AMReX_Num_Levels-1
-
-    CALL amrex_multifab_build(  MF_Source(level),           &
-                                MF_Src_Input(Level)%BA,     &
-                                MF_Src_Input(Level)%DM,     &
-                                MF_Src_nComps, 1                        )
-
-
 
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
 
@@ -582,15 +589,18 @@ END DO  !   Local_P looop
 
 
 
+IF ( Source_Remesh_Flag ) THEN
+    DO level = 0,AMReX_Num_Levels-1
+
+        CALL amrex_multifab_build(  MF_Source(level),           &
+                                    MF_Src_Input(Level)%BA,     &
+                                    MF_Src_Input(Level)%DM,     &
+                                    MF_Src_nComps, 1                        )
+        Source_Remesh_Flag = .FALSE.
+    END DO
+END IF
 
 DO level = 0,AMReX_Num_Levels-1
-
-    CALL amrex_multifab_build(  MF_Source(level),           &
-                                MF_Src_Input(Level)%BA,     &
-                                MF_Src_Input(Level)%DM,     &
-                                MF_Src_nComps, 1                        )
-
-
 
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
 
@@ -696,15 +706,19 @@ INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
 
+IF ( Source_Remesh_Flag ) THEN
+    DO level = 0,AMReX_Num_Levels-1
+
+        CALL amrex_multifab_build(  MF_Source(level),           &
+                                    MF_Src_Input(Level)%BA,     &
+                                    MF_Src_Input(Level)%DM,     &
+                                    MF_Src_nComps, 1                        )
+
+        Source_Remesh_Flag = .FALSE.
+    END DO
+END IF
+
 DO level = 0,AMReX_Num_Levels-1
-
-    CALL amrex_multifab_build(  MF_Source(level),           &
-                                MF_Src_Input(Level)%BA,     &
-                                MF_Src_Input(Level)%DM,     &
-                                MF_Src_nComps, 1                        )
-
-
-
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
 
     DO WHILE(mfi%next())

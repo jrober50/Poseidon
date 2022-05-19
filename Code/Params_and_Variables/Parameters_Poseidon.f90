@@ -74,6 +74,8 @@ LOGICAL, PUBLIC                     ::  Verbose_Flag = .FALSE.
 LOGICAL, PUBLIC                     ::  Poisson_Mode = .FALSE.
 
 LOGICAL, PUBLIC                     ::  Poseidon_Remesh_Flag = .TRUE.
+LOGICAL, PUBLIC                     ::  Source_Remesh_Flag = .TRUE.
+
 
 CHARACTER(17), DIMENSION(3), PUBLIC, PARAMETER        ::  &
 Convergence_Type_Names = ['L_One Error Norm ',     &
