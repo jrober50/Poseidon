@@ -9,7 +9,7 @@ using namespace std;
 extern "C"
 {
 
-    Long amrex_fi_boxarraysize(const BoxArray* BA  )
+    Long poseidon_amrex_fi_boxarraysize(const BoxArray* BA  )
     {
         return BA->size();
         

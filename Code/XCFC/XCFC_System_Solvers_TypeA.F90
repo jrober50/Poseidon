@@ -230,7 +230,6 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
         FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,iU)
         FP_Coeff_Vector_A( :,lm_loc,iU) = WORK_VEC(:)
 
-!        PRINT*,FP_Coeff_Vector_A( :,lm_loc,iU)
 
 
     END DO  ! m Loop

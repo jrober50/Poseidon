@@ -46,23 +46,21 @@ IMPLICIT NONE
 
 
 INTERFACE
-#ifdef POSEIDON_AMREX_FLAG
 !+101+##########################################################################!
 !                                                                               !
 !                                                     				!
 !                                                                               !
 !###############################################################################!
-    PURE FUNCTION amrex_fi_boxarraysize( BA ) BIND(c)
+    PURE FUNCTION poseidon_amrex_fi_boxarraysize( BA ) BIND(c)
 
     IMPORT
     IMPLICIT NONE
     type(c_ptr), VALUE, INTENT(IN)      :: BA
-    INTEGER(amrex_long)                 :: amrex_fi_boxarraysize
+    INTEGER(amrex_long)                 :: poseidon_amrex_fi_boxarraysize
 
 
-    END FUNCTION amrex_fi_boxarraysize
+    END FUNCTION poseidon_amrex_fi_boxarraysize
 
-#endif
 
 END INTERFACE
 
@@ -79,7 +77,7 @@ PURE FUNCTION AMReX_BoxArraySize(  BA ) result( Size )
     class(amrex_boxarray),  INTENT(IN)      :: BA
     INTEGER(AMReX_long)                     :: Size
 
-    Size = amrex_fi_boxarraysize( BA%p )
+    Size = poseidon_amrex_fi_boxarraysize( BA%p )
 
 END FUNCTION AMReX_BoxArraySize
 

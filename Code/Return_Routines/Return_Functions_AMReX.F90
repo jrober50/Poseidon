@@ -76,6 +76,9 @@ USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node,        &
                     FEM_Elem_Map
 
+USE Maps_X_Space, &
+            ONLY :  Map_To_X_Space
+
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
 
@@ -94,6 +97,22 @@ USE Variables_Interface, &
                     Caller_RQ_xlocs,                &
                     Caller_TQ_xlocs,                &
                     Caller_PQ_xlocs
+
+USE Variables_Quadrature, &
+            ONLY :  Num_R_Quad_Points,      &
+                    Num_T_Quad_Points,      &
+                    Num_P_Quad_Points,      &
+                    Num_TP_Quad_Points,     &
+                    Local_Quad_DOF,         &
+                    xLeftLimit,             &
+                    xRightLimit,            &
+                    Int_R_Locations,        &
+                    Int_T_Locations,        &
+                    Int_P_Locations,        &
+                    Int_R_Weights,          &
+                    Int_T_Weights,          &
+                    Int_P_Weights,          &
+                    Int_TP_Weights
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -159,6 +178,9 @@ INTEGER,                                    INTENT(IN)  ::  nLevels
 TYPE(amrex_multifab),                       INTENT(INOUT)  ::  MF_Results(0:nLevels-1)
 
 
+INTEGER                                                 ::  DOF_Input
+INTEGER                                                 ::  Output_Here
+
 INTEGER                                                 ::  iRE
 INTEGER                                                 ::  re, te, pe
 INTEGER                                                 ::  rd, td, pd, tpd
@@ -180,6 +202,8 @@ INTEGER                                                 ::  nComp
 
 INTEGER,    CONTIGUOUS, POINTER                 ::  Mask_PTR(:,:,:,:)
 REAL(idp),  CONTIGUOUS, POINTER                 ::  Result_PTR(:,:,:,:)
+REAL(idp),  DIMENSION(1:Local_Quad_DOF)         ::  Var_Holder_Elem
+REAL(idp),  DIMENSION(:,:), ALLOCATABLE         ::  TransMat
 
 
 INTEGER, DIMENSION(3)                           ::  iEL, iEU
@@ -188,6 +212,24 @@ Quad_Span = Right_Limit - Left_Limit
 
 Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
+
+DOF_Input = NQ(1)*NQ(2)*NQ(3)
+
+Allocate( TransMat(1:Local_Quad_DOF,1:DOF_Input))
+
+TransMat = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                        [xLeftLimit, xRightLimit ],            &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Local_Quad_DOF,         &
+                                        NQ,          &
+                                        [Left_Limit, Right_Limit],          &
+                                        RQ_Input,    &
+                                        TQ_Input,    &
+                                        PQ_Input,    &
+                                        DOF_Input               )
+
 
 
 DO lvl = nLevels-1,0,-1
@@ -236,34 +278,43 @@ DO lvl = nLevels-1,0,-1
             iRE = FEM_Elem_Map(re,lvl)
             CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
 
-
-
-            DO pd = 1,NQ(3)
-            DO td = 1,NQ(2)
-            DO rd = 1,NQ(1)
+            DO pd = 1,Num_P_Quad_Points
+            DO td = 1,NUM_T_QUAD_POINTS
+            DO rd = 1,NUM_R_QUAD_POINTS
 
                 tpd = Map_To_tpd(td,pd)
-                LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
+                LagP = Lagrange_Poly(Int_R_Locations(rd),DEGREE,Local_Locations)
                 Tmp_U_Value = 0.0_idp
 
                 
-                DO lm = 1,LM_Length
                 DO d = 0,DEGREE
                     Current_Location = Map_To_FEM_Node(iRE,d)
-                    Tmp_U_Value = Tmp_U_Value + FP_Coeff_Vector_A(Current_Location,lm,iU)  &
-                                              * LagP(d) * Ylm_Elem_Values( lm, tpd )
+                    Tmp_U_Value = Tmp_U_Value                                    &
+                                + SUM( FP_Coeff_Vector_A(Current_Location,:,iU)  &
+                                        * Ylm_Elem_Values( :, tpd )            ) &
+                                * LagP(d)
 
                 END DO ! d Loop
-                END DO ! lm Loop
+
+                Here = (pd-1)*NQ(2)*NQ(1)           &
+                    + (td-1)*NQ(1)                  &
+                    + rd
+                Var_Holder_Elem(Here) = Tmp_U_Value
+    
+            END DO ! rd
+            END DO ! td
+            END DO ! pd
 
 
-                Here = AMReX_nCOMP_Map( iU, rd, td, pd, NQ )
-                Result_PTR(re,te,pe,HERE) = REAL(Tmp_U_Value, KIND = idp)
 
+            DO Output_Here = 1,DOF_Input
 
-            END DO ! rd Loop
-            END DO ! td Loop
-            END DO ! pd Loop
+                Here = (iU-1)*DOF_Input+Output_Here
+
+                Result_PTR(re,te,pe,Here) = DOT_PRODUCT( TransMat(:,Output_Here), &
+                                                         Var_Holder_Elem(:)         )
+
+            END DO
 
             END IF
 
@@ -312,7 +363,8 @@ REAL(idp),                                  INTENT(IN)  ::  Right_Limit
 INTEGER,                                    INTENT(IN)  ::  nLevels
 TYPE(amrex_multifab),                       INTENT(INOUT)  ::  MF_Results(0:nLevels-1)
 
-
+INTEGER                                                 ::  DOF_Input
+INTEGER                                                 ::  Output_Here
 INTEGER                                                 ::  iRE
 INTEGER                                                 ::  re, te, pe
 INTEGER                                                 ::  rd, td, pd, tpd
@@ -334,11 +386,32 @@ INTEGER                                                 ::  nComp
 
 INTEGER,    CONTIGUOUS, POINTER                         ::  Mask_PTR(:,:,:,:)
 REAL(idp),  CONTIGUOUS, POINTER                         ::  Result_PTR(:,:,:,:)
+REAL(idp),  DIMENSION(1:Local_Quad_DOF)         ::  Var_Holder_Elem
+REAL(idp),  DIMENSION(:,:), ALLOCATABLE         ::  TransMat
 
 Quad_Span = Right_Limit - Left_Limit
 
 Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
+
+DOF_Input = NQ(1)*NQ(2)*NQ(3)
+
+Allocate( TransMat(1:Local_Quad_DOF,1:DOF_Input))
+
+TransMat = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                        [xLeftLimit, xRightLimit ],            &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Local_Quad_DOF,         &
+                                        NQ,          &
+                                        [Left_Limit, Right_Limit],          &
+                                        RQ_Input,    &
+                                        TQ_Input,    &
+                                        PQ_Input,    &
+                                        DOF_Input               )
+
+
 
 
 DO lvl = nLevels-1,0,-1
@@ -383,6 +456,9 @@ DO lvl = nLevels-1,0,-1
 
 
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
+
+
+
                 iRE = FEM_Elem_Map(re,lvl)
 
                 CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
@@ -407,13 +483,25 @@ DO lvl = nLevels-1,0,-1
 
                     END DO ! d Loop
 
+                    Here = (pd-1)*NQ(2)*NQ(1)           &
+                        + (td-1)*NQ(1)                  &
+                        + rd
+                    Var_Holder_Elem(Here) = Tmp_U_Value
 
-                    Here = AMReX_nCOMP_Map( iU, rd, td, pd, NQ )
-                    Result_PTR(re,te,pe,HERE) = REAL(Tmp_U_Value, KIND = idp)
+                END DO ! rd
+                END DO ! td
+                END DO ! pd
 
-                END DO ! rd Loop
-                END DO ! td Loop
-                END DO ! pd Loop
+
+
+                DO Output_Here = 1,DOF_Input
+
+                    Here = (iU-1)*DOF_Input+Output_Here
+
+                    Result_PTR(re,te,pe,Here) = DOT_PRODUCT( TransMat(:,Output_Here), &
+                                                             Var_Holder_Elem(:)         )
+
+                END DO
 
             END IF
 
@@ -519,6 +607,134 @@ AMReX_nCOMP_Map = (iU-1)*Num_QP + Here
 END FUNCTION AMReX_nCOMP_Map
 
 
+
+
+
+
+
+
+FUNCTION Create_Translation_Matrix( Source_NQ,          &
+                                    Source_xL,          &
+                                    Source_RQ_xlocs,    &
+                                    Source_TQ_xlocs,    &
+                                    Source_PQ_xlocs,    &
+                                    Source_DOF,         &
+                                    Dest_NQ,            &
+                                    Dest_xL,            &
+                                    Dest_RQ_xlocs,      &
+                                    Dest_TQ_xlocs,      &
+                                    Dest_PQ_xlocs,      &
+                                    Dest_DOF            ) RESULT( TransMat )
+
+
+INTEGER,    DIMENSION(3),               INTENT(IN)      ::  Source_NQ
+REAL(idp),  DIMENSION(2),               INTENT(IN)      ::  Source_xL
+REAL(idp),  DIMENSION(1:Source_NQ(1)),  INTENT(IN)      ::  Source_RQ_xlocs
+REAL(idp),  DIMENSION(1:Source_NQ(2)),  INTENT(IN)      ::  Source_TQ_xlocs
+REAL(idp),  DIMENSION(1:Source_NQ(3)),  INTENT(IN)      ::  Source_PQ_xlocs
+INTEGER,                                INTENT(IN)      ::  Source_DOF
+
+INTEGER,    DIMENSION(3),               INTENT(IN)      ::  Dest_NQ
+REAL(idp),  DIMENSION(2),               INTENT(IN)      ::  Dest_xL
+REAL(idp),  DIMENSION(1:Dest_NQ(1)),    INTENT(IN)      ::  Dest_RQ_xlocs
+REAL(idp),  DIMENSION(1:Dest_NQ(2)),    INTENT(IN)      ::  Dest_TQ_xlocs
+REAL(idp),  DIMENSION(1:Dest_NQ(3)),    INTENT(IN)      ::  Dest_PQ_xlocs
+INTEGER,                                INTENT(IN)      ::  Dest_DOF
+
+REAL(idp),  DIMENSION(Source_DOF,Dest_DOF)              ::  TransMat
+
+INTEGER                                             ::  Dest_R
+INTEGER                                             ::  Dest_T
+INTEGER                                             ::  Dest_P
+
+INTEGER                                             ::  Source_T
+INTEGER                                             ::  Source_P
+
+INTEGER                                             ::  Here
+INTEGER                                             ::  There
+INTEGER                                             ::  Dest_Here
+
+REAL(idp),  DIMENSION( 1:Source_NQ(1) )              ::  Scaled_R_Quad
+REAL(idp),  DIMENSION( 1:Source_NQ(2) )              ::  Scaled_T_Quad
+REAL(idp),  DIMENSION( 1:Source_NQ(3) )              ::  Scaled_P_Quad
+
+REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  R_Lag_Poly_Values
+REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  T_Lag_Poly_Values
+REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  P_Lag_Poly_Values
+
+
+
+ALLOCATE( R_Lag_Poly_Values(1:Source_NQ(1),1:Dest_NQ(1)) )
+ALLOCATE( T_Lag_Poly_Values(1:Source_NQ(2),1:Dest_NQ(2)) )
+ALLOCATE( P_Lag_Poly_Values(1:Source_NQ(3),1:Dest_NQ(3)) )
+
+
+Scaled_R_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_RQ_xlocs)
+Scaled_T_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_TQ_xlocs)
+Scaled_P_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_PQ_xlocs)
+
+
+
+
+DO Dest_R = 1,Dest_NQ(1)
+    R_Lag_Poly_Values(:,Dest_R) = Lagrange_Poly(Dest_RQ_xlocs(Dest_R),  &
+                                                Caller_NQ(1)-1,         &
+                                                Scaled_R_Quad           )
+
+END DO
+
+DO Dest_T = 1,Dest_NQ(2)
+    T_Lag_Poly_Values(:,Dest_T) = Lagrange_Poly(Dest_TQ_xlocs(Dest_T),  &
+                                                Source_NQ(2)-1,         &
+                                                Scaled_T_Quad           )
+
+END DO
+
+DO Dest_P = 1,Dest_NQ(3)
+    P_Lag_Poly_Values(:,Dest_P) = Lagrange_Poly(Dest_PQ_xlocs(Dest_P),  &
+                                                Source_NQ(3)-1,         &
+                                                Scaled_P_Quad           )
+
+END DO
+
+
+
+DO Dest_P = 1,Dest_NQ(3)
+DO Dest_T = 1,Dest_NQ(2)
+DO Dest_R = 1,Dest_NQ(1)
+
+    Dest_Here = (Dest_P-1) * Dest_NQ(2) * Dest_NQ(1)      &
+               + (Dest_T-1) * Dest_NQ(1)                   &
+               + Dest_R
+
+    DO Source_P = 1,Source_NQ(3)
+    DO Source_T = 1,Source_NQ(2)
+
+            Here = (Source_P-1) * Source_NQ(2) * Source_NQ(1)   &
+                 + (Source_T-1) * Source_NQ(1)
+
+            There = Here + Source_NQ(1)
+
+            TransMat(Here+1:There, Dest_Here)  =                    &
+                      R_Lag_Poly_Values(1:Source_NQ(1),Dest_R)      &
+                    * T_Lag_Poly_Values(Source_T,Source_T)          &
+                    * P_Lag_Poly_Values(Source_P,Source_P)
+
+    END DO  !   Source_T Loop
+    END DO  !   Source_P Loop
+END DO  !   Dest_R Loop
+END DO  !   Dest_T Loop
+END DO  !   Dest_P Loop
+
+
+
+DEALLOCATE( R_Lag_Poly_Values )
+DEALLOCATE( T_Lag_Poly_Values )
+DEALLOCATE( P_Lag_Poly_Values )
+
+
+
+END FUNCTION Create_Translation_Matrix
 
 
 
