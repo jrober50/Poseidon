@@ -269,12 +269,6 @@ AMReX_Mode = .TRUE.
 CALL Init_AMReX_Parameters_From_Input_File()
 
 
-R_Inner = R_Inner*Centimeter
-R_Outer = R_Outer*Centimeter
-
-
-
-
 IF ( PRESENT( Units_Option ) ) THEN
     CALL Set_Units(Units_Option)
 ELSE
@@ -282,7 +276,8 @@ ELSE
 END IF
 
 
-
+R_Inner = R_Inner*Centimeter
+R_Outer = R_Outer*Centimeter
 
 
 IF ( PRESENT( Integration_NQ_Option ) ) THEN
