@@ -632,7 +632,7 @@ DO level = 0,AMReX_Num_Levels-1
         
 
 
-        DO si = iS_S1,iS_S2
+        DO si = iS_S1,iS_S3
         DO Local_Here = 1,My_DOF
 
             Here  = (si-1)*Their_DOF+1
@@ -750,7 +750,7 @@ DO level = 0,AMReX_Num_Levels-1
         
 
 
-        DO si = iS_S1,iS_S2
+        DO si = iS_S1,iS_S3
         DO Local_Here = 1,Local_Quad_DOF
 
             Here  = (si-1)*Caller_Quad_DOF+1
