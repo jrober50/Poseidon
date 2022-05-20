@@ -291,7 +291,7 @@ IF ( PRESENT( Integration_NQ_Option ) ) THEN
     Num_P_Quad_Points = Integration_NQ_Option(3)
 ELSE
     Num_R_Quad_Points = 2*Degree + 2
-    Num_T_Quad_Points = 8
+    Num_T_Quad_Points = 1
     Num_P_Quad_Points = 2*L_Limit + 1
 END IF
 Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
