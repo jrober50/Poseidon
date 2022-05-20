@@ -207,13 +207,11 @@ R_Outer = xR_In(1)
 
 
 
-MaxGridSizeX1    = 1
-MaxGridSizeX2    = 1
-MaxGridSizeX3    = 1
-BlockingFactorX1 = 1
-BlockingFactorX2 = 1
-BlockingFactorX3 = 1
-UseTiling        = .FALSE.
+AMReX_Max_Grid_Size(1)    = 1
+AMReX_Max_Grid_Size(2)    = 1
+AMReX_Max_Grid_Size(3)    = 1
+AMReX_Max_Level           = 1
+AMReX_Tiling              = .FALSE.
 CALL amrex_parmparse_build( PP, 'amr' )
   CALL PP % getarr( 'n_cell'           , nCells_In              )
   CALL PP % query ( 'max_grid_size_x'  , AMReX_Max_Grid_Size(1) )
