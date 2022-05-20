@@ -204,8 +204,6 @@ INTEGER, INTENT(IN)                     ::  iVB         ! Variable Array Referen
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU         ! Upper Element Triplet
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL         ! Lower Element Triplet
 
-INTEGER                                 ::  re, te, pe
-INTEGER,             DIMENSION(3)       ::  iE
 
 
 
@@ -254,8 +252,6 @@ INTEGER                                         ::  rd, tpd, td, pd, i
 INTEGER                                         ::  FEM_Elem
 REAL(KIND = idp)                                ::  DROT,     &
                                                     DTOT
-
-REAL(KIND = idp)                                ::  DROTb, DTOTb
 
 INTEGER                                         ::  Level
 INTEGER                                         ::  iCE(3)
@@ -527,7 +523,6 @@ REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3)   ::  PhysSrc
 
 INTEGER                                                         ::  tpd, rd
 INTEGER                                                         ::  ui, i
-INTEGER                                                         ::  ierr
 
 IF ( iVB == iVB_X ) THEN
 

@@ -58,8 +58,6 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE Allocate_Quadrature()
 
-PRINT*,"In Allocate_Quadrature ",Num_R_Quad_Points
-
 ALLOCATE(INT_R_LOCATIONS(1:NUM_R_QUAD_POINTS), INT_R_WEIGHTS(1:NUM_R_QUAD_POINTS))
 ALLOCATE(INT_T_LOCATIONS(1:NUM_T_QUAD_POINTS), INT_T_WEIGHTS(1:NUM_T_QUAD_POINTS))
 ALLOCATE(INT_P_LOCATIONS(1:NUM_P_QUAD_POINTS), INT_P_WEIGHTS(1:NUM_P_QUAD_POINTS))

@@ -72,7 +72,9 @@ USE Variables_Quadrature, &
                     Int_R_Weights,          &
                     Int_T_Weights,          &
                     Int_P_Weights,          &
-                    Int_TP_Weights
+                    Int_TP_Weights,         &
+                    xLeftLimit,            &
+                    xRightLimit
 
 
 USE Variables_Interface, &
@@ -453,13 +455,160 @@ Caller_Quad_DOF = Caller_NQ(1)*Caller_NQ(2)*Caller_NQ(3)
 
 Caller_Set = .TRUE.
 
-
-PRINT*,Caller_Quad_DOF, Local_Quad_DOF
-
 ALLOCATE( Translation_Matrix(1:Caller_Quad_DOF, 1:Local_Quad_DOF) )
-ALLOCATE( R_Lag_Poly_Values(1:Caller_NQ(1),1:NUM_R_QUAD_POINTS) )
-ALLOCATE( T_Lag_Poly_Values(1:Caller_NQ(2),1:NUM_T_QUAD_POINTS) )
-ALLOCATE( P_Lag_Poly_Values(1:Caller_NQ(3),1:NUM_P_QUAD_POINTS) )
+
+Translation_Matrix = Create_Translation_Matrix( Caller_NQ,          &
+                                                Caller_xL,          &
+                                                Caller_RQ_xlocs,    &
+                                                Caller_TQ_xlocs,    &
+                                                Caller_PQ_xlocs,    &
+                                                Caller_Quad_DOF,    &
+                                                [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                                [xLeftLimit, xRightLimit ],            &
+                                                Int_R_Locations,      &
+                                                Int_R_Locations,      &
+                                                Int_R_Locations,      &
+                                                Local_Quad_DOF            )
+
+
+
+
+
+
+
+!
+!ALLOCATE( R_Lag_Poly_Values(1:Caller_NQ(1),1:NUM_R_QUAD_POINTS) )
+!ALLOCATE( T_Lag_Poly_Values(1:Caller_NQ(2),1:NUM_T_QUAD_POINTS) )
+!ALLOCATE( P_Lag_Poly_Values(1:Caller_NQ(3),1:NUM_P_QUAD_POINTS) )
+!
+!
+!Scaled_R_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_RQ_xlocs)
+!Scaled_T_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_TQ_xlocs)
+!Scaled_P_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_PQ_xlocs)
+!
+!
+!
+!
+!DO Local_R = 1,NUM_R_QUAD_POINTS
+!    R_Lag_Poly_Values(:,Local_R) = Lagrange_Poly( Int_R_Locations(Local_R), &
+!                                                  Caller_NQ(1)-1,            &
+!                                                  Scaled_R_Quad              )
+!
+!END DO
+!
+!DO Local_T = 1,NUM_T_QUAD_POINTS
+!    T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly( Int_T_Locations(Local_T), &
+!                                                  Caller_NQ(2)-1,            &
+!                                                  Scaled_T_Quad              )
+!
+!END DO
+!
+!DO Local_P = 1,NUM_P_QUAD_POINTS
+!    P_Lag_Poly_Values(:,Local_P) = Lagrange_Poly( Int_P_Locations(Local_P), &
+!                                                  Caller_NQ(3)-1,            &
+!                                                  Scaled_P_Quad              )
+!
+!END DO
+!
+!
+!
+!DO Local_P = 1,NUM_P_QUAD_POINTS
+!DO Local_T = 1,NUM_T_QUAD_POINTS
+!DO Local_R = 1,NUM_R_QUAD_POINTS
+!
+!    Local_Here = (Local_P-1) * NUM_T_QUAD_POINTS * NUM_R_QUAD_POINTS        &
+!               + (Local_T-1) * NUM_R_QUAD_POINTS                            &
+!               + Local_R
+!
+!    DO Caller_P = 1,Caller_NQ(3)
+!    DO Caller_T = 1,Caller_NQ(2)
+!
+!            Here = (Caller_P-1) * Caller_NQ(2) * Caller_NQ(1)   &
+!                 + (Caller_T-1) * Caller_NQ(1)
+!
+!            There = Here + Caller_NQ(1)
+!
+!            Translation_Matrix(Here+1:There, Local_Here)  =                 &
+!                              R_Lag_Poly_Values(1:Caller_NQ(1),Local_R)    &
+!                            * T_Lag_Poly_Values(Caller_T,Local_T)            &
+!                            * P_Lag_Poly_Values(Caller_P,Local_P)
+!
+!    END DO  !   Caller_T Loop
+!    END DO  !   Caller_P Loop
+!END DO  !   Local_R Loop
+!END DO  !   Local_T Loop
+!END DO  !   Local_P Loop
+!
+!
+!
+!DEALLOCATE( R_Lag_Poly_Values )
+!DEALLOCATE( T_Lag_Poly_Values )
+!DEALLOCATE( P_Lag_Poly_Values )
+
+END SUBROUTINE Set_Caller_Quadrature
+
+
+
+
+
+
+
+
+
+FUNCTION Create_Translation_Matrix( Source_NQ,          &
+                                    Source_xL,          &
+                                    Source_RQ_xlocs,    &
+                                    Source_TQ_xlocs,    &
+                                    Source_PQ_xlocs,    &
+                                    Source_DOF,         &
+                                    Dest_NQ,            &
+                                    Dest_xL,            &
+                                    Dest_RQ_xlocs,      &
+                                    Dest_TQ_xlocs,      &
+                                    Dest_PQ_xlocs,      &
+                                    Dest_DOF            ) RESULT( TransMat )
+
+
+INTEGER,    DIMENSION(3),               INTENT(IN)      ::  Source_NQ
+REAL(idp),  DIMENSION(2),               INTENT(IN)      ::  Source_xL
+REAL(idp),  DIMENSION(1:Source_NQ(1)),  INTENT(IN)      ::  Source_RQ_xlocs
+REAL(idp),  DIMENSION(1:Source_NQ(2)),  INTENT(IN)      ::  Source_TQ_xlocs
+REAL(idp),  DIMENSION(1:Source_NQ(3)),  INTENT(IN)      ::  Source_PQ_xlocs
+INTEGER,                                INTENT(IN)      ::  Source_DOF
+
+INTEGER,    DIMENSION(3),               INTENT(IN)      ::  Dest_NQ
+REAL(idp),  DIMENSION(2),               INTENT(IN)      ::  Dest_xL
+REAL(idp),  DIMENSION(1:Dest_NQ(1)),    INTENT(IN)      ::  Dest_RQ_xlocs
+REAL(idp),  DIMENSION(1:Dest_NQ(2)),    INTENT(IN)      ::  Dest_TQ_xlocs
+REAL(idp),  DIMENSION(1:Dest_NQ(3)),    INTENT(IN)      ::  Dest_PQ_xlocs
+INTEGER,                                INTENT(IN)      ::  Dest_DOF
+
+REAL(idp),  DIMENSION(Source_DOF,Dest_DOF)              ::  TransMat
+
+INTEGER                                             ::  Dest_R
+INTEGER                                             ::  Dest_T
+INTEGER                                             ::  Dest_P
+
+INTEGER                                             ::  Source_T
+INTEGER                                             ::  Source_P
+
+INTEGER                                             ::  Here
+INTEGER                                             ::  There
+INTEGER                                             ::  Dest_Here
+
+REAL(idp),  DIMENSION( 1:Source_NQ(1) )              ::  Scaled_R_Quad
+REAL(idp),  DIMENSION( 1:Source_NQ(2) )              ::  Scaled_T_Quad
+REAL(idp),  DIMENSION( 1:Source_NQ(3) )              ::  Scaled_P_Quad
+
+REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  R_Lag_Poly_Values
+REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  T_Lag_Poly_Values
+REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  P_Lag_Poly_Values
+
+
+
+ALLOCATE( R_Lag_Poly_Values(1:Source_NQ(1),1:Dest_NQ(1)) )
+ALLOCATE( T_Lag_Poly_Values(1:Source_NQ(2),1:Dest_NQ(2)) )
+ALLOCATE( P_Lag_Poly_Values(1:Source_NQ(3),1:Dest_NQ(3)) )
 
 
 Scaled_R_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_RQ_xlocs)
@@ -469,55 +618,55 @@ Scaled_P_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_PQ_xlocs)
 
 
 
-DO Local_R = 1,NUM_R_QUAD_POINTS
-    R_Lag_Poly_Values(:,Local_R) = Lagrange_Poly( Int_R_Locations(Local_R), &
-                                                  Caller_NQ(1)-1,            &
-                                                  Scaled_R_Quad              )
+DO Dest_R = 1,Dest_NQ(1)
+    R_Lag_Poly_Values(:,Dest_R) = Lagrange_Poly(Dest_RQ_xlocs(Dest_R),  &
+                                                Caller_NQ(1)-1,         &
+                                                Scaled_R_Quad           )
 
 END DO
 
-DO Local_T = 1,NUM_T_QUAD_POINTS
-    T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly( Int_T_Locations(Local_T), &
-                                                  Caller_NQ(2)-1,            &
-                                                  Scaled_T_Quad              )
+DO Dest_T = 1,Dest_NQ(2)
+    T_Lag_Poly_Values(:,Dest_T) = Lagrange_Poly(Dest_TQ_xlocs(Dest_T),  &
+                                                Source_NQ(2)-1,         &
+                                                Scaled_T_Quad           )
 
 END DO
 
-DO Local_P = 1,NUM_P_QUAD_POINTS
-    P_Lag_Poly_Values(:,Local_P) = Lagrange_Poly( Int_P_Locations(Local_P), &
-                                                  Caller_NQ(3)-1,            &
-                                                  Scaled_P_Quad              )
+DO Dest_P = 1,Dest_NQ(3)
+    P_Lag_Poly_Values(:,Dest_P) = Lagrange_Poly(Dest_PQ_xlocs(Dest_P),  &
+                                                Source_NQ(3)-1,         &
+                                                Scaled_P_Quad           )
 
 END DO
 
 
 
-DO Local_P = 1,NUM_P_QUAD_POINTS
-DO Local_T = 1,NUM_T_QUAD_POINTS
-DO Local_R = 1,NUM_R_QUAD_POINTS
+DO Dest_P = 1,Dest_NQ(3)
+DO Dest_T = 1,Dest_NQ(2)
+DO Dest_R = 1,Dest_NQ(1)
 
-    Local_Here = (Local_P-1) * NUM_T_QUAD_POINTS * NUM_R_QUAD_POINTS        &
-               + (Local_T-1) * NUM_R_QUAD_POINTS                            &
-               + Local_R
+    Dest_Here = (Dest_P-1) * Dest_NQ(2) * Dest_NQ(1)      &
+               + (Dest_T-1) * Dest_NQ(1)                   &
+               + Dest_R
 
-    DO Caller_P = 1,Caller_NQ(3)
-    DO Caller_T = 1,Caller_NQ(2)
+    DO Source_P = 1,Source_NQ(3)
+    DO Source_T = 1,Source_NQ(2)
 
-            Here = (Caller_P-1) * Caller_NQ(2) * Caller_NQ(1)   &
-                 + (Caller_T-1) * Caller_NQ(1)
+            Here = (Source_P-1) * Source_NQ(2) * Source_NQ(1)   &
+                 + (Source_T-1) * Source_NQ(1)
 
-            There = Here + Caller_NQ(1)
+            There = Here + Source_NQ(1)
 
-            Translation_Matrix(Here+1:There, Local_Here)  =                 &
-                              R_Lag_Poly_Values(1:Caller_NQ(1),Local_R)    &
-                            * T_Lag_Poly_Values(Caller_T,Local_T)            &
-                            * P_Lag_Poly_Values(Caller_P,Local_P)
+            TransMat(Here+1:There, Dest_Here)  =                    &
+                      R_Lag_Poly_Values(1:Source_NQ(1),Dest_R)      &
+                    * T_Lag_Poly_Values(Source_T,Source_T)          &
+                    * P_Lag_Poly_Values(Source_P,Source_P)
 
-    END DO  !   Caller_T Loop
-    END DO  !   Caller_P Loop
-END DO  !   Local_R Loop
-END DO  !   Local_T Loop
-END DO  !   Local_P Loop
+    END DO  !   Source_T Loop
+    END DO  !   Source_P Loop
+END DO  !   Dest_R Loop
+END DO  !   Dest_T Loop
+END DO  !   Dest_P Loop
 
 
 
@@ -525,7 +674,11 @@ DEALLOCATE( R_Lag_Poly_Values )
 DEALLOCATE( T_Lag_Poly_Values )
 DEALLOCATE( P_Lag_Poly_Values )
 
-END SUBROUTINE Set_Caller_Quadrature
+
+
+END FUNCTION Create_Translation_Matrix
+
+
 
 
 

@@ -180,7 +180,6 @@ REAL(idp), DIMENSION(1:6)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
 
 INTEGER                                                 ::  i
-INTEGER                                                 ::  Level
 
 
 CALL MPI_INIT(ierr)
@@ -242,7 +241,7 @@ Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
 
 NE(1)               = 128                      ! Number of Radial Elements
-NE(2)               = 1                        ! Number of Theta Elements
+NE(2)               = 2                        ! Number of Theta Elements
 NE(3)               = 1                        ! Number of Phi Elements
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
