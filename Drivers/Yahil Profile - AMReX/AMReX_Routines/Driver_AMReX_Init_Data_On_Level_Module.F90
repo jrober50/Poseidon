@@ -333,10 +333,8 @@ DO te = BLo(2),BHi(2)
 line_min = 1
 DO re = BLo(1),BHi(1)
 
-    Cur_R_Locs(:) = DROT * (Caller_RQ_xlocs(:) + 1.0_idp + re*xwidth)
+    Cur_R_Locs(:) = DROT * (Caller_RQ_xlocs(:) - Caller_xL(1) + re*xwidth)
     
-!    PRINT*,re,DROT*2.0_idp
-!    PRINT*,Cur_R_Locs
 
 
     DO rd = 1,Num_R_Quad_Points
@@ -411,6 +409,7 @@ END DO ! pe
 
 
 CALL TimerStop( Timer_Core_Init_Test_Problem )
+
 
 
 END SUBROUTINE Poseidon_Init_Data_On_Level

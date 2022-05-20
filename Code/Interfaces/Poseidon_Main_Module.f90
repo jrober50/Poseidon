@@ -93,6 +93,10 @@ USE Allocation_Core, &
 USE Allocation_Poisson, &
             ONLY :  Deallocate_Poseidon_Poisson_Variables
 
+
+USE XCFC_Source_Variables_Module, &
+            ONLY :  Deallocate_XCFC_Source_Variables
+
 USE Poisson_Main_Module, &
             ONLY :  Poisson_Solve
 
@@ -242,6 +246,7 @@ IF ( Poisson_Mode ) THEN
 ELSE
     !!!!  Deallocate Data Space !!!!
     CALL Deallocate_Poseidon_CFA_Variables
+    Call Deallocate_XCFC_Source_Variables
 
     CALL Deallocate_Quadrature()
     CALL Deallocate_Tables()

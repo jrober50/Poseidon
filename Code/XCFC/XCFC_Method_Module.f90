@@ -100,7 +100,7 @@ SUBROUTINE XCFC_Method()
 LOGICAL                     :: PR = .FALSE.
 
 
-CALL Allocate_XCFC_Source_Variables()
+!CALL Allocate_XCFC_Source_Variables()
 
 
 IF ( Verbose_Flag ) THEN
@@ -140,7 +140,7 @@ IF ( ANY(CFA_Eq_Flags(iU_S1:iU_S3) == 1) ) THEN
 END IF
 
 
-CALL Deallocate_XCFC_Source_Variables()
+!CALL Deallocate_XCFC_Source_Variables()
 
 
 
@@ -171,7 +171,7 @@ LOGICAL                         :: PR = .FALSE.
 
 
 
-CALL Allocate_XCFC_Source_Variables()
+!CALL Allocate_XCFC_Source_Variables()
 
 
 IF ( Verbose_Flag ) THEN
@@ -195,7 +195,7 @@ CALL XCFC_Lapse_Solve()
 
 CALL XCFC_Shift_Solve()
 
-CALL Deallocate_XCFC_Source_Variables()
+!CALL Deallocate_XCFC_Source_Variables()
 
 
 END SUBROUTINE XCFC_Method_New
@@ -220,7 +220,7 @@ LOGICAL                             :: PR = .FALSE.
 
 
 
-CALL Allocate_XCFC_Source_Variables()
+!CALL Allocate_XCFC_Source_Variables()
 
 
 IF ( Verbose_Flag ) THEN
@@ -241,7 +241,7 @@ IF ( CFA_Eq_Flags(1) == 1 ) THEN
     CALL XCFC_ConFactor_Solve()
 END IF
 
-CALL Deallocate_XCFC_Source_Variables()
+!CALL Deallocate_XCFC_Source_Variables()
 
 END SUBROUTINE XCFC_Method_Part1
 
@@ -269,7 +269,7 @@ END SUBROUTINE XCFC_Method_Part1
 !###############################################################################!
 SUBROUTINE XCFC_Method_Part2()
 
-CALL Allocate_XCFC_Source_Variables()
+!CALL Allocate_XCFC_Source_Variables()
 
 IF ( Verbose_Flag ) THEN
     PRINT*,"Begining XCFC Metric Solve (Part 2 of 2)."
@@ -290,7 +290,7 @@ END IF
 
 
 
-CALL Deallocate_XCFC_Source_Variables()
+!CALL Deallocate_XCFC_Source_Variables()
 
 
 

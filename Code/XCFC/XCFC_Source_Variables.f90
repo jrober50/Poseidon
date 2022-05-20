@@ -90,7 +90,7 @@ CONTAINS
 !################################################################################!
 SUBROUTINE Allocate_XCFC_Source_Variables()
 
-
+PRINT*,"In Allocate_XCFC_Source_Variables",Num_R_Quad_Points
 
 ALLOCATE( CUR_R_LOCS(1:NUM_R_QUAD_POINTS) )
 ALLOCATE( CUR_T_LOCS(1:NUM_T_QUAD_POINTS) )

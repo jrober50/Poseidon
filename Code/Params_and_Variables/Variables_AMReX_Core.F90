@@ -64,6 +64,8 @@ INTEGER, PUBLIC, DIMENSION(:), ALLOCATABLE      ::  FEM_Elem_Table
 INTEGER, PUBLIC, DIMENSION(:), ALLOCATABLE      ::  Table_Offsets
 
 
+INTEGER, PUBLIC                                 ::  MF_Source_nComps
+
 #ifdef POSEIDON_AMREX_FLAG
 
 TYPE(amrex_multifab),  PUBLIC,  ALLOCATABLE     ::  MF_Source(:)

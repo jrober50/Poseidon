@@ -30,7 +30,8 @@ USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
 USE Poseidon_Units_Module, &
-            ONLY :  Set_Units
+            ONLY :  Set_Units,      &
+                    Centimeter
 
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
@@ -47,6 +48,9 @@ USE Poseidon_Parameters, &
 
 USE Allocation_Core, &
             ONLY :  Allocate_Poseidon_CFA_Variables
+
+USE XCFC_Source_Variables_Module, &
+            ONLY :  Allocate_XCFC_Source_Variables
 
 USE Variables_MPI, &
             ONLY :  nProcs_Poseidon
@@ -154,7 +158,8 @@ USE amrex_multifab_module,  &
                     amrex_imultifab_destroy
 
 USE Variables_AMReX_Core, &
-            ONLY :  MF_Source
+            ONLY :  MF_Source,              &
+                    MF_Source_nComps
 #endif
 
 USE Variables_AMReX_Core, &
@@ -264,7 +269,8 @@ AMReX_Mode = .TRUE.
 CALL Init_AMReX_Parameters_From_Input_File()
 
 
-
+R_Inner = R_Inner*Centimeter
+R_Outer = R_Outer*Centimeter
 
 
 
@@ -274,6 +280,9 @@ IF ( PRESENT( Units_Option ) ) THEN
 ELSE
     CALL Set_Units("G")
 END IF
+
+
+
 
 
 IF ( PRESENT( Integration_NQ_Option ) ) THEN
@@ -288,7 +297,7 @@ END IF
 Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
 Local_Quad_DOF     = Num_R_Quad_Points*Num_TP_Quad_Points
 
-
+MF_Source_nComps   = 5*Local_Quad_DOF
 
 
 
@@ -360,6 +369,7 @@ ELSE
 
     CALL Initialize_Derived_AMReX()
     CALL Allocate_Poseidon_CFA_Variables()
+    CALL Allocate_XCFC_Source_Variables()
     CALL Initialize_Quadrature()
     CALL Initialize_Tables()
 

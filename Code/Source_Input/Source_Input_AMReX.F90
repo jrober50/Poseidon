@@ -92,7 +92,8 @@ USE Functions_Math, &
 #ifdef POSEIDON_AMREX_FLAG
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
-                    AMReX_Num_Levels
+                    AMReX_Num_Levels,   &
+                    MF_Source_nComps
 
 USE Poseidon_AMReX_Utilities_Module,    &
             ONLY :  AMReX2Poseidon,     &
@@ -138,7 +139,7 @@ CONTAINS
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_AMREX( MF_Src_Input,          &
-                                         MF_Src_nComps,         &
+                                         MF_Src_Input_nComps,         &
                                          Num_Levels,            &
                                          Input_NQ,              &
                                          Input_R_Quad,          &
@@ -147,7 +148,7 @@ SUBROUTINE Poseidon_Input_Sources_AMREX( MF_Src_Input,          &
                                          Input_xL               )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:Num_Levels-1)
-INTEGER,                                INTENT(IN)  ::  MF_Src_nComps
+INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
 INTEGER,                                INTENT(IN)  ::  Num_Levels
 
 INTEGER,    DIMENSION(3),               INTENT(IN)  ::  Input_NQ
@@ -174,7 +175,6 @@ INTEGER                                             ::  Local_P
 INTEGER                                             ::  Input_T
 INTEGER                                             ::  Input_P
 
-INTEGER                                             ::  nComp
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)
 
@@ -279,7 +279,7 @@ IF ( Source_Remesh_Flag ) THEN
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
-                                    MF_Src_nComps, 1                        )
+                                    MF_Source_nComps, 1                        )
 
         Source_Remesh_Flag = .FALSE.
     END DO
@@ -295,7 +295,6 @@ DO level = 0,AMReX_Num_Levels-1
         My_PTR = 0.0_idp
 
         Box = mfi%tilebox()
-        nComp =  MF_Source(level)%ncomp()
 
         iEL = Box%lo
         iEU = Box%hi
@@ -346,12 +345,11 @@ END SUBROUTINE Poseidon_Input_Sources_AMREX
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_AMREX_Caller( MF_Src_Input,       &
-                                                MF_Src_nComps       )
+                                                MF_Src_Input_nComps       )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:Caller_nLevels-1)
-INTEGER,                                INTENT(IN)  ::  MF_Src_nComps
+INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
 
-INTEGER                                             ::  nComp
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)
 
@@ -377,7 +375,7 @@ IF ( Source_Remesh_Flag ) THEN
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
-                                    MF_Src_nComps, 1                        )
+                                    MF_Source_nComps, 1                        )
         Source_Remesh_Flag = .FALSE.
     END DO
 END IF
@@ -393,7 +391,6 @@ DO level = 0,AMReX_Num_Levels-1
         My_PTR = 0.0_idp
 
         Box = mfi%tilebox()
-        nComp =  MF_Source(level)%ncomp()
 
         iEL = Box%lo
         iEU = Box%hi
@@ -452,7 +449,7 @@ END SUBROUTINE Poseidon_Input_Sources_AMREX_Caller
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX( MF_Src_Input,          &
-                                          MF_Src_nComps,         &
+                                          MF_Src_Input_nComps,         &
                                           Num_Levels,            &
                                           Input_NQ,              &
                                           Input_R_Quad,          &
@@ -461,7 +458,7 @@ SUBROUTINE Poseidon_Input_Sources_Part1_AMReX( MF_Src_Input,          &
                                           Input_xL               )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:Num_Levels-1)
-INTEGER,                                INTENT(IN)  ::  MF_Src_nComps
+INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
 INTEGER,                                INTENT(IN)  ::  Num_Levels
 
 INTEGER,    DIMENSION(3),               INTENT(IN)  ::  Input_NQ
@@ -488,7 +485,6 @@ INTEGER                                             ::  Local_P
 INTEGER                                             ::  Input_T
 INTEGER                                             ::  Input_P
 
-INTEGER                                             ::  nComp
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)
 
@@ -594,7 +590,7 @@ IF ( Source_Remesh_Flag ) THEN
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
-                                    MF_Src_nComps, 1                        )
+                                    MF_Source_nComps, 1                        )
         Source_Remesh_Flag = .FALSE.
     END DO
 END IF
@@ -610,7 +606,6 @@ DO level = 0,AMReX_Num_Levels-1
 
 
         Box = mfi%tilebox()
-        nComp =  MF_Source(level)%ncomp()
 
         iEL = Box%lo
         iEU = Box%hi
@@ -681,12 +676,11 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller( MF_Src_Input,       &
-                                                      MF_Src_nComps       )
+                                                      MF_Src_Input_nComps       )
 
-TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:Caller_nLevels-1)
-INTEGER,                                INTENT(IN)  ::  MF_Src_nComps
+TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:Caller_nLevels-1)
+INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
 
-INTEGER                                             ::  nComp
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)
 
@@ -711,11 +705,14 @@ IF ( Source_Remesh_Flag ) THEN
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
-                                    MF_Src_nComps, 1                        )
+                                    MF_Source_nComps, 1         )
 
         Source_Remesh_Flag = .FALSE.
     END DO
 END IF
+
+
+
 
 DO level = 0,AMReX_Num_Levels-1
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
@@ -727,7 +724,6 @@ DO level = 0,AMReX_Num_Levels-1
 
 
         Box = mfi%tilebox()
-        nComp =  MF_Source(level)%ncomp()
 
         iEL = Box%lo
         iEU = Box%hi
