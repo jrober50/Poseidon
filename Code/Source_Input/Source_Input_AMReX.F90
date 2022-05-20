@@ -332,6 +332,7 @@ CALL TimerStop(Timer_GR_SourceInput)
 
 IF ( Poseidon_Remesh_Flag ) THEN
     Call Initialization_XCFC_with_AMReX()
+    Poseidon_Remesh_Flag = .FALSE.
 END IF
 
 
@@ -430,6 +431,7 @@ CALL TimerStop(Timer_GR_SourceInput)
 
 IF ( Poseidon_Remesh_Flag ) THEN
     Call Initialization_XCFC_with_AMReX()
+    Poseidon_Remesh_Flag = .FALSE.
 END IF
 
 
@@ -663,6 +665,7 @@ CALL TimerStop(Timer_GR_SourceInput)
 
 IF ( Poseidon_Remesh_Flag ) THEN
     Call Initialization_XCFC_with_AMReX()
+    Poseidon_Remesh_Flag = .FALSE.
 END IF
 
 
@@ -778,6 +781,7 @@ CALL TimerStop(Timer_GR_SourceInput)
 
 IF ( Poseidon_Remesh_Flag ) THEN
     Call Initialization_XCFC_with_AMReX()
+    Poseidon_Remesh_Flag = .FALSE.
 END IF
 
 
