@@ -40,10 +40,10 @@ INTEGER, PUBLIC, PARAMETER          ::  iVB_X = 2
 !   Source Varaible, S, Indices
 !
 INTEGER, PUBLIC, PARAMETER          ::  iS_E  = 1
-INTEGER, PUBLIC, PARAMETER          ::  iS_S  = 2
-INTEGER, PUBLIC, PARAMETER          ::  iS_S1 = 3
-INTEGER, PUBLIC, PARAMETER          ::  iS_S2 = 4
-INTEGER, PUBLIC, PARAMETER          ::  iS_S3 = 5
+INTEGER, PUBLIC, PARAMETER          ::  iS_S  = 5
+INTEGER, PUBLIC, PARAMETER          ::  iS_S1 = 2
+INTEGER, PUBLIC, PARAMETER          ::  iS_S2 = 3
+INTEGER, PUBLIC, PARAMETER          ::  iS_S3 = 4
 
 
 
