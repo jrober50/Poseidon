@@ -31,7 +31,8 @@ USE Poseidon_Numbers_Module, &
 
 USE Poseidon_Units_Module, &
             ONLY :  Set_Units,      &
-                    Centimeter
+                    Centimeter,     &
+                    Kilometer
 
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
@@ -276,8 +277,8 @@ ELSE
 END IF
 
 
-R_Inner = R_Inner*Centimeter
-R_Outer = R_Outer*Centimeter
+R_Inner = R_Inner*Kilometer
+R_Outer = R_Outer*Kilometer
 
 
 IF ( PRESENT( Integration_NQ_Option ) ) THEN
