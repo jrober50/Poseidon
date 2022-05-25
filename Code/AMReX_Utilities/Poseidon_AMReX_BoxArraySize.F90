@@ -44,8 +44,9 @@ USE amrex_multifab_module,  ONLY: &
 
 IMPLICIT NONE
 
-
+#ifdef POSEIDON_AMREX_FLAG
 INTERFACE
+
 !+101+##########################################################################!
 !                                                                               !
 !                                                     				!
@@ -63,7 +64,7 @@ INTERFACE
 
 
 END INTERFACE
-
+#endif
 
 CONTAINS
 

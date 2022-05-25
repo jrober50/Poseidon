@@ -1,0 +1,11 @@
+FLAGS = \
+Flags_Allocation.f90           \
+Flags_Boundary_Conditions.f90  \
+Flags_Debug.f90                \
+Flags_Initial_Guess.f90        \
+Flags_Initialization.f90       \
+Flags_Run_Check.f90            \
+Flags_Routines.f90             \
+Flags_Main.f90                 \
+
+

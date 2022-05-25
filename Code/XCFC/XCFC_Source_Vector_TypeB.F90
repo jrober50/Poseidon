@@ -212,6 +212,10 @@ INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL         ! Lower Element Triplet
     CALL XCFC_AMReX_Calc_Source_Vector_TypeB( iU, iVB )
 
 #else
+
+    INTEGER, DIMENSION(3)           ::  iE
+    INTEGER                         ::  re, te, pe
+
     FP_Source_Vector_B(:,iVB) = 0.0_idp
     DO re = iEL(1),iEU(1)
     DO te = iEL(2),iEU(2)

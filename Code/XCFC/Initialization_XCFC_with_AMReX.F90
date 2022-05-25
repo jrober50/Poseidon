@@ -86,13 +86,9 @@ USE Variables_Functions, &
                     Calc_1D_CFA_Values
 
 USE Variables_FP, &
-            ONLY :  CFA_EQ_Map,                 &
-                    CFA_Var_Map,                &
-                    CFA_Mat_Map,                &
-                    Laplace_NNZ,                &
+            ONLY :  Laplace_NNZ,                &
                     Beta_Diagonals,             &
-                    Beta_Bandwidth,             &
-                    Num_Matrices
+                    Beta_Bandwidth
 
 USE Allocation_XCFC, &
             ONLY :  Allocate_XCFC

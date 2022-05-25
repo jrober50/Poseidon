@@ -198,6 +198,7 @@ SUBROUTINE Initialize_Poseidon_with_AMReX(  Source_NQ,                          
                                             AMReX_FEM_Refinement_Option,        &
                                             AMReX_Integral_Refinement_Option,   &
                                             Poisson_Mode_Option,                &
+                                            Flat_Guess_Option,                  &
                                             Verbose_Option,                     &
                                             WriteAll_Option,                    &
                                             Print_Setup_Option,                 &
@@ -229,6 +230,7 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_FEM_Refine
 INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Integral_Refinement_Option
 
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Poisson_Mode_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Flat_Guess_Option
 
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Verbose_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  WriteAll_Option
@@ -251,7 +253,7 @@ CALL TimerStart( Timer_Initialization_Core )
 
 #ifdef POSEIDON_AMREX_FLAG
 DOMAIN_DIM = amrex_spacedim
-#endif
+
 
 
 IF ( PRESENT( Verbose_Option ) ) THEN
@@ -294,7 +296,7 @@ Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
 Local_Quad_DOF     = Num_R_Quad_Points*Num_TP_Quad_Points
 
 MF_Source_nComps   = 5*Local_Quad_DOF
-
+!lPF_Init_Flag(iPF_Init_Quad_Vars) = .TRUE.
 
 
 CALL Init_IO_Params(WriteAll_Option,            &
@@ -324,6 +326,13 @@ IF ( PRESENT(Poisson_Mode_Option) ) THEN
 ELSE
     Poisson_Mode = .FALSE.
 END IF
+
+IF ( PRESENT(Flat_Guess_Option) ) THEN
+    Flat_Guess_Flag = Poisson_Mode_Option
+ELSE
+    Flat_Guess_Flag = .TRUE.
+END IF
+
 
 
 IF ( Poisson_Mode ) THEN
@@ -397,7 +406,7 @@ END IF
 
 CALL TimerStop( Timer_Initialization_Core )
 
-
+#endif
 
 
 END SUBROUTINE Initialize_Poseidon_with_AMReX

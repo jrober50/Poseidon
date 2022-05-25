@@ -72,10 +72,7 @@ USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature
 
 USE Variables_FP, &
-            ONLY :  Matrix_Format,              &
-                    Laplace_Matrix_Beta,        &
-                    CFA_EQ_Map,                 &
-                    CFA_Mat_Map
+            ONLY :  Laplace_Matrix_Beta
 
 USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File

@@ -77,8 +77,6 @@ USE Variables_FP, &
                     Beta_IPIV,                  &
                     Beta_MVL_Banded,            &
                     Beta_MVL_Diagonal,          &
-                    CFA_EQ_Map,                 &
-                    CFA_Mat_Map,                &
                     First_Column_Beta_Storage,  &
                     Last_Column_Beta_Storage,   &
                     Beta_Factorized_Flag

@@ -300,7 +300,7 @@ DO lvl = nLevels-1,0,-1
                     + (td-1)*NQ(1)                  &
                     + rd
                 Var_Holder_Elem(Here) = Tmp_U_Value
-    
+                PRINT*,iU,re,rd,Var_Holder_ELEM(Here)
             END DO ! rd
             END DO ! td
             END DO ! pd

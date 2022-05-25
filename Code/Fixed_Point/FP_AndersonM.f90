@@ -65,33 +65,7 @@ USE Poseidon_Parameters, &
 
 
 USE Variables_FP,  &
-            ONLY :  Matrix_Format,              &
-                    Linear_Solver,              &
-                    FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B,          &
-                    FP_Update_Vector,           &
-                    FP_Laplace_Vector,          &
-                    FP_Residual_Vector,         &
-                    FP_Laplace_Vector_Beta,     &
-                    FP_Residual_Vector_Beta,    &
-                    Laplace_Matrix_Full,        &
-                    Laplace_Matrix_VAL,         &
-                    Laplace_Matrix_ROW,         &
-                    Laplace_Matrix_COL,         &
-                    Laplace_Factored_VAL,       &
-                    Laplace_Factored_ROW,       &
-                    Laplace_Factored_COL,       &
-                    Laplace_Matrix_Beta,        &
-                    CFA_Eq_Map,                 &
-                    CFA_MAT_Map,                &
-                    Laplace_NNZ,                &
-                    Num_Matrices,               &
-                    MCF_Flag,                   &
-                    FP_Anderson_M
-
-USE Functions_Mesh, &
-            ONLY :  Create_Logarithmic_1D_Mesh,     &
-                    Create_Uniform_1D_Mesh
+            ONLY :  FP_Anderson_M
 
 USE FP_Source_Vector_Module, &
             ONLY :  Calc_FP_Source_Vector,          &

@@ -85,8 +85,7 @@ USE Variables_FP, &
             ONLY :  FP_Coeff_Vector_A,          &
                     FP_Coeff_Vector_B,          &
                     FP_Source_Vector_A,         &
-                    FP_Source_Vector_B,         &
-                    CFA_EQ_Map
+                    FP_Source_Vector_B
 
 USE Functions_Jacobian, &
             ONLY :  JCBN_kappa_FUNCTION_3D_ALL,     &

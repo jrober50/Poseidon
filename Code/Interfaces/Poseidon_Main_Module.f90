@@ -466,10 +466,6 @@ END IF
 
 
 
-
-
-
-
 END SUBROUTINE Poseidon_CFA_Set_Uniform_Boundary_Conditions
 
 

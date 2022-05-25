@@ -60,8 +60,6 @@ USE Variables_FP, &
                     Laplace_Factored_VAL,       &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
-                    CFA_EQ_Map,                 &
-                    CFA_Mat_Map,                &
                     MCF_Flag,                   &
                     Beta_MVL_Banded,            &
                     Beta_Factorized_Flag,       &

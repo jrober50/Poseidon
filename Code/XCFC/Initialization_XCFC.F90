@@ -82,6 +82,10 @@ USE Timer_Variables_Module, &
             ONLY :  Timer_XCFC_Initialization,      &
                     Timer_XCFC_Matrix_Init
 
+!USE Flags_Initialization_Module, &
+!            ONLY :  lPF_Init_Flags,                 &
+!                    iPF_Init_Eq_Maps,               &
+!                    iPF_Init_XCFC
 
 
 IMPLICIT NONE
@@ -149,6 +153,8 @@ Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
 Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
 
+
+!lPF_Init_Flag(iPF_Init_XCFC) = .TRUE.
 CALL TimerStop( Timer_XCFC_Initialization )
 
 
@@ -231,6 +237,9 @@ ELSE
         END IF
     END DO
 END IF
+
+
+!lPF_Init_Flag(iPF_Init_Eq_Maps) = .TRUE.
 
 
 END SUBROUTINE Create_Eq_Maps
