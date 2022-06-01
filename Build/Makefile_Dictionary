@@ -17,6 +17,7 @@ EXT	= F90
 
 FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90 -cpp
 FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
+FORT_kkadoogan     = $(MPI_HOME)/bin/mpif90
 FORT_MacBook 	   = /usr/local/openmpi/bin/mpif90
 FORT_Rhea	   = mpifort
 FORT_BlueWaters    = ftn
@@ -39,6 +40,9 @@ STD_OPTIMIZE_NicksMacBook = -O2
 STD_DEBUG_sjdunham    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
 STD_OPTIMIZE_sjdunham = -O2
 
+STD_DEBUG_kkadoogan    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
+STD_OPTIMIZE_kkadoogan = -O2
+
 STD_DEBUG_MacBook	= -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
 STD_OPTIMIZE_MacBook	= -O2
 
@@ -50,7 +54,7 @@ STD_OPTIMIZE_BlueWaters	= -O2
 
 
 POSEIDON_DEBUG_FLAG_ON  = -DPOSEIDON_DEBUG_FLAG
-POSEIDON_DEBUG_FLAG_OFF = 
+POSEIDON_DEBUG_FLAG_OFF =
 
 
 ### OpenMP
@@ -60,6 +64,9 @@ OPENMP_NicksMacBook_OFF              =
 
 OPENMP_sjdunham_ON                   = -fopenmp
 OPENMP_sjdunham_OFF                  =
+
+OPENMP_kkadoogan_ON                  = -fopenmp
+OPENMP_kkadoogan_OFF                 =
 
 OPENMP_MacBook_ON		= -fopenmp
 OPENMP_MacBook_OFF		=
@@ -84,7 +91,7 @@ OPENMP_BlueWaters_OFF		= -h noomp
 #USE_F_INTERFACES       = TRUE
 
 AMREX_DEF_FLAG_ON      =-DPOSEIDON_AMREX_FLAG
-AMREX_DEF_FLAG_OFF     = 
+AMREX_DEF_FLAG_OFF     =
 
 
 
@@ -103,6 +110,11 @@ PETSC_sjdunham_ARCH = $(PETSC_DIR)/$(PETSC_ARCH)
 PETSC_sjdunham_ON   = -I$(PETSC_sjdunham_DIR)/include -I$(PETSC_sjdunham_ARCH)/include -L$(PETSC_sjdunham_DIR)/lib -L$(PETSC_sjdunham_ARCH)/lib -lpetsc
 PETSC_sjdunham_Off  =
 
+PETSC_kkadoogan_DIR  =
+PETSC_kkadoogan_ARCH =
+PETSC_kkadoogan_ON   =
+PETSC_kkadoogan_Off  =
+
 PETSC_MacBook_DIR       = $(PETSC_$(MACHINE_NAME)_DIR)
 PETSC_MacBook_ARCH      = arch-darwin-c-debug
 PETSC_MacBook_ON	= -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
@@ -116,7 +128,7 @@ PETSC_BlueWaters_OFF	=
 
 
 PETSC_DEF_FLAG_ON       =-DPOSEIDON_PETSC_FLAG
-PETSC_DEF_FLAG_OFF      = 
+PETSC_DEF_FLAG_OFF      =
 
 
 #### HDF5
@@ -125,6 +137,8 @@ HDF5_NicksMacBook_ON         = -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  
 HDF5_NicksMacBook_OFF        =
 HDF5_sjdunham_ON             = -I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5_fortran -lhdf5
 HDF5_sjdunham_OFF            =
+HDF5_kkadoogan_ON             = -I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5_fortran -lhdf5
+HDF5_kkadoogan_OFF            =
 HDF5_MacBook_ON		= -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5
 HDF5_MacBook_OFF 	=
 HDF5_Rhea_ON            =
@@ -143,6 +157,9 @@ MPI_NicksMacBook_Include    = -L/usr/local/openmpi/include
 MPI_sjdunham_Lib            = -I$(MPICH_DIR)/lib
 MPI_sjdunham_Include        = -L$(MPICH_DIR)/include
 
+MPI_kkadoogan_Lib            = -L$(MPI_HOME)/lib
+MPI_kkadoogan_Include        = -I$(MPI_HOME)/include
+
 MPI_MacBook_Lib             = -I/usr/local/openmpi/lib
 MPI_MacBook_Include         = -L/usr/local/openmpi/include
 
@@ -158,6 +175,7 @@ MPI_OFF                     =
 LAPACK_NicksMacBook     = -lblas -llapack
 #LAPACK_NicksMacBook     = -framework Accelerate
 LAPACK_sjdunham         = -framework Accelerate -fallow-argument-mismatch
+LAPACK_kkadoogan        = -L$(LAPACK_DIR)/lib -llapack -lblas
 LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl
 LAPACK_BlueWaters	=
@@ -180,6 +198,7 @@ OUTPUT_LINKER_ftn	= -J
 ### Legacy, Only Used to Create Variable Names ###
 COMP_NicksMacBook  = gfortran
 COMP_sjdunham      = gfortran
+COMP_kkadoogan     = gfortran
 COMP_MacBook       = gfortran
 COMP_Rhea          = ifort
 COMP_BlueWaters    = ftn
@@ -192,12 +211,12 @@ PETSC_COMP	=$(PETSC_DEF_FLAG_$(PETSC_MODE)) $(PETSC_$(MACHINE_NAME)_$(PETSC_MODE
 HDF5_COMP       =$(HDF5_$(MACHINE_NAME)_$(HDF5_MODE))
 MPI_COMP        =$(MPI_$(MPI_MODE))
 FORT		=$(FORT_$(MACHINE_NAME)) $(PETSC_COMP) $(AMREX_COMP) $(HDF5_COMP) $(OPENMP_COMP) $(MPI_COMP)  $(LAPACK_$(MACHINE_NAME))
-CC              =$(CC_$(MACHINE_NAME)) 
+CC              =$(CC_$(MACHINE_NAME))
 INCLUDE_LINKER	=$(INCLUDE_LINKER_$(COMP_$(MACHINE_NAME)))
 OUTPUT_LINKER	=$(OUTPUT_LINKER_$(COMP_$(MACHINE_NAME)))
 DRIVER_OBJ	=$(OBJ)/d.main_$(DIMENSION).o
 
-POSEIDON_DEFS   =$(AMREX_DEF_FLAG_$(AMREX_MODE)) $(PETSC_DEF_FLAG_$(PETSC_MODE)) $(POSEIDON_DEBUG_FLAG_$(DEBUG_MODE)) 
+POSEIDON_DEFS   =$(AMREX_DEF_FLAG_$(AMREX_MODE)) $(PETSC_DEF_FLAG_$(PETSC_MODE)) $(POSEIDON_DEBUG_FLAG_$(DEBUG_MODE))
 
 
 
