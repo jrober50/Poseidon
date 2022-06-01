@@ -300,7 +300,6 @@ E_Level_Threshold = Central_E/10**(AMReX_Max_Level-Level)
 
 !E_Level_Threshold = Central_E/Half_Decade_Table(Level)
 
-!PRINT*,"Level ",level," Threshold ",E_Level_Threshold," Central E ",Central_E
 
 DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
@@ -308,21 +307,12 @@ DO re = BLo(1),BHi(1)
     
     E_Element_Max = MAXVAL( Src(re,te,pe,0:Num_DOF-1))
     
-!    PRINT*,"E_Max ",E_Element_Max," Threshold ",E_Level_Threshold
     IF ( E_Element_Max > E_Level_Threshold ) THEN
-!        PRINT*,"Refining",re
         Tag(re,te,pe,1) = SetTag
     ELSE
         Tag(re,te,pe,1) = ClearTag
     END IF
 
-!    IF ( re < Fourth ) THEN
-!        Tag(re,te,pe,1) = SetTag
-!    ELSE IF ( re > UFourth ) THEN
-!        Tag(re,te,pe,1) = SetTag
-!    ELSE
-!        Tag(re,te,pe,1) = ClearTag
-!    END IF
 
 
 
