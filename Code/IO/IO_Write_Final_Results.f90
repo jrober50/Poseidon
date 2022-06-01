@@ -85,7 +85,6 @@ USE Variables_Mesh, &
 
 USE Variables_IO, &
             ONLY :  Write_Flags,            &
-                    Report_Flags,           &
                     Report_IDs,             &
                     Iter_Time_Table,        &
                     Frame_Time_Table,       &
@@ -147,6 +146,9 @@ USE Poseidon_File_Routines_Module, &
                     Open_Existing_File
 
 
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,               &
+                    iPF_IO_Write_Results
 
 
 IMPLICIT NONE
@@ -195,7 +197,7 @@ END IF
 
 
 
-IF ( Write_Flags(iWF_Results) > 1 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
 
     Num_Files = 4 + SUM(CFA_Eq_Flag_Used)+1

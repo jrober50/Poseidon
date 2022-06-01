@@ -101,7 +101,7 @@ IF ( MATRIX_FORMAT == 'Full' ) THEN
 
 ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 
-
+    PRINT*,"In Allocate_XCFC, Num_R_Nodes ",Num_R_Nodes
     ALLOCATE( Laplace_Matrix_VAL(0:Laplace_NNZ-1, 0:L_LIMIT,1:Num_Matrices) )
     ALLOCATE( Laplace_Matrix_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
     ALLOCATE( Laplace_Matrix_COL(0:NUM_R_NODES, 0:L_LIMIT) )

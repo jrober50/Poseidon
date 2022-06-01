@@ -64,12 +64,6 @@ USE Functions_Quadrature, &
 USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
-USE Poseidon_IO_Module, &
-            ONLY :  Open_Run_Report_File,       &
-                    Open_New_File,              &
-                    OPEN_FILE_INQUISITION,      &
-                    Output_Poseidon_Sources_3D
-
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
 
@@ -80,12 +74,6 @@ USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Run,                                       &
                     Poseidon_Close
 
-USE Initial_Guess_Module, &
-            ONLY :  Poseidon_Input_Guess,           &
-                    Poseidon_Init_FlatGuess
-
-USE FP_IO_Module, &
-            ONLY :  Output_FP_Timetable
 
 USE Poseidon_Utilities_Module, &
             ONLY :  Poseidon_Calc_ADM_Mass,         &
@@ -293,8 +281,8 @@ SelfSim_V_Switch    =  0
 
 Dimension_Input     = 3
 
-Max_Iterations      = 1000
-CC_Option           = 1.0E-15_idp
+Max_Iterations      = 10
+CC_Option           = 1.0E-10_idp
 
 Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
@@ -332,10 +320,7 @@ CALL Set_Units(Units_Input)
 
 
 
-Domain_Edge = Domain_Edge*Centimeter
 
-
-CALL Open_Run_Report_File()
 
 DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
@@ -409,6 +394,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
            L_Limit_Option              = L_Limit_Input,                 &
            Units_Option                = Units_Input,                   &
            Domain_Edge_Option          = Domain_Edge,                   &
+           Radial_Boundary_Units_Option= "cm",                          &
            NE_Option                   = NE,                            &
            NQ_Option                   = NQ,                            &
            r_Option                    = x_e,                           &

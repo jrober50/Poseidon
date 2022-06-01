@@ -1,11 +1,13 @@
 POSEIDON = \
   $(COMMON)          \
   $(VARIABLES)       \
+  $(FLAG_MODULES)    \
   $(TIMERS)          \
   $(MAPS)            \
   $(MESH)            \
   $(QUAD)            \
   $(FUNCTIONS)       \
+  $(INITIAL_GUESS)   \
   $(AMREX_UTILITIES) \
   $(MPI)             \
   $(TABLES)          \

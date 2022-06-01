@@ -88,9 +88,6 @@ USE Variables_FP, &
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
 
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In
-
 USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
 
@@ -306,6 +303,7 @@ CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
 FEM_Elem = iE(1)
 DROT = 0.5_idp * (rlocs(iE(1)+1) - rlocs(iE(1)))
 DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
+
 
 CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
 CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))

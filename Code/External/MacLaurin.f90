@@ -46,9 +46,9 @@ USE Variables_MPI, &
             ONLY :  myID_Poseidon,          &
                     MasterID_Poseidon
 
-USE  Variables_IO, &
-            ONLY :  Report_Flags,           &
-                    iRF_Setup
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,           &
+                    iPF_IO_Print_Setup
 
 USE Maps_X_Space, &
             ONLY :  Map_To_X_Space,         &
@@ -195,7 +195,7 @@ BB = B*B
 CC = C*C
 
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
-IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3) ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Print_Setup)   ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : MacLaurin Spheroid'
     WRITE(*,'(A,A)')      ' - Spheroid Type  :  ', Spheroid_Name

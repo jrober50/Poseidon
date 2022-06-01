@@ -34,8 +34,8 @@ USE Poseidon_Units_Module, &
 USE Variables_Functions, &
             ONLY :  Potential_Solution
 
-USE Initial_Guess_Module, &
-            ONLY :  Poseidon_Input_Guess
+USE Poseidon_Initial_Guess_Module, &
+            ONLY :  Poseidon_Input_Initial_Guess
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
@@ -169,20 +169,20 @@ IF ( Verbose_Flag ) THEN
     WRITE(*,'(A)')"-Setting Initial Guess"
 END IF
 
-CALL Poseidon_Input_Guess(  Psi_Guess,          &
-                            AlphaPsi_Guess,     &
-                            Beta_Guess,         &
-                            NE(1),              &
-                            NE(2),              &
-                            NE(3),              &
-                            NQ(1),              &
-                            NQ(2),              &
-                            NQ(3),              &
-                            R_Quad,             &
-                            T_Quad,             &
-                            P_Quad,             &
-                            LeftLimit,          &
-                            RightLimit          )
+CALL Poseidon_Input_Initial_Guess(  Psi_Guess,          &
+                                    AlphaPsi_Guess,     &
+                                    Beta_Guess,         &
+                                    NE(1),              &
+                                    NE(2),              &
+                                    NE(3),              &
+                                    NQ(1),              &
+                                    NQ(2),              &
+                                    NQ(3),              &
+                                    R_Quad,             &
+                                    T_Quad,             &
+                                    P_Quad,             &
+                                    LeftLimit,          &
+                                    RightLimit          )
 
 
 

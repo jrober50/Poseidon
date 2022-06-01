@@ -106,7 +106,7 @@ INTEGER, INTENT(IN)                                             ::  iU
 COMPLEX(KIND = idp), DIMENSION(NUM_R_NODES)                     ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                  ::  WORK_ELEM_VAL
 
-INTEGER                                                         ::  l, m, i
+INTEGER                                                         ::  l, m
 INTEGER                                                         ::  lm_loc, ierr
 
 INTEGER                                                         ::  Lower_Limit

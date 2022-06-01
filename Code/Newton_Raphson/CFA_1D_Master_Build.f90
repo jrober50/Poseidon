@@ -150,9 +150,6 @@ USE Functions_Jacobian, &
                         JCBN_BIGK_FUNCTION_1D
 
 
-USE Poseidon_IO_Module, &
-                ONLY :  Clock_In
-                        
 USE IO_Linear_System, &
                 ONLY :  OUTPUT_RHS_VECTOR_Parts,        &
                         OUTPUT_LAPLACE_MATRIX
@@ -260,9 +257,6 @@ SUBROUTINE CFA_1D_Master_Build()
 REAL(KIND = idp)        :: timea, timeb, timec
 
 
-timea = 0.0_idp
-timeb = 0.0_idp
-timec = 0.0_idp
 
 
 !*!
@@ -277,37 +271,24 @@ CALL Allocate_Master_Build_Variables()
 !*!
 PRINT*,"Before CFA_3D_Apply_BCs_Part1"
 CALL CFA_3D_Apply_BCs_Part1()
-timec = MPI_Wtime()
-CALL Clock_In(timec-timeb, 4)
 
 
-Time_J = 0.0_idp
-Time_M = 0.0_idp
 
 !*!
 !*! Create the Non-Laplacian Contributions to the Linear System
 !*!
 PRINT*,"Before CREATE_1D_NONLAPLACIAN_SOE"
-timeb = MPI_Wtime()
 CALL CREATE_1D_NONLAPLACIAN_SOE()
-timea = MPI_Wtime()
-CALL Clock_In(timea-timeb, 9)
 
-IF ( .FALSE. ) THEN
-    PRINT*,"Time_J = ",Time_J
-    PRINT*,"Time_M = ",Time_M
-    PRINT*,"Time_Tot = ",Time_J+Time_M
-END IF
+
 
 
 !*!
 !*! Reduce the Non-Laplacian Contributions to Processes involved in the solve
 !*!
 PRINT*,"Before REDUCE_1D_NONLAPLACIAN_SOE"
-timeb = MPI_Wtime()
 CALL REDUCE_1D_NONLAPLACIAN_SOE()
-timea = MPI_Wtime()
-CALL Clock_In(timea-timeb, 10)
+
 
 
 
@@ -315,24 +296,16 @@ CALL Clock_In(timea-timeb, 10)
 !*! Add the Laplacian contribution to the Jacobian Matrix
 !*!
 PRINT*,"Before FINISH_1D_JACOBIAN_MATRIX"
-timeb = MPI_Wtime()
 CALL FINISH_1D_JACOBIAN_MATRIX()
-timea = MPI_Wtime()
-CALL Clock_In(timea-timeb, 11)
 
 
 !*!
 !*! Add the Laplacian contribution to the Residual Vector
 !*!
 PRINT*,"Before FINISH_1D_RHS_VECTOR"
-timeb = MPI_Wtime()
 CALL FINISH_1D_RHS_VECTOR()
-timea = MPI_Wtime()
-CALL Clock_In(timea-timeb, 12)
 
 
-
-!CALL Jacobi_Type_B_PC()
 
 
 
@@ -340,10 +313,7 @@ CALL Clock_In(timea-timeb, 12)
 !*! Alter the Jacobian Matrix to Reflect Boundary Conditions
 !*!
 PRINT*,"Before CFA_3D_Apply_BCs_Part2"
-timeb = MPI_Wtime()
 CALL CFA_3D_Apply_BCs_Part2()
-timec = MPI_Wtime()
-CALL Clock_In(timec-timeb, 13)
 
 
 
@@ -535,15 +505,6 @@ DO Local_re = 0,NUM_R_ELEMS_PER_BLOCK-1
 
 END DO  ! pe Loop
 
-
-!    END DO  ! te Loop
-!END DO  ! re Loop
-
-
-CALL Clock_In(time_CurVals, 5)
-CALL Clock_In(time_SJT, 6)
-CALL Clock_In(time_RHS, 7)
-CALL Clock_In(time_JCBNM, 8)
 
 
 

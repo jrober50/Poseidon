@@ -3,7 +3,9 @@ $(OBJ)                                          \
 $(POSEIDON_ACTIVE_DIR)/Code:                           \
 $(POSEIDON_ACTIVE_DIR)/Code/Common:                    \
 $(POSEIDON_ACTIVE_DIR)/Code/Params_and_Variables:      \
+$(POSEIDON_ACTIVE_DIR)/Code/Flags:                     \
 $(POSEIDON_ACTIVE_DIR)/Code/Timers:                    \
+$(POSEIDON_ACTIVE_DIR)/Code/Initial_Guess              \
 $(POSEIDON_ACTIVE_DIR)/Code/AMReX_Utilities:           \
 $(POSEIDON_ACTIVE_DIR)/Code/Mapping_Routines:          \
 $(POSEIDON_ACTIVE_DIR)/Code/Mesh:                      \

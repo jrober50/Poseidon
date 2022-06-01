@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE                                                                 	     !##!
+MODULE Flags_Source_Input_Module                                            !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -28,20 +28,21 @@ MODULE                                                                 	     !##
 IMPLICIT NONE
 
 
+!  Boundary Condition Flags
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_SI_Num_Flags    = 2
+
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_SI_Set          = 1
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_SI_MF_Ready     = 2
+
+LOGICAL,    PUBLIC, DIMENSION(1:iPF_SI_Num_Flags)    ::  lPF_SI_Flags
+
+
 CONTAINS
 
 
 
- !+101+####################################################!
-!                                                           !
-!          	                                      	    !
-!                                                           !
- !#########################################################!
-SUBROUTINE
 
 
+END MODULE Flags_Source_Input_Module
 
-END SUBROUTINE
 
-
-END MODULE

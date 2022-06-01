@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Initial_Guess_Module                                                      !##!
+MODULE IG_Input_Native_Module                                                       !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -12,8 +12,6 @@ MODULE FP_Initial_Guess_Module                                                  
 !##!                                                                                !##!
 !##!    Contains:                                                                   !##!
 !##!                                                                                !##!
-!##!    +101+   Initialize_Flat_Space_Guess_Values                                  !##!
-!##!    +102+   Initialize_Special_Guess_Values                                     !##!
 !##!                                                                                !##!
 !######################################################################################!
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
@@ -45,7 +43,28 @@ USE Parameters_Variable_Indices, &
                     iU_S1
 
 USE Variables_Mesh, &
-            ONLY :  NUM_R_ELEMENTS
+            ONLY :  NUM_R_ELEMENTS,             &
+                    NUM_T_ELEMENTS,             &
+                    NUM_P_ELEMENTS
+
+USE Variables_Quadrature, &
+            ONLY :  NUM_R_QUAD_POINTS,          &
+                    NUM_T_QUAD_POINTS,          &
+                    NUM_P_QUAD_POINTS,         &
+                    INT_R_LOCATIONS,            &
+                    INT_T_LOCATIONS,            &
+                    INT_P_LOCATIONS
+
+USE Variables_Interface, &
+            ONLY :  Caller_Set,                     &
+                    Caller_nLevels,                 &
+                    Caller_NQ,                      &
+                    Caller_Quad_DOF,                &
+                    Caller_xL,                      &
+                    Caller_RQ_xlocs,                &
+                    Caller_TQ_xlocs,                &
+                    Caller_PQ_xlocs,                &
+                    Translation_Matrix
 
 USE Variables_FP, &
             ONLY :  FP_Coeff_Vector_A,      &
@@ -58,8 +77,7 @@ USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
 USE Maps_Fixed_Point, &
-            ONLY :  FP_Beta_Array_Map,      &
-                    FP_Array_Map_TypeB
+            ONLY :  FP_Array_Map_TypeB
 
 USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
@@ -72,10 +90,10 @@ CONTAINS
 
 !+101+###########################################################################!
 !                                                                                !
-!                  Input_FP_Guess                                                !
+!               Poseidon_Input_Guess                                             !
 !                                                                                !
 !################################################################################!
-SUBROUTINE FP_Input_Guess(  Psi_Guess,                                  &
+SUBROUTINE IG_Input_Native( Psi_Guess,                                  &
                             AlphaPsi_Guess,                             &
                             Beta_Guess,                                 &
                             Input_RE, Input_TE, Input_PE,               &
@@ -119,6 +137,7 @@ REAL(idp), DIMENSION(1:5)                                                       
 INTEGER                                                                             ::  Here
 REAL(idp), DIMENSION(1:Input_RQ)                                                    ::  Mapped_R_Quad
 
+
 Node_Locs = Initialize_LGL_Quadrature_Locations(DEGREE)
 
 Num_Input_DOF = Input_RQ*Input_TQ*Input_PQ
@@ -127,6 +146,7 @@ Mapped_R_Quad = Map_To_X_Space( Left_Limit, Right_Limit, Input_R_Quad )
 
 FP_Coeff_Vector_A = 0.0_idp
 FP_Coeff_Vector_B = 0.0_idp
+
 DO re = 1,Input_RE
     DO rqb = 0,Degree
         Lagrange_Poly_Value = Lagrange_Poly(Node_Locs(rqb), Input_RQ-1, Mapped_R_Quad)
@@ -164,7 +184,41 @@ END DO ! re
 
 
 
-END SUBROUTINE FP_Input_Guess
+END SUBROUTINE IG_Input_Native
+
+
+
+
+!+101+###########################################################################!
+!                                                                                !
+!               Poseidon_Input_Guess                                             !
+!                                                                                !
+!################################################################################!
+SUBROUTINE IG_Input_Native_Caller(  Psi_Guess,              &
+                                    AlphaPsi_Guess,         &
+                                    Beta_Guess              )
+
+
+REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
+                                    0:Num_R_Elements-1,             &
+                                    0:Num_T_Elements-1,             &
+                                    0:Num_P_Elements-1  )           :: Psi_Guess
+
+REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
+                                    0:Num_R_Elements-1,             &
+                                    0:Num_T_Elements-1,             &
+                                    0:Num_P_Elements-1  )           :: AlphaPsi_Guess
+
+REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
+                                    0:Num_R_Elements-1,             &
+                                    0:Num_T_Elements-1,             &
+                                    0:Num_P_Elements-1  )           :: Beta_Guess
+
+
+
+
+
+END SUBROUTINE IG_Input_Native_Caller
 
 
 
@@ -177,5 +231,4 @@ END SUBROUTINE FP_Input_Guess
 
 
 
-
-END MODULE FP_Initial_Guess_Module
+END MODULE IG_Input_Native_Module

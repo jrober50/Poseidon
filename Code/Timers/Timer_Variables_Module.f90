@@ -82,6 +82,12 @@ REAL(idp), PUBLIC   ::  Timer_XCFC_ConFactor_LinearSolve
 REAL(idp), PUBLIC   ::  Timer_FP_Initialization
 REAL(idp), PUBLIC   ::  Timer_FP_Matrix_Init
 
+REAL(idp), PUBLIC   ::  Timer_FP_Source_Vector
+REAL(idp), PUBLIC   ::  Timer_FP_CFLF_Solve
+REAL(idp), PUBLIC   ::  Timer_FP_Beta_Solve
+
+REAL(idp), PUBLIC   ::  Timer_FP_Matrix_Cholesky
+REAL(idp), PUBLIC   ::  Timer_FP_Banded_Factorization
 
 REAL(idp), PUBLIC   ::  Timer_Driver_SetSource
 REAL(idp), PUBLIC   ::  Timer_Driver_SetSource_InitTest

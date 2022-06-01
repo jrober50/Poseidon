@@ -57,9 +57,6 @@ USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Run,                                       &
                     Poseidon_Close
 
-USE FP_IO_Module, &
-            ONLY :  Output_FP_Timetable
-
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
 
@@ -82,10 +79,6 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetGuess,      &
                     Timer_Driver_Run,           &
                     Timer_Driver_Extra
-
-USE Poseidon_IO_Module, &
-            ONLY :  Open_Run_Report_File
-
 
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
@@ -244,7 +237,7 @@ Star_Radius         =  1.0E+5_idp               ! (cm)
 Dimension_Input     = 3
 
 Max_Iterations      = 100
-CC_Option           = 1.0E-16_idp
+CC_Option           = 1.0E-12_idp
 
 
 Mesh_Type           = 1
@@ -261,8 +254,8 @@ NQ(2)               = 1                         ! Number of Theta Quadrature Poi
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 !Print_Results_Flag  = .TRUE.
 Print_Results_Flag  = .FALSE.
 Suffix_Input        = "Params"
@@ -332,10 +325,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
     Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
-
-
-
-    CALL Open_Run_Report_File()
 
 
     CALL Create_3D_Mesh( Mesh_Type,         &
@@ -498,7 +487,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     IF ( .TRUE. ) THEN
 !        CALL Output_Convergence_Reports()
         CALL Write_Final_Results( Output_Locations_Flag = 2)
-        CALL Output_FP_Timetable()
     END IF
 
 

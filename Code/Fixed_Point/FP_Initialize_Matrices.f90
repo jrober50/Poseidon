@@ -586,6 +586,8 @@ ALLOCATE( Cur_R_locs(1:Int_R_Deg)  )
 ALLOCATE( R_Square(1:Int_R_Deg)    )
 
 
+PRINT*,"In Calculate_Laplace_Matrix, Size(Laplace_Matrix_COL)",size(Laplace_Matrix_COL)
+
 
 IF ( Matrix_Format == 'Full') THEN
 

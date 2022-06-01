@@ -4,7 +4,6 @@ VARIABLES = \
   Parameters_IO.f90          \
   Variables_BC.f90           \
   Variables_Derived.f90      \
-  Variables_Flags.f90        \
   Variables_NR.f90           \
   Variables_FP.f90           \
   Variables_Interface.f90    \

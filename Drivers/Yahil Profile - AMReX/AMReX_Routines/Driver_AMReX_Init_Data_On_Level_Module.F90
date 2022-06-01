@@ -44,6 +44,15 @@ USE amrex_multifab_module,  ONLY: &
 #endif
 
 
+
+USE Parameters_Variable_Indices, &
+            ONLY :  iS_E,               &
+                    iS_S,               &
+                    iS_S1,              &
+                    iS_S2,              &
+                    iS_S3
+
+
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
@@ -342,6 +351,7 @@ DO re = BLo(1),BHi(1)
         xloc = Cur_R_Locs(rd)*X_Factor
         cur_line = Find_Line(xloc, Input_X, NUM_LINES)
 
+
         x = MAP_TO_X_SPACE(Input_X(Cur_Line),Input_X(Cur_Line+1),xloc)
         IF ( x > 1 ) THEN
             x = 1
@@ -389,11 +399,11 @@ DO re = BLo(1),BHi(1)
 
 !            PRINT*,re,te,pe,rd,td,pd,here,2*Num_DOF+Here,Si
 
-            Src(re,te,pe,0*Num_DOF+Here) = E
-            Src(re,te,pe,1*Num_DOF+Here) = S
-            Src(re,te,pe,2*Num_DOF+Here) = Si
-            Src(re,te,pe,3*Num_DOF+Here) = 0.0_idp
-            Src(re,te,pe,4*Num_DOF+Here) = 0.0_idp
+            Src(re,te,pe,(iS_E-1)*Num_DOF+Here) = E
+            Src(re,te,pe,(iS_S-1)*Num_DOF+Here) = S
+            Src(re,te,pe,(iS_S1-1)*Num_DOF+Here) = Si
+            Src(re,te,pe,(iS_S2-1)*Num_DOF+Here) = 0.0_idp
+            Src(re,te,pe,(iS_S3-1)*Num_DOF+Here) = 0.0_idp
 
 
 

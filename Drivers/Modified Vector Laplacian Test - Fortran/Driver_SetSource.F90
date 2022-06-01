@@ -61,7 +61,7 @@ USE Timer_Variables_Module, &
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
-USE Poseidon_IO_Module, &
+USE IO_Output_Sources_Module, &
             ONLY :  Output_Poseidon_Sources_3D
 
 IMPLICIT NONE

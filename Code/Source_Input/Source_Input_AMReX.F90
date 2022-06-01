@@ -32,6 +32,7 @@ USE amrex_distromap_module, ONLY: &
 USE amrex_multifab_module,  ONLY: &
   amrex_multifab, &
   amrex_multifab_build, &
+  amrex_multifab_destroy, &
   amrex_mfiter, &
   amrex_mfiter_build, &
   amrex_mfiter_destroy
@@ -40,8 +41,6 @@ USE amrex_multifab_module,  ONLY: &
 
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,         &
-                    Poseidon_Remesh_Flag, &
-                    Source_Remesh_Flag, &
                     Verbose_Flag
 
 
@@ -66,10 +65,6 @@ USE Variables_Source, &
                     Block_Source_S,     &
                     Block_Source_Si
 
-USE Poseidon_IO_Module, &
-            ONLY :  OUTPUT_POSEIDON_SOURCES_1D
-
-
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
                     Num_T_Quad_Points,      &
@@ -82,12 +77,13 @@ USE Variables_Quadrature, &
                     Int_R_Weights,          &
                     Int_T_Weights,          &
                     Int_P_Weights,          &
-                    Int_TP_Weights
+                    Int_TP_Weights,         &
+                    xLeftLimit,             &
+                    xRightLimit
 
 
-
-USE Functions_Math, &
-            ONLY :  Lagrange_Poly
+USE Functions_Translation_Matrix_Module, &
+            ONLY :  Create_Translation_Matrix
 
 #ifdef POSEIDON_AMREX_FLAG
 USE Variables_AMReX_Core, &
@@ -122,6 +118,14 @@ USE Variables_Interface, &
 
 USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
+
+USE Flags_Source_Input_Module, &
+            ONLY :  lPF_SI_Flags,       &
+                    iPF_SI_MF_Ready
+
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Flags,     &
+                    iPF_Init_Method_Vars
 
 use mpi
 
@@ -182,16 +186,8 @@ TYPE(amrex_mfiter)                                  ::  mfi
 TYPE(amrex_box)                                     ::  Box
 
 REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
-INTEGER                                             ::  My_DOF
 INTEGER                                             ::  Their_DOF
 
-REAL(idp),  DIMENSION( 1:Input_NQ(1) )              ::  Scaled_R_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(2) )              ::  Scaled_T_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(3) )              ::  Scaled_P_Quad
-
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  R_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  T_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  P_Lag_Poly_Values
 
 
 
@@ -201,89 +197,43 @@ END IF
 CALL TimerStart(Timer_GR_SourceInput)
 
 ! Define Interpolation Matrix
-My_DOF    = Num_R_Quad_Points*Num_T_Quad_Points*Num_P_Quad_Points
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
-ALLOCATE(TransMat(1:Their_DOF, 1:My_DOF))
-ALLOCATE( R_Lag_Poly_Values(1:Input_NQ(1),1:NUM_R_QUAD_POINTS) )
-ALLOCATE( T_Lag_Poly_Values(1:Input_NQ(2),1:NUM_T_QUAD_POINTS) )
-ALLOCATE( P_Lag_Poly_Values(1:Input_NQ(3),1:NUM_P_QUAD_POINTS) )
+ALLOCATE(TransMat(1:Their_DOF, 1:Local_Quad_DOF))
 
 
+TransMat = Create_Translation_Matrix(   Input_NQ,          &
+                                        Input_xL,          &
+                                        Input_R_Quad,    &
+                                        Input_T_Quad,    &
+                                        Input_P_Quad,    &
+                                        Their_DOF,         &
+                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                        [xLeftLimit, xRightLimit ],            &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Local_Quad_DOF            )
 
 
-Scaled_R_Quad = Map_To_X_Space(Input_xL(1),Input_xL(2),Input_R_Quad)
-Scaled_T_Quad = Map_To_X_Space(Input_xL(1),Input_xL(2),Input_T_Quad)
-Scaled_P_Quad = Map_To_X_Space(Input_xL(1),Input_xL(2),Input_P_Quad)
-
-
-
-
-DO Local_R = 1,NUM_R_QUAD_POINTS
-    R_Lag_Poly_Values(:,Local_R) = Lagrange_Poly( Int_R_Locations(Local_R), &
-                                                  Input_NQ(1)-1,            &
-                                                  Scaled_R_Quad              )
-
-END DO
-
-DO Local_T = 1,NUM_T_QUAD_POINTS
-    T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly( Int_T_Locations(Local_T), &
-                                                  Input_NQ(2)-1,            &
-                                                  Scaled_T_Quad              )
-
-END DO
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-    P_Lag_Poly_Values(:,Local_P) = Lagrange_Poly( Int_P_Locations(Local_P), &
-                                                  Input_NQ(3)-1,            &
-                                                  Scaled_P_Quad              )
-
-END DO
-
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-DO Local_T = 1,NUM_T_QUAD_POINTS
-DO Local_R = 1,NUM_R_QUAD_POINTS
-
-    Local_Here = (Local_P-1) * NUM_T_QUAD_POINTS * NUM_R_QUAD_POINTS        &
-               + (Local_T-1) * NUM_R_QUAD_POINTS                            &
-               + Local_R
-
-    DO Input_P = 1,Input_NQ(3)
-    DO Input_T = 1,Input_NQ(2)
-
-            Here = (Input_P-1) * Input_NQ(2) * Input_NQ(1)   &
-                 + (Input_T-1) * Input_NQ(1)
-
-            There = Here + Input_NQ(1)
-
-            TransMat(Here+1:There, Local_Here)  =                 &
-                              R_Lag_Poly_Values(1:Input_NQ(1),Local_R)    &
-                            * T_Lag_Poly_Values(Input_T,Local_T)            &
-                            * P_Lag_Poly_Values(Input_P,Local_P)
-
-    END DO  !   Input_T Loop
-    END DO  !   Input_P Loop
-END DO  !   Local_R Loop
-END DO  !   Local_T Loop
-END DO  !   Local_P Loop
-
-
-
-
-
-IF ( Source_Remesh_Flag ) THEN
+!
+!   If the mesh is being defined or being redefined, MF_Source will need to be
+!   built/rebuilt.
+!
+IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
     DO level = 0,AMReX_Num_Levels-1
 
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
-                                    MF_Source_nComps, 1                        )
+                                    MF_Source_nComps, 1         )
 
-        Source_Remesh_Flag = .FALSE.
+        lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
     END DO
 END IF
+
+
 
 DO level = 0,AMReX_Num_Levels-1
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
@@ -307,12 +257,12 @@ DO level = 0,AMReX_Num_Levels-1
 
 
         DO si = 1,2+DOMAIN_DIM
-        DO Local_Here = 1,My_DOF
+        DO Local_Here = 1,Local_Quad_DOF
 
             Here  = (si-1)*Their_DOF+1
             There = si*Their_DOF
 
-            Index = (si-1)*My_DOF+Local_Here
+            Index = (si-1)*Local_Quad_DOF+Local_Here
 
             My_PTR(re,te,pe,Index) = DOT_PRODUCT( TransMat(:,Local_Here), &
                                                   Their_PTR(re,te,pe,Here:There)    )
@@ -330,9 +280,9 @@ CALL TimerStop(Timer_GR_SourceInput)
 
 
 
-IF ( Poseidon_Remesh_Flag ) THEN
+IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     Call Initialization_XCFC_with_AMReX()
-    Poseidon_Remesh_Flag = .FALSE.
+    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
 END IF
 
 
@@ -369,15 +319,17 @@ INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
 
+CALL TimerStart(Timer_GR_SourceInput)
 
-IF ( Source_Remesh_Flag ) THEN
+IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
     DO level = 0,AMReX_Num_Levels-1
 
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
-                                    MF_Source_nComps, 1                        )
-        Source_Remesh_Flag = .FALSE.
+                                    MF_Source_nComps, 1         )
+
+        lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
     END DO
 END IF
 
@@ -428,12 +380,10 @@ END DO          ! level
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-
-IF ( Poseidon_Remesh_Flag ) THEN
+IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     Call Initialization_XCFC_with_AMReX()
-    Poseidon_Remesh_Flag = .FALSE.
+    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
 END IF
-
 
 END SUBROUTINE Poseidon_Input_Sources_AMREX_Caller
 
@@ -494,17 +444,7 @@ TYPE(amrex_mfiter)                                  ::  mfi
 TYPE(amrex_box)                                     ::  Box
 
 REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
-INTEGER                                             ::  My_DOF
 INTEGER                                             ::  Their_DOF
-
-
-REAL(idp),  DIMENSION( 1:Input_NQ(1) )              ::  Scaled_R_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(2) )              ::  Scaled_T_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(3) )              ::  Scaled_P_Quad
-
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  R_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  T_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  P_Lag_Poly_Values
 
 
 IF (Verbose_Flag) THEN
@@ -513,89 +453,37 @@ END IF
 CALL TimerStart(Timer_GR_SourceInput)
 
 ! Define Interpolation Matrix
-My_DOF    = Num_R_Quad_Points*Num_T_Quad_Points*Num_P_Quad_Points
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
-ALLOCATE(TransMat(1:Their_DOF, 1:My_DOF))
-ALLOCATE( R_Lag_Poly_Values(1:Input_NQ(1),1:NUM_R_QUAD_POINTS) )
-ALLOCATE( T_Lag_Poly_Values(1:Input_NQ(2),1:NUM_T_QUAD_POINTS) )
-ALLOCATE( P_Lag_Poly_Values(1:Input_NQ(3),1:NUM_P_QUAD_POINTS) )
+ALLOCATE(TransMat(1:Their_DOF, 1:Local_Quad_DOF))
+
+TransMat = Create_Translation_Matrix(   Input_NQ,                       &
+                                        Input_xL,                       &
+                                        Input_R_Quad,                   &
+                                        Input_T_Quad,                   &
+                                        Input_P_Quad,                   &
+                                        Their_DOF,                      &
+                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                        [xLeftLimit, xRightLimit ],            &
+                                        Int_R_Locations,                &
+                                        Int_R_Locations,                &
+                                        Int_R_Locations,                &
+                                        Local_Quad_DOF                  )
 
 
-
-
-Scaled_R_Quad = Map_To_X_Space(Input_xL(1),Input_xL(2),Input_R_Quad)
-Scaled_T_Quad = Map_To_X_Space(Input_xL(1),Input_xL(2),Input_T_Quad)
-Scaled_P_Quad = Map_To_X_Space(Input_xL(1),Input_xL(2),Input_P_Quad)
-
-
-
-
-DO Local_R = 1,NUM_R_QUAD_POINTS
-    R_Lag_Poly_Values(:,Local_R) = Lagrange_Poly( Int_R_Locations(Local_R), &
-                                                  Input_NQ(1)-1,            &
-                                                  Scaled_R_Quad              )
-
-END DO
-
-DO Local_T = 1,NUM_T_QUAD_POINTS
-    T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly( Int_T_Locations(Local_T), &
-                                                  Input_NQ(2)-1,            &
-                                                  Scaled_T_Quad              )
-
-END DO
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-    P_Lag_Poly_Values(:,Local_P) = Lagrange_Poly( Int_P_Locations(Local_P), &
-                                                  Input_NQ(3)-1,            &
-                                                  Scaled_P_Quad              )
-
-END DO
-
-
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-DO Local_T = 1,NUM_T_QUAD_POINTS
-DO Local_R = 1,NUM_R_QUAD_POINTS
-
-    Local_Here = (Local_P-1) * NUM_T_QUAD_POINTS * NUM_R_QUAD_POINTS        &
-               + (Local_T-1) * NUM_R_QUAD_POINTS                            &
-               + Local_R
-
-    DO Input_P = 1,Input_NQ(3)
-    DO Input_T = 1,Input_NQ(2)
-
-            Here = (Input_P-1) * Input_NQ(2) * Input_NQ(1)   &
-                 + (Input_T-1) * Input_NQ(1)
-
-            There = Here + Input_NQ(1)
-
-            TransMat(Here+1:There, Local_Here)  =                 &
-                              R_Lag_Poly_Values(1:Input_NQ(1),Local_R)    &
-                            * T_Lag_Poly_Values(Input_T,Local_T)            &
-                            * P_Lag_Poly_Values(Input_P,Local_P)
-
-    END DO  !   Input_T Loop
-    END DO  !   Input_P Loop
-END DO  !   Local_R Loop
-END DO  !   Local_T Loop
-END DO  !   Local_P looop
-
-
-
-
-
-IF ( Source_Remesh_Flag ) THEN
+IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
     DO level = 0,AMReX_Num_Levels-1
 
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
-                                    MF_Source_nComps, 1                        )
-        Source_Remesh_Flag = .FALSE.
+                                    MF_Source_nComps, 1         )
+
+        lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
     END DO
 END IF
+
 
 DO level = 0,AMReX_Num_Levels-1
 
@@ -620,12 +508,12 @@ DO level = 0,AMReX_Num_Levels-1
 
 
         si = iS_E
-        DO Local_Here = 1,My_DOF
+        DO Local_Here = 1,Local_Quad_DOF
 
             Here  = (si-1)*Their_DOF+1
             There = si*Their_DOF
 
-            Index = (si-1)*My_DOF+Local_Here
+            Index = (si-1)*Local_Quad_DOF+Local_Here
 
             My_PTR(re,te,pe,Index) = DOT_PRODUCT( TransMat(:,Local_Here), &
                                                   Their_PTR(re,te,pe,Here:There)    )
@@ -635,12 +523,12 @@ DO level = 0,AMReX_Num_Levels-1
 
 
         DO si = iS_S1,iS_S3
-        DO Local_Here = 1,My_DOF
+        DO Local_Here = 1,Local_Quad_DOF
 
             Here  = (si-1)*Their_DOF+1
             There = si*Their_DOF
 
-            Index = (si-1)*My_DOF+Local_Here
+            Index = (si-1)*Local_Quad_DOF+Local_Here
 
             My_PTR(re,te,pe,Index) = DOT_PRODUCT( TransMat(:,Local_Here), &
                                                   Their_PTR(re,te,pe,Here:There)    )
@@ -662,13 +550,10 @@ END DO          ! level
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-
-IF ( Poseidon_Remesh_Flag ) THEN
+IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     Call Initialization_XCFC_with_AMReX()
-    Poseidon_Remesh_Flag = .FALSE.
+    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
 END IF
-
-
 
 END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 
@@ -701,8 +586,10 @@ INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
+CALL TimerStart(Timer_GR_SourceInput)
 
-IF ( Source_Remesh_Flag ) THEN
+
+IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
     DO level = 0,AMReX_Num_Levels-1
 
         CALL amrex_multifab_build(  MF_Source(level),           &
@@ -710,10 +597,9 @@ IF ( Source_Remesh_Flag ) THEN
                                     MF_Src_Input(Level)%DM,     &
                                     MF_Source_nComps, 1         )
 
-        Source_Remesh_Flag = .FALSE.
+        lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
     END DO
 END IF
-
 
 
 
@@ -778,10 +664,9 @@ END DO          ! level
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-
-IF ( Poseidon_Remesh_Flag ) THEN
+IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     Call Initialization_XCFC_with_AMReX()
-    Poseidon_Remesh_Flag = .FALSE.
+    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
 END IF
 
 

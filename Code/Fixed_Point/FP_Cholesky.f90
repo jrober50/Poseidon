@@ -114,9 +114,6 @@ INTEGER, ALLOCATABLE, DIMENSION(:,:,:)                          :: NEW_ROW_IND
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              :: NEW_ELEM_VAL
 
 
-REAL(idp),      DIMENSION(2)                                    :: Timer
-
-
 IF ( Verbose_Flag ) THEN
     PRINT*,"--In Cholesky_Factorization."
 END IF

@@ -41,13 +41,7 @@ USE Variables_Mesh, &
                     Num_P_Elements
 
 USE Variables_IO, &
-            ONLY :  Report_Flags,           &
-                    iRF_Setup,              &
-                    iRF_Time,               &
-                    iWF_Source,             &
-                    iWF_Results,            &
-                    Write_Flags,            &
-                    File_Suffix
+            ONLY :  File_Suffix
 
 USE Variables_FP, &
             ONLY :  FP_Anderson_M,          &
@@ -78,18 +72,34 @@ USE Variables_Quadrature, &
 
 
 USE Variables_Interface, &
-            ONLY :  Caller_Set,                     &
-                    Caller_nLevels,                 &
-                    Caller_NQ,                      &
-                    Caller_Quad_DOF,                &
-                    Caller_xL,                      &
-                    Caller_RQ_xlocs,                &
-                    Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs,                &
+            ONLY :  Caller_Set,                 &
+                    Caller_nLevels,             &
+                    Caller_NQ,                  &
+                    Caller_Quad_DOF,            &
+                    Caller_xL,                  &
+                    Caller_RQ_xlocs,            &
+                    Caller_TQ_xlocs,            &
+                    Caller_PQ_xlocs,            &
                     Translation_Matrix
+
+
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,               &
+                    iPF_IO_Verbose,             &
+                    iPF_IO_Print_Setup,         &
+                    iPF_IO_Write_Setup,         &
+                    iPF_IO_Print_Results,       &
+                    iPF_IO_Write_Results,       &
+                    iPF_IO_Print_Timetable,     &
+                    iPF_IO_Write_Timetable,     &
+                    iPF_IO_Write_Sources
 
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
+
+
+USE Functions_Translation_Matrix_Module, &
+            ONLY :  Create_Translation_Matrix
 
 USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
@@ -135,47 +145,33 @@ INTEGER,            INTENT(IN), OPTIONAL               ::  Frame_Option
 
 
 IF ( Verbose_Flag ) THEN
-    Report_Flags = 1
-    Write_Flags  = 1
+    lPF_IO_Flags(iPF_IO_Verbose)        = .TRUE.
+    lPF_IO_Flags(iPF_IO_Print_Setup)    = .TRUE.
+    lPF_IO_Flags(iPF_IO_Print_Results)  = .TRUE.
 ELSE
-    Report_Flags = 0
-    Write_Flags  = 0
+    lPF_IO_Flags(iPF_IO_Verbose)        = .FALSE.
+    lPF_IO_Flags(iPF_IO_Print_Setup)    = .FALSE.
+    lPF_IO_Flags(iPF_IO_Print_Results)  = .FALSE.
 END IF
 
-IF ( PRESENT( WriteAll_Option) ) THEN
-    Report_Flags = Report_Flags + 2
-    Write_Flags = Write_Flags + 2
-END IF
 
 
 
 
 IF ( PRESENT(Print_Setup_Option) ) THEN
     IF ( Print_Setup_Option ) THEN
-        IF (Report_Flags(iRF_Setup) > 1 ) THEN
-            Report_Flags(iRF_Setup) = 3
-        ELSE
-            Report_Flags(iRF_Setup) = 1
-        END IF
+        lPF_IO_Flags(iPF_IO_Print_Setup) = .TRUE.
     ELSE
-        IF (Report_Flags(iRF_Setup) > 1 ) THEN
-            Report_Flags(iRF_Setup) = 2
-        ELSE
-            Report_Flags(iRF_Setup) = 0
-        END IF
+        lPF_IO_Flags(iPF_IO_Print_Setup) = .FALSE.
     END IF
 END IF
 
 
 IF ( PRESENT(Write_Setup_Option) ) THEN
     IF ( Write_Setup_Option ) THEN
-        IF (Report_Flags(iRF_Setup) < 2 ) THEN
-            Report_Flags(iRF_Setup) = Report_Flags(4) + 2
-        END IF
+        lPF_IO_Flags(iPF_IO_Write_Setup) = .TRUE.
     ELSE
-        IF ( Report_Flags(iRF_Setup) > 1 ) THEN
-            Report_Flags(iRF_Setup) = Report_Flags(4) - 2
-        END IF
+        lPF_IO_Flags(iPF_IO_Write_Setup) = .FALSE.
     END IF
 END IF
 
@@ -185,30 +181,18 @@ END IF
 
 IF ( PRESENT(Print_Results_Option) ) THEN
     IF ( Print_Results_Option ) THEN
-        IF (Write_Flags(iWF_Results) > 1 ) THEN
-            Write_Flags(iWF_Results) = 3
-        ELSE
-            Write_Flags(iWF_Results) = 1
-        END IF
+        lPF_IO_Flags(iPF_IO_Print_Results) = .TRUE.
     ELSE
-        IF (Write_Flags(iWF_Results) > 1 ) THEN
-            Write_Flags(iWF_Results) = 2
-        ELSE
-            Write_Flags(iWF_Results) = 0
-        END IF
+        lPF_IO_Flags(iPF_IO_Print_Results) = .FALSE.
     END IF
 END IF
 
 
 IF ( PRESENT(Write_Results_Option) ) THEN
     IF ( Write_Results_Option ) THEN
-        IF (Write_Flags(iWF_Results) < 2 ) THEN
-            Write_Flags(iWF_Results) = Write_Flags(5) + 2
-        END IF
+        lPF_IO_Flags(iPF_IO_Write_Results) = .TRUE.
     ELSE
-        IF ( Write_Flags(iWF_Results) > 1 ) THEN
-            Write_Flags(iWF_Results) = Write_Flags(5) - 2
-        END IF
+        lPF_IO_Flags(iPF_IO_Write_Results) = .False.
     END IF
 END IF
 
@@ -220,17 +204,9 @@ END IF
 
 IF ( PRESENT(Print_Timetable_Option) ) THEN
     IF ( Print_Timetable_Option ) THEN
-        IF (Report_Flags(iRF_Time) > 1 ) THEN
-            Report_Flags(iRF_Time) = 3
-        ELSE
-            Report_Flags(iRF_Time) = 1
-        END IF
+        lPF_IO_Flags(iPF_IO_Print_Timetable) = .TRUE.
     ELSE
-        IF (Report_Flags(iRF_Time) > 1 ) THEN
-            Report_Flags(iRF_Time) = 2
-        ELSE
-            Report_Flags(iRF_Time) = 0
-        END IF
+        lPF_IO_Flags(iPF_IO_Print_Timetable) = .FALSE.
     END IF
 END IF
 
@@ -238,13 +214,9 @@ END IF
 
 IF ( PRESENT(Write_Timetable_Option) ) THEN
     IF ( Write_Timetable_Option ) THEN
-        IF (Report_Flags(iRF_Time) < 2 ) THEN
-            Report_Flags(iRF_Time) = Report_Flags(iRF_Time) + 2
-        END IF
+        lPF_IO_Flags(iPF_IO_Write_Timetable) = .TRUE.
     ELSE
-        IF ( Report_Flags(iRF_Time) > 1 ) THEN
-            Report_Flags(iRF_Time) = Report_Flags(iRF_Time) - 2
-        END IF
+        lPF_IO_Flags(iPF_IO_Write_Timetable) = .FALSE.
     END IF
 END IF
 
@@ -252,9 +224,9 @@ END IF
 
 IF ( PRESENT(Write_Sources_Option) ) THEN
     IF ( Write_Sources_Option ) THEN
-        Write_Flags(iWF_Source) = 2
+        lPF_IO_Flags(iPF_IO_Write_Sources)  = .TRUE.
     ELSE
-        Write_Flags(iWF_Source) = 0
+        lPF_IO_Flags(iPF_IO_Write_Sources)  = .FALSE.
     END IF
 END IF
 
@@ -473,210 +445,12 @@ Translation_Matrix = Create_Translation_Matrix( Caller_NQ,          &
 
 
 
-
-
-
-!
-!ALLOCATE( R_Lag_Poly_Values(1:Caller_NQ(1),1:NUM_R_QUAD_POINTS) )
-!ALLOCATE( T_Lag_Poly_Values(1:Caller_NQ(2),1:NUM_T_QUAD_POINTS) )
-!ALLOCATE( P_Lag_Poly_Values(1:Caller_NQ(3),1:NUM_P_QUAD_POINTS) )
-!
-!
-!Scaled_R_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_RQ_xlocs)
-!Scaled_T_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_TQ_xlocs)
-!Scaled_P_Quad = Map_To_X_Space(Caller_xL(1),Caller_xL(2),Caller_PQ_xlocs)
-!
-!
-!
-!
-!DO Local_R = 1,NUM_R_QUAD_POINTS
-!    R_Lag_Poly_Values(:,Local_R) = Lagrange_Poly( Int_R_Locations(Local_R), &
-!                                                  Caller_NQ(1)-1,            &
-!                                                  Scaled_R_Quad              )
-!
-!END DO
-!
-!DO Local_T = 1,NUM_T_QUAD_POINTS
-!    T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly( Int_T_Locations(Local_T), &
-!                                                  Caller_NQ(2)-1,            &
-!                                                  Scaled_T_Quad              )
-!
-!END DO
-!
-!DO Local_P = 1,NUM_P_QUAD_POINTS
-!    P_Lag_Poly_Values(:,Local_P) = Lagrange_Poly( Int_P_Locations(Local_P), &
-!                                                  Caller_NQ(3)-1,            &
-!                                                  Scaled_P_Quad              )
-!
-!END DO
-!
-!
-!
-!DO Local_P = 1,NUM_P_QUAD_POINTS
-!DO Local_T = 1,NUM_T_QUAD_POINTS
-!DO Local_R = 1,NUM_R_QUAD_POINTS
-!
-!    Local_Here = (Local_P-1) * NUM_T_QUAD_POINTS * NUM_R_QUAD_POINTS        &
-!               + (Local_T-1) * NUM_R_QUAD_POINTS                            &
-!               + Local_R
-!
-!    DO Caller_P = 1,Caller_NQ(3)
-!    DO Caller_T = 1,Caller_NQ(2)
-!
-!            Here = (Caller_P-1) * Caller_NQ(2) * Caller_NQ(1)   &
-!                 + (Caller_T-1) * Caller_NQ(1)
-!
-!            There = Here + Caller_NQ(1)
-!
-!            Translation_Matrix(Here+1:There, Local_Here)  =                 &
-!                              R_Lag_Poly_Values(1:Caller_NQ(1),Local_R)    &
-!                            * T_Lag_Poly_Values(Caller_T,Local_T)            &
-!                            * P_Lag_Poly_Values(Caller_P,Local_P)
-!
-!    END DO  !   Caller_T Loop
-!    END DO  !   Caller_P Loop
-!END DO  !   Local_R Loop
-!END DO  !   Local_T Loop
-!END DO  !   Local_P Loop
-!
-!
-!
-!DEALLOCATE( R_Lag_Poly_Values )
-!DEALLOCATE( T_Lag_Poly_Values )
-!DEALLOCATE( P_Lag_Poly_Values )
-
 END SUBROUTINE Set_Caller_Quadrature
 
 
 
 
 
-
-
-
-
-FUNCTION Create_Translation_Matrix( Source_NQ,          &
-                                    Source_xL,          &
-                                    Source_RQ_xlocs,    &
-                                    Source_TQ_xlocs,    &
-                                    Source_PQ_xlocs,    &
-                                    Source_DOF,         &
-                                    Dest_NQ,            &
-                                    Dest_xL,            &
-                                    Dest_RQ_xlocs,      &
-                                    Dest_TQ_xlocs,      &
-                                    Dest_PQ_xlocs,      &
-                                    Dest_DOF            ) RESULT( TransMat )
-
-
-INTEGER,    DIMENSION(3),               INTENT(IN)      ::  Source_NQ
-REAL(idp),  DIMENSION(2),               INTENT(IN)      ::  Source_xL
-REAL(idp),  DIMENSION(1:Source_NQ(1)),  INTENT(IN)      ::  Source_RQ_xlocs
-REAL(idp),  DIMENSION(1:Source_NQ(2)),  INTENT(IN)      ::  Source_TQ_xlocs
-REAL(idp),  DIMENSION(1:Source_NQ(3)),  INTENT(IN)      ::  Source_PQ_xlocs
-INTEGER,                                INTENT(IN)      ::  Source_DOF
-
-INTEGER,    DIMENSION(3),               INTENT(IN)      ::  Dest_NQ
-REAL(idp),  DIMENSION(2),               INTENT(IN)      ::  Dest_xL
-REAL(idp),  DIMENSION(1:Dest_NQ(1)),    INTENT(IN)      ::  Dest_RQ_xlocs
-REAL(idp),  DIMENSION(1:Dest_NQ(2)),    INTENT(IN)      ::  Dest_TQ_xlocs
-REAL(idp),  DIMENSION(1:Dest_NQ(3)),    INTENT(IN)      ::  Dest_PQ_xlocs
-INTEGER,                                INTENT(IN)      ::  Dest_DOF
-
-REAL(idp),  DIMENSION(Source_DOF,Dest_DOF)              ::  TransMat
-
-INTEGER                                             ::  Dest_R
-INTEGER                                             ::  Dest_T
-INTEGER                                             ::  Dest_P
-
-INTEGER                                             ::  Source_T
-INTEGER                                             ::  Source_P
-
-INTEGER                                             ::  Here
-INTEGER                                             ::  There
-INTEGER                                             ::  Dest_Here
-
-REAL(idp),  DIMENSION( 1:Source_NQ(1) )              ::  Scaled_R_Quad
-REAL(idp),  DIMENSION( 1:Source_NQ(2) )              ::  Scaled_T_Quad
-REAL(idp),  DIMENSION( 1:Source_NQ(3) )              ::  Scaled_P_Quad
-
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  R_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  T_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  P_Lag_Poly_Values
-
-
-
-ALLOCATE( R_Lag_Poly_Values(1:Source_NQ(1),1:Dest_NQ(1)) )
-ALLOCATE( T_Lag_Poly_Values(1:Source_NQ(2),1:Dest_NQ(2)) )
-ALLOCATE( P_Lag_Poly_Values(1:Source_NQ(3),1:Dest_NQ(3)) )
-
-
-Scaled_R_Quad = Map_To_X_Space(Source_xL(1),Source_xL(2),Source_RQ_xlocs)
-Scaled_T_Quad = Map_To_X_Space(Source_xL(1),Source_xL(2),Source_TQ_xlocs)
-Scaled_P_Quad = Map_To_X_Space(Source_xL(1),Source_xL(2),Source_PQ_xlocs)
-
-
-
-
-DO Dest_R = 1,Dest_NQ(1)
-    R_Lag_Poly_Values(:,Dest_R) = Lagrange_Poly(Dest_RQ_xlocs(Dest_R),  &
-                                                Source_NQ(1)-1,         &
-                                                Scaled_R_Quad           )
-
-END DO
-
-DO Dest_T = 1,Dest_NQ(2)
-    T_Lag_Poly_Values(:,Dest_T) = Lagrange_Poly(Dest_TQ_xlocs(Dest_T),  &
-                                                Source_NQ(2)-1,         &
-                                                Scaled_T_Quad           )
-
-END DO
-
-DO Dest_P = 1,Dest_NQ(3)
-    P_Lag_Poly_Values(:,Dest_P) = Lagrange_Poly(Dest_PQ_xlocs(Dest_P),  &
-                                                Source_NQ(3)-1,         &
-                                                Scaled_P_Quad           )
-
-END DO
-
-
-
-DO Dest_P = 1,Dest_NQ(3)
-DO Dest_T = 1,Dest_NQ(2)
-DO Dest_R = 1,Dest_NQ(1)
-
-    Dest_Here = (Dest_P-1) * Dest_NQ(2) * Dest_NQ(1)      &
-               + (Dest_T-1) * Dest_NQ(1)                   &
-               + Dest_R
-
-    DO Source_P = 1,Source_NQ(3)
-    DO Source_T = 1,Source_NQ(2)
-
-            Here = (Source_P-1) * Source_NQ(2) * Source_NQ(1)   &
-                 + (Source_T-1) * Source_NQ(1)
-
-            There = Here + Source_NQ(1)
-
-            TransMat(Here+1:There, Dest_Here)  =                    &
-                      R_Lag_Poly_Values(1:Source_NQ(1),Dest_R)      &
-                    * T_Lag_Poly_Values(Source_T,Source_T)          &
-                    * P_Lag_Poly_Values(Source_P,Source_P)
-
-    END DO  !   Source_T Loop
-    END DO  !   Source_P Loop
-END DO  !   Dest_R Loop
-END DO  !   Dest_T Loop
-END DO  !   Dest_P Loop
-
-
-
-DEALLOCATE( R_Lag_Poly_Values )
-DEALLOCATE( T_Lag_Poly_Values )
-DEALLOCATE( P_Lag_Poly_Values )
-
-
-
-END FUNCTION Create_Translation_Matrix
 
 
 

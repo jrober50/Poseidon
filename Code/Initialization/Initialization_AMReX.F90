@@ -32,6 +32,7 @@ USE Poseidon_Numbers_Module, &
 USE Poseidon_Units_Module, &
             ONLY :  Set_Units,      &
                     Centimeter,     &
+                    Meter,          &
                     Kilometer
 
 USE Poseidon_Parameters, &
@@ -54,7 +55,9 @@ USE XCFC_Source_Variables_Module, &
             ONLY :  Allocate_XCFC_Source_Variables
 
 USE Variables_MPI, &
-            ONLY :  nProcs_Poseidon
+            ONLY :  nProcs_Poseidon,        &
+                    myID_Poseidon,          &
+                    ierr
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
@@ -172,6 +175,11 @@ USE Variables_AMReX_Core, &
                     FEM_Elem_Table,         &
                     Table_Offsets
 
+USE Flags_Initial_Guess_Module, &
+            ONLY :  lPF_IG_Flags,           &
+                    iPF_IG_Flat_Guess
+
+USE MPI
 
 IMPLICIT NONE
 
@@ -192,6 +200,7 @@ SUBROUTINE Initialize_Poseidon_with_AMReX(  Source_NQ,                          
                                             Source_TQ_xlocs,                    &
                                             Source_PQ_xlocs,                    &
                                             Units_Option,                       &
+                                            Radial_Boundary_Units_Option,       &
                                             Integration_NQ_Option,              &
                                             Convergence_Criteria_Option,        &
                                             CFA_Eq_Flags_Option,                &
@@ -222,6 +231,7 @@ REAL(idp),  DIMENSION(Source_NQ(3)),    INTENT(IN)              ::  Source_PQ_xl
 
 
 CHARACTER(LEN=1),        INTENT(IN), OPTIONAL                   ::  Units_Option
+CHARACTER(LEN=2),        INTENT(IN), OPTIONAL                   ::  Radial_Boundary_Units_Option
 INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL                   ::  Integration_NQ_Option
 REAL(idp),               INTENT(IN), OPTIONAL                   ::  Convergence_Criteria_Option
 INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL                   ::  CFA_EQ_Flags_Option
@@ -279,8 +289,23 @@ ELSE
 END IF
 
 
-R_Inner = R_Inner*Kilometer
-R_Outer = R_Outer*Kilometer
+
+IF ( PRESENT( Radial_Boundary_Units_Option ) ) THEN
+    IF ( Radial_Boundary_Units_Option == "cm" ) THEN
+        R_Inner = R_Inner*Centimeter
+        R_Outer = R_Outer*Centimeter
+    ELSE IF ( Radial_Boundary_Units_Option == "m" ) THEN
+        R_Inner = R_Inner*Meter
+        R_Outer = R_Outer*Meter
+    ELSE IF ( Radial_Boundary_Units_Option == "km" ) THEN
+        R_Inner = R_Inner*Kilometer
+        R_Outer = R_Outer*Kilometer
+    ELSE
+        R_Inner = R_Inner*Centimeter
+        R_Outer = R_Outer*Centimeter
+    END IF
+END IF
+
 
 
 IF ( PRESENT( Integration_NQ_Option ) ) THEN
@@ -328,10 +353,15 @@ ELSE
 END IF
 
 IF ( PRESENT(Flat_Guess_Option) ) THEN
-    Flat_Guess_Flag = Poisson_Mode_Option
+    lPF_IG_Flags(iPF_IG_Flat_Guess) = Poisson_Mode_Option
 ELSE
-    Flat_Guess_Flag = .TRUE.
+    lPF_IG_Flags(iPF_IG_Flat_Guess) = .TRUE.
 END IF
+
+
+
+CALL MPI_COMM_RANK(MPI_COMM_WORLD, myID_Poseidon, ierr)
+
 
 
 
@@ -595,6 +625,7 @@ DO lvl = 0,AMReX_Num_Levels-1
             iLeafElementsPerLvl(lvl) = iLeafElementsPerLvl(lvl) + SUM(Mask(:,EOff(2),EOff(3),:))
         END IF
     END DO
+    PRINT*,"iLeafElementsPerLvl",iLeafElementsPerLvl," myID ",myID_Poseidon
     iNumLeafElements = Sum(iLeafElementsPerLvl)
 
     CALL amrex_mfiter_destroy(mfi)

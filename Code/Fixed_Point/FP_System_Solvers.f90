@@ -145,11 +145,6 @@ USE Linear_Solvers_And_Preconditioners, &
                     JACOBI_CONDITIONING,            &
                     Jacobi_Conditioning_Beta
 
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In,                       &
-                    OPEN_ITER_REPORT_FILE,          &
-                    CLOSE_ITER_REPORT_FILE
-
 USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map,              &
                     FP_Array_Map_TypeB,             &
@@ -162,6 +157,15 @@ USE Maps_Domain, &
 USE FP_Factorize_Beta_Banded, &
             ONLY :  Factorize_Beta_Banded,          &
                     Jacobi_PC_MVL_Banded_Vector
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                     &
+                    TimerStop
+
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_FP_Matrix_Cholesky,      &
+                    Timer_FP_Banded_Factorization
 
 IMPLICIT NONE
 
@@ -198,7 +202,6 @@ INTEGER                                                                     ::  
 REAL(idp)                                                                   ::  omega
 
 
-REAL(KIND = idp), DIMENSION(1:4)                        :: timer
 
 WORK_VECB = 0
 
@@ -220,19 +223,16 @@ IF (( LINEAR_SOLVER == "CHOL" ) .AND. (MCF_Flag == 0 ) ) THEN
     !   solve the linear system using forward and backward substitution.
     !
 
-    timer(1) = MPI_Wtime()
+    CALL TimerStart( Timer_FP_Matrix_Cholesky)
     CALL Cholesky_Factorization()
     MCF_Flag = 1
+    CALL TimerStop( Timer_FP_Matrix_Cholesky)
 
-
-    timer(2) = MPI_Wtime()
-    CALL Clock_IN(timer(2)-timer(1), 11)
 END IF
 
 
 
 
-timer(1) = MPI_Wtime()
 IF (LINEAR_SOLVER =='Full') THEN
     !####################################!
     !
@@ -373,8 +373,7 @@ END IF
 
 
 
-timer(1) = MPI_Wtime()
-CALL Clock_In(timer(1)-timer(2),16)
+
 
 END SUBROUTINE Solve_FP_System
 
@@ -410,8 +409,6 @@ COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)                ::  WORK_MAT
 
 INTEGER                                                         ::  ui, re, d, l
 INTEGER                                                         ::  Here, There, Thither
-
-REAL(idp), DIMENSION(1:4)                                       ::  timer
 
 
 IF ( Verbose_Flag ) THEN
@@ -485,15 +482,12 @@ IF (LINEAR_SOLVER =='Full') THEN
 ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
-    timer(1) = MPI_Wtime()
     IF ( .NOT. Beta_Factorized_Flag ) THEN
-        
+        CALL TimerStart( Timer_FP_Banded_Factorization )
         CALL Factorize_Beta_Banded()
-
+        CALL TimerStop( Timer_FP_Banded_Factorization )
     END IF
-    timer(2) = MPI_Wtime()
-    
-    CALL Clock_IN(timer(2)-timer(1), 12)
+
 
 
     ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
@@ -551,11 +545,6 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
     
 
     DEALLOCATE( Work_Vec )
-!    DEALLOCATE( Work_Mat )
-
-
-    timer(1) = MPI_Wtime()
-    CALL Clock_In(timer(1)-timer(2),17)
 
 END IF
 

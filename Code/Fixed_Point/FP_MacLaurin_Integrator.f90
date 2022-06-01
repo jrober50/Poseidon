@@ -99,10 +99,6 @@ USE Functions_Math, &
             ONLY :  Lagrange_Poly,          &
                     Lagrange_Poly_Deriv
 
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In
-
-
 USE Maps_Fixed_Point, &
             ONLY :  FP_FEM_Node_Map,            &
                     FP_Beta_Array_Map,          &

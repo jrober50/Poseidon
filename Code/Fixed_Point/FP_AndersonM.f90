@@ -87,8 +87,6 @@ USE IO_FP_Linear_System, &
 USE IO_Print_Results, &
             ONLY :  Print_Results
 
-USE FP_IO_Module, &
-            ONLY :  Output_FP_Timetable
 
 USE IO_Convergence_Output,  &
             ONLY :  Output_Convergence_Reports
@@ -106,11 +104,6 @@ USE Linear_Solvers_And_Preconditioners, &
                     JACOBI_CONDITIONING,            &
                     Jacobi_Conditioning_Beta
 
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In,                           &
-                    OPEN_ITER_REPORT_FILE,              &
-                    CLOSE_ITER_REPORT_FILE
-
 USE FP_System_Solvers_Module,   &
             ONLY :  Solve_FP_System,                &
                     Solve_FP_System_Beta
@@ -121,6 +114,16 @@ USE FP_Resid_Convergence_Module,    &
 USE FP_Functions_Coeffs_Module, &
             ONLY :  Coeff_To_Vector,    &
                     Vector_To_Coeff
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                     &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_FP_Source_Vector,         &
+                    Timer_FP_CFLF_Solve,            &
+                    Timer_FP_Beta_Solve
+
 
 IMPLICIT NONE
 
@@ -206,10 +209,10 @@ END IF
 !
 !   Calculate Source Vector with u_0
 !
-timer(1) = MPI_WTime()
+CALL TimerStart(Timer_FP_Source_Vector)
 CALL Calc_FP_Source_Vector()
-timer(2) = MPI_Wtime()
-Call Clock_In(timer(2)-timer(1),3)
+CALL TimerStop(Timer_FP_Source_Vector)
+
 
 
 
@@ -237,18 +240,19 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     IF ( Verbose_Flag ) THEN
         PRINT*,"In Anderson FP loop, Before System Solves."
     END IF
-    timer(1) = MPI_Wtime()
-    IF ( ANY( CFA_EQ_Flags(1:2) == 1) ) THEN
-        Call Solve_FP_System()
-    END IF
-    timer(2) = MPI_WTime()
-    IF ( ANY( CFA_EQ_Flags(3:5) == 1) ) THEN
-        Call Solve_FP_System_Beta()
-    END IF
-    timer(3) = MPI_Wtime()
 
-    CALL Clock_In(timer(2)-timer(1),4)
-    CALL Clock_In(timer(3)-timer(2),5)
+    IF ( ANY( CFA_EQ_Flags(1:2) == 1) ) THEN
+        CALL TimerStart(Timer_FP_CFLF_Solve)
+        Call Solve_FP_System()
+        CALL TimerStop(Timer_FP_CFLF_Solve)
+    END IF
+    
+    IF ( ANY( CFA_EQ_Flags(3:5) == 1) ) THEN
+        CALL TimerStart(Timer_FP_Beta_Solve)
+        Call Solve_FP_System_Beta()
+        CALL TimerStop(Timer_FP_Beta_Solve)
+    END IF
+
 
 
 
@@ -335,17 +339,14 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     IF ( Verbose_Flag ) THEN
         PRINT*,"In Anderson FP loop, Before calculating Source Vector."
     END IF
-    timer(1) = MPI_Wtime()
+
 
 
 !   Calculate Source Vector with new solution
+    CALL TimerStart(Timer_FP_Source_Vector)
     CALL Calc_FP_Source_Vector()
+    CALL TimerStop(Timer_FP_Source_Vector)
 
-
-
-
-    timer(1) = MPI_Wtime()
-    Call Clock_In(timer(1)-timer(4),8)
 
 
     IF ( PR ) THEN
@@ -370,7 +371,7 @@ CALL Deallocate_FP_Source_Variables()
 
 
 CALL Write_Final_Results()
-CALL Output_FP_Timetable()
+
 CALL Output_Convergence_Reports()
 
 END SUBROUTINE Fixed_Point_AndersonM

@@ -54,16 +54,14 @@ USE Variables_Source, &
                     Block_Source_S,     &
                     Block_Source_Si
 
-USE Poseidon_IO_Module, &
-            ONLY :  OUTPUT_POSEIDON_SOURCES_1D
-
-
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
                     Num_T_Quad_Points,      &
                     Num_P_Quad_Points,      &
                     Num_TP_Quad_Points,     &
                     Local_Quad_DOF,         &
+                    xLeftLimit,             &
+                    xRightLimit,            &
                     Int_R_Locations,        &
                     Int_T_Locations,        &
                     Int_P_Locations,        &
@@ -72,8 +70,9 @@ USE Variables_Quadrature, &
                     Int_P_Weights,          &
                     Int_TP_Weights
 
-USE Functions_Math, &
-            ONLY :  Lagrange_Poly
+
+USE Functions_Translation_Matrix_Module, &
+            ONLY :  Create_Translation_Matrix
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
@@ -95,8 +94,6 @@ USE Variables_Interface, &
                     Caller_PQ_xlocs,                &
                     Translation_Matrix
 
-USE Maps_X_Space, &
-            ONLY :  Map_To_X_Space
 
 IMPLICIT NONE
 
@@ -117,7 +114,7 @@ SUBROUTINE Poseidon_Input_Sources_Part1_Native( Input_E,            &
                                                 Input_R_Quad,       &
                                                 Input_T_Quad,       &
                                                 Input_P_Quad,       &
-                                                xL                  )
+                                                Input_xL            )
 
 
 INTEGER,    INTENT(IN), DIMENSION(3)                                ::  Input_NE
@@ -139,38 +136,18 @@ REAL(idp),  INTENT(IN), DIMENSION(  1:Input_NQ(1)*Input_NQ(2)*Input_NQ(3),  &
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(1) )                  ::  Input_R_Quad
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(2) )                  ::  Input_T_Quad
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(3) )                  ::  Input_P_Quad
-REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  xL
+REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  Input_xL
 
 
 
-INTEGER                                             ::  Local_R
-INTEGER                                             ::  Local_T
-INTEGER                                             ::  Local_P
 
-INTEGER                                             ::  Input_T
-INTEGER                                             ::  Input_P
-
-INTEGER                                             ::  Here
-INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
 
 REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
-INTEGER                                             ::  My_DOF
 INTEGER                                             ::  Their_DOF
 
-
-REAL(idp),  DIMENSION( 1:Input_NQ(1) )              ::  Scaled_R_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(2) )              ::  Scaled_T_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(3) )              ::  Scaled_P_Quad
-
-
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  R_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  T_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  P_Lag_Poly_Values
-
-
-INTEGER                                             :: re, rd, pe, te, td, pd
+INTEGER                                             ::  re, te, pe
 
 
 IF (Verbose_Flag) THEN
@@ -182,80 +159,30 @@ CALL TimerStart(Timer_GR_SourceInput_PartA)
 
 
 ! Define Interpolation Matrix
-My_DOF    = Num_R_Quad_Points*Num_T_Quad_Points*Num_P_Quad_Points
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
-ALLOCATE(TransMat(1:Their_DOF, 1:My_DOF))
-ALLOCATE( R_Lag_Poly_Values(1:Input_NQ(1),1:NUM_R_QUAD_POINTS) )
-ALLOCATE( T_Lag_Poly_Values(1:Input_NQ(2),1:NUM_T_QUAD_POINTS) )
-ALLOCATE( P_Lag_Poly_Values(1:Input_NQ(3),1:NUM_P_QUAD_POINTS) )
+ALLOCATE( TransMat(1:Their_DOF, 1:Local_Quad_DOF) )
 
-
-
-Scaled_R_Quad = Map_To_X_Space(xL(1),xL(2),Input_R_Quad)
-Scaled_T_Quad = Map_To_X_Space(xL(1),xL(2),Input_T_Quad)
-Scaled_P_Quad = Map_To_X_Space(xL(1),xL(2),Input_P_Quad)
-
-
-
-
-DO Local_R = 1,NUM_R_QUAD_POINTS
-    R_Lag_Poly_Values(:,Local_R) = Lagrange_Poly( Int_R_Locations(Local_R), &
-                                                  Input_NQ(1)-1,            &
-                                                  Scaled_R_Quad              )
-
-END DO
-
-DO Local_T = 1,NUM_T_QUAD_POINTS
-    T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly( Int_T_Locations(Local_T), &
-                                                  Input_NQ(2)-1,            &
-                                                  Scaled_T_Quad              )
-
-END DO
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-    P_Lag_Poly_Values(:,Local_P) = Lagrange_Poly( Int_P_Locations(Local_P), &
-                                                  Input_NQ(3)-1,            &
-                                                  Scaled_P_Quad              )
-
-END DO
-
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-DO Local_T = 1,NUM_T_QUAD_POINTS
-DO Local_R = 1,NUM_R_QUAD_POINTS
-
-    Local_Here = (Local_P-1) * NUM_T_QUAD_POINTS * NUM_R_QUAD_POINTS        &
-               + (Local_T-1) * NUM_R_QUAD_POINTS                            &
-               + Local_R
-
-    DO Input_P = 1,Input_NQ(3)
-    DO Input_T = 1,Input_NQ(2)
-
-            Here = (Input_P-1) * Input_NQ(2) * Input_NQ(1)   &
-                 + (Input_T-1) * Input_NQ(1)
-
-            There = Here + Input_NQ(1)
-
-            TransMat(Here+1:There, Local_Here)  =                 &
-                              R_Lag_Poly_Values(1:Input_NQ(1),Local_R)    &
-                            * T_Lag_Poly_Values(Input_T,Local_T)            &
-                            * P_Lag_Poly_Values(Input_P,Local_P)
-
-    END DO  !   Input_T Loop
-    END DO  !   Input_P Loop
-END DO  !   Local_R Loop
-END DO  !   Local_T Loop
-END DO  !   Local_P Loop
-
+TransMat =  Create_Translation_Matrix(  Input_NQ,          &
+                                        Input_xL,          &
+                                        Input_R_Quad,    &
+                                        Input_T_Quad,    &
+                                        Input_P_Quad,    &
+                                        Their_DOF,         &
+                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                        [xLeftLimit, xRightLimit ],            &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Local_Quad_DOF            )
 
 
 DO pe = 0,Input_NE(3)-1
 DO te = 0,Input_NE(2)-1
 DO re = 0,Input_NE(1)-1
 
-DO Local_Here = 1,My_DOF
+DO Local_Here = 1,Local_Quad_DOF
 
     Block_Source_E(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &
                                                        Input_E(:,re,te,pe)          )
@@ -373,7 +300,7 @@ SUBROUTINE Poseidon_Input_Sources_Native( Input_E,          &
                                           Input_R_Quad,     &
                                           Input_T_Quad,     &
                                           Input_P_Quad,     &
-                                          xL                )
+                                          Input_xL          )
 
 INTEGER,    INTENT(IN), DIMENSION(1:3)                                ::  Input_NE
 INTEGER,    INTENT(IN), DIMENSION(1:3)                                ::  Input_NQ
@@ -398,38 +325,16 @@ REAL(idp),  INTENT(IN), DIMENSION(  1:Input_NQ(1)*Input_NQ(2)*Input_NQ(3),  &
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(1) )                  ::  Input_R_Quad
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(2) )                  ::  Input_T_Quad
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(3) )                  ::  Input_P_Quad
-REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  xL
+REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  Input_xL
 
 
-
-INTEGER                                             ::  Local_R
-INTEGER                                             ::  Local_T
-INTEGER                                             ::  Local_P
-
-INTEGER                                             ::  Input_T
-INTEGER                                             ::  Input_P
-
-INTEGER                                             ::  Here
-INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
 
 REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
-INTEGER                                             ::  My_DOF
 INTEGER                                             ::  Their_DOF
 
-
-REAL(idp),  DIMENSION( 1:Input_NQ(1) )              ::  Scaled_R_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(2) )              ::  Scaled_T_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(3) )              ::  Scaled_P_Quad
-
-
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE             ::  R_Lag_Poly_Values
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE             ::  T_Lag_Poly_Values
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE             ::  P_Lag_Poly_Values
-
-
-INTEGER                                             :: re, rd, pe, te, td, pd
+INTEGER                                             ::  re, te, pe
 
 
 IF (Verbose_Flag) THEN
@@ -441,81 +346,30 @@ CALL TimerStart(Timer_GR_SourceInput_PartA)
 
 
 ! Define Interpolation Matrix
-My_DOF    = Num_R_Quad_Points*Num_T_Quad_Points*Num_P_Quad_Points
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
-ALLOCATE(TransMat(1:Their_DOF, 1:My_DOF))
-ALLOCATE( R_Lag_Poly_Values(1:Input_NQ(1),1:NUM_R_QUAD_POINTS) )
-ALLOCATE( T_Lag_Poly_Values(1:Input_NQ(2),1:NUM_T_QUAD_POINTS) )
-ALLOCATE( P_Lag_Poly_Values(1:Input_NQ(3),1:NUM_P_QUAD_POINTS) )
+ALLOCATE(TransMat(1:Their_DOF, 1:Local_Quad_DOF))
 
-
-
-
-Scaled_R_Quad = Map_To_X_Space(xL(1),xL(2),Input_R_Quad)
-Scaled_T_Quad = Map_To_X_Space(xL(1),xL(2),Input_T_Quad)
-Scaled_P_Quad = Map_To_X_Space(xL(1),xL(2),Input_P_Quad)
-
-
-
-
-DO Local_R = 1,NUM_R_QUAD_POINTS
-    R_Lag_Poly_Values(:,Local_R) = Lagrange_Poly( Int_R_Locations(Local_R), &
-                                                  Input_NQ(1)-1,            &
-                                                  Scaled_R_Quad              )
-
-END DO
-
-DO Local_T = 1,NUM_T_QUAD_POINTS
-    T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly( Int_T_Locations(Local_T), &
-                                                  Input_NQ(2)-1,            &
-                                                  Scaled_T_Quad              )
-
-END DO
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-    P_Lag_Poly_Values(:,Local_P) = Lagrange_Poly( Int_P_Locations(Local_P), &
-                                                  Input_NQ(3)-1,            &
-                                                  Scaled_P_Quad              )
-
-END DO
-
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-DO Local_T = 1,NUM_T_QUAD_POINTS
-DO Local_R = 1,NUM_R_QUAD_POINTS
-
-    Local_Here = (Local_P-1) * NUM_T_QUAD_POINTS * NUM_R_QUAD_POINTS        &
-               + (Local_T-1) * NUM_R_QUAD_POINTS                            &
-               + Local_R
-
-    DO Input_P = 1,Input_NQ(3)
-    DO Input_T = 1,Input_NQ(2)
-
-            Here = (Input_P-1) * Input_NQ(2) * Input_NQ(1)   &
-                 + (Input_T-1) * Input_NQ(1)
-
-            There = Here + Input_NQ(1)
-
-            TransMat(Here+1:There, Local_Here)  =                 &
-                              R_Lag_Poly_Values(1:Input_NQ(1),Local_R)    &
-                            * T_Lag_Poly_Values(Input_T,Local_T)            &
-                            * P_Lag_Poly_Values(Input_P,Local_P)
-
-    END DO  !   Input_T Loop
-    END DO  !   Input_P Loop
-END DO  !   Local_R Loop
-END DO  !   Local_T Loop
-END DO  !   Local_P Loop
-
+TransMat =  Create_Translation_Matrix(  Input_NQ,          &
+                                        Input_xL,          &
+                                        Input_R_Quad,    &
+                                        Input_T_Quad,    &
+                                        Input_P_Quad,    &
+                                        Their_DOF,         &
+                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                        [xLeftLimit, xRightLimit ],            &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Local_Quad_DOF            )
 
 
 DO pe = 0,Input_NE(3)-1
 DO te = 0,Input_NE(2)-1
 DO re = 0,Input_NE(1)-1
 
-DO Local_Here = 1,My_DOF
+DO Local_Here = 1,Local_Quad_DOF
 
     
 
@@ -642,13 +496,13 @@ END SUBROUTINE Poseidon_Input_Sources_Native_Caller
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Part2_Native( Input_S,          &
-                                                Input_NE,         &
-                                                Input_NQ,         &
-                                                Input_R_Quad,     &
-                                                Input_T_Quad,     &
-                                                Input_P_Quad,     &
-                                                xL                )
+SUBROUTINE Poseidon_Input_Sources_Part2_Native( Input_S,            &
+                                                Input_NE,           &
+                                                Input_NQ,           &
+                                                Input_R_Quad,       &
+                                                Input_T_Quad,       &
+                                                Input_P_Quad,       &
+                                                Input_xL            )
 
 INTEGER,    INTENT(IN), DIMENSION(1:3)                                ::  Input_NE
 INTEGER,    INTENT(IN), DIMENSION(1:3)                                ::  Input_NQ
@@ -663,39 +517,17 @@ REAL(idp),  INTENT(IN), DIMENSION(  1:Input_NQ(1)*Input_NQ(2)*Input_NQ(3),  &
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(1) )                  ::  Input_R_Quad
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(2) )                  ::  Input_T_Quad
 REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(3) )                  ::  Input_P_Quad
-REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  xL
+REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  Input_xL
 
 
-
-INTEGER                                             ::  Local_R
-INTEGER                                             ::  Local_T
-INTEGER                                             ::  Local_P
-
-INTEGER                                             ::  Input_T
-INTEGER                                             ::  Input_P
-
-INTEGER                                             ::  Here
-INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
 
 REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
-INTEGER                                             ::  My_DOF
 INTEGER                                             ::  Their_DOF
 
 
-REAL(idp),  DIMENSION( 1:Input_NQ(1) )              ::  Scaled_R_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(2) )              ::  Scaled_T_Quad
-REAL(idp),  DIMENSION( 1:Input_NQ(3) )              ::  Scaled_P_Quad
-
-
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE             ::  R_Lag_Poly_Values
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE             ::  T_Lag_Poly_Values
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE             ::  P_Lag_Poly_Values
-
-
-INTEGER                                             :: re, rd, pe, te, td, pd
-
+INTEGER                                             :: re, te, pe
 
 IF (Verbose_Flag) THEN
     PRINT*,"In Poseidon_Input_Sources_Native"
@@ -706,73 +538,24 @@ CALL TimerStart(Timer_GR_SourceInput_PartA)
 
 
 ! Define Interpolation Matrix
-My_DOF    = Num_R_Quad_Points*Num_T_Quad_Points*Num_P_Quad_Points
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
-ALLOCATE(TransMat(1:Their_DOF, 1:My_DOF))
-ALLOCATE( R_Lag_Poly_Values(1:Input_NQ(1),1:NUM_R_QUAD_POINTS) )
-ALLOCATE( T_Lag_Poly_Values(1:Input_NQ(2),1:NUM_T_QUAD_POINTS) )
-ALLOCATE( P_Lag_Poly_Values(1:Input_NQ(3),1:NUM_P_QUAD_POINTS) )
+ALLOCATE(TransMat(1:Their_DOF, 1:Local_Quad_DOF))
 
 
-
-
-Scaled_R_Quad = Map_To_X_Space(xL(1),xL(2),Input_R_Quad)
-Scaled_T_Quad = Map_To_X_Space(xL(1),xL(2),Input_T_Quad)
-Scaled_P_Quad = Map_To_X_Space(xL(1),xL(2),Input_P_Quad)
-
-
-
-
-DO Local_R = 1,NUM_R_QUAD_POINTS
-    R_Lag_Poly_Values(:,Local_R) = Lagrange_Poly( Int_R_Locations(Local_R), &
-                                                  Input_NQ(1)-1,            &
-                                                  Scaled_R_Quad              )
-
-END DO
-
-DO Local_T = 1,NUM_T_QUAD_POINTS
-    T_Lag_Poly_Values(:,Local_T) = Lagrange_Poly( Int_T_Locations(Local_T), &
-                                                  Input_NQ(2)-1,            &
-                                                  Scaled_T_Quad              )
-
-END DO
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-    P_Lag_Poly_Values(:,Local_P) = Lagrange_Poly( Int_P_Locations(Local_P), &
-                                                  Input_NQ(3)-1,            &
-                                                  Scaled_P_Quad              )
-
-END DO
-
-
-DO Local_P = 1,NUM_P_QUAD_POINTS
-DO Local_T = 1,NUM_T_QUAD_POINTS
-DO Local_R = 1,NUM_R_QUAD_POINTS
-
-    Local_Here = (Local_P-1) * NUM_T_QUAD_POINTS * NUM_R_QUAD_POINTS        &
-               + (Local_T-1) * NUM_R_QUAD_POINTS                            &
-               + Local_R
-
-    DO Input_P = 1,Input_NQ(3)
-    DO Input_T = 1,Input_NQ(2)
-
-            Here = (Input_P-1) * Input_NQ(2) * Input_NQ(1)   &
-                 + (Input_T-1) * Input_NQ(1)
-
-            There = Here + Input_NQ(1)
-
-            TransMat(Here+1:There, Local_Here)  =                 &
-                              R_Lag_Poly_Values(1:Input_NQ(1),Local_R)    &
-                            * T_Lag_Poly_Values(Input_T,Local_T)            &
-                            * P_Lag_Poly_Values(Input_P,Local_P)
-
-    END DO  !   Input_T Loop
-    END DO  !   Input_P Loop
-END DO  !   Local_R Loop
-END DO  !   Local_T Loop
-END DO  !   Local_P Loop
+TransMat =  Create_Translation_Matrix(  Input_NQ,          &
+                                        Input_xL,          &
+                                        Input_R_Quad,    &
+                                        Input_T_Quad,    &
+                                        Input_P_Quad,    &
+                                        Their_DOF,         &
+                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                        [xLeftLimit, xRightLimit ],            &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Local_Quad_DOF            )
 
 
 
@@ -780,7 +563,7 @@ DO pe = 0,Input_NE(3)-1
 DO te = 0,Input_NE(2)-1
 DO re = 0,Input_NE(1)-1
 
-DO Local_Here = 1,My_DOF
+DO Local_Here = 1,Local_Quad_DOF
 
 
     Block_Source_S(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &

@@ -92,9 +92,6 @@ USE Functions_Jacobian, &
                     JCBN_BIGK_FUNCTION,         &
                     JCBN_Kappa_Array_3D
 
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In
-
 USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
 

@@ -25,7 +25,10 @@ USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
 USE Poseidon_Units_Module, &
-            ONLY :  Set_Units
+            ONLY :  Set_Units,              &
+                    Centimeter,             &
+                    Meter,                  &
+                    Kilometer
 
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
@@ -39,16 +42,6 @@ USE Poseidon_Parameters, &
                     Poisson_Mode,           &
                     CFA_EQ_Flags,           &
                     Num_CFA_Eqs
-
-USE Variables_IO, &
-            ONLY :  Report_Flags,           &
-                    Report_IDs,             &
-                    iRF_Setup,              &
-                    iRF_Time,               &
-                    iWF_Source,             &
-                    iWF_Results,            &
-                    Write_Flags,            &
-                    File_Suffix
 
 USE Variables_Functions, &
             ONLY :  LM_Location
@@ -111,6 +104,9 @@ USE Variables_AMReX_Core, &
 USE Allocation_Core, &
             ONLY :  Allocate_Poseidon_CFA_Variables
 
+USE XCFC_Source_Variables_Module, &
+            ONLY :  Allocate_XCFC_Source_Variables
+
 USE Allocation_Poisson, &
             ONLY :  Allocate_Poseidon_Poisson_Variables
 
@@ -139,13 +135,10 @@ USE Initialization_FP, &
 USE Initialization_XCFC, &
             ONLY :  Initialize_XCFC
 
-!USE Initialization_NR, &
-!            ONLY :  Initialize_NR
-
 USE Maps_Legacy, &
             ONLY :  CFA_3D_LM_Map
 
-USE Poseidon_IO_Module, &
+USE IO_Output_Mesh_Module, &
             ONLY :  Output_Mesh,            &
                     Output_Nodal_Mesh
 
@@ -171,6 +164,10 @@ USE Initialization_Subroutines, &
             ONLY :  Init_Fixed_Point_Params,        &
                     Init_IO_Params
 
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,                   &
+                    iPF_IO_Write_Mesh
+
 IMPLICIT NONE
 
 
@@ -188,6 +185,7 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
                                 FEM_Degree_Option,                      &
                                 L_Limit_Option,                         &
                                 Units_Option,                           &
+                                Radial_Boundary_Units_Option,           &
                                 Domain_Edge_Option,                     &
                                 NE_Option,                              &
                                 NQ_Option,                              &
@@ -217,6 +215,7 @@ SUBROUTINE Initialize_Poseidon( Dimensions_Option,                      &
 
 
 CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Units_Option
+CHARACTER(LEN=*),        INTENT(IN), OPTIONAL               ::  Radial_Boundary_Units_Option
 
 INTEGER,                 INTENT(IN), OPTIONAL               ::  FEM_Degree_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  L_Limit_Option
@@ -382,13 +381,38 @@ Num_Loc_P_Elements = Num_R_Elements
 CALL Allocate_Mesh()
 
 IF ( PRESENT( r_Option ) ) THEN
-    rlocs = r_Option
+    IF ( Radial_Boundary_Units_Option == "cm" ) THEN
+        rlocs = r_Option*Centimeter
+    ELSE IF ( Radial_Boundary_Units_Option == "m" ) THEN
+        rlocs = r_Option*Meter
+    ELSE IF ( Radial_Boundary_Units_Option == "km" ) THEN
+        rlocs = r_Option*Kilometer
+    ELSE
+        rlocs = r_Option*Centimeter
+    END IF
     locs_set(1) = .TRUE.
 END IF
+
+
+
+
+
 IF ( PRESENT( dr_Option ) ) THEN
-    drlocs = dr_Option
+    IF ( Radial_Boundary_Units_Option == "cm" ) THEN
+        drlocs = dr_Option*Centimeter
+    ELSE IF ( Radial_Boundary_Units_Option == "m" ) THEN
+        drlocs = dr_Option*Meter
+    ELSE IF ( Radial_Boundary_Units_Option == "km" ) THEN
+        drlocs = dr_Option*Kilometer
+    ELSE
+        drlocs = dr_Option*Centimeter
+    END IF
     dlocs_set(1) = .TRUE.
 END IF
+
+
+
+
 
 IF ( PRESENT( t_Option ) ) THEN
     tlocs = t_Option
@@ -402,6 +426,23 @@ ELSE
     R_Inner = 0.0_idp
     R_Outer = 1.0_idp
 END IF
+
+IF ( PRESENT( Radial_Boundary_Units_Option ) ) THEN
+    IF ( Radial_Boundary_Units_Option == "cm" ) THEN
+        R_Inner = R_Inner*Centimeter
+        R_Outer = R_Outer*Centimeter
+    ELSE IF ( Radial_Boundary_Units_Option == "m" ) THEN
+        R_Inner = R_Inner*Meter
+        R_Outer = R_Outer*Meter
+    ELSE IF ( Radial_Boundary_Units_Option == "km" ) THEN
+        R_Inner = R_Inner*Kilometer
+        R_Outer = R_Outer*Kilometer
+    ELSE
+        R_Inner = R_Inner*Centimeter
+        R_Outer = R_Outer*Centimeter
+    END IF
+END IF
+
 
 
 IF ( PRESENT( dt_Option ) ) THEN
@@ -537,6 +578,7 @@ ELSE
     CALL Initialize_Derived()
     CALL Initialize_MPI()
     CALL Allocate_Poseidon_CFA_Variables()
+    CALL Allocate_XCFC_Source_Variables()
     CALL Initialize_Quadrature()
 
     CALL Initialize_Tables()
@@ -567,7 +609,7 @@ IF ( Verbose_Flag ) THEN
 END IF
 
 
-IF ( Write_Flags(7) == 1 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Mesh) ) THEN
     PRINT*,"Outputing Radial Mesh to file during initialization."
     CALL Output_Mesh( rlocs, NUM_R_ELEMENTS+1 )
     CALL Output_Nodal_Mesh( rlocs, NUM_R_ELEMENTS+1 )

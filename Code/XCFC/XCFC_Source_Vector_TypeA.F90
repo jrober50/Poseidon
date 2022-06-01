@@ -201,8 +201,9 @@ INTEGER, INTENT(IN)                     ::  iU
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL
 
-INTEGER,             DIMENSION(3)       ::  iE
+
 #ifndef POSEIDON_AMREX_FLAG
+INTEGER,             DIMENSION(3)       ::  iE
 INTEGER                                 ::  re, te, pe
 #endif
 
@@ -388,7 +389,7 @@ INTEGER, INTENT(IN)                                         ::  iU
 INTEGER, INTENT(IN)                                         ::  Level
 INTEGER, INTENT(IN)                                         ::  FEM_Elem
 
-INTEGER                                                     ::  rd, d, lm_loc, td,pd,tpd
+INTEGER                                                     ::  rd, d, lm_loc
 INTEGER                                                     ::  Current_i_Location
 
 COMPLEX(KIND = idp)                                         ::  RHS_TMP

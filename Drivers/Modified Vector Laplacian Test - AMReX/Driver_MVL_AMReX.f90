@@ -60,14 +60,10 @@ USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations
 
 USE Maps_X_Space, &
-           ONLY :  Map_From_X_Space
-
-USE Poseidon_IO_Module, &
-           ONLY :  Open_Run_Report_File,       &
-                   Output_Poseidon_Sources_3D
+           ONLY :   Map_From_X_Space
 
 USE IO_Print_Results, &
-           ONLY :  Print_Results
+           ONLY :   Print_Results
 
 USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Close
@@ -84,9 +80,6 @@ USE Driver_SetBC_Module, &
 USE Driver_SetGuess_Module, &
             ONLY:  Driver_SetGuess
 
-USE FP_IO_Module, &
-            ONLY :  Output_FP_Timetable
-
 USE IO_Print_Results, &
             ONLY :  Print_Single_Var_Results
 
@@ -95,12 +88,6 @@ USE IO_Write_Final_Results, &
 
 USE Poseidon_AMReX_Input_Parsing_Module, &
             ONLY : Init_AMReX_Parameters
-
-USE Variables_MPI, &
-            ONLY :  myID_Poseidon,      &
-                    MasterID_Poseidon,  &
-                    nPROCS_Poseidon,    &
-                    Poseidon_Comm_World
 
 USE Variables_Driver_AMReX, &
             ONLY :  xL,                 &
@@ -113,16 +100,6 @@ USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
                     AMReX_Num_Levels
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,      &
-                    FP_Coeff_Vector_B
-
-USE Variables_Mesh, &
-            ONLY :  Num_R_Elements,         &
-                    Num_T_Elements,         &
-                    Num_P_Elements,         &
-                    rlocs,                  &
-                    drlocs
 
 USE MPI
 
@@ -337,10 +314,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-
-    CALL Open_Run_Report_File()
-
-
     CALL Create_3D_Mesh( Mesh_Type,         &
                         xL(1),    &
                         xR(1),    &
@@ -392,7 +365,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
-    CALL Driver_SetSource( NQ )
+    CALL Driver_SetSource( )
 
 
     !############################################################!
@@ -400,7 +373,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#          Calculate and Set Boundary Conditions           #!
     !#                                                          #!
     !############################################################!
-!    PRINT*,"Before Driver_SetBC"
     CALL Driver_SetBC( )
 
 
@@ -410,24 +382,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#              Calculate and Set Initial Guess             #!
     !#                                                          #!
     !############################################################!
-!    PRINT*,"Before Driver_SetGuess"
-
-    ! These values are established during source input.
-    ! As the original NE accounts for only the coarsest level,
-    ! we need to do this to get the total number of leaf elements
-    NE(1) = Num_R_Elements
-    NE(2) = Num_T_Elements
-    NE(3) = Num_P_Elements
-
-
-    CALL Driver_SetGuess(   NE, NQ,         &
-                            drlocs, rlocs,      &
-                            Input_R_Quad,   &
-                            Input_T_Quad,   &
-                            Input_P_Quad,   &
-                            Left_Limit,     &
-                            Right_Limit,    &
-                            Guess_Type      )
+    CALL Driver_SetGuess( )
     
     !############################################################!
     !#                                                          #!

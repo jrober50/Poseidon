@@ -48,16 +48,16 @@ USE amrex_amrcore_module, ONLY: &
 
 
 USE Poseidon_Units_Module, &
-ONLY :  Grav_Constant_G,    &
-        Speed_of_Light,     &
-        C_Square,           &
-        GR_Source_Scalar,   &
-        Centimeter,         &
-        Second,             &
-        Millisecond,         &
-        Erg,                &
-        Gram,               &
-        E_Units
+            ONLY :  Grav_Constant_G,    &
+                    Speed_of_Light,     &
+                    C_Square,           &
+                    GR_Source_Scalar,   &
+                    Centimeter,         &
+                    Second,             &
+                    Millisecond,         &
+                    Erg,                &
+                    Gram,               &
+                    E_Units
 
 
 USE Variables_AMReX_Core, &
@@ -112,10 +112,9 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
-USE Functions_Quadrature, &
-            ONLY :  Initialize_LG_Quadrature_Locations,         &
-                    Initialize_Trapezoid_Quadrature_Locations
 
+USE Variables_Interface, &
+            ONLY :  Caller_Quad_DOF
 
 USE MPI
 
@@ -131,20 +130,9 @@ CONTAINS
 !     Driver_SetSource                                                			!
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Driver_SetSource( NQ,            &
-                             R_Quad,        &
-                             T_Quad,        &
-                             P_Quad,        &
-                             xL             )
+SUBROUTINE Driver_SetSource( )
 
 
-INTEGER,    DIMENSION(3),       INTENT(IN)              ::  NQ
-REAL(idp),  DIMENSION(NQ(1)),   INTENT(IN)              ::  R_Quad
-REAL(idp),  DIMENSION(NQ(2)),   INTENT(IN)              ::  T_Quad
-REAL(idp),  DIMENSION(NQ(3)),   INTENT(IN)              ::  P_Quad
-REAL(idp),  DIMENSION(2),       INTENT(IN)              ::  xL
-
-INTEGER                                                 ::  Num_DOF
 INTEGER                                                 ::  nVars_Source
 
 
@@ -163,10 +151,9 @@ CALL amrex_init_virtual_functions &
          VF_Clear_Level, &
          VF_Error_Estimate )
 
-Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
 nVars_Source    = 5
-MF_Src_nComps   = nVars_Source*Num_DOF
+MF_Src_nComps   = nVars_Source*Caller_Quad_DOF
 MF_Src_nGhost   = 0
 
 
@@ -181,15 +168,6 @@ IF ( Verbose_Flag ) THEN
 END IF
 
 
-
-!CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source,    &
-!                                   MF_Src_nComps,       &
-!                                   nLevels,             &
-!                                   NQ,                  &
-!                                   R_Quad,              &
-!                                   T_Quad,              &
-!                                   P_Quad,              &
-!                                   xL                   )
 
 
 CALL Poseidon_Input_Sources( MF_Driver_Source,    &

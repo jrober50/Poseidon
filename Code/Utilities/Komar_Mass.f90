@@ -419,7 +419,7 @@ DO pd = 1,NUM_P_QUAD_POINTS
     PRINT*,"Int_Source",Int_Source(tpd)
     PRINT*,  Cur_Drv_AlphaPsi(tpd,1),   &
              Cur_Drv_Psi(tpd,1),   &
-            AB_Array(tpd)
+             AB_Array(tpd)
 END DO ! pd
 END DO ! td
 

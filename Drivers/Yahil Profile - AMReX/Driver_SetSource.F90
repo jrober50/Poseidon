@@ -128,22 +128,11 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
-
 USE SelfSimilar_Module, &
             ONLY :  Calc_Yahil_Central_E
 
-
-USE Functions_Quadrature, &
-            ONLY :  Initialize_LG_Quadrature_Locations,         &
-                    Initialize_Trapezoid_Quadrature_Locations
-
 USE Variables_Interface, &
-            ONLY :  Caller_NQ,                      &
-                    Caller_xL,                      &
-                    Caller_RQ_xlocs,                &
-                    Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs,                &
-                    Caller_Quad_DOF
+            ONLY :  Caller_Quad_DOF
 
 USE MPI
 
@@ -231,30 +220,10 @@ CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
 
 
-
-
-!CALL Poseidon_Input_Sources(MF_Driver_Source,    &   ! Source Multifab
-!                            MF_Src_nComps,       &   ! Number of Comps in Multifab
-!                            nLevels,             &   ! AMReX Levels
-!                            Caller_NQ,           &   ! Number Quadrature Points, DIM(3)
-!                            Caller_RQ_xlocs,     &   ! Radial Quadrature Locations, DIM(NQ(1))
-!                            Caller_TQ_xlocs,     &   ! Theta Quadrature Locations, DIM(NQ(2))
-!                            Caller_PQ_xlocs,     &   ! Phi Quadrature Locations, DIM(NQ(3))
-!                            Caller_xL            )   ! Quadrature Ref Element Limits, DIM(2)
-
-
-
-
 CALL Poseidon_Input_Sources(MF_Driver_Source,    &   ! Source Multifab
                             MF_Src_nComps        )   ! AMReX Levels
 
 
-
-
-!CALL AMReX_Source_Test()
-
-!PRINT*,"Stopping in Driver_SetSource"
-!STOP
 
 
 

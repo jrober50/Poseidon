@@ -35,9 +35,9 @@ USE Variables_MPI, &
             ONLY :  myID_Poseidon,      &
                     MasterID_Poseidon
 
-USE Variables_IO, &
-            ONLY :  Report_Flags,       &
-                    iRF_Setup
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,           &
+                    iPF_IO_Print_Setup
 
 
 USE Poseidon_Units_Module, &
@@ -64,9 +64,8 @@ USE Variables_Functions, &
             ONLY :  Potential_Solution,             &
                     Shift_Solution
 
-USE Poseidon_IO_Module, &
-            ONLY :  OUTPUT_PRIMATIVES,              &
-                    OUTPUT_YAHIL_PRIMATIVES
+USE IO_Output_Sources_Module, &
+            ONLY :  Output_Primatives
 
 USE Allocation_SelfSimilar, &
             ONLY :  Allocate_SelfSim,               &
@@ -221,7 +220,6 @@ CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
 
 IF ( .TRUE. ) THEN
     Kappa_wUnits = Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**Gamma)
-    PRINT*,Kappa_wUnits,(Erg/Centimeter**3),(Gram/Centimeter**3)**Gamma, Gamma
 ELSE
     Kappa_wUnits = 18.394097187796024_idp
     PRINT*,"Kappa_wUnits over written.",Kappa_wUnits
@@ -247,7 +245,7 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
 
 
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
-IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3) ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Print_Setup)   ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
     WRITE(*,'(A,ES12.5,A)') ' - Yahil Time      : ', t_in,' ms'
@@ -257,6 +255,7 @@ IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3) ) THEN
     WRITE(*,'(/)')
 END IF
 END IF
+
 
 
 IF ( SELFSIM_V_SWITCH == 1 ) THEN
@@ -297,6 +296,8 @@ CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, In
 
 Potential_Solution => SELFSIM_NEWT_SOL
 Shift_Solution => SELFSIM_SHIFT_SOL
+
+
 
 
 !CALL Deallocate_SelfSim()
@@ -454,7 +455,7 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
 
 
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
-IF ( (Report_Flags(4) == 1) .OR. (Report_Flags(4) == 3) ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Print_Setup)   ) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
     WRITE(*,'(A,ES12.5,A)') ' - Yahil Time      : ', t_in,' ms'
@@ -635,6 +636,7 @@ DO te = 0,NUM_T_ELEM-1
 !            CALL Find_Line_SUB(xloc, Input_X, NUM_LINES)
             line = Find_Line(xloc, Input_X, NUM_LINES)
 
+
             x = MAP_TO_X_SPACE(Input_X(Line),Input_X(Line+1),xloc)
             IF ( x > 1 ) THEN
                 x = 1
@@ -692,7 +694,7 @@ END DO ! pe
 
 IF ( OUTPUT_PRIMATIVES_FLAG == 1 ) THEN
 
-    CALL OUTPUT_PRIMATIVES( Density_Holder, Velocity_Holder, r_Holder, Num_Radial_Points)
+    CALL Output_Primatives( Density_Holder, Velocity_Holder, r_Holder, Num_Radial_Points)
 
 END IF
 
@@ -844,7 +846,7 @@ END DO ! re
 
 IF ( OUTPUT_PRIMATIVES_FLAG == 1 ) THEN
 
-    CALL OUTPUT_PRIMATIVES( D_Holder, V_Holder, R_Holder, Num_Radial_Points)
+    CALL Output_Primatives( D_Holder, V_Holder, R_Holder, Num_Radial_Points)
 
 END IF
 

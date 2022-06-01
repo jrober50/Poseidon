@@ -78,7 +78,7 @@ USE Functions_Math, &
             ONLY :  lagrange_poly,      &
                     Spherical_Harmonic
 
-USE Poseidon_IO_Module, &
+USE Poseidon_File_Routines, &
             ONLY :  OPEN_EXISTING_FILE
 
 

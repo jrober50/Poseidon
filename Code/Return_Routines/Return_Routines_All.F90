@@ -238,7 +238,7 @@ END SUBROUTINE Poseidon_Return_All_Native
 !                                   of the Conformal Factor at the desired locations.       !
 !                                                                                           !
 !###########################################################################################!
-SUBROUTINE Poseidon_Return_All_Native_Caller( Return_All       )
+SUBROUTINE Poseidon_Return_All_Native_Caller( Return_All )
 
 
 REAL(idp),  DIMENSION( Caller_Quad_DOF,                      &
@@ -253,6 +253,7 @@ INTEGER                                                                 ::  iVB
 INTEGER, DIMENSION(3)                                                   ::  NE
 
 NE = [ Num_R_Elements, Num_T_Elements, Num_P_Elements ]
+
 
 iU = iU_CF
 CALL Poseidon_Return_Native_Type_A( iU,                     &

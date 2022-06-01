@@ -77,7 +77,6 @@ CONTAINS
 SUBROUTINE Poisson_Linear_Solve()
 
 
-REAL(idp)                                               ::  SCALE_FACTOR
 COMPLEX(idp), DIMENSION(0:NUM_R_NODES-1)                ::  WORK_VEC
 
 REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  WORK_ELEM_VAL

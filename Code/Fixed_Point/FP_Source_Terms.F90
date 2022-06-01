@@ -123,8 +123,6 @@ REAL(KIND = idp), INTENT(IN)                                            ::  BigK
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:3)                            ::  n_ARRAY
 REAL(KIND = idp), INTENT(IN), DIMENSION(1:3,1:3)                        ::  Kappa_Array
 
-REAL(KIND = idp)                                                        ::  Beta_Source_Prefix
-
 
 #ifdef POSEIDON_AMREX_FLAG
 CALL Calc_Source_Terms_Native( Source_Terms,                       &

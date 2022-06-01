@@ -32,7 +32,7 @@ IMPLICIT NONE
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_IG_Num_Flags         = 3
 
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_IG_Set          = 1
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_IG_Flag_Guess   = 2
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_IG_Flat_Guess   = 2
 
 LOGICAL,    PUBLIC, DIMENSION(1:iPF_IG_Num_Flags)    ::  lPF_IG_Flags
 

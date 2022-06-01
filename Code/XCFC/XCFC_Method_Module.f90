@@ -80,6 +80,10 @@ USE Poseidon_MPI_Utilities_Module, &
                     MPI_Master_Print,       &
                     MPI_All_Print
 
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,           &
+                    iPF_IO_Print_Results
+
 USE MPI
 
 IMPLICIT NONE
@@ -288,8 +292,9 @@ IF ( ANY(CFA_Eq_Flags(3:5) == 1) ) THEN
 END IF
 
 
-
-
+IF ( lPF_IO_Flags(IPF_IO_Print_Results) ) THEN
+    CALL Print_Results()
+END IF
 !CALL Deallocate_XCFC_Source_Variables()
 
 

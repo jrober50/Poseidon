@@ -176,7 +176,33 @@ END SUBROUTINE OPEN_EXISTING_FILE
 
 
 
+ !+201+############################################################################!
+!                                                                                   !
+!                     OPEN_FILE_INQUISITION                                         !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE OPEN_FILE_INQUISITION()
 
+
+INTEGER                 :: i
+INTEGER                 :: i_min
+INTEGER                 :: i_max
+LOGICAL                 :: OP
+CHARACTER(len=150)        :: name_of_file
+
+i_min = 1
+i_max = 3000
+
+DO i = i_min,i_max
+    OP = .FALSE.
+    INQUIRE( UNIT = i, OPENED = OP, name=name_of_file )
+    IF ( OP .EQV. .TRUE. ) THEN
+        PRINT*,"File ",TRIM(name_of_file)," with Unit ",i," is still open."
+    END IF
+END DO
+
+
+END SUBROUTINE OPEN_FILE_INQUISITION
 
 
 

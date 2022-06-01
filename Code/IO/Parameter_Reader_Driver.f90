@@ -34,14 +34,6 @@ USE Variables_External, &
                     SelfSim_Ecc,                &
                     SelfSim_V_Switch
 
-USE Variables_IO, &
-            ONLY:   Write_Flags,                &
-                    Report_Flags,               &
-                    iWF_Source,                 &
-                    iWF_Results,                &
-                    iRF_Run,                    &
-                    iRF_Frame
-
 USE DRIVER_Parameters, &
             ONLY :  DRIVER_R_ELEMS,             &
                     DRIVER_C_ELEMS,             &
@@ -149,10 +141,6 @@ IF ( Int_Params(13) .NE. -1 ) THEN
     DRIVER_TEST_NUMBER      = Int_Params(13)    ! DTN (Defaults is 3)
 END IF
 
-Write_Flags(iWF_Source)     = Int_Params(14)    ! SOF
-Write_Flags(iWF_Results)    = Int_Params(15)    ! ROF
-Report_Flags(iRF_Run)       = Int_Params(16)    ! RRF
-Report_Flags(iRF_Frame)     = Int_Params(17)    ! FRF
 
 CHIMERA_START_FRAME         = Int_Params(18)    ! CSF
 CHIMERA_END_FRAME           = Int_Params(19)    ! CEF

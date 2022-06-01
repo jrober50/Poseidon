@@ -150,11 +150,6 @@ USE Linear_Solvers_And_Preconditioners, &
                     JACOBI_CONDITIONING,            &
                     Jacobi_Conditioning_Beta
 
-USE Poseidon_IO_Module, &
-            ONLY :  Clock_In,                           &
-                    OPEN_ITER_REPORT_FILE,              &
-                    CLOSE_ITER_REPORT_FILE
-
 USE  Maps_Domain, &
             ONLY :  Map_To_lm
 

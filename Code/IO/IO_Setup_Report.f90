@@ -64,8 +64,7 @@ USE Variables_FP,   &
             ONLY :  FP_Anderson_M
 
 USE Variables_IO, &
-            ONLY :  Report_Flags,           &
-                    Report_IDs,             &
+            ONLY :  Report_IDs,             &
                     File_Suffix,            &
                     iRF_Setup
 
@@ -77,6 +76,10 @@ USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Level,        &
                     iNumLeafElements
 
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,               &
+                    iPF_IO_Print_Setup,         &
+                    iPF_IO_Write_Setup
 
 IMPLICIT NONE
 
@@ -99,7 +102,7 @@ INTEGER                                             ::  Suggested_Number = 400
 IF (myID_Poseidon == MasterID_Poseidon ) THEN
 
 
-    IF ( Report_Flags(iRF_Setup) > 1 ) THEN
+    IF ( lPF_IO_Flags(iPF_IO_Write_Setup) ) THEN
         WRITE(Report_Name,'(A,A,A,A)') Poseidon_Reports_Dir,"Setup_Report_",trim(File_Suffix),".out"
         CALL Open_New_File( Report_Name, Report_IDs(iRF_Setup), Suggested_Number)
     END IF
@@ -155,7 +158,7 @@ INTEGER, INTENT(IN)                                 ::  Report_ID
 
 
 
-IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3)) THEN
+IF ( lPF_IO_Flags(iPF_IO_Print_Setup) ) THEN
     WRITE(*,1400)
     WRITE(*,1401)
     IF ( Poisson_Mode ) WRITE(*,1301)
@@ -176,7 +179,7 @@ IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3)) THEN
     WRITE(*,1400)
 END IF
 
-IF ( Report_ID .NE. -1 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Setup) ) THEN
 
     WRITE(Report_ID,1400)
     WRITE(Report_ID,1401)
@@ -226,7 +229,7 @@ INTEGER, INTENT(IN)                                 ::  Report_ID
 
 
 
-IF ( (Report_Flags(iRF_Setup) == 1) .OR. (Report_Flags(iRF_Setup) == 3)) THEN
+IF ( lPF_IO_Flags(iPF_IO_Print_Setup)  ) THEN
     WRITE(*,1501)
     WRITE(*,1502)Method_Names(Method_Flag)
     WRITE(*,1503)Max_Iterations
@@ -239,7 +242,7 @@ END IF
 
 
 
-IF ( Report_ID .NE. -1 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Setup) ) THEN
     WRITE(Report_ID,1501)
     WRITE(Report_ID,1502)Method_Names(Method_Flag)
     WRITE(Report_ID,1503)Max_Iterations

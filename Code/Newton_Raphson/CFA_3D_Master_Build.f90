@@ -148,10 +148,6 @@ USE Variables_IO, &
 USE Functions_Jacobian, &
                 ONLY :  JCBN_kappa_FUNCTION_3D_ALL,     &
                         JCBN_BIGK_FUNCTION
-
-
-USE Poseidon_IO_Module, &
-                ONLY :  Clock_In
                         
 USE IO_Linear_System, &
                 ONLY :  OUTPUT_RHS_VECTOR_Parts,        &
@@ -269,12 +265,6 @@ SUBROUTINE CFA_3D_Master_Build()
 
 
 
-REAL(KIND = idp)        :: timea, timeb, timec
-
-
-timea = 0.0_idp
-timeb = 0.0_idp
-timec = 0.0_idp
 
 
 !*!
@@ -289,8 +279,7 @@ CALL Allocate_Master_Build_Variables()
 !*!
 
 CALL CFA_3D_Apply_BCs_Part1()
-timec = MPI_Wtime()
-CALL Clock_In(timec-timeb, 4)
+
 
 
 Time_J = 0.0_idp
@@ -299,16 +288,7 @@ Time_M = 0.0_idp
 !*!
 !*! Create the Non-Laplacian Contributions to the Linear System
 !*!
-timeb = MPI_Wtime()
 CALL CREATE_3D_NONLAPLACIAN_SOE()
-timea = MPI_Wtime()
-CALL Clock_In(timea-timeb, 9)
-
-IF ( .FALSE. ) THEN
-    PRINT*,"Time_J = ",Time_J
-    PRINT*,"Time_M = ",Time_M
-    PRINT*,"Time_Tot = ",Time_J+Time_M
-END IF 
 
 
 
@@ -316,29 +296,23 @@ END IF
 !*!
 !*! Reduce the Non-Laplacian Contributions to Processes involved in the solve
 !*!
-timeb = MPI_Wtime()
 CALL REDUCE_3D_NONLAPLACIAN_SOE()
-timea = MPI_Wtime()
-CALL Clock_In(timea-timeb, 10)
+
 
 
 
 !*!
 !*! Add the Laplacian contribution to the Jacobian Matrix
 !*!
-timeb = MPI_Wtime()
 CALL FINISH_3D_JACOBIAN_MATRIX()
-timea = MPI_Wtime()
-CALL Clock_In(timea-timeb, 11)
+
 
 
 !*!
 !*! Add the Laplacian contribution to the Residual Vector
 !*!
-timeb = MPI_Wtime()
 CALL FINISH_3D_RHS_VECTOR()
-timea = MPI_Wtime()
-CALL Clock_In(timea-timeb, 12)
+
 
 
 
@@ -349,10 +323,7 @@ CALL Clock_In(timea-timeb, 12)
 !*!
 !*! Alter the Jacobian Matrix to Reflect Boundary Conditions
 !*!
-timeb = MPI_Wtime()
 CALL CFA_3D_Apply_BCs_Part2()
-timec = MPI_Wtime()
-CALL Clock_In(timec-timeb, 13)
 
 
 
@@ -403,19 +374,6 @@ REAL(KIND = idp)                                                ::  TWOOVER_DELT
 
 
 INTEGER                                                         ::  Block_T_Begin, Block_P_Begin
-
-
-
-
-REAL(KIND = idp)                                    ::  timea, timeb, timec, timed, timee,  &
-                                                        time_CURVALS, time_SJT, time_JCBNM, &
-                                                        time_RHS
-
-
-time_CURVALS = 0.0_idp
-time_SJT = 0.0_idp
-time_JCBNM = 0.0_idp
-time_RHS = 0.0_idp
 
 
 
@@ -498,22 +456,14 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
 
             END DO
 
-!            IF ( Local_re == 0) THEN
-!                WRITE(*,*)"R_INNER^2 = ",R_SQUARE(1)
-!            ELSE IF ( Local_RE == NUM_R_ELEMS_PER_BLOCK-1) THEN
-!                WRITE(*,*)"R_OUTER^2 = ",R_SQUARE(NUM_R_QUAD_POINTS)
-!            END IF
 
 
             !*!
             !*! Calculate Current Values of CFA Varaiables and their Deriviatives
             !*!
-            timea = MPI_Wtime()
             CALL Calc_3D_Current_Values(Global_re , Local_te  , Local_pe,               &
                                         DELTAR_OVERTWO, DELTAT_OVERTWO, DELTAP_OVERTWO  )
 
-
-            timeb = MPI_Wtime()
 
 
 
@@ -522,7 +472,6 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
             !*!
             CALL Calc_3D_SubJcbn_Terms( Local_re, Local_te, Local_pe )
 
-            timec = MPI_Wtime()
 
 
             !*!
@@ -530,7 +479,6 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
             !*!
             CALL CREATE_3D_RHS_VECTOR(  Local_re, Local_te, Local_pe, DELTAR_OVERTWO )
 
-            timed = MPI_Wtime()
 
 
             
@@ -543,29 +491,10 @@ DO Local_pe = 0, NUM_P_ELEMS_PER_BLOCK-1
 
 
 
-            timee = MPI_Wtime()
-
-
-
-            !*!
-            !*! Update Timer Values
-            !*!
-            time_CurVals = time_CurVals + timeb - timea
-            time_SJT = time_SJT + timec - timeb
-            time_RHS = time_RHS + timed - timec
-            time_JCBNM = time_JCBNM + timee - timed
-
-
-
         END DO  ! pe Loop
     END DO  ! te Loop
 END DO  ! re Loop
 
-
-CALL Clock_In(time_CurVals, 5)
-CALL Clock_In(time_SJT, 6)
-CALL Clock_In(time_RHS, 7)
-CALL Clock_In(time_JCBNM, 8)
 
 
 

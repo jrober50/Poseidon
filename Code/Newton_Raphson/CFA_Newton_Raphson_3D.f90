@@ -65,8 +65,6 @@ USE Variables_Functions, &
 
 USE Variables_IO, &
                     ONLY :  Report_IDs,        &
-                            Report_Flags,       &
-                            Write_Flags,                &
                             Iter_Report_Num_Samples,    &
                             Frame_Update_Table,         &
                             Iter_Time_Table,            &
@@ -119,11 +117,6 @@ USE CFA_1D_Master_Build_Module, &
 
 USE CFA_3D_Master_Build_Module, &
                     ONLY :  CFA_3D_Master_Build
-
-USE Poseidon_IO_Module, &
-                    ONLY :  Clock_In,                           &
-                            OPEN_ITER_REPORT_FILE,              &
-                            CLOSE_ITER_REPORT_FILE
 
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
@@ -182,7 +175,7 @@ timec = 0.0_idp
 
 
 
-IF ( (Write_Flags(5) == 1) .OR. (Write_Flags(5) == 3) ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
     PR = .TRUE.
     WRITE(*,'(A)')"Initial Guess Values"
     CALL Print_Results()
@@ -220,58 +213,29 @@ DO WHILE ( CONVERGED .EQV. .FALSE. )
         CALL CFA_3D_Master_Build()
     END IF
 
-    IF ( Write_Flags(1) == 1 ) THEN
-        CALL OUTPUT_JACOBIAN_MATRIX( Block_Elem_STF_MatVec )
-    END IF
-    IF ( Write_Flags(2) == 1 ) THEN
-        CALL OUTPUT_RHS_VECTOR( Block_RHS_Vector )
-    END IF
 
 
     !*!
     !*! Solve the System
     !*!
-    timeb = MPI_Wtime()
     CALL CFA_Solve()
-    timec = MPI_Wtime()
-    CALL Clock_In(timec-timeb, 14)
-
-
-    IF ( Write_Flags(3) == 1 ) THEN
-        CALL OUTPUT_UPDATE_VECTOR( NR_Update_Vector )
-    END IF
     
 
     !*!
     !*! Update Coefficient_Vector
     !*!
-    timeb = MPI_Wtime()
     CALL CFA_Update_Share
-    timec = MPI_Wtime()
-    CALL Clock_In(timec-timeb, 16)
 
     !*!
     !*!  Share Coefficient Vector
     !*!
-    timeb = MPI_Wtime()
     CALL CFA_Coefficient_Update_All
-    timec = MPI_Wtime()
-    CALL Clock_In(timec-timeb, 15)
+
 
     !*!
     !*! Check for convergence
     !*!
-    timeb = MPI_Wtime()
     CALL CONVERGENCE_CHECK(CONVERGED, Cur_Iteration)
-    timec = MPI_Wtime()
-    CALL Clock_In(timec-timeb, 17)
-
-
-    !*!
-    !*! Clock the Iteration
-    !*!
-    timeb = MPI_Wtime()
-    CALL Clock_In(timeb-timea,18)
 
 
 
@@ -315,28 +279,6 @@ Iteration_Histogram(Cur_Iteration-1) = Iteration_Histogram(Cur_Iteration-1) + 1
 
 
 CALL Write_Final_Results()
-
-IF ( Write_Flags(2)== 1 ) THEN
-    !*!
-    !*! Clean the System
-    !*!
-    Block_RHS_Vector = 0.0_idp
-    BLOCK_ELEM_STF_MATVEC = 0.0_idp
-
-
-
-    !*!
-    !*! Create the System
-    !*!
-    IF ( DOMAIN_DIM == 1 ) THEN
-        CALL CFA_1D_Master_Build()
-    ELSE IF ( DOMAIN_DIM .NE. 1 ) THEN
-        CALL CFA_3D_Master_Build()
-    END IF
-
-
-    CALL OUTPUT_RHS_VECTOR( Block_RHS_Vector )
-END IF
 
 
 
@@ -756,13 +698,13 @@ REAL(KIND = idp)                                ::  PsiPot_Val, AlphaPsiPot_Val
 
 
 FILE_ID = -1
-IF ( Report_Flags(iRF_Frame) == 1 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Frame_Report) ) THEN
 
     FILE_ID(0) = Report_IDs(iRF_Frame)
 
 END IF
 
-IF (( Report_Flags(iRF_Iter) == 2) .OR. (Report_Flags(iRF_Iter) == 3) ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Iter_Report) ) THEN
     FILE_ID(1) = Report_IDs(iRF_Iter)
 END IF
 
@@ -819,7 +761,7 @@ END DO
 IF ( ASSOCIATED(Potential_Solution) ) THEN
 
     ! Write Results Table Header to Screen
-    IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
+    IF ( lPF_IO_Flags(iPF_IO_Print_Frame_Report) ) THEN
         IF ( Rank == 0 ) THEN
             PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
             WRITE(*,110)"r","Analytic Potential","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
@@ -853,7 +795,7 @@ IF ( ASSOCIATED(Potential_Solution) ) THEN
 
 
         ! Write Results to Screen
-        IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
+        IF ( lPF_IO_Flags(iPF_IO_Print_Frame_Report) ) THEN
             IF ( Rank == 0 ) THEN
                 WRITE(*,111) r/Centimeter,              &
                              Analytic_Val,              &
@@ -883,7 +825,7 @@ IF ( ASSOCIATED(Potential_Solution) ) THEN
 ELSE
 
     ! Write Results Table Header to Screen
-    IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
+    IF ( lPF_IO_Flags(iPF_IO_Print_Frame_Report) ) THEN
         IF ( Rank == 0 ) THEN
             PRINT*,"+++++++++++++++++++ myID,",Rank," Iteration",Iter,"++++++++++++++++++++++"
             WRITE(*,110)"r","Psi Potential","AlphaPsi Potential","Beta Value1","Beta Value2","Beta Value3"
@@ -913,7 +855,7 @@ ELSE
 
 
         ! Write Results to Screen
-        IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
+        IF ( lPF_IO_Flags(iPF_IO_Print_Frame_Report) ) THEN
             IF ( Rank == 0 ) THEN
                 WRITE(*,111) r/Centimeter,              &
                              PsiPot_Val,                &
@@ -978,11 +920,11 @@ INTEGER                                                 ::  MaxA_Loc
 REAL(KIND = idp)                                        ::  Ratio_Real, Ratio_Imag
 
 FILE_ID = -1
-IF ( Report_Flags(iRF_Frame) == 1 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Frame_Report) ) THEN
     FILE_ID(0) = Report_IDs(iRF_Frame)
 END IF
 
-IF (( Report_Flags(iRF_Iter) == 2) .OR. (Report_Flags(iRF_Iter) == 3) ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Iter_Report) ) THEN
     FILE_ID(1) = Report_IDs(iRF_Iter)
 END IF
 
@@ -1056,7 +998,7 @@ IF (myID_Poseidon == 0) THEN
 
 
 !   Output data to screen
-    IF (( Report_Flags(iRF_Frame) == 1) .OR. (Report_Flags(iRF_Frame) == 3) ) THEN
+    IF ( lPF_IO_Flags(iPF_IO_Print_Frame_Report) ) THEN
 
         WRITE(*,'(A,ES22.15,A,ES22.15)')"Convergence Check: MAXVAL(ABS(NR_Update_Vector)) ",MAXVAL(ABS(NR_Update_Vector)),   &
                                               "  Criteria ",Convergence_Criteria

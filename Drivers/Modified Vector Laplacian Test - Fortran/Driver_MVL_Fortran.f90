@@ -39,15 +39,6 @@ USE Variables_IO, &
 USE Variables_MPI, &
             ONLY :  ierr
 
-USE Variables_Functions, &
-            ONLY :  Potential_Solution
-
-USE Return_Functions_FP , &
-            ONLY : Calc_1D_CFA_Values_FP
-
-USE Poseidon_IO_Parameters, &
-            ONLY :  Poseidon_Results_Dir
-
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -71,9 +62,6 @@ USE Functions_Quadrature, &
 USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
-USE Poseidon_IO_Module, &
-            ONLY :  Open_Run_Report_File
-
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
 
@@ -83,13 +71,6 @@ USE IO_Print_Results, &
 USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Run,                                       &
                     Poseidon_Close
-
-USE Initial_Guess_Module, &
-            ONLY :  Poseidon_Input_Guess,           &
-                    Poseidon_Init_FlatGuess
-
-USE FP_IO_Module, &
-            ONLY :  Output_FP_Timetable
 
 USE Poseidon_Utilities_Module, &
             ONLY :  Poseidon_Calc_ADM_Mass,         &
@@ -118,9 +99,6 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetGuess,      &
                     Timer_Driver_Run,           &
                     Timer_Driver_Extra
-
-USE Poseidon_XCFC_Interface_Module, &
-            ONLY : Poseidon_Return_ExtrinsicCurvature
 
 USE IO_Print_Results, &
             ONLY :  Print_Single_Var_Results
@@ -305,8 +283,6 @@ CALL Set_Units(Units_Input)
 Domain_Edge(2) = Domain_Edge(2)/(10**i)
 Domain_Edge = Domain_Edge*Centimeter
 
-
-CALL Open_Run_Report_File()
 
 DO M_Index = M_Index_Min, M_Index_Max
 DO RE_Index = RE_Index_Min, RE_Index_Max

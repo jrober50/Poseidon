@@ -28,9 +28,9 @@ USE Poseidon_Kinds_Module, &
 
 USE Timer_Variables_Module
 
-USE Variables_IO, &
-            ONLY :  Report_Flags,       &
-                    iRF_Time
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,           &
+                    iPF_IO_Write_Timetable
 
 USE Timer_IO_Module, &
             ONLY :  Output_Time_Report
@@ -168,7 +168,7 @@ Timer_XCFC_ConFactor    = Timer_XCFC_ConFactor              &
 
 
 
-IF ( Report_Flags(iRF_Time) > 0 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Timetable) ) THEN
 
     CALL Output_Time_Report
 

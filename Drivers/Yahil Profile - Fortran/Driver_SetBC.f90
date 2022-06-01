@@ -35,6 +35,9 @@ USE Variables_Functions, &
 USE Poseidon_Main_Module, &
         ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions
 
+USE Variables_Mesh, &
+        ONLY :  R_Outer
+
 
 IMPLICIT NONE
 
@@ -60,12 +63,13 @@ CHARACTER(LEN=1), DIMENSION(1:5)                ::  INNER_BC_TYPES, OUTER_BC_TYP
 REAL(idp), DIMENSION(1:5)                       ::  INNER_BC_VALUES, OUTER_BC_VALUES
 
 Psi_BC = 1.0_idp    &
-       - 0.5_idp*Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)/C_Square
+       - 0.5_idp*Potential_Solution(R_Outer, 0.0_idp, 0.0_idp)/C_Square
 
 AlphaPsi_BC = 1.0_idp    &
-            + 0.5_idp*Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)/C_Square
+            + 0.5_idp*Potential_Solution(R_Outer, 0.0_idp, 0.0_idp)/C_Square
 
 !    PRINT*,"BCs",Psi_BC, AlphaPsi_BC, Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)
+
 
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)

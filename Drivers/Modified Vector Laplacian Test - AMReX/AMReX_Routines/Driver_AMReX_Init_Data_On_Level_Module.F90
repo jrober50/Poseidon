@@ -57,15 +57,6 @@ USE Timer_Routines_Module, &
 USE Timer_Variables_Module, &
             ONLY :  Timer_Core_Init_Test_Problem
 
-
-USE Variables_Interface, &
-            ONLY :  Caller_NQ,                      &
-                    Caller_DOF,                     &
-                    Caller_xL,                      &
-                    Caller_RQ_xlocs,                &
-                    Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs
-
 IMPLICIT NONE
 
 

@@ -30,7 +30,8 @@ USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
 USE Poseidon_Units_Module, &
-            ONLY :  C_Square
+            ONLY :  C_Square,   &
+                    Centimeter
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
@@ -65,8 +66,12 @@ USE Timer_Variables_Module, &
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
-USE Poseidon_IO_Module, &
+USE IO_Output_Sources_Module, &
             ONLY :  Output_Poseidon_Sources_3D
+
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,                       &
+                    iPF_IO_Write_Sources
 
 IMPLICIT NONE
 
@@ -131,14 +136,16 @@ ALLOCATE( Local_Si(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1, 1:3)  )
 
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
-CALL Initialize_Yahil_Sources( Yahil_Params(1),        &
-                                Yahil_Params(2),        &
-                                Yahil_Params(3),        &
-                                Yahil_Params(4),        &
-                                NQ, R_Quad, T_Quad,     &
-                                NE(1), NE(2), NE(3),                         &
-                                dx_c, x_e, y_e,                              &
-                                Local_E, Local_S, Local_Si                   )
+CALL Initialize_Yahil_Sources( Yahil_Params(1),                 &
+                                Yahil_Params(2),                &
+                                Yahil_Params(3),                &
+                                Yahil_Params(4),                &
+                                NQ, R_Quad, T_Quad,             &
+                                NE(1), NE(2), NE(3),            &
+                                dx_c*Centimeter,                &
+                                x_e*Centimeter,                 &
+                                y_e,                            &
+                                Local_E, Local_S, Local_Si      )
 
 
 
@@ -157,6 +164,7 @@ IF ( Solver_Type == 3 ) THEN
 
 
     Cur_R_Locs = dx_c(re)*(R_Quad(:) - Left_Limit) + x_e(re-1)
+    Cur_R_Locs = Cur_R_Locs*Centimeter
 
     DO rd = 1,NQ(1)
 
@@ -174,11 +182,10 @@ IF ( Solver_Type == 3 ) THEN
 
         here = Quad_Map(rd,td,pd)
 
-
         Local_E(Here,re-1,te-1,pe-1) = Local_E(Here,re-1,te-1,pe-1)*Psi_Power
         Local_S(Here,re-1,te-1,pe-1) = Local_S(Here,re-1,te-1,pe-1)*Psi_Power
         Local_Si(Here,re-1,te-1,pe-1,1:3) = Local_Si(Here,re-1,te-1,pe-1,1:3)*Psi_Power
-
+        
 
     END DO  ! pd
     END DO  ! td
@@ -218,7 +225,7 @@ CALL Poseidon_Input_Sources( Local_E,                    &
 
 
 
-IF ( Write_Flags(iWF_Source) > 0 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Sources) ) THEN
 
     CALL Output_Poseidon_Sources_3D( Local_E, Local_S, Local_Si,     &
                                      NE(1), NE(2), NE(3),            &

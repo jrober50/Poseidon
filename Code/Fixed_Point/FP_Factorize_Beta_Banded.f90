@@ -81,9 +81,6 @@ USE Variables_FP, &
                     Last_Column_Beta_Storage,   &
                     Beta_Factorized_Flag
 
-USE Poseidon_IO_Module, &
-            ONLY :  CLOCK_IN
-
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace,             &
                     Output_Laplace_Beta,        &

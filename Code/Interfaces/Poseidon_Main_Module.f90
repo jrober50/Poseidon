@@ -58,14 +58,7 @@ USE Variables_Mesh, &
                     RADIAL_MESH_SET_FLAG,       &
                     THETA_MESH_SET_FLAG,        &
                     PHI_MESH_SET_FLAG
-
-USE Variables_Flags, &
-            ONLY :  Test_Space_Allocated_Flag,  &
-                    FirstCall_Flag,             &
-                    INNER_BC_SET_FLAG,          &
-                    OUTER_BC_SET_FLAG
             
-
 USE Variables_BC, &
             ONLY :  INNER_CFA_BC_VALUES,            &
                     OUTER_CFA_BC_VALUES,            &
@@ -133,8 +126,16 @@ USE Allocation_SelfSimilar, &
 USE Timer_Routines_Module, &
             ONLY : Finalize_Timers
 
+USE Flags_Main_Module, &
+            ONLY : Poseidon_Clear_All_Flags
 
+USE Flags_Boundary_Conditions_Module, &
+            ONLY :  lPF_BC_Flags,           &
+                    iPF_BC_Outer_Set,       &
+                    iPF_BC_Inner_Set
 
+USE Flags_Check_Routines, &
+            ONLY :  Poseidon_Run_Check
 
 IMPLICIT NONE
 
@@ -163,10 +164,9 @@ SUBROUTINE Poseidon_Run()
 LOGICAL                                             ::  Readiness_Flag
 
 
+!Readiness_Flag = .TRUE.
+Readiness_Flag = Poseidon_Run_Check()
 
-
-!CALL Poseidon_Readiness_Check(Readiness_Flag)
-Readiness_Flag = .TRUE.
 
 IF ( Readiness_Flag ) THEN
 
@@ -267,22 +267,7 @@ END IF
 
 
 CALL Finalize_Timers()
-
-
-
-Test_Space_Allocated_Flag = .FALSE.
-
-FirstCall_Flag = .TRUE.
-
-
-RADIAL_MESH_SET_FLAG = .FALSE.
-THETA_MESH_SET_FLAG = .FALSE.
-PHI_MESH_SET_FLAG = .FALSE.
-
-INNER_BC_SET_FLAG = .FALSE.
-OUTER_BC_SET_FLAG = .FALSE.
-
-
+CALL Poseidon_Clear_All_Flags()
 
 
 END SUBROUTINE Poseidon_Close
@@ -587,7 +572,7 @@ END IF
                             !                               !
                             !   Boundary Conditions Check   !
                             !                               !
-IF ( .NOT. INNER_BC_SET_FLAG ) THEN
+IF ( .NOT. lPF_BC_Flags(iPF_BC_Inner_Set) ) THEN
 
     PRINT*,"ERROR IN POSEIDON : The inner boundary condition was not set before 'Poseidon_Run' was called."
     Error_Flag = .TRUE.
@@ -595,7 +580,7 @@ IF ( .NOT. INNER_BC_SET_FLAG ) THEN
 END IF
 
 
-IF ( .NOT. OUTER_BC_SET_FLAG ) THEN
+IF ( .NOT. lPF_BC_Flags(iPF_BC_Outer_Set) ) THEN
 
     PRINT*,"ERROR IN POSEIDON : Ther outer boundary condition was not set before 'Poseidon_Run' was called."
     Error_Flag = .TRUE.

@@ -57,8 +57,6 @@ USE Variables_IO, &
                     ONLY :  Write_Results_R_Samps,      &
                             Write_Results_T_Samps,      &
                             Write_Results_P_Samps,      &
-                            Write_Flags,                &
-                            Report_Flags,               &
                             Iter_Report_Num_Samples,    &
                             iRF_Time,                   &
                             iRF_Iter,                   &
@@ -185,31 +183,31 @@ MAX_ITERATIONS                  = INT_PARAMS(20)
 
 
 
-IF ( INT_PARAMS(21) .NE. -1 ) THEN
-    Report_Flags(iRF_Time)      = INT_PARAMS(21)    ! Default = 0, Off
-END IF
-IF ( INT_PARAMS(22) .NE. -1 ) THEN
-    Report_Flags(iRF_Iter)      = INT_PARAMS(22)    ! Default = 0, Off
-END IF
+!IF ( INT_PARAMS(21) .NE. -1 ) THEN
+!    Report_Flags(iRF_Time)      = INT_PARAMS(21)    ! Default = 0, Off
+!END IF
+!IF ( INT_PARAMS(22) .NE. -1 ) THEN
+!    Report_Flags(iRF_Iter)      = INT_PARAMS(22)    ! Default = 0, Off
+!END IF
 IF ( INT_PARAMS(23) .NE. -1 ) THEN
     ITER_REPORT_NUM_SAMPLES     = INT_PARAMS(23)    ! Default = 20
 END IF
-IF ( INT_PARAMS(24) .NE. -1 ) THEN
-    Write_Flags(iWF_Results)    = INT_PARAMS(24)    ! Default = 0, Off
-END IF
+!IF ( INT_PARAMS(24) .NE. -1 ) THEN
+!    Write_Flags(iWF_Results)    = INT_PARAMS(24)    ! Default = 0, Off
+!END IF
 
 
 NEW_PETSC_SOLVER_FLAG           = INT_PARAMS(25)
 
-IF ( INT_PARAMS(26) .NE. -1 ) THEN
-    Write_Flags(iWF_Matrix)     = INT_PARAMS(26)
-END IF
-IF ( INT_PARAMS(27) .NE. -1 ) THEN
-    Write_Flags(iWF_RHS)        = INT_PARAMS(27)
-END IF
-IF ( INT_PARAMS(33) .NE. -1 ) THEN
-    Write_Flags(iWF_Update)     = INT_PARAMS(33)
-END IF
+!IF ( INT_PARAMS(26) .NE. -1 ) THEN
+!    Write_Flags(iWF_Matrix)     = INT_PARAMS(26)
+!END IF
+!IF ( INT_PARAMS(27) .NE. -1 ) THEN
+!    Write_Flags(iWF_RHS)        = INT_PARAMS(27)
+!END IF
+!IF ( INT_PARAMS(33) .NE. -1 ) THEN
+!    Write_Flags(iWF_Update)     = INT_PARAMS(33)
+!END IF
 
 
 
@@ -217,13 +215,13 @@ WRITE_RESULTS_R_SAMPS           = INT_PARAMS(28)
 WRITE_RESULTS_T_SAMPS           = INT_PARAMS(29)
 WRITE_RESULTS_P_SAMPS           = INT_PARAMS(30)
 
-IF ( INT_PARAMS(31) .NE. -1 ) THEN
-    Report_Flags(iRF_Setup)     = INT_PARAMS(31)    ! Default = 0, Off
-END IF
+!IF ( INT_PARAMS(31) .NE. -1 ) THEN
+!    Report_Flags(iRF_Setup)     = INT_PARAMS(31)    ! Default = 0, Off
+!END IF
 
-IF ( INT_PARAMS(32) .NE. -1 ) THEN
-    Write_Flags(iWF_Source)     = INT_PARAMS(32)    ! Deafult = 0, Off
-END IF
+!IF ( INT_PARAMS(32) .NE. -1 ) THEN
+!    Write_Flags(iWF_Source)     = INT_PARAMS(32)    ! Deafult = 0, Off
+!END IF
 
 CONVERGENCE_CRITERIA            = REAL_PARAMS(1)
 

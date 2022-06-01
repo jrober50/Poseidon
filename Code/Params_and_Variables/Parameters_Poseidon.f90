@@ -38,9 +38,7 @@ INTEGER, PUBLIC                     ::  NUM_CFA_EQs
 INTEGER, DIMENSION(1:5)             ::  CFA_EQ_Flags
 
 
-INTEGER, PUBLIC, PARAMETER          ::  DATA_DIST_MODE = 4
 INTEGER, PUBLIC, PARAMETER          ::  SOL_DIST_SCHEME = 2
-INTEGER, PUBLIC, PARAMETER          ::  STF_MAPPING_FLAG = 2
 
 
 
@@ -53,8 +51,6 @@ INTEGER, PUBLIC                     ::  CONVERGENCE_FLAG     = 0
 INTEGER, PUBLIC                     ::  Convergence_Type     = 2
 REAL(KIND =idp), PUBLIC             ::  CONVERGENCE_CRITERIA = 1.0E-8_idp
 REAL(KIND =idp), PUBLIC, PARAMETER  ::  CONVERGENCE_CRITERIA_Default = 1.0E-8_idp
-
-INTEGER, PUBLIC                     ::  INITIAL_GUESS_FLAG
 
 
 INTEGER, PUBLIC                     ::  NEW_PETSC_SOLVER_FLAG

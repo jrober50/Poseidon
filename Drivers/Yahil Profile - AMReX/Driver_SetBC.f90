@@ -24,41 +24,43 @@ MODULE Driver_SetBC_Module                                                   !##
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-        ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Units_Module, &
-        ONLY :  Grav_Constant_G,    &
-                Speed_of_Light,     &
-                C_Square,           &
-                GR_Source_Scalar,   &
-                Centimeter,         &
-                Second,             &
-                Millisecond,         &
-                Erg,                &
-                Gram
+            ONLY :  Grav_Constant_G,    &
+                    Speed_of_Light,     &
+                    C_Square,           &
+                    GR_Source_Scalar,   &
+                    Centimeter,         &
+                    Second,             &
+                    Millisecond,         &
+                    Erg,                &
+                    Gram
 
 USE Variables_Functions, &
-        ONLY :  Potential_Solution
+            ONLY :  Potential_Solution
 
 USE Variables_External, &
-        ONLY :  SelfSim_T,              &
-                SelfSim_Kappa,          &
-                SelfSim_Gamma,          &
-                NUM_ENTRIES,        &
-                SELFSIM_R_VALS,     &
-                SELFSIM_POT_VALS
+            ONLY :  SelfSim_T,              &
+                    SelfSim_Kappa,          &
+                    SelfSim_Gamma,          &
+                    NUM_ENTRIES,        &
+                    SELFSIM_R_VALS,     &
+                    SELFSIM_POT_VALS
 
 USE Allocation_SelfSimilar, &
-        ONLY :  Allocate_SelfSim,               &
-                Deallocate_SelfSim
+            ONLY :  Allocate_SelfSim,               &
+                    Deallocate_SelfSim
 
+USE Variables_Mesh, &
+            ONLY :  R_Outer
 
 USE Poseidon_Main_Module, &
-        ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions
+            ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions
 
 USE SelfSimilar_Module, &
-        ONLY :  SELFSIM_NEWT_SOL,           &
-                CREATE_SELFSIM_NEWT_SOL
+            ONLY :  SELFSIM_NEWT_SOL,           &
+                    CREATE_SELFSIM_NEWT_SOL
 
 IMPLICIT NONE
 
@@ -72,9 +74,7 @@ CONTAINS
 !   Driver_SetBC                                                                !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Driver_SetBC( Domain_Edge )
-
-REAL(idp), INTENT(IN)                                   ::  Domain_Edge
+SUBROUTINE Driver_SetBC( )
 
 REAL(idp)                                               ::  Psi_BC
 REAL(idp)                                               ::  AlphaPsi_BC
@@ -180,15 +180,13 @@ CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
 Potential_Solution => SELFSIM_NEWT_SOL
 
 
-
 Psi_BC = 1.0_idp    &
-       - 0.5_idp*Potential_Solution(Domain_Edge, 0.0_idp, 0.0_idp)/C_Square
+       - 0.5_idp*Potential_Solution(R_Outer, 0.0_idp, 0.0_idp)/C_Square
 
 AlphaPsi_BC = 1.0_idp    &
-            + 0.5_idp*Potential_Solution(Domain_Edge, 0.0_idp, 0.0_idp)/C_Square
+            + 0.5_idp*Potential_Solution(R_Outer, 0.0_idp, 0.0_idp)/C_Square
 
 Shift_Vector_BC = 0.0_idp
-
 
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)

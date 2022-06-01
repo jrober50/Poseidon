@@ -55,8 +55,6 @@ USE Variables_Derived, &
                     Block_Prob_Dim,             &
                     SUBSHELL_PROB_DIM
 
-USE Poseidon_IO_Module,    &
-            ONLY :  OUTPUT_PETSC_REPORT
 
 #ifdef POSEIDON_PETSC_FLAG
 #include <petsc/finclude/petscsys.h>
@@ -466,12 +464,7 @@ IF ( POSEIDON_COMM_PETSC .NE. MPI_COMM_NULL ) THEN
 
 
 
-    IF ( myID_Poseidon == 0 ) THEN
-        
-        CALL OUTPUT_PETSC_REPORT(matset_time, solve_time, Iter_Count,   &
-                                 rtol, abstol, dtol, maxits             )
 
-    END IF
 
 
 

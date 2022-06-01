@@ -59,7 +59,7 @@ USE Driver_SetSource_Module, &
 USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Run
 
-USE Poseidon_Return_Routines, &
+USE Poseidon_Return_Routines_Module, &
             ONLY :  Poseidon_Return_Conformal_Factor
 
 USE IO_Print_Results, &

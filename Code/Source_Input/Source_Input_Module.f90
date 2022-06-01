@@ -35,12 +35,8 @@ USE Variables_Source, &
                     Block_Source_S,     &
                     Block_Source_Si
 
-USE Poseidon_IO_Module, &
-            ONLY :  OUTPUT_POSEIDON_SOURCES_1D
-
 USE Source_Intput_Poisson,  &
             ONLY :  Poseidon_Input_Sources_Poisson_3D
-
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
