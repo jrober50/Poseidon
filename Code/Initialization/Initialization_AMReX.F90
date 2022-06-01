@@ -625,7 +625,6 @@ DO lvl = 0,AMReX_Num_Levels-1
             iLeafElementsPerLvl(lvl) = iLeafElementsPerLvl(lvl) + SUM(Mask(:,EOff(2),EOff(3),:))
         END IF
     END DO
-    PRINT*,"iLeafElementsPerLvl",iLeafElementsPerLvl," myID ",myID_Poseidon
     iNumLeafElements = Sum(iLeafElementsPerLvl)
 
     CALL amrex_mfiter_destroy(mfi)
