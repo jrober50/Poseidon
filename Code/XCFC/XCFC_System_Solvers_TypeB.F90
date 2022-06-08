@@ -26,6 +26,10 @@ MODULE XCFC_System_Solvers_TypeB_Module                                      !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message,            &
+                    Warning_Message
+
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
@@ -40,6 +44,9 @@ USE Parameters_Variable_Indices, &
                     iU_S1,                      &
                     iU_S2,                      &
                     iU_S3
+
+USE Poseidon_IO_Parameters, &
+            ONLY :  CFA_VecVar_Names
 
 USE Variables_Derived, &
             ONLY :  Beta_Prob_Dim,              &
@@ -122,21 +129,12 @@ INTEGER                                                             ::  Lower_Li
 INTEGER                                                             ::  Upper_Limit
 INTEGER                                                             ::  ierr
 
-
-
+CHARACTER(LEN = 300)                    ::  Message
 
 
 IF ( Verbose_Flag ) THEN
-    IF ( iVB == iVB_X ) THEN
-        PRINT*,"--In XCFC Iteration, Begining X System Solve."
-    ELSE IF ( iVB == iVB_S ) THEN
-        PRINT*,"--In XCFC Iteration, Begining Shift System Solve."
-    ELSE
-        WRITE(*,'(A)') "Incompatable iVB value passed to XCFC_Solve_System_TypeB."
-        WRITE(*,'(A,3I3.3)') "iVB value received ",iVB
-        WRITE(*,'(A)') "iVB must be 1 or 2."
-
-    END IF
+    WRITE(Message,'(A,A,A)')'Beginning ',TRIM(CFA_VecVar_Names(iVB)),' Linear Solve.'
+    CALL Run_Message(TRIM(Message))
 END IF
 
 
@@ -188,7 +186,8 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                  INFO                   )
 
     IF (INFO .NE. 0) THEN
-        print*,"ZGBTRS has failed with INFO = ",INFO
+        WRITE(Message,'(A,I1.1)')"ZGBTRS has failed with INFO = ",INFO
+        CALL Warning_Message(TRIM(Message))
     END IF
 
 !    PRINT*,"Coeff_Vec"

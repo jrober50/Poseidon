@@ -24,10 +24,13 @@ MODULE Initialization_Tables                                                    
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-                    ONLY : idp
+            ONLY : idp
 
 USE Poseidon_Numbers_Module, &
-                    ONLY : pi, twopi
+            ONLY : pi, twopi
+
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
 
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
@@ -37,12 +40,6 @@ USE Poseidon_Parameters, &
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Mode
-
-USE Variables_MPI, &
-            ONLY :  Num_Block_Theta_Rows,   &
-                    Num_T_Elems_Per_Block,  &
-                    Num_P_Elems_Per_Block,  &
-                    myID_Shell
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
@@ -117,6 +114,10 @@ USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,          &
                     AMReX_Num_Levels
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Tables_Flags,        &
+                    iPF_Init_Tables_Init
+
 #ifdef POSEIDON_AMREX_FLAG
 USE amrex_fort_module, &
             ONLY :  amrex_spacedim
@@ -136,10 +137,7 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE Initialize_Tables()
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Basis Function Tables. "
-END IF
-
+IF ( Verbose_Flag ) CALL Init_Message('Initializing Basis Functions Tables.')
 LagPoly_Num_Tables = 2**(AMReX_Num_Levels+1) - 1  ! Sum of power of 2
 
 
@@ -160,7 +158,7 @@ LagPoly_Num_Tables = 2**(AMReX_Num_Levels+1) - 1  ! Sum of power of 2
 #endif
 
 
-
+lPF_Init_Tables_Flags(iPF_Init_Tables_Init) = .TRUE.
 
 END SUBROUTINE Initialize_Tables
 
@@ -187,10 +185,6 @@ REAL(KIND = idp), DIMENSION(1:1)                                ::  Legendre_Pol
 
 REAL(KIND = idp)                                                ::  Norm_Storage
 REAL(KIND = idp)                                                ::  REAL_L
-INTEGER                                                         ::  Block_T_Begin,      &
-                                                                    Block_P_Begin,      &
-                                                                    Global_TE,          &
-                                                                    Global_PE
 
 REAL(KIND = idp), DIMENSION(-L_LIMIT:L_LIMIT)                   :: M_POWER_TABLE
 
@@ -206,13 +200,9 @@ COMPLEX(Kind = idp)                                             ::  Tmp_Value_B
 
 ALLOCATE( Ylm_Table(-L_LIMIT:L_LIMIT, -1:L_LIMIT,                           &
                     1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
-                    0:NUM_T_ELEMS_PER_BLOCK-1, 0:NUM_P_ELEMS_PER_BLOCK-1)   )
+                    0:NUM_T_Elements-1, 0:NUM_P_Elements-1)   )
 
 
-
-
-Block_T_Begin = MOD(myID_Shell,NUM_BLOCK_THETA_ROWS)*NUM_T_ELEMS_PER_BLOCK
-Block_P_Begin = (myID_Shell/NUM_BLOCK_THETA_ROWS)*NUM_P_ELEMS_PER_BLOCK
 
 
 
@@ -254,22 +244,20 @@ END DO ! l Loop
 
 
 Ylm_Table = 0.0_idp
-DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
+DO pe = 0,Num_P_Elements-1
 
      !                                                          !
     !!    Map Phi Locations from [-1,1] space to real space.    !!
      !                                                          !
-    Global_pe = Block_P_Begin + pe
-    P_Locations = Map_From_X_Space(plocs(Global_pe), plocs(Global_pe + 1), INT_P_LOCATIONS)
+    P_Locations = Map_From_X_Space(plocs(pe), plocs(pe + 1), INT_P_LOCATIONS)
     
 
-    DO te = 0,NUM_T_ELEMS_PER_BLOCK-1
+    DO te = 0,Num_T_Elements-1
 
          !                                                          !
         !!   Map Theta Locations from [-1,1] space to real space.   !!
          !                                                          !
-        Global_te = Block_T_Begin + te
-        T_Locations = Map_From_X_Space(tlocs(Global_te), tlocs(Global_te + 1), INT_T_LOCATIONS)
+        T_Locations = Map_From_X_Space(tlocs(te), tlocs(te + 1), INT_T_LOCATIONS)
 
 
         
@@ -301,21 +289,19 @@ END DO ! pe Loop
 
 
 
-DO pe = 0,NUM_P_ELEMS_PER_BLOCK-1
+DO pe = 0,Num_P_Elements-1
 
      !                                                          !
     !!    Map Phi Locations from [-1,1] space to real space.    !!
      !                                                          !
-    Global_pe = Block_P_Begin + pe
-    P_Locations = Map_From_X_Space(plocs(Global_pe), plocs(Global_pe + 1), INT_P_LOCATIONS)
+    P_Locations = Map_From_X_Space(plocs(pe), plocs(pe + 1), INT_P_LOCATIONS)
 
-    DO te = 0,NUM_T_ELEMS_PER_BLOCK-1
+    DO te = 0,Num_T_Elements-1
 
          !                                                          !
         !!   Map Theta Locations from [-1,1] space to real space.   !!
          !                                                          !
-        Global_te = Block_T_Begin + te
-        T_Locations = Map_From_X_Space(tlocs(Global_te), tlocs(Global_te + 1), INT_T_LOCATIONS)
+        T_Locations = Map_From_X_Space(tlocs(te), tlocs(te + 1), INT_T_LOCATIONS)
 
         CSC_VAL(:) = 1.0_idp/DSIN(T_Locations(:))
         COT_VAL(:) = 1.0_idp/DTAN(T_Locations(:))

@@ -39,6 +39,9 @@ MODULE Poseidon_Cholesky_Module                                                 
 USE Poseidon_Kinds_Module, &
         ONLY :  idp
 
+USE Poseidon_Message_Routines_Module, &
+        ONLY :  Init_Message
+
 USE Poseidon_Parameters, &
         ONLY :  DEGREE,             &
                 L_LIMIT,            &
@@ -79,6 +82,9 @@ USE Timer_Routines_Module, &
 USE Timer_Variables_Module, &
         ONLY :  Timer_XCFC_Matrix_Cholesky
 
+USE Flags_Initialization_Module, &
+        ONLY :  lPF_Init_Matrices_Flags,    &
+                iPF_Init_Matrices_Type_A_Cholesky
 
 IMPLICIT NONE
 
@@ -114,9 +120,8 @@ INTEGER, ALLOCATABLE, DIMENSION(:,:,:)                          :: NEW_ROW_IND
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              :: NEW_ELEM_VAL
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"--In Cholesky_Factorization."
-END IF
+
+IF ( Verbose_Flag ) CALL Init_Message('Factorizing scalar Laplace matrix using Cholesky factorization.')
 CALL TimerStart(Timer_XCFC_Matrix_Cholesky)
 
 
@@ -376,6 +381,7 @@ END DO
 DEALLOCATE(NEW_ELEM_VAL, NEW_ROW_IND)
 
 CALL TimerStop(Timer_XCFC_Matrix_Cholesky)
+lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .TRUE.
 
 !PRINT*,"STOPing at end of CHOLESKY_FACTORIZATION"
 !STOP

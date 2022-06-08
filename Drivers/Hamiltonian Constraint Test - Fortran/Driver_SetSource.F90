@@ -38,13 +38,16 @@ USE Poseidon_Units_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
+
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_Results_Dir
 
 USE SelfSimilar_Module, &
             ONLY :  Initialize_Yahil_Sources
 
-USE Source_Input_Module, &
+USE Poseidon_Source_Input_Module, &
             ONLY :  Poseidon_Input_Sources
 
 USE Variables_IO, &
@@ -74,24 +77,24 @@ SUBROUTINE Driver_SetSource( NE, NQ,                    &
                              Alpha,                     &
                              Star_Radius                )
 
-INTEGER, INTENT(IN), DIMENSION(3)                       ::  NE
-INTEGER, INTENT(IN), DIMENSION(3)                       ::  NQ
+INTEGER,    INTENT(IN), DIMENSION(3)                    ::  NE
+INTEGER,    INTENT(IN), DIMENSION(3)                    ::  NQ
 
-REAL(idp), INTENT(IN), DIMENSION(1:NE(1))               ::  dx_c
-REAL(idp), INTENT(IN), DIMENSION(0:NE(1))               ::  x_e
-REAL(idp), INTENT(IN), DIMENSION(0:NE(2))               ::  y_e
+REAL(idp),  INTENT(IN), DIMENSION(1:NE(1))              ::  dx_c
+REAL(idp),  INTENT(IN), DIMENSION(0:NE(1))              ::  x_e
+REAL(idp),  INTENT(IN), DIMENSION(0:NE(2))              ::  y_e
 
-REAL(idp), INTENT(IN), DIMENSION(1:NQ(1))               ::  R_Quad
-REAL(idp), INTENT(IN), DIMENSION(1:NQ(2))               ::  T_Quad
-REAL(idp), INTENT(IN), DIMENSION(1:NQ(3))               ::  P_Quad
+REAL(idp),  INTENT(IN), DIMENSION(1:NQ(1))              ::  R_Quad
+REAL(idp),  INTENT(IN), DIMENSION(1:NQ(2))              ::  T_Quad
+REAL(idp),  INTENT(IN), DIMENSION(1:NQ(3))              ::  P_Quad
 
-REAL(idp), INTENT(IN)                                   ::  LeftLimit
-REAL(idp), INTENT(IN)                                   ::  RightLimit
+REAL(idp),  INTENT(IN)                                  ::  LeftLimit
+REAL(idp),  INTENT(IN)                                  ::  RightLimit
 
-INTEGER,   INTENT(IN)                                   ::  myID
+INTEGER,    INTENT(IN)                                  ::  myID
 
-REAL(idp), INTENT(IN)                                   ::  Alpha
-REAL(idp), INTENT(IN)                                   ::  Star_Radius
+REAL(idp),  INTENT(IN)                                  ::  Alpha
+REAL(idp),  INTENT(IN)                                  ::  Star_Radius
 
 REAL(idp)                                               ::  Psi_Holder
 
@@ -136,10 +139,9 @@ ALLOCATE( Cur_R_Locs(1:NQ(1)) )
 
 
 
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing the Hamiltonian constraint test source.')
 
-IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A)')"-Creating Sources."
-END IF
+
 
 HCT_Fileid = 4242
 
@@ -197,15 +199,15 @@ IF ( Verbose_Flag ) THEN
     WRITE(*,'(A)')"-Inputing Sources"
 END IF
 
-CALL Poseidon_Input_Sources(myID,                           &
-                            myID,                           &
-                            myID,                           &
-                            Local_E, Local_S, Local_Si,     &
-                            NE(1), NE(2), NE(3),            &
-                            NQ(1), NQ(2), NQ(3),            &
-                            R_Quad, T_Quad, P_Quad,         &
-                            LeftLimit, RightLimit           )
-
+CALL Poseidon_Input_Sources(Local_E,                &
+                            Local_Si,               &
+                            Local_S,                &
+                            NE,                     &
+                            NQ,                     &
+                            R_Quad,                 &
+                            T_Quad,                 &
+                            P_Quad,                 &
+                            [LeftLimit, RightLimit] )
 
 
 

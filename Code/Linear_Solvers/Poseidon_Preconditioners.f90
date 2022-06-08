@@ -31,11 +31,9 @@ USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     NUM_CFA_VARS
 
-USE Variables_MPI, &
-            ONLY :  Num_R_Elems_Per_Block
-
 USE Variables_Mesh, &
-            ONLY :  rlocs
+            ONLY :  rlocs,                      &
+                    Num_R_Elements
 
 USE Variables_Derived, &
             ONLY :  LM_LENGTH,                  &
@@ -63,7 +61,7 @@ CONTAINS
 !################################################################################!
 SUBROUTINE Jacobi_Type_A_PC( A_Mat, b_Vec)
 
-COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:NUM_R_ELEMS_PER_BLOCK-1), INTENT(INOUT) :: A_Mat
+COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(INOUT) :: A_Mat
 COMPLEX(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(INOUT)     ::  b_Vec
 
 INTEGER                                                     ::  re, d, F, lm_loc
@@ -80,7 +78,7 @@ Node_X_Locs = Initialize_LGL_Quadrature_Locations(DEGREE)
 
 
 ! Create Modifiers
-DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
+DO re = 0,Num_R_Elements-1
 
     Delta_R_Over_Two = (rlocs(re+1) - rlocs(re))/2.0_idp
     Node_R_Locs(:) = Delta_R_Over_Two * ( Node_X_Locs(:) + 1.0_idp) + rlocs(re)
@@ -105,7 +103,7 @@ b_Vec(:) = b_Vec(:)*Modifier(:)
 
 
 ! Modify Jacobian
-DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
+DO re = 0,Num_R_Elements-1
     DO d = 0,DEGREE
         DO F = 1,NUM_CFA_VARS
             DO lm_loc = 0,LM_LENGTH-1
@@ -134,7 +132,7 @@ END SUBROUTINE Jacobi_Type_A_PC
 !################################################################################!
 SUBROUTINE Jacobi_Type_B_PC( A_Mat, b_Vec )
 
-COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:NUM_R_ELEMS_PER_BLOCK-1), INTENT(INOUT) :: A_Mat
+COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(INOUT) :: A_Mat
 COMPLEX(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(INOUT)     ::  b_Vec
 
 INTEGER                                                     ::  re, d, i, F, lm_loc
@@ -150,7 +148,7 @@ Node_X_Locs = Initialize_LGL_Quadrature_Locations(DEGREE)
 
 ! Create Modifiers
 Modifier = 0.0_idp
-DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
+DO re = 0,Num_R_Elements-1
     DO i = 0,ELEM_PROB_DIM-1
 
         Start = re*(ELEM_PROB_DIM-ULM_LENGTH) + i
@@ -168,7 +166,7 @@ b_Vec(:) = b_Vec(:)*Modifier(:)
 
 
 ! Modify Jacobian
-DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
+DO re = 0,Num_R_Elements-1
     DO d = 0,DEGREE
         DO F = 1,NUM_CFA_VARS
             DO lm_loc = 0,LM_LENGTH-1

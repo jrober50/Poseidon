@@ -25,7 +25,10 @@ MODULE XCFC_Method_Module                                                       
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-            ONLY : idp
+            ONLY :  idp
+
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag,               &
@@ -71,9 +74,6 @@ USE XCFC_Solvers_Main_Module ,  &
                     XCFC_Lapse_Solve,           &
                     XCFC_Shift_Solve
 
-USE XCFC_Source_Variables_Module, &
-            ONLY :  Allocate_XCFC_Source_Variables, &
-                    Deallocate_XCFC_Source_Variables
 
 USE Poseidon_MPI_Utilities_Module, &
             ONLY :  STOP_MPI,               &
@@ -104,13 +104,8 @@ SUBROUTINE XCFC_Method()
 LOGICAL                     :: PR = .FALSE.
 
 
-!CALL Allocate_XCFC_Source_Variables()
 
-
-IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining XCFC Fixed Point Iterative Solve."
-END IF
-
+IF ( Verbose_Flag ) CALL Run_Message('Beginning XCFC System Solve.')
 
 
 CALL Output_Initial_Guess(PR)
@@ -144,7 +139,6 @@ IF ( ANY(CFA_Eq_Flags(iU_S1:iU_S3) == 1) ) THEN
 END IF
 
 
-!CALL Deallocate_XCFC_Source_Variables()
 
 
 
@@ -175,12 +169,9 @@ LOGICAL                         :: PR = .FALSE.
 
 
 
-!CALL Allocate_XCFC_Source_Variables()
 
+IF ( Verbose_Flag ) CALL Run_Message('Beginning XCFC System Solve.')
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining XCFC Fixed Point Iterative Solve."
-END IF
 
 
 CALL Output_Initial_Guess(PR)
@@ -199,7 +190,6 @@ CALL XCFC_Lapse_Solve()
 
 CALL XCFC_Shift_Solve()
 
-!CALL Deallocate_XCFC_Source_Variables()
 
 
 END SUBROUTINE XCFC_Method_New
@@ -222,14 +212,7 @@ SUBROUTINE XCFC_Method_Part1()
 LOGICAL                             :: PR = .FALSE.
 
 
-
-
-!CALL Allocate_XCFC_Source_Variables()
-
-
-IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining XCFC Metric Solve (Part 1 of 2)."
-END IF
+IF ( Verbose_Flag ) CALL Run_Message('Begining XCFC Metric Solve (Part 1 of 2).')
 
 
 CALL Output_Initial_Guess(PR)
@@ -245,7 +228,13 @@ IF ( CFA_Eq_Flags(1) == 1 ) THEN
     CALL XCFC_ConFactor_Solve()
 END IF
 
-!CALL Deallocate_XCFC_Source_Variables()
+
+
+!IF ( lPF_IO_Flags(IPF_IO_Print_Results) ) THEN
+!    CALL Print_Results()
+!END IF
+
+
 
 END SUBROUTINE XCFC_Method_Part1
 
@@ -273,11 +262,8 @@ END SUBROUTINE XCFC_Method_Part1
 !###############################################################################!
 SUBROUTINE XCFC_Method_Part2()
 
-!CALL Allocate_XCFC_Source_Variables()
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining XCFC Metric Solve (Part 2 of 2)."
-END IF
+IF ( Verbose_Flag ) CALL Run_Message('Begining XCFC Metric Solve (Part 2 of 2).')
 
 
 ! Solve for Lapse Function
@@ -292,10 +278,9 @@ IF ( ANY(CFA_Eq_Flags(3:5) == 1) ) THEN
 END IF
 
 
-IF ( lPF_IO_Flags(IPF_IO_Print_Results) ) THEN
-    CALL Print_Results()
-END IF
-!CALL Deallocate_XCFC_Source_Variables()
+!IF ( lPF_IO_Flags(IPF_IO_Print_Results) ) THEN
+!    CALL Print_Results()
+!END IF
 
 
 

@@ -57,13 +57,18 @@ CHARACTER(LEN=14), DIMENSION(N_RF)  :: Report_Names = [ 'Run           ',   &
 
 
 
-INTEGER, PARAMETER          :: N_PF                         = 5
-INTEGER, DIMENSION(N_PF)    :: Print_Flags
+INTEGER, PARAMETER                  :: N_PF         = 2
+
+INTEGER, PARAMETER                  :: iPF_Cond     = 1
+INTEGER, PARAMETER                  :: iPF_Results  = 1
+
+INTEGER, DIMENSION(N_PF)            :: Print_Flags = 2
+CHARACTER(LEN=16), DIMENSION(N_PF)  :: Print_Names = [  'Condition Number', &
+                                                        'Results         ']
 
 
 
-
-INTEGER, PARAMETER                  :: N_WF         = 7
+INTEGER, PARAMETER                  :: N_WF         = 8
 
 INTEGER, PARAMETER                  :: iWF_Matrix   = 1
 INTEGER, PARAMETER                  :: iWF_RHS      = 2
@@ -72,6 +77,7 @@ INTEGER, PARAMETER                  :: iWF_Source   = 4
 INTEGER, PARAMETER                  :: iWF_Results  = 5
 INTEGER, PARAMETER                  :: iWF_Coeffs   = 6
 INTEGER, PARAMETER                  :: iWF_Mesh     = 7
+INTEGER, PARAMETER                  :: iWF_Cond     = 8
 
 INTEGER, DIMENSION(N_WF)            :: Write_Flags = 0
 CHARACTER(LEN=16), DIMENSION(N_WF)  :: Write_Names = [  'Matrix(ces)     ', &
@@ -80,7 +86,8 @@ CHARACTER(LEN=16), DIMENSION(N_WF)  :: Write_Names = [  'Matrix(ces)     ', &
                                                         'Source(s)       ', &
                                                         'Results         ', &
                                                         'Coefficients    ', &
-                                                        'Mesh            '  ]
+                                                        'Mesh            ', &
+                                                        'Condition Number']
 
 
 

@@ -29,40 +29,30 @@ MODULE Driver_SetSource_Module                                              !##!
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Poseidon_Units_Module, &
-            ONLY :  C_Square
-
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
-USE SelfSimilar_Module, &
-            ONLY :  Initialize_Yahil_Sources
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
 
-USE Source_Input_Module, &
+USE Poseidon_Source_Input_Module, &
             ONLY :  Poseidon_Input_Sources
-
-USE Variables_Functions, &
-            ONLY :  Potential_Solution
-
-USE Variables_IO, &
-            ONLY :  Write_Flags,        &
-                    iWF_Source
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
                     TimerSTop
-
 
 USE Timer_Variables_Module, &
             ONLY :  Timer_Driver_SetSource_InitTest,        &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
-USE Maps_Quadrature, &
-            ONLY :  Quad_Map
-
 USE IO_Output_Sources_Module, &
             ONLY :  Output_Poseidon_Sources_3D
+
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,       &
+                    iPF_IO_Write_Sources
 
 IMPLICIT NONE
 
@@ -79,7 +69,7 @@ CONTAINS
 SUBROUTINE Driver_SetSource( NE, NQ,                    &
                              dx_c, x_e, y_e,            &
                              R_Quad, T_Quad, P_Quad,    &
-                             Left_Limit, Right_Limit,   &
+                             LeftLimit, RightLimit,   &
                              myID                       )
 
 INTEGER, INTENT(IN), DIMENSION(3)                       ::  NE
@@ -93,8 +83,8 @@ REAL(idp), INTENT(IN), DIMENSION(1:NQ(1))               ::  R_Quad
 REAL(idp), INTENT(IN), DIMENSION(1:NQ(2))               ::  T_Quad
 REAL(idp), INTENT(IN), DIMENSION(1:NQ(3))               ::  P_Quad
 
-REAL(idp), INTENT(IN)                                   ::  Left_Limit
-REAL(idp), INTENT(IN)                                   ::  Right_Limit
+REAL(idp), INTENT(IN)                                   ::  LeftLimit
+REAL(idp), INTENT(IN)                                   ::  RightLimit
 
 INTEGER,   INTENT(IN)                                   ::  myID
 
@@ -113,6 +103,9 @@ REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Local_S
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Local_Si
 
 
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing the Modified Vector Laplacian test source.')
+
+
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
 ALLOCATE( Local_E(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
@@ -128,24 +121,27 @@ Local_Si = 0.0_idp
 CALL TimerStart( Timer_Driver_SetSource_SetSource )
 
 
-CALL Poseidon_Input_Sources(    myID, myID, myID,               &
-                                Local_E, Local_S, Local_Si,     &
-                                NE(1), NE(2), NE(3),            &
-                                NQ(1), NQ(2), NQ(3),            &
-                                R_Quad, T_Quad, P_Quad,         &
-                                Left_Limit, Right_Limit         )
+
+
+CALL Poseidon_Input_Sources(Local_E,                &
+                            Local_Si,               &
+                            Local_S,                &
+                            NE,                     &
+                            NQ,                     &
+                            R_Quad,                 &
+                            T_Quad,                 &
+                            P_Quad,                 &
+                            [LeftLimit, RightLimit] )
 
 
 
-
-
-IF ( Write_Flags(iWF_Source) > 0 ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Sources) ) THEN
 
     CALL Output_Poseidon_Sources_3D( Local_E, Local_S, Local_Si,     &
                                      NE(1), NE(2), NE(3),            &
                                      NQ(1), NQ(2), NQ(3),            &
                                      R_Quad, T_Quad, P_Quad,         &
-                                     Left_Limit, Right_Limit         )
+                                     LeftLimit, RightLimit         )
 
  
 END IF

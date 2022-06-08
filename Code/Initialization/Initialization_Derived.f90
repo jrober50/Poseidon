@@ -18,52 +18,52 @@ MODULE Initialization_Derived                                                   
 !===================================!
 
 USE Poseidon_Kinds_Module, &
-                    ONLY : idp
+            ONLY : idp
 
 USE Poseidon_Parameters, &
-                    ONLY :  Domain_Dim,             &
-                            Degree,                 &
-                            L_Limit,                &
-                            Verbose_Flag,           &
-                            Num_CFA_Vars
+            ONLY :  Domain_Dim,             &
+                    Degree,                 &
+                    L_Limit,                &
+                    Verbose_Flag,           &
+                    Num_CFA_Vars
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
 
 USE Variables_Mesh, &
-                    ONLY :  Num_R_Elements
-
-
-USE Variables_MPI, &
-                    ONLY :  Num_R_Elems_Per_Block,  &
-                            Num_R_Elems_Per_SubShell
+            ONLY :  Num_R_Elements
 
 USE Variables_Derived, &
-                    ONLY :  Num_R_Nodes,            &
-                            Num_R_Nodesp1,          &
-                            Var_Dim,                &
-                            Elem_Var_Dim,           &
-                            Block_Var_Dim,          &
-                            LM_Length,              &
-                            ULM_Length,             &
-                            Prob_Dim,               &
-                            Elem_Prob_Dim,          &
-                            Elem_Prob_Dim_Sqr,      &
-                            Block_Prob_Dim,         &
-                            Num_Off_Diagonals,      &
-                            Beta_Prob_Dim,          &
-                            Beta_Elem_Prob_Dim
+            ONLY :  Num_R_Nodes,            &
+                    Num_R_Nodesp1,          &
+                    Var_Dim,                &
+                    Elem_Var_Dim,           &
+                    Block_Var_Dim,          &
+                    LM_Length,              &
+                    ULM_Length,             &
+                    Prob_Dim,               &
+                    Elem_Prob_Dim,          &
+                    Elem_Prob_Dim_Sqr,      &
+                    Block_Prob_Dim,         &
+                    Num_Off_Diagonals,      &
+                    Beta_Prob_Dim,          &
+                    Beta_Elem_Prob_Dim
                             
 USE Variables_Functions, &
-                    ONLY :  Matrix_Location,            &
-                            LM_Location
+            ONLY :  Matrix_Location,            &
+                    LM_Location
 
 USE Maps_Legacy, &
-                    ONLY :  CFA_1D_Matrix_Map,      &
-                            CFA_2D_Matrix_Map,      &
-                            CFA_3D_Matrix_Map,      &
-                            CFA_1D_LM_Map,          &
-                            CFA_2D_LM_Map,          &
-                            CFA_3D_LM_Map
+            ONLY :  CFA_1D_Matrix_Map,      &
+                    CFA_2D_Matrix_Map,      &
+                    CFA_3D_Matrix_Map,      &
+                    CFA_1D_LM_Map,          &
+                    CFA_2D_LM_Map,          &
+                    CFA_3D_LM_Map
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_MTGV_Flags,    &
+                    iPF_Init_MTGV_Derived
 
 
 IMPLICIT NONE
@@ -76,9 +76,7 @@ CONTAINS
  !#########################################################!
 SUBROUTINE Initialize_Derived()
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Derived Quantities. "
-END IF
+IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables.')
 
 IF ( DOMAIN_DIM == 1 ) THEN
 
@@ -129,7 +127,7 @@ Beta_Elem_Prob_Dim  = 3*Elem_Var_Dim
 
 NUM_OFF_DIAGONALS = ULM_LENGTH*(DEGREE + 1) - 1
 
-
+lPF_Init_MTGV_Flags(iPF_Init_MTGV_Derived) = .TRUE.
 
 END SUBROUTINE Initialize_Derived
 
@@ -149,10 +147,7 @@ END SUBROUTINE Initialize_Derived
  !#########################################################!
 SUBROUTINE Initialize_Derived_AMReX
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Derived Quantities. "
-END IF
-
+IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables.')
 
 
 IF ( DOMAIN_DIM == 1 ) THEN
@@ -198,6 +193,8 @@ Beta_Elem_Prob_Dim  = 3*Elem_Var_Dim
 
 NUM_OFF_DIAGONALS   = ULM_LENGTH*(DEGREE + 1) - 1
 
+
+lPF_Init_MTGV_Flags(iPF_Init_MTGV_Derived) = .TRUE.
 
 
 END SUBROUTINE Initialize_Derived_AMReX

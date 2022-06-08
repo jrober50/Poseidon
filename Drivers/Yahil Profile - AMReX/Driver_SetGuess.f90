@@ -23,17 +23,6 @@ MODULE Driver_SetGuess_Module                                                !##
 !           Dependencies            !
 !                                   !
 !===================================!
-
-
-USE Poseidon_Kinds_Module, &
-            ONLY :  idp
-
-USE Poseidon_Units_Module, &
-            ONLY :  C_Square
-
-USE Variables_Functions, &
-            ONLY :  Potential_Solution
-
 USE Poseidon_Initial_Guess_Module, &
             ONLY :  Poseidon_Initialize_Flat_Guess
 
@@ -54,6 +43,7 @@ SUBROUTINE Driver_SetGuess()
 
 
 CALL Poseidon_Initialize_Flat_Guess()
+
 
 END SUBROUTINE Driver_SetGuess
 

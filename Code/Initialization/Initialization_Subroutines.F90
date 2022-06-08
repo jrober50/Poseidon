@@ -26,9 +26,22 @@ MODULE Initialization_Subroutines                                            !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Numbers_Module, &
+            ONLY :  pi
+
+USE Poseidon_Units_Module, &
+            ONLY :  Centimeter,     &
+                    Meter,          &
+                    Kilometer
+
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
+
 USE Poseidon_Parameters, &
             ONLY :  Degree,                         &
+                    Degree_Default,                 &
                     L_Limit,                        &
+                    L_Limit_Default,                &
                     Verbose_Flag,                   &
                     Convergence_Criteria,           &
                     Convergence_Criteria_Default,   &
@@ -36,9 +49,19 @@ USE Poseidon_Parameters, &
                     Max_Iterations_Default
 
 USE Variables_Mesh, &
-            ONLY :  Num_R_Elements,         &
-                    Num_T_Elements,         &
-                    Num_P_Elements
+                ONLY :  Num_R_Elements,         &
+                        Num_T_Elements,         &
+                        Num_P_Elements,         &
+                        R_Inner,                &
+                        R_Outer,                &
+                        rlocs,                  &
+                        tlocs,                  &
+                        plocs,                  &
+                        drlocs,                 &
+                        dtlocs,                 &
+                        dplocs,                 &
+                        locs_Set,               &
+                        dlocs_Set
 
 USE Variables_IO, &
             ONLY :  File_Suffix
@@ -52,7 +75,8 @@ USE Variables_AMReX_Core, &
                     AMReX_Max_Level,        &
                     AMReX_Num_Levels,       &
                     iFRL,                   &
-                    iIRL
+                    iIRL,                   &
+                    MF_Source_nComps
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
@@ -73,13 +97,13 @@ USE Variables_Quadrature, &
 
 USE Variables_Interface, &
             ONLY :  Caller_Set,                 &
-                    Caller_nLevels,             &
                     Caller_NQ,                  &
                     Caller_Quad_DOF,            &
                     Caller_xL,                  &
                     Caller_RQ_xlocs,            &
                     Caller_TQ_xlocs,            &
                     Caller_PQ_xlocs,            &
+                    Caller_R_Units,             &
                     Translation_Matrix
 
 
@@ -92,7 +116,30 @@ USE Flags_IO_Module, &
                     iPF_IO_Write_Results,       &
                     iPF_IO_Print_Timetable,     &
                     iPF_IO_Write_Timetable,     &
-                    iPF_IO_Write_Sources
+                    iPF_IO_Write_Sources,       &
+                    iPF_IO_Print_Cond,          &
+                    iPF_IO_Write_Cond
+
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Flags,             &
+                    lPF_Init_AMReX_Flags,       &
+                    lPF_Init_Quad_Flags,        &
+                    lPF_Init_Mesh_Flags,        &
+                    iPF_Init_IO_Params,         &
+                    iPF_Init_FP_Params,         &
+                    iPF_Init_Caller_Vars,       &
+                    iPF_Init_Quad_Params,       &
+                    iPF_Init_MPI,               &
+                    iPF_Init_Expansion_Params,  &
+                    iPF_Init_AMReX_Params,      &
+                    iPF_Init_Mesh_Params,       &
+                    iPF_Init_Mesh_Init
+
+USE Variables_MPI, &
+            ONLY :  nProcs_Poseidon,        &
+                    myID_Poseidon,          &
+                    ierr
+
 
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
@@ -104,10 +151,47 @@ USE Functions_Translation_Matrix_Module, &
 USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
 
+USE Allocation_Mesh, &
+            ONLY :  Allocate_Mesh
+
+USE MPI
+
+
 IMPLICIT NONE
 
 
 CONTAINS
+ !+101+########################################################!
+!                                                               !
+!       Init_Expansion_Params                                   !
+!                                                               !
+ !#############################################################!
+SUBROUTINE Init_Expansion_Params(   Degree_Option,   &
+                                    L_Limit_Option   )
+
+INTEGER,            INTENT(IN), OPTIONAL               ::  Degree_Option
+INTEGER,            INTENT(IN), OPTIONAL               ::  L_Limit_Option
+
+IF ( Verbose_Flag ) CALL Init_Message('Setting Expansion Parameters.')
+
+IF ( PRESENT(Degree_Option) ) THEN
+    Degree = Degree_Option
+ELSE
+    Degree = Degree_Default
+END IF
+
+
+IF ( PRESENT(L_Limit_Option) ) THEN
+    L_Limit = L_Limit_Option
+ELSE
+    L_Limit = L_Limit_Default
+END IF
+
+
+lPF_Init_Flags(iPF_Init_Expansion_Params) = .TRUE.
+
+END SUBROUTINE Init_Expansion_Params
+
 
 
 
@@ -124,6 +208,8 @@ SUBROUTINE Init_IO_Params(  WriteAll_Option,            &
                             Print_Timetable_Option,     &
                             Write_Timetable_Option,     &
                             Write_Sources_Option,       &
+                            Print_Condition_Option,     &
+                            Write_Condition_Option,     &
                             Suffix_Flag_Option,         &
                             Suffix_Tail_Option,         &
                             Frame_Option                )
@@ -137,27 +223,34 @@ LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Results_Option
 LOGICAL,            INTENT(IN), OPTIONAL               ::  Print_Timetable_Option
 LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Timetable_Option
 LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Sources_Option
+LOGICAL,            INTENT(IN), OPTIONAL               ::  Print_Condition_Option
+LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Condition_Option
 
 CHARACTER(LEN=10),  INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
 CHARACTER(LEN=1),   INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
 INTEGER,            INTENT(IN), OPTIONAL               ::  Frame_Option
 
 
+IF ( Verbose_Flag ) CALL Init_Message('Setting IO Parameters.')
+
 
 IF ( Verbose_Flag ) THEN
     lPF_IO_Flags(iPF_IO_Verbose)        = .TRUE.
     lPF_IO_Flags(iPF_IO_Print_Setup)    = .TRUE.
     lPF_IO_Flags(iPF_IO_Print_Results)  = .TRUE.
+    lPF_IO_Flags(iPF_IO_Print_Cond)     = .TRUE.
 ELSE
     lPF_IO_Flags(iPF_IO_Verbose)        = .FALSE.
     lPF_IO_Flags(iPF_IO_Print_Setup)    = .FALSE.
     lPF_IO_Flags(iPF_IO_Print_Results)  = .FALSE.
+    lPF_IO_Flags(iPF_IO_Print_Cond)     = .FALSE.
 END IF
 
 
 
-
-
+!
+!   Setup
+!
 IF ( PRESENT(Print_Setup_Option) ) THEN
     IF ( Print_Setup_Option ) THEN
         lPF_IO_Flags(iPF_IO_Print_Setup) = .TRUE.
@@ -177,8 +270,9 @@ END IF
 
 
 
-
-
+!
+!   Results
+!
 IF ( PRESENT(Print_Results_Option) ) THEN
     IF ( Print_Results_Option ) THEN
         lPF_IO_Flags(iPF_IO_Print_Results) = .TRUE.
@@ -200,8 +294,9 @@ END IF
 
 
 
-
-
+!
+!   Timetable
+!
 IF ( PRESENT(Print_Timetable_Option) ) THEN
     IF ( Print_Timetable_Option ) THEN
         lPF_IO_Flags(iPF_IO_Print_Timetable) = .TRUE.
@@ -221,7 +316,33 @@ IF ( PRESENT(Write_Timetable_Option) ) THEN
 END IF
 
 
+!
+!   Condition Number
+!
+IF ( PRESENT(Print_Condition_Option) ) THEN
+    IF ( Print_Condition_Option ) THEN
+        lPF_IO_Flags(iPF_IO_Print_Cond) = .TRUE.
+    ELSE
+        lPF_IO_Flags(iPF_IO_Print_Cond) = .FALSE.
+    END IF
+END IF
 
+
+
+IF ( PRESENT(Write_Condition_Option) ) THEN
+    IF ( Write_Condition_Option ) THEN
+        lPF_IO_Flags(iPF_IO_Write_Cond) = .TRUE.
+    ELSE
+        lPF_IO_Flags(iPF_IO_Write_Cond) = .FALSE.
+    END IF
+END IF
+
+
+
+
+!
+!   Sources
+!
 IF ( PRESENT(Write_Sources_Option) ) THEN
     IF ( Write_Sources_Option ) THEN
         lPF_IO_Flags(iPF_IO_Write_Sources)  = .TRUE.
@@ -231,6 +352,13 @@ IF ( PRESENT(Write_Sources_Option) ) THEN
 END IF
 
 
+
+
+
+
+!
+!   Suffix
+!
 IF ( PRESENT(Suffix_Flag_Option) ) THEN
 
 
@@ -259,6 +387,8 @@ END IF
 
 
 
+lPF_Init_Flags(iPF_Init_IO_Params) = .TRUE.
+
 
 END SUBROUTINE Init_IO_Params
 
@@ -283,7 +413,7 @@ REAL(idp),               INTENT(IN), OPTIONAL               ::  Convergence_Crit
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Anderson_M_Option
 
 
-
+IF ( Verbose_Flag ) CALL Init_Message('Setting Fixed Point Parameters.')
 
 
 IF ( PRESENT( Max_Iterations_Option ) ) THEN
@@ -307,6 +437,9 @@ ELSE
 END IF
 
 
+lPF_Init_Flags(iPF_Init_FP_Params) = .TRUE.
+
+
 END SUBROUTINE Init_Fixed_Point_Params
 
 
@@ -318,55 +451,49 @@ END SUBROUTINE Init_Fixed_Point_Params
 !       Init_AMReX_Params                                                   !
 !                                                                           !
  !#########################################################################!
-SUBROUTINE Init_AMReX_Params(   AMReX_Max_Level_Option,             &
-                                AMReX_Max_Grid_Size_Option,         &
-                                AMReX_FEM_Refinement_Option,        &
-                                AMReX_Integral_Refinement_Option    )
+SUBROUTINE Init_AMReX_Params(   nCells_Option,          &
+                                Max_Level_Option,       &
+                                Max_Grid_Size_Option    )
+
+INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL       ::  nCells_Option
+INTEGER,                 INTENT(IN), OPTIONAL       ::  Max_Level_Option
+INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL       ::  Max_Grid_Size_Option
 
 
-INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Max_Level_Option
-INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  AMReX_Max_Grid_Size_Option
-INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_FEM_Refinement_Option
-INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Integral_Refinement_Option
+IF ( Verbose_Flag ) CALL Init_Message('Setting AMReX Parameters.')
 
-
-IF ( PRESENT(AMReX_Max_Level_Option) ) THEN
-    AMReX_Max_Level  = AMReX_Max_Level_Option
+IF ( PRESENT( Max_Level_Option ) ) THEN
+    AMReX_Max_Level  = Max_Level_Option
 ELSE
     AMReX_Max_Level  = 0
 END IF
 AMReX_Num_Levels = AMReX_Max_Level+1
 
 
-
-
-IF ( PRESENT(AMReX_Max_Level_Option) ) THEN
-    AMReX_Max_Grid_Size = AMReX_Max_Grid_Size_Option
+IF ( PRESENT( Max_Level_Option ) ) THEN
+    AMReX_Max_Grid_Size = Max_Grid_Size_Option
 ELSE
     AMReX_Max_Grid_Size = 4
 END IF
 
 
 
-IF ( PRESENT(AMReX_FEM_Refinement_Option) ) THEN
-    iFRL = AMReX_FEM_Refinement_Option
-ELSE
-    iFRL = AMReX_Max_Level
-END IF
+!IF ( PRESENT(AMReX_FEM_Refinement_Option) ) THEN
+!    iFRL = AMReX_FEM_Refinement_Option
+!ELSE
+!    iFRL = AMReX_Max_Level
+!END IF
+!
+!IF ( PRESENT(AMReX_Integral_Refinement_Option) ) THEN
+!    iIRL = AMReX_Integral_Refinement_Option
+!ELSE
+!    iIRL = AMReX_Max_Level
+!END IF
 
-IF ( PRESENT(AMReX_Integral_Refinement_Option) ) THEN
-    iIRL = AMReX_Integral_Refinement_Option
-ELSE
-    iIRL = AMReX_Max_Level
-END IF
+lPF_Init_AMReX_Flags(iPF_Init_AMReX_Params) = .TRUE.
 
 
 END SUBROUTINE Init_AMReX_Params
-
-
-
-
-
 
 
 
@@ -377,11 +504,118 @@ END SUBROUTINE Init_AMReX_Params
 !       Init_AMReX_Params                                                   !
 !                                                                           !
  !#########################################################################!
-SUBROUTINE Set_Caller_Quadrature( Source_NQ,        &
-                                  Source_xL,        &
-                                  Source_RQ_xlocs,  &
-                                  Source_TQ_xlocs,  &
-                                  Source_PQ_xlocs   )
+SUBROUTINE Init_Mesh_Params(    NE_Option,          &
+                                Inner_Edge_Option,  &
+                                Outer_Edge_Option,  &
+                                Radial_Units_Option )
+
+INTEGER,    DIMENSION(3),   INTENT(IN),     OPTIONAL    ::  NE_Option
+REAL(idp),  DIMENSION(3),   INTENT(IN),     OPTIONAL    ::  Inner_Edge_Option
+REAL(idp),  DIMENSION(3),   INTENT(IN),     OPTIONAL    ::  Outer_Edge_Option
+CHARACTER(LEN=2),           INTENT(IN),     OPTIONAL    ::  Radial_Units_Option
+
+IF ( Verbose_Flag ) CALL Init_Message('Setting Mesh Parameters.')
+
+IF ( PRESENT(NE_Option) ) THEN
+    Num_R_Elements = NE_Option(1)
+    Num_T_Elements = NE_Option(2)
+    Num_P_Elements = NE_Option(3)
+ELSE
+    Num_R_Elements = 1
+    Num_T_Elements = 1
+    Num_P_Elements = 1
+END IF
+
+
+IF ( PRESENT(Inner_Edge_Option) ) THEN
+    R_Inner = Inner_Edge_Option(1)
+ELSE
+    R_Inner = 0.0_idp
+END IF
+
+IF ( PRESENT(Outer_Edge_Option) ) THEN
+    R_Outer = Outer_Edge_Option(1)
+ELSE
+    R_Outer = 0.0_idp
+END IF
+
+
+
+lPF_Init_Mesh_Flags(iPF_Init_Mesh_Params) = .TRUE.
+
+
+END SUBROUTINE Init_Mesh_Params
+
+
+
+ !+102+####################################################################!
+!                                                                           !
+!       Init_Quad_Params                                                   !
+!                                                                           !
+ !#########################################################################!
+SUBROUTINE Init_Quad_Params(    NQ_Option   )
+
+INTEGER,    DIMENSION(3),   INTENT(IN),     OPTIONAL    ::  NQ_Option
+
+IF ( Verbose_Flag ) CALL Init_Message('Setting Quadrature Parameters.')
+
+IF ( PRESENT( NQ_Option ) ) THEN
+    Num_R_Quad_Points = NQ_Option(1)
+    Num_T_Quad_Points = NQ_Option(2)
+    Num_P_Quad_Points = NQ_Option(3)
+ELSE
+    Num_R_Quad_Points = 2*Degree + 2
+    Num_T_Quad_Points = 1
+    Num_P_Quad_Points = 2*L_Limit + 1
+END IF
+Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
+Local_Quad_DOF     = Num_R_Quad_Points*Num_TP_Quad_Points
+
+
+#ifdef POSEIDON_AMREX_FLAG
+MF_Source_nComps   = 5*Local_Quad_DOF
+#endif
+
+
+lPF_Init_Quad_Flags(iPF_Init_Quad_Params) = .TRUE.
+
+
+END SUBROUTINE Init_Quad_Params
+
+
+
+
+
+ !+102+####################################################################!
+!                                                                           !
+!       Init_MPI_Params                                                   !
+!                                                                           !
+ !#########################################################################!
+SUBROUTINE Init_MPI_Params(  )
+
+IF ( Verbose_Flag ) CALL Init_Message('Setting MPI Parameters.')
+
+CALL MPI_COMM_RANK(MPI_COMM_WORLD, myID_Poseidon, ierr)
+
+lPF_Init_Flags(iPF_Init_MPI) = .TRUE.
+
+END SUBROUTINE Init_MPI_Params
+
+
+
+
+ !+102+####################################################################!
+!                                                                           !
+!       Set_Caller_Quadrature                                                   !
+!                                                                           !
+ !#########################################################################!
+SUBROUTINE Set_Caller_Data( Source_NQ,          &
+                            Source_xL,          &
+                            Source_RQ_xlocs,    &
+                            Source_TQ_xlocs,    &
+                            Source_PQ_xlocs,    &
+                            Source_Units,       &
+                            Source_Radial_Boundary_Units )
 
 
 INTEGER,    DIMENSION(3),               INTENT(IN)      ::  Source_NQ
@@ -389,29 +623,14 @@ REAL(idp),  DIMENSION(2),               INTENT(IN)      ::  Source_xL
 REAL(idp),  DIMENSION(1:Source_NQ(1)),  INTENT(IN)      ::  Source_RQ_xlocs
 REAL(idp),  DIMENSION(1:Source_NQ(2)),  INTENT(IN)      ::  Source_TQ_xlocs
 REAL(idp),  DIMENSION(1:Source_NQ(3)),  INTENT(IN)      ::  Source_PQ_xlocs
+CHARACTER(LEN=1),                       INTENT(IN)      ::  Source_Units
+CHARACTER(LEN=2),                       INTENT(IN)      ::  Source_Radial_Boundary_Units
 
 
-INTEGER                                             ::  Local_R
-INTEGER                                             ::  Local_T
-INTEGER                                             ::  Local_P
-
-INTEGER                                             ::  Caller_T
-INTEGER                                             ::  Caller_P
-
-INTEGER                                             ::  Here
-INTEGER                                             ::  There
-INTEGER                                             ::  Local_Here
-
-REAL(idp),  DIMENSION( 1:Source_NQ(1) )              ::  Scaled_R_Quad
-REAL(idp),  DIMENSION( 1:Source_NQ(2) )              ::  Scaled_T_Quad
-REAL(idp),  DIMENSION( 1:Source_NQ(3) )              ::  Scaled_P_Quad
-
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  R_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  T_Lag_Poly_Values
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  P_Lag_Poly_Values
 
 
-Caller_nLevels = AMReX_Num_Levels
+IF ( Verbose_Flag ) CALL Init_Message('Setting Caller Parameters.')
+
 Caller_NQ = Source_NQ
 Caller_xL = Source_xL
 
@@ -429,24 +648,137 @@ Caller_Set = .TRUE.
 
 ALLOCATE( Translation_Matrix(1:Caller_Quad_DOF, 1:Local_Quad_DOF) )
 
-Translation_Matrix = Create_Translation_Matrix( Caller_NQ,          &
-                                                Caller_xL,          &
-                                                Caller_RQ_xlocs,    &
-                                                Caller_TQ_xlocs,    &
-                                                Caller_PQ_xlocs,    &
-                                                Caller_Quad_DOF,    &
-                                                [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
-                                                [xLeftLimit, xRightLimit ],            &
-                                                Int_R_Locations,      &
-                                                Int_R_Locations,      &
-                                                Int_R_Locations,      &
-                                                Local_Quad_DOF            )
 
 
 
 
-END SUBROUTINE Set_Caller_Quadrature
+IF ( Source_Radial_Boundary_Units == "cm" ) THEN
+    Caller_R_Units = Centimeter
+ELSE IF ( Source_Radial_Boundary_Units == "m" ) THEN
+    Caller_R_Units = Meter
+ELSE IF ( Source_Radial_Boundary_Units == "km" ) THEN
+    Caller_R_Units = Kilometer
+ELSE
+    Caller_R_Units = Centimeter
+END IF
 
+
+lPF_Init_Flags(iPF_Init_Caller_Vars) = .TRUE.
+
+END SUBROUTINE Set_Caller_Data
+
+
+
+
+ !+101+################################################################################!
+!                                                                                       !
+!       Initialize_Mesh                                                                 !
+!                                                                                       !
+ !#####################################################################################!
+SUBROUTINE Initialize_Mesh( NE_Option,                          &
+                            Domain_Edge_Option,                 &
+                            Radial_Boundary_Units_Option,       &
+                            r_Option, t_Option, p_Option,       &
+                            dr_Option, dt_Option, dp_Option     )
+
+INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  NE_Option
+CHARACTER(LEN=*),        INTENT(IN), OPTIONAL               ::  Radial_Boundary_Units_Option
+REAL(idp), DIMENSION(2), INTENT(IN), OPTIONAL               ::  Domain_Edge_Option
+
+REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  r_Option
+REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  t_Option
+REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  p_Option
+REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  dr_Option
+REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  dt_Option
+REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  dp_Option
+
+
+REAL(idp)                                                   ::  Caller_Units
+LOGICAL,    DIMENSION(3)                                    ::  Mesh_Set
+
+
+IF ( Verbose_Flag ) CALL Init_Message('Initializing Mesh Variables.')
+
+
+
+IF ( PRESENT( Radial_Boundary_Units_Option ) ) THEN
+    IF ( Radial_Boundary_Units_Option == "cm" ) THEN
+        Caller_Units = Centimeter
+    ELSE IF ( Radial_Boundary_Units_Option == "m" ) THEN
+        Caller_Units = Meter
+    ELSE IF ( Radial_Boundary_Units_Option == "km" ) THEN
+        Caller_Units = Kilometer
+    ELSE
+        Caller_Units = Centimeter
+    END IF
+ELSE
+    Caller_Units = Centimeter
+END IF
+
+
+IF ( PRESENT( Domain_Edge_Option ) ) THEN
+    R_Inner = Domain_Edge_Option(1)*Caller_Units
+    R_Outer = Domain_Edge_Option(2)*Caller_Units
+ELSE
+    R_Inner = 0.0_idp*Caller_Units
+    R_Outer = 1.0_idp*Caller_Units
+END IF
+
+CALL Init_Mesh_Params(  NE_Option,                      &
+                        [R_Inner, 0.0_idp, 0.0_idp],    &
+                        [R_Outer, pi, 2.0_idp*pi]       )
+
+
+
+CALL Allocate_Mesh()
+
+IF ( PRESENT( r_Option ) ) THEN
+    rlocs = r_Option*Caller_Units
+    Mesh_set(1) = .TRUE.
+END IF
+
+IF ( PRESENT( dr_Option ) ) THEN
+    drlocs = dr_Option*Caller_Units
+    dlocs_set(1) = .TRUE.
+END IF
+
+
+
+IF ( PRESENT( t_Option ) ) THEN
+    tlocs = t_Option
+    Mesh_set(2) = .TRUE.
+END IF
+
+IF ( PRESENT( dt_Option ) ) THEN
+    dtlocs = dt_Option
+    dlocs_set(2) = .TRUE.
+ELSE
+    dtlocs = pi/Num_T_Elements
+    dlocs_set(2) = .TRUE.
+END IF
+
+
+
+IF ( PRESENT( p_Option ) ) THEN
+    plocs = p_Option
+    Mesh_set(3) = .TRUE.
+END IF
+
+IF ( PRESENT( dp_Option ) ) THEN
+    dplocs = dp_Option
+    dlocs_set(3) = .TRUE.
+ELSE
+    dplocs = 2.0_idp*pi/Num_P_Elements
+    dlocs_set(3) = .TRUE.
+END IF
+
+
+IF (ALL(Mesh_Set) ) THEN
+    lPF_Init_Mesh_Flags(iPF_Init_Mesh_Init) = .TRUE.
+END IF
+
+
+END SUBROUTINE Initialize_Mesh
 
 
 

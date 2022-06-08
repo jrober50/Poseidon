@@ -105,7 +105,6 @@ REAL(idp), INTENT(OUT)                              ::  ADM_Curve
 
 
 INTEGER                                             ::  re, te, pe
-INTEGER                                             ::  rd, td, pd, tpd
 
 REAL(idp)                                           ::  DROT, DTOT, DPOT
 REAL(idp), DIMENSION(1:Num_R_Quad_Points)           ::  crlocs

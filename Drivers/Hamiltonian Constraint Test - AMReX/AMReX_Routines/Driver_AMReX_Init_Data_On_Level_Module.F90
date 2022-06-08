@@ -47,6 +47,9 @@ USE amrex_multifab_module,  ONLY: &
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Numbers_Module, &
+            ONLY :  pi
+
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
@@ -72,13 +75,12 @@ USE Variables_Quadrature, &
                     NUM_R_QUAD_POINTS,          &
                     NUM_T_QUAD_POINTS,          &
                     NUM_P_QUAD_POINTS,          &
-                    Num_Quad_DOF
+                    Local_Quad_DOF
 
 
-USE Variables_Yahil, &
-            ONLY :  SelfSim_T,              &
-                    SelfSim_Kappa,          &
-                    SelfSim_Gamma
+USE Variables_External, &
+            ONLY :  HCT_Alpha,                  &
+                    HCT_Star_Radius
 
 USE Poseidon_AMReX_Multilayer_Utilities_Module, &
             ONLY :  Find_Coarsest_Parent
@@ -99,7 +101,7 @@ USE Timer_VAriables_Module, &
 USE Variables_Functions, &
             ONLY :  Potential_Solution
 
-USE Quadrature_Mapping_Functions, &
+USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
 IMPLICIT NONE
@@ -140,41 +142,45 @@ INTEGER                                     ::  Num_DOF
 REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  cur_r_locs
 REAL(idp)                                   ::  DROT
 
+REAL(idp)                                   ::  fofalpha
+REAL(idp)                                   ::  rho_o
+INTEGER                                     ::  Here
 
 
 CALL TimerStart( Timer_Core_Init_Test_Problem )
 
 
 
-fofalpha            =  Alpha**5/(1.0_idp+Alpha*Alpha)**3
-rho_o               =  (3.0_idp/(2.0_idp*pi*Star_Radius*Star_Radius) )*fofalpha*fofalpha
+fofalpha            =  HCT_Alpha**5/(1.0_idp+HCT_Alpha*HCT_Alpha)**3
+rho_o               =  (3.0_idp/(2.0_idp*pi*HCT_Star_Radius*HCT_Star_Radius) )*fofalpha*fofalpha
 
 
 DROT = Level_dx(Level,1)/2.0_idp
 Num_DOF = nComps/5
 
+Src = 0.0_idp
+
 DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
 
-line_min = 1
 DO re = BLo(1),BHi(1)
 
     Cur_r_locs(:) = DROT * (Int_R_Locations(:) + 1.0_idp + re*2.0_idp)
     
 
-    DO pd = 1,NQ(3)
-    DO td = 1,NQ(2)
-    DO rd = 1,NQ(1)
+    DO pd = 1,Num_P_Quad_Points
+    DO td = 1,Num_T_Quad_Points
+    DO rd = 1,Num_R_Quad_Points
 
 
-        Here = (pd-1)*NQ(1)*NQ(2)       &
-             + (td-1)*NQ(1)             &
+        Here = (pd-1)*Num_R_Quad_Points*Num_T_Quad_Points       &
+             + (td-1)*Num_R_Quad_Points                         &
              + rd
 
-        IF ( cur_r_locs(rq) .LE. Star_Radius ) THEN
-            Local_E(re,te,pe,0*Num_DOF+Here) = rho_o
+        IF ( cur_r_locs(rd) .LE. HCT_Star_Radius ) THEN
+            Src(re,te,pe,Here) = rho_o
         ELSE
-            Local_E(Here, re-1, te-1, pe-1) = 0.0_idp
+            Src(re,te,pe,Here) = 0.0_idp
         END IF
 
     END DO ! rq

@@ -26,6 +26,9 @@ MODULE XCFC_Source_Vector_TypeB_Module                                          
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
+
 USE Poseidon_Numbers_Module, &
             ONLY :  pi,                         &
                     TwoPi
@@ -37,7 +40,8 @@ USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
                     NUM_CFA_EQs,                &
-                    NUM_CFA_VARs
+                    NUM_CFA_VARs,               &
+                    Verbose_Flag
 
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,                        &
@@ -51,6 +55,9 @@ USE Parameters_Variable_Indices, &
                     iVB_S,                       &
                     iVB_X
 
+USE Poseidon_IO_Parameters, &
+            ONLY :  CFA_VecVar_Names
+        
 
 USE Variables_Quadrature, &
             ONLY :  NUM_R_QUAD_POINTS,          &
@@ -108,7 +115,7 @@ USE XCFC_Functions_Calc_Values_Module, &
 USE XCFC_Functions_Physical_Source_Module, &
             ONLY :  Get_Physical_Source
 
-USE XCFC_Source_Variables_Module, &
+USE XCFC_Source_Routine_Variables_Module, &
             ONLY :  Cur_R_Locs,         &
                     Cur_T_Locs,         &
                     R_Square,           &
@@ -201,10 +208,16 @@ INTEGER, INTENT(IN)                     ::  iVB         ! Variable Array Referen
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU         ! Upper Element Triplet
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL         ! Lower Element Triplet
 
-
+CHARACTER(LEN = 300)                    ::  Message
 
 
 #ifdef POSEIDON_AMREX_FLAG
+
+    IF ( Verbose_Flag ) THEN
+        WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_VecVar_Names(iVB)),' Source Vector.'
+        CALL Run_Message(TRIM(Message))
+    END IF
+
 
     CALL XCFC_AMReX_Calc_Source_Vector_TypeB( iU, iVB )
 
@@ -212,6 +225,12 @@ INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL         ! Lower Element Triplet
 
     INTEGER, DIMENSION(3)           ::  iE
     INTEGER                         ::  re, te, pe
+
+
+    IF ( Verbose_Flag ) THEN
+        WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_VecVar_Names(iVB)),' Source Vector.'
+        CALL Run_Message(TRIM(Message))
+    END IF
 
     FP_Source_Vector_B(:,iVB) = 0.0_idp
     DO re = iEL(1),iEU(1)

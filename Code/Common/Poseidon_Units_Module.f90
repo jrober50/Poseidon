@@ -64,8 +64,6 @@ SUBROUTINE Set_Units( Units_Flag )
 
 CHARACTER(LEN = 1)                          :: Units_Flag
 
-
-
 IF ( Units_Flag == "C" ) THEN
 !   CGS (centimeter-gram-second ) system
 !

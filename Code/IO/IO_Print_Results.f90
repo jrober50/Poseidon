@@ -51,7 +51,9 @@ USE Variables_Derived, &
 USE Variables_Poisson, &
             ONLY :  Coefficient_Vector
 
-
+USE Variables_MPI, &
+            ONLY :  myID_Poseidon,      &
+                    MasterID_Poseidon
 
 USE Variables_Functions, &
             ONLY :  Calc_3D_Values_At_Location
@@ -133,86 +135,89 @@ INTEGER                                                 ::  Num_Samples = 20
 211 FORMAT (4X,A16,7X,A16,7X,A16)
 212 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15)
 
-CALL TimerStart( Timer_Core_PrintResults )
+
+IF ( myID_Poseidon == MasterID_Poseidon ) THEN
+    CALL TimerStart( Timer_Core_PrintResults )
 
 
-ALLOCATE( x_e(0:Num_Samples) )
-ALLOCATE( x_c(1:Num_Samples) )
-ALLOCATE( dx_c(1:Num_Samples) )
+    ALLOCATE( x_e(0:Num_Samples) )
+    ALLOCATE( x_c(1:Num_Samples) )
+    ALLOCATE( dx_c(1:Num_Samples) )
 
-IF ( R_Outer - R_Inner > 1000.0_idp ) THEN
-    Call Create_Logarithmic_1D_Mesh( R_Inner,           &
-                                     R_Outer,           &
-                                     Num_Samples,       &
-                                     x_e, x_c, dx_c     )
-ELSE
+    IF ( R_Outer - R_Inner > 1000.0_idp ) THEN
+        Call Create_Logarithmic_1D_Mesh( R_Inner,           &
+                                         R_Outer,           &
+                                         Num_Samples,       &
+                                         x_e, x_c, dx_c     )
+    ELSE
 
-    CALL Create_Uniform_1D_Mesh( R_Inner, R_Outer, Num_Samples, x_e, x_c, dx_c )
+        CALL Create_Uniform_1D_Mesh( R_Inner, R_Outer, Num_Samples, x_e, x_c, dx_c )
 
-END IF
-
-
-theta = 0.5_idp * pi
-phi = 0.5_idp * pi
+    END IF
 
 
-WRITE(*,'(A,F4.2,A,F4.2,A)')"Results taken along ray, theta = ",theta/pi," Pi Radians, Phi = ",phi/pi," Pi Radians"
+    theta = 0.5_idp * pi
+    phi = 0.5_idp * pi
 
 
-
-IF ( Poisson_Mode ) THEN
-
-
-    WRITE(*,210)"r","Code Results","Lapse Function"
-    WRITE(*,211)"----------------","----------------","----------------"
-
-    DO i = 0,NUM_SAMPLES
-
-        Potential =  Calculate_Potential_At_Location( x_e(i) )
-
-        Return_Psi = 1.0_idp    &
-                    - 0.5_idp*Potential/C_Square
-
-        WRITE(*,212)x_e(i)/Centimeter,potential,Return_Psi
-
-
-    END DO
-
-ELSE
-
-    WRITE(*,110)"r","Psi","AlphaPsi","Beta1 Value","Beta2 Value","Beta3 Value"
-
-
-    DO i = 0,Num_Samples
-
-        r = x_e(i)
+    WRITE(*,'(A,F4.2,A,F4.2,A)')"Results taken along ray, theta = ",theta/pi," Pi Radians, Phi = ",phi/pi," Pi Radians"
 
 
 
-        CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
-                                        Return_Psi, Return_AlphaPsi,                &
-                                        Return_Beta1, Return_Beta2, Return_Beta3    )
+    IF ( Poisson_Mode ) THEN
 
 
-        Potential = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+        WRITE(*,210)"r","Code Results","Lapse Function"
+        WRITE(*,211)"----------------","----------------","----------------"
 
-!        WRITE(*,212)x_e(i)/Centimeter,potential,Return_Psi
+        DO i = 0,NUM_SAMPLES
 
+            Potential =  Calculate_Potential_At_Location( x_e(i) )
 
-        WRITE(*,111) r/Centimeter,              &
-                     Return_Psi,                &
-                     Return_AlphaPsi,           &
-                     Return_Beta1/Shift_Units,  &
-                     Return_Beta2,              &
-                     Return_Beta3
+            Return_Psi = 1.0_idp    &
+                        - 0.5_idp*Potential/C_Square
 
-    END DO
-
-END IF ! Poisson_Mode
+            WRITE(*,212)x_e(i)/Centimeter,potential,Return_Psi
 
 
-CALL TimerStop( Timer_Core_PrintResults )
+        END DO
 
+    ELSE
+
+        WRITE(*,110)"r","Psi","AlphaPsi","Beta1 Value","Beta2 Value","Beta3 Value"
+
+
+        DO i = 0,Num_Samples
+
+            r = x_e(i)
+
+
+
+            CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+                                            Return_Psi, Return_AlphaPsi,                &
+                                            Return_Beta1, Return_Beta2, Return_Beta3    )
+
+
+            Potential = 2.0_idp*C_Square*(1.0_idp - Return_Psi)
+
+    !        WRITE(*,212)x_e(i)/Centimeter,potential,Return_Psi
+
+
+            WRITE(*,111) r/Centimeter,              &
+                         Return_Psi,                &
+                         Return_AlphaPsi,           &
+                         Return_Beta1/Shift_Units,  &
+                         Return_Beta2,              &
+                         Return_Beta3
+
+        END DO
+
+    END IF ! Poisson_Mode
+
+
+    CALL TimerStop( Timer_Core_PrintResults )
+
+END IF ! myID_Poseidon == MasterID_Poseidon
 
 END SUBROUTINE Print_Results
 

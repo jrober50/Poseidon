@@ -59,9 +59,6 @@ USE Variables_Derived, &
                             Elem_Prob_Dim_Sqr,      &
                             Num_Off_Diagonals
 
-USE Variables_MPI, &
-                    ONLY :  NUM_R_ELEMS_PER_BLOCK
-
 
 USE Poseidon_File_Routines_Module, &
                     ONLY :  Open_New_File,                  &
@@ -105,7 +102,7 @@ fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 
 WRITE(FILE_NAMEb,100) Poseidon_LinSys_Dir,"LAP_MAT_DIM_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAMEb, FILE_ID, 300 )
-WRITE(FILE_ID,*) NUM_R_ELEMS_PER_BLOCK,NUM_OFF_DIAGONALS, DEGREE, L_LIMIT
+WRITE(FILE_ID,*) Num_R_Elements,NUM_OFF_DIAGONALS, DEGREE, L_LIMIT
 CLOSE(FILE_ID)
 
 
@@ -134,7 +131,7 @@ END SUBROUTINE OUTPUT_LAPLACE_MATRIX
 !################################################################################!
 SUBROUTINE OUTPUT_JACOBIAN_MATRIX( Matrix )
 
-COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:NUM_R_ELEMS_PER_BLOCK-1), INTENT(IN) :: Matrix
+COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(IN) :: Matrix
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 61)                                     ::  FILE_NAMEb
@@ -151,7 +148,7 @@ fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 
 WRITE(FILE_NAMEb,100) Poseidon_LinSys_Dir,"STF_MAT_DIM_F",Poseidon_Frame,"_I",CUR_ITERATION,".out"
 CALL OPEN_NEW_FILE( FILE_NAMEb, FILE_ID, 400 )
-WRITE(FILE_ID,*) NUM_R_ELEMS_PER_BLOCK,DEGREE,L_LIMIT
+WRITE(FILE_ID,*) Num_R_Elements,DEGREE,L_LIMIT
 CLOSE(FILE_ID)
 
 
@@ -161,7 +158,7 @@ CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 400 )
 PRINT*,"Writing Jacobian Matrix to file: ", File_Name
 
 
-DO re = 0,NUM_R_ELEMS_PER_BLOCK-1
+DO re = 0,Num_R_Elements-1
     DO e = 0,ELEM_PROB_DIM_SQR-1
         WRITE(FILE_ID,fmt) Matrix(e,re)
 !        WRITE(*,*) Matrix(e,re)
@@ -468,54 +465,6 @@ END SUBROUTINE OUTPUT_NODE_MESH
 
 
 
-
-
-
-
-
-
-
-!!+403+###########################################################################!
-!!                                                                                !
-!!                   OUTPUT_Beta_MATRIX                                       !
-!!                                                                                !
-!!################################################################################!
-!SUBROUTINE OUTPUT_Beta_MATRIX( Matrix )
-!
-!COMPLEX(idp), DIMENSION(1:Beta_Prob_Dim, 1:Beta_Prob_Dim), INTENT(IN) :: Matrix
-!
-!CHARACTER(LEN = 57)                                     ::  FILE_NAME
-!CHARACTER(LEN = 61)                                     ::  FILE_NAMEb
-!CHARACTER(LEN = 40)                                     ::  fmt
-!
-!
-!INTEGER                                                 ::  FILE_ID
-!INTEGEr                                                 ::  re,e
-!
-!100 FORMAT (A,A,I2.2,A,I2.2,A)
-!116 FORMAT (A,A,A,A)
-!
-!fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
-!
-!
-!WRITE(File_Nameb,116) Poseidon_LinSys_Dir,"Beta_Mat_DIM_",TRIM(File_Suffix),".out"
-!CALL OPEN_NEW_FILE( FILE_NAMEb, FILE_ID, 400 )
-!WRITE(FILE_ID,*) NUM_R_ELEMS_PER_BLOCK,DEGREE,L_LIMIT
-!CLOSE(FILE_ID)
-!
-!WRITE(File_Name,116) Poseidon_LinSys_Dir,"Beta_Mat_",TRIM(File_Suffix),".out"
-!CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 400 )
-!
-!PRINT*,"Writing Beta Matrix to file: ", File_Name
-!
-!
-!DO e = 0,ELEM_PROB_DIM_SQR-1
-!        WRITE(FILE_ID,fmt) Matrix(:,e)
-!END DO
-!
-!CLOSE(FILE_ID)
-!
-!END SUBROUTINE OUTPUT_Beta_MATRIX
 
 
 

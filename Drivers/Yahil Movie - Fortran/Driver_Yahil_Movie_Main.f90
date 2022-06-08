@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-PROGRAM MVL_Driver                                                                  !##!
+PROGRAM Yahil_Movie                                                                 !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
@@ -27,7 +27,6 @@ USE Poseidon_Units_Module, &
 USE Initialization_Poseidon, &
             ONLY :  Initialize_Poseidon
 
-
 USE Variables_IO, &
             ONLY :  Write_Results_R_Samps,      &
                     Write_Results_T_Samps,      &
@@ -35,23 +34,11 @@ USE Variables_IO, &
                     Report_Flags,               &
                     iRF_Time
 
-
 USE Variables_MPI, &
             ONLY :  ierr
 
-
-USE Parameters_Variable_Indices, &
-            ONLY :  iVB_X,                      &
-                    iVB_S,                      &
-                    iU_CF,                      &
-                    iU_LF,                      &
-                    iU_S1,                      &
-                    iU_S2,                      &
-                    iU_S3,                      &
-                    iU_X1,                      &
-                    iU_X2,                      &
-                    iU_X3
-
+USE Variables_External, &
+            ONLY :  SelfSim_V_Switch
 
 USE Functions_Mesh, &
             ONLY :  Create_3D_Mesh
@@ -86,9 +73,6 @@ USE Driver_SetBC_Module, &
 USE Driver_SetGuess_Module, &
             ONLY :  Driver_SetGuess
 
-USE Timer_IO_Module, &
-            ONLY :  Output_Time_Report
-
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
                     TimerStop
@@ -100,8 +84,7 @@ USE Timer_Variables_Module, &
                     Timer_Driver_Run,           &
                     Timer_Driver_Extra
 
-USE IO_Print_Results, &
-            ONLY :  Print_Single_Var_Results
+
 
 USE MPI
 
@@ -124,6 +107,8 @@ INTEGER, DIMENSION(3)                                   ::  NQ
 REAL(idp), DIMENSION(2)                                 ::  Domain_Edge
 INTEGER                                                 ::  Num_DOF
 
+INTEGER                                                 ::  Ylm_L_Limit
+INTEGER                                                 ::  FEM_Degree
 
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  dx_c, dy_c, dz_c
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_e, y_e, z_e
@@ -134,46 +119,25 @@ LOGICAL                                                 ::  Print_Results_Flag
 
 INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
-
-
-
 CHARACTER(LEN=10)                                       ::  Suffix_Input
 CHARACTER(LEN=1)                                        ::  Suffix_Tail
 
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Cur_R_Locs
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_T_Quad
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_P_Quad
 REAL(idp)                                               ::  Left_Limit
 REAL(idp)                                               ::  Right_Limit
 
-INTEGER                                                 ::  i
-
 INTEGER                                                 ::  myID
-
-INTEGER                                                 ::  re
-INTEGER                                                 ::  rq
-
 
 INTEGER                                                 ::  Guess_Type
 
-INTEGER, DIMENSION(:), ALLOCATABLE                      ::  RE_Table
-
-INTEGER                                                 ::  RE_Index
-INTEGER                                                 ::  RE_Index_Min
-INTEGER                                                 ::  RE_Index_Max
-
-INTEGER                                                 ::  Degree_Input
-INTEGER                                                 ::  Degree_Min
-INTEGER                                                 ::  Degree_Max
-
-INTEGER                                                 ::  L_Limit_Input
-INTEGER                                                 ::  L_Limit_Min
-INTEGER                                                 ::  L_Limit_Max
-
-INTEGER                                                 ::  M_Index
-INTEGER                                                 ::  M_Index_Min
-INTEGER                                                 ::  M_Index_Max
+INTEGER                                                 ::  T_Index
+REAL(idp)                                               ::  Time_Start
+REAL(idp)                                               ::  Time_Stop
+INTEGER                                                 ::  Time_Steps
+REAL(idp)                                               ::  dt
+REAL(idp)                                               ::  Time
 
 REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
@@ -185,10 +149,12 @@ REAL(idp)                                               ::  CC_Option
 REAL(idp)                                               ::  Perturbation
 REAL(idp)                                               ::  Offset
 
+REAL(idp), DIMENSION(4)                                 ::  Yahil_Params
 
-INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
+INTEGER                                                 ::  Anderson_M_Value
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
-INTEGER, DIMENSION(1:2)                                 ::  L_Values
+
+
 
 REAL(idp)                                               ::  ADM_Mass
 REAL(idp)                                               ::  ADM_MassB
@@ -202,7 +168,7 @@ REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Output_Kij
 CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
 
-ALLOCATE( RE_Table(1:9) )
+
 
 
 
@@ -211,182 +177,180 @@ ALLOCATE( RE_Table(1:9) )
 !#                      Test Parameters                     #!
 !#                                                          #!
 !############################################################!
-Units_Input         = "U"
+Units_Input         = "G"
 Solver_Type         = 3
 
+Time_Start          = 15.0 ! ms
+Time_Stop           = 0.015  ! ms
+Time_Steps          = 240
 
-RE_Table            = (/ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 /)
-Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-L_Values            = (/ 5, 10 /)
-
-RE_Index_Min        =  1
-RE_Index_Max        =  10
-
-Degree_Min          =  1
-Degree_Max          =  4
-
-M_Index_Min         =  3
-M_Index_Max         =  3
-
-L_Limit_Min         =  0
-L_Limit_Max         =  0
+FEM_Degree          = 1
+Ylm_L_Limit         = 0
 
 
-
-Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
-Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
-
-Kappa               = 953946015514834.4
-Gamma               = 1.30_idp
-
-!Suffix_Tail         = "A"
-!Convergence_Criteria = 1.0E-8_idp
-
-Dimension_Input     = 3
-
-Max_Iterations      = 10
-CC_Option           = 1.0E-10_idp
-
-Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
-Domain_Edge(1)      = 1.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 2.0_idp                   ! Outer Radius (cm)
-
-
-
-NE(1)               = 128 ! 1.5*128                       ! Number of Radial Elements
+NE(1)               = 256 ! 1.5*128            ! Number of Radial Elements
 NE(2)               = 1                        ! Number of Theta Elements
 NE(3)               = 1                        ! Number of Phi Elements
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
 NQ(2)               = 1                        ! Number of Theta Quadrature Points
-NQ(3)               = 1                         ! Number of Phi Quadrature Points
+NQ(3)               = 2*Ylm_L_Limit + 1        ! Number of Phi Quadrature Points
+Num_DOF             = NQ(1)*NQ(2)*NQ(3)
 
 
 !Verbose             = .TRUE.
 Verbose             = .FALSE.
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
-Suffix_Input        = "Params"
-
-CFA_Eqs = (/ 0, 0, 0, 0, 0 /)
 
 
-Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
+Anderson_M_Value    =  3
+AMReX_Levels        =  0
+
+
+Mesh_Type           = 2                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
+Domain_Edge(2)      = 1E9_idp                   ! Outer Radius (cm)
+
+
+Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
+Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
+
+
+Kappa               = 953946015514834.4
+Gamma               = 1.30_idp
+SelfSim_V_Switch    =  0
+
+
+Dimension_Input     = 3
+
+Max_Iterations      = 20
+CC_Option           = 1.0E-15_idp
+
+
+CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
+
+Suffix_Input    = "Frame"
+!Suffix_Input    = "Params"
+Suffix_Tail     = Letter_Table(1)
+Letter_Table    = (/ "A","B","C","D","E","F","G","H","I","J" /)
 
 
 Write_Results_R_Samps = 256
 Write_Results_T_Samps = 1
 
+
 CALL Set_Units(Units_Input)
 
 
-Domain_Edge(2) = Domain_Edge(2)/(10**i)
 Domain_Edge = Domain_Edge*Centimeter
 
 
-DO M_Index = M_Index_Min, M_Index_Max
-DO RE_Index = RE_Index_Min, RE_Index_Max
-DO Degree_Input = Degree_Min, Degree_Max
-DO L_Limit_Input = L_Limit_Min, L_Limit_Max
-
-    
-    IF ( Mesh_Type == 6 ) THEN
-        NE(1) = INT(RE_Table(RE_Index)*(1.0_idp + REAL((AMReX_Levels-1),idp)/2.0_idp))
-    ELSE
-        NE(1) = RE_Table(RE_Index)
-    END IF
-    NQ(3) = 2*L_Limit_Input + 1
-
-    Suffix_Tail = Letter_Table(Mesh_Type)
+ALLOCATE( Input_R_Quad(1:NQ(1)) )
+ALLOCATE( Input_T_Quad(1:NQ(2)) )
+ALLOCATE( Input_P_Quad(1:NQ(3)) )
 
 
-    Num_DOF = NQ(1)*NQ(2)*NQ(3)
-
-    ALLOCATE( Cur_R_Locs(1:NQ(1)) )
-    ALLOCATE( Input_R_Quad(1:NQ(1)) )
-    ALLOCATE( Input_T_Quad(1:NQ(2)) )
-    ALLOCATE( Input_P_Quad(1:NQ(3)) )
-
-    ALLOCATE( x_e(0:NE(1)), y_e(0:NE(2)), z_e(0:NE(3)) )
-    ALLOCATE( x_c(1:NE(1)), y_c(1:NE(2)), z_c(1:NE(3)) )
-    ALLOCATE( dx_c(1:NE(1)) )
-    ALLOCATE( dy_c(1:NE(2)) )
-    ALLOCATE( dz_c(1:NE(3)) )
-
-    ALLOCATE( Output_Kij(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3),1:6) )
+ALLOCATE( x_e(0:NE(1)), y_e(0:NE(2)), z_e(0:NE(3)) )
+ALLOCATE( x_c(1:NE(1)), y_c(1:NE(2)), z_c(1:NE(3)) )
+ALLOCATE( dx_c(1:NE(1)) )
+ALLOCATE( dy_c(1:NE(2)) )
+ALLOCATE( dz_c(1:NE(3)) )
 
 
+Input_R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
+Input_T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
+Input_P_Quad = Initialize_LG_Quadrature_Locations(NQ(3))
 
-    Input_R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
-    Input_T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
-    Input_P_Quad = Initialize_LG_Quadrature_Locations(NQ(3))
+Left_Limit  = -0.50_idp
+Right_Limit = +0.50_idp
 
-    Left_Limit  = -0.50_idp
-    Right_Limit = +0.50_idp
-
-    Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
-    Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
-    Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
-
-
-    CALL Create_3D_Mesh( Mesh_Type,         &
-                        Domain_Edge(1),    &
-                        Domain_Edge(2),    &
-                        NE(1),             &
-                        NE(2),             &
-                        NE(3),             &
-                        x_e, x_c, dx_c,    &
-                        y_e, y_c, dy_c,    &
-                        z_e, z_c, dz_c,     &
-                        Zoom = 1.032034864238313_idp,   &
-                        Levels_In = AMReX_Levels       )
+Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
+Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
+Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
 
-!    PRINT*,x_E
+CALL Create_3D_Mesh( Mesh_Type,         &
+                    Domain_Edge(1),    &
+                    Domain_Edge(2),    &
+                    NE(1),             &
+                    NE(2),             &
+                    NE(3),             &
+                    x_e, x_c, dx_c,    &
+                    y_e, y_c, dy_c,    &
+                    z_e, z_c, dz_c,     &
+                    Zoom = 1.032034864238313_idp,   &
+                    Levels_In = AMReX_Levels       )
 
-    !############################################################!
-    !#                                                          #!
-    !#                   Initialize Poseidon                    #!
-    !#                                                          #!
-    !############################################################!
+
+
+
+
+
+
+
+
+
+
+!############################################################!
+!#                                                          #!
+!#                   Initialize Poseidon                    #!
+!#                                                          #!
+!############################################################!
+
+
+
+
+
+
+
+
+!############################################################!
+!#                                                          #!
+!#                    Start Time Stepping                   #!
+!#                                                          #!
+!############################################################!
+IF (Time_Steps == 0 ) THEN
+    dt = 0.0_idp
+ELSE
+    dt = (Time_Stop - Time_Start)/(Time_Steps-1)
+END IF
+
+
+DO T_Index = 1,Time_Steps
+    Time = Time_Start + (T_Index-1)*dt
+    WRITE(*,'(A,I2.2,A,F4.2)') "Starting Loop ",T_Index," at time, ",Time
+
+
+
 
     CALL Initialize_Poseidon &
-       (   Dimensions_Option            = Dimension_Input,              &
-           FEM_Degree_Option            = Degree_Input,                 &
-           L_Limit_Option               = L_Limit_Input,                &
-           Source_NE                    = NE,                           &
-           Domain_Edge_Option           = Domain_Edge,                  &
-           Source_NQ                    = NQ,                           &
-           Source_xL                    = [Left_Limit, Right_Limit],    &
-           Source_RQ_xlocs              = Input_R_Quad,                 &
-           Source_TQ_xlocs              = Input_T_Quad,                 &
-           Source_PQ_xlocs              = Input_P_Quad,                 &
-           Source_Units                 = Units_Input,                  &
-           Source_Radial_Boundary_Units = "cm",                         &
-           Integration_NQ_Option        = NQ,                           &
-           Source_R_Option              = x_e,                          &
-           Source_T_Option              = y_e,                          &
-           Source_P_Option              = z_e,                          &
-           Method_Flag_Option           = Solver_Type,                  &
-           CFA_Eq_Flags_Option          = CFA_Eqs,                      &
-           Max_Iterations_Option        = Max_Iterations,               &
-           Convergence_Criteria_Option  = CC_Option,                    &
-           Anderson_M_Option            = Anderson_M_Values(M_Index),   &
-           Verbose_Option               = Verbose,                      &
-           WriteAll_Option              = .FALSE.,                      &
-           Print_Setup_Option           = .FALSE.,                       &
-           Write_Setup_Option           = .TRUE.,                       &
-           Print_Results_Option         = Print_Results_Flag,           &
-           Write_Results_Option         = .TRUE.,                       &
-           Print_Timetable_Option       = .FALSE.,                      &
-           Write_Timetable_Option       = .TRUE.,                       &
-           Write_Sources_Option         = .TRUE.,                       &
-           Print_Condition_Option       = .FALSE.,                       &
-           Write_Condition_Option       = .TRUE.,                       &
-           Suffix_Flag_Option           = Suffix_Input,                 &
-           Suffix_Tail_Option           = Suffix_Tail                   )
-
-
+    (   Dimensions_Option           = Dimension_Input,               &
+        FEM_Degree_Option           = FEM_Degree,                    &
+        L_Limit_Option              = YLM_L_Limit,                   &
+        Units_Option                = Units_Input,                   &
+        Domain_Edge_Option          = Domain_Edge,                   &
+        NE_Option                   = NE,                            &
+        NQ_Option                   = NQ,                            &
+        r_Option                    = x_e,                           &
+        t_Option                    = y_e,                           &
+        p_Option                    = z_e,                           &
+        Suffix_Flag_Option          = Suffix_Input,                  &
+        Frame_Option                = T_Index,                       &
+        Method_Flag_Option          = Solver_Type,                   &
+        CFA_Eq_Flags_Option         = CFA_Eqs,                       &
+        Max_Iterations_Option       = Max_Iterations,                &
+        Convergence_Criteria_Option = CC_Option,                     &
+        Anderson_M_Option           = Anderson_M_Value,              &
+        Verbose_Option              = Verbose,                       &
+        WriteAll_Option             = .FALSE.,                       &
+        Print_Setup_Option          = .TRUE.,                        &
+        Write_Setup_Option          = .FALSE.,                       &
+        Print_Results_Option        = Print_Results_Flag,            &
+        Write_Results_Option        = .TRUE.,                        &
+        Print_Timetable_Option      = .FALSE.,                       &
+        Write_Timetable_Option      = .FALSE.,                       &
+        Write_Sources_Option        = .FALSE.                        )
 
 
     !############################################################!
@@ -394,8 +358,10 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
+
     CALL TimerStart( Timer_Driver_SetSource )
 
+    Yahil_Params = [Time, Kappa, Gamma, 0.0_idp]
     CALL Driver_SetSource(  NE, NQ,             &
                             dx_c, x_e, y_e,     &
                             Input_R_Quad,       &
@@ -403,7 +369,9 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                             Input_P_Quad,       &
                             Left_Limit,         &
                             Right_Limit,        &
-                            myID                )
+                            Solver_Type,        &
+                            myID,               &
+                            Yahil_Params        )
 
     CALL TimerStop( Timer_Driver_SetSource )
 
@@ -417,7 +385,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !############################################################!
     CALL TimerStart( Timer_Driver_SetBC )
 
-    CALL Driver_SetBC( NE, x_e, i )
+    CALL Driver_SetBC( NE, x_e )
 
     CALL TimerStop( Timer_Driver_SetBC )
 
@@ -455,14 +423,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     Call Poseidon_Run()
 
-
     CALL TimerStop( Timer_Driver_Run )
 
-    CALL TimerStart( Timer_Driver_Extra  )
-
-!    CALL Poseidon_Calc_ADM_Mass( ADM_Mass )
-!    CALL Poseidon_Calc_ADM_Mass_Parts( ADM_MassB, ADM_Phys, ADM_Curve)
-!    CALL Poseidon_Calc_Komar_Mass( Komar_Mass )
     
 
 
@@ -471,18 +433,17 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                       Output Results                     #!
     !#                                                          #!
     !############################################################!
+    CALL TimerStart( Timer_Driver_Extra  )
     IF ((Print_Results_Flag .EQV. .TRUE.) .OR. (Verbose .EQV. .TRUE. )) THEN
         WRITE(*,'(A)')" Final Results "
-
-        CALL Print_Single_Var_Results( iU_X1, iVB_X )
-
+        
+        CALL Print_Results()
+        CALL Write_Final_Results()
 
     END IF
 
-    CALL Write_Final_Results(CFA_Eq_Overide = (/ 1, 1, 1, 1, 1 /))
-
-
     CALL TimerStop( Timer_Driver_Extra )
+
 
 
 
@@ -494,26 +455,22 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                      Close Poseidon                      #!
     !#                                                          #!
     !############################################################!
-
     CALL Poseidon_Close()
 
-    DEALLOCATE( Cur_R_Locs )
-    DEALLOCATE( Input_R_Quad )
-    DEALLOCATE( Input_T_Quad )
-    DEALLOCATE( Input_P_Quad )
-    DEALLOCATE( x_e, y_e, z_e )
-    DEALLOCATE( x_c, y_c, z_c )
-    DEALLOCATE( dx_c, dy_c, dz_c )
-
-    DEALLOCATE( Output_Kij )
-
-END DO ! L_Limit
-END DO ! Degree_Index
-END DO ! RE_Index
-END DO ! M_Index
 
 
 
+END DO ! T_Index
+
+
+
+
+DEALLOCATE( Input_R_Quad )
+DEALLOCATE( Input_T_Quad )
+DEALLOCATE( Input_P_Quad )
+DEALLOCATE( x_e, y_e, z_e )
+DEALLOCATE( x_c, y_c, z_c )
+DEALLOCATE( dx_c, dy_c, dz_c )
 
 CALL MPI_FINALIZE(ierr)
 
@@ -524,7 +481,7 @@ CONTAINS
 
 
 
-END PROGRAM MVL_Driver
+END PROGRAM Yahil_Movie
 
 
 

@@ -57,7 +57,6 @@ USE Variables_Quadrature, &
 
 USE Variables_Interface, &
             ONLY :  Caller_Set,                     &
-                    Caller_nLevels,                 &
                     Caller_NQ,                      &
                     Caller_Quad_DOF,                &
                     Caller_xL,                      &

@@ -27,26 +27,30 @@ USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
 USE Poseidon_Parameters, &
-            ONLY :  Method_Flag
+            ONLY :  Method_Flag,                &
+                    Verbose_Flag
 
 USE IG_Input_Native_Module, &
             ONLY :  IG_Input_Native
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
+
 USE Variables_Mesh, &
-        ONLY :  NUM_R_ELEMENTS,             &
-                NUM_T_ELEMENTS,             &
-                NUM_P_ELEMENTS
+            ONLY :  NUM_R_ELEMENTS,             &
+                    NUM_T_ELEMENTS,             &
+                    NUM_P_ELEMENTS
 
 USE Variables_Quadrature, &
-        ONLY :  NUM_R_QUAD_POINTS,          &
-                NUM_T_QUAD_POINTS,          &
-                NUM_P_QUAD_POINTS,         &
-                INT_R_LOCATIONS,            &
-                INT_T_LOCATIONS,            &
-                INT_P_LOCATIONS,            &
-                Local_Quad_DOF,             &
-                xLeftLimit,                 &
-                xRightLimit
+            ONLY :  NUM_R_QUAD_POINTS,          &
+                    NUM_T_QUAD_POINTS,          &
+                    NUM_P_QUAD_POINTS,         &
+                    INT_R_LOCATIONS,            &
+                    INT_T_LOCATIONS,            &
+                    INT_P_LOCATIONS,            &
+                    Local_Quad_DOF,             &
+                    xLeftLimit,                 &
+                    xRightLimit
 
 IMPLICIT NONE
 
@@ -72,6 +76,7 @@ REAL(idp)                                               :: Left_Limit
 REAL(idp)                                               :: Right_Limit
 INTEGER                                                 :: Num_DOF
 
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing flat space guess.')
 
 
 Num_DOF =NUM_R_QUAD_POINTS*NUM_T_QUAD_POINTS*NUM_P_QUAD_POINTS

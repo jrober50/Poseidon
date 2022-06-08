@@ -30,8 +30,10 @@ IMPLICIT NONE
 
 
 INTEGER, PUBLIC                     ::  DOMAIN_DIM
-INTEGER, PUBLIC                     ::  DEGREE
-INTEGER, PUBLIC                     ::  L_LIMIT
+INTEGER, PUBLIC                     ::  Degree
+INTEGER, PUBLIC, PARAMETER          ::  Degree_Default = 1
+INTEGER, PUBLIC                     ::  L_Limit
+INTEGER, PUBLIC, PARAMETER          ::  L_Limit_Default = 0
 
 INTEGER, PUBLIC                     ::  NUM_CFA_VARS = 5
 INTEGER, PUBLIC                     ::  NUM_CFA_EQs

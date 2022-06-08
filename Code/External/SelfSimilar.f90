@@ -28,6 +28,9 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi, eps
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
+
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
@@ -156,9 +159,7 @@ INTEGER                                     :: nread
 INTEGER                                     :: istat
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Yahil Sources. "
-END IF
+IF ( Verbose_Flag ) CALL Init_Message('Initializing Yahil profile variables.')
 CALL TimerStart( Timer_Core_Init_Test_Problem )
 
 

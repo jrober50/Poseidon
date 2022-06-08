@@ -86,9 +86,6 @@ USE Variables_Mesh, &
 USE Variables_IO, &
             ONLY :  Write_Flags,            &
                     Report_IDs,             &
-                    Iter_Time_Table,        &
-                    Frame_Time_Table,       &
-                    Run_Time_Table,         &
                     Write_Results_R_Samps,  &
                     Write_Results_T_Samps,  &
                     Write_Results_P_Samps,  &

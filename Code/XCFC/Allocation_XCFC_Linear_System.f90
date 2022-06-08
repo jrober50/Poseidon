@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Allocation_XCFC                                                                !##!
+MODULE Allocation_XCFC_Linear_Systems                                               !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -12,8 +12,8 @@ MODULE Allocation_XCFC                                                          
 !##!                                                                                !##!
 !##!    Contains:                                                                   !##!
 !##!                                                                                !##!
-!##!    +101+   Allocate_Poseidon_FP_Variables                                      !##!
-!##!    +102+   Deallocate_Poseidon_FP_Variables                                    !##!
+!##!    +101+   Allocate_XCFC_Linear_Systems                                        !##!
+!##!    +102+   Deallocate_XCFC_Linear_Systems                                      !##!
 !##!                                                                                !##!
 !######################################################################################!
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
@@ -65,9 +65,6 @@ USE Variables_FP, &
                     FP_Laplace_Vector,      &
                     FP_Laplace_Vector_Beta, &
                     FP_Laplace_Vector_X,    &
-                    FP_Residual_Vector,     &
-                    FP_Residual_Vector_Beta,&
-                    FP_Residual_Vector_X,   &
                     Matrix_Format,          &
                     Num_Matrices,           &
                     First_Column_Storage,   &
@@ -75,22 +72,21 @@ USE Variables_FP, &
                     First_Column_Beta_Storage,   &
                     Last_Column_Beta_Storage
 
-
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Flags,         &
+                    iPF_Init_Alloc_LinSys
 
 
 IMPLICIT NONE
 
 
 CONTAINS
-
-
-
-!+101+###########################################################################!
-!                                                                                !
-!                            Allocate_Poseidon_Variables                         !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Allocate_XCFC()
+ !+101+####################################################!
+!                                                           !
+!          Allocate_Poseidon_Variables                      !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Allocate_XCFC_Linear_Systems()
 
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
@@ -128,21 +124,11 @@ ALLOCATE( FP_Source_Vector_B(1:Beta_Prob_Dim,1:2) )
 ALLOCATE( FP_Coeff_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
 ALLOCATE( FP_Coeff_Vector_B(1:Beta_Prob_Dim,1:2) )
 
-ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:8)  )
+ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
 
-ALLOCATE( FP_Laplace_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)  )
-ALLOCATE( FP_Laplace_Vector_Beta(1:Beta_Prob_Dim)  )
-ALLOCATE( FP_Laplace_Vector_X(1:Beta_Prob_Dim)  )
+lPF_Init_Flags(iPF_Init_Alloc_LinSys) = .TRUE.
 
-ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
-ALLOCATE( FP_Residual_Vector_Beta(1:Beta_Prob_Dim)  )
-ALLOCATE( FP_Residual_Vector_X(1:Beta_Prob_Dim)  )
-
-!ALLOCATE( FP_Coeff_Vector(1:Prob_Dim) )
-!ALLOCATE( FP_Update_Vector(1:Prob_Dim) )
-
-
-END SUBROUTINE Allocate_XCFC
+END SUBROUTINE Allocate_XCFC_Linear_Systems
 
 
 
@@ -154,12 +140,12 @@ END SUBROUTINE Allocate_XCFC
 
 
 
-!+102+###########################################################################!
-!                                                                                !
-!                           Deallocate_Poseidon_Variables                        !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Deallocate_XCFC()
+ !+102+####################################################!
+!                                                           !
+!          Deallocate_XCFC_Linear_Systems                   !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Deallocate_XCFC_Linear_Systems()
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
     DEALLOCATE( Laplace_Matrix_Full )
@@ -192,18 +178,10 @@ DEALLOCATE( FP_Coeff_Vector_A )
 DEALLOCATE( FP_Coeff_Vector_B )
 
 DEALLOCATE( FP_Update_Vector )
-DEALLOCATE( FP_Laplace_Vector )
-DEALLOCATE( FP_Laplace_Vector_Beta )
-DEALLOCATE( FP_Laplace_Vector_X )
 
-DEALLOCATE( FP_Residual_Vector )
-DEALLOCATE( FP_Residual_Vector_Beta )
-DEALLOCATE( FP_Residual_Vector_X )
+lPF_Init_Flags(iPF_Init_Alloc_LinSys) = .FALSE.
 
-
-
-
-END SUBROUTINE Deallocate_XCFC
+END SUBROUTINE Deallocate_XCFC_Linear_Systems
 
 
 
@@ -211,5 +189,5 @@ END SUBROUTINE Deallocate_XCFC
 
 
 
-END MODULE Allocation_XCFC
+END MODULE Allocation_XCFC_Linear_Systems
 

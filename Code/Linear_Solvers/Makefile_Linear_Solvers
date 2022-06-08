@@ -1,6 +1,5 @@
 LINEAR_SOLVERS = \
    Poseidon_Linear_Solvers.f90   \
-   Poseidon_PETSc_Solver.F90     \
    Poseidon_Preconditioners.f90  \
 
 

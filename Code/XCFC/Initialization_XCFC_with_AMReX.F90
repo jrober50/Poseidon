@@ -43,7 +43,8 @@ USE amrex_multifab_module,  ONLY: &
   amrex_mfiter_build, &
   amrex_mfiter_destroy
 
-
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
 
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
@@ -90,8 +91,8 @@ USE Variables_FP, &
                     Beta_Diagonals,             &
                     Beta_Bandwidth
 
-USE Allocation_XCFC, &
-            ONLY :  Allocate_XCFC
+USE Allocation_XCFC_Linear_Systems, &
+            ONLY :  Allocate_XCFC_Linear_Systems
 
 USE Allocation_Mesh, &
             ONLY :  Allocate_Mesh
@@ -136,6 +137,11 @@ USE Return_Functions_FP, &
             ONLY :  Calc_Var_At_Location_Type_A,    &
                     Calc_Var_At_Location_Type_B
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Flags,     &
+                    iPF_Init_Method_Vars
+
+
 IMPLICIT NONE
 
 
@@ -152,64 +158,68 @@ SUBROUTINE  Initialization_XCFC_with_AMReX( )
 
 
 ! Determine Radial Base Variables from Multifab
-IF ( Verbose_Flag ) THEN
-    PRINT*,"In Initialization_XCFC_with_AMReX"
+IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
+    
+
+
+    IF ( Verbose_Flag ) CALL Init_Message('Initializing XCFC system with AMReX.')
+
+    CALL TimerStart(Timer_Initialization_XCFC)
+
+
+    CALL Initialize_AMReX_Maps()
+
+
+    IF ( Verbose_Flag ) THEN
+        CALL PRINT_AMReX_Setup()
+    END IF
+
+    Num_R_Elements = iNumLeafElements
+
+
+
+    ! Determine Derived Varaibles
+    Num_R_Nodes         = DEGREE*NUM_R_ELEMENTS + 1
+    Num_R_Nodesp1       = Num_R_Nodes + 1
+
+
+    VAR_DIM             = LM_LENGTH*NUM_R_NODES
+    PROB_DIM            = NUM_CFA_VARS*VAR_DIM
+    Beta_Prob_Dim       = 3*Var_Dim
+    Beta_Diagonals = Beta_Elem_Prob_Dim-1
+    Beta_Bandwidth = 2*Beta_Diagonals+1
+
+    Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
+
+
+    CALL Allocate_Mesh()
+    CALL Determine_AMReX_Mesh()
+
+    ! Allocate Arrays
+    CALL Allocate_XCFC_Linear_Systems()
+
+
+    ! Construct Matrices
+    CALL TimerStart( Timer_XCFC_Matrix_Init )
+    CALL Initialize_FP_Matrices()
+    CALL TimerStop( Timer_XCFC_Matrix_Init )
+
+
+
+
+    Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
+    Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
+
+
+
+
+
+
+    CALL TimerStop(Timer_Initialization_XCFC)
+
+
+    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
 END IF
-
-
-CALL TimerStart(Timer_Initialization_XCFC)
-
-
-CALL Initialize_AMReX_Maps()
-
-
-IF ( Verbose_Flag ) THEN
-    CALL PRINT_AMReX_Setup()
-END IF
-
-Num_R_Elements = iNumLeafElements
-
-
-
-! Determine Derived Varaibles
-Num_R_Nodes         = DEGREE*NUM_R_ELEMENTS + 1
-Num_R_Nodesp1       = Num_R_Nodes + 1
-
-
-VAR_DIM             = LM_LENGTH*NUM_R_NODES
-PROB_DIM            = NUM_CFA_VARS*VAR_DIM
-Beta_Prob_Dim       = 3*Var_Dim
-Beta_Diagonals = Beta_Elem_Prob_Dim-1
-Beta_Bandwidth = 2*Beta_Diagonals+1
-
-Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-
-
-CALL Allocate_Mesh()
-CALL Determine_AMReX_Mesh()
-
-! Allocate Arrays
-CALL Allocate_XCFC()
-
-
-! Construct Matrices
-CALL TimerStart( Timer_XCFC_Matrix_Init )
-CALL Initialize_FP_Matrices()
-CALL TimerStop( Timer_XCFC_Matrix_Init )
-
-
-
-
-Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
-Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
-
-
-
-
-
-
-CALL TimerStop(Timer_Initialization_XCFC)
-
 
 END SUBROUTINE  Initialization_XCFC_with_AMReX
 

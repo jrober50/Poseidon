@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE XCFC_Source_Variables_Module                                          !##!
+MODULE XCFC_Source_Routine_Variables_Module                                  !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -88,7 +88,7 @@ CONTAINS
 !           Allocate_Master_Build_Variables                                      !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Allocate_XCFC_Source_Variables()
+SUBROUTINE Allocate_XCFC_Source_Routine_Variables()
 
 ALLOCATE( CUR_R_LOCS(1:NUM_R_QUAD_POINTS) )
 ALLOCATE( CUR_T_LOCS(1:NUM_T_QUAD_POINTS) )
@@ -134,7 +134,7 @@ ALLOCATE( CUR_DRV_X(1:NUM_TP_QUAD_POINTS, 1:NUM_R_QUAD_POINTS, 1:3, 1:3) )
 
 ALLOCATE( SourceTerm( 1:NUM_TP_QUAD_POINTS, 1:NUM_R_QUAD_POINTS, 1:8 ) )
 
-END SUBROUTINE Allocate_XCFC_Source_Variables
+END SUBROUTINE Allocate_XCFC_Source_Routine_Variables
 
 
 
@@ -143,7 +143,7 @@ END SUBROUTINE Allocate_XCFC_Source_Variables
 !           Deallocate_Master_Build_Variables                                    !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Deallocate_XCFC_Source_Variables()
+SUBROUTINE Deallocate_XCFC_Source_Routine_Variables()
 
 DEALLOCATE( CUR_R_LOCS )
 DEALLOCATE( CUR_T_LOCS )
@@ -185,6 +185,6 @@ DEALLOCATE( CUR_DRV_X )
 
 DEALLOCATE( SourceTerm )
 
-END SUBROUTINE Deallocate_XCFC_Source_Variables
+END SUBROUTINE Deallocate_XCFC_Source_Routine_Variables
 
-END MODULE XCFC_Source_Variables_Module
+END MODULE XCFC_Source_Routine_Variables_Module

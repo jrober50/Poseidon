@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Flags_Check_Routines                                           	     !##!
+MODULE Poseidon_Message_Routines_Module                                      !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -23,12 +23,7 @@ MODULE Flags_Check_Routines                                           	     !##!
 !           Dependencies            !
 !                                   !
 !===================================!
-USE Poseidon_Parameters, &
-            ONLY :  Verbose_Flag
 
-
-USE Flags_Initialization_Module, &
-            ONLY :  Poseidon_Initialization_Check
 
 IMPLICIT NONE
 
@@ -37,90 +32,61 @@ CONTAINS
 
 
 
-!+101+####################################################!
+ !+101+####################################################!
 !                                                           !
-!          Poseidon_Run_Check                               !
-!                                                           !
-!#########################################################!
-LOGICAL FUNCTION Poseidon_Run_Check()
-
-LOGICAL, DIMENSION(1:4)             ::  Flags
-
-Flags = [   Poseidon_Initialization_Check(),        &
-            Poseidon_Source_Input_Check(),          &
-            Poseidon_Boundary_Condition_Check(),    &
-            Poseidon_Guess_Check()                  ]
-
-IF ( ALL(Flags) ) THEN
-    Poseidon_Run_Check = .TRUE.
-    IF ( Verbose_Flag ) THEN
-        WRITE(*,'(A)') "Poseidon Run Check :  Passed."
-    END IF
-ELSE
-    Poseidon_Run_Check = .FALSE.
-    STOP "Poseidon Run Check : Failed."
-END IF
-
-
-END FUNCTION Poseidon_Run_Check
-
-
-
-
-
-
-
- !+103+####################################################!
-!                                                           !
-!          Poseidon_Source_Input_Check                      !
+!       Initialization_Message   	                        !
 !                                                           !
  !#########################################################!
-LOGICAL FUNCTION Poseidon_Source_Input_Check()
+SUBROUTINE Init_Message( Message )
 
-IF ( .TRUE. ) THEN
-    Poseidon_Source_Input_Check = .TRUE.
-ELSE
-    Poseidon_Source_Input_Check = .FALSE.
-END IF
+CHARACTER(LEN=*), INTENT(IN)    :: Message
 
-END FUNCTION Poseidon_Source_Input_Check
+WRITE(*,'(A,A)')'Poseidon Initialization : ',Message
 
+END SUBROUTINE Init_Message
 
-
- !+103+####################################################!
+ !+201+####################################################!
 !                                                           !
-!          Poseidon_Boundary_Condition_Check                !
+!       Run_Message                                         !
 !                                                           !
  !#########################################################!
-LOGICAL FUNCTION Poseidon_Boundary_Condition_Check()
+SUBROUTINE Run_Message( Message )
 
-IF ( .TRUE. ) THEN
-    Poseidon_Boundary_Condition_Check = .TRUE.
-ELSE
-    Poseidon_Boundary_Condition_Check = .FALSE.
-END IF
+CHARACTER(LEN=*), INTENT(IN)    :: Message
 
-END FUNCTION Poseidon_Boundary_Condition_Check
+WRITE(*,'(A,A)')'Poseidon Running : ',Message
+
+END SUBROUTINE Run_Message
 
 
-
-
- !+103+####################################################!
+ !+301+####################################################!
 !                                                           !
-!          Poseidon_Boundary_Condition_Check                !
+!       Warning_Message                                     !
 !                                                           !
  !#########################################################!
-LOGICAL FUNCTION Poseidon_Guess_Check()
+SUBROUTINE Warning_Message( Message )
 
-IF ( .TRUE. ) THEN
-    Poseidon_Guess_Check = .TRUE.
-ELSE
-    Poseidon_Guess_Check = .FALSE.
-END IF
+CHARACTER(LEN=*), INTENT(IN)    :: Message
 
-END FUNCTION Poseidon_Guess_Check
+WRITE(*,'(A,A)')'POSEIDON WARNING : ',Message
+
+END SUBROUTINE Warning_Message
 
 
 
+ !+301+####################################################!
+!                                                           !
+!       Driver_Init_Message                                 !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Driver_Init_Message( Message )
 
-END MODULE Flags_Check_Routines
+CHARACTER(LEN=*), INTENT(IN)    :: Message
+
+WRITE(*,'(A,A)')'Poseidon Driver Initialization : ',Message
+
+END SUBROUTINE Driver_Init_Message
+
+
+
+END MODULE Poseidon_Message_Routines_Module

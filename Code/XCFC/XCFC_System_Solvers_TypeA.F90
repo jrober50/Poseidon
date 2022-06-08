@@ -26,6 +26,9 @@ MODULE XCFC_System_Solvers_TypeA_Module                                      !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
+
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
@@ -34,6 +37,8 @@ USE Poseidon_Parameters, &
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,                      &
                     iU_LF
+USE Poseidon_IO_Parameters, &
+            ONLY :  CFA_Var_Names
 
 USE Variables_Derived, &
             ONLY :  Beta_Prob_Dim,              &
@@ -112,18 +117,11 @@ INTEGER                                                         ::  lm_loc, ierr
 INTEGER                                                         ::  Lower_Limit
 INTEGER                                                         ::  Upper_Limit
 
-
+CHARACTER(LEN = 300)                    ::  Message
 
 IF ( Verbose_Flag ) THEN
-    IF( iU == iU_CF ) THEN
-        WRITE(*,'(A)')"--In XCFC Iteration, Begining Conformal Factor System Solve.", myID_Poseidon
-    ELSE IF ( iU == iU_LF ) THEN
-        WRITE(*,'(A)')"--In XCFC Iteration, Begining Lapse Function System Solve."
-    ELSE
-        WRITE(*,'(A)')"Incompatable iU value passed to XCFC_Solve_System_TypeA."
-        WRITE(*,'(A,3I3.3)')"iU value received ",iU
-        WRITE(*,'(A)')"iU must be 1 or 2."
-    END IF
+    WRITE(Message,'(A,A,A)')'Beginning ',TRIM(CFA_Var_Names(iU)),' Linear Solve.'
+    CALL Run_Message(TRIM(Message))
 END IF
 
 
@@ -140,7 +138,7 @@ IF ( MCF_Flag == 0 ) THEN
 
     CALL Cholesky_Factorization()
     MCF_Flag = 1
-
+    
 END IF
 
 

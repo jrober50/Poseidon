@@ -26,6 +26,10 @@ MODULE XCFC_Fixed_Point_Module                                               !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message,        &
+                    Warning_Message
+
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag,       &
                     Max_Iterations,     &
@@ -42,6 +46,9 @@ USE Parameters_Variable_Indices, &
                     iU_X3,                       &
                     iVB_S,                       &
                     iVB_X
+
+USE Poseidon_IO_Parameters, &
+            ONLY :  CFA_Var_Names
 
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS,             &
@@ -116,6 +123,19 @@ COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Work
 
 INTEGER                                                 ::  Cur_Iteration
 LOGICAL                                                 ::  CONVERGED
+
+CHARACTER(LEN = 300)                                ::  Message
+
+
+IF ( Verbose_Flag ) THEN
+    WRITE(Message,'(A,A,A)')'Beginning ',TRIM(CFA_Var_Names(iU)),' fixed point iterations.'
+    CALL Run_Message(TRIM(Message))
+END IF
+
+
+
+
+
 M = FP_Anderson_M
 LWORK = 2*M
 
@@ -130,9 +150,15 @@ CALL XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
 Cur_Iteration = 0
 CONVERGED     = .FALSE.
 DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
-
-
     Cur_Iteration = Cur_Iteration+1
+
+    IF ( Verbose_Flag ) THEN
+        WRITE(Message,'(A,A,A,I2.2,A)')'Starting ',TRIM(CFA_Var_Names(iU)),' Iteration ',Cur_Iteration,'.'
+        CALL Run_Message(TRIM(Message))
+    END IF
+
+
+    
     mk = MIN(Cur_Iteration, M)
 
 
@@ -221,7 +247,9 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
     IF ( Verbose_Flag ) THEN
-        WRITE(*,'(A,1X,I3.3,/)') "End of Iteration",Cur_Iteration
+        WRITE(Message,'(A,A,A,I2.2,A)')'Ending ',TRIM(CFA_Var_Names(iU)),' Iteration ',Cur_Iteration,'.'
+        CALL Run_Message(TRIM(Message))
+        WRITE(*,'()')
     END IF
 
 
@@ -267,15 +295,20 @@ COMPLEX(idp),DIMENSION(Var_Dim), INTENT(IN)         :: Update
 INTEGER,                         INTENT(IN)         :: Iter
 LOGICAL,                         INTENT(INOUT)      :: Flag
 
+CHARACTER(LEN = 300)                                ::  Message
 
 
 IF ( Verbose_Flag ) THEN
-    PRINT*,"L_Inf(FVectorM) = ",MAXVAL(ABS(Update))
+    WRITE(Message,'(A,ES22.15,A)')'Maximum change in the coefficient vector : ',MAXVAL(ABS(Update)),'.'
+    CALL Run_Message(TRIM(Message))
 END IF
+
+
 
 IF ( ALL( ABS( Update ) <= Convergence_Criteria ) ) THEN
     IF ( Verbose_Flag ) THEN
-        PRINT*,"The Method has converged. The absolute update is less than the tolerance set. "
+        CALL Run_Message("The Method has converged.")
+        CALL Run_Message("The absolute update is less than the tolerance set. ")
     END IF
     Flag = .TRUE.
     
@@ -283,7 +316,7 @@ END IF
 
 
 IF ( Iter == Max_Iterations ) THEN
-    PRINT*,"FP_Accelerated has reached the maximum number of allowed iterations. "
+    CALL Warning_Message('FP_Accelerated has reached the maximum number of allowed iterations.')
     Flag = .TRUE.
 END IF
 

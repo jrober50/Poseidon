@@ -80,21 +80,18 @@ USE Functions_Mesh, &
             ONLY :  Generate_Defined_Mesh
                     
 
-USE Allocation_Core, &
-            ONLY :  Deallocate_Poseidon_CFA_Variables
+USE Allocation_Sources, &
+            ONLY :  Deallocate_Poseidon_Source_Variables
 
 USE Allocation_Poisson, &
             ONLY :  Deallocate_Poseidon_Poisson_Variables
 
 
-USE XCFC_Source_Variables_Module, &
-            ONLY :  Deallocate_XCFC_Source_Variables
+USE XCFC_Source_Routine_Variables_Module, &
+            ONLY :  Deallocate_XCFC_Source_Routine_Variables
 
 USE Poisson_Main_Module, &
             ONLY :  Poisson_Solve
-
-!USE CFA_Newton_Raphson_3D_Module, &
-!            ONLY :  CFA_Newton_Raphson_3D
 
 USE FP_AndersonM_Module, &
             ONLY : Fixed_Point_AndersonM
@@ -117,14 +114,17 @@ USE Allocation_Tables, &
 USE Allocation_FP, &
             ONLY : Deallocate_FP
 
-USE Allocation_XCFC, &
-            ONLY : Deallocate_XCFC
+USE Allocation_XCFC_Linear_Systems, &
+            ONLY : Deallocate_XCFC_Linear_Systems
 
 USE Allocation_SelfSimilar, &
             ONLY : Deallocate_SelfSim
 
 USE Timer_Routines_Module, &
             ONLY : Finalize_Timers
+
+USE IO_Print_Results, &
+            ONLY :  Print_Results
 
 USE Flags_Main_Module, &
             ONLY : Poseidon_Clear_All_Flags
@@ -133,6 +133,10 @@ USE Flags_Boundary_Conditions_Module, &
             ONLY :  lPF_BC_Flags,           &
                     iPF_BC_Outer_Set,       &
                     iPF_BC_Inner_Set
+
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,           &
+                    iPF_IO_Print_Results
 
 USE Flags_Check_Routines, &
             ONLY :  Poseidon_Run_Check
@@ -203,6 +207,11 @@ Poseidon_Frame = Poseidon_Frame + 1
 
 
 
+IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
+    Call Print_Results()
+END IF
+
+
 
 END SUBROUTINE Poseidon_Run
 
@@ -245,8 +254,8 @@ IF ( Poisson_Mode ) THEN
 
 ELSE
     !!!!  Deallocate Data Space !!!!
-    CALL Deallocate_Poseidon_CFA_Variables
-    Call Deallocate_XCFC_Source_Variables
+    CALL Deallocate_Poseidon_Source_Variables
+    Call Deallocate_XCFC_Source_Routine_Variables
 
     CALL Deallocate_Quadrature()
     CALL Deallocate_Tables()
@@ -260,7 +269,7 @@ ELSE
     ELSE IF ( Method_Flag == 2 ) THEN
         CALL Deallocate_FP
     ELSE IF ( Method_Flag == 3 ) THEN
-        CALL Deallocate_XCFC
+        CALL Deallocate_XCFC_Linear_Systems
     END IF
 
 END IF

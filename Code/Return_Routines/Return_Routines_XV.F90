@@ -92,8 +92,7 @@ USE Initialization_Tables, &
 
 
 USE Variables_Interface, &
-            ONLY :  Caller_nLevels,                 &
-                    Caller_NQ,                      &
+            ONLY :  Caller_NQ,                      &
                     Caller_Quad_DOF,                     &
                     Caller_xL,                      &
                     Caller_RQ_xlocs,                &
@@ -302,7 +301,7 @@ SUBROUTINE Poseidon_Return_XV_AMReX_Caller( MF_Results )
 
 
 
-TYPE(amrex_multifab),   INTENT(INOUT)               ::  MF_Results(0:Caller_nLevels-1)
+TYPE(amrex_multifab),   INTENT(INOUT)               ::  MF_Results(0:AMReX_Num_Levels-1)
 
 
 
@@ -322,7 +321,7 @@ DO iU = iU_X1,iU_X3
                                         Caller_PQ_xlocs,    &
                                         Caller_xL(1),       &
                                         Caller_xL(2),       &
-                                        Caller_nLevels,     &
+                                        AMReX_Num_Levels,   &
                                         MF_Results          )
 END DO
 

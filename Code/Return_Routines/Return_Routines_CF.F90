@@ -48,13 +48,15 @@ USE Variables_Mesh, &
 
 
 USE Variables_Interface, &
-            ONLY :  Caller_nLevels,                 &
-                    Caller_NQ,                      &
+            ONLY :  Caller_NQ,                      &
                     Caller_Quad_DOF,                &
                     Caller_xL,                      &
                     Caller_RQ_xlocs,                &
                     Caller_TQ_xlocs,                &
                     Caller_PQ_xlocs
+
+USE Variables_AMReX_Core, &
+            ONLY :  AMReX_Num_Levels
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -220,7 +222,7 @@ END SUBROUTINE Poseidon_Return_CF_AMReX
 !###########################################################################################!
 SUBROUTINE Poseidon_Return_CF_AMReX_Caller( MF_Results )
 
-TYPE(amrex_multifab),   INTENT(INOUT)           ::  MF_Results(0:Caller_nLevels-1)
+TYPE(amrex_multifab),   INTENT(INOUT)           ::  MF_Results(0:AMReX_Num_Levels-1)
 
 
 
@@ -230,13 +232,13 @@ INTEGER                                                         ::  iU
 iU = iU_CF
 
 CALL Poseidon_Return_AMReX_Type_A(  iU,                     &
-                                    Caller_NQ,                      &
-                                    Caller_RQ_xlocs,                &
-                                    Caller_TQ_xlocs,                &
-                                    Caller_PQ_xlocs,                &
-                                    Caller_xL(1),                   &
-                                    Caller_xL(2),                   &
-                                    Caller_nLevels,                 &
+                                    Caller_NQ,              &
+                                    Caller_RQ_xlocs,        &
+                                    Caller_TQ_xlocs,        &
+                                    Caller_PQ_xlocs,        &
+                                    Caller_xL(1),           &
+                                    Caller_xL(2),           &
+                                    AMReX_Num_Levels,       &
                                     MF_Results              )
 
 END SUBROUTINE Poseidon_Return_CF_AMReX_Caller

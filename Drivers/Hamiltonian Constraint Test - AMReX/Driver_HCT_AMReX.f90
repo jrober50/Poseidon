@@ -45,12 +45,8 @@ USE Functions_Mesh, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations
 
-USE Functions_Mapping, &
+USE Maps_X_Space, &
            ONLY :  Map_From_X_Space
-
-USE Poseidon_IO_Module, &
-           ONLY :  Open_Run_Report_File,       &
-                   Output_Poseidon_Sources_3D
 
 USE IO_Print_Results, &
            ONLY :  Print_Results
@@ -69,9 +65,6 @@ USE Driver_SetBC_Module, &
 
 USE Driver_SetGuess_Module, &
             ONLY:  Driver_SetGuess
-
-USE FP_IO_Module, &
-            ONLY :  Output_FP_Timetable
 
 USE Poseidon_AMReX_Input_Parsing_Module, &
             ONLY : Init_AMReX_Parameters
@@ -250,9 +243,9 @@ Dimension_Input     = 3
 Max_Iterations      = 10
 CC_Option           = 1.0E-10_idp
 
-Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 1
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
+Domain_Edge(2)      = 8.0_idp * Star_Radius     ! Outer Radius (cm)
 
 
 NE(1)               = 128                      ! Number of Radial Elements
@@ -336,7 +329,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-    CALL Open_Run_Report_File()
 
 
     CALL Create_3D_Mesh( Mesh_Type,         &
@@ -357,18 +349,15 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     CALL Initialize_Poseidon_with_AMReX &
-       (    FEM_Degree_Option                   = Degree_Input,         &
-            L_Limit_Option                      = L_Limit_Input,        &
-            Units_Option                        = Units_Input,          &
-            Domain_Edge_Option                  = Domain_Edge,          &
-            Coarse_NE_Option                    = NE,                   &
-            NQ_Option                           = NQ,                   &
-            Max_Iterations_Option               = Max_Iterations,       &
-            Convergence_Criteria_Option         = CC_Option,            &
-            Anderson_M_Option                   = Anderson_M_Values(M_Index),   &
+       (    Source_NQ                           = NQ,                   &
+            Source_xL                           = [Left_Limit, Right_Limit],    &
+            Source_RQ_xlocs                     = Input_R_Quad,         &
+            Source_TQ_xlocs                     = Input_T_Quad,         &
+            Source_PQ_xlocs                     = Input_P_Quad,         &
+            Source_Units                        = Units_Input,          &
+            Source_Radial_Boundary_Units        = "cm",                 &
+            Integration_NQ_Option               = NQ,                   &
             CFA_Eq_Flags_Option                 = CFA_Eqs,              &
-            AMReX_Max_Levels_Option             = nlevels-1,            &
-            AMReX_Max_Grid_Size_Option          = MaxGridSizeX,         &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
             Poisson_Mode_Option                 = .FALSE.,              &
@@ -381,8 +370,10 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             Print_Timetable_Option              = .TRUE.,               &
             Write_Timetable_Option              = .TRUE.,               &
             Write_Sources_Option                = .FALSE.,              &
-            Suffix_Flag_Option                   = Suffix_Input,        &
-            Suffix_Tail_Option                   = Suffix_Tail          )
+            Print_Condition_Option              = .TRUE.,               &
+            Write_Condition_Option              = .TRUE.,               &
+            Suffix_Flag_Option                  = Suffix_Input,         &
+            Suffix_Tail_Option                  = Suffix_Tail           )
 
 
 
@@ -391,7 +382,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
-    CALL Driver_SetSource( )
+    CALL Driver_SetSource( Alpha, Star_Radius )
 
 
     !############################################################!
@@ -400,7 +391,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
 !    PRINT*,"Before Driver_SetBC"
-    CALL Driver_SetBC( )
+    CALL Driver_SetBC( Domain_Edge )
 
 
 

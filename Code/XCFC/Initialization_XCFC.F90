@@ -31,6 +31,10 @@ MODULE Initialization_XCFC                                                      
 USE Poseidon_Kinds_Module, &
             ONLY :  idp, fdp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
+
+
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
@@ -64,8 +68,8 @@ USE Variables_FP, &
                     Beta_Bandwidth,             &
                     Num_Matrices
 
-USE Allocation_XCFC, &
-            ONLY :  Allocate_XCFC
+USE Allocation_XCFC_Linear_Systems, &
+            ONLY :  Allocate_XCFC_Linear_Systems
 
 USE Return_Functions_FP,   &
             ONLY :  Calc_FP_Values_At_Location,  &
@@ -82,11 +86,11 @@ USE Timer_Variables_Module, &
             ONLY :  Timer_XCFC_Initialization,      &
                     Timer_XCFC_Matrix_Init
 
-!USE Flags_Initialization_Module, &
-!            ONLY :  lPF_Init_Flags,                 &
-!                    iPF_Init_Eq_Maps,               &
-!                    iPF_Init_XCFC
 
+
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Flags,     &
+                    iPF_Init_Method_Vars
 
 IMPLICIT NONE
 
@@ -119,45 +123,38 @@ CONTAINS
 SUBROUTINE Initialize_XCFC( )
 
 
+IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
+
+    IF ( Verbose_Flag ) CALL Init_Message('Initializing XCFC system variables.')
+
+    CALL TimerStart( Timer_XCFC_Initialization )
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing XCFC Fixed Point Method variables. "
+
+    Beta_Diagonals = Beta_Elem_Prob_Dim-1
+    Beta_Bandwidth = 2*Beta_Diagonals+1
+
+
+    Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
+
+    CALL Allocate_XCFC_Linear_Systems()
+
+    CALL TimerStart( Timer_XCFC_Matrix_Init )
+    CALL Initialize_FP_Matrices()
+    CALL TimerStop( Timer_XCFC_Matrix_Init )
+
+
+
+    Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
+    Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
+
+
+
+    !lPF_Init_Flag(iPF_Init_XCFC) = .TRUE.
+    CALL TimerStop( Timer_XCFC_Initialization )
+
+    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
 END IF
-CALL TimerStart( Timer_XCFC_Initialization )
-
-
-
-Beta_Diagonals = Beta_Elem_Prob_Dim-1
-Beta_Bandwidth = 2*Beta_Diagonals+1
-
-
-
-#ifdef POSEIDON_AMREX_FLAG
-
-
-#else
-
-Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-
-CALL Allocate_XCFC()
-
-CALL TimerStart( Timer_XCFC_Matrix_Init )
-CALL Initialize_FP_Matrices()
-CALL TimerStop( Timer_XCFC_Matrix_Init )
-
-
-#endif
-
-Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
-Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
-
-
-
-!lPF_Init_Flag(iPF_Init_XCFC) = .TRUE.
-CALL TimerStop( Timer_XCFC_Initialization )
-
-
 
 END SUBROUTINE Initialize_XCFC
 

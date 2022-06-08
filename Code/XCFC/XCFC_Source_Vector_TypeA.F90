@@ -24,58 +24,65 @@ MODULE XCFC_Source_Vector_TypeA_Module                                          
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-           ONLY :  idp
+            ONLY :  idp
+
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
+
 
 USE Poseidon_Numbers_Module, &
-           ONLY :  pi,                         &
-                   TwoPi
+            ONLY :  pi,                         &
+                    TwoPi
 
 USE Poseidon_Units_Module, &
-           ONLY :  GR_Source_Scalar
+            ONLY :  GR_Source_Scalar
 
 USE Poseidon_Parameters, &
-           ONLY :  DEGREE,                     &
-                   L_LIMIT,                    &
-                   NUM_CFA_EQs,                &
-                   NUM_CFA_VARs
+            ONLY :  DEGREE,                     &
+                    L_LIMIT,                    &
+                    NUM_CFA_EQs,                &
+                    NUM_CFA_VARs,               &
+                    Verbose_Flag
 
 USE Parameters_Variable_Indices, &
-           ONLY :  iU_CF,                        &
-                   iU_LF,                        &
-                   iU_S1,                        &
-                   iU_S2,                        &
-                   iU_S3,                        &
-                   iU_X1,                        &
-                   iU_X2,                        &
-                   iU_X3,                       &
-                   iVB_S,                       &
-                   iVB_X
+            ONLY :  iU_CF,                        &
+                    iU_LF,                        &
+                    iU_S1,                        &
+                    iU_S2,                        &
+                    iU_S3,                        &
+                    iU_X1,                        &
+                    iU_X2,                        &
+                    iU_X3,                       &
+                    iVB_S,                       &
+                    iVB_X
 
+USE Poseidon_IO_Parameters, &
+            ONLY :  CFA_Var_Names
 
 USE Variables_Quadrature, &
-           ONLY :  NUM_R_QUAD_POINTS,          &
-                   NUM_T_QUAD_POINTS,          &
-                   NUM_P_QUAD_POINTS,          &
-                   NUM_TP_QUAD_POINTS,         &
-                   INT_R_LOCATIONS,            &
-                   INT_T_LOCATIONS,            &
-                   INT_P_LOCATIONS
+            ONLY :  NUM_R_QUAD_POINTS,          &
+                    NUM_T_QUAD_POINTS,          &
+                    NUM_P_QUAD_POINTS,          &
+                    NUM_TP_QUAD_POINTS,         &
+                    INT_R_LOCATIONS,            &
+                    INT_T_LOCATIONS,            &
+                    INT_P_LOCATIONS
 
 USE Variables_Mesh, &
-           ONLY :  NUM_R_ELEMENTS,             &
-                   NUM_T_ELEMENTS,             &
-                   NUM_P_ELEMENTS,             &
-                   rlocs,                      &
-                   tlocs,                      &
-                   plocs
+            ONLY :  NUM_R_ELEMENTS,             &
+                    NUM_T_ELEMENTS,             &
+                    NUM_P_ELEMENTS,             &
+                    rlocs,                      &
+                    tlocs,                      &
+                    plocs
                  
 USE Variables_Source, &
-           ONLY :  Block_Source_E,             &
-                   Block_Source_S,             &
-                   Block_Source_Si
+            ONLY :  Block_Source_E,             &
+                    Block_Source_S,             &
+                    Block_Source_Si
 
 USE Variables_Tables, &
-           ONLY :   Ylm_CC_Values,              &
+            ONLY :  Ylm_CC_Values,              &
                     Ylm_Elem_CC_Values,         &
                     Level_dx,                   &
                     Level_Ratios,               &
@@ -83,14 +90,14 @@ USE Variables_Tables, &
                     LagPoly_MultiLayer_Table
 
 USE Variables_Derived, &
-           ONLY :  LM_LENGTH
+            ONLY :  LM_LENGTH
 
 USE Variables_FP, &
-           ONLY :  FP_Coeff_Vector_A,            &
-                   FP_Source_Vector_A
+            ONLY :  FP_Coeff_Vector_A,            &
+                    FP_Source_Vector_A
 
 USE Functions_Jacobian, &
-           ONLY :  Calc_Ahat
+            ONLY :  Calc_Ahat
 
 USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node,            &
@@ -101,7 +108,7 @@ USE Maps_Quadrature, &
 
 
 
-USE XCFC_Source_Variables_Module, &
+USE XCFC_Source_Routine_Variables_Module, &
             ONLY :  Cur_R_Locs,         &
                     Cur_T_Locs,         &
                     R_Square,           &
@@ -201,11 +208,19 @@ INTEGER, INTENT(IN)                     ::  iU
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEL
 
+CHARACTER(LEN = 300)                    ::  Message
+
 
 #ifndef POSEIDON_AMREX_FLAG
 INTEGER,             DIMENSION(3)       ::  iE
 INTEGER                                 ::  re, te, pe
 #endif
+
+IF ( Verbose_Flag ) THEN
+    WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_Var_Names(iU)),' Source Vector.'
+    CALL Run_Message(TRIM(Message))
+END IF
+
 
 
 IF ( iU == iU_CF ) THEN

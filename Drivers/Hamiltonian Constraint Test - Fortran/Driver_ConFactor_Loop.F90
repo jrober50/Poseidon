@@ -38,14 +38,20 @@ USE Poseidon_Units_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
+
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_Results_Dir
 
 USE SelfSimilar_Module, &
             ONLY :  Initialize_Yahil_Sources
 
-USE Source_Input_Module, &
+USE Poseidon_Source_Input_Module, &
             ONLY :  Poseidon_Input_Sources
+
+USE Source_Input_Native_Module, &
+            ONLY :  Poseidon_Input_Sources_Native
 
 USE Variables_IO, &
             ONLY :  File_Suffix
@@ -159,10 +165,8 @@ ALLOCATE( Cur_R_Locs(1:NQ(1)) )
 
 
 
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing the Hamiltonian constraint test source.')
 
-IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A)')"-Creating Sources."
-END IF
 
 HCT_Fileid = 4242
 
@@ -239,25 +243,26 @@ DO WHILE ( Flag )
         WRITE(*,'(A)')"-Inputing Sources"
     END IF
 
-    CALL Poseidon_Input_Sources(myID,                           &
-                                myID,                           &
-                                myID,                           &
-                                Local_E, Local_S, Local_Si,     &
-                                NE(1), NE(2), NE(3),            &
-                                NQ(1), NQ(2), NQ(3),            &
-                                R_Quad, T_Quad, P_Quad,         &
-                                LeftLimit, RightLimit           )
+    CALL Poseidon_Input_Sources(Local_E,                &
+                                Local_Si,               &
+                                Local_S,                &
+                                NE,                     &
+                                NQ,                     &
+                                R_Quad,                 &
+                                T_Quad,                 &
+                                P_Quad,                 &
+                                [LeftLimit, RightLimit] )
 
 
-!    CALL Driver_SetGuess(   NE, NQ,             &
-!                            dx_c, x_e,          &
-!                            R_Quad,             &
-!                            T_Quad,             &
-!                            P_Quad,             &
-!                            LeftLimit,          &
-!                            RightLimit,         &
-!                            1                   )
-
+!    CALL Poseidon_Input_Sources_Native( Local_E,                &
+!                                        Local_Si,               &
+!                                        Local_S,                &
+!                                        NE,                     &
+!                                        NQ,                     &
+!                                        R_Quad,                 &
+!                                        T_Quad,                 &
+!                                        P_Quad,                 &
+!                                        [LeftLimit, RightLimit] )
 
 
     Call Poseidon_Run()

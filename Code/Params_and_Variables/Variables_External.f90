@@ -56,6 +56,9 @@ REAL(idp)                                               ::  MacLaurin_Rho
 CHARACTER(LEN=1)                                        ::  MacLaurin_SphereType
 
 
+REAL(idp)                                               ::  HCT_Alpha
+REAL(idp)                                               ::  HCT_Star_Radius
+
 END MODULE Variables_External
 
 

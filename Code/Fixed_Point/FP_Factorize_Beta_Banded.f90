@@ -26,6 +26,11 @@ MODULE FP_Factorize_Beta_Banded                                      !##!
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message,           &
+                    Run_Message,            &
+                    Warning_Message
+
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
@@ -86,6 +91,9 @@ USE IO_FP_Linear_System, &
                     Output_Laplace_Beta,        &
                     Output_Source_Beta
 
+USE IO_Condition_Number_Output_Module, &
+            ONLY :  IO_Output_Condition_Number
+
 USE Variables_BC, &
             ONLY :  INNER_CFA_BC_VALUES,        &
                     OUTER_CFA_BC_VALUES,        &
@@ -101,6 +109,12 @@ USE Timer_Routines_Module, &
 
 USE Timer_Variables_Module, &
             ONLY :  Timer_XCFC_Banded_Factorization
+
+
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Matrices_Flags,    &
+                    iPF_Init_Matrices_Type_B_LU
+
 
 
 USE MPI
@@ -122,17 +136,12 @@ SUBROUTINE Factorize_Beta_Banded()
 
 
 INTEGER                                                 :: INFO
-COMPLEX(idp),   DIMENSION(2*Beta_Prob_Dim)              :: WORK
-REAL(idp),      DIMENSION(Beta_Prob_Dim)                :: RWORK
-REAL(idp)                                               :: RCOND_One
-REAL(idp)                                               :: NORM
 
-INTEGER                                                 :: i
+CHARACTER(LEN = 300)                                    ::  Message
+
+IF ( Verbose_Flag ) CALL Init_Message('Factorizing vector Laplace matrix using LAPAK LU factorization.')
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"--In Factorize_Beta_Banded."
-END IF
 CALL TimerStart( Timer_XCFC_Banded_Factorization )
 
 !   Dirichlet BCs modify the stiffness matrix so we modify it now.
@@ -162,58 +171,31 @@ CALL ZGBTRF( Beta_Prob_Dim,             &
              INFO                       )
 
 IF (INFO .NE. 0) THEN
-    print*,"ZGBTRF has failed with INFO = ",INFO
+    WRITE(Message,'(A,I1.1)')"ZGBTRF has failed with INFO = ",INFO
+    CALL Warning_Message(TRIM(Message))
 ELSE
-
     Beta_Factorized_Flag = .TRUE.
-
 END IF
 
 
 
-!PRINT*,"Beta_MVL_Banded in Factorize_Beta_Banded"
-!PRINT*,REAL(Beta_MVL_Banded, kind = idp)
-
-
-
-
-
-
-IF ( Verbose_Flag ) THEN
-
-    NORM = 0.0_idp
-    DO i = 1,Beta_Prob_Dim
-
-        NORM = MAX( NORM, ABS(SUM(Beta_MVL_Banded(:,i) ) ) )
-
-    END DO
-
-    CALL ZGBCON( '1',                   &
-                 Beta_Prob_Dim,         &
-                 Beta_Diagonals,        &
-                 Beta_Diagonals,        &
-                 Beta_MVL_Banded,       &
-                 3*Beta_Diagonals+1,    &
-                 Beta_IPIV,             &
-                 NORM,                  &
-                 RCOND_One,             &
-                 WORK,                  &
-                 RWORK,                 &
-                 INFO                   )
-    IF (INFO .NE. 0) THEN
-        print*,"ZGBCON has failed with INFO = ",INFO
-    ELSE
-            PRINT*,"RCOND = ",RCOND_One," Norm = ",Norm
-    END IF
-END IF
 
 
 CALL TimerStop( Timer_XCFC_Banded_Factorization )
 
 
 
+
+CALL IO_Output_Condition_Number()
+
+
+lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) = .TRUE.
+
+
+
 !PRINT*,"STOPing in Factorize_Beta_Banded"
 !STOP
+
 
 END SUBROUTINE Factorize_Beta_Banded
 

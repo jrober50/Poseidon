@@ -26,6 +26,11 @@ MODULE Initialization_Mesh_AMReX_Module                                      !##
 USE Poseidon_Kinds_Module, &
             ONLY : idp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
+
+USE Poseidon_Parameters, &
+            ONLY :  Verbose_Flag
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Num_Levels,   &
@@ -50,6 +55,10 @@ USE Variables_AMReX_Core, &
             ONLY :  Table_Offsets,           &
                     FEM_Elem_Table
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Mesh_Flags,    &
+                    iPF_Init_Mesh_Init
+
 IMPLICIT NONE
 
 
@@ -70,6 +79,7 @@ INTEGER                                         ::  There
 INTEGER                                         ::  re
 INTEGER                                         ::  elem
 
+IF ( Verbose_Flag ) CALL Init_Message('Initializing Mesh Variables.')
 
 DO lvl = 0,AMReX_Num_Levels-1
     Here  = Table_Offsets(lvl)
@@ -87,6 +97,7 @@ DO re = 1,Num_R_Elements
 END DO
 
 
+lPF_Init_Mesh_Flags(iPF_Init_Mesh_Init) = .TRUE.
 
 END SUBROUTINE Determine_AMReX_Mesh
 

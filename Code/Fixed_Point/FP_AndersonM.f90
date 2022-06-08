@@ -108,9 +108,6 @@ USE FP_System_Solvers_Module,   &
             ONLY :  Solve_FP_System,                &
                     Solve_FP_System_Beta
 
-USE FP_Resid_Convergence_Module,    &
-            ONLY :  Check_FP_Convergence
-
 USE FP_Functions_Coeffs_Module, &
             ONLY :  Coeff_To_Vector,    &
                     Vector_To_Coeff

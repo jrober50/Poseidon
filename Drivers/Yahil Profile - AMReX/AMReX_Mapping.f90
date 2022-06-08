@@ -281,8 +281,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             Source_RQ_xlocs                     = Input_R_Quad,         &
             Source_TQ_xlocs                     = Input_T_Quad,         &
             Source_PQ_xlocs                     = Input_P_Quad,         &
-            Units_Option                        = Units_Input,          &
-            Radial_Boundary_Units_Option        = "cm",                 &
+            Source_Units                        = Units_Input,          &
+            Source_Radial_Boundary_Units        = "cm",                 &
             Integration_NQ_Option               = NQ,                   &
             CFA_Eq_Flags_Option                 = CFA_Eqs,              &
             AMReX_FEM_Refinement_Option         = IFL,                  &
@@ -297,8 +297,10 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             Print_Timetable_Option              = .TRUE.,               &
             Write_Timetable_Option              = .TRUE.,               &
             Write_Sources_Option                = .FALSE.,              &
-            Suffix_Flag_Option                   = Suffix_Input,        &
-            Suffix_Tail_Option                   = Suffix_Tail          )
+            Print_Condition_Option              = .TRUE.,               &
+            Write_Condition_Option              = .TRUE.,               &
+            Suffix_Flag_Option                  = Suffix_Input,         &
+            Suffix_Tail_Option                  = Suffix_Tail           )
 
 
 

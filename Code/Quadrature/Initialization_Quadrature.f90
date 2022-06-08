@@ -23,6 +23,9 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
+
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
@@ -49,6 +52,10 @@ USE Functions_Quadrature, &
 USE Allocation_Quadrature, &
             ONLY :  Allocate_Quadrature
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Quad_Flags,     &
+                    iPF_Init_Quad_Init
+
 IMPLICIT NONE
 
 CONTAINS
@@ -63,11 +70,11 @@ SUBROUTINE Initialize_Quadrature()
 INTEGER                                 :: td, pd
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Quadrature variables. "
-END IF
-
 CALL Allocate_Quadrature
+
+
+IF ( Verbose_Flag ) CALL Init_Message('Initializing Quadrature Arrays.')
+
 
 
 CALL Initialize_LG_Quadrature(NUM_R_QUAD_POINTS, INT_R_LOCATIONS, INT_R_WEIGHTS)
@@ -90,6 +97,7 @@ DO td = 1,NUM_T_QUAD_POINTS
     END DO
 END DO
 
+lPF_Init_Quad_Flags(iPF_Init_Quad_Init) = .TRUE.
 
 END SUBROUTINE Initialize_Quadrature
 

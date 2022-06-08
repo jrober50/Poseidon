@@ -26,6 +26,9 @@ MODULE XCFC_Solvers_Main_Module                                                 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
+
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
                     iVB_S,                      &
@@ -90,8 +93,10 @@ INTEGER, DIMENSION(3)                                   ::  iEU
 INTEGER, DIMENSION(3)                                   ::  iEL
 
 
+
 IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining X system. "
+    WRITE(*,'()')
+    CALL Run_Message('Beginning X System.')
 END IF
 CALL TimerStart( Timer_XCFC_X )
 
@@ -116,8 +121,7 @@ CALL TimerStop( Timer_XCFC_X )
 !CALL Print_Single_Var_Results( iU_X1, iVB_X )
 
 IF ( .FALSE. ) THEN
-    PRINT*,"Stopping at the end of XCFC_x_Solve"
-    STOP
+    STOP "Stopping at the end of XCFC_x_Solve"
 END IF
 
 END SUBROUTINE XCFC_X_Solve
@@ -138,15 +142,16 @@ SUBROUTINE XCFC_ConFactor_Solve()
 
 
 IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining Conformal Factor system. "
+    WRITE(*,'()')
+    CALL Run_Message('Beginning Conformal Factor System.')
 END IF
+
 CALL TimerStart( Timer_XCFC_ConFactor )
 CALL XCFC_Fixed_Point(iU_CF)
 CALL TimerStop( Timer_XCFC_ConFactor )
 
 IF ( .FALSE. ) THEN
-    PRINT*,"Stopping at the end of XCFC_ConFactor_Solve"
-    STOP
+    STOP "Stopping at the end of XCFC_ConFactor_Solve"
 END IF
 
 
@@ -165,15 +170,22 @@ END SUBROUTINE XCFC_ConFactor_Solve
 !###############################################################################!
 SUBROUTINE XCFC_Lapse_Solve()
 
-
 IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining Lapse Function system. "
+    WRITE(*,'()')
+    CALL Run_Message('Beginning Lapse Function System.')
 END IF
+
+
 CALL TimerStart( Timer_XCFC_Lapse )
 
 CALL XCFC_Fixed_Point(iU_LF)
 
 CALL TimerStop( Timer_XCFC_Lapse )
+
+
+IF ( .FALSE. ) THEN
+    STOP "Stopping at the end of XCFC_Lapse_Solve"
+END IF
 
 END SUBROUTINE XCFC_Lapse_Solve
 
@@ -195,8 +207,12 @@ INTEGER, DIMENSION(3)                               ::  iEL
 
 
 IF ( Verbose_Flag ) THEN
-    PRINT*,"Begining Shift system. "
+    WRITE(*,'()')
+    CALL Run_Message('Beginning Shift System.')
 END IF
+
+
+
 CALL TimerStart( Timer_XCFC_Shift )
 
 
@@ -217,6 +233,10 @@ CALL TimerStop(  Timer_XCFC_Shift_LinearSolve )
 CALL TimerStop( Timer_XCFC_Shift )
 
 !CALL Print_Single_Var_Results( iU_S1, iVB_S )
+
+IF ( .FALSE. ) THEN
+    STOP "Stopping at the end of XCFC_Shift_Solve"
+END IF
 
 END SUBROUTINE XCFC_Shift_Solve
 

@@ -112,8 +112,7 @@ USE Timer_Variables_Module, &
 
 
 USE Variables_Interface, &
-            ONLY :  Caller_nLevels,             &
-                    Caller_Quad_DOF,            &
+            ONLY :  Caller_Quad_DOF,            &
                     Translation_Matrix
 
 USE Maps_X_Space, &
@@ -279,11 +278,7 @@ END DO          ! level
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-
-IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
-    Call Initialization_XCFC_with_AMReX()
-    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
-END IF
+CALL Initialization_XCFC_with_AMReX()
 
 
 
@@ -298,7 +293,7 @@ END SUBROUTINE Poseidon_Input_Sources_AMREX
 SUBROUTINE Poseidon_Input_Sources_AMREX_Caller( MF_Src_Input,       &
                                                 MF_Src_Input_nComps       )
 
-TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:Caller_nLevels-1)
+TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:AMReX_Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
 
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
@@ -332,6 +327,8 @@ IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
         lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
     END DO
 END IF
+
+
 
 DO level = 0,AMReX_Num_Levels-1
 
@@ -380,10 +377,8 @@ END DO          ! level
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
-    Call Initialization_XCFC_with_AMReX()
-    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
-END IF
+CALL Initialization_XCFC_with_AMReX()
+
 
 END SUBROUTINE Poseidon_Input_Sources_AMREX_Caller
 
@@ -550,10 +545,7 @@ END DO          ! level
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
-    Call Initialization_XCFC_with_AMReX()
-    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
-END IF
+CALL Initialization_XCFC_with_AMReX()
 
 END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 
@@ -566,7 +558,7 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller( MF_Src_Input,       &
                                                       MF_Src_Input_nComps       )
 
-TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:Caller_nLevels-1)
+TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:AMReX_Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
 
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
@@ -664,10 +656,7 @@ END DO          ! level
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
-    Call Initialization_XCFC_with_AMReX()
-    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
-END IF
+CALL Initialization_XCFC_with_AMReX()
 
 
 END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller

@@ -86,8 +86,7 @@ USE Initialization_Tables, &
 
 
 USE Variables_Interface, &
-            ONLY :  Caller_nLevels,                 &
-                    Caller_NQ,                      &
+            ONLY :  Caller_NQ,                      &
                     Caller_xL,                      &
                     Caller_RQ_xlocs,                &
                     Caller_TQ_xlocs,                &

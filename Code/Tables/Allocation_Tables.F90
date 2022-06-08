@@ -26,17 +26,22 @@ MODULE Allocation_Tables                                                        
 USE Poseidon_Kinds_Module, &
             ONLY : idp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
+
 USE Poseidon_Parameters, &
             ONLY :  Degree,                 &
-                    L_Limit
+                    L_Limit,                &
+                    Max_Iterations,         &
+                    Verbose_Flag
 
 USE Variables_Derived, &
             ONLY :  LM_Length
 
-USE Variables_MPI, &
-            ONLY :  Num_R_Elems_Per_Block,  &
-                    Num_T_Elems_Per_Block,  &
-                    Num_P_Elems_Per_Block
+USE Variables_Mesh, &
+            ONLY :  Num_R_Elements,         &
+                    Num_T_Elements,         &
+                    Num_P_Elements
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
@@ -45,35 +50,42 @@ USE Variables_Quadrature, &
                     Num_TP_Quad_Points
 
 USE Variables_Tables, &
-            ONLY :  Ylm_Table_Block,        &
-                    Ylm_Values,             &
-                    Ylm_dt_Values,          &
-                    Ylm_dp_Values,          &
-                    Ylm_CC_Values,          &
-                    Ylm_CC_dt_Values,       &
-                    Ylm_CC_dp_Values,       &
-                    Lagrange_Poly_Table,    &
-                    LPT_LPT,                &
-                    M_Values,               &
-                    Ylm_Norm_Table,         &
-                    Ylm_Sqrt_Table,         &
-                    rBT_NormedLegendre,     &
+            ONLY :  Ylm_Table_Block,            &
+                    Ylm_Values,                 &
+                    Ylm_dt_Values,              &
+                    Ylm_dp_Values,              &
+                    Ylm_CC_Values,              &
+                    Ylm_CC_dt_Values,           &
+                    Ylm_CC_dp_Values,           &
+                    Lagrange_Poly_Table,        &
+                    LPT_LPT,                    &
+                    M_Values,                   &
+                    Ylm_Norm_Table,             &
+                    Ylm_Sqrt_Table,             &
+                    rBT_NormedLegendre,         &
 !                    rBT_NormedLegendre_dt,  &
 !                    rBT_NormedLegendre_CC,  &
-                    Ylm_Elem_Values,        &
-                    Ylm_Elem_dt_Values,     &
-                    Ylm_Elem_dp_Values,     &
-                    Ylm_Elem_CC_Values,     &
-                    Level_dx,               &
-                    Level_Ratios,           &
-                    LagPoly_MultiLayer_Table, &
+                    Ylm_Elem_Values,            &
+                    Ylm_Elem_dt_Values,         &
+                    Ylm_Elem_dp_Values,         &
+                    Ylm_Elem_CC_Values,         &
+                    Level_dx,                   &
+                    Level_Ratios,               &
+                    LagPoly_MultiLayer_Table,   &
                     LagPoly_Num_Tables
 
 USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Max_Grid_Size,          &
+            ONLY :  AMReX_Max_Grid_Size,        &
                     AMReX_Num_Levels
 
+USE Variables_IO, &
+            ONLY :  Frame_Update_Table,         &
+                    Frame_Residual_Table,       &
+                    Iteration_Histogram
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Tables_Flags,    &
+                    iPF_Init_Tables_Alloc
 
 
 IMPLICIT NONE
@@ -90,6 +102,8 @@ CONTAINS
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Allocate_Tables()
+
+IF ( Verbose_Flag ) CALL Init_Message('Allocating Table Variables.')
 
 #ifdef POSEIDON_AMREX_FLAG
 
@@ -136,33 +150,33 @@ ALLOCATE( Level_Ratios(0:AMReX_Num_Levels) )
 
 ALLOCATE( Ylm_Values(       1:LM_Length,                    &
                             1:NUM_TP_QUAD_POINTS,           &
-                            0:NUM_T_ELEMS_PER_BLOCK-1,      &
-                            0:NUM_P_ELEMS_PER_BLOCK-1)      )
+                            0:Num_T_Elements-1,      &
+                            0:Num_P_Elements-1)      )
 
 ALLOCATE( Ylm_dt_Values(    1:LM_Length,                    &
                             1:NUM_TP_QUAD_POINTS,           &
-                            0:NUM_T_ELEMS_PER_BLOCK-1,      &
-                            0:NUM_P_ELEMS_PER_BLOCK-1)      )
+                            0:Num_T_Elements-1,      &
+                            0:Num_P_Elements-1)      )
 
 ALLOCATE( Ylm_dp_Values(    1:LM_Length,                    &
                             1:NUM_TP_QUAD_POINTS,           &
-                            0:NUM_T_ELEMS_PER_BLOCK-1,      &
-                            0:NUM_P_ELEMS_PER_BLOCK-1)      )
+                            0:Num_T_Elements-1,      &
+                            0:Num_P_Elements-1)      )
 
 ALLOCATE( Ylm_CC_Values(    1:NUM_TP_QUAD_POINTS,           &
                             1:LM_Length,                    &
-                            0:NUM_T_ELEMS_PER_BLOCK-1,      &
-                            0:NUM_P_ELEMS_PER_BLOCK-1)      )
+                            0:Num_T_Elements-1,      &
+                            0:Num_P_Elements-1)      )
 
 ALLOCATE( Ylm_CC_dt_Values( 1:NUM_TP_QUAD_POINTS,           &
                             1:LM_Length,                    &
-                            0:NUM_T_ELEMS_PER_BLOCK-1,      &
-                            0:NUM_P_ELEMS_PER_BLOCK-1)      )
+                            0:Num_T_Elements-1,      &
+                            0:Num_P_Elements-1)      )
 
 ALLOCATE( Ylm_CC_dp_Values( 1:NUM_TP_QUAD_POINTS,           &
                             1:LM_Length,                    &
-                            0:NUM_T_ELEMS_PER_BLOCK-1,      &
-                            0:NUM_P_ELEMS_PER_BLOCK-1)      )
+                            0:Num_T_Elements-1,      &
+                            0:Num_P_Elements-1)      )
 
 
 #endif
@@ -171,6 +185,17 @@ ALLOCATE( M_VALUES(0:L_LIMIT) )
 ALLOCATE( Lagrange_Poly_Table(0:DEGREE, 1:NUM_R_QUAD_POINTS, 0:2)   )
 ALLOCATE( LPT_LPT( 1:NUM_R_QUAD_POINTS,0:DEGREE,0:DEGREE,0:1,0:2)       )
 
+
+
+ALLOCATE( Frame_Update_Table(1:MAX_ITERATIONS,1:5) )
+ALLOCATE( Frame_Residual_Table(1:3, 1:MAX_ITERATIONS,1:5) )
+ALLOCATE( Iteration_Histogram(1:MAX_ITERATIONS) )
+
+Frame_Update_Table = 0.0_idp
+Frame_Residual_Table = 0.0_idp
+Iteration_Histogram = 0
+
+lPF_Init_Tables_Flags(iPF_Init_Tables_Alloc) = .TRUE.
 
 END SUBROUTINE Allocate_Tables
 
@@ -223,6 +248,11 @@ DEALLOCATE( M_Values )
 
 DEALLOCATE( Lagrange_Poly_Table )
 DEALLOCATE( LPT_LPT )
+
+DEALLOCATE( Frame_Update_Table )
+DEALLOCATE( Frame_Residual_Table )
+DEALLOCATE( ITERATION_HISTOGRAM )
+
 
 END SUBROUTINE Deallocate_Tables
 

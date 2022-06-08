@@ -216,11 +216,11 @@ External_Iter_Max   =  500
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  1
-RE_Index_Max        =  6
+RE_Index_Min        =  8
+RE_Index_Max        =  8
 
 Degree_Min          =  1
-Degree_Max          =  4
+Degree_Max          =  1
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
@@ -292,7 +292,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     NQ(3) = 2*L_Limit_Input + 1
     Suffix_Tail = Tolerance_Letters(Tol_Index)
 
-
+    
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
@@ -347,32 +347,40 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     CALL Initialize_Poseidon &
-       (   Dimensions_Option           = Dimension_Input,               &
-           FEM_Degree_Option           = Degree_Input,                  &
-           L_Limit_Option              = L_Limit_Input,                 &
-           Units_Option                = Units_Input,                   &
-           Domain_Edge_Option          = Domain_Edge,                   &
-           NE_Option                   = NE,                            &
-           NQ_Option                   = NQ,                            &
-           r_Option                    = x_e,                           &
-           t_Option                    = y_e,                           &
-           p_Option                    = z_e,                           &
-           Suffix_Flag_Option          = Suffix_Input,                  &
-           Suffix_Tail_Option          = Suffix_Tail,                   &
-           Method_Flag_Option          = Solver_Type,                   &
-           CFA_Eq_Flags_Option         = CFA_Eqs,                       &
-           Max_Iterations_Option       = Max_Iterations,                &
-           Convergence_Criteria_Option = CC_Option,                     &
-           Anderson_M_Option           = Anderson_M_Values(M_Index),    &
-           Verbose_Option              = Verbose,                       &
-           WriteAll_Option             = .FALSE.,                       &
-           Print_Setup_Option          = .TRUE.,                        &
-           Write_Setup_Option          = .TRUE.,                       &
-           Print_Results_Option        = Print_Results_Flag,            &
-           Write_Results_Option        = .TRUE.,                        &
-           Print_Timetable_Option      = .FALSE.,                       &
-           Write_Timetable_Option      = .TRUE.,                       &
-           Write_Sources_Option        = .TRUE.                        )
+       (   Dimensions_Option            = Dimension_Input,              &
+           FEM_Degree_Option            = Degree_Input,                 &
+           L_Limit_Option               = L_Limit_Input,                &
+           Source_NE                    = NE,                           &
+           Domain_Edge_Option           = Domain_Edge,                  &
+           Source_NQ                    = NQ,                           &
+           Source_xL                    = [Left_Limit, Right_Limit],    &
+           Source_RQ_xlocs              = Input_R_Quad,                 &
+           Source_TQ_xlocs              = Input_T_Quad,                 &
+           Source_PQ_xlocs              = Input_P_Quad,                 &
+           Source_Units                 = Units_Input,                  &
+           Source_Radial_Boundary_Units = "cm",                         &
+           Integration_NQ_Option        = NQ,                           &
+           Source_R_Option              = x_e,                          &
+           Source_T_Option              = y_e,                          &
+           Source_P_Option              = z_e,                          &
+           Method_Flag_Option           = Solver_Type,                  &
+           CFA_Eq_Flags_Option          = CFA_Eqs,                      &
+           Max_Iterations_Option        = Max_Iterations,               &
+           Convergence_Criteria_Option  = CC_Option,                    &
+           Anderson_M_Option            = Anderson_M_Values(M_Index),   &
+           Verbose_Option               = Verbose,                      &
+           WriteAll_Option              = .FALSE.,                      &
+           Print_Setup_Option           = .TRUE.,                       &
+           Write_Setup_Option           = .TRUE.,                       &
+           Print_Results_Option         = Print_Results_Flag,           &
+           Write_Results_Option         = .TRUE.,                       &
+           Print_Timetable_Option       = .FALSE.,                      &
+           Write_Timetable_Option       = .TRUE.,                       &
+           Write_Sources_Option         = .TRUE.,                       &
+           Print_Condition_Option       = .TRUE.,                       &
+           Write_Condition_Option       = .TRUE.,                       &
+           Suffix_Flag_Option           = Suffix_Input,                 &
+           Suffix_Tail_Option           = Suffix_Tail                   )
 
 
 
@@ -386,14 +394,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
         !############################################################!
         CALL TimerStart( Timer_Driver_SetGuess )
 
-        CALL Driver_SetGuess(   NE, NQ,             &
-                                dx_c, x_e,          &
-                                Input_R_Quad,       &
-                                Input_T_Quad,       &
-                                Input_P_Quad,       &
-                                Left_Limit,         &
-                                Right_Limit,        &
-                                Guess_Type          )
+        CALL Driver_SetGuess( )
 
         CALL TimerStop( Timer_Driver_SetGuess )
 

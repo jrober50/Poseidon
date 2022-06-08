@@ -36,17 +36,14 @@ USE Variables_AMReX_Core, &
 
 
 USE Poseidon_Parameters, &
-            ONLY :  Degree,                         &
-                    L_Limit,                        &
+            ONLY :  Degree_Default,                 &
+                    L_Limit_Default,                &
                     Verbose_Flag,                   &
-                    Convergence_Criteria,           &
                     Convergence_Criteria_Default,   &
-                    Max_Iterations,                 &
                     Max_Iterations_Default
 
 USE Variables_FP, &
-            ONLY :  FP_Anderson_M,          &
-                    FP_Anderson_M_Default
+            ONLY :  FP_Anderson_M_Default
 
 
 USE Variables_Mesh, &
@@ -172,85 +169,7 @@ END SUBROUTINE Init_AMReX_Parameters
 
 
 
-!+301+###########################################################################!
-!                                                                                !
-!                  Init_AMReX_Parameters                                             !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Init_AMReX_Parameters_From_Input_File()
 
-
-#ifdef POSEIDON_AMREX_FLAG
-TYPE(amrex_parmparse)                       :: PP
-
-REAL(idp),  ALLOCATABLE                     :: xL_In(:), xR_In(:)
-INTEGER,    ALLOCATABLE                     :: nCells_In(:)
-
-ALLOCATE( xL_In(3), xR_In(3) )
-ALLOCATE( nCells_In(3) )
-
-
-IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A,I2.2)')"-Initializing Poseidon variables from inputs file."
-END IF
-
-
-
-CALL amrex_parmparse_build( PP, 'geometry' )
-    CALL PP % getarr( 'prob_lo'  , xL_In   )
-    CALL PP % getarr( 'prob_hi'  , xR_In   )
-CALL amrex_parmparse_destroy( PP )
-
-
-R_Inner = xL_In(1)
-R_Outer = xR_In(1)
-
-
-
-AMReX_Max_Grid_Size(1)    = 1
-AMReX_Max_Grid_Size(2)    = 1
-AMReX_Max_Grid_Size(3)    = 1
-AMReX_Max_Level           = 1
-AMReX_Tiling              = .FALSE.
-CALL amrex_parmparse_build( PP, 'amr' )
-  CALL PP % getarr( 'n_cell'           , nCells_In              )
-  CALL PP % query ( 'max_grid_size_x'  , AMReX_Max_Grid_Size(1) )
-  CALL PP % query ( 'max_grid_size_y'  , AMReX_Max_Grid_Size(2) )
-  CALL PP % query ( 'max_grid_size_z'  , AMReX_Max_Grid_Size(3) )
-  CALL PP % get   ( 'max_level'        , AMReX_Max_Level        )
-  CALL PP % query ( 'UseTiling'        , AMReX_Tiling           )
-CALL amrex_parmparse_destroy( PP )
-
-
-Num_R_Elements = nCells_In(1)
-Num_T_Elements = nCells_In(2)
-Num_P_Elements = nCells_In(3)
-
-AMReX_Num_Levels = AMReX_Max_Level+1
-
-
-Degree = 1
-L_Limit = 0
-Max_Iterations = 10
-FP_Anderson_M = FP_Anderson_M_Default
-Max_Iterations = Max_Iterations_Default
-Convergence_Criteria = Convergence_Criteria_Default
-CALL amrex_parmparse_build( PP, 'poseidon' )
-  CALL PP % query ( 'fem_degree'        , Degree )
-  CALL PP % query ( 'l_limit'           , L_Limit               )
-  CALL PP % query ( 'max_fp_iters'      , Max_Iterations        )
-  CALL PP % query ( 'anderson_m'        , FP_Anderson_M         )
-  CALL PP % query ( 'converge_criteria' , Convergence_Criteria  )
-CALL amrex_parmparse_destroy( PP )
-
-
-
-#endif
-
-
-
-
-END SUBROUTINE Init_AMReX_Parameters_From_Input_File
 
 
 

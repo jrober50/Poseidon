@@ -26,14 +26,11 @@ MODULE Initialization_AMReX                                                  !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Poseidon_Numbers_Module, &
-            ONLY :  pi
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
 
 USE Poseidon_Units_Module, &
-            ONLY :  Set_Units,      &
-                    Centimeter,     &
-                    Meter,          &
-                    Kilometer
+            ONLY :  Set_Units
 
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
@@ -48,33 +45,35 @@ USE Poseidon_Parameters, &
                     CFA_EQ_Flags,           &
                     Num_CFA_Eqs
 
-USE Allocation_Core, &
-            ONLY :  Allocate_Poseidon_CFA_Variables
+USE Allocation_Sources, &
+            ONLY :  Allocate_Poseidon_Source_Variables
 
-USE XCFC_Source_Variables_Module, &
-            ONLY :  Allocate_XCFC_Source_Variables
+USE XCFC_Source_Routine_Variables_Module, &
+            ONLY :  Allocate_XCFC_Source_Routine_Variables
 
 USE Variables_MPI, &
             ONLY :  nProcs_Poseidon,        &
                     myID_Poseidon,          &
                     ierr
 
-USE Variables_Mesh, &
-            ONLY :  Num_R_Elements,         &
-                    Num_T_Elements,         &
-                    Num_P_Elements,         &
-                    R_Inner,                &
-                    R_Outer
+USE Variables_Functions, &
+            ONLY :  LM_Location
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
                     Num_T_Quad_Points,      &
                     Num_P_Quad_Points,      &
                     Num_TP_Quad_Points,     &
-                    Local_Quad_DOF
-
-USE Variables_Functions, &
-            ONLY :  LM_Location
+                    Local_Quad_DOF,         &
+                    Int_R_Locations,        &
+                    Int_T_Locations,        &
+                    Int_P_Locations,        &
+                    Int_R_Weights,          &
+                    Int_T_Weights,          &
+                    Int_P_Weights,          &
+                    Int_TP_Weights,         &
+                    xLeftLimit,            &
+                    xRightLimit
 
 USE Initialization_XCFC, &
             ONLY :  Initialize_XCFC,        &
@@ -93,8 +92,12 @@ USE Initialization_Derived, &
 USE Initialization_Subroutines, &
             ONLY :  Init_Fixed_Point_Params,        &
                     Init_IO_Params,                 &
-                    Init_AMReX_Params,              &
-                    Set_Caller_Quadrature
+                    Init_MPI_Params,                &
+                    Init_Quad_Params,               &
+                    Set_Caller_Data
+
+USE Initialization_Subroutines_AMReX, &
+            ONLY : Init_Parameters_From_AMReX_Input_File
 
 
 USE IO_Setup_Report_Module, &
@@ -119,8 +122,11 @@ USE Maps_Legacy, &
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,             &
                     Mask_PTR,               &
-                    iTrunk,                &
+                    iTrunk,                 &
                     iLeaf
+
+USE Variables_Interface, &
+            ONLY :  Caller_R_Units
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
@@ -131,12 +137,6 @@ USE Poseidon_AMReX_BoxArraySize_Module, &
 USE Poseidon_AMReX_Multilayer_Utilities_Module, &
             ONLY :  Find_Coarsest_Parent
 
-USE Variables_MPI, &
-            ONLY :  myID_Poseidon
-
-
-USE Poseidon_AMReX_Input_Parsing_Module, &
-            ONLY : Init_AMReX_Parameters_From_Input_File
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -162,9 +162,22 @@ USE amrex_multifab_module,  &
                     amrex_imultifab_destroy
 
 USE Variables_AMReX_Core, &
-            ONLY :  MF_Source,              &
-                    MF_Source_nComps
+            ONLY :  MF_Source
 #endif
+
+USE Functions_Translation_Matrix_Module, &
+            ONLY :  Create_Translation_Matrix
+
+
+USE Variables_Interface, &
+            ONLY :  Caller_NQ,                  &
+                    Caller_Quad_DOF,            &
+                    Caller_xL,                  &
+                    Caller_RQ_xlocs,            &
+                    Caller_TQ_xlocs,            &
+                    Caller_PQ_xlocs,            &
+                    Caller_R_Units,             &
+                    Translation_Matrix
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Num_Levels,       &
@@ -179,7 +192,12 @@ USE Flags_Initial_Guess_Module, &
             ONLY :  lPF_IG_Flags,           &
                     iPF_IG_Flat_Guess
 
-USE MPI
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_MTGV_Flags,    &
+                    iPF_Init_MTGV_TransMat, &
+                    lPF_Init_AMReX_Flags,   &
+                    iPF_Init_AMReX_Maps
+
 
 IMPLICIT NONE
 
@@ -199,8 +217,8 @@ SUBROUTINE Initialize_Poseidon_with_AMReX(  Source_NQ,                          
                                             Source_RQ_xlocs,                    &
                                             Source_TQ_xlocs,                    &
                                             Source_PQ_xlocs,                    &
-                                            Units_Option,                       &
-                                            Radial_Boundary_Units_Option,       &
+                                            Source_Units,                       &
+                                            Source_Radial_Boundary_Units,       &
                                             Integration_NQ_Option,              &
                                             Convergence_Criteria_Option,        &
                                             CFA_Eq_Flags_Option,                &
@@ -217,6 +235,8 @@ SUBROUTINE Initialize_Poseidon_with_AMReX(  Source_NQ,                          
                                             Print_Timetable_Option,             &
                                             Write_Timetable_Option,             &
                                             Write_Sources_Option,               &
+                                            Print_Condition_Option,             &
+                                            Write_Condition_Option,             &
                                             Suffix_Flag_Option,                 &
                                             Suffix_Tail_Option,                 &
                                             Frame_Option                        )
@@ -228,10 +248,10 @@ REAL(idp),  DIMENSION(2),               INTENT(IN)              ::  Source_xL
 REAL(idp),  DIMENSION(Source_NQ(1)),    INTENT(IN)              ::  Source_RQ_xlocs
 REAL(idp),  DIMENSION(Source_NQ(2)),    INTENT(IN)              ::  Source_TQ_xlocs
 REAL(idp),  DIMENSION(Source_NQ(3)),    INTENT(IN)              ::  Source_PQ_xlocs
+CHARACTER(LEN=1),                       INTENT(IN)              ::  Source_Units
+CHARACTER(LEN=2),                       INTENT(IN)              ::  Source_Radial_Boundary_Units
 
 
-CHARACTER(LEN=1),        INTENT(IN), OPTIONAL                   ::  Units_Option
-CHARACTER(LEN=2),        INTENT(IN), OPTIONAL                   ::  Radial_Boundary_Units_Option
 INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL                   ::  Integration_NQ_Option
 REAL(idp),               INTENT(IN), OPTIONAL                   ::  Convergence_Criteria_Option
 INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL                   ::  CFA_EQ_Flags_Option
@@ -251,6 +271,8 @@ LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Results_Op
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Timetable_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Timetable_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Sources_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Condition_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Condition_Option
 
 CHARACTER(LEN=10),       INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
 CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
@@ -272,79 +294,11 @@ ELSE
     Verbose_Flag = .FALSE.
 END IF
 
-IF ( Verbose_Flag .EQV. .TRUE. ) THEN
-    PRINT*,"Initializing Poseidon with AMReX..."
-END IF
+IF ( Verbose_Flag ) CALL Init_Message('Beginning Poseidon Core Initialization.')
 
 AMReX_Mode = .TRUE.
 
-
-CALL Init_AMReX_Parameters_From_Input_File()
-
-
-IF ( PRESENT( Units_Option ) ) THEN
-    CALL Set_Units(Units_Option)
-ELSE
-    CALL Set_Units("G")
-END IF
-
-
-
-IF ( PRESENT( Radial_Boundary_Units_Option ) ) THEN
-    IF ( Radial_Boundary_Units_Option == "cm" ) THEN
-        R_Inner = R_Inner*Centimeter
-        R_Outer = R_Outer*Centimeter
-    ELSE IF ( Radial_Boundary_Units_Option == "m" ) THEN
-        R_Inner = R_Inner*Meter
-        R_Outer = R_Outer*Meter
-    ELSE IF ( Radial_Boundary_Units_Option == "km" ) THEN
-        R_Inner = R_Inner*Kilometer
-        R_Outer = R_Outer*Kilometer
-    ELSE
-        R_Inner = R_Inner*Centimeter
-        R_Outer = R_Outer*Centimeter
-    END IF
-END IF
-
-
-
-IF ( PRESENT( Integration_NQ_Option ) ) THEN
-    Num_R_Quad_Points = Integration_NQ_Option(1)
-    Num_T_Quad_Points = Integration_NQ_Option(2)
-    Num_P_Quad_Points = Integration_NQ_Option(3)
-ELSE
-    Num_R_Quad_Points = 2*Degree + 2
-    Num_T_Quad_Points = 1
-    Num_P_Quad_Points = 2*L_Limit + 1
-END IF
-Num_TP_Quad_Points = Num_T_Quad_Points*Num_P_Quad_Points
-Local_Quad_DOF     = Num_R_Quad_Points*Num_TP_Quad_Points
-
-MF_Source_nComps   = 5*Local_Quad_DOF
-!lPF_Init_Flag(iPF_Init_Quad_Vars) = .TRUE.
-
-
-CALL Init_IO_Params(WriteAll_Option,            &
-                    Print_Setup_Option,         &
-                    Write_Setup_Option,         &
-                    Print_Results_Option,       &
-                    Write_Results_Option,       &
-                    Print_Timetable_Option,     &
-                    Write_Timetable_Option,     &
-                    Write_Sources_Option,       &
-                    Suffix_Flag_Option,         &
-                    Suffix_Tail_Option,         &
-                    Frame_Option                )
-
-
-
-
-!CALL Init_AMReX_Params( AMReX_Max_Levels_Option,            &
-!                        AMReX_Max_Grid_Size_Option,         &
-!                        AMReX_FEM_Refinement_Option,        &
-!                        AMReX_Integral_Refinement_Option    )
-
-
+CALL Set_Units(Source_Units)
 
 IF ( PRESENT(Poisson_Mode_Option) ) THEN
     Poisson_Mode = Poisson_Mode_Option
@@ -352,15 +306,66 @@ ELSE
     Poisson_Mode = .FALSE.
 END IF
 
+CALL Init_MPI_Params()
+
+CALL Set_Caller_Data(   Source_NQ,                      &
+                        Source_xL,                      &
+                        Source_RQ_xlocs,                &
+                        Source_TQ_xlocs,                &
+                        Source_PQ_xlocs,                &
+                        Source_Units,                   &
+                        Source_Radial_Boundary_Units    )
+
+
+
+CALL Init_Parameters_From_AMReX_Input_File()
+
+
+
+CALL Init_IO_Params(    WriteAll_Option,                &
+                        Print_Setup_Option,             &
+                        Write_Setup_Option,             &
+                        Print_Results_Option,           &
+                        Write_Results_Option,           &
+                        Print_Timetable_Option,         &
+                        Write_Timetable_Option,         &
+                        Write_Sources_Option,           &
+                        Print_Condition_Option,     &
+                        Write_Condition_Option,     &
+                        Suffix_Flag_Option,             &
+                        Suffix_Tail_Option,             &
+                        Frame_Option                    )
+
+
+CALL Init_Quad_Params( Integration_NQ_Option )
+CALL Initialize_Quadrature()
+
+
+
+Translation_Matrix = Create_Translation_Matrix( Caller_NQ,          &
+                                                Caller_xL,          &
+                                                Caller_RQ_xlocs,    &
+                                                Caller_TQ_xlocs,    &
+                                                Caller_PQ_xlocs,    &
+                                                Caller_Quad_DOF,    &
+                                                [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                                [xLeftLimit, xRightLimit ],            &
+                                                Int_R_Locations,      &
+                                                Int_T_Locations,      &
+                                                Int_P_Locations,      &
+                                                Local_Quad_DOF            )
+lPF_Init_MTGV_Flags(iPF_Init_MTGV_TransMat) = .TRUE.
+
+
+
 IF ( PRESENT(Flat_Guess_Option) ) THEN
-    lPF_IG_Flags(iPF_IG_Flat_Guess) = Poisson_Mode_Option
+    lPF_IG_Flags(iPF_IG_Flat_Guess) = Flat_Guess_Option
 ELSE
     lPF_IG_Flags(iPF_IG_Flat_Guess) = .TRUE.
 END IF
 
 
 
-CALL MPI_COMM_RANK(MPI_COMM_WORLD, myID_Poseidon, ierr)
 
 
 
@@ -383,13 +388,6 @@ ELSE
     Method_Flag = 3
 
 
-!    CALL Init_Fixed_Point_Params( Max_Iterations_Option,          &
-!                                  Convergence_Criteria_Option,    &
-!                                  Anderson_M_Option               )
-
-
-
-
     IF ( PRESENT(CFA_Eq_Flags_Option) ) THEN
         CFA_EQ_Flags = CFA_Eq_Flags_Option
     ELSE
@@ -403,38 +401,29 @@ ELSE
 
 
     CALL Initialize_Derived_AMReX()
-    CALL Allocate_Poseidon_CFA_Variables()
-    CALL Allocate_XCFC_Source_Variables()
-    CALL Initialize_Quadrature()
+    CALL Allocate_Poseidon_Source_Variables()
+    CALL Allocate_XCFC_Source_Routine_Variables()
     CALL Initialize_Tables()
-
-
-!    CALL Initialize_XCFC_with_AMReX(CFA_EQ_Flags_Option)
 
 
 
 END IF ! Not Poisson Mode
 
 
-CALL Set_Caller_Quadrature( Source_NQ,          &
-                            Source_xL,          &
-                            Source_RQ_xlocs,    &
-                            Source_TQ_xlocs,    &
-                            Source_PQ_xlocs     )
+
+CALL TimerStop( Timer_Initialization_Core )
 
 
 
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"Poseidon Initialization Complete"
-END IF
+IF ( Verbose_Flag ) CALL Init_Message('Poseidon Initialization Core Complete.')
+
 
 IF ( Verbose_Flag ) THEN
     CALL Output_Setup_Report()
 END IF
 
-CALL TimerStop( Timer_Initialization_Core )
 
 #endif
 
@@ -479,6 +468,8 @@ CALL Create_FindLoc_Table()
 
 CALL Create_FEM_Elem_Table()
 
+
+lPF_Init_AMReX_Flags(iPF_Init_AMReX_Maps) = .TRUE.
 
 END SUBROUTINE Initialize_AMReX_Maps
 

@@ -31,6 +31,9 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY : pi
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Init_Message
+
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
@@ -93,6 +96,11 @@ USE Functions_Quadrature, &
                     Initialize_LG_Quadrature,               &
                     Initialize_Trapezoid_Quadrature
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Matrices_Flags,    &
+                    iPF_Init_Matrices_Type_A,   &
+                    iPF_Init_Matrices_Type_B
+
 
 USE MPI
 
@@ -140,6 +148,8 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE Initialize_FP_Matrices()
 
+
+IF ( Verbose_Flag ) CALL Init_Message('Beginning Matrix Initialization.')
 
 
 ! Set number of quadrature points for different dimensions
@@ -201,6 +211,8 @@ CALL Calculate_Angular_Terms()
 
 CALL Calculate_Laplace_Matrix()
 CALL Calculate_MVL_Banded()
+
+
 DEALLOCATE( Cur_T_Locs )
 DEALLOCATE( Cur_P_Locs )
 
@@ -590,10 +602,8 @@ ALLOCATE( R_Square(1:Int_R_Deg)    )
 
 IF ( Matrix_Format == 'Full') THEN
 
-    IF ( Verbose_Flag ) THEN
-        PRINT*,"-Initializing Laplace Matrix.  Format: Full. "
-    END IF
 
+    IF ( Verbose_Flag ) CALL Init_Message('Initializing Laplace Matrix.  Format: Full.')
 
     DO l = 0,L_LIMIT
     DO re = 0,NUM_R_ELEMENTS-1
@@ -632,10 +642,8 @@ IF ( Matrix_Format == 'Full') THEN
 
 ELSEIF ( Matrix_Format == 'CCS') THEN
 
-    IF ( Verbose_Flag ) THEN
-        PRINT*,"-Initializing Laplace Matrix.  Format: CCS. "
-    END IF
 
+    IF ( Verbose_Flag ) CALL Init_Message('Initializing Laplace Matrix.  Format: CCS.')
 
 
     Laplace_Matrix_COL(0,:) = 0
@@ -740,7 +748,7 @@ END IF
 !PRiNT*,"Val"
 !PRINT*,Laplace_Matrix_COL
 
-
+lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A) = .TRUE.
 
 
 END SUBROUTINE Calculate_Laplace_Matrix
@@ -783,6 +791,10 @@ REAL(idp)                                               ::  DR, TODR
 
 
 
+IF ( Verbose_Flag ) CALL Init_Message('Initializing Modified Vector Laplacian Matrix.  Format: Banded.')
+
+
+
 Beta_MVL_Banded = 0.0_idp
 
 
@@ -793,11 +805,6 @@ ALLOCATE( RR_Factor(   1:Int_R_Deg, 0:DEGREE, 0:DEGREE )    )
 ALLOCATE( RDR_Factor(  1:Int_R_Deg, 0:DEGREE, 0:DEGREE )    )
 ALLOCATE( DRR_Factor(  1:Int_R_Deg, 0:DEGREE, 0:DEGREE )    )
 ALLOCATE( DRDR_Factor( 1:Int_R_Deg, 0:DEGREE, 0:DEGREE )    )
-
-
-IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Modified Vector Laplacian Matrix.  Format: Banded. "
-END IF
 
 
 
@@ -900,26 +907,16 @@ DO re = 0,Num_R_Elements-1
 END DO ! re Loop
 
 
-
-
-!Call Output_Laplace_Beta(Beta_MVL_Banded,Beta_Prob_Dim, Beta_Prob_Dim)
-Beta_Factorized_Flag = .FALSE.
-
-
 DEALLOCATE( Cur_R_Locs, R_Square )
-
 DEALLOCATE( RR_Factor    )
 DEALLOCATE( RDR_Factor   )
 DEALLOCATE( DRR_Factor   )
 DEALLOCATE( DRDR_Factor  )
 
 
-!PRINT*,"Beta_MVL_Banded"
-!PRINT*,Beta_MVL_Banded
-!
-!PRINT*,"STOPPING at end of Calculate_MVL_Banded"
-!STOP
 
+Beta_Factorized_Flag = .FALSE.
+lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B) = .TRUE.
 
 END SUBROUTINE Calculate_MVL_Banded
 

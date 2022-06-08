@@ -51,6 +51,13 @@ CFA_Var_Names = ['Conformal Factor                  ', &
                  'Theta X Component                 ', &
                  'Phi X Component                   ' ]
 
+
+INTEGER, PARAMETER                                      :: N_VecVars = 2
+CHARACTER(LEN = 15),DIMENSION(N_VecVars), PARAMETER   :: &
+CFA_VecVar_Names = ['Shift Component', &
+                    'X Component    ']
+
+
 INTEGER, PARAMETER                                      :: N_ShortVars = 8
 CHARACTER(LEN = 10),DIMENSION(N_ShortVars), PARAMETER   :: &
 CFA_ShortVars = ['ConFactor ', &

@@ -69,20 +69,20 @@ USE Variables_IO, &
                             
 
 
-USE Variables_MPI, &
-                    ONLY :  nProcs_Poseidon,        &
-                            Num_Block_Phi_Columns,  &
-                            Num_Block_Theta_Rows,   &
-                            Num_Shells,             &
-                            Num_SubShells,          &
-                            Num_SubShells_Per_Shell,&
-                            Num_Blocks,             &
-                            Num_Blocks_Per_Shell,   &
-                            Num_R_Elems_Per_Block,  &
-                            Num_T_Elems_Per_Block,  &
-                            Num_P_Elems_Per_Block,  &
-                            Num_R_Elems_Per_Shell,  &
-                            Num_R_Elems_Per_SubShell
+!USE Variables_MPI, &
+!                    ONLY :  nProcs_Poseidon,        &
+!                            Num_Block_Phi_Columns,  &
+!                            Num_Block_Theta_Rows,   &
+!                            Num_Shells,             &
+!                            Num_SubShells,          &
+!                            Num_SubShells_Per_Shell,&
+!                            Num_Blocks,             &
+!                            Num_Blocks_Per_Shell,   &
+!                            Num_R_Elems_Per_Block,  &
+!                            Num_T_Elems_Per_Block,  &
+!                            Num_P_Elems_Per_Block,  &
+!                            Num_R_Elems_Per_Shell,  &
+!                            Num_R_Elems_Per_SubShell
                             
 
 USE Variables_Quadrature, &
@@ -146,21 +146,21 @@ DOMAIN_DIM                  = INT_PARAMS(1)
 DEGREE                      = INT_PARAMS(2)
 L_LIMIT                     = INT_PARAMS(3)
 
-nPROCS_POSEIDON             = INT_PARAMS(4)
+!nPROCS_POSEIDON             = INT_PARAMS(4)
 
-NUM_R_ELEMS_PER_SHELL       = INT_PARAMS(5)
-NUM_R_ELEMS_PER_SUBSHELL    = INT_PARAMS(6)
-NUM_SHELLS                  = INT_PARAMS(7)
-NUM_SUBSHELLS_PER_SHELL     = INT_PARAMS(8)
+!NUM_R_ELEMS_PER_SHELL       = INT_PARAMS(5)
+!NUM_R_ELEMS_PER_SUBSHELL    = INT_PARAMS(6)
+!NUM_SHELLS                  = INT_PARAMS(7)
+!NUM_SUBSHELLS_PER_SHELL     = INT_PARAMS(8)
+!
+!NUM_BLOCKS_PER_SHELL        = INT_PARAMS(9)
+!NUM_BLOCK_THETA_ROWS        = INT_PARAMS(10)
+!NUM_BLOCK_PHI_COLUMNS       = INT_PARAMS(11)
 
-NUM_BLOCKS_PER_SHELL        = INT_PARAMS(9)
-NUM_BLOCK_THETA_ROWS        = INT_PARAMS(10)
-NUM_BLOCK_PHI_COLUMNS       = INT_PARAMS(11)
-
-
-NUM_R_ELEMS_PER_BLOCK       = INT_PARAMS(5)
-NUM_T_ELEMS_PER_BLOCK       = INT_PARAMS(12)
-NUM_P_ELEMS_PER_BLOCK       = INT_PARAMS(13)
+!
+!NUM_R_ELEMS_PER_BLOCK       = INT_PARAMS(5)
+!NUM_T_ELEMS_PER_BLOCK       = INT_PARAMS(12)
+!NUM_P_ELEMS_PER_BLOCK       = INT_PARAMS(13)
 
 NUM_R_QUAD_POINTS           = INT_PARAMS(14)
 NUM_T_QUAD_POINTS           = INT_PARAMS(15)
@@ -233,8 +233,8 @@ Local_Quad_DOF    = NUM_R_QUAD_POINTS   &
                 * NUM_T_QUAD_POINTS   &
                 * NUM_P_QUAD_POINTS
 
-NUM_BLOCKS      = NUM_SHELLS*NUM_BLOCKS_PER_SHELL
-NUM_SUBSHELLS   = NUM_SHELLS*NUM_SUBSHELLS_PER_SHELL
+!NUM_BLOCKS      = NUM_SHELLS*NUM_BLOCKS_PER_SHELL
+!NUM_SUBSHELLS   = NUM_SHELLS*NUM_SUBSHELLS_PER_SHELL
 
 
 
