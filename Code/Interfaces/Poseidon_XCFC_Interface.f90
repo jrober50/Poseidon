@@ -79,13 +79,12 @@ USE Functions_Quadrature, &
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
+USE IO_Print_Results, &
+            ONLY :  Print_Results
 
 USE XCFC_Method_Module, &
             ONLY :  XCFC_Method_Part1,      &
                     XCFC_Method_Part2
-
-USE IO_Print_Results, &
-            ONLY :  Print_Results
 
 USE Flags_IO_Module, &
             ONLY :  lPF_IO_Flags,           &
@@ -104,7 +103,6 @@ CONTAINS
 !                                                                                           !
 !###########################################################################################!
 SUBROUTINE Poseidon_XCFC_Run_Part1()
-
 
 CALL XCFC_Method_Part1()
 
