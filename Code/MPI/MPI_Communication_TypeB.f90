@@ -24,6 +24,9 @@ MODULE MPI_Communication_TypeB_Module                                        !##
 !                                   !
 !===================================!
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Warning_Message
+
 USE Variables_Derived, &
             ONLY :  Num_R_Nodes,                &
                     LM_Length
@@ -33,7 +36,8 @@ USE Variables_FP,  &
                     FP_Source_Vector_B
 
 USE Variables_MPI, &
-            ONLY :  myID_Poseidon
+            ONLY :  myID_Poseidon,              &
+                    nPROCS_Poseidon
 
 USE MPI
 
@@ -111,7 +115,13 @@ INTEGER, INTENT(INOUT)                  :: ierr
 INTEGER                                 :: lm_loc
 INTEGER                                 :: Send_Size
 
+
+INTEGER                                 ::  i
+CHARACTER(LEN = 300)                    ::  Message
+
 Send_Size = ULim - LLim + 1
+
+
 
 CALL MPI_Bcast( FP_Coeff_Vector_B(LLim:ULim,iVB),   &
                 Send_Size,                          &
@@ -119,6 +129,12 @@ CALL MPI_Bcast( FP_Coeff_Vector_B(LLim:ULim,iVB),   &
                 MasterID,                           &
                 Comm,                               &
                 ierr                                )
+IF (ierr .NE. 0) THEN
+    WRITE(Message,'(A,I1.1)')"MPI_BCAST has failed with ierr = ",ierr
+    CALL Warning_Message(TRIM(Message))
+END IF
+
+
 
 
 END SUBROUTINE MPI_BCAST_Coeffs_TypeB

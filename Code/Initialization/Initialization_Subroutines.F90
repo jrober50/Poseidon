@@ -138,6 +138,7 @@ USE Flags_Initialization_Module, &
 USE Variables_MPI, &
             ONLY :  nProcs_Poseidon,        &
                     myID_Poseidon,          &
+                    Poseidon_Comm_World,    &
                     ierr
 
 
@@ -595,7 +596,9 @@ SUBROUTINE Init_MPI_Params(  )
 
 IF ( Verbose_Flag ) CALL Init_Message('Setting MPI Parameters.')
 
-CALL MPI_COMM_RANK(MPI_COMM_WORLD, myID_Poseidon, ierr)
+CALL MPI_COMM_DUP(MPI_COMM_WORLD, Poseidon_Comm_World, ierr)
+CALL MPI_COMM_SIZE(Poseidon_Comm_World, nProcs_Poseidon, ierr)
+CALL MPI_COMM_RANK(Poseidon_Comm_World, myID_Poseidon, ierr)
 
 lPF_Init_Flags(iPF_Init_MPI) = .TRUE.
 

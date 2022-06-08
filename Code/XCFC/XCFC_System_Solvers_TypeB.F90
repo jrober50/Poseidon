@@ -206,7 +206,7 @@ END IF
 
 #ifdef POSEIDON_AMREX_FLAG
 Lower_Limit = 1
-Upper_Limit = Num_R_Nodes
+Upper_Limit = Beta_Prob_Dim
 CALL MPI_BCAST_Coeffs_TypeB(iVB,                     &
                             Lower_Limit,            &
                             Upper_Limit,            &
