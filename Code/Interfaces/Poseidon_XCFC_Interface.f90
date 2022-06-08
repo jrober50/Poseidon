@@ -82,6 +82,12 @@ USE Functions_Math, &
 USE IO_Print_Results, &
             ONLY :  Print_Results
 
+USE Variables_MPI, &
+            ONLY :  myID_Poseidon,              &
+                    MasterID_Poseidon,          &
+                    nPROCS_Poseidon,            &
+                    Poseidon_Comm_World
+
 USE XCFC_Method_Module, &
             ONLY :  XCFC_Method_Part1,      &
                     XCFC_Method_Part2
@@ -89,6 +95,8 @@ USE XCFC_Method_Module, &
 USE Flags_IO_Module, &
             ONLY :  lPF_IO_Flags,           &
                     iPF_IO_Print_Results
+
+USE MPI
 
 
 CONTAINS
@@ -104,10 +112,20 @@ CONTAINS
 !###########################################################################################!
 SUBROUTINE Poseidon_XCFC_Run_Part1()
 
+INTEGER         :: i, ierr
+
 CALL XCFC_Method_Part1()
 
+
 IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
-    Call Print_Results()
+    DO i = 0,nPROCs_Poseidon
+        IF (myID_Poseidon == MasterID_Poseidon) THEN
+            PRINT*,"myID_Poseidon :",myID_Poseidon
+            Call Print_Results()
+        END IF
+        CALL MPI_Barrier(Poseidon_Comm_World,ierr)
+    END DO
+
 END IF
 
 
@@ -128,13 +146,23 @@ END SUBROUTINE Poseidon_XCFC_Run_Part1
 !###########################################################################################!
 SUBROUTINE Poseidon_XCFC_Run_Part2()
 
+INTEGER         :: i, ierr
 
 CALL XCFC_Method_Part2()
 
 
+
 IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
-    Call Print_Results()
+    DO i = 0,nPROCs_Poseidon
+        IF (myID_Poseidon == MasterID_Poseidon) THEN
+            PRINT*,"myID_Poseidon :",myID_Poseidon
+            Call Print_Results()
+        END IF
+        CALL MPI_Barrier(Poseidon_Comm_World,ierr)
+    END DO
+
 END IF
+
 
 END SUBROUTINE Poseidon_XCFC_Run_Part2
 
