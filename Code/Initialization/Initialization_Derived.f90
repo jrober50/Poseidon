@@ -48,18 +48,6 @@ USE Variables_Derived, &
                     Num_Off_Diagonals,      &
                     Beta_Prob_Dim,          &
                     Beta_Elem_Prob_Dim
-                            
-USE Variables_Functions, &
-            ONLY :  Matrix_Location,            &
-                    LM_Location
-
-USE Maps_Legacy, &
-            ONLY :  CFA_1D_Matrix_Map,      &
-                    CFA_2D_Matrix_Map,      &
-                    CFA_3D_Matrix_Map,      &
-                    CFA_1D_LM_Map,          &
-                    CFA_2D_LM_Map,          &
-                    CFA_3D_LM_Map
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_MTGV_Flags,    &
@@ -78,23 +66,18 @@ SUBROUTINE Initialize_Derived()
 
 IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables.')
 
+
 IF ( DOMAIN_DIM == 1 ) THEN
 
     LM_LENGTH = 1
-    Matrix_Location => CFA_1D_Matrix_Map
-    LM_Location => CFA_1D_LM_Map
 
 ELSE IF ( DOMAIN_DIM == 2 ) THEN
 
     LM_LENGTH = L_LIMIT + 1
-    Matrix_Location => CFA_2D_Matrix_Map
-    LM_Location => CFA_2D_LM_Map
 
 ELSE IF ( DOMAIN_DIM == 3 ) THEN
 
     LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
-    Matrix_Location => CFA_3D_Matrix_Map
-    LM_Location => CFA_3D_LM_Map
 
 END IF
 
@@ -153,20 +136,14 @@ IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables.')
 IF ( DOMAIN_DIM == 1 ) THEN
 
     LM_LENGTH = 1
-    Matrix_Location => CFA_1D_Matrix_Map
-    LM_Location => CFA_1D_LM_Map
 
 ELSE IF ( DOMAIN_DIM == 2 ) THEN
 
     LM_LENGTH = L_LIMIT + 1
-    Matrix_Location => CFA_2D_Matrix_Map
-    LM_Location => CFA_2D_LM_Map
 
 ELSE IF ( DOMAIN_DIM == 3 ) THEN
 
     LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
-    Matrix_Location => CFA_3D_Matrix_Map
-    LM_Location => CFA_3D_LM_Map
 
 END IF
 

@@ -125,6 +125,9 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
+USE Variables_Interface, &
+            ONLY :  Caller_Quad_DOF
+
 
 USE MPI
 
@@ -145,14 +148,14 @@ SUBROUTINE Driver_SetSource( Alpha, Star_Radius )
 REAL(idp), INTENT(IN)           :: Alpha
 REAL(idp), INTENT(IN)           :: Star_Radius
 
+INTEGER                         ::  nVars_Source
+
 
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Creating AMReX source variables.')
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing Hamiltonian Constraint Test Source Multifab.')
 
 
-
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
-
 
 HCT_Alpha = Alpha
 HCT_Star_Radius = Star_Radius
@@ -165,21 +168,17 @@ CALL amrex_init_virtual_functions &
          VF_Error_Estimate )
 
 
+nVars_Source    = 5
+MF_Src_nComps   = nVars_Source*Caller_Quad_DOF
+MF_Src_nGhost   = 0
 
-!PRINT*,"nLevels",nlevels
 ALLOCATE( MF_Driver_Source(0:nLevels-1) )
 
 CALL amrex_init_from_scratch( 0.0_idp )
 
-
-CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source, MF_Src_nComps, nLevels )
-
+CALL Poseidon_Input_Sources( MF_Driver_Source, MF_Src_nComps )
 
 CALL TimerStop( Timer_Driver_SetSource_InitTest )
-
-
-
-
 
 DEALLOCATE(MF_Driver_Source)
 
@@ -208,7 +207,6 @@ TYPE(amrex_box)                                 ::  Box
 TYPE(amrex_imultifab)                           ::  Level_Mask
 
 INTEGER                                         ::  re, te, pe
-INTEGER, DIMENSION(3)                           ::  iE
 INTEGER, DIMENSION(3)                           ::  iEL, iEU
 INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl

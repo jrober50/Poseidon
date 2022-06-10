@@ -36,11 +36,8 @@ USE Poseidon_Units_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
-USE SelfSimilar_Module, &
+USE External_Yahil_Profile_Module, &
             ONLY :  Initialize_Yahil_Sources
-
-!USE Source_Input_Module, &
-!            ONLY :  Poseidon_Input_Sources
 
 USE Poseidon_Source_Input_Module, &
             ONLY :  Poseidon_Input_Sources

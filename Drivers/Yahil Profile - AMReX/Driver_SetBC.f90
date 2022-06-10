@@ -26,6 +26,13 @@ MODULE Driver_SetBC_Module                                                   !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Parameters, &
+            ONLY :  Verbose_Flag
+
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
+
+
 USE Poseidon_Units_Module, &
             ONLY :  Grav_Constant_G,    &
                     Speed_of_Light,     &
@@ -48,17 +55,18 @@ USE Variables_External, &
                     SELFSIM_R_VALS,     &
                     SELFSIM_POT_VALS
 
-USE Allocation_SelfSimilar, &
-            ONLY :  Allocate_SelfSim,               &
-                    Deallocate_SelfSim
+USE Allocation_Yahil_Profile, &
+            ONLY :  Allocate_Yahil_Profile,               &
+                    Deallocate_Yahil_Profile
 
 USE Variables_Mesh, &
             ONLY :  R_Outer
 
-USE Poseidon_Main_Module, &
-            ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions
+USE Poseidon_Interface_BC_Input, &
+            ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
 
-USE SelfSimilar_Module, &
+
+USE External_Yahil_Profile_Module, &
             ONLY :  SELFSIM_NEWT_SOL,           &
                     CREATE_SELFSIM_NEWT_SOL
 
@@ -109,6 +117,7 @@ INTEGER                                     :: istat
 
 
 
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Calculating boundary conditions.')
 
 
 
@@ -138,7 +147,7 @@ ALLOCATE( Enclosed_Mass(1:NUM_LINES)  )
 
 NUM_ENTRIES = NUM_LINES
 
-CALL Allocate_SelfSim(Num_Entries)
+CALL Allocate_Yahil_Profile(Num_Entries)
 
 
 
@@ -197,8 +206,12 @@ INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
 
-CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
-CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Setting boundary conditions.')
+
+
+
+CALL Poseidon_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
+CALL Poseidon_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
 
 
 END SUBROUTINE Driver_SetBC

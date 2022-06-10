@@ -120,9 +120,11 @@ CALL TimerStop( Timer_XCFC_X )
 
 !CALL Print_Single_Var_Results( iU_X1, iVB_X )
 
-IF ( .FALSE. ) THEN
-    STOP "Stopping at the end of XCFC_x_Solve"
-END IF
+
+
+IF ( .FALSE. ) STOP "at the end of XCFC_x_Solve"
+
+
 
 END SUBROUTINE XCFC_X_Solve
 

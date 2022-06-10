@@ -44,9 +44,6 @@ USE Poseidon_Message_Routines_Module, &
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_Results_Dir
 
-USE SelfSimilar_Module, &
-            ONLY :  Initialize_Yahil_Sources
-
 USE Poseidon_Source_Input_Module, &
             ONLY :  Poseidon_Input_Sources
 

@@ -128,8 +128,6 @@ CONTAINS
  !#########################################################!
 LOGICAL FUNCTION Poseidon_Initialization_Check()
 
-LOGICAL, DIMENSION(1:3)             ::  Check_Flags
-
 
 lPF_Init_Flags(iPF_Init_Matrices) = Poseidon_Init_Matrices_Check()
 lPF_Init_Flags(iPF_Init_Quadrature) = Poseidon_Init_Quadrature_Check()

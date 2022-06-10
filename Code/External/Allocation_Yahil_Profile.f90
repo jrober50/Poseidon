@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Allocation_SelfSimilar                                                       !##!
+MODULE Allocation_Yahil_Profile                                                     !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -53,7 +53,7 @@ CONTAINS
 !                            Allocate_Poseidon_Variables                         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Allocate_SelfSim(Num_Entries)
+SUBROUTINE Allocate_Yahil_Profile(Num_Entries)
 
 INTEGER, INTENT(IN)                             ::  Num_Entries
 
@@ -67,7 +67,7 @@ ELSE
     SelfSim_Allocated = .TRUE.
 END IF
 
-END SUBROUTINE Allocate_SelfSim
+END SUBROUTINE Allocate_Yahil_Profile
 
 
 
@@ -84,7 +84,7 @@ END SUBROUTINE Allocate_SelfSim
 !                           Deallocate_Poseidon_Variables                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Deallocate_SelfSim()
+SUBROUTINE Deallocate_Yahil_Profile()
 
 IF ( SelfSim_Allocated ) THEN
 
@@ -95,7 +95,7 @@ IF ( SelfSim_Allocated ) THEN
 
 END IF
 
-END SUBROUTINE Deallocate_SelfSim
+END SUBROUTINE Deallocate_Yahil_Profile
 
 
 
@@ -103,6 +103,6 @@ END SUBROUTINE Deallocate_SelfSim
 
 
 
-END MODULE Allocation_SelfSimilar
+END MODULE Allocation_Yahil_Profile
 
 

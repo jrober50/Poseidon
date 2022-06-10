@@ -28,9 +28,6 @@ USE MPI
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-
-
-
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,             &
                     R_Inner,                    &
@@ -62,8 +59,6 @@ USE Poseidon_Parameters, &
                     CFA_Eq_Flags,               &
                     Verbose_Flag
 
-
-
 USE Variables_FP,  &
             ONLY :  FP_Anderson_M
 
@@ -72,37 +67,14 @@ USE FP_Source_Vector_Module, &
                     Allocate_FP_Source_Variables,   &
                     Deallocate_FP_Source_Variables
 
-USE FP_Functions_BC,  &
-            ONLY :  Dirichlet_BC,                   &
-                    Dirichlet_BC_CCS,               &
-                    Dirichlet_BC_CHOL,              &
-                    Dirichlet_BC_Beta,              &
-                    Neumann_BC,                     &
-                    Neumann_BC_CCS
-
-USE IO_FP_Linear_System, &
-            ONLY :  Output_Laplace_Beta,            &
-                    Output_Laplace
-
 USE IO_Print_Results, &
             ONLY :  Print_Results
-
 
 USE IO_Convergence_Output,  &
             ONLY :  Output_Convergence_Reports
 
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
-
-USE Poseidon_Cholesky_Module,   &
-            ONLY :  Cholesky_Factorization,         &
-                    CCS_Back_Substitution,          &
-                    CCS_Forward_Substitution
-
-USE Linear_Solvers_And_Preconditioners, &
-            ONLY :  PRECOND_CONJ_GRAD_CCS,          &
-                    JACOBI_CONDITIONING,            &
-                    Jacobi_Conditioning_Beta
 
 USE FP_System_Solvers_Module,   &
             ONLY :  Solve_FP_System,                &

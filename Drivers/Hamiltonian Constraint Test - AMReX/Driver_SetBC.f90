@@ -29,11 +29,17 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
+
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
 USE Poseidon_Units_Module, &
             ONLY :  C_Square
+
+USE Variables_Mesh, &
+            ONLY :  R_Outer
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
@@ -42,8 +48,8 @@ USE Variables_External, &
             ONLY :  HCT_Alpha,      &
                     HCT_Star_Radius
 
-USE Poseidon_Main_Module, &
-            ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions
+USE Poseidon_Interface_BC_Input, &
+            ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
 
 
 IMPLICIT NONE
@@ -58,9 +64,7 @@ CONTAINS
 !   Driver_SetBC                                                                !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Driver_SetBC( Domain_Edge )
-
-REAL(idp), INTENT(IN)                                   ::  Domain_Edge
+SUBROUTINE Driver_SetBC( )
 
 
 
@@ -79,10 +83,8 @@ REAL(idp)                                               ::  rho_o
 REAL(idp)                                               ::  uaR
 REAL(idp)                                               ::  fofalpha
 
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Calculating boundary conditions.')
 
-IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A)')"-Calculating Boundary Conditions."
-END IF
 
 fofalpha            =  HCT_Alpha**5/(1.0_idp+HCT_Alpha*HCT_Alpha)**3
 
@@ -92,7 +94,7 @@ C                   =  1.0_idp/sqrt(sqrt( (2.0_idp/3.0_idp)*pi*rho_o  ) )
 Beta                =  (C*uaR-1.0_idp)*HCT_Star_Radius
 
 Psi_BC          = 1.0250_idp
-!Psi_BC          = HCT_Solution( Domain_Edge, HCT_Alpha, Beta, C, HCT_Star_Radius )
+!Psi_BC          = HCT_Solution( R_Outer, HCT_Alpha, Beta, C, HCT_Star_Radius )
 AlphaPsi_BC     = 1.0_idp
 Shift_Vector_BC = 0.0_idp
 
@@ -106,12 +108,11 @@ INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
 
-IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A)')"-Setting Boundary Conditions"
-END IF
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Setting boundary conditions.')
 
-CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
-CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
+
+CALL Poseidon_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
+CALL Poseidon_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
 
 
 

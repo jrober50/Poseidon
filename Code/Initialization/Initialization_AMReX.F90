@@ -56,9 +56,6 @@ USE Variables_MPI, &
                     myID_Poseidon,          &
                     ierr
 
-USE Variables_Functions, &
-            ONLY :  LM_Location
-
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
                     Num_T_Quad_Points,      &
@@ -396,8 +393,6 @@ ELSE
 
     NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
     CALL Create_Eq_Maps()
-
-    LM_Location => CFA_3D_LM_Map
 
 
     CALL Initialize_Derived_AMReX()

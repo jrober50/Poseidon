@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Functions_BC                                                              !##!
+MODULE Matrix_Boundary_Condition_Routines                                           !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -817,4 +817,4 @@ END SUBROUTINE DIRICHLET_BC_Beta_Banded
 
 
 
-END MODULE FP_Functions_BC
+END MODULE Matrix_Boundary_Condition_Routines

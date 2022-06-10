@@ -29,8 +29,11 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
-USE Poseidon_Main_Module, &
-        ONLY :  Poseidon_CFA_Set_Uniform_Boundary_Conditions
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
+
+USE Poseidon_Interface_BC_Input, &
+            ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
 
 
 IMPLICIT NONE
@@ -57,9 +60,8 @@ REAL(idp), DIMENSION(1:5)                               ::  INNER_BC_VALUES
 REAL(idp), DIMENSION(1:5)                               ::  OUTER_BC_VALUES
 
 
-IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A)')"In Driver, Setting Boundary Conditions."
-END IF
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Calculating boundary conditions.')
+
 
 
 
@@ -75,9 +77,11 @@ OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Setting boundary conditions.')
 
-CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
-CALL Poseidon_CFA_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
+
+CALL Poseidon_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
+CALL Poseidon_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
 
 
 

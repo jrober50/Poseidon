@@ -59,7 +59,6 @@ USE Variables_FP,  &
                     Beta_Diagonals,             &
                     Beta_MVL_Banded,            &
                     Beta_IPIV,                  &
-                    MCF_Flag,                   &
                     Factored_NNZ,               &
                     Laplace_Factored_Val,       &
                     Laplace_Factored_Col,       &
@@ -67,12 +66,12 @@ USE Variables_FP,  &
                     FP_Update_Vector,           &
                     CFA_Var_Map
 
-USE Poseidon_Cholesky_Module,   &
+USE Matrix_Cholesky_Factorization_Module,   &
             ONLY :  CCS_Back_Substitution,          &
                     CCS_Forward_Substitution,       &
                     Cholesky_Factorization
 
-USE FP_Functions_BC,  &
+USE Matrix_Boundary_Condition_Routines,  &
             ONLY :  DIRICHLET_BC_Beta_Banded,       &
                     Dirichlet_BC_CHOL,              &
                     Neumann_BC_CCS
@@ -91,6 +90,10 @@ USE Timer_Routines_Module, &
 USE Timer_Variables_Module, &
             ONLY :  Timer_XCFC_Lapse_LinearSolve,   &
                     Timer_XCFC_ConFactor_LinearSolve
+
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Matrices_Flags,    &
+                    iPF_Init_Matrices_Type_A_Cholesky
 
 IMPLICIT NONE
 
@@ -126,7 +129,7 @@ END IF
 
 
 
-IF ( MCF_Flag == 0 ) THEN
+IF ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) ) THEN
     
     !
     !   This only needs to be done everytime the radial mesh is defined/redefined.
@@ -135,9 +138,7 @@ IF ( MCF_Flag == 0 ) THEN
     !   represent the factorization matrix, L.  This matrix can then be reused to
     !   solve the linear system using forward and backward substitution.
     !
-
     CALL Cholesky_Factorization()
-    MCF_Flag = 1
     
 END IF
 

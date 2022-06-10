@@ -147,19 +147,18 @@ REAL(idp)                                   ::  rho_o
 INTEGER                                     ::  Here
 
 
-CALL TimerStart( Timer_Core_Init_Test_Problem )
 
+CALL TimerStart( Timer_Core_Init_Test_Problem )
 
 
 fofalpha            =  HCT_Alpha**5/(1.0_idp+HCT_Alpha*HCT_Alpha)**3
 rho_o               =  (3.0_idp/(2.0_idp*pi*HCT_Star_Radius*HCT_Star_Radius) )*fofalpha*fofalpha
 
-
 DROT = Level_dx(Level,1)/2.0_idp
 Num_DOF = nComps/5
 
-Src = 0.0_idp
 
+Src = 0.0_idp
 DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
 
@@ -177,7 +176,7 @@ DO re = BLo(1),BHi(1)
              + (td-1)*Num_R_Quad_Points                         &
              + rd
 
-        IF ( cur_r_locs(rd) .LE. HCT_Star_Radius ) THEN
+        IF ( Cur_R_Locs(rd) .LE. HCT_Star_Radius ) THEN
             Src(re,te,pe,Here) = rho_o
         ELSE
             Src(re,te,pe,Here) = 0.0_idp

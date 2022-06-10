@@ -1,4 +1,4 @@
 EXTERNAL = \
-  Allocation_SelfSimilar.f90       \
-  SelfSimilar.f90                  \
-  MacLaurin.f90                    \
+  Allocation_Yahil_Profile.f90      \
+  External_Yahil_Profile.f90        \
+  External_MacLaurin_Profile.f90    \

@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Intialize_Matrices                                                        !##!
+MODULE Matrix_Initialization_Module                                                 !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -63,17 +63,12 @@ USE Variables_FP, &
                     Laplace_Factored_VAL,       &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
-                    MCF_Flag,                   &
                     Beta_MVL_Banded,            &
-                    Beta_Factorized_Flag,       &
                     Beta_Bandwidth
 
 
-USE Poseidon_Cholesky_Module,   &
+USE Matrix_Cholesky_Factorization_Module,   &
             ONLY :  Cholesky_Factorization
-
-USE IO_FP_Linear_System, &
-            ONLY :  Output_Laplace
 
 USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map
@@ -97,9 +92,11 @@ USE Functions_Quadrature, &
                     Initialize_Trapezoid_Quadrature
 
 USE Flags_Initialization_Module, &
-            ONLY :  lPF_Init_Matrices_Flags,    &
-                    iPF_Init_Matrices_Type_A,   &
-                    iPF_Init_Matrices_Type_B
+            ONLY :  lPF_Init_Matrices_Flags,            &
+                    iPF_Init_Matrices_Type_A,           &
+                    iPF_Init_Matrices_Type_B,           &
+                    iPF_Init_Matrices_Type_A_Cholesky,  &
+                    iPF_Init_Matrices_Type_B_LU
 
 
 USE MPI
@@ -143,10 +140,10 @@ CONTAINS
 
 !+101+##########################################################################!
 !                                                                               !
-!           Initialize_FP_Matrices                                              !
+!           Initialize_XCFC_Matrices                                            !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Initialize_FP_Matrices()
+SUBROUTINE Initialize_XCFC_Matrices()
 
 
 IF ( Verbose_Flag ) CALL Init_Message('Beginning Matrix Initialization.')
@@ -235,7 +232,7 @@ DEALLOCATE( Ylm_CC_dp )
 
 
 
-END SUBROUTINE Initialize_FP_Matrices
+END SUBROUTINE Initialize_XCFC_Matrices
 
 
 
@@ -731,7 +728,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
     END DO  ! l Loop
 
 
-    MCF_Flag = 0
     Laplace_Factored_VAL = Laplace_Matrix_VAL
     Laplace_Factored_ROW = Laplace_Matrix_ROW
     Laplace_Factored_COL = Laplace_Matrix_COL
@@ -747,7 +743,7 @@ END IF
 !PRINT*,Laplace_Matrix_ROW
 !PRiNT*,"Val"
 !PRINT*,Laplace_Matrix_COL
-
+lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .FALSE.
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A) = .TRUE.
 
 
@@ -915,8 +911,8 @@ DEALLOCATE( DRDR_Factor  )
 
 
 
-Beta_Factorized_Flag = .FALSE.
-lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B) = .TRUE.
+lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) = .FALSE.
+lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B)    = .TRUE.
 
 END SUBROUTINE Calculate_MVL_Banded
 
@@ -1320,5 +1316,8 @@ END DO ! dp Loop
 
 END SUBROUTINE Calc_Beta3_Terms
 
-END MODULE FP_Intialize_Matrices
+
+
+
+END MODULE Matrix_Initialization_Module
 

@@ -40,8 +40,7 @@ USE Poseidon_Parameters, &
                     CFA_EQ_Flags,           &
                     Num_CFA_Eqs
 
-USE Variables_Functions, &
-            ONLY :  LM_Location
+
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
@@ -407,7 +406,6 @@ IF ( Poisson_Mode ) THEN
     !=======================================================!
 
 
-    LM_Location => CFA_3D_LM_Map
     CALL Initialize_Derived()
     CALL Initialize_Quadrature()
 !    CALL Initialize_Tables()
@@ -452,8 +450,6 @@ ELSE
     ELSE
         nProcs_Poseidon = 1
     END IF
-
-    LM_Location => CFA_3D_LM_Map
 
 
 

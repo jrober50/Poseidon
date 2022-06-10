@@ -36,19 +36,6 @@ PROCEDURE(Matrix_Location_Pointer), POINTER                 ::   Matrix_Location
 
 
 
-ABSTRACT INTERFACE
-    PURE FUNCTION LM_Location_Pointer(l, m)
-        INTEGER                                             ::  LM_Location_Pointer
-        INTEGER, INTENT(IN)                                 ::  l, m
-    END FUNCTION LM_Location_Pointer
-END INTERFACE
-
-PROCEDURE(LM_Location_Pointer), POINTER                     ::   LM_Location => NULL()
-
-
-
-
-
 
 
 

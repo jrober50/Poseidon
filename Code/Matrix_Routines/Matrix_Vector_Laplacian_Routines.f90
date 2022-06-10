@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE FP_Factorize_Beta_Banded                                      !##!
+MODULE Matrix_Vector_Laplacian_Routines                                      !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -83,13 +83,7 @@ USE Variables_FP, &
                     Beta_MVL_Banded,            &
                     Beta_MVL_Diagonal,          &
                     First_Column_Beta_Storage,  &
-                    Last_Column_Beta_Storage,   &
-                    Beta_Factorized_Flag
-
-USE IO_FP_Linear_System, &
-            ONLY :  Output_Laplace,             &
-                    Output_Laplace_Beta,        &
-                    Output_Source_Beta
+                    Last_Column_Beta_Storage
 
 USE IO_Condition_Number_Output_Module, &
             ONLY :  IO_Output_Condition_Number
@@ -128,10 +122,10 @@ CONTAINS
 
 !+501+###########################################################################!
 !                                                                                !
-!                   Factorize_Beta_Banded                                       !
+!           Factorize_Vector_Laplacian                                       !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Factorize_Beta_Banded()
+SUBROUTINE Factorize_Vector_Laplacian()
 
 
 
@@ -148,12 +142,9 @@ CALL TimerStart( Timer_XCFC_Banded_Factorization )
 !   But to apply the BCs we will need values from the original matrix,
 !   so those values are stored before we modify the matrix.
 !
-
-!PRINT*,"Beta_MVL_Banded in Factorize_Beta_Banded"
-!PRINT*,Beta_MVL_Banded
+CALL Dirichlet_BC_Beta_Banded_Mat()
 
 
-CALL DIRICHLET_BC_Beta_Banded_Mat()
 
 
 CALL Jacobi_PC_MVL_Banded()
@@ -173,8 +164,6 @@ CALL ZGBTRF( Beta_Prob_Dim,             &
 IF (INFO .NE. 0) THEN
     WRITE(Message,'(A,I1.1)')"ZGBTRF has failed with INFO = ",INFO
     CALL Warning_Message(TRIM(Message))
-ELSE
-    Beta_Factorized_Flag = .TRUE.
 END IF
 
 
@@ -193,11 +182,7 @@ lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) = .TRUE.
 
 
 
-!PRINT*,"STOPing in Factorize_Beta_Banded"
-!STOP
-
-
-END SUBROUTINE Factorize_Beta_Banded
+END SUBROUTINE Factorize_Vector_Laplacian
 
 
 
@@ -541,4 +526,4 @@ END SUBROUTINE DIRICHLET_BC_Beta_Banded_Mat
 
 
 
-END MODULE FP_Factorize_Beta_Banded
+END MODULE Matrix_Vector_Laplacian_Routines

@@ -171,13 +171,6 @@ INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
-INTEGER                                             ::  Local_R
-INTEGER                                             ::  Local_T
-INTEGER                                             ::  Local_P
-
-INTEGER                                             ::  Input_T
-INTEGER                                             ::  Input_P
-
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)
 
@@ -425,12 +418,6 @@ INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
-INTEGER                                             ::  Local_R
-INTEGER                                             ::  Local_T
-INTEGER                                             ::  Local_P
-
-INTEGER                                             ::  Input_T
-INTEGER                                             ::  Input_P
 
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)

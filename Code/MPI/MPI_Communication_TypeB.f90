@@ -60,7 +60,6 @@ INTEGER, INTENT(IN)                     :: MasterID
 INTEGER, INTENT(IN)                     :: COMM
 INTEGER, INTENT(INOUT)                  :: ierr
 
-INTEGER                                 :: lm_loc
 INTEGER                                 :: Send_Size
 
 Send_Size = ULim - LLim + 1
@@ -105,18 +104,14 @@ END SUBROUTINE MPI_RTM_Source_TypeB
 !###############################################################################!
 SUBROUTINE MPI_BCAST_Coeffs_TypeB( iVB, LLim, ULim, MasterID, COMM, ierr )
 
-INTEGER, INTENT(IN)                     :: iVB
-INTEGER, INTENT(IN)                     :: LLim
-INTEGER, INTENT(IN)                     :: ULim
-INTEGER, INTENT(IN)                     :: MasterID
-INTEGER, INTENT(IN)                     :: COMM
-INTEGER, INTENT(INOUT)                  :: ierr
+INTEGER, INTENT(IN)                     ::  iVB
+INTEGER, INTENT(IN)                     ::  LLim
+INTEGER, INTENT(IN)                     ::  ULim
+INTEGER, INTENT(IN)                     ::  MasterID
+INTEGER, INTENT(IN)                     ::  COMM
+INTEGER, INTENT(INOUT)                  ::  ierr
 
-INTEGER                                 :: lm_loc
-INTEGER                                 :: Send_Size
-
-
-INTEGER                                 ::  i
+INTEGER                                 ::  Send_Size
 CHARACTER(LEN = 300)                    ::  Message
 
 Send_Size = ULim - LLim + 1

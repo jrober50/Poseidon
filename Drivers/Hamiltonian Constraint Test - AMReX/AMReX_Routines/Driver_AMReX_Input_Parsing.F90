@@ -94,7 +94,6 @@ SUBROUTINE Init_AMReX_Parameters()
 
 
 #ifdef POSEIDON_AMREX_FLAG
-INTEGER                                     :: lvl
 TYPE(amrex_parmparse)                       :: PP
 
 ALLOCATE( xL(3), xR(3) )

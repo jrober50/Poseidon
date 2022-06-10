@@ -107,8 +107,7 @@ REAL(idp), INTENT(OUT)                              ::  Komar_Mass
 
 
 
-INTEGER                                             ::  re, te, pe
-INTEGER                                             ::  rd, td, pd, tpd
+INTEGER                                             ::  te, pe
 
 REAL(idp)                                           ::  DROT, DTOT, DPOT
 REAL(idp)                                           ::  crlocs
@@ -207,7 +206,7 @@ REAL(idp), INTENT(OUT), DIMENSION(1:Num_TP_Quad_Points)     ::  TP_Cotan_Val
 REAL(idp), INTENT(OUT), DIMENSION(1:Num_TP_Quad_Points)     ::  TP_Rsin_Square
 
 
-INTEGER                                                     ::  rd, td, pd, tpd
+INTEGER                                                     ::  td, pd, tpd
 
 
 DROT = 0.5_idp * (rlocs(Num_R_Elements) - rlocs(Num_R_Elements-1))
@@ -308,8 +307,6 @@ REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points,     &
 REAL(idp),  INTENT(INOUT), DIMENSION(1:Num_TP_Quad_Points)  ::  Int_Source
 
 
-INTEGER                                                     ::  NRQ = 1
-
 REAL(idp), DIMENSION(Num_TP_Quad_Points )                   ::  Cur_Val_Psi
 REAL(idp), DIMENSION(Num_TP_Quad_Points, 3 )                ::  Cur_Drv_Psi
 
@@ -326,8 +323,8 @@ REAL(idp), DIMENSION(Num_TP_Quad_Points, 3 )                ::  f
 REAL(idp), DIMENSION(Num_TP_Quad_Points, 3, 3 )             ::  Ahat_Array
 
 
-INTEGER                                                     ::  tpd, rd, td, pd
-INTEGER                                                     ::  i, j
+INTEGER                                                     ::  tpd, td, pd
+INTEGER                                                     ::  i
 
 
 

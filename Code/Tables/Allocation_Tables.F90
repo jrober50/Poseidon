@@ -126,6 +126,7 @@ ALLOCATE( rBT_NormedLegendre(   -L_Limit:L_Limit,           &
 !                                1:Num_T_Quad_Points,        &
 !                                0:MaxGridSizeX2-1       )   )
 
+
 ALLOCATE( Ylm_Elem_Values(      1:LM_Length,                &
                                 1:Num_TP_Quad_Points    )   )
 ALLOCATE( Ylm_Elem_dt_Values(   1:LM_Length,                &

@@ -68,9 +68,6 @@ USE IO_Print_Results, &
 USE Poseidon_Main_Module, &
             ONLY :  Poseidon_Close
 
-USE Driver_Run_Module, &
-            ONLY :  Driver_Run
-
 USE Driver_SetSource_Module, &
             ONLY:  Driver_SetSource
 
@@ -92,13 +89,7 @@ USE Poseidon_AMReX_Input_Parsing_Module, &
 USE Variables_Driver_AMReX, &
             ONLY :  xL,                 &
                     xR,                 &
-                    nCells,             &
-                    MaxGridSizeX,       &
                     nLevels
-
-USE Variables_AMReX_Core, &
-            ONLY :  MF_Source,          &
-                    AMReX_Num_Levels
 
 
 USE MPI
@@ -116,15 +107,8 @@ INTEGER                                                 ::  Solver_Type
 
 CHARACTER(LEN = 1)                                      ::  Units_Input
 
-INTEGER, DIMENSION(3)                                   ::  NE
 INTEGER, DIMENSION(3)                                   ::  NQ
-REAL(idp), DIMENSION(2)                                 ::  Domain_Edge
-INTEGER                                                 ::  Num_DOF
 
-
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  dx_c, dy_c, dz_c
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_e, y_e, z_e
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_c, y_c, z_c
 
 LOGICAL                                                 ::  Verbose
 
@@ -134,7 +118,6 @@ INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 CHARACTER(LEN=10)                                       ::  Suffix_Input
 CHARACTER(LEN=1)                                        ::  Suffix_Tail
 
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Cur_R_Locs
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_T_Quad
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_P_Quad
@@ -146,51 +129,19 @@ INTEGER                                                 ::  myID, nPROCS
 
 INTEGER                                                 ::  Guess_Type
 
-INTEGER, DIMENSION(:), ALLOCATABLE                      ::  RE_Table
-
-INTEGER                                                 ::  RE_Index
-INTEGER                                                 ::  RE_Index_Min
-INTEGER                                                 ::  RE_Index_Max
-
-INTEGER                                                 ::  Degree_Input
-INTEGER                                                 ::  Degree_Min
-INTEGER                                                 ::  Degree_Max
-
-INTEGER                                                 ::  L_Limit_Input
-INTEGER                                                 ::  L_Limit_Min
-INTEGER                                                 ::  L_Limit_Max
-
 INTEGER                                                 ::  M_Index
 INTEGER                                                 ::  M_Index_Min
 INTEGER                                                 ::  M_Index_Max
 
-
-REAL(idp)                                               ::  Kappa
-REAL(idp)                                               ::  Gamma
-REAL(idp), DIMENSION(3)                                 ::  Yahil_Params
-
-
-INTEGER                                                 ::  Max_Iterations
-REAL(idp)                                               ::  CC_Option
 
 INTEGER                                                 ::  IRL
 INTEGER                                                 ::  IFL
 
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
-REAL(idp), DIMENSION(1:6)                               ::  Time_Values
-INTEGER, DIMENSION(1:2)                                 ::  L_Values
-
-INTEGER                                                 ::  i
-INTEGER                                                 ::  Level
 
 
-CALL MPI_INIT(ierr)
-CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
-CALL MPI_COMM_SIZE(MPI_COMM_WORLD, nPROCS,ierr)
 
-
-ALLOCATE( RE_Table(1:9) )
 
 
 !############################################################!
@@ -202,43 +153,16 @@ Units_Input         = "U"
 Solver_Type         = 3
 
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
-L_Values            = (/ 5, 10 /)
-
 
 M_Index_Min         =  3
 M_Index_Max         =  3
-
-Degree_Min          =  1
-Degree_Max          =  4
-
-L_Limit_Min         =  0
-L_Limit_Max         =  0
 
 IFL                 =  0
 IRL                 =  0
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 
-Kappa               = 953946015514834.4
-Gamma               = 1.30_idp
-
-!Suffix_Tail         = "A"
-!Convergence_Criteria = 1.0E-8_idp
-
 Dimension_Input     = 3
-
-Max_Iterations      = 10
-CC_Option           = 1.0E-10_idp
-
-Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
-Domain_Edge(1)      = 1.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 2.0_idp                  ! Outer Radius (cm)
-
-
-NE(1)               = 128                      ! Number of Radial Elements
-NE(2)               = 1                        ! Number of Theta Elements
-NE(3)               = 1                        ! Number of Phi Elements
 
 NQ(1)               = 10                        ! Number of Radial Quadrature Points
 NQ(2)               = 1                        ! Number of Theta Quadrature Points
@@ -260,44 +184,41 @@ Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
 Write_Results_R_Samps = 256
 Write_Results_T_Samps = 1
 
-CALL Set_Units(Units_Input)
 
-call amrex_init()
+!############################################################!
+!#                                                          #!
+!#                 Initialize AMReX & MPI                   #!
+!#                                                          #!
+!############################################################!
+CALL MPI_INIT(ierr)
+CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
+CALL MPI_COMM_SIZE(MPI_COMM_WORLD, nPROCS,ierr)
+
+CALL amrex_init()
 CALL amrex_amrcore_init()
-
 CALL Init_AMReX_Parameters()
 
 
 
-Domain_Edge(1) = xL(1)*Centimeter
-Domain_Edge(2) = xR(1)*Centimeter
 
-
-
+!############################################################!
+!#                                                          #!
+!#                       Start Program                      #!
+!#                                                          #!
+!############################################################!
 DO M_Index = M_Index_Min, M_Index_Max
-DO Degree_Input = Degree_Min, Degree_Max
-DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
-    NE = nCells
 
-    NQ(3) = 2*L_Limit_Input + 1
 
     Suffix_Tail = Letter_Table(nLevels)
 
 
 
-    Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
-    ALLOCATE( Cur_R_Locs(1:NQ(1)) )
     ALLOCATE( Input_R_Quad(1:NQ(1)) )
     ALLOCATE( Input_T_Quad(1:NQ(2)) )
     ALLOCATE( Input_P_Quad(1:NQ(3)) )
 
-    ALLOCATE( x_e(0:NE(1)), y_e(0:NE(2)), z_e(0:NE(3)) )
-    ALLOCATE( x_c(1:NE(1)), y_c(1:NE(2)), z_c(1:NE(3)) )
-    ALLOCATE( dx_c(1:NE(1)) )
-    ALLOCATE( dy_c(1:NE(2)) )
-    ALLOCATE( dz_c(1:NE(3)) )
 
 
 
@@ -314,17 +235,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-    CALL Create_3D_Mesh( Mesh_Type,         &
-                        xL(1),    &
-                        xR(1),    &
-                        NE(1),             &
-                        NE(2),             &
-                        NE(3),             &
-                        x_e, x_c, dx_c,    &
-                        y_e, y_c, dy_c,    &
-                        z_e, z_c, dz_c,     &
-                        Zoom = 1.032034864238313_idp )
-
     
     !############################################################!
     !#                                                          #!
@@ -333,11 +243,12 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !############################################################!
     CALL Initialize_Poseidon_with_AMReX &
        (    Source_NQ                           = NQ,                   &
-            Source_xL                           = [Left_Limit, Right_Limit],      &
+            Source_xL                           = [Left_Limit, Right_Limit],    &
             Source_RQ_xlocs                     = Input_R_Quad,         &
             Source_TQ_xlocs                     = Input_T_Quad,         &
             Source_PQ_xlocs                     = Input_P_Quad,         &
-            Units_Option                        = Units_Input,          &
+            Source_Units                        = Units_Input,          &
+            Source_Radial_Boundary_Units        = "cm",                 &
             Integration_NQ_Option               = NQ,                   &
             CFA_Eq_Flags_Option                 = CFA_Eqs,              &
             AMReX_FEM_Refinement_Option         = IFL,                  &
@@ -352,9 +263,10 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
             Print_Timetable_Option              = .TRUE.,               &
             Write_Timetable_Option              = .TRUE.,               &
             Write_Sources_Option                = .FALSE.,              &
-            Suffix_Flag_Option                   = Suffix_Input,        &
-            Suffix_Tail_Option                   = Suffix_Tail          )
-
+            Print_Condition_Option              = .TRUE.,               &
+            Write_Condition_Option              = .TRUE.,               &
+            Suffix_Flag_Option                  = Suffix_Input,         &
+            Suffix_Tail_Option                  = Suffix_Tail           )
 
 
 
@@ -389,7 +301,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                         Run Poseidon                     #!
     !#                                                          #!
     !############################################################!
-!    Call Driver_Run()
     CALL Poseidon_Run()
 
 
@@ -417,23 +328,19 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !############################################################!
     CALL Poseidon_Close()
 
-    DEALLOCATE( Cur_R_Locs )
     DEALLOCATE( Input_R_Quad )
     DEALLOCATE( Input_T_Quad )
     DEALLOCATE( Input_P_Quad )
-    DEALLOCATE( x_e, y_e, z_e )
-    DEALLOCATE( x_c, y_c, z_c )
-    DEALLOCATE( dx_c, dy_c, dz_c )
 
 
-
-
-END DO ! L_Limit
-END DO ! Degree_Index
 END DO ! M_Index
 
 
-
+!############################################################!
+!#                                                          #!
+!#                    Close AMReX & MPI                     #!
+!#                                                          #!
+!############################################################!
 call amrex_finalize()
 CALL MPI_Finalize(ierr)
 

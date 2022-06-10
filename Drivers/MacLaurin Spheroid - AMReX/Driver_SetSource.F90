@@ -23,6 +23,15 @@ MODULE Driver_SetSource_Module                                              !##!
 !           Dependencies            !
 !                                   !
 !===================================!
+USE Poseidon_Kinds_Module, &
+            ONLY :  idp
+
+USE Poseidon_Parameters, &
+            ONLY :  Verbose_Flag
+
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
+
 
 use amrex_base_module
 
@@ -48,16 +57,8 @@ USE amrex_amrcore_module, ONLY: &
 
 
 USE Poseidon_Units_Module, &
-            ONLY :  Grav_Constant_G,    &
-                    Speed_of_Light,     &
-                    C_Square,           &
-                    GR_Source_Scalar,   &
-                    Centimeter,         &
-                    Second,             &
-                    Millisecond,         &
-                    Erg,                &
-                    Gram,               &
-                    E_Units
+            ONLY :  Centimeter,         &
+                    Gram
 
 USE Variables_External, &
             ONLY :  MacLaurin_SemiMinor,         &
@@ -76,8 +77,6 @@ USE Variables_Driver_AMReX, &
             ONLY :  MF_Driver_Source,   &
                     MF_Src_nComps,      &
                     MF_Src_nGhost,      &
-                    dt, t_old, t_new,   &
-                    StepNo,             &
                     nLevels
 
 USE Variables_AMReX_Source, &
@@ -89,28 +88,11 @@ USE Variables_AMReX_Source, &
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
 
-USE Poseidon_Kinds_Module, &
-            ONLY :  idp
+USE Poseidon_Source_Input_Module, &
+            ONLY :  Poseidon_Input_Sources
 
-USE Poseidon_Parameters, &
-            ONLY :  Verbose_Flag
-
-
-USE Variables_MPI, &
-            ONLY :  myID_Poseidon,      &
-                    Poseidon_Comm_World
-
-USE Source_Input_AMReX, &
-            ONLY :  Poseidon_Input_Sources_AMREX
-
-USE Functions_Quadrature, &
-            ONLY :  Initialize_LG_Quadrature_Locations, &
-                    Initialize_Trapezoid_Quadrature_Locations
-
-USE Poseidon_MPI_Utilities_Module, &
-            ONLY :  STOP_MPI,               &
-                    MPI_Master_Print,       &
-                    MPI_All_Print
+USE Variables_Interface, &
+            ONLY :  Caller_Quad_DOF
 
 USE Driver_AMReX_Virtual_Functions_Module, &
             ONLY :  VF_Make_New_Level_From_Scratch, &
@@ -122,7 +104,6 @@ USE Driver_AMReX_Virtual_Functions_Module, &
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
                     TimerSTop
-
 
 USE Timer_Variables_Module, &
             ONLY :  Timer_Driver_SetSource_InitTest,        &
@@ -144,23 +125,15 @@ CONTAINS
 !     Driver_SetSource                                      !
 !                                                           !
  !#########################################################!
-SUBROUTINE Driver_SetSource( NQ )
-
-INTEGER,    DIMENSION(3),   INTENT(IN)          ::  NQ
-
-REAL(idp),  DIMENSION(NQ(1))                    ::  R_Quad
-REAL(idp),  DIMENSION(NQ(2))                    ::  T_Quad
-REAL(idp),  DIMENSION(NQ(3))                    ::  P_Quad
-REAL(idp),  DIMENSION(2)                        ::  xL
+SUBROUTINE Driver_SetSource( )
 
 
-INTEGER                                         ::  Num_DOF
 INTEGER                                         ::  nVars_Source
 
-IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A)')"In Driver, Creating AMReX Source Variables."
-END IF
-
+IF ( Verbose_Flag )             &
+        CALL Driver_Init_Message('Creating AMReX source variables.')
+IF ( Verbose_Flag )             &
+        CALL Driver_Init_Message('Initializing Homogenous Spheroid Source  Multifab.')
 
 
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
@@ -178,46 +151,27 @@ CALL amrex_init_virtual_functions &
          VF_Clear_Level, &
          VF_Error_Estimate )
 
-Num_DOF = NQ(1)*NQ(2)*NQ(3)
-nVars_Source    = 5
-MF_Src_nComps   = nVars_Source*Num_DOF
-MF_Src_nGhost   = 0
 
-StepNo  = 0
-dt      = 0.0_idp
-t_old   = 0.0_idp
-t_new   = 0.0_idp
+nVars_Source    = 5
+MF_Src_nComps   = nVars_Source*Caller_Quad_DOF
+MF_Src_nGhost   = 0
 
 
 ALLOCATE( MF_Driver_Source(0:nLevels-1) )
 
 CALL amrex_init_from_scratch( 0.0_idp )
 
-
-
-xL(1) = -1.0_idp
-xL(2) = +1.0_idp
-R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
-T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
-P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
-
-
-
-CALL Poseidon_Input_Sources_AMREX( MF_Driver_Source,    &   ! Source Multifab
-                                   MF_Src_nComps,       &   ! Number of Comps in Multifab
-                                   nLevels,             &   ! AMReX Levels
-                                   NQ,                  &   ! Number Quadrature Points, DIM(3)
-                                   R_Quad,              &   ! Radial Quadrature Locations, DIM(NQ(1))
-                                   T_Quad,              &   ! Theta Quadrature Locations, DIM(NQ(2))
-                                   P_Quad,              &   ! Phi Quadrature Locations, DIM(NQ(3))
-                                   xL                   )   ! Quadrature Ref Element Limits, DIM(2)
-
 CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
 
 
 
-DEALLOCATE(MF_Driver_Source)
+
+CALL Poseidon_Input_Sources( MF_Driver_Source,    &
+                             MF_Src_nComps        )
+
+
+
 
 
 
@@ -246,108 +200,6 @@ END SUBROUTINE Driver_SetSource
 
 
 
-!+201+##########################################################################!
-!                                                                               !
-!     SetSource_Parallel                                                            !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE SetSource_Parallel(  nDOF, nVars, nLevels,          &
-                                NE_Lower, NE_Upper,             &
-                                Local_E, Local_S, Local_Si,     &
-                                MF_SRC_Input                      )
-
-INTEGER,    INTENT(IN)                              ::  nDOF, nVars, nLevels
-INTEGER,    INTENT(IN), DIMENSION(3)                ::  NE_Lower, NE_Upper
-REAL(idp),  INTENT(IN), DIMENSION( nDOF,        &
-                                NE_Upper(1),    &
-                                NE_Upper(2),    &
-                                NE_Upper(3)     )   ::  Local_E
-
-REAL(idp),  INTENT(IN), DIMENSION( nDOF,        &
-                                NE_Upper(1),    &
-                                NE_Upper(2),    &
-                                NE_Upper(3)     )   ::  Local_S
-
-REAL(idp),  INTENT(IN), DIMENSION( nDOF,        &
-                                NE_Upper(1),    &
-                                NE_Upper(2),    &
-                                NE_Upper(3),    &
-                                1:3             )   ::  Local_Si
-
-
-TYPE(amrex_multifab), INTENT(INOUT)                 ::  MF_SRC_Input(0:nLevels-1)
-
-REAL(idp), CONTIGUOUS, POINTER                      :: p(:,:,:,:)
-
-INTEGER                                             :: PE, TE, RE, Var
-INTEGER, DIMENSION(3)                               :: ELo, EHi
-
-INTEGER                                             :: Here, There, lvl
-
-TYPE(amrex_mfiter)                                  :: mfi
-TYPE(amrex_box)                                     :: Box
-
-!INTEGER                                             :: ierr
-
-PRINT*,"In SetSource_Parallel ", myID_Poseidon
-
-
-
-
-DO lvl = 0,nLevels-1
-    PRINT*,"A"
-    CALL amrex_mfiter_build(mfi, MF_SRC_Input(lvl), tiling = .false. )
-    DO WHILE(mfi%next())
-
-!        CALL MPI_All_Print("In mfiter loop")
-        PRINT*,"B"
-        p => MF_SRC_Input(lvl)%dataPtr(mfi)
-        Box = mfi%tilebox()
-
-        PRINT*,"C"
-        ELo = Box%lo
-        EHi = Box%hi
-
-        PRINT*,"D"
-        DO PE = ELo(3), EHi(3)
-        DO TE = ELo(2), EHi(2)
-        DO RE = ELo(1), EHi(1)
-
-            Here  = 1
-            There = nDOF
-            p(RE,TE,PE, Here:There ) = Local_E(:,RE,TE,PE)
-            
-            Here  = 1*nDOF+1
-            There = 2*nDOF
-            p(RE,TE,PE, Here:There ) = Local_S(:,RE,TE,PE)
-
-            DO Var = 3,5
-                Here  = (Var-1)*nDOF+1
-                There = Var*nDOF
-                p(RE,TE,PE,Here:There) = Local_Si(:,RE,TE,PE,Var-2)
-            END DO
-
-        
-
-        END DO
-        END DO
-        END DO
-
-    END DO
-    CALL amrex_mfiter_destroy(mfi)
-END DO ! lvl
-
-
-
-
-!CALL MPI_Barrier(Poseidon_Comm_World, ierr)
-!CALL MPI_Master_Print("At the end of SetSource_Parallel")
-!CALL STOP_MPI(ierr)
-
-
-END SUBROUTINE SetSource_Parallel
-
-
 
 
 
@@ -369,7 +221,6 @@ TYPE(amrex_box)                                 ::  Box
 TYPE(amrex_imultifab)                           ::  Level_Mask
 
 INTEGER                                         ::  re, te, pe
-INTEGER, DIMENSION(3)                           ::  iE
 INTEGER, DIMENSION(3)                           ::  iEL, iEU
 INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl

@@ -77,7 +77,7 @@ USE Variables_Quadrature, &
                     NUM_R_QUAD_POINTS,          &
                     NUM_T_QUAD_POINTS,          &
                     NUM_P_QUAD_POINTS,          &
-                    Num_Quad_DOF
+                    Local_Quad_DOF
 
 
 USE Variables_Tables,   &

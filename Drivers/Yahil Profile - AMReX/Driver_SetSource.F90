@@ -130,7 +130,7 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetSource_SetSource,       &
                     Timer_Driver_SetSource_Scale
 
-USE SelfSimilar_Module, &
+USE External_Yahil_Profile_Module, &
             ONLY :  Calc_Yahil_Central_E
 
 USE Variables_Interface, &

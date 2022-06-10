@@ -113,10 +113,7 @@ REAL(idp), DIMENSION(Num_TP_Quad_Points),   INTENT(OUT)  :: Val
 INTEGER,   INTENT(IN)                       :: iU
 
 REAL(idp)                                   :: TMP_Val
-INTEGER                                     :: rd, tpd, d, Here
-
-REAL(idp), DIMENSION(0:DEGREE,1:Num_R_Quad_Points)  :: LagPoly
-
+INTEGER                                     :: tpd, Here
 
 
 DO tpd = 1,NUM_TP_QUAD_POINTS
@@ -207,14 +204,13 @@ END SUBROUTINE Calc_Val_And_Drv_On_Edge_TypeA
 !################################################################################!
 SUBROUTINE Calc_Val_On_Edge_TypeB( TE, PE, Val, iU, iVB )
 
-INTEGER,   INTENT(IN)                       :: TE, PE
-REAL(idp), DIMENSION(Num_TP_Quad_Points),    INTENT(OUT)    :: Val
-INTEGER,   INTENT(IN)                       :: iU, iVB
+INTEGER,                                    INTENT(IN)  :: TE, PE
+REAL(idp),  DIMENSION(Num_TP_Quad_Points),  INTENT(OUT) :: Val
+INTEGER,                                    INTENT(IN)  :: iU, iVB
 
-REAL(idp)                                   :: TMP_Val
 
-INTEGER                                     :: tpd, d, Here, There
-
+INTEGER                                     ::  tpd, Here, There
+REAL(idp)                                   ::  TMP_Val
 REAL(idp), DIMENSION(0:DEGREE)              ::  Local_Locs
 REAL(idp), DIMENSION(0:DEGREE)              ::  Lagrange_DRV_Values
 
@@ -252,19 +248,19 @@ END SUBROUTINE Calc_Val_On_Edge_TypeB
 !################################################################################!
 SUBROUTINE Calc_Val_And_Drv_On_Edge_TypeB( DROT, TE, PE, Val, Drv, iU, iVB )
 
-INTEGER,   INTENT(IN)                       :: TE, PE
-REAL(idp),                                   INTENT(IN)     :: DROT
-REAL(idp), DIMENSION(Num_TP_Quad_Points),    INTENT(OUT)    :: Val
-REAL(idp), DIMENSION(Num_TP_Quad_Points,3),  INTENT(OUT)    :: Drv
-INTEGER,   INTENT(IN)                       :: iU, iVB
+INTEGER,                                        INTENT(IN)      ::  TE, PE
+REAL(idp),                                      INTENT(IN)      ::  DROT
+REAL(idp),  DIMENSION(Num_TP_Quad_Points),      INTENT(OUT)     ::  Val
+REAL(idp),  DIMENSION(Num_TP_Quad_Points,3),    INTENT(OUT)     ::  Drv
+INTEGER,                                        INTENT(IN)      ::  iU, iVB
 
-REAL(idp)                                   :: TMP_Val
-REAL(idp), DIMENSION(3)                     :: TMP_Drv
+REAL(idp)                                       ::  TMP_Val
+REAL(idp),  DIMENSION(3)                        ::  TMP_Drv
 
-INTEGER                                     :: tpd, d, Here, There
+INTEGER                                         ::  tpd, Here, There
 
-REAL(idp), DIMENSION(0:DEGREE)              ::  Local_Locs
-REAL(idp), DIMENSION(0:DEGREE)              ::  Lagrange_DRV_Values
+REAL(idp),  DIMENSION(0:DEGREE)                 ::  Local_Locs
+REAL(idp),  DIMENSION(0:DEGREE)                 ::  Lagrange_DRV_Values
 
 Local_Locs = Initialize_LGL_Quadrature_Locations(Degree)
 
@@ -323,29 +319,20 @@ SUBROUTINE Calc_Ahat_Edge( Ahat_Array,                              &
                             RSIN_SQUARE, COTAN_VAL,                 &
                             CUR_VAL_X, CUR_DRV_X                    )
 
-REAL(KIND = idp), DIMENSION(Num_TP_Quad_Points, 3, 3 ), INTENT(OUT) ::  Ahat_Array
+REAL(idp),  DIMENSION(Num_TP_Quad_Points, 3, 3 ),   INTENT(OUT) ::  Ahat_Array
 
-INTEGER, INTENT(IN)                                                 ::  NUM_TP_QUAD_POINTS
+INTEGER,                                            INTENT(IN)  ::  NUM_TP_QUAD_POINTS
 
-REAL(KIND = idp), INTENT(IN)                                        ::  rVal
-REAL(KIND = idp), INTENT(IN)                                        ::  rSqr
+REAL(idp),                                          INTENT(IN)  ::  rVal
+REAL(idp),                                          INTENT(IN)  ::  rSqr
+REAL(idp),  DIMENSION(Num_TP_Quad_Points),          INTENT(IN)  ::  COTAN_VAL
+REAL(idp),  DIMENSION(1:Num_TP_Quad_Points),        INTENT(IN)  ::  RSIN_SQUARE
 
-REAL(KIND = idp), DIMENSION(Num_TP_Quad_Points), INTENT(IN)         ::  COTAN_VAL
-
-REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  RSIN_SQUARE
-
-
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
-                                         1:3                    )          ::  CUR_VAL_X
+REAL(idp),  DIMENSION(1:NUM_TP_QUAD_POINTS, 1:3),   INTENT(IN)  ::  CUR_VAL_X
+REAL(idp),  DIMENSION(1:NUM_TP_QUAD_POINTS, 1:3, 1:3),INTENT(IN)::  CUR_DRV_X
 
 
-REAL(KIND = idp), INTENT(IN), DIMENSION( 1:NUM_TP_QUAD_POINTS,  &
-                                         1:3, 1:3               )          ::  CUR_DRV_X
-
-
-INTEGER                                                                     ::  rd, tpd
-
-
+INTEGER                                                         ::  tpd
 
 
 

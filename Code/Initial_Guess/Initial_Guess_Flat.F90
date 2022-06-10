@@ -72,14 +72,8 @@ REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  AlphaPsi_Guess
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Beta_Guess
 
 
-REAL(idp)                                               :: Left_Limit
-REAL(idp)                                               :: Right_Limit
-INTEGER                                                 :: Num_DOF
-
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing flat space guess.')
 
-
-Num_DOF =NUM_R_QUAD_POINTS*NUM_T_QUAD_POINTS*NUM_P_QUAD_POINTS
 
 ALLOCATE( Psi_Guess(    1:Local_Quad_DOF,       &
                         0:Num_R_Elements-1,     &
@@ -94,8 +88,6 @@ ALLOCATE( Beta_Guess(   1:Local_Quad_DOF,       &
                         0:Num_T_Elements-1,     &
                         0:Num_P_Elements-1,     &
                         1:3                 )   )
-
-
 
 
 Psi_Guess = 1.0_idp
@@ -116,6 +108,9 @@ CALL IG_Input_Native( Psi_Guess,                                                
 
 
 END SUBROUTINE IG_Init_Flat_Guess
+
+
+
 
 
 

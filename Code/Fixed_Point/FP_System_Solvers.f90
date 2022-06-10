@@ -99,13 +99,11 @@ USE Variables_FP,  &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
                     Num_Matrices,               &
-                    MCF_Flag,                   &
                     FP_Anderson_M,              &
                     Beta_IPIV,                  &
                     Beta_Diagonals,             &
                     Beta_Bandwidth,             &
-                    Beta_MVL_Banded,            &
-                    Beta_Factorized_Flag
+                    Beta_MVL_Banded
 
 USE Functions_Mesh, &
             ONLY :  Create_Logarithmic_1D_Mesh,     &
@@ -116,7 +114,7 @@ USE FP_Source_Vector_Module, &
                     Allocate_FP_Source_Variables,   &
                     Deallocate_FP_Source_Variables
 
-USE FP_Functions_BC,  &
+USE Matrix_Boundary_Condition_Routines,  &
             ONLY :  Dirichlet_BC,                   &
                     Dirichlet_BC_CCS,               &
                     Dirichlet_BC_CHOL,              &
@@ -125,14 +123,15 @@ USE FP_Functions_BC,  &
                     Neumann_BC,                     &
                     Neumann_BC_CCS
 
-USE IO_FP_Linear_System, &
-            ONLY :  Output_Laplace_Beta,            &
-                    Output_Laplace
-
-USE Poseidon_Cholesky_Module,   &
+USE Matrix_Cholesky_Factorization_Module,   &
             ONLY :  CCS_Back_Substitution,          &
                     CCS_Forward_Substitution,       &
                     Cholesky_Factorization
+
+
+USE IO_FP_Linear_System, &
+            ONLY :  Output_Laplace_Beta,            &
+                    Output_Laplace
 
 USE Linear_Solvers_And_Preconditioners, &
             ONLY :  PRECOND_CONJ_GRAD_CCS,          &
@@ -148,8 +147,8 @@ USE Maps_Domain, &
                 ONLY :  Map_To_lm,                  &
                         Map_To_FEM_Node
 
-USE FP_Factorize_Beta_Banded, &
-            ONLY :  Factorize_Beta_Banded,          &
+USE Matrix_Vector_Laplacian_Routines, &
+            ONLY :  Factorize_Vector_Laplacian,     &
                     Jacobi_PC_MVL_Banded_Vector
 
 USE Timer_Routines_Module, &
@@ -160,6 +159,11 @@ USE Timer_Routines_Module, &
 USE Timer_Variables_Module, &
             ONLY :  Timer_FP_Matrix_Cholesky,      &
                     Timer_FP_Banded_Factorization
+
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Matrices_Flags,            &
+                    iPF_Init_Matrices_Type_B_LU,        &
+                    iPF_Init_Matrices_Type_A_Cholesky
 
 IMPLICIT NONE
 
@@ -207,7 +211,7 @@ Omega = 2.0_idp/(1.0_idp + sin( pi/(Num_R_Nodes) ) )
 
 
 
-IF (( LINEAR_SOLVER == "CHOL" ) .AND. (MCF_Flag == 0 ) ) THEN
+IF (( LINEAR_SOLVER == "CHOL" ) .AND. ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky)) ) THEN
     
     !
     !   This only needs to be done everytime the radial mesh is defined/redefined.
@@ -219,7 +223,6 @@ IF (( LINEAR_SOLVER == "CHOL" ) .AND. (MCF_Flag == 0 ) ) THEN
 
     CALL TimerStart( Timer_FP_Matrix_Cholesky)
     CALL Cholesky_Factorization()
-    MCF_Flag = 1
     CALL TimerStop( Timer_FP_Matrix_Cholesky)
 
 END IF
@@ -476,9 +479,9 @@ IF (LINEAR_SOLVER =='Full') THEN
 ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
-    IF ( .NOT. Beta_Factorized_Flag ) THEN
+    IF ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) ) THEN
         CALL TimerStart( Timer_FP_Banded_Factorization )
-        CALL Factorize_Beta_Banded()
+        CALL Factorize_Vector_Laplacian()
         CALL TimerStop( Timer_FP_Banded_Factorization )
     END IF
 
@@ -492,7 +495,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
 
-    CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
+    CALL Dirichlet_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
 
 
 

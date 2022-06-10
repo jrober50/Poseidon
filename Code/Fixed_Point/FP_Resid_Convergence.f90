@@ -106,7 +106,6 @@ USE Variables_FP,  &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
                     Num_Matrices,               &
-                    MCF_Flag,                   &
                     FP_Anderson_M,              &
                     Beta_Bandwidth
 
@@ -124,7 +123,7 @@ USE FP_Source_Vector_Module, &
                     Allocate_FP_Source_Variables,   &
                     Deallocate_FP_Source_Variables
 
-USE FP_Functions_BC,  &
+USE Matrix_Boundary_Condition_Routines,  &
             ONLY :  Dirichlet_BC,                   &
                     Dirichlet_BC_CCS,               &
                     Dirichlet_BC_CHOL,              &
@@ -133,17 +132,17 @@ USE FP_Functions_BC,  &
                     Neumann_BC,                     &
                     Neumann_BC_CCS
 
-USE FP_Factorize_Beta_Banded, &
+USE Matrix_Vector_Laplacian_Routines, &
             ONLY :  Jacobi_PC_MVL_Banded_Vector
+
+USE Matrix_Cholesky_Factorization_Module,   &
+            ONLY :  Cholesky_Factorization,         &
+                    CCS_Back_Substitution,          &
+                    CCS_Forward_Substitution
 
 USE IO_FP_Linear_System, &
             ONLY :  Output_Laplace_Beta,            &
                     Output_Laplace
-
-USE Poseidon_Cholesky_Module,   &
-            ONLY :  Cholesky_Factorization,         &
-                    CCS_Back_Substitution,          &
-                    CCS_Forward_Substitution
 
 USE Linear_Solvers_And_Preconditioners, &
             ONLY :  PRECOND_CONJ_GRAD_CCS,          &

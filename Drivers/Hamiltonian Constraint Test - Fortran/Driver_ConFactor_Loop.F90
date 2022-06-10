@@ -44,14 +44,8 @@ USE Poseidon_Message_Routines_Module, &
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_Results_Dir
 
-USE SelfSimilar_Module, &
-            ONLY :  Initialize_Yahil_Sources
-
 USE Poseidon_Source_Input_Module, &
             ONLY :  Poseidon_Input_Sources
-
-USE Source_Input_Native_Module, &
-            ONLY :  Poseidon_Input_Sources_Native
 
 USE Variables_IO, &
             ONLY :  File_Suffix
@@ -187,8 +181,6 @@ CALL Poseidon_Return_Conformal_Factor( NE, NQ,                 &
                                         ConFactor_New        )
 
 
-!WRITE(*,'(A)') "Before ConFactor Loops "
-!CALL Print_Results()
 
 
 Iter = 0
@@ -252,17 +244,6 @@ DO WHILE ( Flag )
                                 T_Quad,                 &
                                 P_Quad,                 &
                                 [LeftLimit, RightLimit] )
-
-
-!    CALL Poseidon_Input_Sources_Native( Local_E,                &
-!                                        Local_Si,               &
-!                                        Local_S,                &
-!                                        NE,                     &
-!                                        NQ,                     &
-!                                        R_Quad,                 &
-!                                        T_Quad,                 &
-!                                        P_Quad,                 &
-!                                        [LeftLimit, RightLimit] )
 
 
     Call Poseidon_Run()

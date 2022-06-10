@@ -82,8 +82,7 @@ USE Variables_Mesh, &
             ONLY :  Num_R_Elements
 
 USE Variables_Functions, &
-            ONLY :  LM_Location,                    &
-                    Calc_3D_Values_At_Location,     &
+            ONLY :  Calc_3D_Values_At_Location,     &
                     Calc_1D_CFA_Values
 
 USE Variables_FP, &
@@ -101,9 +100,8 @@ USE Return_Functions_FP,   &
             ONLY :  Calc_FP_Values_At_Location, &
                     Calc_1D_CFA_Values_FP
                 
-
-USE FP_Intialize_Matrices, &
-            ONLY :  Initialize_FP_Matrices
+USE Matrix_Initialization_Module, &
+            ONLY :  Initialize_XCFC_Matrices
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -201,7 +199,7 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
     ! Construct Matrices
     CALL TimerStart( Timer_XCFC_Matrix_Init )
-    CALL Initialize_FP_Matrices()
+    CALL Initialize_XCFC_Matrices()
     CALL TimerStop( Timer_XCFC_Matrix_Init )
 
 

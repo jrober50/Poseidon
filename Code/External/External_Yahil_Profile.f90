@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE SelfSimilar_Module                                                            !##!
+MODULE External_Yahil_Profile_Module                                                !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -70,9 +70,9 @@ USE Variables_Functions, &
 USE IO_Output_Sources_Module, &
             ONLY :  Output_Primatives
 
-USE Allocation_SelfSimilar, &
-            ONLY :  Allocate_SelfSim,               &
-                    Deallocate_SelfSim
+USE Allocation_Yahil_Profile, &
+            ONLY :  Allocate_Yahil_Profile,         &
+                    Deallocate_Yahil_Profile
 
 
 USE Timer_Routines_Module, &
@@ -191,7 +191,7 @@ ALLOCATE( Enclosed_Mass(1:NUM_LINES)  )
 
 NUM_ENTRIES = NUM_LINES
 
-CALL Allocate_SelfSim(Num_Entries)
+CALL Allocate_Yahil_Profile(Num_Entries)
 
 
 
@@ -301,7 +301,7 @@ Shift_Solution => SELFSIM_SHIFT_SOL
 
 
 
-!CALL Deallocate_SelfSim()
+!CALL Deallocate_Yahil_Profile()
 
 CALL TimerStop( Timer_Core_Init_Test_Problem )
 
@@ -406,7 +406,7 @@ ALLOCATE( Enclosed_Mass(1:NUM_LINES)  )
 
 NUM_ENTRIES = NUM_LINES
 
-CALL Allocate_SelfSim(Num_Entries)
+CALL Allocate_Yahil_Profile(Num_Entries)
 
 
 
@@ -732,47 +732,46 @@ SUBROUTINE Calculate_Yahil_Density( t, kappa, gamma,                        &
                                     Output_D                                )
 
 
-REAL(idp),               INTENT(IN)                                  ::  t, kappa, gamma
-INTEGER,    DIMENSION(1:3),     INTENT(IN)                                  ::  Num_Nodes
-INTEGER,    INTENT(IN)                                                      ::  Num_LINES
-REAL(idp), DIMENSION(1:NUM_NODES(1)),INTENT(IN)                      ::  INPUT_R_QUAD
+REAL(idp),                              INTENT(IN)                  ::  t, kappa, gamma
+INTEGER,    DIMENSION(1:3),             INTENT(IN)                  ::  Num_Nodes
+INTEGER,                                INTENT(IN)                  ::  Num_LINES
+REAL(idp),  DIMENSION(1:NUM_NODES(1)),  INTENT(IN)                  ::  INPUT_R_QUAD
 
-INTEGER,                        INTENT(IN)                                  ::  NUM_R_ELEM
-INTEGER,                        INTENT(IN)                                  ::  NUM_T_ELEM
-INTEGER,                        INTENT(IN)                                  ::  NUM_P_ELEM
+INTEGER,                                INTENT(IN)                  ::  NUM_R_ELEM
+INTEGER,                                INTENT(IN)                  ::  NUM_T_ELEM
+INTEGER,                                INTENT(IN)                  ::  NUM_P_ELEM
 
-REAL(idp), DIMENSION(NUM_R_ELEM),   INTENT(IN)                       ::  Delta_R
-REAL(idp), DIMENSION(0:NUM_R_ELEM), INTENT(IN)                       ::  r_locs
+REAL(idp),  DIMENSION(NUM_R_ELEM),      INTENT(IN)                  ::  Delta_R
+REAL(idp),  DIMENSION(0:NUM_R_ELEM),    INTENT(IN)                  ::  r_locs
 
-REAL(idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_D
-REAL(idp), DIMENSION(1:NUM_LINES), INTENT(IN)                        ::  Input_X
+REAL(idp),  DIMENSION(1:NUM_LINES),     INTENT(IN)                  ::  Input_D
+REAL(idp),  DIMENSION(1:NUM_LINES),     INTENT(IN)                  ::  Input_X
 
-REAL(idp), DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),       &
-                            0:NUM_R_ELEM-1,                                 &
-                            0:NUM_T_ELEM-1,                                 &
-                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)           ::  Output_D
+REAL(idp),  DIMENSION(1:Num_Nodes(1)*Num_Nodes(2)*Num_Nodes(3),     &
+                            0:NUM_R_ELEM-1,                         &
+                            0:NUM_T_ELEM-1,                         &
+                            0:NUM_P_ELEM-1    ),    INTENT(INOUT)   ::  Output_D
 
 
-INTEGER                                                                     ::  re
-INTEGER                                                                     ::  rd, td, pd
+INTEGER                                                             ::  re
+INTEGER                                                             ::  rd, td, pd
 
-INTEGER                                                                     ::  nd, line, line_min
-REAL(idp)                                                            ::  xloc
-REAL(idp), DIMENSION(0:1)                                            ::  xlocs
-REAL(idp)                                                            ::  x
-REAL(idp)                                                            ::  Density
+INTEGER                                                             ::  nd, line, line_min
+REAL(idp)                                                           ::  xloc
+REAL(idp), DIMENSION(0:1)                                           ::  xlocs
+REAL(idp)                                                           ::  x
 
-REAL(idp), DIMENSION(0:1)                                            ::  LagPoly_Vals
-REAL(idp), DIMENSION(1:NUM_NODES(1))                                 ::  CUR_R_LOCS
+REAL(idp), DIMENSION(0:1)                                           ::  LagPoly_Vals
+REAL(idp), DIMENSION(1:NUM_NODES(1))                                ::  CUR_R_LOCS
 
-REAL(idp)                                                            ::  D_FACTOR
-REAL(idp)                                                            ::  X_FACTOR
+REAL(idp)                                                           ::  D_FACTOR
+REAL(idp)                                                           ::  X_FACTOR
 
-INTEGER                                                                     ::  Num_Radial_Points
+INTEGER                                                             ::  Num_Radial_Points
 
-REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  D_Holder
-REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  V_Holder
-REAL(idp), DIMENSION(:), ALLOCATABLE                                 ::  R_Holder
+REAL(idp), DIMENSION(:), ALLOCATABLE                                ::  D_Holder
+REAL(idp), DIMENSION(:), ALLOCATABLE                                ::  V_Holder
+REAL(idp), DIMENSION(:), ALLOCATABLE                                ::  R_Holder
 
 
 
@@ -1525,5 +1524,5 @@ END FUNCTION  Calc_Yahil_Central_E
 
 
 
-END MODULE SelfSimilar_Module
+END MODULE External_Yahil_Profile_Module
 

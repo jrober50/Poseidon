@@ -15,6 +15,7 @@ POSEIDON = \
   $(IO)              \
   $(LINEAR_SOLVERS)  \
   $(POISSON)         \
+  $(MATRIX)          \
   $(FP)              \
   $(XCFC)            \
   $(EXTERNAL)        \

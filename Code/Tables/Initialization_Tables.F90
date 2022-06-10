@@ -24,10 +24,10 @@ MODULE Initialization_Tables                                                    
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-            ONLY : idp
+            ONLY :  idp
 
 USE Poseidon_Numbers_Module, &
-            ONLY : pi, twopi
+            ONLY :  pi, twopi
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Init_Message
@@ -39,7 +39,9 @@ USE Poseidon_Parameters, &
                     Verbose_Flag
 
 USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Mode
+            ONLY :  AMReX_Mode,             &
+                    AMReX_Max_Grid_Size,          &
+                    AMReX_Num_Levels
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
@@ -85,9 +87,6 @@ USE Variables_Tables, &
                     LagPoly_MultiLayer_Table,&
                     LagPoly_Num_Tables
 
-USE Variables_Functions, &
-            ONLY :  LM_Location
-
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
 
@@ -105,14 +104,11 @@ USE Maps_Quadrature, &
 USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
+USE Maps_Domain, &
+            ONLY :  Map_To_lm
 
 USE Allocation_Tables, &
             ONLY :  Allocate_Tables
-
-
-USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Max_Grid_Size,          &
-                    AMReX_Num_Levels
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Tables_Flags,        &
@@ -235,7 +231,7 @@ DO l = 1,L_LIMIT
         Tmp_Value_A = COMPLEX( (2.0_idp * REAL_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp )
         Tmp_Value_B = COMPLEX( (l-m)*(l+m),0.0_idp )
 
-        Sqrt_Term(LM_Location(l,m)) = zsqrt( Tmp_Value_A)*zsqrt(Tmp_Value_B)
+        Sqrt_Term(Map_To_lm(l,m)) = zsqrt( Tmp_Value_A)*zsqrt(Tmp_Value_B)
 
     END DO ! m Loop
 END DO ! l Loop
@@ -315,7 +311,7 @@ DO pe = 0,Num_P_Elements-1
             REAL_L = REAL(l, idp)
 
             tpd_loc = (td-1)*NUM_P_QUAD_POINTS + pd
-            lm_loc = LM_Location(l,m)
+            lm_loc = Map_To_lm(l,m)
             Norm_Storage = Norm_Factor(l,m)
             Legendre_Poly_Value = Legendre_Poly(l, m, 1, T_Locations(td))
 
@@ -572,7 +568,7 @@ DO te = iEL(2), iEU(2)
 DO l = 0,L_LIMIT
 DO m = -l,l
 
-    lm = LM_Location(l,m)
+    lm = Map_To_lm(l,m)
     teb = te-iEL(2)
     rBT_NormedLegendre(m,l,:,teb) = Ylm_Norm_Table( m, l )      &
                                   * LegPoly_Table(m,l,:,teb)
@@ -653,7 +649,7 @@ DO l  = 0,L_Limit
 DO m  = -l,l
 
     tpd = Map_To_tpd(td,pd)
-    lm = LM_Location(l,m)+1
+    lm = Map_To_lm(l,m)
 
 
     Ylm_Elem_Values( lm, tpd )      = rBT_NormedLegendre(m,l,td,teb)           &

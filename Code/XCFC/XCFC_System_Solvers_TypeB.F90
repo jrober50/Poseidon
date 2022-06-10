@@ -60,27 +60,14 @@ USE Variables_FP,  &
                     FP_Source_Vector_B,         &
                     Beta_Diagonals,             &
                     Beta_MVL_Banded,            &
-                    Beta_IPIV,                  &
-                    Beta_Factorized_Flag,       &
-                    MCF_Flag,                   &
-                    Factored_NNZ,               &
-                    Laplace_Factored_Val,       &
-                    Laplace_Factored_Col,       &
-                    Laplace_Factored_Row,       &
-                    FP_Update_Vector,           &
-                    CFA_Var_Map
-
-USE Poseidon_Cholesky_Module,   &
-            ONLY :  CCS_Back_Substitution,      &
-                    CCS_Forward_Substitution,   &
-                    Cholesky_Factorization
+                    Beta_IPIV
 
 
-USE FP_Factorize_Beta_Banded, &
-            ONLY :  Factorize_Beta_Banded,      &
+USE Matrix_Vector_Laplacian_Routines, &
+            ONLY :  Factorize_Vector_Laplacian,     &
                     Jacobi_PC_MVL_Banded_Vector
 
-USE FP_Functions_BC,  &
+USE Matrix_Boundary_Condition_Routines,  &
             ONLY :  DIRICHLET_BC_Beta_Banded,   &
                     Dirichlet_BC_CHOL,          &
                     Neumann_BC_CCS
@@ -101,6 +88,9 @@ USE MPI_Communication_TypeB_Module,             &
             ONLY :  MPI_RTM_Source_TypeB,       &
                     MPI_BCast_Coeffs_TypeB
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Matrices_Flags,    &
+                    iPF_Init_Matrices_Type_B_LU
 
 IMPLICIT NONE
 
@@ -157,8 +147,8 @@ CALL MPI_RTM_Source_TypeB(  iVB,                    &
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 
-    IF ( .NOT. Beta_Factorized_Flag ) THEN
-        CALL Factorize_Beta_Banded()
+    IF ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) ) THEN
+        CALL Factorize_Vector_Laplacian()
     END IF
 
 

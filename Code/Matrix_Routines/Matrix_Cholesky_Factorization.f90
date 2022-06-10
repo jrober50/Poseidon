@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Poseidon_Cholesky_Module                                                     !##!
+MODULE Matrix_Cholesky_Factorization_Module                                         !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -362,6 +362,7 @@ Factored_NNZ =  New_NNZ
 !                                                                       !
 !   Reallocate global space for the new factorized stiffness matrix     !
 !                                                                       !
+
 ALLOCATE( Laplace_Factored_VAL(0:Factored_NNZ-1, 0:L_LIMIT, 1:Num_Matrices)  )
 ALLOCATE( Laplace_Factored_ROW(0:Factored_NNZ-1, 0:L_LIMIT))
 
@@ -1001,4 +1002,4 @@ END SUBROUTINE CCS_Forward_Substitution
 
 
 
-END MODULE Poseidon_Cholesky_Module
+END MODULE Matrix_Cholesky_Factorization_Module 

@@ -387,36 +387,41 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                   Initialize Poseidon                    #!
     !#                                                          #!
     !############################################################!
-
-    CALL Initialize_Poseidon &
-       (   Dimensions_Option           = Dimension_Input,               &
-           FEM_Degree_Option           = Degree_Input,                  &
-           L_Limit_Option              = L_Limit_Input,                 &
-           Units_Option                = Units_Input,                   &
-           Domain_Edge_Option          = Domain_Edge,                   &
-           Radial_Boundary_Units_Option= "cm",                          &
-           NE_Option                   = NE,                            &
-           NQ_Option                   = NQ,                            &
-           r_Option                    = x_e,                           &
-           t_Option                    = y_e,                           &
-           p_Option                    = z_e,                           &
-           Suffix_Flag_Option          = Suffix_Input,                  &
-           Suffix_Tail_Option          = Suffix_Tail,                   &
-           Method_Flag_Option          = Solver_Type,                   &
-           CFA_Eq_Flags_Option         = CFA_Eqs,                       &
-           Max_Iterations_Option       = Max_Iterations,                &
-           Convergence_Criteria_Option = CC_Option,                     &
-           Anderson_M_Option           = Anderson_M_Values(M_Index),    &
-           Verbose_Option              = Verbose,                       &
-           WriteAll_Option             = .FALSE.,                       &
-           Print_Setup_Option          = .TRUE.,                        &
-           Write_Setup_Option          = .FALSE.,                       &
-           Print_Results_Option        = Print_Results_Flag,            &
-           Write_Results_Option        = .TRUE.,                        &
-           Print_Timetable_Option      = .FALSE.,                       &
-           Write_Timetable_Option      = .FALSE.,                       &
-           Write_Sources_Option        = .FALSE.                        )
-
+CALL Initialize_Poseidon &
+   (   Dimensions_Option            = Dimension_Input,              &
+       FEM_Degree_Option            = Degree_Input,                 &
+       L_Limit_Option               = L_Limit_Input,                &
+       Source_NE                    = NE,                           &
+       Domain_Edge_Option           = Domain_Edge,                  &
+       Source_NQ                    = NQ,                           &
+       Source_xL                    = [Left_Limit, Right_Limit],    &
+       Source_RQ_xlocs              = Input_R_Quad,                 &
+       Source_TQ_xlocs              = Input_T_Quad,                 &
+       Source_PQ_xlocs              = Input_P_Quad,                 &
+       Source_Units                 = Units_Input,                  &
+       Source_Radial_Boundary_Units = "cm",                         &
+       Integration_NQ_Option        = NQ,                           &
+       Source_R_Option              = x_e,                          &
+       Source_T_Option              = y_e,                          &
+       Source_P_Option              = z_e,                          &
+       Method_Flag_Option           = Solver_Type,                  &
+       CFA_Eq_Flags_Option          = CFA_Eqs,                      &
+       Max_Iterations_Option        = Max_Iterations,               &
+       Convergence_Criteria_Option  = CC_Option,                    &
+       Anderson_M_Option            = Anderson_M_Values(M_Index),   &
+       Verbose_Option               = Verbose,                      &
+       WriteAll_Option              = .FALSE.,                      &
+       Print_Setup_Option           = .TRUE.,                       &
+       Write_Setup_Option           = .TRUE.,                       &
+       Print_Results_Option         = Print_Results_Flag,           &
+       Write_Results_Option         = .TRUE.,                       &
+       Print_Timetable_Option       = .FALSE.,                      &
+       Write_Timetable_Option       = .TRUE.,                       &
+       Write_Sources_Option         = .TRUE.,                       &
+       Print_Condition_Option       = .TRUE.,                       &
+       Write_Condition_Option       = .TRUE.,                       &
+       Suffix_Flag_Option           = Suffix_Input,                 &
+       Suffix_Tail_Option           = Suffix_Tail                   )
 
 
 

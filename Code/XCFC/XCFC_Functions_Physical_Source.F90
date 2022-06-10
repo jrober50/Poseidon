@@ -231,7 +231,6 @@ INTEGER,   DIMENSION(3),                                     INTENT(IN)     :: i
 INTEGER                                                         :: rd, td, pd, tpd
 INTEGER                                                         :: Here, There
 
-INTEGER                                                         :: ierr
 INTEGER                                                         ::  iEOff(3)
 
 
