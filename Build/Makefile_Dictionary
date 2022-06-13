@@ -14,7 +14,7 @@ EXT	= F90
 
 
 ### Fortran Compiler
-
+FORT_ISAAC         = mpif90
 FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90 -cpp
 FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
 FORT_kkadoogan     = $(MPI_HOME)/bin/mpif90
@@ -27,12 +27,15 @@ FORT_BlueWaters    = ftn
 
 ### C Compiler
 
+CC_ISAAC           = mpicxx
 CC_NicksMacBook    = /usr/local/openmpi/bin/mpic++
 
 
 
 
 #### Debuging Options
+STD_DEBUG_ISAAC           = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
+STD_OPTIMIZE_ISAAC        = -O2
 
 STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
 STD_OPTIMIZE_NicksMacBook = -O2
@@ -58,6 +61,8 @@ POSEIDON_DEBUG_FLAG_OFF =
 
 
 ### OpenMP
+OPENMP_ISAAC_ON                      =
+OPENMP_ISAAC_OFF                     =
 
 OPENMP_NicksMacBook_ON               = -fopenmp
 OPENMP_NicksMacBook_OFF              =
@@ -96,6 +101,8 @@ AMREX_DEF_FLAG_OFF     =
 
 
 ### PETSc Linkers
+PETSC_ISAAC_ON          =
+PETSC_ISAAC_OFF         =
 
 PETSC_Rhea_ON		= -cpp -B /sw/rhea/petsc/3.7.2/rhel6.7_gnu4.8.2  -B /sw/rhea/openmpi/1.8.4/rhel6.6_intell4.0.4
 PETSC_Rhea_OFF		=
@@ -196,6 +203,7 @@ OUTPUT_LINKER_ftn	= -J
 
 
 ### Legacy, Only Used to Create Variable Names ###
+COMP_ISAAC         = mpif90
 COMP_NicksMacBook  = gfortran
 COMP_sjdunham      = gfortran
 COMP_kkadoogan     = gfortran
