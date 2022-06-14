@@ -112,10 +112,6 @@ USE Timer_Variables_Module, &
                     Timer_Initialization_Core
 
 
-USE Maps_Legacy, &
-            ONLY :  CFA_3D_LM_Map
-
-
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,             &
                     Mask_PTR,               &

@@ -203,6 +203,10 @@ INTEGER                                         ::  RE
 INTEGER                                         ::  ui, d, l
 INTEGER                                         ::  uj, dp, lp
 
+
+
+IF ( Verbose_Flag ) CALL Init_Message('Preconditioning the Modified Vector Laplacian matrix using Jacobi preconditioner.')
+
 ! Store inverse diagonal
 DO i = 1,Beta_Prob_Dim
 
@@ -347,7 +351,7 @@ SUBROUTINE Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
 COMPLEX(idp),   DIMENSION(1:Beta_Prob_Dim),     INTENT(INOUT)       ::  Work_Vec
 
-
+IF ( Verbose_Flag ) CALL Init_Message('Preconditioning the RHS vector using Jacobi preconditioner.')
 
 ! Multiply diagonal and work vec
 

@@ -99,6 +99,7 @@ INTEGER FUNCTION FEM_Elem_Map( AMReX_Elem_Num, AMReX_Level )
 INTEGER, INTENT(IN)             ::  AMReX_Elem_Num
 INTEGER, INTENT(IN)             ::  AMReX_Level
 
+INTEGER                         ::  i
 INTEGER                         ::  Here
 INTEGER                         ::  There
 INTEGER                         ::  Index
@@ -108,6 +109,17 @@ Here  = Table_Offsets(AMReX_Level)
 There = Table_Offsets(AMReX_Level+1)-1
 
 Index = Findloc(Findloc_Table(Here:There), AMReX_Elem_Num, DIM=1)
+
+
+DO i = Here,There
+    IF ( FindLoc_Table(i) == AMReX_Elem_Num ) THEN
+        Index = i-Here+1
+        EXIT
+    ELSE
+        Index = -1
+    ENDIF
+END DO
+
 
 
 ! Since the arrays start their indexing at 0,

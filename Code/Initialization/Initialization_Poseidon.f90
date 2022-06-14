@@ -135,9 +135,6 @@ USE Initialization_FP, &
 USE Initialization_XCFC, &
             ONLY :  Initialize_XCFC
 
-USE Maps_Legacy, &
-            ONLY :  CFA_3D_LM_Map
-
 USE IO_Output_Mesh_Module, &
             ONLY :  Output_Mesh,            &
                     Output_Nodal_Mesh
