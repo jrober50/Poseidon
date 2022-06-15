@@ -47,9 +47,6 @@ INTEGER, PUBLIC                      ::  T_COARSEN_FACTOR    = 1
 INTEGER, PUBLIC                      ::  P_COARSEN_FACTOR    = 1
 
 
-LOGICAL, PUBLIC, DIMENSION(3)       ::  locs_Set
-LOGICAL, PUBLIC, DIMENSION(3)       ::  dlocs_Set
-
 
 LOGICAL                                             ::  RADIAL_MESH_SET_FLAG = .FALSE.
 LOGICAL                                             ::  THETA_MESH_SET_FLAG = .FALSE.

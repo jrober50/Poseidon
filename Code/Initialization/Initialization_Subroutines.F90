@@ -59,9 +59,7 @@ USE Variables_Mesh, &
                         plocs,                  &
                         drlocs,                 &
                         dtlocs,                 &
-                        dplocs,                 &
-                        locs_Set,               &
-                        dlocs_Set
+                        dplocs
 
 USE Variables_IO, &
             ONLY :  File_Suffix
@@ -657,14 +655,13 @@ ALLOCATE( Translation_Matrix(1:Caller_Quad_DOF, 1:Local_Quad_DOF) )
 
 IF ( Source_Radial_Boundary_Units == "cm" ) THEN
     Caller_R_Units = Centimeter
-ELSE IF ( Source_Radial_Boundary_Units == "m" ) THEN
+ELSE IF ( Source_Radial_Boundary_Units == " m" ) THEN
     Caller_R_Units = Meter
 ELSE IF ( Source_Radial_Boundary_Units == "km" ) THEN
     Caller_R_Units = Kilometer
 ELSE
     Caller_R_Units = Centimeter
 END IF
-
 
 lPF_Init_Flags(iPF_Init_Caller_Vars) = .TRUE.
 
@@ -697,8 +694,9 @@ REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  dp_Option
 
 
 REAL(idp)                                                   ::  Caller_Units
+LOGICAL,    DIMENSION(3)                                    ::  xSet
+LOGICAL,    DIMENSION(3)                                    ::  dxSet
 LOGICAL,    DIMENSION(3)                                    ::  Mesh_Set
-
 
 IF ( Verbose_Flag ) CALL Init_Message('Initializing Mesh Variables.')
 
@@ -707,7 +705,7 @@ IF ( Verbose_Flag ) CALL Init_Message('Initializing Mesh Variables.')
 IF ( PRESENT( Radial_Boundary_Units_Option ) ) THEN
     IF ( Radial_Boundary_Units_Option == "cm" ) THEN
         Caller_Units = Centimeter
-    ELSE IF ( Radial_Boundary_Units_Option == "m" ) THEN
+    ELSE IF ( Radial_Boundary_Units_Option == " m" ) THEN
         Caller_Units = Meter
     ELSE IF ( Radial_Boundary_Units_Option == "km" ) THEN
         Caller_Units = Kilometer
@@ -727,6 +725,7 @@ ELSE
     R_Outer = 1.0_idp*Caller_Units
 END IF
 
+
 CALL Init_Mesh_Params(  NE_Option,                      &
                         [R_Inner, 0.0_idp, 0.0_idp],    &
                         [R_Outer, pi, 2.0_idp*pi]       )
@@ -735,45 +734,50 @@ CALL Init_Mesh_Params(  NE_Option,                      &
 
 CALL Allocate_Mesh()
 
+
+xSet  = .FALSE.
+dxSet = .FALSE.
+
 IF ( PRESENT( r_Option ) ) THEN
     rlocs = r_Option*Caller_Units
-    Mesh_set(1) = .TRUE.
+    xSet(1) = .TRUE.
 END IF
 
 IF ( PRESENT( dr_Option ) ) THEN
     drlocs = dr_Option*Caller_Units
-    dlocs_set(1) = .TRUE.
+    dxSet(1) = .TRUE.
 END IF
 
 
 
 IF ( PRESENT( t_Option ) ) THEN
     tlocs = t_Option
-    Mesh_set(2) = .TRUE.
+    xSet(2) = .TRUE.
 END IF
 
 IF ( PRESENT( dt_Option ) ) THEN
     dtlocs = dt_Option
-    dlocs_set(2) = .TRUE.
-ELSE
-    dtlocs = pi/Num_T_Elements
-    dlocs_set(2) = .TRUE.
+    dxSet(2) = .TRUE.
 END IF
 
 
 
 IF ( PRESENT( p_Option ) ) THEN
     plocs = p_Option
-    Mesh_set(3) = .TRUE.
+    xSet(3) = .TRUE.
 END IF
 
 IF ( PRESENT( dp_Option ) ) THEN
     dplocs = dp_Option
-    dlocs_set(3) = .TRUE.
-ELSE
-    dplocs = 2.0_idp*pi/Num_P_Elements
-    dlocs_set(3) = .TRUE.
+    dxSet(3) = .TRUE.
 END IF
+
+
+
+Call Mesh_Check(xSet, dxSet, Mesh_Set)
+
+
+
 
 
 IF (ALL(Mesh_Set) ) THEN
@@ -787,7 +791,81 @@ END SUBROUTINE Initialize_Mesh
 
 
 
+SUBROUTINE Mesh_Check( xSet, dxSet, Mesh_Set )
 
+LOGICAL,    DIMENSION(3),   INTENT(IN)      ::  xSet
+LOGICAL,    DIMENSION(3),   INTENT(IN)      ::  dxSet
+LOGICAL,    DIMENSION(3),   INTENT(OUT)     ::  Mesh_Set
+
+INTEGER                                     ::  i
+
+
+i = 1
+IF ( (.NOT. xSet(i)) .AND. (.NOT. dxSet(i) ) ) THEN     ! Neither are Set
+    drlocs = (R_Outer - R_Inner)/REAL(Num_R_Elements, KIND = idp)
+
+    rlocs(0) = R_Inner
+    DO i = 1,Num_R_Elements
+        rlocs(i) = rlocs(i-1) + drlocs(i-1)
+    END DO
+ELSEIF ( (.NOT. xSet(i)) .AND. ( dxSet(i)) ) THEN       ! Only dx is set
+    rlocs(0) = R_Inner
+    DO i = 1,Num_R_Elements
+        rlocs(i) = rlocs(i-1) + drlocs(i-1)
+    END DO
+ELSEIF ( ( xSet(i)) .AND. (.NOT. dxSet(i) ) ) THEN      ! Only x is set
+    DO i = 0,Num_R_Elements-1
+        drlocs(i) = rlocs(i+1)-rlocs(i)
+    END DO
+END IF
+Mesh_Set(1) = .TRUE.
+
+
+
+
+i = 2
+IF ( (.NOT. xSet(i)) .AND. (.NOT. dxSet(i) ) ) THEN     ! Neither are Set
+    dtlocs = ( pi )/REAL(Num_T_Elements, KIND = idp)
+
+    tlocs(0) = 0.0_idp
+    DO i = 1,Num_T_Elements
+        tlocs(i) = tlocs(i-1) + dtlocs(i-1)
+    END DO
+ELSEIF ( (.NOT. xSet(i)) .AND. ( dxSet(i)) ) THEN       ! Only dx is set
+    tlocs(0) = 0.0_idp
+    DO i = 1,Num_T_Elements
+        tlocs(i) = tlocs(i-1) + dtlocs(i-1)
+    END DO
+ELSEIF ( ( xSet(i)) .AND. (.NOT. dxSet(i) ) ) THEN      ! Only x is set
+    DO i = 0,Num_T_Elements-1
+        dtlocs(i) = tlocs(i+1)-tlocs(i)
+    END DO
+END IF
+Mesh_Set(2) = .TRUE.
+
+
+i = 3
+IF ( (.NOT. xSet(i)) .AND. (.NOT. dxSet(i) ) ) THEN     ! Neither are Set
+    dplocs = ( 2.0_idp*pi )/REAL(Num_P_Elements, KIND = idp)
+
+    plocs(0) = 0.0_idp
+    DO i = 1,Num_P_Elements
+        plocs(i) = plocs(i-1) + dplocs(i-1)
+    END DO
+ELSEIF ( (.NOT. xSet(i)) .AND. ( dxSet(i)) ) THEN       ! Only dx is set
+    plocs(0) = 0.0_idp
+    DO i = 1,Num_P_Elements
+        plocs(i) = plocs(i-1) + dplocs(i-1)
+    END DO
+ELSEIF ( ( xSet(i)) .AND. (.NOT. dxSet(i) ) ) THEN      ! Only x is set
+    DO i = 0,Num_P_Elements-1
+        dplocs(i) = plocs(i+1)-plocs(i)
+    END DO
+END IF
+Mesh_Set(3) = .TRUE.
+
+
+END SUBROUTINE Mesh_Check
 
 
 

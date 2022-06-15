@@ -27,10 +27,6 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
-USE Variables_Mesh, &
-            ONLY :  locs_Set,   &
-                    dlocs_Set
-
 USE Poseidon_Units_Module, &
             ONLY :  C_Square,        &
                     Set_Units,       &
@@ -765,78 +761,6 @@ END DO
 
 END SUBROUTINE Generate_Defined_Mesh
 
-
-
-
-
-
-!+802+##################################################################################!
-!                                                                                       !
-!       GENERATE_DEFINED_COARSE_MESH                                                    !
-!                                                                                       !
-!#######################################################################################!
-SUBROUTINE Generate_Defined_Coarse_Mesh(Input_Number_of_Elements,           &
-                                        Output_Number_of_Elements,          &
-                                        Coarsen_Factor, Mesh_Start,         &
-                                        Dim,                                &
-                                        Mesh, dMesh )
-
-
-INTEGER, INTENT(IN)                                                         ::  Input_Number_of_Elements
-INTEGER, INTENT(IN)                                                         ::  Output_Number_of_Elements
-INTEGER, INTENT(INOUT)                                                      ::  Coarsen_Factor
-REAL(KIND = idp), INTENT(IN)                                                ::  Mesh_Start
-INTEGER, INTENT(IN)                                                         ::  Dim
-
-REAL(KIND = idp), DIMENSION(0:Output_Number_of_Elements), INTENT(INOUT)     ::  Mesh
-REAL(KIND = idp), DIMENSION(1:Output_Number_of_Elements), INTENT(INOUT)     ::  dMesh
-
-INTEGER                                                                     ::  i
-
-
-IF ( Coarsen_Factor .NE. 1 ) THEN
-    PRINT*,"!*  Warning in Poseidon *!"
-    PRINT*,"  In Generate_Defined_Coarse_Mesh():    "
-    PRINT*,"- Grid coarsening unavailable at this time. "
-    PRINT*,"- Setting Coarsen_Factor to 1. "
-    PRINT*,"!* End of Warning *!"
-    Coarsen_Factor = 1
-END IF
-
-
-
-
-IF ( Output_Number_of_Elements*Coarsen_Factor == Input_Number_of_Elements ) THEN
-
-    IF ( locs_Set(Dim) .EQV. .FALSE. ) THEN
-        mesh(0) = Mesh_Start
-        DO i = 1,Output_Number_of_Elements
-            mesh(i) = mesh(i-1) + dMesh(i)
-        END DO
-    END IF
-
-    IF ( dlocs_Set(Dim) .EQV. .FALSE. ) THEN
-        
-        DO i = 1,Output_Number_of_Elements
-            dmesh(i) = Mesh(i)-Mesh(i-1)
-        END DO
-
-    END IF
-
-ELSE
-
-    PRINT*,"!* ERROR IN POSEIDON *!"
-    PRINT*,"Error in Generate_Defined_Coarse_Mesh(): "
-    PRINT*,"- Grid Coarsening Improperly Set Up. "
-    PRINT*,"Output_Number_of_Elements*Coarsen_Factor != Input_Number_of_Elements"
-    PRINT*,Output_Number_of_Elements,"*",Coarsen_Factor," = ",Output_Number_of_Elements*Coarsen_Factor,"!=",Input_Number_of_Elements
-    PRINT*,"!* POSEIDON STOPPING PROGRAM  *!"
-    STOP
-
-END IF
-
-
-END SUBROUTINE Generate_Defined_Coarse_Mesh
 
 
 

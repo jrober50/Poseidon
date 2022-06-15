@@ -60,24 +60,8 @@ USE Variables_Quadrature, &
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
-                    Num_T_Elements,         &
-                    Num_P_Elements,         &
-                    Num_Loc_R_Elements,     &
-                    Num_Loc_T_Elements,     &
-                    Num_Loc_P_Elements,     &
                     rlocs,                  &
-                    tlocs,                  &
-                    plocs,                  &
-                    drlocs,                 &
-                    dtlocs,                 &
-                    dplocs,                 &
-                    R_Inner,                &
-                    R_Outer,                &
-                    R_Coarsen_Factor,       &
-                    T_Coarsen_Factor,       &
-                    P_Coarsen_Factor,       &
-                    locs_set,               &
-                    dlocs_set
+                    drlocs
 
 USE Variables_Derived, &
             ONLY :  Prob_Dim,               &
@@ -306,7 +290,6 @@ IF ( Verbose_Flag ) CALL Init_Message('Beginning Poseidon Core Initialization.')
 
 
 CALL Set_Units(Source_Units)
-
 
 IF ( PRESENT( Dimensions_Option ) ) THEN
     Domain_Dim = Dimensions_Option
