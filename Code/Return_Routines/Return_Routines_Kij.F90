@@ -230,9 +230,9 @@ Gamma(1) = 1.0_idp
 Christoffel = 0.0_idp
 
 
-DO pe = 1,NE(3)-1
-DO te = 1,NE(2)-1
-DO re = 1,NE(1)-1
+DO pe = 1,NE(3)
+DO te = 1,NE(2)
+DO re = 1,NE(1)
 
 DROT = 0.5_idp * (rlocs(re) - rlocs(re-1))
 DTOT = 0.5_idp * (tlocs(te) - tlocs(te-1))
