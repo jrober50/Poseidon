@@ -128,7 +128,7 @@ REAL(idp)                                               ::  Potential
 
 INTEGER                                                 ::  Num_Samples = 20
 
-110 FORMAT (11X,A1,24X,A3,19X,A8,15X,A11,14X,A11,14X,A11)
+110 FORMAT (11X,A,17X,A,10X,A,12X,A,13X,A,14X,A)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 
 210 FORMAT (11X,A1,16X,A12,16X,A12)
@@ -184,7 +184,7 @@ IF ( Poisson_Mode ) THEN
 
 ELSE
 
-    WRITE(*,110)"r","Psi","AlphaPsi","Beta1 Value","Beta2 Value","Beta3 Value"
+    WRITE(*,110)"r","Conformal Factor","Lapse Function","Radial Shift","Theta Shift","Phi Shift"
 
 
     DO i = 0,Num_Samples
@@ -203,11 +203,11 @@ ELSE
 !        WRITE(*,212)x_e(i)/Centimeter,potential,Return_Psi
 
 
-        WRITE(*,111) r/Centimeter,              &
-                     Return_Psi,                &
-                     Return_AlphaPsi,           &
-                     Return_Beta1/Shift_Units,  &
-                     Return_Beta2,              &
+        WRITE(*,111) r/Centimeter,                  &
+                     Return_Psi,                    &
+                     Return_AlphaPsi/Return_Psi,    &
+                     Return_Beta1/Shift_Units,      &
+                     Return_Beta2,                  &
                      Return_Beta3
 
     END DO

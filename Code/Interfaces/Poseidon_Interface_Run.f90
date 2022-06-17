@@ -51,6 +51,9 @@ USE IO_Print_Results, &
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
 
+USE Poseidon_Interface_Initial_Guess,       &
+            ONLY :  Poseidon_Initialize_Flat_Guess
+
 USE Flags_Check_Routines, &
             ONLY :  Poseidon_Run_Check
 
@@ -58,6 +61,11 @@ USE Flags_IO_Module, &
             ONLY :  lPF_IO_Flags,           &
                     iPF_IO_Print_Results,   &
                     iPF_IO_Write_Results
+
+USE Flags_Initial_Guess_Module, &
+            ONLY :  lPF_IG_Flags,           &
+                    iPF_IG_Set,             &
+                    iPF_IG_Flat_Guess
 
 IMPLICIT NONE
 
@@ -74,6 +82,12 @@ CONTAINS
 SUBROUTINE Poseidon_Run()
 
 LOGICAL                                             ::  Readiness_Flag
+
+
+IF (( .NOT. lPF_IG_Flags(iPF_IG_Set)) .AND. lPF_IG_Flags(iPF_IG_Flat_Guess) ) THEN
+    CALL Poseidon_Initialize_Flat_Guess
+END IF
+
 
 
 !Readiness_Flag = .TRUE.
@@ -139,7 +153,9 @@ END SUBROUTINE Poseidon_Run
 
  INTEGER         :: i, ierr
 
-
+IF (( .NOT. lPF_IG_Flags(iPF_IG_Set)) .AND. lPF_IG_Flags(iPF_IG_Flat_Guess) ) THEN
+    CALL Poseidon_Initialize_Flat_Guess
+END IF
 
 
  CALL XCFC_Method_Part1()
@@ -186,6 +202,9 @@ END SUBROUTINE Poseidon_Run
  INTEGER         :: i, ierr
 
 
+IF (( .NOT. lPF_IG_Flags(iPF_IG_Set)) .AND. lPF_IG_Flags(iPF_IG_Flat_Guess) ) THEN
+    CALL Poseidon_Initialize_Flat_Guess
+END IF
 
  CALL XCFC_Method_Part2()
 

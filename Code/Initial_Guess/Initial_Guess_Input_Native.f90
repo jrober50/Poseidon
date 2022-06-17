@@ -81,6 +81,10 @@ USE Maps_Fixed_Point, &
 USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
 
+USE Flags_Initial_Guess_Module, &
+            ONLY :  lPF_IG_Flags,       &
+                    iPF_IG_Set
+
 IMPLICIT NONE
 
 CONTAINS
@@ -182,6 +186,7 @@ DO re = 1,Input_RE
 END DO ! re
 
 
+lPF_IG_Flags(iPF_IG_Set) = .TRUE.
 
 END SUBROUTINE IG_Input_Native
 
@@ -214,7 +219,7 @@ REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
                                     0:Num_P_Elements-1  )           :: Beta_Guess
 
 
-
+lPF_IG_Flags(iPF_IG_Set) = .TRUE.
 
 
 END SUBROUTINE IG_Input_Native_Caller

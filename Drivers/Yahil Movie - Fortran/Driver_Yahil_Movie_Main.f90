@@ -184,7 +184,7 @@ Solver_Type         = 3
 
 Time_Start          = 15.0 ! ms
 Time_Stop           = 0.015  ! ms
-Time_Steps          = 240
+Time_Steps          = 10
 
 FEM_Degree          = 1
 Ylm_L_Limit         = 0
@@ -319,6 +319,45 @@ ELSE
 END IF
 
 
+
+CALL Initialize_Poseidon &
+(   Dimensions_Option            = Dimension_Input,              &
+    FEM_Degree_Option            = FEM_Degree,                 &
+    L_Limit_Option               = Ylm_L_Limit,                &
+    Source_NE                    = NE,                           &
+    Domain_Edge_Option           = Domain_Edge,                  &
+    Source_NQ                    = NQ,                           &
+    Source_xL                    = [Left_Limit, Right_Limit],    &
+    Source_RQ_xlocs              = Input_R_Quad,                 &
+    Source_TQ_xlocs              = Input_T_Quad,                 &
+    Source_PQ_xlocs              = Input_P_Quad,                 &
+    Source_Units                 = Units_Input,                  &
+    Source_Radial_Boundary_Units = "cm",                         &
+    Integration_NQ_Option        = NQ,                           &
+    Source_R_Option              = x_e,                          &
+    Source_T_Option              = y_e,                          &
+    Source_P_Option              = z_e,                          &
+    Method_Flag_Option           = Solver_Type,                  &
+    CFA_Eq_Flags_Option          = CFA_Eqs,                      &
+    Max_Iterations_Option        = Max_Iterations,               &
+    Convergence_Criteria_Option  = CC_Option,                    &
+    Anderson_M_Option            = Anderson_M_Value,   &
+    Verbose_Option               = Verbose,                      &
+    WriteAll_Option              = .FALSE.,                      &
+    Print_Setup_Option           = .TRUE.,                       &
+    Write_Setup_Option           = .TRUE.,                       &
+    Print_Results_Option         = Print_Results_Flag,           &
+    Write_Results_Option         = .TRUE.,                       &
+    Print_Timetable_Option       = .FALSE.,                      &
+    Write_Timetable_Option       = .TRUE.,                       &
+    Write_Sources_Option         = .TRUE.,                       &
+    Print_Condition_Option       = .TRUE.,                       &
+    Write_Condition_Option       = .TRUE.,                       &
+    Suffix_Flag_Option           = Suffix_Input,                 &
+    Suffix_Tail_Option           = Suffix_Tail                   )
+
+
+
 DO T_Index = 1,Time_Steps
     Time = Time_Start + (T_Index-1)*dt
     WRITE(*,'(A,I2.2,A,F4.2)') "Starting Loop ",T_Index," at time, ",Time
@@ -326,41 +365,7 @@ DO T_Index = 1,Time_Steps
 
 
 
-    CALL Initialize_Poseidon &
-    (   Dimensions_Option            = Dimension_Input,              &
-        FEM_Degree_Option            = FEM_Degree,                 &
-        L_Limit_Option               = Ylm_L_Limit,                &
-        Source_NE                    = NE,                           &
-        Domain_Edge_Option           = Domain_Edge,                  &
-        Source_NQ                    = NQ,                           &
-        Source_xL                    = [Left_Limit, Right_Limit],    &
-        Source_RQ_xlocs              = Input_R_Quad,                 &
-        Source_TQ_xlocs              = Input_T_Quad,                 &
-        Source_PQ_xlocs              = Input_P_Quad,                 &
-        Source_Units                 = Units_Input,                  &
-        Source_Radial_Boundary_Units = "cm",                         &
-        Integration_NQ_Option        = NQ,                           &
-        Source_R_Option              = x_e,                          &
-        Source_T_Option              = y_e,                          &
-        Source_P_Option              = z_e,                          &
-        Method_Flag_Option           = Solver_Type,                  &
-        CFA_Eq_Flags_Option          = CFA_Eqs,                      &
-        Max_Iterations_Option        = Max_Iterations,               &
-        Convergence_Criteria_Option  = CC_Option,                    &
-        Anderson_M_Option            = Anderson_M_Value,   &
-        Verbose_Option               = Verbose,                      &
-        WriteAll_Option              = .FALSE.,                      &
-        Print_Setup_Option           = .TRUE.,                       &
-        Write_Setup_Option           = .TRUE.,                       &
-        Print_Results_Option         = Print_Results_Flag,           &
-        Write_Results_Option         = .TRUE.,                       &
-        Print_Timetable_Option       = .FALSE.,                      &
-        Write_Timetable_Option       = .TRUE.,                       &
-        Write_Sources_Option         = .TRUE.,                       &
-        Print_Condition_Option       = .TRUE.,                       &
-        Write_Condition_Option       = .TRUE.,                       &
-        Suffix_Flag_Option           = Suffix_Input,                 &
-        Suffix_Tail_Option           = Suffix_Tail                   )
+
 
 
     !############################################################!
@@ -410,19 +415,21 @@ DO T_Index = 1,Time_Steps
     !#              Calculate and Set Initial Guess             #!
     !#                                                          #!
     !############################################################!
-    CALL TimerStart( Timer_Driver_SetGuess )
 
-    CALL Driver_SetGuess(   NE, NQ,             &
-                            dx_c, x_e,          &
-                            Input_R_Quad,       &
-                            Input_T_Quad,       &
-                            Input_P_Quad,       &
-                            Left_Limit,         &
-                            Right_Limit,        &
-                            Guess_Type          )
+    IF ( T_Index == 1 ) THEN
+        CALL TimerStart( Timer_Driver_SetGuess )
 
-    CALL TimerStop( Timer_Driver_SetGuess )
+        CALL Driver_SetGuess(   NE, NQ,             &
+                                dx_c, x_e,          &
+                                Input_R_Quad,       &
+                                Input_T_Quad,       &
+                                Input_P_Quad,       &
+                                Left_Limit,         &
+                                Right_Limit,        &
+                                Guess_Type          )
 
+        CALL TimerStop( Timer_Driver_SetGuess )
+    END IF
 
     !############################################################!
     !#                                                          #!
@@ -460,19 +467,19 @@ DO T_Index = 1,Time_Steps
 
 
 
-    !############################################################!
-    !#                                                          #!
-    !#                      Close Poseidon                      #!
-    !#                                                          #!
-    !############################################################!
-    CALL Poseidon_Close()
+
 
 
 
 
 END DO ! T_Index
 
-
+!############################################################!
+!#                                                          #!
+!#                      Close Poseidon                      #!
+!#                                                          #!
+!############################################################!
+CALL Poseidon_Close()
 
 
 DEALLOCATE( Input_R_Quad )

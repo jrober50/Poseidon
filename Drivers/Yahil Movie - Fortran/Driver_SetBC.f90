@@ -33,7 +33,8 @@ USE Poseidon_Message_Routines_Module, &
             ONLY :  Driver_Init_Message
 
 USE Poseidon_Units_Module, &
-            ONLY :  C_Square
+            ONLY :  C_Square,           &
+                    Centimeter
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
@@ -70,10 +71,10 @@ REAL(idp), DIMENSION(1:5)                       ::  INNER_BC_VALUES, OUTER_BC_VA
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Calculating boundary conditions.')
 
 Psi_BC = 1.0_idp    &
-       - 0.5_idp*Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)/C_Square
+       - 0.5_idp*Potential_Solution(x_e(NE(1))*Centimeter, 0.0_idp, 0.0_idp)/C_Square
 
 AlphaPsi_BC = 1.0_idp    &
-            + 0.5_idp*Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)/C_Square
+            + 0.5_idp*Potential_Solution(x_e(NE(1))*Centimeter, 0.0_idp, 0.0_idp)/C_Square
 
 !    PRINT*,"BCs",Psi_BC, AlphaPsi_BC, Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)
 
