@@ -13,8 +13,8 @@ HDF5_LIB       = $(HDF5_HOME)/lib
 
 USE_F_INTERFACES = TRUE
 
-#DEBUG     = FALSE
-DEBUG     = TRUE
+DEBUG     = FALSE
+#DEBUG     = TRUE
 
 USE_MPI   = TRUE
 USE_OMP   = FALSE

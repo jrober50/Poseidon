@@ -27,16 +27,18 @@ USE Poseidon_Numbers_Module, &
 USE Poseidon_Units_Module, &
             ONLY :  Set_Units
 
-USE Initialization_AMReX, &
-            ONLY :  Initialize_Poseidon_with_AMReX
+USE Poseidon_Interface_Initialization, &
+            ONLY :  Initialize_Poseidon
 
+USE Poseidon_Interface_Run, &
+            ONLY :  Poseidon_Run
+
+USE Poseidon_Interface_Close, &
+            ONLY :  Poseidon_Close
 
 USE Variables_IO, &
             ONLY :  Write_Results_R_Samps,      &
-                       Write_Results_T_Samps
-
-USE Variables_MPI, &
-            ONLY :  ierr
+                    Write_Results_T_Samps
 
 USE Functions_Mesh, &
             ONLY :  Create_3D_Mesh
@@ -46,10 +48,6 @@ USE Functions_Quadrature, &
 
 USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
-
-USE Poseidon_Main_Module, &
-            ONLY :  Poseidon_Run,                                       &
-                    Poseidon_Close
 
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
@@ -70,10 +68,7 @@ USE Allocation_Yahil_Profile, &
             ONLY :  Deallocate_Yahil_Profile
 
 USE Variables_MPI, &
-            ONLY :  myID_Poseidon,      &
-                    MasterID_Poseidon,  &
-                    nPROCS_Poseidon,    &
-                    Poseidon_Comm_World
+            ONLY :  ierr
 
 USE Variables_Driver_AMReX, &
             ONLY :  nLevels
@@ -124,8 +119,6 @@ INTEGER                                                 ::  IFL
 CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
 REAL(idp), DIMENSION(1:6)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
-
-INTEGER                                                 ::  i
 
 Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
 
@@ -235,7 +228,7 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                   Initialize Poseidon                    #!
     !#                                                          #!
     !############################################################!
-    CALL Initialize_Poseidon_with_AMReX &
+    CALL Initialize_Poseidon &
        (    Source_NQ                           = NQ,                   &
             Source_xL                           = [Left_Limit, Right_Limit],    &
             Source_RQ_xlocs                     = Input_R_Quad,         &

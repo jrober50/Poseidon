@@ -62,7 +62,7 @@ USE Allocation_Yahil_Profile, &
 USE Variables_Mesh, &
             ONLY :  R_Outer
 
-USE Poseidon_Interface_BC_Input, &
+USE Poseidon_Interface_Boundary_Conditions, &
             ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
 
 
@@ -190,12 +190,13 @@ Potential_Solution => SELFSIM_NEWT_SOL
 
 
 Psi_BC = 1.0_idp    &
-       - 0.5_idp*Potential_Solution(R_Outer, 0.0_idp, 0.0_idp)/C_Square
+       - 0.5_idp*Potential_Solution(R_Outer*Centimeter, 0.0_idp, 0.0_idp)/C_Square
 
 AlphaPsi_BC = 1.0_idp    &
-            + 0.5_idp*Potential_Solution(R_Outer, 0.0_idp, 0.0_idp)/C_Square
+            + 0.5_idp*Potential_Solution(R_Outer*Centimeter, 0.0_idp, 0.0_idp)/C_Square
 
 Shift_Vector_BC = 0.0_idp
+
 
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)

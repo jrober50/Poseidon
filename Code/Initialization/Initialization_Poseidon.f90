@@ -288,7 +288,6 @@ END IF
 IF ( Verbose_Flag ) CALL Init_Message('Beginning Poseidon Core Initialization.')
 
 
-
 CALL Set_Units(Source_Units)
 
 IF ( PRESENT( Dimensions_Option ) ) THEN

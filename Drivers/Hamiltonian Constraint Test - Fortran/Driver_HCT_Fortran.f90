@@ -24,7 +24,7 @@ USE Poseidon_Units_Module, &
                     Centimeter,     &
                     Gram
 
-USE Initialization_Poseidon, &
+USE Poseidon_Interface_Initialization, &
             ONLY :  Initialize_Poseidon
 
 USE Variables_IO, &
@@ -53,9 +53,11 @@ USE IO_Write_Final_Results, &
 USE IO_Convergence_Output, &
             ONLY :  Output_Convergence_Reports
 
-USE Poseidon_Main_Module, &
-            ONLY :  Poseidon_Run,                                       &
-                    Poseidon_Close
+USE Poseidon_Interface_Run, &
+            ONLY :  Poseidon_Run
+
+USE Poseidon_Interface_Close, &
+            ONLY :  Poseidon_Close
 
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource

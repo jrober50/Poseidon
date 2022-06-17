@@ -34,7 +34,7 @@ USE Poseidon_Units_Module, &
 USE Variables_Functions, &
             ONLY :  Potential_Solution
 
-USE Poseidon_Initial_Guess_Module, &
+USE Poseidon_Interface_Initial_Guess, &
             ONLY :  Poseidon_Input_Initial_Guess
 
 

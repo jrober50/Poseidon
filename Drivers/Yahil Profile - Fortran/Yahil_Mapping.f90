@@ -24,9 +24,17 @@ USE Poseidon_Units_Module, &
                     Centimeter,      &
                     Gram
 
-USE Initialization_Poseidon, &
+USE Poseidon_Interface_Initialization, &
             ONLY :  Initialize_Poseidon
 
+USE Poseidon_Interface_Run, &
+            ONLY :  Poseidon_Run
+
+!USE Poseidon_Main_Module, &
+!            ONLY :  Poseidon_Close
+
+USE Poseidon_Interface_Close, &
+            ONLY :  Poseidon_Close
 
 USE Poseidon_Return_Routines_Module, &
             ONLY : Poseidon_Return_Extrinsic_Curvature
@@ -69,11 +77,6 @@ USE IO_Write_Final_Results, &
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
-
-USE Poseidon_Main_Module, &
-            ONLY :  Poseidon_Run,                                       &
-                    Poseidon_Close
-
 
 USE Poseidon_Utilities_Module, &
             ONLY :  Poseidon_Calc_ADM_Mass,         &
@@ -250,14 +253,14 @@ Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  2
-T_Index_Max         =  2
+T_Index_Min         =  4
+T_Index_Max         =  4
 
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  1
-RE_Index_Max        =  1
+RE_Index_Min        =  2
+RE_Index_Max        =  2
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -415,10 +418,10 @@ CALL Initialize_Poseidon &
        Write_Setup_Option           = .TRUE.,                       &
        Print_Results_Option         = Print_Results_Flag,           &
        Write_Results_Option         = .TRUE.,                       &
-       Print_Timetable_Option       = .FALSE.,                      &
+       Print_Timetable_Option       = .TRUE.,                       &
        Write_Timetable_Option       = .TRUE.,                       &
        Write_Sources_Option         = .TRUE.,                       &
-       Print_Condition_Option       = .TRUE.,                       &
+       Print_Condition_Option       = .FALSE.,                       &
        Write_Condition_Option       = .TRUE.,                       &
        Suffix_Flag_Option           = Suffix_Input,                 &
        Suffix_Tail_Option           = Suffix_Tail                   )
@@ -528,7 +531,7 @@ CALL Initialize_Poseidon &
         CALL Print_Results()
         CALL Write_Final_Results()
 
-        CALL Output_Time_Report()
+
     END IF
 
 
@@ -588,3 +591,4 @@ END PROGRAM Yahil_Mapping
 
 
 
+!

@@ -39,8 +39,9 @@ USE Poseidon_Parameters, &
 USE External_Yahil_Profile_Module, &
             ONLY :  Initialize_Yahil_Sources
 
-USE Poseidon_Source_Input_Module, &
+USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
+
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
@@ -210,16 +211,19 @@ CALL TimerStart( Timer_Driver_SetSource_SetSource )
 !                                Left_Limit, Right_Limit         )
 
 
-CALL Poseidon_Input_Sources( Local_E,                    &
-                             Local_Si,                   &
-                             Local_S,                    &
-                             NE,                         &
-                             NQ,                         &
-                             R_Quad,                     &
-                             T_Quad,                     &
-                             P_Quad,                     &
-                             [Left_Limit, Right_Limit]   )
+!CALL Poseidon_Input_Sources( Local_E,                    &
+!                             Local_Si,                   &
+!                             Local_S,                    &
+!                             NE,                         &
+!                             NQ,                         &
+!                             R_Quad,                     &
+!                             T_Quad,                     &
+!                             P_Quad,                     &
+!                             [Left_Limit, Right_Limit]   )
 
+CALL Poseidon_Input_Sources( Local_E,                    &
+                            Local_Si,                   &
+                            Local_S                     )
 
 
 IF ( lPF_IO_Flags(iPF_IO_Write_Sources) ) THEN

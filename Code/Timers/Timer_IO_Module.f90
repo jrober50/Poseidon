@@ -157,7 +157,6 @@ END SUBROUTINE Output_Poisson_Time_Report
  !#############################################################!
 SUBROUTINE Output_XCFC_Time_Report()
 
-
 IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
 
     CALL Output_Header()

@@ -48,7 +48,7 @@ USE Variables_External, &
             ONLY :  HCT_Alpha,      &
                     HCT_Star_Radius
 
-USE Poseidon_Interface_BC_Input, &
+USE Poseidon_Interface_Boundary_Conditions, &
             ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
 
 

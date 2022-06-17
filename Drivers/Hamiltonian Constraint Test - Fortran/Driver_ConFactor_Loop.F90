@@ -44,7 +44,7 @@ USE Poseidon_Message_Routines_Module, &
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_Results_Dir
 
-USE Poseidon_Source_Input_Module, &
+USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
 USE Variables_IO, &
@@ -56,10 +56,10 @@ USE Poseidon_File_Routines_Module, &
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
 
-USE Poseidon_Main_Module, &
+USE Poseidon_Interface_Run, &
             ONLY :  Poseidon_Run
 
-USE Poseidon_Return_Routines_Module, &
+USE Poseidon_Interface_Return_Routines, &
             ONLY :  Poseidon_Return_Conformal_Factor
 
 USE IO_Print_Results, &

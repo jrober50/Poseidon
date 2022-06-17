@@ -44,7 +44,7 @@ USE Poseidon_Message_Routines_Module, &
 USE Poseidon_IO_Parameters, &
             ONLY :  Poseidon_Results_Dir
 
-USE Poseidon_Source_Input_Module, &
+USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
 USE Variables_IO, &

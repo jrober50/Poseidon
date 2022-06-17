@@ -891,14 +891,17 @@ SELFSIM_POT_VALS(NUM_ENTRIES) = -GRAV_Constant_G*Enclosed_Mass(Num_Entries)/R_Va
 
 DO i = NUM_ENTRIES-1,1,-1
 
-     SELFSIM_POT_VALS(i) = SELFSIM_POT_VALS(i+1) - Grav_Constant_G*Enclosed_Mass(i)             &
-                                                 * (SELFSIM_r_Vals(i+1)-SELFSIM_R_Vals(i))                  &
-                                                 / (SELFSIM_R_Vals(i)*SELFSIM_R_Vals(i))
+    SELFSIM_POT_VALS(i) = SELFSIM_POT_VALS(i+1)                         &
+                        - Grav_Constant_G*Enclosed_Mass(i)              &
+                        * (SELFSIM_r_Vals(i+1)-SELFSIM_R_Vals(i))       &
+                        / (SELFSIM_R_Vals(i)*SELFSIM_R_Vals(i))
+
 
 END DO
 
-SELFSIM_POT_VALS(0) = SELFSIM_POT_VALS(1) - 3*Grav_Constant_G*Enclosed_Mass(1)           &
-                                            /(2*SELFSIM_R_VALS(1))
+SELFSIM_POT_VALS(0) = SELFSIM_POT_VALS(1)                           &
+                    - 3*Grav_Constant_G*Enclosed_Mass(1)            &
+                    /(2*SELFSIM_R_VALS(1))
 
 
 
@@ -926,20 +929,15 @@ INTEGER                          :: i
 
 REAL(idp)                 :: deltar
 
-
-
 DO i = 0,NUM_ENTRIES-1
 
     IF ( r == 0 ) THEN
-
-       cur_entry = 0
+        cur_entry = 0
 
     ELSE IF (( r > SELFSIM_R_VALS(i) ) .AND. ( r <= SELFSIM_R_VALS(i+1) ) ) THEN
-
         cur_entry = i
 
     ELSE IF ( r > SELFSIM_R_VALS(Num_Entries) ) THEN
-
         cur_entry = i
 
     END IF
@@ -951,7 +949,6 @@ deltar = SELFSIM_R_VALS(cur_entry+1) - SELFSIM_R_VALS(cur_entry)
 SELFSIM_NEWT_SOL = (1.0_idp/deltar)    &
                  *( SELFSIM_POT_VALS(cur_entry)*(SELFSIM_R_VALS(cur_entry+1) - r)         &
                    +SELFSIM_POT_VALS(cur_entry+1)*(r - SELFSIM_R_VALS(cur_entry))         )
-
 
 
 END FUNCTION SELFSIM_NEWT_SOL
@@ -1401,7 +1398,6 @@ REAL(idp)                                   ::  Density, Velocity
 
 REAL(idp)                                   ::  Pressure, Energy
 REAL(idp)                                   ::  vsqr, LF_sqr
-REAL(idp)                                   ::  E
 
 
 REAL(idp)                                   ::  D_FACTOR,               &

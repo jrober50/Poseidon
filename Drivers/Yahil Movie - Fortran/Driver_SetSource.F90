@@ -41,7 +41,7 @@ USE Poseidon_Message_Routines_Module, &
 USE External_Yahil_Profile_Module, &
             ONLY :  Initialize_Yahil_Sources
 
-USE Poseidon_Source_Input_Module, &
+USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
 USE Variables_Functions, &

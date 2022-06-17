@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Poseidon_Source_Input_Module                                          !##!
+MODULE Poseidon_Interface_Source_Input                                       !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -74,4 +74,4 @@ END INTERFACE Poseidon_Input_Sources_Part2
 
 CONTAINS
 
-END MODULE Poseidon_Source_Input_Module
+END MODULE Poseidon_Interface_Source_Input

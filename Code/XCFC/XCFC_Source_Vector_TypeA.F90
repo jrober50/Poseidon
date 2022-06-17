@@ -607,7 +607,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     ! Calc Flat Metric Terms
     f(tpd,rd,1) = 1.0_idp
     f(tpd,rd,2) = R_Square(rd)
-    f(tpd,rd,3) = R_Square(rd) * TP_SIN_SQUARE(tpd)
+    f(tpd,rd,3) = TP_RSIN_SQUARE(tpd,rd)
     
 END DO ! tpd
 END DO ! rd

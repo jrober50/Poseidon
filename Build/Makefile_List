@@ -3,12 +3,12 @@ POSEIDON = \
   $(VARIABLES)       \
   $(FLAG_MODULES)    \
   $(TIMERS)          \
+  $(AMREX_UTILITIES) \
   $(MAPS)            \
   $(MESH)            \
   $(QUAD)            \
   $(FUNCTIONS)       \
   $(INITIAL_GUESS)   \
-  $(AMREX_UTILITIES) \
   $(MPI)             \
   $(TABLES)          \
   $(RETURN_ROUTINES) \

@@ -24,7 +24,7 @@ MODULE Driver_SetGuess_Module                                                !##
 !                                   !
 !===================================!
 !===================================!
-USE Poseidon_Initial_Guess_Module, &
+USE Poseidon_Interface_Initial_Guess, &
             ONLY :  Poseidon_Initialize_Flat_Guess
 
 

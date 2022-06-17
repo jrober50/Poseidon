@@ -23,7 +23,7 @@ MODULE Driver_Run_Module                                                     !##
 !           Dependencies            !
 !                                   !
 !===================================!
-USE Poseidon_Main_Module, &
+USE Poseidon_Interface_Run, &
             ONLY : Poseidon_Run
 
 IMPLICIT NONE

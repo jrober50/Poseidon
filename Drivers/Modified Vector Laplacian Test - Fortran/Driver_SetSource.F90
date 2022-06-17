@@ -35,7 +35,7 @@ USE Poseidon_Parameters, &
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Driver_Init_Message
 
-USE Poseidon_Source_Input_Module, &
+USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
 USE Timer_Routines_Module, &

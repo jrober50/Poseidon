@@ -24,8 +24,14 @@ USE Poseidon_Units_Module, &
                     Centimeter,      &
                     Gram
 
-USE Initialization_Poseidon, &
+USE Poseidon_Interface_Initialization, &
             ONLY :  Initialize_Poseidon
+
+USE Poseidon_Interface_Run, &
+            ONLY :  Poseidon_Run
+
+USE Poseidon_Interface_Close, &
+            ONLY :  Poseidon_Close
 
 USE Variables_IO, &
             ONLY :  Write_Results_R_Samps,      &
@@ -54,10 +60,6 @@ USE IO_Write_Final_Results, &
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
-
-USE Poseidon_Main_Module, &
-            ONLY :  Poseidon_Run,                                       &
-                    Poseidon_Close
 
 USE Poseidon_Utilities_Module, &
             ONLY :  Poseidon_Calc_ADM_Mass,         &

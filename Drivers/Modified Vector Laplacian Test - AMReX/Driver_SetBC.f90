@@ -32,7 +32,7 @@ USE Poseidon_Parameters, &
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Driver_Init_Message
 
-USE Poseidon_Interface_BC_Input, &
+USE Poseidon_Interface_Boundary_Conditions, &
             ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
 
 

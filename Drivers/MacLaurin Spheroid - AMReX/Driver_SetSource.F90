@@ -88,7 +88,7 @@ USE Variables_AMReX_Source, &
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
 
-USE Poseidon_Source_Input_Module, &
+USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
 USE Variables_Interface, &

@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Poseidon_Initial_Guess_Module                                         !##!
+MODULE Poseidon_Interface_Initial_Guess                                      !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -51,4 +51,4 @@ CONTAINS
 
 
 
-END MODULE Poseidon_Initial_Guess_Module
+END MODULE Poseidon_Interface_Initial_Guess

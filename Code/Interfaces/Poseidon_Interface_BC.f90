@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Poseidon_Interface_BC_Input                                           !##!
+MODULE Poseidon_Interface_Boundary_Conditions                                !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -178,4 +178,4 @@ CONTAINS
 
 
 
-END MODULE Poseidon_Interface_BC_Input
+END MODULE Poseidon_Interface_Boundary_Conditions

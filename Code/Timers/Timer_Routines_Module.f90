@@ -166,13 +166,8 @@ Timer_XCFC_ConFactor    = Timer_XCFC_ConFactor              &
 
 
 
+CALL Output_Time_Report
 
-
-IF ( lPF_IO_Flags(iPF_IO_Write_Timetable) ) THEN
-
-    CALL Output_Time_Report
-
-END IF
 
 END SUBROUTINE Finalize_Timers
 

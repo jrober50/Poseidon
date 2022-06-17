@@ -119,7 +119,7 @@ USE Variables_AMReX_Core, &
 USE Poseidon_AMReX_BoxArraySize_Module, &
             ONLY : AMReX_BoxArraySize
 
-USE Initialization_AMReX, &
+USE Maps_AMReX, &
             ONLY :  Initialize_AMReX_Maps
 
 USE Initialization_Mesh_AMReX_Module, &

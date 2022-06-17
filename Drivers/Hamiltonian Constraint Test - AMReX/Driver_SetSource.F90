@@ -36,7 +36,7 @@ USE Variables_MPI, &
             ONLY :  myID_Poseidon,      &
                     Poseidon_Comm_World
 
-USE Poseidon_Source_Input_Module, &
+USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
 USE Poseidon_MPI_Utilities_Module, &

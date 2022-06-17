@@ -90,15 +90,11 @@ USE Variables_AMReX_Source, &
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
 
-USE Driver_SourceProfiles_Module, &
-            ONLY :  Load_AMReX_Profile
-
-
 USE Variables_MPI, &
             ONLY :  myID_Poseidon,      &
                     Poseidon_Comm_World
 
-USE Poseidon_Source_Input_Module, &
+USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
 

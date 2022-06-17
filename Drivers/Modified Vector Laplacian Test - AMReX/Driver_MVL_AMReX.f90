@@ -40,11 +40,14 @@ USE Parameters_Variable_Indices, &
                     iU_X2,                      &
                     iU_X3
 
-USE Initialization_AMReX, &
-            ONLY :  Initialize_Poseidon_with_AMReX
+USE Poseidon_Interface_Initialization, &
+            ONLY :  Initialize_Poseidon
 
-USE Poseidon_Main_Module, &
+USE Poseidon_Interface_Run, &
             ONLY :  Poseidon_Run
+
+USE Poseidon_Interface_Close, &
+            ONLY :  Poseidon_Close
 
 USE Variables_IO, &
            ONLY :  Write_Results_R_Samps,      &
@@ -64,9 +67,6 @@ USE Maps_X_Space, &
 
 USE IO_Print_Results, &
            ONLY :   Print_Results
-
-USE Poseidon_Main_Module, &
-            ONLY :  Poseidon_Close
 
 USE Driver_SetSource_Module, &
             ONLY:  Driver_SetSource
@@ -241,7 +241,7 @@ DO M_Index = M_Index_Min, M_Index_Max
     !#                   Initialize Poseidon                    #!
     !#                                                          #!
     !############################################################!
-    CALL Initialize_Poseidon_with_AMReX &
+    CALL Initialize_Poseidon &
        (    Source_NQ                           = NQ,                   &
             Source_xL                           = [Left_Limit, Right_Limit],    &
             Source_RQ_xlocs                     = Input_R_Quad,         &
