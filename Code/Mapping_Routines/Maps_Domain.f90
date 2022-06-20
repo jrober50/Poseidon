@@ -108,7 +108,7 @@ INTEGER                         ::  Index
 Here  = Table_Offsets(AMReX_Level)
 There = Table_Offsets(AMReX_Level+1)-1
 
-Index = Findloc(Findloc_Table(Here:There), AMReX_Elem_Num, DIM=1)
+!Index = Findloc(Findloc_Table(Here:There), AMReX_Elem_Num, DIM=1)
 
 
 DO i = Here,There
