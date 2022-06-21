@@ -26,16 +26,13 @@ MODULE Allocation_Yahil_Profile                                                 
 !           Dependencies            !
 !                                   !
 !===================================!
-USE Poseidon_Kinds_Module, &
-            ONLY :  idp
-
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
 
 USE Variables_External, &
-            ONLY :  SELFSIM_R_VALS,     &
-                    SELFSIM_POT_VALS,   &
-                    SELFSIM_SHIFT_VALs, &
+            ONLY :  SelfSim_R_Vals,     &
+                    Selfsim_Pot_Vals,   &
+                    Selfsim_Shift_Vals, &
                     SelfSim_Allocated
 
 

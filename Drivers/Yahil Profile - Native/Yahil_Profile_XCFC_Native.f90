@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-PROGRAM Yahil_Mapping                                                               !##!
+PROGRAM Yahil_Profile_XCFC_Native                                                   !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
@@ -259,8 +259,8 @@ T_Index_Max         =  4
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  2
-RE_Index_Max        =  2
+RE_Index_Min        =  1
+RE_Index_Max        =  1
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -587,7 +587,7 @@ CONTAINS
 
 
 
-END PROGRAM Yahil_Mapping
+END PROGRAM Yahil_Profile_XCFC_Native
 
 
 

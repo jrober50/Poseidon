@@ -2,7 +2,7 @@
   Poseidon_Kinds.f90             \
   Poseidon_Numbers.f90           \
   Poseidon_Letters.f90           \
-  Poseidon_Units_Module.f90      \
+  Poseidon_Units.f90             \
   Poseidon_File_Routines.f90     \
   Poseidon_Message_Routines.f90  \
 

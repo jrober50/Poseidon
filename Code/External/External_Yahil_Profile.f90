@@ -34,18 +34,8 @@ USE Poseidon_Message_Routines_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
-USE Variables_MPI, &
-            ONLY :  myID_Poseidon,      &
-                    MasterID_Poseidon
-
-USE Flags_IO_Module, &
-            ONLY :  lPF_IO_Flags,           &
-                    iPF_IO_Print_Setup
-
-
 USE Poseidon_Units_Module, &
             ONLY :  Grav_Constant_G,    &
-                    Speed_of_Light,     &
                     C_Square,           &
                     GR_Source_Scalar,   &
                     Centimeter,         &
@@ -53,6 +43,10 @@ USE Poseidon_Units_Module, &
                     Millisecond,         &
                     Erg,                &
                     Gram
+
+USE Variables_MPI, &
+            ONLY :  myID_Poseidon,      &
+                    MasterID_Poseidon
 
 USE Variables_External, &
             ONLY :  NUM_ENTRIES,        &
@@ -67,13 +61,16 @@ USE Variables_Functions, &
             ONLY :  Potential_Solution,             &
                     Shift_Solution
 
-USE IO_Output_Sources_Module, &
-            ONLY :  Output_Primatives
 
 USE Allocation_Yahil_Profile, &
             ONLY :  Allocate_Yahil_Profile,         &
                     Deallocate_Yahil_Profile
 
+USE IO_Output_Sources_Module, &
+            ONLY :  Output_Primatives
+
+USE Maps_Quadrature, &
+            ONLY :  Quad_Map
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -82,9 +79,10 @@ USE Timer_Routines_Module, &
 USE Timer_VAriables_Module, &
             ONLY :  Timer_Core_Init_Test_Problem
 
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,           &
+                    iPF_IO_Print_Setup
 
-USE Maps_Quadrature, &
-            ONLY :  Quad_Map
 
 IMPLICIT NONE
 

@@ -55,24 +55,17 @@ include Makefile_Driver
 
 Mapping : $(POSEIDON_o) $(DRIVER_o)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Yahil_Mapping.f90  -o $(OBJ)/Yahil_Mapping.o
-	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Yahil_Mapping.x
+	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Yahil_Profile_XCFC_Native.f90  -o $(OBJ)/Yahil_Profile_XCFC_Native.o
+	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Yahil_Profile_XCFC_Native.x
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
-Upscale : $(POSEIDON_o)
-	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Yahil_Upscale.f90  -o $(OBJ)/Yahil_Upscale.o
-	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Yahil_Upscale.x
-	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 
 
 
 run : 
-	./$(BIN)/Yahil_Mapping.x
+	./$(BIN)/Yahil_Profile_XCFC_Native.x
 
-run_Upscale :
-	./$(BIN)/Yahil_Upscale.x
 
 clean:
 	rm -f $(OBJ)/*.o
