@@ -92,9 +92,8 @@ USE Variables_Tables, &
 USE Variables_Derived, &
             ONLY :  LM_LENGTH
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,            &
-                    FP_Source_Vector_A
+USE Variables_Vectors, &
+            ONLY :  cVA_Source_Vector
 
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
@@ -238,7 +237,7 @@ END IF
 
 #else
     
-    FP_Source_Vector_A(:,:,iU) = 0.0_idp
+    cVA_Source_Vector(:,:,iU) = 0.0_idp
     DO re = iEL(1),iEU(1)
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
@@ -259,7 +258,7 @@ END IF
 
 
 
-!PRINT*,FP_Source_Vector_A(:,:,iU)
+!PRINT*,cVA_Source_Vector(:,:,iU)
 
 
 END SUBROUTINE XCFC_Calc_Source_Vector_TypeA
@@ -487,13 +486,13 @@ DO d = 0,DEGREE
 
 
     Current_i_Location = Map_To_FEM_Node(FEM_Elem,d)
-    FP_Source_Vector_A(Current_i_Location,lm_loc,iU)          &
-        = FP_Source_Vector_A(Current_i_Location,lm_loc,iU)    &
+    cVA_Source_Vector(Current_i_Location,lm_loc,iU)          &
+        = cVA_Source_Vector(Current_i_Location,lm_loc,iU)    &
         + RHS_TMP
 
     
 !    PRINT*,"*",iE,FEM_Elem,d,lm_loc,Current_i_Location, &
-!                FP_Source_Vector_A(Current_i_Location,lm_loc,iU),RHS_TMP
+!                cVA_Source_Vector(Current_i_Location,lm_loc,iU),RHS_TMP
 
 END DO  ! d Loop
 END DO  ! lm_loc Loop
@@ -703,7 +702,7 @@ INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl
 
 
-FP_Source_Vector_A(:,:,iU) = 0.0_idp
+cVA_Source_Vector(:,:,iU) = 0.0_idp
 
 DO lvl = AMReX_Num_Levels-1,0,-1
 

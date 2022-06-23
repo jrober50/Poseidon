@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Allocation_FP                                                                !##!
+MODULE Allocation_CFA_Linear_Systems                                                !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -12,8 +12,8 @@ MODULE Allocation_FP                                                            
 !##!                                                                                !##!
 !##!    Contains:                                                                   !##!
 !##!                                                                                !##!
-!##!    +101+   Allocate_Poseidon_FP_Variables                                      !##!
-!##!    +102+   Deallocate_Poseidon_FP_Variables                                    !##!
+!##!    +101+   Allocate_CFA_Linear_Systems                                         !##!
+!##!    +102+   Deallocate_CFA_Linear_Systems                                       !##!
 !##!                                                                                !##!
 !######################################################################################!
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
@@ -30,10 +30,8 @@ USE Poseidon_Kinds_Module, &
             ONLY : idp
 
 USE Poseidon_Parameters, &
-            ONLY :  DOMAIN_DIM,             &
-                    DEGREE,                 &
-                    L_LIMIT,                &
-                    NUM_CFA_Eqs
+            ONLY :  Degree,                 &
+                    L_Limit
 
 Use Variables_Derived, &
             ONLY :  Num_R_Nodes,            &
@@ -44,8 +42,21 @@ Use Variables_Derived, &
                     Beta_Prob_Dim
 
 
-USE Variables_FP, &
-            ONLY :  Laplace_Matrix_Full,    &
+USE Variables_Vectors, &
+            ONLY :  cVA_Source_Vector,      &
+                    cVB_Source_Vector,      &
+                    cVA_Coeff_Vector,      &
+                    cVB_Coeff_Vector
+                    
+
+USE Variables_Matrices, &
+            ONLY :  Num_Matrices,           &
+                    Matrix_Format,          &
+                    First_Column_Storage,   &
+                    Last_Column_Storage,    &
+                    First_Column_Beta_Storage,   &
+                    Last_Column_Beta_Storage,   &
+                    Laplace_Matrix_Full,    &
                     Laplace_Matrix_Beta,    &
                     Laplace_Matrix_VAL,     &
                     Laplace_Matrix_ROW,     &
@@ -58,22 +69,15 @@ USE Variables_FP, &
                     Beta_Diagonals,         &
                     Beta_Bandwidth,         &
                     Beta_MVL_Banded,        &
-                    Beta_MVL_Diagonal,      &
-                    FP_Source_Vector_A,     &
-                    FP_Source_Vector_B,     &
-                    FP_Coeff_Vector_A,      &
-                    FP_Coeff_Vector_B,      &
-                    FP_Update_Vector,       &
+                    Beta_MVL_Diagonal
+
+USE Variables_FP, &
+            ONLY :  FP_Update_Vector,       &
                     FP_Laplace_Vector,      &
                     FP_Laplace_Vector_Beta, &
                     FP_Residual_Vector,     &
-                    FP_Residual_Vector_Beta,&
-                    Matrix_Format,          &
-                    Num_Matrices,           &
-                    First_Column_Storage,   &
-                    Last_Column_Storage,    &
-                    First_Column_Beta_Storage,   &
-                    Last_Column_Beta_Storage
+                    FP_Residual_Vector_Beta
+                    
 
 
 
@@ -90,7 +94,7 @@ CONTAINS
 !                            Allocate_Poseidon_Variables                         !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Allocate_FP()
+SUBROUTINE Allocate_CFA_Linear_Systems
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
 
@@ -121,11 +125,11 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 END IF
 
 
-ALLOCATE( FP_Source_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
-ALLOCATE( FP_Source_Vector_B(1:Beta_Prob_Dim,1:2) )
+ALLOCATE( cVA_Source_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
+ALLOCATE( cVB_Source_Vector(1:Beta_Prob_Dim,1:2) )
 
-ALLOCATE( FP_Coeff_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:5)         )
-ALLOCATE( FP_Coeff_Vector_B(1:Beta_Prob_Dim,1:2) )
+ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)         )
+ALLOCATE( cVB_Coeff_Vector(1:Beta_Prob_Dim,1:2) )
 
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
 
@@ -139,7 +143,7 @@ ALLOCATE( FP_Residual_Vector_Beta(1:Beta_Prob_Dim)  )
 !ALLOCATE( FP_Update_Vector(1:Prob_Dim) )
 
 
-END SUBROUTINE Allocate_FP
+END SUBROUTINE Allocate_CFA_Linear_Systems
 
 
 
@@ -156,7 +160,7 @@ END SUBROUTINE Allocate_FP
 !                           Deallocate_Poseidon_Variables                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Deallocate_FP()
+SUBROUTINE Deallocate_CFA_Linear_Systems()
 
 IF ( MATRIX_FORMAT == 'Full' ) THEN
     DEALLOCATE( Laplace_Matrix_Full )
@@ -182,10 +186,10 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     
 END IF
 
-DEALLOCATE( FP_Source_Vector_A )
-DEALLOCATE( FP_Source_Vector_B )
-DEALLOCATE( FP_Coeff_Vector_A )
-DEALLOCATE( FP_Coeff_Vector_B )
+DEALLOCATE( cVA_Source_Vector )
+DEALLOCATE( cVB_Source_Vector )
+DEALLOCATE( cVA_Coeff_Vector )
+DEALLOCATE( cVB_Coeff_Vector )
 DEALLOCATE( FP_Update_Vector )
 DEALLOCATE( FP_Laplace_Vector )
 DEALLOCATE( FP_Laplace_Vector_Beta )
@@ -196,7 +200,7 @@ DEALLOCATE( FP_Residual_Vector_Beta )
 
 
 
-END SUBROUTINE Deallocate_FP
+END SUBROUTINE Deallocate_CFA_Linear_Systems
 
 
 
@@ -204,5 +208,5 @@ END SUBROUTINE Deallocate_FP
 
 
 
-END MODULE Allocation_FP
+END MODULE Allocation_CFA_Linear_Systems
 

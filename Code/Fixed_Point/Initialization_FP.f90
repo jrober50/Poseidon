@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Initialization_FP                                                            !##!
+MODULE Initialization_CFA                                                            !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -57,14 +57,16 @@ USE Variables_Functions, &
 USE Variables_FP, &
             ONLY :  CFA_EQ_Map,                 &
                     CFA_Var_Map,                &
-                    CFA_Mat_Map,                &
-                    Laplace_NNZ,                &
+                    CFA_Mat_Map
+
+USE Variables_Matrices, &
+            ONLY :  Laplace_NNZ,                &
                     Beta_Diagonals,             &
                     Beta_Bandwidth,             &
                     Num_Matrices
 
-USE Allocation_FP, &
-            ONLY :  Allocate_FP
+USE Allocation_CFA_Linear_Systems, &
+            ONLY :  Allocate_CFA_Linear_Systems
 
 
 USE Return_Functions_FP,   &
@@ -115,7 +117,7 @@ CONTAINS
 !===========================================================================================!
 !                                                                                           !
  !#########################################################################################!
-SUBROUTINE Initialize_FP( CFA_EQ_Flags_Input )
+SUBROUTINE Initialize_CFA( CFA_EQ_Flags_Input )
 
 INTEGER, DIMENSION(5), INTENT(IN), OPTIONAL             ::  CFA_EQ_Flags_Input
 
@@ -132,7 +134,7 @@ Beta_Diagonals = Beta_Elem_Prob_Dim
 Beta_Bandwidth = 2*Beta_Diagonals+1
 
 
-CALL Allocate_FP()
+CALL Allocate_CFA_Linear_Systems()
 
 CALL TimerStart( Timer_FP_Matrix_Init )
 CALL Initialize_XCFC_Matrices()
@@ -148,7 +150,7 @@ Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 CALL TimerStop( Timer_FP_Initialization )
 
 
-END SUBROUTINE Initialize_FP
+END SUBROUTINE Initialize_CFA
 
 
 
@@ -237,5 +239,5 @@ END SUBROUTINE Create_Eq_Maps
 
 
 
-END MODULE Initialization_FP
+END MODULE Initialization_CFA
 

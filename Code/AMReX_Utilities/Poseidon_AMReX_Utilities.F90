@@ -28,26 +28,15 @@ USE Poseidon_Kinds_Module, &
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
 
-USE amrex_box_module,       ONLY: &
-  amrex_box
-USE amrex_boxarray_module,  ONLY: &
-  amrex_boxarray,         &
-  amrex_boxarray_build,   &
-  amrex_boxarray_destroy
-USE amrex_distromap_module, ONLY: &
-  amrex_distromap,       &
-  amrex_distromap_build, &
-  amrex_distromap_destroy
-USE amrex_multifab_module,  ONLY: &
-  amrex_multifab, &
-  amrex_multifab_build, &
-  amrex_mfiter, &
-  amrex_mfiter_build, &
-  amrex_mfiter_destroy
-USE amrex_parmparse_module, ONLY: &
-  amrex_parmparse,       &
-  amrex_parmparse_build, &
-  amrex_parmparse_destroy
+USE amrex_box_module, &
+            ONLY:   amrex_box
+USE amrex_multifab_module, &
+            ONLY:   amrex_multifab,         &
+                    amrex_multifab_build,   &
+                    amrex_mfiter,           &
+                    amrex_mfiter_build,     &
+                    amrex_mfiter_destroy
+
 #endif
 
 IMPLICIT NONE
@@ -598,78 +587,6 @@ DO lvl = 0,nLevels-1
 END DO ! lvl
 
 END SUBROUTINE UnpackSources_AMReX
-
-
-
-
-
-!!+204+###########################################################################!
-!!                                                                                !
-!!                  Poseidon2Thornado                                             !
-!!                                                                                !
-!!################################################################################!
-!SUBROUTINE Poseidon2Thornado()
-!
-!TYPE(amrex_multifab), ALLOCATABLE           :: PVars(:)
-!TYPE(amrex_multifab), ALLOCATABLE           :: tVars(:)
-!
-!TYPE(amrex_box)                                         ::  Box
-!TYPE(amrex_boxarray)                                    ::  BoxArray
-!TYPE(amrex_distromap)                                   ::  DistroMap
-!
-!
-!INTEGER                                     :: nDOF    = 12
-!INTEGER                                     :: nLevels = 1
-!INTEGER                                     :: nPVars  = 5
-!INTEGER                                     :: ntVars  = 13
-!INTEGER                                     :: nGhost  = 0
-!
-!INTEGER                                     :: nGhost_Copy = 0
-!
-!INTEGER                                     :: Copy_Length
-!INTEGER                                     :: SRC_Start
-!INTEGER                                     :: DST_Start
-!
-!INTEGER, DIMENSION(3)                       :: NE_Lower = (/1,1,1/)
-!INTEGER, DIMENSION(3)                       :: NE_Upper = (/10,10,10/)
-!
-!ALLOCATE( PVars(0:nLevels-1) )
-!ALLOCATE( tVars(0:nLevels-1) )
-!
-!
-!
-!Box = amrex_box(NE_Lower, NE)
-!CALL amrex_boxarray_build(BoxArray, Box)
-!CALL amrex_distromap_build(DistroMap,BoxArray)
-!
-!CALL amrex_multifab_build(PVars,BoxArray,DistroMap,nPVars*nDOF, nghost)
-!CALL amrex_multifab_build(tVars,BoxArray,DistroMap,ntVars*nDOF, nghost)
-!
-!! PVars(1 = Conformal Factor, 2 = Lapse Function, 3,4,5 = Shift Vector )
-!! tVars(13 = Conformal Factor, 9 = Lapse Function, 10,11,12 = Shift Vector)
-!
-!Copy_Length = nDOF
-!SRC_Start   = 1 !(1-1)*nDOF+1
-!DST_Start   = (13-1)*nDOF+1  ! Depends on index of first component
-!
-!tVars%COPY(PVars, SRC_Start, DST_Start, Copy_Length, nGhost_Copy)   ! Copy Conformal Factor
-!
-!
-!
-!Copy_Length = nDOF
-!SRC_Start   = (2-1)*nDOF+1
-!DST_Start   = (9-1)*nDOF+1  ! Depends on index of first component
-!
-!tVars%COPY(PVars, SRC_Start, DST_Start, Copy_Length, nGhost_Copy)   ! Copy Lapse Function
-!
-!
-!Copy_Length = 3*nDOF
-!SRC_Start   = (3-1)*nDOF+1
-!DST_Start   = (10-1)*nDOF+1  ! Depends on index of first component
-!
-!tVars%COPY(PVars, SRC_Start, DST_Start, Copy_Length, nGhost_Copy)   ! Copy Shift Vector Components together
-!
-!END SUBROUTINE Poseidon2Thornado
 
 
 

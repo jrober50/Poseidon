@@ -51,19 +51,18 @@ USE Variables_MPI, &
                     Poseidon_Comm_World,        &
                     nPROCS_Poseidon
 
-USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector_A,            &
-                    FP_Coeff_Vector_B,          &
-                    FP_Source_Vector_A,         &
-                    FP_Source_Vector_B,         &
-                    Beta_Diagonals,             &
-                    Beta_MVL_Banded,            &
-                    Beta_IPIV,                  &
-                    Factored_NNZ,               &
+USE Variables_Vectors,  &
+            ONLY :  cVA_Coeff_Vector,           &
+                    cVA_Source_Vector   
+                    
+USE Variables_Matrices,  &
+            ONLY :  Factored_NNZ,               &
                     Laplace_Factored_Val,       &
                     Laplace_Factored_Col,       &
-                    Laplace_Factored_Row,       &
-                    FP_Update_Vector,           &
+                    Laplace_Factored_Row
+
+USE Variables_FP,  &
+            ONLY :  FP_Update_Vector,           &
                     CFA_Var_Map
 
 USE Matrix_Cholesky_Factorization_Module,   &
@@ -180,7 +179,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     DO m = -l,l
 
         lm_loc = Map_To_lm(l,m)
-        WORK_VEC = -FP_Source_Vector_A(:,lm_loc,iU)
+        WORK_VEC = -cVA_Source_Vector(:,lm_loc,iU)
         WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_Map(iU))
 
 !        PRINT*,"Work_Vec, Type A l = ",l," m = ",m
@@ -226,8 +225,8 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                                         WORK_VEC                        )
 
 
-        FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,iU)
-        FP_Coeff_Vector_A( :,lm_loc,iU) = WORK_VEC(:)
+        FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,iU)
+        cVA_Coeff_Vector( :,lm_loc,iU) = WORK_VEC(:)
 
 
 
@@ -259,7 +258,7 @@ CALL MPI_BCAST_Coeffs_TypeA(iU,                     &
 !IF ( myID_Poseidon == i ) THEN
 !    PRINT*,"myID_Poseidon ",i
 !    DO lm_loc = 1,LM_Length
-!        PRINT*,FP_Coeff_Vector_A(:,lm_loc, iU)
+!        PRINT*,cVA_Coeff_Vector(:,lm_loc, iU)
 !    END DO
 !END IF
 !CALL MPI_Barrier(Poseidon_Comm_World,ierr)
@@ -279,7 +278,7 @@ END IF
 
 
 
-!PRINT*,FP_Coeff_Vector_A( :,1,iU)
+!PRINT*,cVA_Coeff_Vector( :,1,iU)
 
 
 

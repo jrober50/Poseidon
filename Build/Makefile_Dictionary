@@ -38,6 +38,7 @@ STD_DEBUG_ISAAC           = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-sum
 STD_OPTIMIZE_ISAAC        = -O2
 
 STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
+#STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wall -Wextra
 STD_OPTIMIZE_NicksMacBook = -O2
 
 STD_DEBUG_sjdunham    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all

@@ -40,10 +40,6 @@ INTEGER, PUBLIC                     ::  NUM_CFA_EQs
 INTEGER, DIMENSION(1:5)             ::  CFA_EQ_Flags
 
 
-INTEGER, PUBLIC, PARAMETER          ::  SOL_DIST_SCHEME = 2
-
-
-
 INTEGER, PUBLIC                     ::  POSEIDON_FRAME          = 1
 INTEGER, PUBLIC                     ::  CUR_ITERATION           = 1
 INTEGER, PUBLIC                     ::  MAX_ITERATIONS          = 20
@@ -55,12 +51,10 @@ REAL(KIND =idp), PUBLIC             ::  CONVERGENCE_CRITERIA = 1.0E-8_idp
 REAL(KIND =idp), PUBLIC, PARAMETER  ::  CONVERGENCE_CRITERIA_Default = 1.0E-8_idp
 
 
+INTEGER, PUBLIC, PARAMETER          ::  SOL_DIST_SCHEME = 2
 INTEGER, PUBLIC                     ::  NEW_PETSC_SOLVER_FLAG
 INTEGER, PUBLIC                     ::  Method_Flag          = 1 ! 1 = Regular N-R (Default), 2 = Jacobian-Free GMRES
 
-
-
-LOGICAL, PUBLIC                     ::  POSEIDON_INITIALIZED_FLAG   = .FALSE.
 
 INTEGER, PUBLIC                     ::  Ratio_T_BNDLperBLCK
 INTEGER, PUBLIC                     ::  Ratio_P_BNDLperBLCK
@@ -68,8 +62,6 @@ INTEGER, PUBLIC                     ::  Ratio_BNDLperBLCK
 
 
 LOGICAL, PUBLIC                     ::  Verbose_Flag = .FALSE.
-
-LOGICAL, PUBLIC                     ::  Poisson_Mode = .FALSE.
 
 LOGICAL, PUBLIC                     ::  Poseidon_Remesh_Flag = .TRUE.
 LOGICAL, PUBLIC                     ::  Source_Remesh_Flag = .TRUE.

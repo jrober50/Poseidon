@@ -29,7 +29,8 @@ USE Poseidon_Numbers_Module, &
             ONLY :  pi, eps
 
 USE Poseidon_Message_Routines_Module, &
-            ONLY :  Init_Message
+            ONLY :  Driver_Init_Message,    &
+                    Warning_Message
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
@@ -156,8 +157,7 @@ INTEGER                                     :: CUR_LINE
 INTEGER                                     :: nread
 INTEGER                                     :: istat
 
-
-IF ( Verbose_Flag ) CALL Init_Message('Initializing Yahil profile variables.')
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing Source Profile : Yahil-Lattimer Self-Similar Collapse.')
 CALL TimerStart( Timer_Core_Init_Test_Problem )
 
 
@@ -258,7 +258,7 @@ END IF
 
 
 IF ( SELFSIM_V_SWITCH == 1 ) THEN
-    PRINT*,"Input_V Zeroed"
+    CALL Warning_Message("The Yahil profile has had its velocity zeroed.")
     Input_V = 0.0_idp
 END IF
 
@@ -370,9 +370,7 @@ INTEGER                             :: nread
 INTEGER                             :: istat
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"-Initializing Yahil Density. "
-END IF
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing Density Profile : Yahil-Lattimer Self-Similar Collapse.')
 CALL TimerStart( Timer_Core_Init_Test_Problem )
 
 

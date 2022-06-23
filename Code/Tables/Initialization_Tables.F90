@@ -39,8 +39,7 @@ USE Poseidon_Parameters, &
                     Verbose_Flag
 
 USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Mode,             &
-                    AMReX_Max_Grid_Size,          &
+            ONLY :  AMReX_Max_Grid_Size,          &
                     AMReX_Num_Levels
 
 USE Variables_Quadrature, &
@@ -150,7 +149,6 @@ LagPoly_Num_Tables = 2**(AMReX_Num_Levels+1) - 1  ! Sum of power of 2
     CALL Allocate_Tables()
     CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
     CALL Initialize_Ylm_Tables()
-
 #endif
 
 
@@ -387,18 +385,21 @@ REAL(KIND = idp), DIMENSION(0:Ord)          ::  Lagrange_DRV_Values
 INTEGER                                     ::  Eval_Point
 INTEGER                                     ::  rd, d, dp,dd
 
+
+
+
+
+
+#ifdef POSEIDON_AMREX_FLAG
+
 INTEGER                                     ::  lvl, elem
 INTEGER                                     ::  iNLE, Cur_Table
 REAL(idp)                                   ::  ra, rb, wl
 REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  Local_R
 
-Lagrange_Poly_Table = 0.0_idp
-
-
 Local_Locations = Initialize_LGL_Quadrature_Locations(Ord)
 
 
-#ifdef POSEIDON_AMREX_FLAG
 DO lvl = 0,AMReX_Num_Levels-1
 iNLE = 2**lvl-1
 DO elem = 0,iNLE
@@ -427,13 +428,11 @@ DO elem = 0,iNLE
 END DO
 END DO
 
-
-
-
 #endif
 
 
-
+Local_Locations = Initialize_LGL_Quadrature_Locations(Ord)
+Lagrange_Poly_Table = 0.0_idp
 
 DO Eval_Point = 1,Num_Quad_Points
     
@@ -444,7 +443,6 @@ DO Eval_Point = 1,Num_Quad_Points
     Lagrange_Poly_Table( :, Eval_Point, 1) = Lagrange_DRV_Values
 
 END DO
-
 
 
 DO dd = 0,1
@@ -458,7 +456,6 @@ DO dd = 0,1
         END DO
     END DO
 END DO
-
 
 
 
@@ -499,7 +496,7 @@ INTEGER                                                         ::  l, m
 
 DO l = 0,L_LIMIT
 DO m = -l,l
-    Ylm_Norm_Table( m,l ) = COMPLEX( Norm_Factor(l,m), 0.0_idp )
+    Ylm_Norm_Table( m,l ) = Norm_Factor(l,m)
     Ylm_Sqrt_Table( m,l ) = COMPLEX( Sqrt_Factor(l,m), 0.0_idp )
 END DO ! m Loop
 END DO ! l Loop

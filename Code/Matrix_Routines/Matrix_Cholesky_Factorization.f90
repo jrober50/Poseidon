@@ -61,7 +61,7 @@ USE Variables_BC, &
                 INNER_CFA_BC_TYPE,          &
                 OUTER_CFA_BC_TYPE
 
-USE Variables_FP, &
+USE Variables_Matrices, &
         ONLY :  First_Column_Storage,   &
                 Last_Column_Storage,    &
                 Laplace_NNZ,            &

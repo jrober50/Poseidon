@@ -87,10 +87,8 @@ USE Variables_Tables, &
 USE Variables_Derived, &
             ONLY :  LM_LENGTH
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,           &
-                    FP_Coeff_Vector_B,           &
-                    FP_Source_Vector_B
+USE Variables_Vectors, &
+            ONLY :  cVB_Source_Vector
 
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
@@ -232,7 +230,7 @@ CHARACTER(LEN = 300)                    ::  Message
         CALL Run_Message(TRIM(Message))
     END IF
 
-    FP_Source_Vector_B(:,iVB) = 0.0_idp
+    cVB_Source_Vector(:,iVB) = 0.0_idp
     DO re = iEL(1),iEU(1)
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
@@ -493,14 +491,14 @@ DO d = 0,DEGREE
                                             d, lm_loc   )
 
 
-    FP_Source_Vector_B(Current_i_Location,iVB)          &
-        = FP_Source_Vector_B(Current_i_Location,iVB)    &
+    cVB_Source_Vector(Current_i_Location,iVB)          &
+        = cVB_Source_Vector(Current_i_Location,iVB)    &
         + RHS_TMP
 
 
     E_Mass = E_Mass + Mass_TMP
 
-!    PRINT*,Current_i_Location,FP_Source_Vector_B(Current_i_Location,iVB)
+!    PRINT*,Current_i_Location,cVB_Source_Vector(Current_i_Location,iVB)
 END DO  ! d Loop
 END DO  ! lm_loc Loop
 END DO  ! ui Loop
@@ -723,7 +721,7 @@ INTEGER                                         ::  lvl
 
 E_Mass = 0.0_idp
 
-FP_Source_Vector_B(:,iVB) = 0.0_idp
+cVB_Source_Vector(:,iVB) = 0.0_idp
 DO lvl = AMReX_Num_Levels-1,0,-1
 
 

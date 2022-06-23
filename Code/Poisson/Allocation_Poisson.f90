@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Allocation_Poisson                                                    !##!
+MODULE Allocation_Poisson_Linear_System                                      !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -67,7 +67,7 @@ CONTAINS
 !                                                     				!
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Allocate_Poseidon_Poisson_Variables
+SUBROUTINE Allocate_Poisson_Linear_System
 
 ALLOCATE( Source_Vector(0:NUM_R_NODES-1, 1:LM_Length) )
 ALLOCATE( Coefficient_Vector(0:NUM_R_NODES-1, -L_LIMIT:L_LIMIT, 0:L_LIMIT) )
@@ -96,7 +96,7 @@ ALLOCATE( STF_COL_PTR(0:NUM_R_NODES)                 )
 
 
 
-END SUBROUTINE Allocate_Poseidon_Poisson_Variables
+END SUBROUTINE Allocate_Poisson_Linear_System
 
 
 
@@ -107,7 +107,7 @@ END SUBROUTINE Allocate_Poseidon_Poisson_Variables
 !                                                                     !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Deallocate_Poseidon_Poisson_Variables
+SUBROUTINE Deallocate_Poisson_Linear_System
 
 DEALLOCATE( Source_Vector       )
 
@@ -121,7 +121,7 @@ DEALLOCATE( STF_ELEM_VAL        )
 DEALLOCATE( STF_ROW_IND         )
 DEALLOCATE( STF_COL_PTR         )
 
-END SUBROUTINE Deallocate_Poseidon_Poisson_Variables
+END SUBROUTINE Deallocate_Poisson_Linear_System
 
 
 
@@ -130,4 +130,4 @@ END SUBROUTINE Deallocate_Poseidon_Poisson_Variables
 
 
 
-END MODULE Allocation_Poisson
+END MODULE Allocation_Poisson_Linear_System

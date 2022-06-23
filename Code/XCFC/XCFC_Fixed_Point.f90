@@ -61,11 +61,6 @@ USE Variables_Derived, &
 USE Variables_FP, &
             ONLY :  FP_Anderson_M
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B,          &
-                    FP_Source_Vector_A
-
 USE XCFC_Source_Vector_TypeA_Module, &
             ONLY :  XCFC_Calc_Source_Vector_TypeA
 
@@ -261,7 +256,6 @@ DEALLOCATE( Work )
 
 
 
-!PRINT*,FP_Coeff_Vector_A(:,:,iU)
 
 END SUBROUTINE XCFC_Fixed_Point
 

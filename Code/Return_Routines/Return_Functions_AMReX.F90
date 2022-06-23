@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Return_Functions_AMReX                                          	     !##!
+MODULE Return_Functions_AMReX                                                !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -53,9 +53,9 @@ USE Variables_Tables, &
 USE Variables_Derived, &
             ONLY :  LM_LENGTH
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,  &
-                    FP_Coeff_Vector_B
+USE Variables_Vectors, &
+            ONLY :  cVA_Coeff_Vector,      &
+                    cVB_Coeff_Vector
 
 USE Variables_Mesh, &
             ONLY :  rlocs,              &
@@ -292,7 +292,7 @@ DO lvl = nLevels-1,0,-1
                 DO d = 0,DEGREE
                     Current_Location = Map_To_FEM_Node(iRE,d)
                     Tmp_U_Value = Tmp_U_Value                                    &
-                                + SUM( FP_Coeff_Vector_A(Current_Location,:,iU)  &
+                                + SUM( cVA_Coeff_Vector(Current_Location,:,iU)  &
                                         * Ylm_Elem_Values( :, tpd )            ) &
                                 * LagP(d)
 
@@ -477,7 +477,7 @@ DO lvl = nLevels-1,0,-1
                         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
                         
                         Tmp_U_Value = Tmp_U_Value                                   &
-                                    + SUM( FP_Coeff_Vector_B(Here:There,iVB)        &
+                                    + SUM( cVB_Coeff_Vector(Here:There,iVB)        &
                                             * Ylm_Elem_Values( :, tpd ) )   &
                                     * LagP(d)
                                     

@@ -28,9 +28,9 @@ USE Variables_Derived, &
             ONLY :  Num_R_Nodes,                &
                     LM_Length
 
-USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector_A,            &
-                    FP_Source_Vector_A
+USE Variables_Vectors,  &
+            ONLY :  cVA_Coeff_Vector,            &
+                    cVA_Source_Vector
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
@@ -67,7 +67,7 @@ DO lm_loc = 1,LM_Length
 
 
         CALL MPI_Reduce(MPI_IN_PLACE,                   &
-                        FP_Source_Vector_A(LLim:ULim,lm_loc,iU),&
+                        cVA_Source_Vector(LLim:ULim,lm_loc,iU),&
                         Send_Size,                      &
                         MPI_Double_Complex,             &
                         MPI_SUM,                        &
@@ -79,8 +79,8 @@ DO lm_loc = 1,LM_Length
     ELSE
 
 
-        CALL MPI_Reduce(FP_Source_Vector_A(LLim:ULim,lm_loc,iU),&
-                        FP_Source_Vector_A(LLim:ULim,lm_loc,iU),&
+        CALL MPI_Reduce(cVA_Source_Vector(LLim:ULim,lm_loc,iU),&
+                        cVA_Source_Vector(LLim:ULim,lm_loc,iU),&
                         Send_Size,                              &
                         MPI_Double_Complex,                     &
                         MPI_SUM,                                &
@@ -122,7 +122,7 @@ Send_Size = ULim - LLim + 1
 
 
 DO lm_loc = 1,LM_Length
-    CALL MPI_Bcast( FP_Coeff_Vector_A( LLim:ULim,lm_loc,iU),&
+    CALL MPI_Bcast( cVA_Coeff_Vector( LLim:ULim,lm_loc,iU),&
                     Send_Size,                              &
                     MPI_Double_Complex,                     &
                     MasterID,                               &

@@ -29,15 +29,17 @@ USE iso_c_binding
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
 
-USE amrex_box_module,       ONLY: &
-  amrex_box
-USE amrex_boxarray_module,  ONLY: &
-  amrex_boxarray
-USE amrex_distromap_module, ONLY: &
-  amrex_distromap
-USE amrex_multifab_module,  ONLY: &
-  amrex_multifab, &
-  amrex_imultifab
+USE amrex_box_module, &
+            ONLY:   amrex_box
+
+USE amrex_boxarray_module, &
+            ONLY:   amrex_boxarray
+
+USE amrex_distromap_module, &
+            ONLY:   amrex_distromap
+
+USE amrex_multifab_module, &
+            ONLY:   amrex_imultifab
 #endif
 
 

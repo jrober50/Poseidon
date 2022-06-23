@@ -26,12 +26,11 @@ MODULE Source_Input_Native_Module                                      	     !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-
 USE Poseidon_Parameters, &
-            ONLY :  Domain_Dim,         &
-                    Poseidon_Remesh_Flag, &
-                    Verbose_Flag
+            ONLY :  Verbose_Flag
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
 
 USE Parameters_Variable_Indices, &
             ONLY :  iS_E,               &
@@ -39,6 +38,16 @@ USE Parameters_Variable_Indices, &
                     iS_S1,              &
                     iS_S2,              &
                     iS_S3
+
+USE Variables_Interface, &
+            ONLY :  Caller_Set,                     &
+                    Caller_NQ,                      &
+                    Caller_Quad_DOF,                &
+                    Caller_xL,                      &
+                    Caller_RQ_xlocs,                &
+                    Caller_TQ_xlocs,                &
+                    Caller_PQ_xlocs,                &
+                    Translation_Matrix
 
 
 USE Variables_Mesh, &
@@ -62,13 +71,7 @@ USE Variables_Quadrature, &
                     Local_Quad_DOF,         &
                     xLeftLimit,             &
                     xRightLimit,            &
-                    Int_R_Locations,        &
-                    Int_T_Locations,        &
-                    Int_P_Locations,        &
-                    Int_R_Weights,          &
-                    Int_T_Weights,          &
-                    Int_P_Weights,          &
-                    Int_TP_Weights
+                    Int_R_Locations
 
 
 USE Functions_Translation_Matrix_Module, &
@@ -83,15 +86,6 @@ USE Timer_Variables_Module, &
                     Timer_GR_SourceInput_PartA
 
 
-USE Variables_Interface, &
-            ONLY :  Caller_Set,                     &
-                    Caller_NQ,                      &
-                    Caller_Quad_DOF,                &
-                    Caller_xL,                      &
-                    Caller_RQ_xlocs,                &
-                    Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs,                &
-                    Translation_Matrix
 
 
 IMPLICIT NONE
@@ -149,9 +143,8 @@ INTEGER                                             ::  Their_DOF
 INTEGER                                             ::  re, te, pe
 
 
-IF (Verbose_Flag) THEN
-    PRINT*,"In Poseidon_Input_Sources_Part1_Native"
-END IF
+IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : Fortran Array.')
+
 CALL TimerStart(Timer_GR_SourceInput)
 CALL TimerStart(Timer_GR_SourceInput_PartA)
 
@@ -243,9 +236,7 @@ REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
 INTEGER                                                             ::  Local_Here
 INTEGER                                                             ::  re, te, pe
 
-IF (Verbose_Flag) THEN
-    PRINT*,"In Poseidon_Input_Sources_Part1_Native"
-END IF
+IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : Fortran Array.')
 CALL TimerStart(Timer_GR_SourceInput)
 CALL TimerStart(Timer_GR_SourceInput_PartA)
 
@@ -291,15 +282,15 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_Native_Caller
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Native( Input_E,          &
-                                          Input_Si,         &
-                                          Input_S,          &
-                                          Input_NE,         &
-                                          Input_NQ,         &
-                                          Input_R_Quad,     &
-                                          Input_T_Quad,     &
-                                          Input_P_Quad,     &
-                                          Input_xL          )
+SUBROUTINE Poseidon_Input_Sources_XCFC_Native(  Input_E,          &
+                                                Input_Si,         &
+                                                Input_S,          &
+                                                Input_NE,         &
+                                                Input_NQ,         &
+                                                Input_R_Quad,     &
+                                                Input_T_Quad,     &
+                                                Input_P_Quad,     &
+                                                Input_xL          )
 
 INTEGER,    INTENT(IN), DIMENSION(1:3)                                ::  Input_NE
 INTEGER,    INTENT(IN), DIMENSION(1:3)                                ::  Input_NQ
@@ -336,9 +327,7 @@ INTEGER                                             ::  Their_DOF
 INTEGER                                             ::  re, te, pe
 
 
-IF (Verbose_Flag) THEN
-    PRINT*,"In Poseidon_Input_Sources_Native"
-END IF
+IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : Fortran Array.')
 CALL TimerStart(Timer_GR_SourceInput)
 CALL TimerStart(Timer_GR_SourceInput_PartA)
 
@@ -402,7 +391,7 @@ CALL TimerStop(Timer_GR_SourceInput_PartA)
 
 
 
-END SUBROUTINE Poseidon_Input_Sources_Native
+END SUBROUTINE Poseidon_Input_Sources_XCFC_Native
 
 
 
@@ -416,7 +405,7 @@ END SUBROUTINE Poseidon_Input_Sources_Native
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Native_Caller( Input_E, Input_Si, Input_S  )
+SUBROUTINE Poseidon_Input_Sources_XCFC_Native_Caller( Input_E, Input_Si, Input_S  )
 
 
 
@@ -441,9 +430,7 @@ REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
 INTEGER                                                             ::  Local_Here
 INTEGER                                                             ::  re, te, pe
 
-IF (Verbose_Flag) THEN
-    PRINT*,"In Poseidon_Input_Sources_Part1_Native"
-END IF
+IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : Fortran Array.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 
@@ -480,161 +467,13 @@ END DO ! pe Loop
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-END SUBROUTINE Poseidon_Input_Sources_Native_Caller
+END SUBROUTINE Poseidon_Input_Sources_XCFC_Native_Caller
 
 
 
 
 
 
-
-
-
-!+301+##########################################################################!
-!                                                                               !
-!                           Poseidon_Input_Sources                              !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Part2_Native( Input_S,            &
-                                                Input_NE,           &
-                                                Input_NQ,           &
-                                                Input_R_Quad,       &
-                                                Input_T_Quad,       &
-                                                Input_P_Quad,       &
-                                                Input_xL            )
-
-INTEGER,    INTENT(IN), DIMENSION(1:3)                                ::  Input_NE
-INTEGER,    INTENT(IN), DIMENSION(1:3)                                ::  Input_NQ
-
-
-REAL(idp),  INTENT(IN), DIMENSION(  1:Input_NQ(1)*Input_NQ(2)*Input_NQ(3),  &
-                                    0:Input_NE(1)-1,                        &
-                                    0:Input_NE(2)-1,                        &
-                                    0:Input_NE(3)-1  )                      ::  Input_S
-
-
-REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(1) )                  ::  Input_R_Quad
-REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(2) )                  ::  Input_T_Quad
-REAL(idp),  INTENT(IN), DIMENSION( 1:Input_NQ(3) )                  ::  Input_P_Quad
-REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  Input_xL
-
-
-INTEGER                                             ::  Local_Here
-
-
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
-INTEGER                                             ::  Their_DOF
-
-
-INTEGER                                             :: re, te, pe
-
-IF (Verbose_Flag) THEN
-    PRINT*,"In Poseidon_Input_Sources_Native"
-END IF
-CALL TimerStart(Timer_GR_SourceInput)
-CALL TimerStart(Timer_GR_SourceInput_PartA)
-
-
-
-! Define Interpolation Matrix
-Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
-
-
-ALLOCATE(TransMat(1:Their_DOF, 1:Local_Quad_DOF))
-
-
-TransMat =  Create_Translation_Matrix(  Input_NQ,          &
-                                        Input_xL,          &
-                                        Input_R_Quad,    &
-                                        Input_T_Quad,    &
-                                        Input_P_Quad,    &
-                                        Their_DOF,         &
-                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
-                                        [xLeftLimit, xRightLimit ],            &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Local_Quad_DOF            )
-
-
-
-DO pe = 0,Input_NE(3)-1
-DO te = 0,Input_NE(2)-1
-DO re = 0,Input_NE(1)-1
-
-DO Local_Here = 1,Local_Quad_DOF
-
-
-    Block_Source_S(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &
-                                                       Input_S(:,re,te,pe)          )
-
-END DO  ! Local_Here
-
-END DO ! re Loop
-END DO ! te Loop
-END DO ! pe Loop
-
-
-CALL TimerStop(Timer_GR_SourceInput)
-CALL TimerStop(Timer_GR_SourceInput_PartA)
-
-
-
-END SUBROUTINE Poseidon_Input_Sources_Part2_Native
-
-
-
-
-
-
-
-
-!+101+##########################################################################!
-!                                                                               !
-!                           Poseidon_Input_Sources                              !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Part2_Native_Caller( Input_S  )
-
-
-
-REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,                &
-                                    0:Num_R_Elements-1,               &
-                                    0:Num_T_Elements-1,               &
-                                    0:Num_P_Elements-1  )             ::  Input_S
-
-
-
-INTEGER                                                             ::  Local_Here
-INTEGER                                                             ::  re, te, pe
-
-IF (Verbose_Flag) THEN
-    PRINT*,"In Poseidon_Input_Sources_Part1_Native"
-END IF
-CALL TimerStart(Timer_GR_SourceInput)
-
-
-
-DO pe = 0,Num_P_Elements-1
-DO te = 0,Num_T_Elements-1
-DO re = 0,Num_R_Elements-1
-
-DO Local_Here = 1,Local_Quad_DOF
-
-    Block_Source_S(Local_Here,re,te,pe) = DOT_PRODUCT( Translation_Matrix(:,Local_Here),    &
-                                                       Input_S(:,re,te,pe)                  )
-
-END DO  ! Local_Here
-
-END DO ! re Loop
-END DO ! te Loop
-END DO ! pe Loop
-
-
-CALL TimerStop(Timer_GR_SourceInput)
-
-
-END SUBROUTINE Poseidon_Input_Sources_Part2_Native_Caller
 
 
 

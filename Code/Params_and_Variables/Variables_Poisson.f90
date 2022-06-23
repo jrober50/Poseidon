@@ -29,11 +29,6 @@ USE Poseidon_Kinds_Module, &
 IMPLICIT NONE
 
 
-CHARACTER(LEN = 4)                          ::  MATRIX_FORMAT = 'CCS'
-CHARACTER(LEN = 4)                          ::  LINEAR_SOLVER = "CHOL"
-
-
-
 
 COMPLEX(idp), ALLOCATABLE, DIMENSION(:,:,:)     ::  Coefficient_Vector
 COMPLEX(idp), ALLOCATABLE, DIMENSION(:,:)       ::  Source_Vector

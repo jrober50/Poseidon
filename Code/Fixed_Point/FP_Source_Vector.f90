@@ -81,11 +81,11 @@ USE Variables_Derived, &
             ONLY :  NUM_R_NODES,                &
                     LM_LENGTH
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B,          &
-                    FP_Source_Vector_A,         &
-                    FP_Source_Vector_B
+USE Variables_Vectors, &
+            ONLY :  cVA_Coeff_Vector,          &
+                    cVB_Coeff_Vector,          &
+                    cVA_Source_Vector,         &
+                    cVB_Source_Vector
 
 USE Functions_Jacobian, &
             ONLY :  JCBN_kappa_FUNCTION_3D_ALL,     &
@@ -171,8 +171,8 @@ REAL(KIND = idp)                                                ::  deltar_overt
 
 
 Timer = 0.0_idp
-FP_Source_Vector_A = 0.0_idp
-FP_Source_Vector_B = 0.0_idp
+cVA_Source_Vector = 0.0_idp
+cVB_Source_Vector = 0.0_idp
 
 
 !PRINT*,"**WARNING** Create_FP_Source_Vector hacked, Lm loop limited."
@@ -339,25 +339,25 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
 
         TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
-                                + SUM( FP_Coeff_Vector_A( Here, :, ui )     &
+                                + SUM( cVA_Coeff_Vector( Here, :, ui )     &
                                 * Ylm_Values( :, tpd, te, pe )       )      &
                                 * Lagrange_Poly_Table( d, rd, 0 )
 
 
         TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector_A( Here, :, ui )     &
+                                + SUM( cVA_Coeff_Vector( Here, :, ui )     &
                                 * Ylm_Values( :, tpd, te, pe )       )      &
                                 * Lagrange_Poly_Table( d, rd, 1 )           &
                                 / DELTAR_OVERTWO
 
 
         TMP_U_T_DRV_Value(ui)   = TMP_U_T_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector_A( Here, :, ui )     &
+                                + SUM( cVA_Coeff_Vector( Here, :, ui )     &
                                 * Ylm_dt_Values( :, tpd, te, pe)     )      &
                                 * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_U_P_DRV_Value(ui)   = TMP_U_P_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector_A( Here, :, ui )     &
+                                + SUM( cVA_Coeff_Vector( Here, :, ui )     &
                                 * Ylm_dp_Values( :, tpd, te, pe)     )      &
                                 * Lagrange_Poly_Table( d, rd, 0)
 
@@ -376,25 +376,25 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
 
         TMP_U_Value(ui)         = TMP_U_Value(ui)                           &
-                                + SUM( FP_Coeff_Vector_B(Here:There,iVB_S)  &
+                                + SUM( cVB_Coeff_Vector(Here:There,iVB_S)  &
                                 * Ylm_Values( :, tpd, te, pe )       )      &
                                 * Lagrange_Poly_Table( d, rd, 0 )
 
 
         TMP_U_R_DRV_Value(ui)   = TMP_U_R_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector_B(Here:There,iVB_S)  &
+                                + SUM( cVB_Coeff_Vector(Here:There,iVB_S)  &
                                 * Ylm_Values( :, tpd, te, pe )       )      &
                                 * Lagrange_Poly_Table( d, rd, 1 )           &
                                 / DELTAR_OVERTWO
 
 
         TMP_U_T_DRV_Value(ui)   = TMP_U_T_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector_B(Here:There,iVB_S)  &
+                                + SUM( cVB_Coeff_Vector(Here:There,iVB_S)  &
                                 * Ylm_dt_Values( :, tpd, te, pe)     )      &
                                 * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_U_P_DRV_Value(ui)   = TMP_U_P_DRV_Value(ui)                     &
-                                + SUM( FP_Coeff_Vector_B(Here:There,iVB_S)  &
+                                + SUM( cVB_Coeff_Vector(Here:There,iVB_S)  &
                                 * Ylm_dp_Values( :, tpd, te, pe)     )      &
                                 * Lagrange_Poly_Table( d, rd, 0)
 
@@ -589,8 +589,8 @@ DO ui = iU_CF,iU_LF
             
 
             Current_i_Location = Map_To_FEM_Node(re,d)
-            FP_Source_Vector_A(Current_i_Location,lm_loc,ui)                &
-                = FP_Source_Vector_A(Current_i_Location,lm_loc,ui)          &
+            cVA_Source_Vector(Current_i_Location,lm_loc,ui)                &
+                = cVA_Source_Vector(Current_i_Location,lm_loc,ui)          &
                 + RHS_TMP(ui)
 
 
@@ -626,8 +626,8 @@ DO ui = iU_S1,iU_S3
 
             Current_i_Location = FP_Array_Map_TypeB(ui,iVB_S,re,d,lm_loc)
 
-            FP_Source_Vector_B(Current_i_Location,iVB_S)                &
-                = FP_Source_Vector_B(Current_i_Location,iVB_S)          &
+            cVB_Source_Vector(Current_i_Location,iVB_S)                &
+                = cVB_Source_Vector(Current_i_Location,iVB_S)          &
                 + RHS_TMP(ui)
 
 

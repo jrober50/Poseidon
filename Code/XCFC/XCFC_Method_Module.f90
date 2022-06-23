@@ -56,10 +56,6 @@ USE Variables_Derived, &
             ONLY :  Num_R_Nodes,                &
                     LM_Length
 
-USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B
-
 USE Variables_IO, &
             ONLY :  Write_Flags,                &
                     Print_Flags

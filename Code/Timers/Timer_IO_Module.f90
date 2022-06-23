@@ -26,9 +26,6 @@ MODULE Timer_IO_Module                                                      !##!
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Poseidon_Parameters, &
-            ONLY :  Poisson_Mode
-
 USE Poseidon_IO_Parameters, &
             ONLY :  Method_Names,           &
                     Poseidon_Reports_Dir
@@ -46,6 +43,9 @@ USE Flags_IO_Module, &
                     iPF_IO_Print_TimeTable,     &
                     iPF_IO_Write_TimeTable
 
+USE Flags_Core_Module, &
+            ONLY :  lPF_Core_Flags,         &
+                    iPF_Core_Poisson_Mode
 
 IMPLICIT NONE
 
@@ -62,7 +62,7 @@ CONTAINS
 SUBROUTINE Output_Time_Report()
 
 
-IF ( Poisson_Mode ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
     CALL Output_Poisson_Time_Report()
 ELSE
     CALL Output_XCFC_Time_Report()

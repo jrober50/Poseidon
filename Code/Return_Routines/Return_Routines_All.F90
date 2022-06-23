@@ -57,9 +57,9 @@ USE Variables_Mesh, &
 USE Variables_Derived, &
            ONLY :  LM_LENGTH
 
-USE Variables_FP, &
-           ONLY :  FP_Coeff_Vector_A,  &
-                   FP_Coeff_Vector_B
+USE Variables_Vectors, &
+ONLY :  cVA_Coeff_Vector,      &
+        cVB_Coeff_Vector
 
 USE Variables_Mesh, &
            ONLY :  rlocs,              &
@@ -477,7 +477,7 @@ DO lvl = 0,nLevels-1
 
                     Current_Location = Map_To_FEM_Node(iRE,d)
                     TMP_Val_A(iU) = TMP_Val_A(iU)                               &
-                                + FP_Coeff_Vector_A(Current_Location,lm,iU)     &
+                                + cVA_Coeff_Vector(Current_Location,lm,iU)     &
                                 * LagP(d) * Ylm_Elem_Values( lm, tpd )
 
 
@@ -499,7 +499,7 @@ DO lvl = 0,nLevels-1
 
 
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
-                            + SUM( FP_Coeff_Vector_B( Here:There, iVB )     &
+                            + SUM( cVB_Coeff_Vector( Here:There, iVB )     &
                                     * Ylm_Elem_Values( :, tpd )   )         &
                             * Lagrange_Poly_Table( d, rd, 0 )
 
@@ -528,24 +528,24 @@ DO lvl = 0,nLevels-1
                     iU_Offset = iU-3*iVB+1
 
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
-                            + SUM( FP_Coeff_Vector_B( Here:There, iVB )     &
+                            + SUM( cVB_Coeff_Vector( Here:There, iVB )     &
                                     * Ylm_Elem_Values( :, tpd )   )         &
                             * Lagrange_Poly_Table( d, rd, 0 )
 
                     TMP_Drv_B(1,iU_Offset) = TMP_Drv_B(1,iU_Offset)         &
-                               + SUM( FP_Coeff_Vector_B( Here:There, iVB )  &
+                               + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
                                      * Ylm_Elem_Values( :, tpd  )     )     &
                                * Lagrange_Poly_Table( d, rd, 1 )            &
                                / DROT
 
                     TMP_Drv_B(2,iU_Offset) = TMP_Drv_B(2,iU_Offset)         &
-                               + SUM( FP_Coeff_Vector_B( Here:There, iVB )  &
+                               + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
                                      * Ylm_Elem_dt_Values( :, tpd )   )     &
                                * Lagrange_Poly_Table( d, rd, 0)
 
 
                     TMP_Drv_B(3,iU_Offset) = TMP_Drv_B(3,iU_Offset)         &
-                               + SUM( FP_Coeff_Vector_B( Here:There, iVB )  &
+                               + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
                                      * Ylm_Elem_dp_Values( :, tpd)   )      &
                                * Lagrange_Poly_Table( d, rd, 0)
 

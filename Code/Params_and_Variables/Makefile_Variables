@@ -9,6 +9,8 @@ VARIABLES = \
   Variables_Interface.f90    \
   Variables_Functions.f90    \
   Variables_IO.f90           \
+  Variables_Vectors.f90      \
+  Variables_Matrices.f90     \
   Variables_Mesh.f90         \
   Variables_MPI.f90          \
   Variables_Quadrature.f90   \

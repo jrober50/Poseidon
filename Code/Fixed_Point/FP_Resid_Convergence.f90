@@ -80,17 +80,24 @@ USE Variables_MPI, &
 
 
 USE Variables_FP,  &
-            ONLY :  Matrix_Format,              &
-                    Linear_Solver,              &
-                    FP_Source_Vector_A,         &
-                    FP_Source_Vector_B,         &
-                    FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B,          &
-                    FP_Update_Vector,           &
+            ONLY :  FP_Update_Vector,           &
                     FP_Laplace_Vector,          &
                     FP_Residual_Vector,         &
                     FP_Laplace_Vector_Beta,     &
                     FP_Residual_Vector_Beta,    &
+                    FP_Anderson_M,              &
+                    CFA_Eq_Map,                 &
+                    CFA_MAT_Map
+
+USE Variables_Vectors,  &
+            ONLY :  cVA_Source_Vector,         &
+                    cVB_Source_Vector,         &
+                    cVA_Coeff_Vector,          &
+                    cVB_Coeff_Vector
+
+USE Variables_Matrices,  &
+            ONLY :  Matrix_Format,              &
+                    Linear_Solver,              &
                     Laplace_Matrix_Full,        &
                     Laplace_Matrix_VAL,         &
                     Laplace_Matrix_ROW,         &
@@ -101,17 +108,13 @@ USE Variables_FP,  &
                     Laplace_Matrix_Beta,        &
                     Beta_MVL_Banded,            &
                     Beta_Diagonals,             &
-                    CFA_Eq_Map,                 &
-                    CFA_MAT_Map,                &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
                     Num_Matrices,               &
-                    FP_Anderson_M,              &
                     Beta_Bandwidth
 
 USE Functions_Matrix, &
             ONLY :  MVMULT_FULL,                &
-                    MVMULT_FULL_SUB,            &
                     MVMULT_CCS
 
 USE Functions_Mesh, &
@@ -145,8 +148,7 @@ USE IO_FP_Linear_System, &
                     Output_Laplace
 
 USE Linear_Solvers_And_Preconditioners, &
-            ONLY :  PRECOND_CONJ_GRAD_CCS,          &
-                    JACOBI_CONDITIONING,            &
+            ONLY :  JACOBI_CONDITIONING,            &
                     Jacobi_Conditioning_Beta
 
 USE  Maps_Domain, &
@@ -261,12 +263,12 @@ IF ( Matrix_Format == 'Full' ) THEN
                     map_loc = CFA_MAT_Map(CFA_EQ_Map(ui))
 
                     WORK_MAT = Laplace_Matrix_Full(:,:,l)
-                    WORK_VEC = FP_Source_Vector_A(:,lm_loc,ui)
+                    WORK_VEC = cVA_Source_Vector(:,lm_loc,ui)
         
                     CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
 
                     FP_Laplace_Vector(:,lm_loc,ui) = MVMULT_FULL( WORK_MAT,                             &
-                                                            FP_Coeff_Vector_A(:,lm_loc,CFA_EQ_Map(ui)),   &
+                                                            cVA_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)),   &
                                                             NUM_R_NODES, NUM_R_NODES                    )
 
 
@@ -309,7 +311,7 @@ IF ( Matrix_Format == 'Full' ) THEN
         ALLOCATE( WORK_MAT(1:Beta_Prob_Dim,1:Beta_Prob_Dim) )
 
         WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
-        WORK_VEC(:) = FP_Source_Vector_B(:,iVB_S)
+        WORK_VEC(:) = cVB_Source_Vector(:,iVB_S)
 
         CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
@@ -323,7 +325,7 @@ IF ( Matrix_Format == 'Full' ) THEN
                     1.0_idp,                    &
                     Work_Mat,                   &
                     Beta_Prob_Dim,              &
-                    FP_Coeff_Vector_B(:,iVB_S), &
+                    cVB_Coeff_Vector(:,iVB_S), &
                     1,                          &
                     0.0_idp,                    &
                     FP_Laplace_Vector_Beta,     &
@@ -374,7 +376,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                     lm_loc = Map_To_lm(l,m)
 
 
-                    WORK_VEC = -FP_Source_Vector_A(:,lm_loc,ui)
+                    WORK_VEC = -cVA_Source_Vector(:,lm_loc,ui)
 
                     CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                             Factored_NNZ,               &
@@ -393,7 +395,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                                                     Laplace_Factored_VAL(:,l,ui),           &
                                                     Laplace_Factored_COL(:,l),              &
                                                     Laplace_Factored_ROW(:,l),              &
-                                                    FP_Coeff_Vector_A(:,lm_loc,CFA_EQ_Map(ui)),    &
+                                                    cVA_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)),    &
                                                     FP_Laplace_Vector(:,lm_loc,ui) )
 
 
@@ -432,7 +434,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
 
     DEALLOCATE(Work_Vec)
     ALLOCATE( Work_Vec(1:Beta_Prob_Dim ) )
-    Work_Vec = FP_Source_Vector_B(:,iVB_S)
+    Work_Vec = cVB_Source_Vector(:,iVB_S)
 
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
 
@@ -447,7 +449,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                 1.0_idp,                    &
                 Beta_MVL_Banded,            &
                 3*Beta_Diagonals+1,         &
-                FP_Coeff_Vector_B(:,iVB_S), &
+                cVB_Coeff_Vector(:,iVB_S), &
                 1,                          &
                 0.0_idp,                    &
                 FP_Laplace_Vector_Beta,     &

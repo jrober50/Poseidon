@@ -40,9 +40,9 @@ USE Variables_Derived, &
                     Prob_Dim,           &
                     Num_R_Nodes
 
-USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector_A,  &
-                    FP_Coeff_Vector_B
+USE Variables_Vectors,  &
+            ONLY :  cVA_Coeff_Vector,  &
+                    cVB_Coeff_Vector
 
 
 IMPLICIT NONE
@@ -121,7 +121,7 @@ INTEGER                                         :: LM_loc, Here, There
 DO LM_loc = 1,LM_Length
     here = (iU-1)*Var_Dim + (lm_loc-1)*Num_R_Nodes + 1
     there = (iU-1)*Var_Dim + lm_loc*Num_R_Nodes
-    Vector(here:there) = FP_Coeff_Vector_A(:,lm_loc,iU)
+    Vector(here:there) = cVA_Coeff_Vector(:,lm_loc,iU)
 END DO
 
 
@@ -152,7 +152,7 @@ HereB  = (iU-Offset)*Var_Dim + 1
 ThereB = (iU-Offset + 1)*Var_Dim
 
 
-Vector(HereA:ThereA) = FP_Coeff_Vector_B(HereB:ThereB,iVB)
+Vector(HereA:ThereA) = cVB_Coeff_Vector(HereB:ThereB,iVB)
 
 
 END SUBROUTINE CoeffB_To_Vector
@@ -175,7 +175,7 @@ INTEGER                                             :: LM_loc, Here, There
 DO LM_loc = 1,LM_Length
     here = (iU-1)*Var_Dim + (lm_loc-1)*Num_R_Nodes + 1
     there = (iU-1)*Var_Dim + lm_loc*Num_R_Nodes
-    FP_Coeff_Vector_A(:,lm_loc,iU) = Vector(here:There)
+    cVA_Coeff_Vector(:,lm_loc,iU) = Vector(here:There)
 END DO
 
 
@@ -205,7 +205,7 @@ ThereA = iU * Var_Dim
 HereB  = (iU-Offset)*Var_Dim + 1
 ThereB = (iU-Offset + 1)*Var_Dim
 
-FP_Coeff_Vector_B(HereB:ThereB,iVB) = Vector(HereA:ThereA)
+cVB_Coeff_Vector(HereB:ThereB,iVB) = Vector(HereA:ThereA)
 
 
 END SUBROUTINE Vector_To_CoeffB

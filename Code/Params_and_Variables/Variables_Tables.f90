@@ -56,7 +56,7 @@ REAL(idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:,:)        :: LPT_LPT
 !                                                                   !
 !===================================================================!
 COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Sqrt_Table
-COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Norm_Table
+REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:)         ::  Ylm_Norm_Table
 REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  rBT_NormedLegendre
 !REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  rBT_NormedLegendre_dt
 !REAL(idp),      PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)     ::  rBT_NormedLegendre_CC

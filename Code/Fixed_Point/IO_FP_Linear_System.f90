@@ -71,7 +71,7 @@ USE Variables_IO, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature
 
-USE Variables_FP, &
+USE Variables_Matrices, &
             ONLY :  Laplace_Matrix_Beta
 
 USE Poseidon_File_Routines_Module, &

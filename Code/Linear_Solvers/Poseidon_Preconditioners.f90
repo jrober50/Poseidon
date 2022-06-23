@@ -82,7 +82,7 @@ DO re = 0,Num_R_Elements-1
 
     Delta_R_Over_Two = (rlocs(re+1) - rlocs(re))/2.0_idp
     Node_R_Locs(:) = Delta_R_Over_Two * ( Node_X_Locs(:) + 1.0_idp) + rlocs(re)
-    IF ( Node_R_Locs(0) == 0.0_idp ) THEN
+    IF ( Node_R_Locs(0) .LE. 0.0_idp ) THEN
         Node_R_Locs(0) = 1.0_idp
     END IF
 
@@ -112,7 +112,7 @@ DO re = 0,Num_R_Elements-1
                 Finish = Start + ELEM_PROB_DIM-1
                 Here = CFA_ALL_Matrix_Map(F, lm_loc, re, d)
 
-                PRINT*,"Start: ",start," Finish: ",Finish," Here : ",Here
+!                PRINT*,"Start: ",start," Finish: ",Finish," Here : ",Here
                 A_Mat(Start:Finish,re) = A_Mat(Start:Finish,re) * Modifier(Here)
 
             END DO ! lm_loc
@@ -123,6 +123,10 @@ END DO  ! re
 
 
 END SUBROUTINE Jacobi_Type_A_PC
+
+
+
+
 
 
 !+102+###########################################################################!
@@ -185,6 +189,11 @@ END DO  ! re
 
 
 END SUBROUTINE Jacobi_Type_B_PC
+
+
+
+
+
 
 END MODULE Poseidon_Preconditioner_Module
 

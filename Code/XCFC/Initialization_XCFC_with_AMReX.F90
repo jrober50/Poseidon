@@ -85,7 +85,7 @@ USE Variables_Functions, &
             ONLY :  Calc_3D_Values_At_Location,     &
                     Calc_1D_CFA_Values
 
-USE Variables_FP, &
+USE Variables_Matrices, &
             ONLY :  Laplace_NNZ,                &
                     Beta_Diagonals,             &
                     Beta_Bandwidth

@@ -75,7 +75,7 @@ USE Variables_IO, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature
 
-USE Variables_FP, &
+USE Variables_Matrices, &
             ONLY :  Matrix_Format,              &
                     Beta_Diagonals,             &
                     Beta_Bandwidth,             &

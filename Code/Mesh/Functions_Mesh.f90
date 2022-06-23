@@ -573,7 +573,7 @@ REAL(KIND = idp)                                        ::  Scale_Factor_Power
 
 
 
-IF ( Inner_Edge == 0.0_idp ) THEN
+IF ( Inner_Edge .LE. 0.0_idp ) THEN
 
     tmp_Inner_Edge = 1.0_idp
 !    PRINT*,"Logarithmic mesh requires non-zero inner edge.  Shifted to 1."

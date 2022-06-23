@@ -61,8 +61,10 @@ USE Variables_Functions, &
 USE Variables_FP, &
             ONLY :  CFA_EQ_Map,                 &
                     CFA_Var_Map,                &
-                    CFA_Mat_Map,                &
-                    Laplace_NNZ,                &
+                    CFA_Mat_Map
+
+USE Variables_Matrices, &
+            ONLY :  Laplace_NNZ,                &
                     Beta_Diagonals,             &
                     Beta_Bandwidth,             &
                     Num_Matrices
@@ -84,8 +86,6 @@ USE Timer_Routines_Module, &
 USE Timer_Variables_Module, &
             ONLY :  Timer_XCFC_Initialization,      &
                     Timer_XCFC_Matrix_Init
-
-
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,     &

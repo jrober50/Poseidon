@@ -753,29 +753,18 @@ A_jk = ELEM_VAL(j)
 
 IF (A_jk .NE. 0.0_idp ) THEN
 
-
     j_row = ROW_IND(j)
     ij_here = COL_PTR(ROW_IND(j))
 
 
-
     DO i = j, COL_PTR(k+1)-1
-
-
-
-
         DO WHILE(ROW_IND(ij_here) .NE. ROW_IND(i) .AND. ij_here < COL_PTR(j_row + 1))
 
             ij_here = ij_here+1
 
         END DO
 
-
-
         ELEM_VAL(ij_here) = ELEM_VAL(ij_here) - ELEM_VAL(i)*A_jk
-
-
-
 
     END DO
 END IF

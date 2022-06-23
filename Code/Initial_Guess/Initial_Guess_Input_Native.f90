@@ -65,9 +65,9 @@ USE Variables_Interface, &
                     Caller_PQ_xlocs,                &
                     Translation_Matrix
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,      &
-                    FP_Coeff_Vector_B
+USE Variables_Vectors, &
+            ONLY :  cVA_Coeff_Vector,      &
+                    cVB_Coeff_Vector
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
@@ -147,8 +147,8 @@ Num_Input_DOF = Input_RQ*Input_TQ*Input_PQ
 
 Mapped_R_Quad = Map_To_X_Space( Left_Limit, Right_Limit, Input_R_Quad )
 
-FP_Coeff_Vector_A = 0.0_idp
-FP_Coeff_Vector_B = 0.0_idp
+cVA_Coeff_Vector = 0.0_idp
+cVB_Coeff_Vector = 0.0_idp
 
 DO re = 1,Input_RE
     DO rqb = 0,Degree
@@ -172,15 +172,15 @@ DO re = 1,Input_RE
 
         Here = (re-1)*Degree + rqb + 1
 
-        FP_Coeff_Vector_A(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
+        cVA_Coeff_Vector(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
 
         Here = FP_Array_Map_TypeB(iU_S1,iVB_S,re-1,rqb,1)
-        FP_Coeff_Vector_B(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
+        cVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
 
 !        Here = FP_Beta_Array_Map(re,rqb,2,0)
-!        FP_Coeff_Vector_B(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(4)
+!        cVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(4)
 !        Here = FP_Beta_Array_Map(re,rqb,3,0)
-!        FP_Coeff_Vector_B(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(5)
+!        cVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(5)
         
     END DO ! rqb
 END DO ! re
@@ -217,6 +217,23 @@ REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
                                     0:Num_R_Elements-1,             &
                                     0:Num_T_Elements-1,             &
                                     0:Num_P_Elements-1  )           :: Beta_Guess
+
+
+
+CALL IG_Input_Native(   Psi_Guess,          &
+                        AlphaPsi_Guess,     &
+                        Beta_Guess,         &
+                        Num_R_Elements,     &
+                        Num_T_Elements,     &
+                        Num_P_Elements,     &
+                        Caller_NQ(1),       &
+                        Caller_NQ(2),       &
+                        Caller_NQ(3),       &
+                        Caller_RQ_xlocs,    &
+                        Caller_TQ_xlocs,    &
+                        Caller_PQ_xlocs,    &
+                        Caller_xL(1),       &
+                        Caller_xL(2)        )
 
 
 lPF_IG_Flags(iPF_IG_Set) = .TRUE.

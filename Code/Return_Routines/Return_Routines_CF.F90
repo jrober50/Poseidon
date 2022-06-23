@@ -30,16 +30,7 @@ USE Poseidon_Parameters, &
             ONLY :  DEGREE
 
 USE Parameters_Variable_Indices, &
-            ONLY :  iVB_X,                      &
-                    iVB_S,                      &
-                    iU_CF,                      &
-                    iU_LF,                      &
-                    iU_S1,                      &
-                    iU_S2,                      &
-                    iU_S3,                      &
-                    iU_X1,                      &
-                    iU_X2,                      &
-                    iU_X3
+            ONLY :  iU_CF
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &

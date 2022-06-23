@@ -110,8 +110,8 @@ INTEGER, INTENT(IN) :: N,M
 
 
 INTEGER             :: i
-REAL(KIND = idp)  :: fact
-
+INTEGER             :: fact
+REAL(idp)           :: tmp
 
 
 IF (M .GE. N) THEN
@@ -121,10 +121,11 @@ IF (M .GE. N) THEN
         fact = fact*i
     END DO
 
-    IF (fact .EQ. 0) THEN
+    IF (fact == 0) THEN
         fact = 1
     END IF
 
+    tmp = REAL(fact, KIND = idp)
 END IF
 
 
@@ -132,7 +133,7 @@ IF (M < N) THEN
 
     fact = M
 
-    IF (fact .EQ. 0) THEN
+    IF (fact == 0) THEN
         fact = 1
     END IF
 
@@ -140,14 +141,11 @@ IF (M < N) THEN
         fact = fact*i
     END DO
 
-
-
-
-    fact = 1/fact
-
+    
+    tmp = 1.0_idp/REAL(fact, KIND = idp)
 END IF
 
-Factorial_Division = fact
+Factorial_Division = tmp
 
 
 END FUNCTION Factorial_Division

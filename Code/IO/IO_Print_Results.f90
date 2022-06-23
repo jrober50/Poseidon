@@ -35,8 +35,7 @@ USE Poseidon_Units_Module, &
 
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,             &
-                    L_Limit,            &
-                    Poisson_Mode
+                    L_Limit
 
 USE Poseidon_IO_Parameters, &
             ONLY :  CFA_Var_Names
@@ -87,6 +86,10 @@ USE Timer_Routines_Module, &
 
 USE Timer_Variables_Module, &
             ONLY :  Timer_Core_PrintResults
+
+USE Flags_Core_Module, &
+            ONLY :  lPF_Core_Flags,         &
+                    iPF_Core_Poisson_Mode
 
 IMPLICIT NONE
 
@@ -164,7 +167,7 @@ WRITE(*,'(A,F4.2,A,F4.2,A)')"Results taken along ray, theta = ",theta/pi," Pi Ra
 
 
 
-IF ( Poisson_Mode ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
 
 
     WRITE(*,210)"r","Code Results","Lapse Function"
@@ -212,7 +215,7 @@ ELSE
 
     END DO
 
-END IF ! Poisson_Mode
+END IF ! lPF_Core_Flags(iPF_Core_Poisson_Mode)
 
 
 CALL TimerStop( Timer_Core_PrintResults )
@@ -285,7 +288,7 @@ END IF
 
 potential = 0.0_idp
 
-IF (r == rlocs(0)) THEN
+IF (r .LE. rlocs(0)) THEN
 
     DO l = 0,L_LIMIT
 

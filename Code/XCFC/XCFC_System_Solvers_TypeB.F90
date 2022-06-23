@@ -31,9 +31,7 @@ USE Poseidon_Message_Routines_Module, &
                     Warning_Message
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE,                     &
-                    L_LIMIT,                    &
-                    Verbose_Flag
+            ONLY :  Verbose_Flag
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -53,12 +51,12 @@ USE Variables_Derived, &
                     Num_R_Nodes,                &
                     LM_Length
 
-USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B,          &
-                    FP_Source_Vector_A,         &
-                    FP_Source_Vector_B,         &
-                    Beta_Diagonals,             &
+USE Variables_Vectors,  &
+            ONLY :  cVB_Coeff_Vector,          &
+                    cVB_Source_Vector
+
+USE Variables_Matrices,  &
+            ONLY :  Beta_Diagonals,             &
                     Beta_MVL_Banded,            &
                     Beta_IPIV
 
@@ -154,7 +152,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 
     ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
-    Work_Vec = FP_Source_Vector_B(:,iVB)
+    Work_Vec = cVB_Source_Vector(:,iVB)
 
 
 
@@ -183,7 +181,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 !    PRINT*,"Coeff_Vec"
 !    PRINT*,Work_Vec
 
-    FP_Coeff_Vector_B(:,iVB) = Work_Vec(:)
+    cVB_Coeff_Vector(:,iVB) = Work_Vec(:)
 
 
     DEALLOCATE( Work_Vec )

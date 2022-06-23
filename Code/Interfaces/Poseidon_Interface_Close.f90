@@ -34,8 +34,7 @@ MODULE Poseidon_Interface_Close                                                 
 !                                   !
 !===================================!
 USE Poseidon_Parameters, &
-            ONLY :  Poisson_Mode,               &
-                    Method_Flag
+            ONLY :  Method_Flag
 
 USE Variables_Interface, &
             ONLY :  Caller_Set,                     &
@@ -46,10 +45,6 @@ USE Variables_Interface, &
 
 USE Allocation_Sources, &
             ONLY :  Deallocate_Poseidon_Source_Variables
-
-USE Allocation_Poisson, &
-            ONLY :  Deallocate_Poseidon_Poisson_Variables
-
 
 USE XCFC_Source_Routine_Variables_Module, &
             ONLY :  Deallocate_XCFC_Source_Routine_Variables
@@ -63,8 +58,11 @@ USE Allocation_Quadrature, &
 USE Allocation_Tables, &
             ONLY :  Deallocate_Tables
 
-USE Allocation_FP, &
-            ONLY :  Deallocate_FP
+USE Allocation_Poisson_Linear_System, &
+            ONLY :  Deallocate_Poisson_Linear_System
+
+USE Allocation_CFA_Linear_Systems, &
+            ONLY :  Deallocate_CFA_Linear_Systems
 
 USE Allocation_XCFC_Linear_Systems, &
             ONLY :  Deallocate_XCFC_Linear_Systems
@@ -75,7 +73,9 @@ USE Timer_Routines_Module, &
 USE Flags_Main_Module, &
             ONLY : Poseidon_Clear_All_Flags
 
-
+USE Flags_Core_Module, &
+            ONLY :  lPF_Core_Flags,         &
+                    iPF_Core_Poisson_Mode
 
 
 IMPLICIT NONE
@@ -111,8 +111,8 @@ IF ( Caller_Set ) THEN
 END IF
 
 
-IF ( Poisson_Mode ) THEN
-    Call Deallocate_Poseidon_Poisson_Variables
+IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+    CALL Deallocate_Poisson_Linear_System
 
 ELSE
     !!!!  Deallocate Data Space !!!!
@@ -126,9 +126,9 @@ ELSE
     IF ( Method_Flag == 1 ) THEN
         WRITE(*,'(A)')"The Newton-Raphson method is not currently available in Poseidon. STOPING"
         STOP
-!        CALL Deallocate_NR
+        
     ELSE IF ( Method_Flag == 2 ) THEN
-        CALL Deallocate_FP
+        CALL Deallocate_CFA_Linear_Systems
     ELSE IF ( Method_Flag == 3 ) THEN
         CALL Deallocate_XCFC_Linear_Systems
     END IF

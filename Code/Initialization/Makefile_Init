@@ -3,6 +3,4 @@ INIT = \
   Initialization_Subroutines.F90 \
   Initialization_Subroutines_AMReX.F90 \
   Initialization_Derived.f90     \
-  Initialization_AMReX.F90       \
-  Initialization_Poseidon.f90    \
  

@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Return_Functions_Native                                         	     !##!
+MODULE Return_Functions_Native                                               !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -51,9 +51,9 @@ USE Variables_Tables, &
 USE Variables_Derived, &
             ONLY :  LM_LENGTH
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,  &
-                    FP_Coeff_Vector_B
+USE Variables_Vectors, &
+            ONLY :  cVA_Coeff_Vector,      &
+                    cVB_Coeff_Vector
 
 USE Variables_Mesh, &
             ONLY :  rlocs,              &
@@ -160,7 +160,7 @@ DO rd = 1,NQ(1)
     DO d = 0,DEGREE
 
         Current_Location = Map_To_FEM_Node(re-1,d)
-        Tmp_U_Value = Tmp_U_Value + FP_Coeff_Vector_A(Current_Location,lm,iU)  &
+        Tmp_U_Value = Tmp_U_Value + cVA_Coeff_Vector(Current_Location,lm,iU)  &
                                * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
     END DO ! d Loop
@@ -245,7 +245,7 @@ DO rd = 1,NQ(1)
 
         Current_Location = FP_Array_Map_TypeB(iU,iVB,re-1,d,lm)
         Tmp_U_Value = Tmp_U_Value                                       &
-                    + FP_Coeff_Vector_B(Current_Location,iVB_S)         &
+                    + cVB_Coeff_Vector(Current_Location,iVB_S)         &
                     * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
 
 

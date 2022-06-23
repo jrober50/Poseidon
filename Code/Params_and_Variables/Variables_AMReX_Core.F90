@@ -38,7 +38,6 @@ IMPLICIT NONE
 
 
 
-LOGICAL, PUBLIC                                 ::  AMReX_Mode   = .FALSE.
 LOGICAL, PUBLIC                                 ::  AMReX_Tiling = .TRUE.
 
 LOGICAL, PUBLIC                                 ::  AMReX_Regrid_Flag = .TRUE.

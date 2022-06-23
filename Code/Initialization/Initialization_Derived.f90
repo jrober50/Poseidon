@@ -64,7 +64,7 @@ CONTAINS
  !#########################################################!
 SUBROUTINE Initialize_Derived()
 
-IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables.')
+IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables, Native.')
 
 
 IF ( DOMAIN_DIM == 1 ) THEN
@@ -130,8 +130,10 @@ END SUBROUTINE Initialize_Derived
  !#########################################################!
 SUBROUTINE Initialize_Derived_AMReX
 
-IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables.')
+IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables, AMReX.')
 
+PRINT*,"Domain_Dim",Domain_Dim
+PRINT*,L_LIMIT
 
 IF ( DOMAIN_DIM == 1 ) THEN
 
@@ -174,6 +176,7 @@ NUM_OFF_DIAGONALS   = ULM_LENGTH*(DEGREE + 1) - 1
 lPF_Init_MTGV_Flags(iPF_Init_MTGV_Derived) = .TRUE.
 
 
+PRINT*,"END of Init_Derived_AMREX"
 END SUBROUTINE Initialize_Derived_AMReX
 
 

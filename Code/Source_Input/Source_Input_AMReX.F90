@@ -21,14 +21,6 @@ use amrex_base_module
 
 USE amrex_box_module,       ONLY: &
   amrex_box
-USE amrex_boxarray_module,  ONLY: &
-  amrex_boxarray,         &
-  amrex_boxarray_build,   &
-  amrex_boxarray_destroy
-USE amrex_distromap_module, ONLY: &
-  amrex_distromap,       &
-  amrex_distromap_build, &
-  amrex_distromap_destroy
 USE amrex_multifab_module,  ONLY: &
   amrex_multifab, &
   amrex_multifab_build, &
@@ -43,6 +35,9 @@ USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,         &
                     Verbose_Flag
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
+
 
 USE Parameters_Variable_Indices, &
             ONLY :  iS_E,               &
@@ -52,32 +47,14 @@ USE Parameters_Variable_Indices, &
                     iS_S3
 
 
-USE Variables_Mesh, &
-            ONLY :  NUM_R_ELEMENTS,     &
-                    NUM_T_ELEMENTS,     &
-                    NUM_P_ELEMENTS,     &
-                    drlocs,             &
-                    dtlocs,             &
-                    dplocs
-
-USE Variables_Source, &
-            ONLY :  Block_Source_E,     &
-                    Block_Source_S,     &
-                    Block_Source_Si
-
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
                     Num_T_Quad_Points,      &
                     Num_P_Quad_Points,      &
-                    Num_TP_Quad_Points,     &
                     Local_Quad_DOF,         &
                     Int_R_Locations,        &
                     Int_T_Locations,        &
                     Int_P_Locations,        &
-                    Int_R_Weights,          &
-                    Int_T_Weights,          &
-                    Int_P_Weights,          &
-                    Int_TP_Weights,         &
                     xLeftLimit,             &
                     xRightLimit
 
@@ -90,11 +67,6 @@ USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
                     AMReX_Num_Levels,   &
                     MF_Source_nComps
-
-USE Poseidon_AMReX_Utilities_Module,    &
-            ONLY :  AMReX2Poseidon,     &
-                    UnpackSources_AMReX
-
 
 USE Initialization_XCFC_with_AMReX_Module, &
             ONLY :  Initialization_XCFC_with_AMReX
@@ -141,14 +113,14 @@ CONTAINS
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_AMREX( MF_Src_Input,          &
-                                         MF_Src_Input_nComps,         &
-                                         Num_Levels,            &
-                                         Input_NQ,              &
-                                         Input_R_Quad,          &
-                                         Input_T_Quad,          &
-                                         Input_P_Quad,          &
-                                         Input_xL               )
+SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX(   MF_Src_Input,          &
+                                                MF_Src_Input_nComps,         &
+                                                Num_Levels,            &
+                                                Input_NQ,              &
+                                                Input_R_Quad,          &
+                                                Input_T_Quad,          &
+                                                Input_P_Quad,          &
+                                                Input_xL               )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
@@ -183,9 +155,7 @@ INTEGER                                             ::  Their_DOF
 
 
 
-IF (Verbose_Flag) THEN
-    PRINT*,"In Poseidon_Input_Sources_AMREX"
-END IF
+IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 ! Define Interpolation Matrix
@@ -275,7 +245,7 @@ CALL Initialization_XCFC_with_AMReX()
 
 
 
-END SUBROUTINE Poseidon_Input_Sources_AMREX
+END SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX
 
 
 !+102+##########################################################################!
@@ -283,8 +253,8 @@ END SUBROUTINE Poseidon_Input_Sources_AMREX
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_AMREX_Caller( MF_Src_Input,       &
-                                                MF_Src_Input_nComps       )
+SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller(    MF_Src_Input,           &
+                                                        MF_Src_Input_nComps     )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:AMReX_Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
@@ -307,6 +277,9 @@ INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
 
+
+
+IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
@@ -373,7 +346,7 @@ CALL TimerStop(Timer_GR_SourceInput)
 CALL Initialization_XCFC_with_AMReX()
 
 
-END SUBROUTINE Poseidon_Input_Sources_AMREX_Caller
+END SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller
 
 
 
@@ -429,9 +402,7 @@ REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
 INTEGER                                             ::  Their_DOF
 
 
-IF (Verbose_Flag) THEN
-    PRINT*,"In Poseidon_Input_Sources_Part1_AMReX"
-END IF
+IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 ! Define Interpolation Matrix
@@ -565,6 +536,8 @@ INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
+
+IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 
@@ -659,17 +632,17 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller
 #else
 
 
-SUBROUTINE Poseidon_Input_Sources_AMReX( )
-END SUBROUTINE Poseidon_Input_Sources_AMReX
+SUBROUTINE Poseidon_Input_Sources_XCFC_AMReX( )
+END SUBROUTINE Poseidon_Input_Sources_XCFC_AMReX
 
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX( )
 END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 
 
 
-SUBROUTINE Poseidon_Input_Sources_AMReX_Caller( A_Difference )
+SUBROUTINE Poseidon_Input_Sources_XCFC_AMReX_Caller( A_Difference )
 INTEGER     :: A_Difference
-END SUBROUTINE Poseidon_Input_Sources_AMReX_Caller
+END SUBROUTINE Poseidon_Input_Sources_XCFC_AMReX_Caller
 
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller( A_Difference )
 INTEGER     :: A_Difference

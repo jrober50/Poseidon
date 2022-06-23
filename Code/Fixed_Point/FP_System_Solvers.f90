@@ -74,17 +74,25 @@ USE Variables_MPI, &
 
 
 USE Variables_FP,  &
-            ONLY :  Matrix_Format,              &
-                    Linear_Solver,              &
-                    FP_Source_Vector_A,         &
-                    FP_Source_Vector_B,         &
-                    FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B,          &
-                    FP_Update_Vector,           &
+            ONLY :  FP_Update_Vector,           &
                     FP_Laplace_Vector,          &
                     FP_Residual_Vector,         &
                     FP_Laplace_Vector_Beta,     &
                     FP_Residual_Vector_Beta,    &
+                    FP_Anderson_M,              &
+                    CFA_Eq_Map,                 &
+                    CFA_MAT_Map,                &
+                    CFA_Var_Map
+
+USE Variables_Vectors,  &
+            ONLY :  cVA_Source_Vector,         &
+                    cVB_Source_Vector,         &
+                    cVA_Coeff_Vector,          &
+                    cVB_Coeff_Vector
+
+USE Variables_Matrices,  &
+            ONLY :  Matrix_Format,              &
+                    Linear_Solver,              &
                     Laplace_Matrix_Full,        &
                     Laplace_Matrix_VAL,         &
                     Laplace_Matrix_ROW,         &
@@ -93,17 +101,13 @@ USE Variables_FP,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
-                    CFA_Eq_Map,                 &
-                    CFA_Var_Map,                &
-                    CFA_MAT_Map,                &
+                    Beta_MVL_Banded,            &
+                    Beta_Diagonals,             &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
                     Num_Matrices,               &
-                    FP_Anderson_M,              &
-                    Beta_IPIV,                  &
-                    Beta_Diagonals,             &
                     Beta_Bandwidth,             &
-                    Beta_MVL_Banded
+                    Beta_IPIV
 
 USE Functions_Mesh, &
             ONLY :  Create_Logarithmic_1D_Mesh,     &
@@ -134,8 +138,7 @@ USE IO_FP_Linear_System, &
                     Output_Laplace
 
 USE Linear_Solvers_And_Preconditioners, &
-            ONLY :  PRECOND_CONJ_GRAD_CCS,          &
-                    JACOBI_CONDITIONING,            &
+            ONLY :  Jacobi_Conditioning,            &
                     Jacobi_Conditioning_Beta
 
 USE Maps_Fixed_Point, &
@@ -245,7 +248,7 @@ IF (LINEAR_SOLVER =='Full') THEN
 
             lm_loc   = Map_To_lm(l,m)
             WORK_MAT = Laplace_Matrix_Full(:,:,l)
-            WORK_VEC = FP_Source_Vector_A(:,lm_loc,ui)
+            WORK_VEC = cVA_Source_Vector(:,lm_loc,ui)
 
 
             CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
@@ -254,7 +257,7 @@ IF (LINEAR_SOLVER =='Full') THEN
             CALL NEUMANN_BC(l, WORK_VEC)
 
             
-            CALL JACOBI_CONDITIONING(WORK_MAT, WORK_VEC)
+            CALL Jacobi_Conditioning(WORK_MAT, WORK_VEC)
 
 
             CALL ZGESV(NUM_R_NODES, 1, WORK_MAT, NUM_R_NODES, IPIV, WORK_VEC, NUM_R_NODES, INFO)
@@ -263,8 +266,8 @@ IF (LINEAR_SOLVER =='Full') THEN
             END IF
 
         
-            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,CFA_EQ_Map(ui))
-            FP_Coeff_Vector_A(:,lm_loc,ui) = WORK_VEC(:)
+            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
+            cVA_Coeff_Vector(:,lm_loc,ui) = WORK_VEC(:)
 
 
 
@@ -292,7 +295,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
             lm_loc = Map_To_lm(l,m)
-            WORK_VEC = -FP_Source_Vector_A(:,lm_loc,ui)
+            WORK_VEC = -cVA_Source_Vector(:,lm_loc,ui)
             WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_MAP(ui))
 
     
@@ -337,8 +340,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
 
-            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-FP_Coeff_Vector_A(:,lm_loc,ui)
-            FP_Coeff_Vector_A( :,lm_loc,ui) = WORK_VEC(:)
+            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,ui)
+            cVA_Coeff_Vector( :,lm_loc,ui) = WORK_VEC(:)
 
 
 
@@ -427,14 +430,14 @@ IF (LINEAR_SOLVER =='Full') THEN
     ALLOCATE( WORK_MAT( 1:Beta_Prob_Dim, 1:Beta_Prob_Dim ) )
 
     WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
-    WORK_VEC(:)   = FP_Source_Vector_B(:,iVB_S)
+    WORK_VEC(:)   = cVB_Source_Vector(:,iVB_S)
 
     
 
     CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
 
-    CALL JACOBI_CONDITIONING_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
+    CALL Jacobi_Conditioning_Beta(WORK_MAT, WORK_VEC, Beta_Prob_Dim, Beta_Prob_Dim)
     
     
 !    CALL Calc_RCOND_Full( Work_Mat, RCOND )
@@ -455,14 +458,14 @@ IF (LINEAR_SOLVER =='Full') THEN
         There   = Map_To_FEM_Node(re,d)
         Thither = FP_Array_Map_TypeB(ui,iVB_S,re,d,l)
 
-        FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector_B(Thither,iVB_S)
+        FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-cVB_Coeff_Vector(Thither,iVB_S)
 
     END DO  ! l
     END DO ! d
     END DO ! re
     END DO ! ui
 
-    FP_Coeff_Vector_B(:,iVB_S) = WORK_VEC(:)
+    cVB_Coeff_Vector(:,iVB_S) = WORK_VEC(:)
 
 
     DEALLOCATE( Work_Vec )
@@ -491,7 +494,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 !    ALLOCATE( WORK_MAT( 1:(3*Beta_Diagonals+1), 1:Beta_Prob_Dim ) )
     
 !    Work_Mat = Beta_MVL_Banded
-    Work_Vec = FP_Source_Vector_B(:,iVB_S)
+    Work_Vec = cVB_Source_Vector(:,iVB_S)
 
 
 
@@ -531,14 +534,14 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
         There   = Map_To_FEM_Node(re,d)
         Thither = FP_Array_Map_TypeB(ui+2,iVB_S,re,d,l)
 
-        FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-FP_Coeff_Vector_B(Thither,iVB_S)
+        FP_Update_Vector(There,l,ui+2) = WORK_VEC(Here)-cVB_Coeff_Vector(Thither,iVB_S)
 
     END DO  ! l
     END DO ! d
     END DO ! re
     END DO ! ui
 
-    FP_Coeff_Vector_B(:,iVB_S) = WORK_VEC(:)
+    cVB_Coeff_Vector(:,iVB_S) = WORK_VEC(:)
     
 
     DEALLOCATE( Work_Vec )

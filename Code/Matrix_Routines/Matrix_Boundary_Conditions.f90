@@ -42,18 +42,18 @@ USE Poseidon_Numbers_Module, &
 
 
 USE Poseidon_Parameters, &
-            ONLY :  DOMAIN_DIM,                 &
-                    DEGREE,                     &
-                    L_LIMIT,                    &
+            ONLY :  Degree,                     &
+                    L_Limit,                    &
                     NUM_CFA_EQs
 
-USE Variables_FP, &
+USE Variables_Matrices, &
             ONLY :  First_Column_Storage,       &
                     Last_Column_Storage,        &
                     First_Column_Beta_Storage,  &
-                    Last_Column_Beta_Storage,   &
-                    CFA_EQ_Map,                 &
-                    CFA_Var_Map
+                    Last_Column_Beta_Storage
+
+USE Variables_FP, &
+            ONLY :  CFA_Var_Map
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,             &
@@ -99,37 +99,23 @@ CONTAINS
  !#################################################################################!
 SUBROUTINE DIRICHLET_BC(WORK_MAT, WORK_VEC, L, M, ui)
 
-INTEGER, INTENT(IN)                                                                     :: L, M, ui
+COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES,1:NUM_R_NODES),    INTENT(INOUT)   :: WORK_MAT
+COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES),                  INTENT(INOUT)   :: WORK_VEC
+INTEGER,                                                        INTENT(IN)      :: L, M, ui
 
-!REAL(KIND = idp), DIMENSION(0:NUM_R_NODES - 1), INTENT(INOUT)                           :: WORK_VEC
-COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES), INTENT(INOUT)                            :: WORK_VEC
-
-COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES,1:NUM_R_NODES), INTENT(INOUT)         :: WORK_MAT
-
-
+INTEGER                             :: i, shift, uj
+COMPLEX(KIND = idp)                 :: BC_Value
 
 
-INTEGER                 :: i, shift, uj
 
+IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
-COMPLEX(KIND = idp)                                                         :: BC_Value
-
-
-uj = CFA_EQ_Map(ui)
-IF (INNER_CFA_BC_TYPE(uj) == "D") THEN
-
-    BC_Value =  2.0_idp*sqrt(pi)*INNER_CFA_BC_VALUES(uj)
+    BC_Value =  2.0_idp*sqrt(pi)*INNER_CFA_BC_VALUES(ui)
     
-
     WORK_VEC(1) = BC_Value
     DO i = 2,DEGREE+1
-
         WORK_VEC(i) = WORK_VEC(i) - WORK_MAT(1,i)*BC_Value
-
     END DO
-
-
-
 
     WORK_MAT(1,:) = 0.0_idp
     WORK_MAT(:,1) = 0.0_idp
@@ -145,10 +131,10 @@ IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
     shift = 1
 END IF
 
-IF (OUTER_CFA_BC_TYPE(uj)  == "D") THEN
+IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
 
     IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN
-        BC_Value = 2.0_idp*sqrt(pi)*OUTER_CFA_BC_VALUES(uj)
+        BC_Value = 2.0_idp*sqrt(pi)*OUTER_CFA_BC_VALUES(ui)
     ELSE
         BC_Value = 0.0_idp
     END IF
@@ -168,9 +154,6 @@ IF (OUTER_CFA_BC_TYPE(uj)  == "D") THEN
     WORK_MAT(NUM_R_NODES,:) = 0.0_idp
     WORK_MAT(:,NUM_R_NODES) = 0.0_idp
     WORK_MAT(NUM_R_NODES,NUM_R_NODES) = 1.0_idp
-
-
-
 
 END IF
 

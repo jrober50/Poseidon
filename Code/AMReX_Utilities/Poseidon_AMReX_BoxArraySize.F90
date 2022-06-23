@@ -32,11 +32,6 @@ USE amrex_box_module,       ONLY: &
   amrex_box
 USE amrex_boxarray_module,  ONLY: &
   amrex_boxarray
-USE amrex_distromap_module, ONLY: &
-  amrex_distromap
-USE amrex_multifab_module,  ONLY: &
-  amrex_multifab, &
-  amrex_imultifab
 #endif
 
 

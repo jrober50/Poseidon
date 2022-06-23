@@ -41,7 +41,6 @@ USE Poseidon_Parameters, &
                     Convergence_Criteria,   &
                     Num_CFA_Vars,           &
                     Max_Iterations,         &
-                    Poisson_Mode,           &
                     CFA_EQ_Flags,           &
                     Num_CFA_Eqs
 
@@ -101,8 +100,8 @@ USE Initialization_Subroutines, &
 USE Poisson_Matrix_Routines,    &
             ONLY :  Initialize_Stiffness_Matrix
 
-USE Allocation_Poisson, &
-            ONLY :  Allocate_Poseidon_Poisson_Variables
+USE Allocation_Poisson_Linear_System, &
+            ONLY :  Allocate_Poisson_Linear_System
 
 USE Initialization_Subroutines_AMReX, &
             ONLY : Init_Parameters_From_AMReX_Input_File
@@ -185,12 +184,18 @@ USE Variables_Interface, &
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Num_Levels,       &
-                    AMReX_Mode,             &
                     iNumLeafElements,       &
                     iLeafElementsPerLvl,    &
                     Findloc_Table,          &
                     FEM_Elem_Table,         &
                     Table_Offsets
+
+USE Flags_Core_Module, &
+            ONLY :  lPF_Core_Flags,         &
+                    iPF_Core_Poisson_Mode,  &
+                    iPF_Core_CFA_Mode,      &
+                    iPF_Core_XCFC_Mode,     &
+                    iPF_Core_AMReX_Mode
 
 USE Flags_Initial_Guess_Module, &
             ONLY :  lPF_IG_Flags,           &
@@ -329,10 +334,22 @@ IF ( Verbose_Flag ) CALL Init_Message('Beginning Poseidon Core Initialization.')
 
 CALL Set_Units(Source_Units)
 
+
+
 IF ( PRESENT(Poisson_Mode_Option) ) THEN
-    Poisson_Mode = Poisson_Mode_Option
+    IF ( Poisson_Mode_Option ) THEN
+        lPF_Core_Flags(iPF_Core_Poisson_Mode)   = .TRUE.
+        lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
+        lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .FALSE.
+    ELSE
+        lPF_Core_Flags(iPF_Core_Poisson_Mode)   = .FALSE.
+        lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
+        lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .TRUE.
+    END IF
 ELSE
-    Poisson_Mode = .FALSE.
+    lPF_Core_Flags(iPF_Core_Poisson_Mode)   = .FALSE.
+    lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
+    lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .TRUE.
 END IF
 
 IF ( PRESENT( Method_Flag_Option ) ) THEN
@@ -358,11 +375,10 @@ CALL Set_Caller_Data(   Source_NQ,                      &
 
 #ifdef POSEIDON_AMREX_FLAG
     DOMAIN_DIM = amrex_spacedim
-    AMReX_Mode = .TRUE.
+    lPF_Core_Flags(iPF_Core_AMReX_Mode) = .TRUE.
     CALL Init_Parameters_From_AMReX_Input_File()
-
 #else
-    AMReX_Mode = .FALSE.
+    lPF_Core_Flags(iPF_Core_AMReX_Mode) = .FALSE.
 
     IF ( PRESENT( Dimensions_Option ) ) THEN
         Domain_Dim = Dimensions_Option
@@ -440,17 +456,17 @@ END IF
 
 
 
-IF ( Poisson_Mode ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
     !=======================================================!
     !                                                       !
     !               Initialize Poisson Solver               !
     !                                                       !
     !=======================================================!
     CALL Initialize_Derived()
-    CALL Initialize_Quadrature()
+!    CALL Initialize_Quadrature()
 !    CALL Initialize_Tables()
 
-    CALL Allocate_Poseidon_Poisson_Variables()
+    CALL Allocate_Poisson_Linear_System()
 
 
 

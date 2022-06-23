@@ -26,9 +26,8 @@ MODULE Functions_Translation_Matrix_Module                                   !##
 USE Poseidon_Kinds_Module, &
             ONLY : idp
 
-
 USE Maps_X_Space, &
-            ONLY :  Map_To_X_Space
+            ONLY :  Map_Between_Spaces
 
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
@@ -81,9 +80,9 @@ INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Dest_Here
 
-REAL(idp),  DIMENSION( 1:Source_NQ(1) )              ::  Scaled_R_Quad
-REAL(idp),  DIMENSION( 1:Source_NQ(2) )              ::  Scaled_T_Quad
-REAL(idp),  DIMENSION( 1:Source_NQ(3) )              ::  Scaled_P_Quad
+REAL(idp),  DIMENSION( 1:Source_NQ(1) )             ::  Scaled_Source_R_Quad
+REAL(idp),  DIMENSION( 1:Source_NQ(2) )             ::  Scaled_Source_T_Quad
+REAL(idp),  DIMENSION( 1:Source_NQ(3) )             ::  Scaled_Source_P_Quad
 
 REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  R_Lag_Poly_Values
 REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  T_Lag_Poly_Values
@@ -96,31 +95,45 @@ ALLOCATE( T_Lag_Poly_Values(1:Source_NQ(2),1:Dest_NQ(2)) )
 ALLOCATE( P_Lag_Poly_Values(1:Source_NQ(3),1:Dest_NQ(3)) )
 
 
-Scaled_R_Quad = Map_To_X_Space(Source_xL(1),Source_xL(2),Source_RQ_xlocs)
-Scaled_T_Quad = Map_To_X_Space(Source_xL(1),Source_xL(2),Source_TQ_xlocs)
-Scaled_P_Quad = Map_To_X_Space(Source_xL(1),Source_xL(2),Source_PQ_xlocs)
+Scaled_Source_R_Quad = Map_Between_Spaces(  Source_RQ_xlocs,    &
+                                            Source_xL(1),       &
+                                            Source_xL(2),       &
+                                            Dest_xL(1),         &
+                                            Dest_xL(2)          )
+
+Scaled_Source_T_Quad = Map_Between_Spaces(  Source_TQ_xlocs,    &
+                                            Source_xL(1),       &
+                                            Source_xL(2),       &
+                                            Dest_xL(1),         &
+                                            Dest_xL(2)          )
+
+Scaled_Source_P_Quad = Map_Between_Spaces(  Source_PQ_xlocs,    &
+                                            Source_xL(1),       &
+                                            Source_xL(2),       &
+                                            Dest_xL(1),         &
+                                            Dest_xL(2)          )
 
 
 
 
 DO Dest_R = 1,Dest_NQ(1)
- R_Lag_Poly_Values(:,Dest_R) = Lagrange_Poly(Dest_RQ_xlocs(Dest_R),  &
-                                             Source_NQ(1)-1,         &
-                                             Scaled_R_Quad           )
+ R_Lag_Poly_Values(:,Dest_R) = Lagrange_Poly(Dest_RQ_xlocs(Dest_R), &
+                                             Source_NQ(1)-1,        &
+                                             Scaled_Source_R_Quad   )
 
 END DO
 
 DO Dest_T = 1,Dest_NQ(2)
- T_Lag_Poly_Values(:,Dest_T) = Lagrange_Poly(Dest_TQ_xlocs(Dest_T),  &
-                                             Source_NQ(2)-1,         &
-                                             Scaled_T_Quad           )
+ T_Lag_Poly_Values(:,Dest_T) = Lagrange_Poly(Dest_TQ_xlocs(Dest_T), &
+                                             Source_NQ(2)-1,        &
+                                             Scaled_Source_T_Quad   )
 
 END DO
 
 DO Dest_P = 1,Dest_NQ(3)
- P_Lag_Poly_Values(:,Dest_P) = Lagrange_Poly(Dest_PQ_xlocs(Dest_P),  &
-                                             Source_NQ(3)-1,         &
-                                             Scaled_P_Quad           )
+ P_Lag_Poly_Values(:,Dest_P) = Lagrange_Poly(Dest_PQ_xlocs(Dest_P), &
+                                             Source_NQ(3)-1,        &
+                                             Scaled_Source_P_Quad   )
 
 END DO
 

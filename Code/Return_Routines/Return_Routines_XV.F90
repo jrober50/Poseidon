@@ -26,70 +26,16 @@ MODULE Poseidon_Return_Routines_XV                                           !##
 USE Poseidon_Kinds_Module, &
             ONLY : idp
 
-USE Poseidon_Parameters, &
-            ONLY :  DEGREE
-
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
-                    iVB_S,                      &
-                    iU_CF,                      &
-                    iU_LF,                      &
-                    iU_S1,                      &
-                    iU_S2,                      &
-                    iU_S3,                      &
                     iU_X1,                      &
                     iU_X2,                      &
                     iU_X3
-
-
-USE Variables_Tables, &
-            ONLY :  Ylm_Elem_Values,        &
-                    Ylm_Elem_dt_Values,     &
-                    Ylm_Elem_dp_Values,              &
-                    Lagrange_Poly_Table,        &
-                    Level_DX
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
                     Num_T_Elements,         &
                     Num_P_Elements
-
-USE Variables_Derived, &
-            ONLY :  LM_LENGTH
-
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,  &
-                    FP_Coeff_Vector_B
-
-USE Variables_Mesh, &
-            ONLY :  rlocs,              &
-                    tlocs,              &
-                    plocs
-
-USE Variables_AMReX_Source, &
-            ONLY :  iLeaf,                &
-                    iTrunk
-
-USE Maps_Fixed_Point, &
-            ONLY :  FP_Array_Map_TypeB
-
-USE Maps_Quadrature, &
-            ONLY :  Map_To_tpd
-
-USE Maps_Domain, &
-            ONLY :  Map_To_FEM_Node,        &
-                    FEM_Elem_Map
-
-USE Functions_Quadrature, &
-            ONLY :  Initialize_LGL_Quadrature_Locations
-
-USE Functions_Math, &
-            ONLY :  Lagrange_Poly
-
-USE Initialization_Tables, &
-            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                    Initialize_Ylm_Tables_On_Elem
-
 
 USE Variables_Interface, &
             ONLY :  Caller_NQ,                      &

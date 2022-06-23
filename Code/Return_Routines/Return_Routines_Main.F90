@@ -23,18 +23,6 @@ MODULE Poseidon_Return_Routines_Module                                       !##
 !           Dependencies            !
 !                                   !
 !===================================!
-USE Poseidon_Kinds_Module, &
-            ONLY :  idp
-
-
-USE Parameters_Variable_Indices, &
-            ONLY :  iU_CF,                  &
-                    iU_LF,                  &
-                    iU_S1,                  &
-                    iU_S2,                  &
-                    iU_S3,                  &
-                    iVB_S
-
 USE Return_Functions_FP, &
             ONLY :  Calc_Var_At_Location_Type_A,        &
                     Calc_Var_At_Location_Type_B,        &

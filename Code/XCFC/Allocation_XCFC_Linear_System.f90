@@ -41,32 +41,37 @@ Use Variables_Derived, &
                     Prob_Dim,               &
                     Beta_Prob_Dim
 
-
-USE Variables_FP, &
-            ONLY :  Laplace_Matrix_Full,    &
-                    Laplace_Matrix_Beta,    &
-                    Laplace_Matrix_VAL,     &
-                    Laplace_Matrix_ROW,     &
-                    Laplace_Matrix_COL,     &
-                    Laplace_Factored_VAL,   &
-                    Laplace_Factored_ROW,   &
-                    Laplace_Factored_COL,   &
-                    Laplace_NNZ,            &
-                    Beta_IPIV,              &
-                    Beta_Diagonals,         &
-                    Beta_Bandwidth,         &
-                    Beta_MVL_Banded,        &
-                    Beta_MVL_Diagonal,      &
-                    FP_Source_Vector_A,     &
-                    FP_Source_Vector_B,     &
-                    FP_Coeff_Vector_A,      &
-                    FP_Coeff_Vector_B,      &
-                    FP_Update_Vector,       &
+USE Variables_FP,  &
+            ONLY :  FP_Update_Vector,       &
                     FP_Laplace_Vector,      &
                     FP_Laplace_Vector_Beta, &
-                    FP_Laplace_Vector_X,    &
-                    Matrix_Format,          &
-                    Num_Matrices,           &
+                    FP_Laplace_Vector_X
+
+USE Variables_Vectors,  &
+            ONLY :  cVA_Source_Vector,         &
+                    cVB_Source_Vector,         &
+                    cVA_Coeff_Vector,          &
+                    cVB_Coeff_Vector
+
+USE Variables_Matrices,  &
+            ONLY :  Matrix_Format,              &
+                    Linear_Solver,              &
+                    Laplace_Matrix_Full,        &
+                    Laplace_Matrix_VAL,         &
+                    Laplace_Matrix_ROW,         &
+                    Laplace_Matrix_COL,         &
+                    Laplace_Factored_VAL,       &
+                    Laplace_Factored_ROW,       &
+                    Laplace_Factored_COL,       &
+                    Laplace_Matrix_Beta,        &
+                    Beta_MVL_Banded,            &
+                    Beta_MVL_Diagonal,          &
+                    Beta_Diagonals,             &
+                    Beta_IPIV,                  &
+                    Laplace_NNZ,                &
+                    Factored_NNZ,               &
+                    Num_Matrices,               &
+                    Beta_Bandwidth,           &
                     First_Column_Storage,   &
                     Last_Column_Storage,    &
                     First_Column_Beta_Storage,   &
@@ -118,11 +123,11 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 END IF
 
 
-ALLOCATE( FP_Source_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
-ALLOCATE( FP_Source_Vector_B(1:Beta_Prob_Dim,1:2) )
+ALLOCATE( cVA_Source_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
+ALLOCATE( cVB_Source_Vector(1:Beta_Prob_Dim,1:2) )
 
-ALLOCATE( FP_Coeff_Vector_A(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
-ALLOCATE( FP_Coeff_Vector_B(1:Beta_Prob_Dim,1:2) )
+ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
+ALLOCATE( cVB_Coeff_Vector(1:Beta_Prob_Dim,1:2) )
 
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
 
@@ -171,11 +176,11 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     
 END IF
 
-DEALLOCATE( FP_Source_Vector_A )
-DEALLOCATE( FP_Source_Vector_B )
+DEALLOCATE( cVA_Source_Vector )
+DEALLOCATE( cVB_Source_Vector )
 
-DEALLOCATE( FP_Coeff_Vector_A )
-DEALLOCATE( FP_Coeff_Vector_B )
+DEALLOCATE( cVA_Coeff_Vector )
+DEALLOCATE( cVB_Coeff_Vector )
 
 DEALLOCATE( FP_Update_Vector )
 

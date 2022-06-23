@@ -77,9 +77,9 @@ USE Maps_Domain, &
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
 
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,          &
-                    FP_Coeff_Vector_B
+USE Variables_Vectors, &
+            ONLY :  cVA_Coeff_Vector,          &
+                    cVB_Coeff_Vector
 
 USE Variables_Tables, &
             ONLY :  Ylm_Values,                 &
@@ -121,7 +121,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
    
     Here = Map_To_FEM_Node(Num_R_Elements-1,Degree)
     
-    TMP_Val = SUM( FP_Coeff_Vector_A( Here, :, iU )     &
+    TMP_Val = SUM( cVA_Coeff_Vector( Here, :, iU )     &
                   * Ylm_Values( :, tpd, te, pe )        )
 
 
@@ -167,20 +167,20 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     Lagrange_DRV_Values = Lagrange_Poly_Deriv(1.0_idp, Degree, Local_Locs)
 
 
-    TMP_Val = SUM( FP_Coeff_Vector_A( Here, :, iU )     &
+    TMP_Val = SUM( cVA_Coeff_Vector( Here, :, iU )     &
                     * Ylm_Values( :, tpd, te, pe )        )
 
 
-    TMP_Drv(1) = SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+    TMP_Drv(1) = SUM( cVA_Coeff_Vector( Here, :, iU )      &
                     * Ylm_Values( :, tpd, te, pe )     )    &
                 * Lagrange_DRV_Values ( Degree )            &
                 / DROT
 
 
-    TMP_Drv(2) = SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+    TMP_Drv(2) = SUM( cVA_Coeff_Vector( Here, :, iU )      &
                     * Ylm_dt_Values( :, tpd, te, pe)   )
 
-    TMP_Drv(3) = SUM( FP_Coeff_Vector_A( Here, :, iU )      &
+    TMP_Drv(3) = SUM( cVA_Coeff_Vector( Here, :, iU )      &
                     * Ylm_dp_Values( :, tpd, te, pe)   )
 
 
@@ -226,7 +226,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     Here  = FP_Array_Map_TypeB(iU,iVB,Num_R_Elements-1,Degree,1)
     There = FP_Array_Map_TypeB(iU,iVB,Num_R_Elements-1,Degree,LM_Length)
 
-    TMP_Val = SUM( FP_Coeff_Vector_B( Here:There, iVB )     &
+    TMP_Val = SUM( cVB_Coeff_Vector( Here:There, iVB )     &
                    * Ylm_Values( :, tpd, te, pe )           )
 
 
@@ -275,20 +275,20 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     Here  = FP_Array_Map_TypeB(iU,iVB,Num_R_Elements-1,Degree,1)
     There = FP_Array_Map_TypeB(iU,iVB,Num_R_Elements-1,Degree,LM_Length)
 
-    TMP_Val = SUM( FP_Coeff_Vector_B( Here:There, iVB )      &
+    TMP_Val = SUM( cVB_Coeff_Vector( Here:There, iVB )      &
                    * Ylm_Values( :, tpd, te, pe )   )
 
 
-    TMP_Drv(1) = SUM( FP_Coeff_Vector_B( Here:There, iVB )  &
+    TMP_Drv(1) = SUM( cVB_Coeff_Vector( Here:There, iVB )  &
                     * Ylm_Values( :, tpd, te, pe )     )    &
                 * Lagrange_DRV_Values ( Degree )            &
                 / DROT
 
 
-    TMP_Drv(2) = SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+    TMP_Drv(2) = SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                     * Ylm_dt_Values( :, tpd, te, pe)   )
 
-    TMP_Drv(3) = SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+    TMP_Drv(3) = SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                     * Ylm_dp_Values( :, tpd, te, pe)   )
 
 

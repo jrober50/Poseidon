@@ -31,9 +31,9 @@ USE Variables_Derived, &
             ONLY :  Num_R_Nodes,                &
                     LM_Length
 
-USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector_B,            &
-                    FP_Source_Vector_B
+USE Variables_Vectors,  &
+            ONLY :  cVB_Coeff_Vector,            &
+                    cVB_Source_Vector
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon,              &
@@ -67,7 +67,7 @@ Send_Size = ULim - LLim + 1
 
 IF ( myID_Poseidon == MasterID ) THEN
     CALL MPI_Reduce(MPI_IN_PLACE,                   &
-                    FP_Source_Vector_B(LLim:ULim,iVB),      &
+                    cVB_Source_Vector(LLim:ULim,iVB),      &
                     Send_Size,                  &
                     MPI_Double_Complex,             &
                     MPI_SUM,                        &
@@ -75,8 +75,8 @@ IF ( myID_Poseidon == MasterID ) THEN
                     Comm,            &
                     ierr )
 ELSE
-CALL MPI_Reduce(FP_Source_Vector_B(LLim:ULim,iVB),      &
-                FP_Source_Vector_B(LLim:ULim,iVB),      &
+CALL MPI_Reduce(cVB_Source_Vector(LLim:ULim,iVB),      &
+                cVB_Source_Vector(LLim:ULim,iVB),      &
                 Send_Size,                  &
                 MPI_Double_Complex,             &
                 MPI_SUM,                        &
@@ -118,7 +118,7 @@ Send_Size = ULim - LLim + 1
 
 
 
-CALL MPI_Bcast( FP_Coeff_Vector_B(LLim:ULim,iVB),   &
+CALL MPI_Bcast( cVB_Coeff_Vector(LLim:ULim,iVB),   &
                 Send_Size,                          &
                 MPI_Double_Complex,                 &
                 MasterID,                           &

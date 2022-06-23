@@ -60,9 +60,9 @@ USE Variables_Mesh, &
 USE Variables_Derived, &
            ONLY :  LM_LENGTH
 
-USE Variables_FP, &
-           ONLY :  FP_Coeff_Vector_A,  &
-                   FP_Coeff_Vector_B
+USE Variables_Vectors, &
+            ONLY :  cVA_Coeff_Vector,      &
+                    cVB_Coeff_Vector
 
 USE Variables_Mesh, &
            ONLY :  rlocs,              &
@@ -257,25 +257,25 @@ DO rd = 1,NQ(1)
         There = FP_Array_Map_TypeB(iU(i),iVB,re-1,d,LM_Length)
 
         TMP_Val(i) = TMP_Val(i)                                  &
-                + SUM( FP_Coeff_Vector_B( Here:There, iVB )      &
+                + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
                         * Ylm_Values( :, tpd, te-1, pe-1 )   )       &
                 * Lagrange_Poly_Table( d, rd, 0 )
 
 
         TMP_Drv(1,i) = TMP_Drv(1,i)                              &
-                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                          * Ylm_Values( :, tpd, te-1, pe-1 )     )    &
                    * Lagrange_Poly_Table( d, rd, 1 )             &
                    / DROT
 
 
         TMP_Drv(2,i) = TMP_Drv(2,i)                              &
-                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                          * Ylm_dt_Values( :, tpd, te-1, pe-1)   )    &
                    * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_Drv(3,i) = TMP_Drv(3,i)                              &
-                   + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                          * Ylm_dp_Values( :, tpd, te-1, pe-1)   )    &
                    * Lagrange_Poly_Table( d, rd, 0)
 
@@ -319,7 +319,7 @@ DO rd = 1,NQ(1)
                +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val(2)   &
                +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val(3)   )
 
-    Return_Kij(Here,re,te,pe,1) = Tmp_A(1)/(Gamma(1)*Gamma(1))
+    Return_Kij(Here,re,te,pe,1) = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)), KIND = idp)
 
 
     ! Ahat^12
@@ -336,7 +336,7 @@ DO rd = 1,NQ(1)
              +( Gamma(i)*Christoffel(j,i,3)      &
               + Gamma(j)*Christoffel(i,j,3)      &
               )*Tmp_Val(3)
-     Return_Kij(Here,re,te,pe,2) = Tmp_A(2)/(Gamma(1)*Gamma(2))
+     Return_Kij(Here,re,te,pe,2) = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)), KIND = idp)
 
     ! Ahat^13
     i=1
@@ -352,7 +352,7 @@ DO rd = 1,NQ(1)
              +( Gamma(i)*Christoffel(j,i,3)      &
               + Gamma(j)*Christoffel(i,j,3)      &
               )*Tmp_Val(3)
-     Return_Kij(Here,re,te,pe,3) = Tmp_A(3)/(Gamma(1)*Gamma(3))
+     Return_Kij(Here,re,te,pe,3) = REAL(Tmp_A(3)/(Gamma(1)*Gamma(3)), KIND = idp)
 
 
     ! Ahat^22
@@ -361,7 +361,7 @@ DO rd = 1,NQ(1)
                +(2.0_idp * Christoffel(2,2,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
                +(2.0_idp * Christoffel(2,2,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
                +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
-     Return_Kij(Here,re,te,pe,4) = Tmp_A(4)/(Gamma(2)*Gamma(2))
+     Return_Kij(Here,re,te,pe,4) = REAL(Tmp_A(4)/(Gamma(2)*Gamma(2)), KIND = idp)
 
 
     ! Ahat^23
@@ -378,7 +378,7 @@ DO rd = 1,NQ(1)
              +( Gamma(i)*Christoffel(j,i,3)      &
               + Gamma(j)*Christoffel(i,j,3)      &
               )*Tmp_Val(3)
-     Return_Kij(Here,re,te,pe,5) = Tmp_A(5)/(Gamma(2)*Gamma(3))
+     Return_Kij(Here,re,te,pe,5) = REAL(Tmp_A(5)/(Gamma(2)*Gamma(3)), KIND = idp)
 
 
     ! Ahat^33
@@ -387,7 +387,7 @@ DO rd = 1,NQ(1)
                +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
                +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
                +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
-     Return_Kij(Here,re,te,pe,6) = Tmp_A(6)/(Gamma(3)*Gamma(3))
+     Return_Kij(Here,re,te,pe,6) = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)), KIND = idp)
 
 
 !    Return_Kij(Here,re,te,pe,1) =
@@ -629,25 +629,25 @@ TYPE(amrex_multifab),                           INTENT(INOUT)   ::  MF_Results(0
 
 
                      TMP_Val(i) = TMP_Val(i)                                  &
-                             + SUM( FP_Coeff_Vector_B( Here:There, iVB )      &
+                             + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
                                      * Ylm_Elem_Values( :, tpd )   )       &
                              * Lagrange_Poly_Table( d, rd, 0 )
 
 
                      TMP_Drv(1,i) = TMP_Drv(1,i)                              &
-                                + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                       * Ylm_Elem_Values( :, tpd  )     )    &
                                 * Lagrange_Poly_Table( d, rd, 1 )             &
                                 / DROT
 
 
                      TMP_Drv(2,i) = TMP_Drv(2,i)                              &
-                                + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                       * Ylm_Elem_dt_Values( :, tpd )   )    &
                                 * Lagrange_Poly_Table( d, rd, 0)
 
                      TMP_Drv(3,i) = TMP_Drv(3,i)                              &
-                                + SUM( FP_Coeff_Vector_B( Here:There, iVB )   &
+                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                       * Ylm_Elem_dp_Values( :, tpd)   )    &
                                 * Lagrange_Poly_Table( d, rd, 0)
 

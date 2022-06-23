@@ -164,8 +164,7 @@ END FUNCTION JCBN_kappa_FUNCTION_3D_ALL
 SUBROUTINE JCBN_Kappa_Array_3D( Kappa_Array,                                &
                                 NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINTS,      &
                                 Cur_R_Locs, R_SQUARE, R_CUBED, RSIN_SQUARE, &
-                                SIN_VAL, SIN_SQUARE, CSC_SQUARE,            &
-                                COS_VAL, COTAN_VAL,                         &
+                                COTAN_VAL,                         &
                                 CUR_VAL_BETA, CUR_DRV_BETA                  )
 
 REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points, 1:Num_R_Quad_Points, 1:3,1:3), INTENT(OUT) ::  Kappa_Array
@@ -175,11 +174,6 @@ INTEGER, INTENT(IN)                     ::  NUM_R_QUAD_POINTS, NUM_TP_QUAD_POINT
 REAL(KIND = idp), DIMENSION(1:Num_R_Quad_Points), INTENT(IN)        ::  Cur_R_Locs
 REAL(KIND = idp), DIMENSION(1:Num_R_Quad_Points), INTENT(IN)        ::  R_SQUARE
 REAL(KIND = idp), DIMENSION(1:Num_R_Quad_Points), INTENT(IN)        ::  R_CUBED
-
-REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  SIN_VAL
-REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  SIN_SQUARE
-REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  CSC_SQUARE
-REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  COS_VAL
 REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points), INTENT(IN)       ::  COTAN_VAL
 
 REAL(KIND = idp), DIMENSION(1:Num_TP_Quad_Points, 1:Num_R_Quad_Points), INTENT(IN)  ::  RSIN_SQUARE
@@ -201,11 +195,11 @@ INTEGER                                                                     ::  
 DO rd = 1,Num_R_Quad_Points
 DO tpd = 1,Num_TP_Quad_Points
     
-        Kappa_Array(tpd, rd, 1,1) = FourThirds                  * CUR_DRV_BETA( tpd, rd, 1, 1 )       &
-                                  - FourThirds/ Cur_R_Locs(rd)  * CUR_VAL_BETA( tpd, rd, 1 )          &
-                                  - TwoThirds * COTAN_VAL(tpd)  * CUR_VAL_BETA( tpd, rd, 2 )          &
-                                  - TwoThirds                   * CUR_DRV_BETA( tpd, rd, 2, 2 )       &
-                                  - TwoThirds                   * CUR_DRV_BETA( tpd, rd, 3, 3 )
+    Kappa_Array(tpd, rd, 1,1) = FourThirds                  * CUR_DRV_BETA( tpd, rd, 1, 1 )       &
+                              - FourThirds/ Cur_R_Locs(rd)  * CUR_VAL_BETA( tpd, rd, 1 )          &
+                              - TwoThirds * COTAN_VAL(tpd)  * CUR_VAL_BETA( tpd, rd, 2 )          &
+                              - TwoThirds                   * CUR_DRV_BETA( tpd, rd, 2, 2 )       &
+                              - TwoThirds                   * CUR_DRV_BETA( tpd, rd, 3, 3 )
 
 END DO
 END DO

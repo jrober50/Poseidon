@@ -37,7 +37,7 @@ USE Variables_Derived, &
             ONLY :  Beta_Prob_Dim
 
 
-USE Variables_FP, &
+USE Variables_Matrices, &
             ONLY :  Beta_Diagonals,             &
                     Beta_IPIV,                  &
                     Beta_MVL_Banded

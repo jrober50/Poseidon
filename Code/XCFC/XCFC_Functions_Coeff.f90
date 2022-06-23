@@ -39,9 +39,9 @@ USE Variables_Derived, &
                     Var_Dim,            &
                     Num_R_Nodes
 
-USE Variables_FP,  &
-            ONLY :  FP_Coeff_Vector_A,  &
-                    FP_Coeff_Vector_B
+USE Variables_Vectors,  &
+            ONLY :  cVA_Coeff_Vector,  &
+                    cVB_Coeff_Vector
 
 
 IMPLICIT NONE
@@ -120,7 +120,7 @@ DO LM_loc = 1,LM_Length
     Here  = (lm_loc-1)*Num_R_Nodes + 1
     There = lm_loc*Num_R_Nodes
 
-    Vector(here:there) = FP_Coeff_Vector_A(:,lm_loc,iU)
+    Vector(here:there) = cVA_Coeff_Vector(:,lm_loc,iU)
 END DO
 
 
@@ -139,7 +139,7 @@ INTEGER                         , INTENT(IN)    :: iU, iVB
 
 
 
-Vector(:) = FP_Coeff_Vector_B(:,iVB)
+Vector(:) = cVB_Coeff_Vector(:,iVB)
 
 
 END SUBROUTINE Coeff_To_Vector_TypeB
@@ -162,7 +162,7 @@ INTEGER                                             :: LM_loc, Here, There
 DO LM_loc = 1,LM_Length
     Here = (lm_loc-1)*Num_R_Nodes + 1
     There = lm_loc*Num_R_Nodes
-    FP_Coeff_Vector_A(:,lm_loc,iU) = Vector(here:There)
+    cVA_Coeff_Vector(:,lm_loc,iU) = Vector(here:There)
 END DO
 
 
@@ -182,7 +182,7 @@ COMPLEX(idp), DIMENSION(Var_Dim), INTENT(IN)    :: Vector
 INTEGER                         , INTENT(IN)    :: iU, iVB
 
 
-FP_Coeff_Vector_B(:,iVB) = Vector(:)
+cVB_Coeff_Vector(:,iVB) = Vector(:)
 
 
 END SUBROUTINE Vector_To_Coeff_TypeB

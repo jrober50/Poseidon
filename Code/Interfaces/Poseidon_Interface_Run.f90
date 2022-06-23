@@ -25,7 +25,6 @@ MODULE Poseidon_Interface_Run                                          	     !##
 !===================================!
 USE Poseidon_Parameters, &
             ONLY :  Poseidon_Frame,             &
-                    Poisson_Mode,               &
                     Method_Flag
 
 USE Poisson_Main_Module, &
@@ -67,6 +66,10 @@ USE Flags_Initial_Guess_Module, &
                     iPF_IG_Set,             &
                     iPF_IG_Flat_Guess
 
+USE Flags_Core_Module, &
+            ONLY :  lPF_Core_Flags,         &
+                    iPF_Core_Poisson_Mode
+
 IMPLICIT NONE
 
 
@@ -96,7 +99,7 @@ Readiness_Flag = Poseidon_Run_Check()
 
 IF ( Readiness_Flag ) THEN
 
-    IF ( Poisson_Mode .eqv. .TRUE. ) THEN
+    IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) .eqv. .TRUE. ) THEN
 
         CALL Poisson_Solve()
     
