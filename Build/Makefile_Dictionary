@@ -18,6 +18,7 @@ FORT_ISAAC         = mpif90
 FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90 -cpp
 FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
 FORT_kkadoogan     = $(MPI_HOME)/bin/mpif90
+FORT_accre_gnu     = /cvmfs/oasis.opensciencegrid.org/accre/mirror/optimized/sandy_bridge/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/bin/mpif90
 FORT_MacBook 	   = /usr/local/openmpi/bin/mpif90
 FORT_Rhea	   = mpifort
 FORT_BlueWaters    = ftn
@@ -47,6 +48,9 @@ STD_OPTIMIZE_sjdunham = -O2
 STD_DEBUG_kkadoogan    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
 STD_OPTIMIZE_kkadoogan = -O2
 
+STD_DEBUG_accre_gnu    = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
+STD_OPTIMIZE_accre_gnu = -O2
+
 STD_DEBUG_MacBook	= -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
 STD_OPTIMIZE_MacBook	= -O2
 
@@ -73,6 +77,9 @@ OPENMP_sjdunham_OFF                  =
 
 OPENMP_kkadoogan_ON                  = -fopenmp
 OPENMP_kkadoogan_OFF                 =
+
+OPENMP_accre_gnu_ON                   = -fopenmp
+OPENMP_accre_gnu_OFF                  =
 
 OPENMP_MacBook_ON		= -fopenmp
 OPENMP_MacBook_OFF		=
@@ -123,6 +130,11 @@ PETSC_kkadoogan_ARCH =
 PETSC_kkadoogan_ON   =
 PETSC_kkadoogan_Off  =
 
+PETSC_accre_gnu_DIR  =
+PETSC_accre_gnu_ARCH =
+PETSC_accre_gnu_ON   =
+PETSC_accre_gnu_Off  =
+
 PETSC_MacBook_DIR       = $(PETSC_$(MACHINE_NAME)_DIR)
 PETSC_MacBook_ARCH      = arch-darwin-c-debug
 PETSC_MacBook_ON	= -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
@@ -147,6 +159,8 @@ HDF5_sjdunham_ON             = -I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5_fo
 HDF5_sjdunham_OFF            =
 HDF5_kkadoogan_ON             = -I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5_fortran -lhdf5
 HDF5_kkadoogan_OFF            =
+HDF5_accre_gnu_ON             = -I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5_fortran -lhdf5
+HDF5_accre_gnu_OFF            =
 HDF5_MacBook_ON		= -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5
 HDF5_MacBook_OFF 	=
 HDF5_Rhea_ON            =
@@ -168,6 +182,9 @@ MPI_sjdunham_Include        = -L$(MPICH_DIR)/include
 MPI_kkadoogan_Lib            = -L$(MPI_HOME)/lib
 MPI_kkadoogan_Include        = -I$(MPI_HOME)/include
 
+MPI_accre_gnu_Lib            = -L/accre/arch/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/lib
+MPI_accre_gnu_Include        = -I/accre/arch/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/include
+
 MPI_MacBook_Lib             = -I/usr/local/openmpi/lib
 MPI_MacBook_Include         = -L/usr/local/openmpi/include
 
@@ -184,6 +201,7 @@ LAPACK_NicksMacBook     = -lblas -llapack
 #LAPACK_NicksMacBook     = -framework Accelerate
 LAPACK_sjdunham         = -framework Accelerate -fallow-argument-mismatch
 LAPACK_kkadoogan        = -L$(LAPACK_DIR)/lib -llapack -lblas
+LAPACK_accre_gnu        = -L$(LAPACK_DIR)/lib -lscalapack -lopenblas
 LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl
 LAPACK_BlueWaters	=
@@ -208,6 +226,7 @@ COMP_ISAAC         = mpif90
 COMP_NicksMacBook  = gfortran
 COMP_sjdunham      = gfortran
 COMP_kkadoogan     = gfortran
+COMP_accre_gnu     = gfortran
 COMP_MacBook       = gfortran
 COMP_Rhea          = ifort
 COMP_BlueWaters    = ftn
