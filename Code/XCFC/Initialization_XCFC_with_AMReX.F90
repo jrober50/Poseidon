@@ -125,9 +125,6 @@ USE Maps_AMReX, &
 USE Initialization_Mesh_AMReX_Module, &
             ONLY :  Determine_AMReX_Mesh
 
-USE Initialization_XCFC, &
-            ONLY :  Create_Eq_Maps
-
 USE IO_Setup_Report_Module, &
             ONLY :  PRINT_AMReX_Setup
 
