@@ -12,6 +12,7 @@ Tests/.DS_Store
 *.out
 *.png
 *.dSYM
+*.ex
 
 ~$ConditionNumber.xlsx
 

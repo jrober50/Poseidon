@@ -15,14 +15,11 @@ PROGRAM Yahil_Profile_XCFC_Native                                               
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Poseidon_Numbers_Module, &
-            ONLY :  pi
-
 USE Poseidon_Units_Module, &
-            ONLY :  C_Square,        &
-                    Set_Units,       &
-                    Centimeter,      &
-                    Gram
+            ONLY :  Set_Units
+
+USE Poseidon_Letters_Module, &
+            ONLY :  Letter_Table_Upper
 
 USE Poseidon_Interface_Initialization, &
             ONLY :  Initialize_Poseidon
@@ -30,38 +27,17 @@ USE Poseidon_Interface_Initialization, &
 USE Poseidon_Interface_Run, &
             ONLY :  Poseidon_Run
 
-!USE Poseidon_Main_Module, &
-!            ONLY :  Poseidon_Close
-
 USE Poseidon_Interface_Close, &
             ONLY :  Poseidon_Close
 
 USE Poseidon_Return_Routines_Module, &
             ONLY : Poseidon_Return_Extrinsic_Curvature
 
-
-USE Variables_IO, &
-            ONLY :  Write_Results_R_Samps,      &
-                    Write_Results_T_Samps,      &
-                    File_Suffix,                &
-                    Report_Flags,               &
-                    iRF_Time
-
-
 USE Variables_MPI, &
             ONLY :  ierr
 
-USE Variables_Functions, &
-            ONLY :  Potential_Solution
-
-USE Return_Functions_FP, &
-            ONLY : Calc_1D_CFA_Values_FP
-
 USE Variables_External, &
             ONLY :  SelfSim_V_Switch
-
-USE Poseidon_IO_Parameters, &
-            ONLY :  Poseidon_Results_Dir
 
 USE Functions_Mesh, &
             ONLY :  Create_3D_Mesh
@@ -78,11 +54,6 @@ USE IO_Write_Final_Results, &
 USE IO_Print_Results, &
             ONLY :  Print_Results
 
-USE Poseidon_Utilities_Module, &
-            ONLY :  Poseidon_Calc_ADM_Mass,         &
-                    Poseidon_Calc_ADM_Mass_Parts,   &
-                    Poseidon_Calc_Komar_Mass
-
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
 
@@ -92,8 +63,8 @@ USE Driver_SetBC_Module, &
 USE Driver_SetGuess_Module, &
             ONLY :  Driver_SetGuess
 
-USE Timer_IO_Module, &
-            ONLY :  Output_Time_Report
+USE Driver_ConFactor_Loop_Module, &
+            ONLY :  Driver_ConFactor_Loop
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
@@ -106,29 +77,6 @@ USE Timer_Variables_Module, &
                     Timer_Driver_Run,           &
                     Timer_Driver_Extra
 
-
-USE Driver_SetSource_Module, &
-            ONLY :  Driver_SetSource
-
-USE Driver_SetBC_Module, &
-            ONLY :  Driver_SetBC
-
-USE Driver_SetGuess_Module, &
-            ONLY :  Driver_SetGuess
-
-!USE Timer_IO_Module, &
-!            ONLY :  Output_Time_Report
-!
-!USE Timer_Routines_Module, &
-!            ONLY :  TimerStart,     &
-!                    TimerStop
-!
-!USE Timer_Variables_Module, &
-!            ONLY :  Timer_Driver_SetSource,     &
-!                    Timer_Driver_SetBC,         &
-!                    Timer_Driver_SetGuess,      &
-!                    Timer_Driver_Run,           &
-!                    Timer_Driver_Extra
 
 USE MPI
 
@@ -178,9 +126,6 @@ REAL(idp)                                               ::  Right_Limit
 
 INTEGER                                                 ::  myID
 
-INTEGER                                                 ::  re
-INTEGER                                                 ::  rq
-
 
 INTEGER                                                 ::  Guess_Type
 
@@ -213,20 +158,17 @@ INTEGER                                                 ::  AMReX_Levels
 INTEGER                                                 ::  Max_Iterations
 REAL(idp)                                               ::  CC_Option
 
+
+INTEGER                                                 ::  External_Iter_Max
+REAL(idp)                                               ::  External_Tolerance
+
 REAL(idp)                                               ::  Perturbation
-REAL(idp)                                               ::  Offset
 
 REAL(idp), DIMENSION(4)                                 ::  Yahil_Params
 
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
-CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
 REAL(idp), DIMENSION(1:7)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
-
-REAL(idp)                                               ::  ADM_Mass
-REAL(idp)                                               ::  ADM_MassB
-REAL(idp)                                               ::  ADM_Phys
-REAL(idp)                                               ::  ADM_Curve
 
 REAL(idp)                                               ::  Komar_Mass
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Output_Kij
@@ -236,7 +178,6 @@ CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
 
 ALLOCATE( RE_Table(1:9) )
-
 
 
 !############################################################!
@@ -250,17 +191,17 @@ Solver_Type         = 3
 
 RE_Table            = (/ 32, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.15_idp, 0.05_idp /)
+Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.51_idp, 0.275_idp, 0.15_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  4
-T_Index_Max         =  4
+T_Index_Min         =  6
+T_Index_Max         =  6
 
-M_Index_Min         =  3
-M_Index_Max         =  3
+M_Index_Min         =  1
+M_Index_Max         =  1
 
-RE_Index_Min        =  1
-RE_Index_Max        =  1
+RE_Index_Min        =  5
+RE_Index_Max        =  5
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -270,6 +211,9 @@ L_Limit_Max         =  0
 
 AMReX_Levels        =  0
 
+
+External_Iter_Max   =  500
+External_Tolerance  =  1.0E-10
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
@@ -284,12 +228,12 @@ SelfSim_V_Switch    =  0
 
 Dimension_Input     = 3
 
-Max_Iterations      = 10
+Max_Iterations      = 100
 CC_Option           = 1.0E-10_idp
 
-Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1.0E10_idp                   ! Outer Radius (cm)
+Domain_Edge(2)      = 8.0E8_idp                   ! Outer Radius (cm)
 
 
 
@@ -303,21 +247,18 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
-Print_Results_Flag  = .TRUE.
-!Print_Results_Flag  = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
+!Print_Results_Flag  = .TRUE.
+Print_Results_Flag  = .FALSE.
 
 Suffix_Input        = "Params"
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
 
 
-Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
 
 
-Write_Results_R_Samps = 256
-Write_Results_T_Samps = 1
 
 CALL Set_Units(Units_Input)
 
@@ -339,7 +280,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(T_Index)
+    Suffix_Tail = Letter_Table_Upper(T_Index)
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -414,11 +355,11 @@ CALL Initialize_Poseidon &
        Anderson_M_Option            = Anderson_M_Values(M_Index),   &
        Verbose_Option               = Verbose,                      &
        WriteAll_Option              = .FALSE.,                      &
-       Print_Setup_Option           = .TRUE.,                       &
+       Print_Setup_Option           = .FALSE.,                       &
        Write_Setup_Option           = .TRUE.,                       &
        Print_Results_Option         = Print_Results_Flag,           &
        Write_Results_Option         = .TRUE.,                       &
-       Print_Timetable_Option       = .TRUE.,                       &
+       Print_Timetable_Option       = .FALSE.,                       &
        Write_Timetable_Option       = .TRUE.,                       &
        Write_Sources_Option         = .TRUE.,                       &
        Print_Condition_Option       = .FALSE.,                       &
@@ -506,10 +447,18 @@ CALL Initialize_Poseidon &
 
     CALL TimerStart( Timer_Driver_Extra  )
 
-!    CALL Poseidon_Calc_ADM_Mass( ADM_Mass )
-!    CALL Poseidon_Calc_ADM_Mass_Parts( ADM_MassB, ADM_Phys, ADM_Curve)
-!    CALL Poseidon_Calc_Komar_Mass( Komar_Mass )
-    
+
+
+!    CALL Driver_ConFactor_Loop( NE, NQ,                    &
+!                                dx_c, x_e, y_e,             &
+!                                Input_R_Quad, Input_T_Quad, Input_P_Quad,    &
+!                                Left_Limit, Right_Limit,   &
+!                                Solver_Type,               &
+!                                myID,                      &
+!                                Yahil_Params,              &
+!                                External_Tolerance,         &
+!                                External_Iter_Max          )
+!
 
 
     !############################################################!
@@ -519,14 +468,6 @@ CALL Initialize_Poseidon &
     !############################################################!
     IF ((Print_Results_Flag .EQV. .TRUE.) .OR. (Verbose .EQV. .TRUE. )) THEN
         WRITE(*,'(A)')" Final Results "
-
-!        WRITE(*,'(A,ES18.12,A)')"ADM Mass   : ", ADM_Mass / Gram, " grams"
-!        WRITE(*,'(A,ES18.12,A)')"Komar Mass : ", Komar_Mass / Gram, " grams"
-
-!        WRITE(*,'(A,ES18.12,A)')"ADM MassB: ", ADM_MassB / Gram, " grams"
-!        WRITE(*,'(A,ES18.12,A)')"ADM Phys : ", ADM_Phys / Gram, " grams"
-!        WRITE(*,'(A,ES18.12,A)')"ADM Crve : ", ADM_Curve / Gram, " grams"
-!        WRITE(*,'(A,ES18.12,A)')"ADM Sum  : ", (ADM_Phys + ADM_Curve) / Gram, " grams"
         
         CALL Print_Results()
         CALL Write_Final_Results()

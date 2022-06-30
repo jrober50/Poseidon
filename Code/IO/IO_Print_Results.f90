@@ -248,7 +248,7 @@ REAL(idp)                                               ::  Value
 INTEGER                                                 ::  Num_Samples = 20
 
 
-110 FORMAT (11X,A1,24X,A)
+110 FORMAT (11X,A1,17X,A)
 111 FORMAT (ES22.15,3X,ES22.15,3X)
 
 
@@ -318,7 +318,7 @@ INTEGER                                                 ::  Num_Samples = 20
 
 
 
-110 FORMAT (11X,A1,16X,A)
+110 FORMAT (11X,A1,17X,A)
 111 FORMAT (ES22.15,3X,ES22.15,3X)
 
 

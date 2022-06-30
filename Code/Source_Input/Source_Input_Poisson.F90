@@ -45,6 +45,9 @@ USE Variables_Interface, &
                     Caller_PQ_xlocs,                &
                     Translation_Matrix
 
+USE Variables_Source, &
+            ONLY :  Source_Rho
+
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS,     &
                     NUM_T_ELEMENTS,     &
@@ -149,8 +152,8 @@ DO Local_Here = 1,Local_Quad_DOF
 
 
 
-!    Block_Source_E(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &
-!                                                       Input_E(:,re,te,pe)          )
+    Source_Rho(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &
+                                                       Input_Rho(:,re,te,pe)          )
 
 
 END DO  ! Local_Here

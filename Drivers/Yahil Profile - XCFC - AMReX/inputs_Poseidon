@@ -4,12 +4,12 @@ geometry.prob_hi     = 1.0e+10 3.1415926535897931 6.2831853071795862 # Upper dom
 geometry.is_periodic = 00 00 01    # Periodicity. 0 (no), 1 (yes)
 
 amr.n_cell            = 1024 01 01 # Number of cells in each dimension
-amr.max_grid_size_x   = 8
-amr.max_grid_size_y   = 4
-amr.max_grid_size_z   = 4
-amr.blocking_factor_x = 8
-amr.blocking_factor_y = 4
-amr.blocking_factor_z = 4
+amr.max_grid_size_x   = 128
+amr.max_grid_size_y   = 8
+amr.max_grid_size_z   = 8
+amr.blocking_factor_x = 128
+amr.blocking_factor_y = 8
+amr.blocking_factor_z = 8
 amr.max_level         = 0
 
 amr.n_error_buf       = 0

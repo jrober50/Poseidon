@@ -2,6 +2,8 @@
 
 ## Select Number of Processes (Mostly for MacBook)
 
+NAME := KnotAFish
+
 NPROCS=1
 
 ## Select Machine
@@ -15,8 +17,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-#CMODE	=DEBUG
-CMODE	=OPTIMIZE
+CMODE	=DEBUG
+#CMODE	=OPTIMIZE
 
 
 ## Compile with Openmp
@@ -54,7 +56,21 @@ VPATH += ./Obj
 
 #---------------------------- Compilation Rules ------------------------------------#
 
+#objb = $(POSEIDON).o
+#$(foreach Poseidon, $(POSEIDON), $(eval $(POSEIDON) := $(objb)))
 
+#OBJS := $(addsuffix .o, $(POSEIDON))
+#DEPS := $(addsuffix .d, $(POSEIDON))
+#LIB  := $(patsubst %, lib.%a, $(NAME))
+
+
+#$(info $$OBJS is [${OBJS}])
+
+$(LIB): $(OBJS)
+	ar crv $@ $^
+
+
+.PHONY: PoseidonLib clean clean_output
 
 PoseidonLib: $(POSEIDON_o)
 	ar crv $(OBJ)/poseidon.a $(OBJ)/*.o
