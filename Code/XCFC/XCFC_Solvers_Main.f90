@@ -51,8 +51,8 @@ USE Variables_Mesh, &
 USE XCFC_Fixed_Point_Module, &
             ONLY :  XCFC_Fixed_Point
 
-USE XCFC_Source_Vector_TypeB_Module, &
-            ONLY :  XCFC_Calc_Source_Vector_TypeB
+USE XCFC_Load_Vector_TypeB_Module, &
+            ONLY :  XCFC_Calc_Load_Vector_TypeB
 
 USE XCFC_System_Solvers_TypeB_Module, &
             ONLY :  XCFC_Solve_System_TypeB
@@ -108,7 +108,7 @@ iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
 !PRINT*,"Before Calc_Source"
 CALL TimerStart( Timer_XCFC_X_SourceVector )
-CALL XCFC_Calc_Source_Vector_TypeB( iU, iVB, iEU, iEL )
+CALL XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
 CALL TimerStop(  Timer_XCFC_X_SourceVector )
 
 !PRINT*,"Before Solve"
@@ -224,7 +224,7 @@ iEL = [0, 0, 0]
 iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
 CALL TimerStart( Timer_XCFC_Shift_SourceVector )
-CALL XCFC_Calc_Source_Vector_TypeB( iU, iVB, iEU, iEL )
+CALL XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
 CALL TimerStop(  Timer_XCFC_Shift_SourceVector )
 
 CALL TimerStart( Timer_XCFC_Shift_LinearSolve )

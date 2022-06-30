@@ -39,7 +39,6 @@ REAL(idp), PUBLIC   ::  Timer_Initialization_Total
 REAL(idp), PUBLIC   ::  Timer_Initialization_Core
 REAL(idp), PUBLIC   ::  Timer_Initialization_XCFC
 
-REAL(idp), PUBLIC   ::  Timer_Poisson_Matrix_Init
 REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput
 REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput_PartA
 REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput_PartB
@@ -57,6 +56,8 @@ REAL(idp), PUBLIC   ::  Timer_GR_SourceInput_PartB
 REAL(idp), PUBLIC   ::  Timer_XCFC_Initialization
 REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Init
 
+REAL(idp), PUBLIC   ::  Timer_Poisson_Initialization
+REAL(idp), PUBLIC   ::  Timer_Poisson_Matrix_Init
 
 REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Factorization
 REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Cholesky
@@ -82,7 +83,7 @@ REAL(idp), PUBLIC   ::  Timer_XCFC_ConFactor_LinearSolve
 REAL(idp), PUBLIC   ::  Timer_FP_Initialization
 REAL(idp), PUBLIC   ::  Timer_FP_Matrix_Init
 
-REAL(idp), PUBLIC   ::  Timer_FP_Source_Vector
+REAL(idp), PUBLIC   ::  Timer_FP_Load_Vector
 REAL(idp), PUBLIC   ::  Timer_FP_CFLF_Solve
 REAL(idp), PUBLIC   ::  Timer_FP_Beta_Solve
 

@@ -30,7 +30,7 @@ USE Variables_Derived, &
 
 USE Variables_Vectors,  &
             ONLY :  cVA_Coeff_Vector,            &
-                    cVA_Source_Vector
+                    cVA_Load_Vector
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
@@ -67,7 +67,7 @@ DO lm_loc = 1,LM_Length
 
 
         CALL MPI_Reduce(MPI_IN_PLACE,                   &
-                        cVA_Source_Vector(LLim:ULim,lm_loc,iU),&
+                        cVA_Load_Vector(LLim:ULim,lm_loc,iU),&
                         Send_Size,                      &
                         MPI_Double_Complex,             &
                         MPI_SUM,                        &
@@ -79,8 +79,8 @@ DO lm_loc = 1,LM_Length
     ELSE
 
 
-        CALL MPI_Reduce(cVA_Source_Vector(LLim:ULim,lm_loc,iU),&
-                        cVA_Source_Vector(LLim:ULim,lm_loc,iU),&
+        CALL MPI_Reduce(cVA_Load_Vector(LLim:ULim,lm_loc,iU),&
+                        cVA_Load_Vector(LLim:ULim,lm_loc,iU),&
                         Send_Size,                              &
                         MPI_Double_Complex,                     &
                         MPI_SUM,                                &

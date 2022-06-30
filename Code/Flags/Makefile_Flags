@@ -1,4 +1,5 @@
 FLAG_MODULES = \
+  Flags_Core.f90                 \
   Flags_Allocation.f90           \
   Flags_Boundary_Conditions.f90  \
   Flags_Debug.F90                \
@@ -10,5 +11,4 @@ FLAG_MODULES = \
   Flags_Source_Input.f90         \
   Flags_Check_Routines.f90       \
   Flags_Main.F90                 \
-  Flags_Core.f90                 \
 

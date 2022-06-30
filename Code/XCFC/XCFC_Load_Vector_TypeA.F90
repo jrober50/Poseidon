@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE XCFC_Source_Vector_TypeA_Module                                              !##!
+MODULE XCFC_Load_Vector_TypeA_Module                                              !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -29,7 +29,6 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Run_Message
 
-
 USE Poseidon_Numbers_Module, &
             ONLY :  pi,                         &
                     TwoPi
@@ -40,8 +39,6 @@ USE Poseidon_Units_Module, &
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
                     L_LIMIT,                    &
-                    NUM_CFA_EQs,                &
-                    NUM_CFA_VARs,               &
                     Verbose_Flag
 
 USE Parameters_Variable_Indices, &
@@ -93,7 +90,7 @@ USE Variables_Derived, &
             ONLY :  LM_LENGTH
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Source_Vector
+            ONLY :  cVA_Load_Vector
 
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
@@ -104,8 +101,6 @@ USE Maps_Domain, &
 
 USE Maps_Quadrature, &
             ONLY :  Map_To_tpd
-
-
 
 USE XCFC_Source_Routine_Variables_Module, &
             ONLY :  Cur_R_Locs,         &
@@ -137,7 +132,6 @@ USE XCFC_Functions_Calc_Values_Module, &
 USE Initialization_Tables, &
             ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
                     Initialize_Ylm_Tables_On_Elem
-
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -198,10 +192,10 @@ CONTAINS
 
 !+102+###########################################################################!
 !                                                                                !
-!           XCFC_Calc_Source_Vector_TypeA                                        !
+!           XCFC_Calc_Load_Vector_TypeA                                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
+SUBROUTINE XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
 
 INTEGER, INTENT(IN)                     ::  iU
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU
@@ -233,16 +227,16 @@ END IF
 
 #ifdef POSEIDON_AMREX_FLAG
 
-    CALL XCFC_AMReX_Calc_Source_Vector_TypeA( iU )
+    CALL XCFC_AMReX_Calc_Load_Vector_TypeA( iU )
 
 #else
     
-    cVA_Source_Vector(:,:,iU) = 0.0_idp
+    cVA_Load_Vector(:,:,iU) = 0.0_idp
     DO re = iEL(1),iEU(1)
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
         iE = [re,te,pe]
-        CALL XCFC_Calc_Source_Vector_On_Element_TypeA( iU, iE )
+        CALL XCFC_Calc_Load_Vector_On_Element_TypeA( iU, iE )
     END DO ! pe
     END DO ! te
     END DO ! re
@@ -258,19 +252,19 @@ END IF
 
 
 
-!PRINT*,cVA_Source_Vector(:,:,iU)
+!PRINT*,cVA_Load_Vector(:,:,iU)
 
 
-END SUBROUTINE XCFC_Calc_Source_Vector_TypeA
+END SUBROUTINE XCFC_Calc_Load_Vector_TypeA
 
 
 
 !+102+###########################################################################!
 !                                                                                !
-!           XCFC_Calc_Source_Vector_TypeA                                        !
+!           XCFC_Calc_Load_Vector_TypeA                                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE XCFC_Calc_Source_Vector_On_Element_TypeA( iU, iE, Level_Option )
+SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeA( iU, iE, Level_Option )
 
 INTEGER, INTENT(IN)                             ::  iU
 INTEGER, INTENT(IN), DIMENSION(3)               ::  iE
@@ -378,7 +372,7 @@ CALL Create_XCFC_Vector_TypeA( iE, iU, Level, FEM_Elem )
 
 
 
-END SUBROUTINE XCFC_Calc_Source_Vector_On_Element_TypeA
+END SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeA
 
 
 
@@ -486,13 +480,13 @@ DO d = 0,DEGREE
 
 
     Current_i_Location = Map_To_FEM_Node(FEM_Elem,d)
-    cVA_Source_Vector(Current_i_Location,lm_loc,iU)          &
-        = cVA_Source_Vector(Current_i_Location,lm_loc,iU)    &
+    cVA_Load_Vector(Current_i_Location,lm_loc,iU)          &
+        = cVA_Load_Vector(Current_i_Location,lm_loc,iU)    &
         + RHS_TMP
 
     
 !    PRINT*,"*",iE,FEM_Elem,d,lm_loc,Current_i_Location, &
-!                cVA_Source_Vector(Current_i_Location,lm_loc,iU),RHS_TMP
+!                cVA_Load_Vector(Current_i_Location,lm_loc,iU),RHS_TMP
 
 END DO  ! d Loop
 END DO  ! lm_loc Loop
@@ -641,16 +635,17 @@ IF ( iU == iU_CF ) THEN
 !    PRINT*,PhysSrc(:,:)
 !    PRINT*,"3"
 !    PRINT*,AA_Array(:,:)
-!    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar / Cur_Val_Psi(:,:)   &
+    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar / Cur_Val_Psi(:,:)   &
+                        * PhysSrc(:,:)                                  &
+                      -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
+                        * AA_Array(:,:)
+
+!
+!    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar * Cur_Val_Psi(:,:)**5   &
 !                        * PhysSrc(:,:)                                  &
 !                      -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
 !                        * AA_Array(:,:)
 
-
-    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar * Cur_Val_Psi(:,:)**5   &
-                        * PhysSrc(:,:)                                  &
-                      -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
-                        * AA_Array(:,:)
 
 ELSEIF ( iU == iU_LF ) THEN
 
@@ -681,10 +676,10 @@ END SUBROUTINE Calc_XCFC_CurVals_TypeA
 
 !+102+##########################################################################!
 !                                                                               !
-!          XCFC_AMReX_Calc_Source_Vector_TypeA                                  !
+!          XCFC_AMReX_Calc_Load_Vector_TypeA                                  !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE XCFC_AMReX_Calc_Source_Vector_TypeA( iU )
+SUBROUTINE XCFC_AMReX_Calc_Load_Vector_TypeA( iU )
 
 INTEGER, INTENT(IN)                             ::  iU
 
@@ -702,7 +697,7 @@ INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl
 
 
-cVA_Source_Vector(:,:,iU) = 0.0_idp
+cVA_Load_Vector(:,:,iU) = 0.0_idp
 
 DO lvl = AMReX_Num_Levels-1,0,-1
 
@@ -749,7 +744,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
                 CALL Initialize_Ylm_Tables_On_Elem( te, pe, iEL, lvl )
                 iE = [re,te,pe]
-                CALL XCFC_Calc_Source_Vector_On_Element_TypeA( iU, iE, lvl )
+                CALL XCFC_Calc_Load_Vector_On_Element_TypeA( iU, iE, lvl )
             END IF
         END DO ! pe
         END DO ! te
@@ -761,8 +756,8 @@ END DO ! lvl
 
 #endif
 
-END SUBROUTINE XCFC_AMReX_Calc_Source_Vector_TypeA
+END SUBROUTINE XCFC_AMReX_Calc_Load_Vector_TypeA
 
 
 
-END MODULE XCFC_Source_Vector_TypeA_Module
+END MODULE XCFC_Load_Vector_TypeA_Module

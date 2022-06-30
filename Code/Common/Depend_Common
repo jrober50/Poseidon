@@ -1,0 +1,20 @@
+Poseidon_Kinds.o:             \
+  Poseidon_Kinds.f90          \
+
+Poseidon_Numbers.o:           \
+  Poseidon_Kinds.o            \
+  Poseidon_Numbers.f90        
+
+Poseidon_Letters.o:           \
+  Poseidon_Letters.f90        
+
+Poseidon_Units_Module.o:      \
+  Poseidon_Kinds.o            \
+  Poseidon_Units_Module.f90   
+
+Poseidon_File_Routines.o:     \
+  Poseidon_File_Routines.f90    
+
+Poseidon_Message_Routines.o:  \
+  Poseidon_Message_Routines.f90  
+

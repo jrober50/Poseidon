@@ -39,18 +39,23 @@ USE Variables_Quadrature, &
             ONLY :  Local_Quad_DOF
 
 USE Variables_Mesh, &
-            ONLY :  NUM_R_ELEMENTS,     &
-                    NUM_T_ELEMENTS,     &
-                    NUM_P_ELEMENTS
+            ONLY :  Num_R_Elements,     &
+                    Num_T_Elements,     &
+                    Num_P_Elements
 
 USE Variables_Source, &
-            ONLY :  Block_Source_E,             &
-                    Block_Source_S,             &
+            ONLY :  Source_Rho,             &
+                    Block_Source_E,         &
+                    Block_Source_S,         &
                     Block_Source_Si
 
 USE Flags_Initialization_Module, &
-            ONLY :  lPF_Init_Flags,             &
+            ONLY :  lPF_Init_Flags,         &
                     iPF_Init_Alloc_Source
+
+USE Flags_Core_Module, &
+            ONLY :  lPF_Core_Flags,         &
+                    iPF_Core_Poisson_Mode
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -91,22 +96,32 @@ ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
 
 #else
 
-ALLOCATE(Block_Source_E(    1:Local_Quad_DOF,       &
+IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+
+    ALLOCATE(Source_Rho(    1:Local_Quad_DOF,       &
                             0:NUM_R_ELEMENTS-1,     &
                             0:NUM_T_ELEMENTS-1,     &
                             0:NUM_P_ELEMENTS-1  )   )
 
-ALLOCATE(Block_Source_S(    1:Local_Quad_DOF,       &
-                            0:NUM_R_ELEMENTS-1,     &
-                            0:NUM_T_ELEMENTS-1,     &
-                            0:NUM_P_ELEMENTS-1  )   )
+ELSE
 
-ALLOCATE(Block_Source_Si(   1:Local_Quad_DOF,       &
-                            0:NUM_R_ELEMENTS-1,     &
-                            0:NUM_T_ELEMENTS-1,     &
-                            0:NUM_P_ELEMENTS-1,     &
-                            1:3                 )   )
+    ALLOCATE(Block_Source_E(    1:Local_Quad_DOF,       &
+                                0:NUM_R_ELEMENTS-1,     &
+                                0:NUM_T_ELEMENTS-1,     &
+                                0:NUM_P_ELEMENTS-1  )   )
 
+    ALLOCATE(Block_Source_S(    1:Local_Quad_DOF,       &
+                                0:NUM_R_ELEMENTS-1,     &
+                                0:NUM_T_ELEMENTS-1,     &
+                                0:NUM_P_ELEMENTS-1  )   )
+
+    ALLOCATE(Block_Source_Si(   1:Local_Quad_DOF,       &
+                                0:NUM_R_ELEMENTS-1,     &
+                                0:NUM_T_ELEMENTS-1,     &
+                                0:NUM_P_ELEMENTS-1,     &
+                                1:3                 )   )
+
+END IF
 #endif
 
 

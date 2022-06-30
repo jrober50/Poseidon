@@ -1,0 +1,65 @@
+Parameters_Poseidon.o:            \
+  Parameters_Poseidon.f90         \
+
+Parameters_Variable_Indices.o:    \
+  Parameters_Variable_Indices.f90 \
+
+Parameters_IO.o:                  \  
+  Parameters_IO.f90               \
+
+Variables_BC.o:                   \
+  Variables_BC.f90                \
+
+Variables_Derived.o:              \
+  Variables_Derived.f90           \
+
+Variables_FP.o:                  \
+  Variables_FP.f90               \
+
+Variables_Interface.o:           \
+  Variables_Interface.f90        \
+
+Variables_Functions.o:           \
+  Variables_Functions.f90        \
+
+Variables_IO.o:                  \
+  Variables_IO.f90               \
+
+Variables_Vectors.o              \
+  Variables_Vectors.f90          \
+
+Variables_Matrices.o             \
+  Variables_Matrices.f90         \
+
+Variables_Mesh.o:                \
+  Variables_Mesh.f90             \
+
+Variables_MPI.o:                 \
+  Variables_MPI.f90              \
+
+Variables_Quadrature.o:          \
+  Variables_Quadrature.f90       \
+
+Variables_Tables.o:              \
+  Variables_Tables.f90           \
+
+Variables_Source.o:              \
+  Variables_Source.f90           \
+
+Variables_External.o:            \
+  Variables_External.f90         \
+
+Variables_Poisson.o:             \
+  Variables_Poisson.f90          \
+
+Variables_Driver_AMReX.o:       \
+  Variables_Driver_AMReX.F90    \
+
+Variables_AMReX_Core.o:         \
+  Variables_AMReX_Core.F90      \
+
+Variables_AMReX_Source.o:      \
+  Variables_AMReX_Source.f90   \
+
+
+

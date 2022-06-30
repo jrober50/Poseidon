@@ -136,7 +136,7 @@ IF ( iU == 1 ) THEN
         tpd  = Map_To_tpd(td,pd)
         Here = Quad_Map(rd,td,pd)
         Source(tpd,rd) = Block_Source_E(Here,iE(1),iE(2),iE(3))
-
+!        PRINT*,iE,rd,Source(tpd,rd)
     END DO ! pd
     END DO ! td
     END DO ! rd

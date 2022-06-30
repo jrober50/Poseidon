@@ -26,41 +26,72 @@ MODULE Poisson_Linear_Solve_Module                                           !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
+
 USE Poseidon_Parameters, &
-            ONLY :  Degree,             &
-                    L_Limit,            &
+            ONLY :  DEGREE,                     &
+                    L_LIMIT,                    &
                     Verbose_Flag
 
-USE Variables_Mesh, &
-            ONLY :  Num_R_Elements
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF,                      &
+                    iU_LF
+USE Poseidon_IO_Parameters, &
+            ONLY :  CFA_Var_Names
 
 USE Variables_Derived, &
-            ONLY :  LM_LENGTH,                  &
-                    Num_R_Nodes
+            ONLY :  Beta_Prob_Dim,              &
+                    Num_R_Nodes,                &
+                    LM_Length
 
-USE Variables_Poisson, &
-            ONLY :  Source_Vector,      &
-                    Coefficient_Vector, &
-                    STF_NNZ,            &
-                    STF_Mat_Integrals,  &
-                    STF_Elem_Val,       &
-                    STF_Row_Ind,        &
-                    STF_Col_Ptr,        &
-                    Matrix_Cholesky_Factorized_Flag
+USE Variables_MPI, &
+            ONLY :  myID_Poseidon,              &
+                    MasterID_Poseidon,          &
+                    Poseidon_Comm_World,        &
+                    nPROCS_Poseidon
 
-USE Poisson_Cholesky_Module, &
-            ONLY :  Cholesky_Factorization
+USE Variables_Vectors,  &
+            ONLY :  cVA_Coeff_Vector,           &
+                    cVA_Load_Vector
+                    
+USE Variables_Matrices,  &
+            ONLY :  Factored_NNZ,               &
+                    Laplace_Factored_Val,       &
+                    Laplace_Factored_Col,       &
+                    Laplace_Factored_Row
 
-USE Poisson_Boundary_Conditions_Module, &
-            ONLY :  DIRICHLET_BC_CHOL,  &
-                    NEUMANN_BC_CCS
+USE Variables_FP,  &
+            ONLY :  FP_Update_Vector
 
-USE Poisson_Forward_Substitution_Module, &
-            ONLY :  CCS_Forward_Substitution
+USE Matrix_Cholesky_Factorization_Module,   &
+            ONLY :  CCS_Back_Substitution,          &
+                    CCS_Forward_Substitution,       &
+                    Cholesky_Factorization
 
-USE Poisson_Back_Substitution_Module, &
-            ONLY :  CCS_Back_Substitution
+USE Matrix_Boundary_Condition_Routines,  &
+            ONLY :  DIRICHLET_BC_Beta_Banded,       &
+                    Dirichlet_BC_CHOL,              &
+                    Neumann_BC_CCS
 
+USE Maps_Domain, &
+            ONLY :  Map_To_lm
+
+USE MPI_Communication_TypeA_Module,             &
+            ONLY :  MPI_RTM_Source_TypeA,           &
+                    MPI_BCast_Coeffs_TypeA
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                     &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_XCFC_Lapse_LinearSolve,   &
+                    Timer_XCFC_ConFactor_LinearSolve
+
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Matrices_Flags,    &
+                    iPF_Init_Matrices_Type_A_Cholesky
 
 IMPLICIT NONE
 
@@ -81,23 +112,19 @@ COMPLEX(idp), DIMENSION(0:NUM_R_NODES-1)                ::  WORK_VEC
 
 REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  WORK_ELEM_VAL
 
-INTEGER                                                 ::  NNZ
 INTEGER                                                 ::  l, m, lm,k
 
+INTEGER                                                 ::  iU
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"- Begining Linear Solve."
-END IF
-
-NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-ALLOCATE(WORK_ELEM_VAL(0:NNZ-1))
+IF ( Verbose_Flag ) CALL Run_Message("Beginning Poisson Linear Solve.")
 
 
 
 
 
 
-IF ( Matrix_Cholesky_Factorized_Flag .EQV. .FALSE. ) THEN
+
+IF ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) ) THEN
 
 
     !
@@ -109,7 +136,6 @@ IF ( Matrix_Cholesky_Factorized_Flag .EQV. .FALSE. ) THEN
     !
 
     CALL Cholesky_Factorization()
-    Matrix_Cholesky_Factorized_Flag = .TRUE.
 
 
 END IF
@@ -122,7 +148,9 @@ END IF
 
 
 
+IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
+ALLOCATE( Work_Elem_Val(0:Factored_NNZ-1))
 
 DO l = 0,L_LIMIT
 DO m = -l,l
@@ -132,57 +160,56 @@ DO m = -l,l
     !                                                                       !
     !#######################################################################!
 
-    lm = l*(l+1)+m+1
+    lm = Map_To_lm(l,m)
+    WORK_VEC = -cVA_Load_Vector(:,lm_loc,iU)
+    WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l)
 
-    WORK_VEC = Source_Vector(:,lm)
-
-
-    CALL DIRICHLET_BC_CHOL( NUM_R_NODES,    &
-                            STF_NNZ,        &
-                            l, m,           &
-                            STF_COL_PTR,    &
-                            STF_ROW_IND,    &
-                            WORK_VEC        )
-
-
-    CALL NEUMANN_BC_CCS(    NUM_R_NODES,    &
-                            STF_NNZ,        &
-                            l, m,           &
-                            WORK_ELEM_VAL,  &
-                            STF_COL_PTR,    &
-                            STF_ROW_IND,    &
-                            WORK_VEC        )
+    CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
+                            Factored_NNZ,               &
+                            l,                          &
+                            m,                          &
+                            Laplace_Factored_COL(:,l),  &
+                            Laplace_Factored_ROW(:,l),  &
+                            WORK_VEC,                   &
+                            iU                           )
 
 
-
-    CALL CCS_Forward_Substitution(  NUM_R_NODES,        &
-                                    STF_NNZ,            &
-                                    STF_ELEM_VAL(:,l),  &
-                                    STF_COL_PTR,        &
-                                    STF_ROW_IND,        &
-                                    WORK_VEC            )
-
-
-    CALL CCS_Back_Substitution( NUM_R_NODES,        &
-                                STF_NNZ,            &
-                                STF_ELEM_VAL(:,l),  &
-                                STF_COL_PTR,        &
-                                STF_ROW_IND,        &
-                                WORK_VEC            )
+    CALL NEUMANN_BC_CCS(    NUM_R_NODES,                &
+                            Factored_NNZ,               &
+                            l,                          &
+                            m,                          &
+                            WORK_ELEM_VAL,              &
+                            Laplace_Factored_COL(:,l),  &
+                            Laplace_Factored_ROW(:,l),  &
+                            WORK_VEC                    )
 
 
+    CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
+                                    Factored_NNZ,                   &
+                                    WORK_ELEM_VAL,                  &
+                                    Laplace_Factored_COL(:,l),      &
+                                    Laplace_Factored_ROW(:,l),      &
+                                    WORK_VEC                        )
 
 
-    Do k = 0,NUM_R_NODES - 1
-        Coefficient_Vector(k,m,l) = WORK_VEC(k)
-    END DO
+    CALL CCS_Back_Substitution(     NUM_R_NODES,                    &
+                                    Factored_NNZ,                   &
+                                    WORK_ELEM_VAL,                  &
+                                    Laplace_Factored_COL(:,l),      &
+                                    Laplace_Factored_ROW(:,l),      &
+                                    WORK_VEC                        )
+
+
+
+
+    cVA_Coeff_Vector( :,lm_loc,iU) = WORK_VEC(:)
 
 
 
 END DO
 END DO
 
-
+END IF ! myID_Poseidon == MasterID_Poseidon
 
 
 

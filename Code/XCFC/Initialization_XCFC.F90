@@ -29,27 +29,17 @@ MODULE Initialization_XCFC                                                      
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-            ONLY :  idp, fdp
+            ONLY :  idp
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Init_Message
 
-
-USE Poseidon_Numbers_Module, &
-            ONLY :  pi
-
-
 USE Poseidon_Parameters, &
-            ONLY :  Domain_Dim,             &
-                    DEGREE,                 &
-                    L_LIMIT,                &
-                    Num_CFA_Eqs,            &
-                    CFA_Eq_Flags,           &
+            ONLY :  Degree,                 &
                     Verbose_Flag
 
 USE Variables_Derived, &
-            ONLY :  LM_Length,              &
-                    Beta_Elem_Prob_Dim
+            ONLY :  Beta_Elem_Prob_Dim
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
@@ -58,16 +48,10 @@ USE Variables_Functions, &
             ONLY :  Calc_3D_Values_At_Location,    &
                     Calc_1D_CFA_Values
 
-USE Variables_FP, &
-            ONLY :  CFA_EQ_Map,                 &
-                    CFA_Var_Map,                &
-                    CFA_Mat_Map
-
 USE Variables_Matrices, &
             ONLY :  Laplace_NNZ,                &
                     Beta_Diagonals,             &
-                    Beta_Bandwidth,             &
-                    Num_Matrices
+                    Beta_Bandwidth
 
 USE Allocation_XCFC_Linear_Systems, &
             ONLY :  Allocate_XCFC_Linear_Systems
@@ -156,89 +140,6 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 END IF
 
 END SUBROUTINE Initialize_XCFC
-
-
-
-
-
-
- !+102+####################################################################################!
-!                                                                                           !
-!       Create_Eq_Maps                                                          !
-!                                                                                           !
- !#########################################################################################!
-SUBROUTINE Create_Eq_Maps()
-
-INTEGER                                                 ::  i, j
-
-
-CFA_EQ_Map = -1
-j = 1
-DO i = 1,5
-    IF ( CFA_EQ_Flags(i) == 1 ) THEN
-        CFA_EQ_Map(j) = i
-        j = j+1
-    END IF
-END DO
-
-
-CFA_Var_Map = -1
-j = 1
-DO i = 1,5
-    IF ( CFA_EQ_Flags(i) == 1 ) THEN
-        CFA_Var_Map(i) = j
-        j = j+1
-    END IF
-END DO
-
-
-
-
-!
-!   Calculate the number of matrices to be created and stored.
-!
-! The Psi and AlphaPsi equations can share the same Lapace Matrix.
-! Each of the Shift Vector componenets will need its own matrix.
-Num_Matrices = 0
-IF (CFA_EQ_Flags(1) == 1)  THEN
-    Num_Matrices = Num_Matrices + 1
-END IF
-IF (CFA_EQ_Flags(2) == 1)  THEN
-    Num_Matrices = Num_Matrices + 1
-END IF
-
-
-
-IF ( ( CFA_EQ_Flags(1) == 1 ) .OR. ( CFA_EQ_Flags(2) == 1 ) ) THEN
-    IF ( CFA_EQ_Flags(1) == 1 ) THEN
-        CFA_Mat_Map(1) = 1
-    END IF
-    IF ( CFA_EQ_Flags(2) == 1 ) THEN
-        CFA_Mat_Map(2) = 1
-    END IF
-    j = 2
-    DO i = 3,5
-        IF ( CFA_EQ_Flags(i) == 1 ) THEN
-            CFA_Mat_Map(i) = j
-            j = j + 1
-        END IF
-    END DO
-ELSE
-
-    j = 1
-    DO i = 3,5
-        IF ( CFA_EQ_Flags(i) == 1 ) THEN
-            CFA_Mat_Map(i) = j
-            j = j + 1
-        END IF
-    END DO
-END IF
-
-
-!lPF_Init_Flag(iPF_Init_Eq_Maps) = .TRUE.
-
-
-END SUBROUTINE Create_Eq_Maps
 
 
 

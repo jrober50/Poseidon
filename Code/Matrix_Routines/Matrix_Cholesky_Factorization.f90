@@ -72,8 +72,7 @@ USE Variables_Matrices, &
                 Laplace_Matrix_COL,     &
                 Laplace_Factored_VAL,   &
                 Laplace_Factored_ROW,   &
-                Laplace_Factored_COL,   &
-                Num_Matrices
+                Laplace_Factored_COL
 
 USE Timer_Routines_Module, &
         ONLY :  TimerStart,             &
@@ -111,13 +110,13 @@ CONTAINS
 SUBROUTINE Cholesky_Factorization()
 
 
-INTEGER                                                         ::  l, i, ui
-INTEGER                                                         ::  OLD_NNZ, NEW_NNZ
+INTEGER                                                 ::  l, i, ui
+INTEGER                                                 ::  OLD_NNZ, NEW_NNZ
 
-INTEGER(KIND = 1), ALLOCATABLE, DIMENSION(:,:,:)                :: LogMap
+INTEGER(KIND = 1),  ALLOCATABLE,    DIMENSION(:,:)      ::  LogMap
 
-INTEGER, ALLOCATABLE, DIMENSION(:,:,:)                          :: NEW_ROW_IND
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:)              :: NEW_ELEM_VAL
+INTEGER,            ALLOCATABLE,    DIMENSION(:,:)      ::  NEW_ROW_IND
+COMPLEX(idp),       ALLOCATABLE,    DIMENSION(:,:)      ::  NEW_ELEM_VAL
 
 
 
@@ -141,35 +140,35 @@ OLD_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
                      !!                                     !!
                       !                                     !
 
-DO ui = 1,Num_Matrices
-    !   Dirichlet BCs modify the stiffness matrix so we modify it now.
-    !   But to apply the BCs we will need values from the original matrix,
-    !   so those values are stored before we modify the matrix.
+
+!   Dirichlet BCs modify the stiffness matrix so we modify it now.
+!   But to apply the BCs we will need values from the original matrix,
+!   so those values are stored before we modify the matrix.
+!
+IF ( ANY(INNER_CFA_BC_TYPE == "D") ) THEN
+
+
     !
-    IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+    !   This is part of imposing a Dirichlet BC on the FEM system
+    !
+    Laplace_Factored_VAL(0,:) = 1.0_idp
 
 
-        !
-        !   This is part of imposing a Dirichlet BC on the FEM system
-        !
-        Laplace_Factored_VAL(0,:,ui) = 1.0_idp
+    !
+    !   Save the needed values first.
+    !
+    First_Column_Storage(1:DEGREE,:) = Laplace_Factored_VAL(1:DEGREE,:)
 
 
-        !
-        !   Save the needed values first.
-        !
-        First_Column_Storage(1:DEGREE,:,ui) = Laplace_Factored_VAL(1:DEGREE,:,ui)
+    !
+    !   Now its safe to modify the matrix.
+    !
+    DO l = 0,L_LIMIT
+        Laplace_Factored_VAL(1:Degree,l) = 0.0_idp
+        Laplace_Factored_VAL(Laplace_Factored_COL(1:DEGREE,l),l) = 0.0_idp
+    END DO
 
-
-        !
-        !   Now its safe to modify the matrix.
-        !
-        DO l = 0,L_LIMIT
-            Laplace_Factored_VAL(1:Degree,l,ui) = 0.0_idp
-            Laplace_Factored_VAL(Laplace_Factored_COL(1:DEGREE,l),l,ui) = 0.0_idp
-        END DO
-
-    END IF
+END IF
 
 
 
@@ -178,35 +177,34 @@ DO ui = 1,Num_Matrices
 
 
 
-    IF (OUTER_CFA_BC_TYPE(ui) == "D") THEN
+IF ( ANY(OUTER_CFA_BC_TYPE == "D") ) THEN
 
 
-        !
-        ! Save the needed values first
-        !
-        DO l = 0,L_LIMIT
-            DO i = 0,Degree
-                Last_Column_Storage(i,l,ui) = Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES,l) - 1 - i, l,ui)
-            END DO
-        END DO
+    !
+    ! Save the needed values first
+    !
+    DO l = 0,L_LIMIT
+    DO i = 0,Degree
+        Last_Column_Storage(i,l) = Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES,l) - 1 - i, l)
+    END DO
+    END DO
 
 
-        DO i = 1, DEGREE
+    !
+    !   Now its safe to modify the matrix
+    !
+    DO i = 1, DEGREE
+    DO l = 0,L_LIMIT
+        Laplace_Factored_VAL(Laplace_NNZ - 1 - i, l) = 0.0_idp
+        Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES - i,l) - 1, l) = 0.0_idp
+    END DO
 
-            !
-            !   Now its safe to modify the matrix
-            !
-            DO l = 0,L_LIMIT
-                Laplace_Factored_VAL(Laplace_NNZ - 1 - i, l,ui) = 0.0_idp
-                Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES - i,l) - 1, l,ui) = 0.0_idp
-            END DO
+    END DO
 
-        END DO
+    Laplace_Factored_VAL(Laplace_NNZ-1,:) = 1.0_idp
 
-        Laplace_Factored_VAL(Laplace_NNZ-1,:,ui) = 1.0_idp
+END IF
 
-    END IF
-END DO
 
 
 
@@ -240,7 +238,7 @@ END DO
 !   locations of the origional zeros (0), and non-zeros (1) and the locations
 !   where a non-zero will appear (-1).
 !
-ALLOCATE(LogMap(0:NUM_R_NODES-1,0:NUM_R_NODES-1,1:Num_Matrices) )
+ALLOCATE(LogMap(0:NUM_R_NODES-1,0:NUM_R_NODES-1) )
 
 
 
@@ -250,22 +248,21 @@ ALLOCATE(LogMap(0:NUM_R_NODES-1,0:NUM_R_NODES-1,1:Num_Matrices) )
 !   using the 1,0,-1 notation above by a process called Symbolic Factorization. More
 !   detials on how this works can be found inside the function.
 !
-DO ui = 1,Num_Matrices
-    CALL Sym_Fact_Initialize(LogMap(:,:,ui),                &
-                             NEW_NNZ,               &
-                             NUM_R_NODES,           &
-                             Laplace_NNZ,           &
-                             Laplace_Factored_COL,  &
-                             Laplace_Factored_ROW   )
-END DO
+CALL Sym_Fact_Initialize(LogMap(:,:),           &
+                         NEW_NNZ,               &
+                         NUM_R_NODES,           &
+                         Laplace_NNZ,           &
+                         Laplace_Factored_COL,  &
+                         Laplace_Factored_ROW   )
+
 
 
 
 !
 !   Now create space to store the factorized stiffness matrix.
 !
-ALLOCATE( NEW_ROW_IND(0:NEW_NNZ-1,0:L_LIMIT,1:Num_Matrices),   &
-          NEW_ELEM_VAL(0:NEW_NNZ-1,0:L_LIMIT,1:Num_Matrices)    )
+ALLOCATE( NEW_ROW_IND(0:NEW_NNZ-1,0:L_LIMIT),   &
+          NEW_ELEM_VAL(0:NEW_NNZ-1,0:L_LIMIT)    )
 
 
 
@@ -275,21 +272,18 @@ ALLOCATE( NEW_ROW_IND(0:NEW_NNZ-1,0:L_LIMIT,1:Num_Matrices),   &
 !   This function transfers the values from the stiffness matrix from the old data space
 !   to the newly prepared data space.
 !
-DO ui = 1,Num_Matrices
-    DO l = 0,L_LIMIT
+DO l = 0,L_LIMIT
 
-        CALL Sym_Fact_Matrix_Swap(  LogMap(:,:,ui),                 &
-                                    NUM_R_NODES,                    &
-                                    OLD_NNZ,                        &
-                                    NEW_NNZ,                        &
-                                    Laplace_Factored_COL(:,l),      &
-                                    Laplace_Factored_ROW(:,l),      &
-                                    Laplace_Factored_VAL(:,l,ui),   &
-                                    NEW_ROW_IND(:,l,ui),            &
-                                    NEW_ELEM_VAL(:,l,ui)            )
+    CALL Sym_Fact_Matrix_Swap(  LogMap(:,:),                &
+                                NUM_R_NODES,                &
+                                OLD_NNZ,                    &
+                                NEW_NNZ,                    &
+                                Laplace_Factored_COL(:,l),  &
+                                Laplace_Factored_ROW(:,l),  &
+                                Laplace_Factored_VAL(:,l),  &
+                                NEW_ROW_IND(:,l),           &
+                                NEW_ELEM_VAL(:,l)           )
 
-
-    END DO
 END DO
 
 
@@ -324,14 +318,15 @@ DEALLOCATE(LogMap)
 !   where A is the origional stiffness matrix.  This allows one to solve the linear
 !   system using backwards and forwards substitution.
 !
-DO ui = 1,NUM_MATRICES
-    DO l = 0,L_LIMIT
+DO l = 0,L_LIMIT
 
 
-        CALL Chol_Factorizer(NUM_R_NODES, NEW_NNZ, Laplace_Factored_COL(:,l), NEW_ROW_IND(:,L,ui), NEW_ELEM_VAL(:,l,ui))
+    CALL Chol_Factorizer(   NUM_R_NODES,                &
+                            NEW_NNZ,                    &
+                            Laplace_Factored_COL(:,l),  &
+                            NEW_ROW_IND(:,l),           &
+                            NEW_ELEM_VAL(:,l)           )
 
-
-    END DO
 END DO
 
 !PRINT*,"After Chol_Factorizer"
@@ -363,17 +358,16 @@ Factored_NNZ =  New_NNZ
 !   Reallocate global space for the new factorized stiffness matrix     !
 !                                                                       !
 
-ALLOCATE( Laplace_Factored_VAL(0:Factored_NNZ-1, 0:L_LIMIT, 1:Num_Matrices)  )
-ALLOCATE( Laplace_Factored_ROW(0:Factored_NNZ-1, 0:L_LIMIT))
+ALLOCATE( Laplace_Factored_VAL(0:Factored_NNZ-1, 0:L_LIMIT) )
+ALLOCATE( Laplace_Factored_ROW(0:Factored_NNZ-1, 0:L_LIMIT) )
 
 
 !
 !   Transfer the new values from function variables to the global variables.
 !
-DO ui = 1,Num_Matrices
-    Laplace_Factored_VAL(:,:,ui) = NEW_ELEM_VAL(:,:,ui)
-    Laplace_Factored_ROW(:,:) = NEW_ROW_IND(:,:,ui)
-END DO
+Laplace_Factored_VAL = NEW_ELEM_VAL
+Laplace_Factored_ROW = NEW_ROW_IND
+
 
 
 !

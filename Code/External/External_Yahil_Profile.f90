@@ -77,7 +77,7 @@ USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
                     TimerStop
 
-USE Timer_VAriables_Module, &
+USE Timer_Variables_Module, &
             ONLY :  Timer_Core_Init_Test_Problem
 
 USE Flags_IO_Module, &
@@ -262,11 +262,7 @@ IF ( SELFSIM_V_SWITCH == 1 ) THEN
     Input_V = 0.0_idp
 END IF
 
-!Input_V = 0.0_idp
-!PRINT*,"Delta_R"
-!print*,Delta_R
-!print*,"r_locs"
-!print*,r_locs
+
 
 CALL CONVERT_SELF_SIMILAR_3D(  t, Kappa_wUnits, gamma, ecc,                   &
                                 Num_Nodes, NUM_LINES,                   &
@@ -276,16 +272,6 @@ CALL CONVERT_SELF_SIMILAR_3D(  t, Kappa_wUnits, gamma, ecc,                   &
                                 Input_D, Input_V, Input_X,             &
                                 Input_E, Input_S, Input_Si              )
 
-!PRINT*,"In UNPACK_SELF_SIMILAR"
-!PRINT*,"Input_E"
-!PRINT*,Input_E
-!WRITE(*,'(/ / / /)')
-!PRINT*,"Input_S"
-!PRINT*,Input_S
-!PRINT*," "
-!PRINT*,"Input_Si"
-!PRINT*,Input_Si
-!PRINT*," "
 
 
 
@@ -613,10 +599,7 @@ M_FACTOR = kappa**(3.0_idp/2.0_idp)                             &
          * t**(4.0_idp- 3.0_idp* gamma )
 
 
-!PRINT*,D_Factor,V_Factor,X_Factor,M_Factor
 
-
-!PRINT*,Input_R_Quad
 
 DO pe = 0,NUM_P_ELEM-1
 DO te = 0,NUM_T_ELEM-1
@@ -625,9 +608,6 @@ DO te = 0,NUM_T_ELEM-1
     DO re = 0,NUM_R_ELEM-1
         CUR_R_LOCS(:) = Delta_R(Re+1) * (INPUT_R_QUAD(:)+0.5_idp) + r_locs(re)
     
-!        PRINT*,re,Delta_R(re+1)
-!        PRINT*,Cur_R_Locs
-
         DO rd = 1,NUM_NODES(1)
             xloc = CUR_R_LOCS(rd)*X_Factor
 !            CALL Find_Line_SUB(xloc, Input_X, NUM_LINES)
@@ -670,6 +650,11 @@ DO te = 0,NUM_T_ELEM-1
 
 !            PRINT*,re,rd,cur_r_locs(rd),E,S,Si
 !            PRINT*,re,Velocity
+!            PRINT*,Density/(gram/centimeter**3),Velocity,Specific_Enthalpy,LF_Sqr
+!            PRINT*,Density/(gram/centimeter**3),Density
+
+            
+!            PRINT*,E,Specific_Enthalpy,LF_Sqr,Density/(gram/centimeter**3),Pressure
 
             DO pd = 1,NUM_NODES(3)
             DO td = 1,NUM_NODES(2)

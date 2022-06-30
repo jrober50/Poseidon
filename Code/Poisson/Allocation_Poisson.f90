@@ -26,27 +26,35 @@ MODULE Allocation_Poisson_Linear_System                                      !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Variables_Poisson, &
-            ONLY :  Source_Vector,      &
-                    Coefficient_Vector, &
-                    Source_Terms,       &
-                    First_Column_Storage,   &
-                    Last_Column_Storage,    &
-                    STF_NNZ,            &
-                    STF_Mat_Integrals,  &
-                    STF_Elem_Val,       &
-                    STF_Row_Ind,        &
-                    STF_Col_Ptr
-
 USE Poseidon_Parameters, &
             ONLY :  Degree,             &
                     L_Limit
+
+USE Variables_Vectors, &
+            ONLY :  cVA_Coeff_Vector,   &
+                    cVA_Load_Vector
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,     &
                     Num_T_Elements,     &
                     Num_P_Elements
 
+USE Variables_FP,  &
+            ONLY :  FP_Update_Vector
+
+USE Variables_Matrices,  &
+            ONLY :  Matrix_Format,              &
+                    Linear_Solver,              &
+                    Laplace_Matrix_Full,        &
+                    Laplace_Matrix_VAL,         &
+                    Laplace_Matrix_ROW,         &
+                    Laplace_Matrix_COL,         &
+                    Laplace_Factored_VAL,       &
+                    Laplace_Factored_ROW,       &
+                    Laplace_Factored_COL,       &
+                    Laplace_NNZ,                &
+                    First_Column_Storage,       &
+                    Last_Column_Storage
 
 USE Variables_Quadrature, &
             ONLY :  Local_Quad_DOF
@@ -55,6 +63,10 @@ USE Variables_Derived, &
             ONLY :  LM_Length,          &
                     Num_R_Nodes
 
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_Flags,         &
+                    iPF_Init_Alloc_LinSys
+
 IMPLICIT NONE
 
 
@@ -62,36 +74,44 @@ CONTAINS
 
 
 
-!+101+##########################################################################!
-!                                                                               !
-!                                                     				!
-!                                                                               !
-!###############################################################################!
+ !+101+############################################################!
+!                                                                   !
+!          Allocate_Poisson_Linear_System            			    !
+!                                                                   !
+ !#################################################################!
 SUBROUTINE Allocate_Poisson_Linear_System
 
-ALLOCATE( Source_Vector(0:NUM_R_NODES-1, 1:LM_Length) )
-ALLOCATE( Coefficient_Vector(0:NUM_R_NODES-1, -L_LIMIT:L_LIMIT, 0:L_LIMIT) )
-ALLOCATE( Source_Terms( 1:Local_Quad_DOF,         &
-                        0:NUM_R_ELEMENTS-1,     &
-                        0:NUM_T_ELEMENTS-1,     &
-                        0:NUM_P_ELEMENTS-1)     )
 
 
-ALLOCATE( First_Column_Storage(0:Degree, 0:L_Limit) )
-ALLOCATE(  Last_Column_Storage(0:Degree, 0:L_Limit) )
+IF ( MATRIX_FORMAT == 'Full' ) THEN
 
-Source_Vector      = 0.0_idp
-Coefficient_Vector = 0.0_idp
+    ALLOCATE( Laplace_Matrix_Full(1:NUM_R_NODES,1:NUM_R_NODES,0:L_LIMIT) )
 
 
-STF_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
+ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 
-    !!! Allocate CCS Matrix Arrays !!!
-ALLOCATE( STF_MAT_Integrals(0:3, 0:DEGREE, 0:DEGREE) )
-ALLOCATE( STF_ELEM_VAL(0:STF_NNZ-1,0:L_LIMIT)        )
-ALLOCATE( STF_ROW_IND(0:STF_NNZ-1)                   )
-ALLOCATE( STF_COL_PTR(0:NUM_R_NODES)                 )
+    ALLOCATE( Laplace_Matrix_VAL(0:Laplace_NNZ-1, 0:L_LIMIT) )
+    ALLOCATE( Laplace_Matrix_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
+    ALLOCATE( Laplace_Matrix_COL(0:NUM_R_NODES, 0:L_LIMIT) )
 
+    ALLOCATE( Laplace_Factored_VAL(0:Laplace_NNZ-1, 0:L_LIMIT) )
+    ALLOCATE( Laplace_Factored_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
+    ALLOCATE( Laplace_Factored_COL(0:NUM_R_NODES, 0:L_LIMIT) )
+
+    ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT)   )
+    ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT)    )
+
+
+END IF
+
+
+ALLOCATE( cVA_Load_Vector(1:NUM_R_NODES,1:LM_LENGTH,1)   )
+ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1) )
+
+
+ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
+
+lPF_Init_Flags(iPF_Init_Alloc_LinSys) = .TRUE.
 
 
 
@@ -109,17 +129,28 @@ END SUBROUTINE Allocate_Poisson_Linear_System
 !###############################################################################!
 SUBROUTINE Deallocate_Poisson_Linear_System
 
-DEALLOCATE( Source_Vector       )
+IF ( MATRIX_FORMAT == 'Full' ) THEN
+    DEALLOCATE( Laplace_Matrix_Full )
+ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
+    DEALLOCATE( Laplace_Matrix_VAL )
+    DEALLOCATE( Laplace_Matrix_ROW )
+    DEALLOCATE( Laplace_Matrix_COL )
 
-DEALLOCATE( Coefficient_Vector  )
+    DEALLOCATE( Laplace_Factored_VAL )
+    DEALLOCATE( Laplace_Factored_ROW )
+    DEALLOCATE( Laplace_Factored_COL )
 
-DEALLOCATE( First_Column_Storage )
-DEALLOCATE(  Last_Column_Storage )
+    DEALLOCATE( First_Column_Storage )
+    DEALLOCATE( Last_Column_Storage )
 
-DEALLOCATE( STF_MAT_Integrals   )
-DEALLOCATE( STF_ELEM_VAL        )
-DEALLOCATE( STF_ROW_IND         )
-DEALLOCATE( STF_COL_PTR         )
+END IF
+
+DEALLOCATE( cVA_Load_Vector )
+DEALLOCATE( cVA_Coeff_Vector )
+
+DEALLOCATE( FP_Update_Vector )
+
+lPF_Init_Flags(iPF_Init_Alloc_LinSys) = .FALSE.
 
 END SUBROUTINE Deallocate_Poisson_Linear_System
 

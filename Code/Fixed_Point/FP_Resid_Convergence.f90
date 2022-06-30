@@ -85,13 +85,11 @@ USE Variables_FP,  &
                     FP_Residual_Vector,         &
                     FP_Laplace_Vector_Beta,     &
                     FP_Residual_Vector_Beta,    &
-                    FP_Anderson_M,              &
-                    CFA_Eq_Map,                 &
-                    CFA_MAT_Map
+                    FP_Anderson_M
 
 USE Variables_Vectors,  &
-            ONLY :  cVA_Source_Vector,         &
-                    cVB_Source_Vector,         &
+            ONLY :  cVA_Load_Vector,         &
+                    cVB_Load_Vector,         &
                     cVA_Coeff_Vector,          &
                     cVB_Coeff_Vector
 
@@ -110,7 +108,6 @@ USE Variables_Matrices,  &
                     Beta_Diagonals,             &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
-                    Num_Matrices,               &
                     Beta_Bandwidth
 
 USE Functions_Matrix, &
@@ -121,8 +118,8 @@ USE Functions_Mesh, &
             ONLY :  Create_Logarithmic_1D_Mesh,     &
                     Create_Uniform_1D_Mesh
 
-USE FP_Source_Vector_Module, &
-            ONLY :  Calc_FP_Source_Vector,          &
+USE FP_Load_Vector_Module, &
+            ONLY :  Calc_FP_Load_Vector,          &
                     Allocate_FP_Source_Variables,   &
                     Deallocate_FP_Source_Variables
 
@@ -231,7 +228,7 @@ SUBROUTINE Calc_FP_Residual( Convergence_Stat )
 REAL(KIND = idp), DIMENSION(1:3,1:LM_LENGTH,1:5), INTENT(OUT)       ::  Convergence_Stat
 
 
-INTEGER                                             ::  ui, l, m, lm_loc, map_loc
+INTEGER                                             ::  ui, l, m, lm_loc
 
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)      ::  WORK_VEC
 COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:)    ::  WORK_MAT
@@ -260,15 +257,14 @@ IF ( Matrix_Format == 'Full' ) THEN
             DO l = 0,L_Limit
                 DO m = -l,l
                     lm_loc  = Map_To_lm(l,m)
-                    map_loc = CFA_MAT_Map(CFA_EQ_Map(ui))
 
                     WORK_MAT = Laplace_Matrix_Full(:,:,l)
-                    WORK_VEC = cVA_Source_Vector(:,lm_loc,ui)
+                    WORK_VEC = cVA_Load_Vector(:,lm_loc,ui)
         
                     CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
 
                     FP_Laplace_Vector(:,lm_loc,ui) = MVMULT_FULL( WORK_MAT,                             &
-                                                            cVA_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)),   &
+                                                            cVA_Coeff_Vector(:,lm_loc,ui),   &
                                                             NUM_R_NODES, NUM_R_NODES                    )
 
 
@@ -311,7 +307,7 @@ IF ( Matrix_Format == 'Full' ) THEN
         ALLOCATE( WORK_MAT(1:Beta_Prob_Dim,1:Beta_Prob_Dim) )
 
         WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
-        WORK_VEC(:) = cVB_Source_Vector(:,iVB_S)
+        WORK_VEC(:) = cVB_Load_Vector(:,iVB_S)
 
         CALL DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
@@ -376,7 +372,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
                     lm_loc = Map_To_lm(l,m)
 
 
-                    WORK_VEC = -cVA_Source_Vector(:,lm_loc,ui)
+                    WORK_VEC = -cVA_Load_Vector(:,lm_loc,ui)
 
                     CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                             Factored_NNZ,               &
@@ -392,10 +388,10 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
 
                     CALL Calc_CCS_Laplacian_Vector( NUM_R_NODES,                            &
                                                     Factored_NNZ,                            &
-                                                    Laplace_Factored_VAL(:,l,ui),           &
+                                                    Laplace_Factored_VAL(:,l),              &
                                                     Laplace_Factored_COL(:,l),              &
                                                     Laplace_Factored_ROW(:,l),              &
-                                                    cVA_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui)),    &
+                                                    cVA_Coeff_Vector(:,lm_loc,ui),    &
                                                     FP_Laplace_Vector(:,lm_loc,ui) )
 
 
@@ -434,7 +430,7 @@ ELSE IF ( Matrix_Format == 'CCS' ) THEN
 
     DEALLOCATE(Work_Vec)
     ALLOCATE( Work_Vec(1:Beta_Prob_Dim ) )
-    Work_Vec = cVB_Source_Vector(:,iVB_S)
+    Work_Vec = cVB_Load_Vector(:,iVB_S)
 
     CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
 

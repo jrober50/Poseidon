@@ -135,17 +135,17 @@ USE Poseidon_IO_Parameters, &
                     Poseidon_Sources_Dir,                           &
                     CFA_ShortVars
 
-USE Functions_Info,   &
-            ONLY  : PQ_ITERATIONS_MAX
-
 USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File,                  &
                     Open_Existing_File
 
-
 USE Flags_IO_Module, &
             ONLY :  lPF_IO_Flags,               &
                     iPF_IO_Write_Results
+
+USE Flags_Core_Module, &
+            ONLY :  lPF_Core_Flags,         &
+                    iPF_Core_Poisson_Mode
 
 
 IMPLICIT NONE
@@ -183,7 +183,11 @@ INTEGER                                                     ::  Output_Locations
 IF ( PRESENT(CFA_Eq_Overide) ) THEN
     CFA_Eq_Flag_Used = CFA_Eq_Overide
 ELSE
-    CFA_Eq_Flag_Used = CFA_Eq_Flags
+    IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+        CFA_Eq_Flag_Used = [1,0,0,0,0]
+    ELSE
+        CFA_Eq_Flag_Used = CFA_Eq_Flags
+    END IF
 END IF
 
 IF ( PRESENT(Output_Locations_Flag) ) THEN

@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Poisson_Source_Vector                                                 !##!
+MODULE Poisson_Load_Vector                                                 !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -25,6 +25,9 @@ MODULE Poisson_Source_Vector                                                 !##
 !===================================!
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
+
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Run_Message
 
 USE Poseidon_Numbers_Module, &
             ONLY :  pi,                         &
@@ -63,10 +66,11 @@ USE Variables_Quadrature, &
                     INT_P_WEIGHTS,              &
                     INT_TP_WEIGHTS
 
-USE Variables_Poisson, &
-            ONLY :  Source_Vector,                  &
-                    Source_Terms
+USE Variables_Vectors, &
+            ONLY :  cVA_Load_Vector
 
+USE Variables_Source, &
+            ONLY :  Source_Rho
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature,       &
@@ -83,6 +87,10 @@ USE Maps_X_Space, &
 
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
+
+USE Maps_Domain, &
+            ONLY :  Map_To_FEM_Node,                &
+                    Map_To_lm
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -103,7 +111,7 @@ CONTAINS
 
  !+201b+####################################################################!
 !                                                                           !
-!                      Calculate_Poisson_Source_Vector                      !
+!                      Calculate_Poisson_Load_Vector                      !
 !                                                                           !
 !---------------------------------------------------------------------------!
 !                                                                           !
@@ -112,7 +120,7 @@ CONTAINS
 !       established by the mixed spectral/fintie element method.            !
 !                                                                           !
  !#########################################################################!
-SUBROUTINE Calculate_Poisson_Source_Vector()
+SUBROUTINE Calculate_Poisson_Load_Vector()
 
 COMPLEX(idp)                                        ::  Tmp_Val
 
@@ -144,14 +152,13 @@ ALLOCATE(P_locs(1:Num_P_Quad_Points ) )
 
 
 
-ALLOCATE( R_Pre(1:Num_R_Quad_Points,0:Num_R_Nodes-1) )
+ALLOCATE( R_Pre(1:Num_R_Quad_Points,1:Num_R_Nodes) )
 ALLOCATE( T_Pre(1:Num_T_Quad_Points,0:Num_T_Elements-1,1:LM_Length) )
 ALLOCATE( P_Pre(1:Num_P_Quad_Points,0:Num_P_Elements-1,1:LM_Length) )
 
 
-IF ( Verbose_Flag ) THEN
-    PRINT*,"- Calculating Source Vector."
-END IF
+IF ( Verbose_Flag ) CALL Run_Message("Calculating Load Vector.")
+
 
 
 CALL Initialize_LGL_Quadrature(DEGREE, Poly_xlocs, Poly_weights)
@@ -182,7 +189,7 @@ CALL TimerStart( Timer_Poisson_SourceVector_Subparts )
 DO re = 0, Num_R_Elements -1
 DO  p = 0, Degree
 
-    There = re*Degree + p
+    There = Map_To_FEM_Node(re,p)
     R_locs = Map_From_X_Space(rlocs(re), rlocs(re+1), Int_R_Locations)
     drot = 0.5_idp *(rlocs(re+1) - rlocs(re))
 
@@ -212,7 +219,7 @@ DO te = 0, NUM_T_ELEMENTS - 1
     dtot = 0.5_idp *(tlocs(te+1) - tlocs(te))
     T_locs = Map_From_X_Space(tlocs(te), tlocs(te+1), Int_T_Locations)
     SphereHarm_NormFactor = (-1.0_idp**m)*Norm_Factor(l,-m)
-    lm = l*(l+1)+m+1
+    lm = Map_To_lm( l, m )
 
     T_Pre(:,te,lm) = sin(T_locs(:))                                     &
                     * SphereHarm_NormFactor                             &
@@ -230,7 +237,7 @@ DO l = 0, L_LIMIT
 DO m = -l,l
 DO pe = 0, Num_P_Elements - 1
 DO pd = 1,Num_P_Quad_Points
-    lm = l*(l+1)+m+1
+    lm = Map_To_lm( l, m )
     P_locs = Map_From_X_Space(plocs(pe), plocs(pe+1), Int_P_Locations)
     P_PRE(pd,pe,lm) = CDEXP(CMPLX(0.0_idp,-m * P_locs(pd),idp)) * Int_P_weights(pd)
 END DO
@@ -248,8 +255,9 @@ CALL TimerStart( Timer_Poisson_SourceVector_Main )
 
 
 
-Source_Vector = 0.0_idp
+cVA_Load_Vector = 0.0_idp
 Tmp_Val = 0.0_idp
+
 #if defined(POSEIDON_OPENMP_OL_FLAG)
     !$OMP TARGET TEAMS DISTRIBUTE PARALLEL DO SIMD COLLAPSE(3) &
     !$OMP PRIVATE(  ) &
@@ -270,37 +278,38 @@ DO lm = 1, LM_Length
 DO re = 0,NUM_R_ELEMENTS - 1
 DO p = 0,DEGREE
 
-There = re*Degree + p
-
-DO pe = 0,NUM_P_ELEMENTS - 1
-DO te = 0,NUM_T_ELEMENTS - 1
-
-DO pd = 1, Num_P_Quad_Points
-DO td = 1, Num_T_Quad_Points
-DO rd = 1, Num_R_Quad_Points
-
-
-    Here = Quad_Map(rd,td,pd)
-
-
-    Tmp_Val = Tmp_Val                       &
-            - Source_Terms(Here,re,te,pe)   &
-            * R_PRE(rd,There)               &
-            * T_PRE(td,te,lm)               &
-            * P_PRE(pd,pe,lm)
-
     
-END DO ! rd Loop
-END DO ! td Loop
-END DO ! pd Loop
+    There = Map_To_FEM_Node( re, p )
 
-END DO  ! te Loop
-END DO  ! pe Loop
+    DO pe = 0,NUM_P_ELEMENTS - 1
+    DO te = 0,NUM_T_ELEMENTS - 1
+
+    DO pd = 1, Num_P_Quad_Points
+    DO td = 1, Num_T_Quad_Points
+    DO rd = 1, Num_R_Quad_Points
 
 
-Source_Vector(There,lm) = Source_Vector(There,lm) + Tmp_Val
+        Here = Quad_Map(rd,td,pd)
 
-TMP_Val = 0.0_idp
+
+        Tmp_Val = Tmp_Val                       &
+                - Source_Rho(Here,re,te,pe)   &
+                * R_PRE(rd,There)               &
+                * T_PRE(td,te,lm)               &
+                * P_PRE(pd,pe,lm)
+
+        
+    END DO ! rd Loop
+    END DO ! td Loop
+    END DO ! pd Loop
+
+    END DO  ! te Loop
+    END DO  ! pe Loop
+
+
+    cVA_Load_Vector(There,lm,1) = cVA_Load_Vector(There,lm,1) + Tmp_Val
+
+    TMP_Val = 0.0_idp
 
 END DO ! p Loop
 END DO  ! re Loop
@@ -320,7 +329,7 @@ END DO  ! lm Loop
 CALL TimerStop( Timer_Poisson_SourceVector_Main )
 
 
-END SUBROUTINE Calculate_Poisson_Source_Vector
+END SUBROUTINE Calculate_Poisson_Load_Vector
 
 
 
@@ -330,4 +339,4 @@ END SUBROUTINE Calculate_Poisson_Source_Vector
 
 
 
-END MODULE Poisson_Source_Vector
+END MODULE Poisson_Load_Vector

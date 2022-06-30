@@ -104,19 +104,19 @@ USE MPI
 IMPLICIT NONE
 
 
-INTEGER                                                 ::  Int_R_Deg
-INTEGER                                                 ::  Int_T_Deg
-INTEGER                                                 ::  Int_P_Deg
-INTEGER                                                 ::  Int_TP_Deg
+INTEGER,                                        PRIVATE ::  Int_R_Deg
+INTEGER,                                        PRIVATE ::  Int_T_Deg
+INTEGER,                                        PRIVATE ::  Int_P_Deg
+INTEGER,                                        PRIVATE ::  Int_TP_Deg
 
 
-REAL(idp),      ALLOCATABLE,    DIMENSION(:)            ::  Cur_T_Locs
-REAL(idp),      ALLOCATABLE,    DIMENSION(:)            ::  Cur_P_Locs
+REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Cur_T_Locs
+REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Cur_P_Locs
 
-REAL(idp),      ALLOCATABLE,    DIMENSION(:)            ::  Int_R_Locs, Int_R_Weights
-REAL(idp),      ALLOCATABLE,    DIMENSION(:)            ::  Int_T_Locs, Int_T_Weights
-REAL(idp),      ALLOCATABLE,    DIMENSION(:)            ::  Int_P_Locs, Int_P_Weights
-REAL(idp),      ALLOCATABLE,    DIMENSION(:)            ::  Int_TP_Weights
+REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_R_Locs, Int_R_Weights
+REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_T_Locs, Int_T_Weights
+REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_P_Locs, Int_P_Weights
+REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_TP_Weights
 
 REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,:,:,: )  ::  LP_LP_Table
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION( :,:,: )      ::  TP_TP_Integrals
@@ -164,6 +164,100 @@ Int_P_Deg  = 2*L_LIMIT + 1
 Int_TP_Deg = Int_T_Deg*Int_P_Deg
 
 
+
+CALL Allocate_Matrix_Init_Variables()
+
+
+CALL Initialize_LG_Quadrature(Int_R_Deg, Int_R_Locs, Int_R_Weights)
+CALL Initialize_LG_Quadrature(Int_T_Deg, Int_T_Locs, Int_T_Weights)
+CALL Initialize_Trapezoid_Quadrature(Int_P_Deg, 1, Int_P_Locs, Int_P_Weights)
+
+
+
+ !                                                          !
+!!   Map Theta and Phi Locations from [-1,1] space to real space.   !!
+ !                                                          !
+Cur_T_Locs = Map_From_X_Space( 0.0_idp, pi, Int_T_Locs )
+Cur_P_Locs = Int_P_Locs
+
+CALL Calculate_Radial_Terms()
+CALL Calculate_Angular_Terms()
+
+
+CALL Calculate_Laplace_Matrix()
+CALL Calculate_MVL_Banded()
+
+
+Call Deallocate_Matrix_Init_Variables()
+
+
+END SUBROUTINE Initialize_XCFC_Matrices
+
+
+
+!+101+##########################################################################!
+!                                                                               !
+!           Initialize_XCFC_Matrices                                            !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Initialize_Poisson_Matrix()
+
+
+IF ( Verbose_Flag ) CALL Init_Message('Beginning Matrix Initialization.')
+
+
+! Set number of quadrature points for different dimensions
+!
+! Radial : Using Gaussian Quadrature. 2n-1 points for exact integration of Polynomials of degree n.
+!           Radially this is a product of two Lagrange Polys so n = 2*Degree.
+! Phi    : Using Trapezoid rule quadrature. m + 1 for exact integration of exp(-i*m*phi).
+!           Max m is defined by the product of exp(i*L_Limit*Phi)*exp(i*L_Limit*Phi) = exp(i*(2*L_Limit)*Phi)
+!
+Int_R_Deg  = 4*Degree - 1
+!INT_R_Deg  = 5
+Int_T_Deg  = 15
+Int_P_Deg  = 2*L_LIMIT + 1
+
+Int_TP_Deg = Int_T_Deg*Int_P_Deg
+
+
+
+CALL Allocate_Matrix_Init_Variables()
+
+
+CALL Initialize_LG_Quadrature(Int_R_Deg, Int_R_Locs, Int_R_Weights)
+!CALL Initialize_LG_Quadrature(Int_T_Deg, Int_T_Locs, Int_T_Weights)
+!CALL Initialize_Trapezoid_Quadrature(Int_P_Deg, 1, Int_P_Locs, Int_P_Weights)
+
+
+
+ !                                                          !
+!!   Map Theta and Phi Locations from [-1,1] space to real space.   !!
+ !                                                          !
+Cur_T_Locs = Map_From_X_Space( 0.0_idp, pi, Int_T_Locs )
+Cur_P_Locs = Int_P_Locs
+
+CALL Calculate_Radial_Terms()
+!CALL Calculate_Angular_Terms()
+
+
+CALL Calculate_Laplace_Matrix()
+
+
+Call Deallocate_Matrix_Init_Variables()
+
+
+END SUBROUTINE Initialize_Poisson_Matrix
+
+
+
+ !+201+################################################################!
+!                                                                       !
+!          Allocate_Matrix_Init_Variables                               !
+!                                                                       !
+ !#####################################################################!
+SUBROUTINE Allocate_Matrix_Init_Variables()
+
 ALLOCATE( Cur_T_Locs(1:Int_T_Deg) )
 ALLOCATE( Cur_P_Locs(1:Int_P_Deg) )
 
@@ -184,31 +278,16 @@ ALLOCATE( Ylm_CC(1:Int_TP_Deg,1:LM_Length) )
 ALLOCATE( Ylm_CC_dt(1:Int_TP_Deg,1:LM_Length) )
 ALLOCATE( Ylm_CC_dp(1:Int_TP_Deg,1:LM_Length) )
 
-
-
-CALL Initialize_LG_Quadrature(Int_R_Deg, Int_R_Locs, Int_R_Weights)
-CALL Initialize_LG_Quadrature(Int_T_Deg, Int_T_Locs, Int_T_Weights)
-CALL Initialize_Trapezoid_Quadrature(Int_P_Deg, 1, Int_P_Locs, Int_P_Weights)
+END SUBROUTINE Allocate_Matrix_Init_Variables
 
 
 
- !                                                          !
-!!   Map Theta and Phi Locations from [-1,1] space to real space.   !!
- !                                                          !
-Cur_T_Locs = Map_From_X_Space( 0.0_idp, pi, Int_T_Locs )
-Cur_P_Locs = Int_P_Locs
-
-
-
-
-
-CALL Calculate_Radial_Terms()
-CALL Calculate_Angular_Terms()
-
-
-CALL Calculate_Laplace_Matrix()
-CALL Calculate_MVL_Banded()
-
+ !+201+################################################################!
+!                                                                       !
+!          Deallocate_Matrix_Init_Variables                             !
+!                                                                       !
+ !#####################################################################!
+SUBROUTINE Deallocate_Matrix_Init_Variables()
 
 DEALLOCATE( Cur_T_Locs )
 DEALLOCATE( Cur_P_Locs )
@@ -231,13 +310,7 @@ DEALLOCATE( Ylm_CC_dt )
 DEALLOCATE( Ylm_CC_dp )
 
 
-
-END SUBROUTINE Initialize_XCFC_Matrices
-
-
-
-
-
+END SUBROUTINE Deallocate_Matrix_Init_Variables
 
 
 
@@ -647,7 +720,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
     Laplace_Matrix_COL(1,:) = Laplace_Matrix_COL(0,:) + (DEGREE+1)
     HERE = 2
 
-
     DO re = 1,NUM_R_ELEMENTS-1
         DO d = 1,DEGREE - 1
 
@@ -659,6 +731,7 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
         Here = Here + 1
 
     END DO
+
 
     DO d = 1, DEGREE
 
@@ -695,7 +768,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
     Laplace_Matrix_ROW(Here,:) = DEGREE * NUM_R_ELEMENTS
 
 
-
     Laplace_Matrix_VAL = 0.0_idp
 
     DO l = 0,L_LIMIT
@@ -712,7 +784,7 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
                 DO d = 0,DEGREE
 
 
-                    Laplace_Matrix_VAL(Here,l,:) = Laplace_Matrix_VAL(Here,l,:)     &
+                    Laplace_Matrix_VAL(Here,l) = Laplace_Matrix_VAL(Here,l)     &
                                     + SUM( R_SQUARE(:) * LP_LP_Table(:,d,dp,1,1)    &
                                             * TODR * Int_R_Weights(:)               &
                                            + L_Lp1 * LP_LP_Table(:,d,dp,0,0) / TODR &

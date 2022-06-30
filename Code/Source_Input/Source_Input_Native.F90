@@ -246,6 +246,9 @@ DO pe = 0,Num_P_Elements-1
 DO te = 0,Num_T_Elements-1
 DO re = 0,Num_R_Elements-1
 
+!PRINT*,Input_E(:,re,te,pe)
+!PRINT*,Input_Si(:,re,te,pe,1)
+
 DO Local_Here = 1,Local_Quad_DOF
 
     Block_Source_E(Local_Here,re,te,pe) = DOT_PRODUCT( Translation_Matrix(:,Local_Here),    &
@@ -361,7 +364,7 @@ DO Local_Here = 1,Local_Quad_DOF
 
     
 
-
+    
     Block_Source_E(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &
                                                        Input_E(:,re,te,pe)          )
 
@@ -438,6 +441,9 @@ CALL TimerStart(Timer_GR_SourceInput)
 DO pe = 0,Num_P_Elements-1
 DO te = 0,Num_T_Elements-1
 DO re = 0,Num_R_Elements-1
+
+!PRINT*,Input_E(:,re,te,pe)
+!PRINT*,Input_Si(:,re,te,pe,1)
 
 DO Local_Here = 1,Local_Quad_DOF
 

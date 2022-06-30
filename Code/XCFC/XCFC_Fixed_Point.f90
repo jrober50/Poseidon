@@ -61,8 +61,8 @@ USE Variables_Derived, &
 USE Variables_FP, &
             ONLY :  FP_Anderson_M
 
-USE XCFC_Source_Vector_TypeA_Module, &
-            ONLY :  XCFC_Calc_Source_Vector_TypeA
+USE XCFC_Load_Vector_TypeA_Module, &
+            ONLY :  XCFC_Calc_Load_Vector_TypeA
 
 USE XCFC_System_Solvers_TypeA_Module, &
             ONLY :  XCFC_Solve_System_TypeA
@@ -139,7 +139,7 @@ iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 ALLOCATE( Work(1:LWORK) )
 
 
-CALL XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
+CALL XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
 
 
 Cur_Iteration = 0
@@ -192,6 +192,11 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
                     BVector, Var_Dim,               &
                     WORK, LWORK, INFO )
 
+
+        IF ( INFO .NE. 0 ) THEN
+            WRITE(Message,'(A,I1.1,A,I1.1)')'In XCFC_Fixed_Point, iU = ',iU,' : ZGELS failed with INFO = ',INFO
+            CALL WARNING_MESSAGE(Message)
+        END IF
         Alpha(1:mk-1) = BVector(1:mk-1)
         Alpha(mk)     = 1.0_idp - SUM( Alpha(1:mk-1) )
 
@@ -228,9 +233,9 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     CALL Vector_To_Coeff_TypeA( GVectorM, iU )
 
 
-!    PRINT*,"Before XCFC_Calc_Source_Vector_TypeA"
+!    PRINT*,"Before XCFC_Calc_Load_Vector_TypeA"
     !   Calculate Source Vector with updated solution
-    CALL XCFC_Calc_Source_Vector_TypeA( iU, iEU, iEL )
+    CALL XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
     
 
 

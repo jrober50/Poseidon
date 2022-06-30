@@ -25,8 +25,10 @@ MODULE Poseidon_Interface_Initial_Guess                                      !##
 !===================================!
 
 USE IG_Input_Native_Module, &
-            ONLY :  IG_Input_Native,               &
-                    IG_Input_Native_Caller
+            ONLY :  IG_Input_XCFC_Native,           &
+                    IG_Input_XCFC_Native_Caller,    &
+                    IG_Input_Poisson_Native,        &
+                    IG_Input_Poisson_Native_Caller
 
 USE IG_Flat_Guess_Module, &
             ONLY :  IG_Init_Flat_Guess
@@ -37,8 +39,10 @@ IMPLICIT NONE
 
 
 INTERFACE Poseidon_Input_Initial_Guess
-    MODULE PROCEDURE IG_Input_Native
-    MODULE PROCEDURE IG_Input_Native_Caller
+    MODULE PROCEDURE IG_Input_XCFC_Native
+    MODULE PROCEDURE IG_Input_XCFC_Native_Caller
+    MODULE PROCEDURE IG_Input_Poisson_Native
+    MODULE PROCEDURE IG_Input_Poisson_Native_Caller
 END INTERFACE Poseidon_Input_Initial_Guess
 
 

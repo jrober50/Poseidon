@@ -46,19 +46,6 @@ USE Variables_MPI, &
             ONLY :  myID_Poseidon,          &
                     MasterID_Poseidon
 
-USE Flags_IO_Module, &
-            ONLY :  lPF_IO_Flags,           &
-                    iPF_IO_Print_Setup
-
-USE Maps_X_Space, &
-            ONLY :  Map_To_X_Space,         &
-                    Map_From_X_Space
-
-USE Maps_Quadrature,   &
-            ONLY :  Quad_Map
-
-
-
 USE Variables_Functions, &
             ONLY :  Potential_Solution
 
@@ -68,6 +55,18 @@ USE Variables_External, &
                     MacLaurin_Ecc,          &
                     MacLaurin_SphereType,   &
                     MacLaurin_Rho
+
+USE Maps_X_Space, &
+            ONLY :  Map_To_X_Space,         &
+                    Map_From_X_Space
+
+USE Maps_Quadrature,   &
+            ONLY :  Quad_Map
+
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,           &
+                    iPF_IO_Print_Setup
+
 
 IMPLICIT NONE
 

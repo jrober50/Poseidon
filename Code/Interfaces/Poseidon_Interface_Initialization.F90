@@ -72,9 +72,10 @@ USE Variables_Quadrature, &
                     xRightLimit
 
 USE Initialization_XCFC, &
-            ONLY :  Initialize_XCFC,        &
-                    Create_EQ_Maps
+            ONLY :  Initialize_XCFC
 
+USE Initialization_Poisson, &
+            ONLY :  Initialize_Poisson
 
 USE Initialization_Quadrature, &
             ONLY :  Initialize_Quadrature
@@ -97,11 +98,6 @@ USE Initialization_Subroutines, &
                     Init_AMReX_Params,              &
                     Set_Caller_Data
 
-USE Poisson_Matrix_Routines,    &
-            ONLY :  Initialize_Stiffness_Matrix
-
-USE Allocation_Poisson_Linear_System, &
-            ONLY :  Allocate_Poisson_Linear_System
 
 USE Initialization_Subroutines_AMReX, &
             ONLY : Init_Parameters_From_AMReX_Input_File
@@ -463,16 +459,12 @@ IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
     !                                                       !
     !=======================================================!
     CALL Initialize_Derived()
-!    CALL Initialize_Quadrature()
-!    CALL Initialize_Tables()
 
-    CALL Allocate_Poisson_Linear_System()
+    CALL Allocate_Poseidon_Source_Variables()
 
+    CALL Initialize_Tables()
 
-
-    CALL TimerStart( Timer_Poisson_Matrix_Init )
-    CALL Initialize_Stiffness_Matrix()
-    CALL TimerStop(  Timer_Poisson_Matrix_Init )
+    CALL Initialize_Poisson
 
 ELSE
     !=======================================================!
@@ -491,7 +483,6 @@ ELSE
     END IF
 
     NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
-    CALL Create_Eq_Maps()
 
 #ifdef POSEIDON_AMREX_FLAG
     CALL Initialize_Derived_AMReX()

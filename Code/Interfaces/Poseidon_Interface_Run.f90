@@ -135,9 +135,11 @@ Poseidon_Frame = Poseidon_Frame + 1
 IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
     Call Print_Results()
 END IF
+
 IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
     Call Write_Final_Results()
 END IF
+
 
 
 END SUBROUTINE Poseidon_Run

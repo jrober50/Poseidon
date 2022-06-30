@@ -36,25 +36,21 @@ USE Poseidon_Units_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Driver_Init_Message
+
 USE External_Yahil_Profile_Module, &
             ONLY :  Initialize_Yahil_Sources
 
 USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
-
 USE Variables_Functions, &
             ONLY :  Potential_Solution
-
-
-USE Variables_IO, &
-            ONLY :  Write_Flags,        &
-                    iWF_Source
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
                     TimerSTop
-
 
 USE Timer_Variables_Module, &
             ONLY :  Timer_Driver_SetSource_InitTest,        &
@@ -132,6 +128,7 @@ ALLOCATE( Local_S(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )       )
 ALLOCATE( Local_Si(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1, 1:3)  )
 
 
+
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
 CALL Initialize_Yahil_Sources( Yahil_Params(1),                 &
@@ -171,10 +168,6 @@ IF ( Solver_Type == 3 ) THEN
 
     Psi_Power  = Psi_Holder**6
 
-
-!    PRINT*,re,te,pe, Psi_Holder,x_e(re-1)
-
-
     DO pd = 1,NQ(3)
     DO td = 1,NQ(2)
 
@@ -198,6 +191,8 @@ IF ( Solver_Type == 3 ) THEN
  END IF
 
 CALL TimerStop( Timer_Driver_SetSource_Scale )
+
+
 
 
 CALL TimerStart( Timer_Driver_SetSource_SetSource )

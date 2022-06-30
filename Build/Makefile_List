@@ -14,10 +14,10 @@ POSEIDON = \
   $(RETURN_ROUTINES) \
   $(IO)              \
   $(LINEAR_SOLVERS)  \
-  $(POISSON)         \
   $(MATRIX)          \
   $(FP)              \
   $(XCFC)            \
+  $(POISSON)         \
   $(EXTERNAL)        \
   $(INIT)            \
   $(UTILITIES)       \

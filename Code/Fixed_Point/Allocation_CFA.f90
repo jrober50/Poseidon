@@ -43,15 +43,14 @@ Use Variables_Derived, &
 
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Source_Vector,      &
-                    cVB_Source_Vector,      &
+            ONLY :  cVA_Load_Vector,      &
+                    cVB_Load_Vector,      &
                     cVA_Coeff_Vector,      &
                     cVB_Coeff_Vector
                     
 
 USE Variables_Matrices, &
-            ONLY :  Num_Matrices,           &
-                    Matrix_Format,          &
+            ONLY :  Matrix_Format,          &
                     First_Column_Storage,   &
                     Last_Column_Storage,    &
                     First_Column_Beta_Storage,   &
@@ -104,11 +103,11 @@ IF ( MATRIX_FORMAT == 'Full' ) THEN
 
 ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 
-    ALLOCATE( Laplace_Matrix_VAL(0:Laplace_NNZ-1, 0:L_LIMIT,1:Num_Matrices) )
+    ALLOCATE( Laplace_Matrix_VAL(0:Laplace_NNZ-1, 0:L_LIMIT) )
     ALLOCATE( Laplace_Matrix_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
     ALLOCATE( Laplace_Matrix_COL(0:NUM_R_NODES, 0:L_LIMIT) )
 
-    ALLOCATE( Laplace_Factored_VAL(0:Laplace_NNZ-1, 0:L_LIMIT,1:Num_Matrices) )
+    ALLOCATE( Laplace_Factored_VAL(0:Laplace_NNZ-1, 0:L_LIMIT) )
     ALLOCATE( Laplace_Factored_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
     ALLOCATE( Laplace_Factored_COL(0:NUM_R_NODES, 0:L_LIMIT) )
 
@@ -116,8 +115,8 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     ALLOCATE( Beta_MVL_Banded(1:(3*Beta_Diagonals+1), 1:Beta_Prob_Dim))
     ALLOCATE( Beta_MVL_Diagonal(1:Beta_Prob_Dim) )
 
-    ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)   )
-    ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT,1:Num_Matrices)    )
+    ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT)   )
+    ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT)    )
 
     ALLOCATE( First_Column_Beta_Storage(1:LM_Length,0:DEGREE,1:3)   )
     ALLOCATE( Last_Column_Beta_Storage(1:LM_Length,0:DEGREE,1:3)    )
@@ -125,8 +124,8 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 END IF
 
 
-ALLOCATE( cVA_Source_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
-ALLOCATE( cVB_Source_Vector(1:Beta_Prob_Dim,1:2) )
+ALLOCATE( cVA_Load_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
+ALLOCATE( cVB_Load_Vector(1:Beta_Prob_Dim,1:2) )
 
 ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)         )
 ALLOCATE( cVB_Coeff_Vector(1:Beta_Prob_Dim,1:2) )
@@ -186,8 +185,8 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     
 END IF
 
-DEALLOCATE( cVA_Source_Vector )
-DEALLOCATE( cVB_Source_Vector )
+DEALLOCATE( cVA_Load_Vector )
+DEALLOCATE( cVB_Load_Vector )
 DEALLOCATE( cVA_Coeff_Vector )
 DEALLOCATE( cVB_Coeff_Vector )
 DEALLOCATE( FP_Update_Vector )

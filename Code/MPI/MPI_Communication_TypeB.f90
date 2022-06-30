@@ -33,7 +33,7 @@ USE Variables_Derived, &
 
 USE Variables_Vectors,  &
             ONLY :  cVB_Coeff_Vector,            &
-                    cVB_Source_Vector
+                    cVB_Load_Vector
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon,              &
@@ -67,7 +67,7 @@ Send_Size = ULim - LLim + 1
 
 IF ( myID_Poseidon == MasterID ) THEN
     CALL MPI_Reduce(MPI_IN_PLACE,                   &
-                    cVB_Source_Vector(LLim:ULim,iVB),      &
+                    cVB_Load_Vector(LLim:ULim,iVB),      &
                     Send_Size,                  &
                     MPI_Double_Complex,             &
                     MPI_SUM,                        &
@@ -75,8 +75,8 @@ IF ( myID_Poseidon == MasterID ) THEN
                     Comm,            &
                     ierr )
 ELSE
-CALL MPI_Reduce(cVB_Source_Vector(LLim:ULim,iVB),      &
-                cVB_Source_Vector(LLim:ULim,iVB),      &
+CALL MPI_Reduce(cVB_Load_Vector(LLim:ULim,iVB),      &
+                cVB_Load_Vector(LLim:ULim,iVB),      &
                 Send_Size,                  &
                 MPI_Double_Complex,             &
                 MPI_SUM,                        &

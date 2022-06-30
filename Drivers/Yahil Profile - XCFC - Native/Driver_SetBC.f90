@@ -24,26 +24,26 @@ MODULE Driver_SetBC_Module                                                   !##
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-        ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Parameters, &
-        ONLY :  Verbose_Flag
+            ONLY :  Verbose_Flag
 
 USE Poseidon_Message_Routines_Module, &
-        ONLY :  Driver_Init_Message
+            ONLY :  Driver_Init_Message
 
 USE Poseidon_Units_Module, &
-        ONLY :  C_Square,       &
-                Centimeter
+            ONLY :  C_Square,       &
+                    Centimeter
 
 USE Variables_Functions, &
-        ONLY :  Potential_Solution
+            ONLY :  Potential_Solution
 
 USE Poseidon_Interface_Boundary_Conditions, &
-ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
+            ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
 
 USE Variables_Mesh, &
-        ONLY :  R_Outer
+            ONLY :  R_Outer
 
 
 IMPLICIT NONE
@@ -80,7 +80,6 @@ Psi_BC = 1.0_idp    &
 AlphaPsi_BC = 1.0_idp    &
             + 0.5_idp*Potential_Solution(R_Outer*Centimeter, 0.0_idp, 0.0_idp)/C_Square
 
-!    PRINT*,"BCs",Psi_BC, AlphaPsi_BC, Potential_Solution(x_e(NE(1)), 0.0_idp, 0.0_idp)
 
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)
@@ -97,6 +96,7 @@ IF ( Verbose_Flag ) CALL Driver_Init_Message('Setting boundary conditions.')
 
 CALL Poseidon_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
 CALL Poseidon_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
+
 
 
 END SUBROUTINE Driver_SetBC

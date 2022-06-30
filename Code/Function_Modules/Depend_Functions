@@ -1,0 +1,27 @@
+Functions_Info.o:           \
+  Functions_Info.f90        \
+
+Functions_Jacobian.o:       \
+  Functions_Jacobian.f90    \
+
+Functions_Quadrature.o:     \
+  Functions_Quadrature.f90  \
+
+Functions_Math.o:           \
+  Functions_Math.f90        \
+
+Functions_Additional.o:     \
+  Functions_Additional.f90  \
+
+Functions_Matrix.o:         \
+  Functions_Matrix.f90      \
+
+Functions_Ylm_Relays.o:     \
+  Functions_Ylm_Relays.F90  \
+
+Functions_TransMat.o:       \
+  Functions_TransMat.f90    \
+
+
+
+

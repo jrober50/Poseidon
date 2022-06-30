@@ -19,8 +19,12 @@ MODULE Flags_Initialization_Module                                              
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Poseidon_Message_Routines_Module, &
+USE Poseidon_Message_Routines_Module,   &
             ONLY :  Warning_Message
+
+USE Flags_Core_Module, &
+            ONLY :  lPF_Core_Flags,         &
+                    iPF_Core_Poisson_Mode
 
 IMPLICIT NONE
 
@@ -135,6 +139,8 @@ lPF_Init_Flags(iPF_Init_MTGV) = Poseidon_Init_MTGV_Check()
 lPF_Init_Flags(iPF_Init_Mesh) = Poseidon_Init_Mesh_Check()
 lPF_Init_Flags(iPF_Init_Tables) = Poseidon_Init_Tables_Check()
 
+
+
 IF ( ALL(lPF_Init_Flags) ) THEN
     Poseidon_Initialization_Check = .TRUE.
 ELSE
@@ -157,11 +163,11 @@ ELSE
     IF ( .NOT. lPF_Init_Flags(iPF_Init_Mesh))         &
         CALL Warning_Message('Poseidon Initialization Check Failed. Mesh not initialized.')
 
-    IF ( .NOT. lPF_Init_Flags(iPF_Init_Tables))         &
-        CALL Warning_Message('Poseidon Initialization Check Failed. Tables not initialized.')
-
     IF ( .NOT. lPF_Init_Flags(iPF_Init_Quadrature))         &
         CALL Warning_Message('Poseidon Initialization Check Failed. Quadrature not initialized.')
+
+    IF ( .NOT. lPF_Init_Flags(iPF_Init_Tables))         &
+        CALL Warning_Message('Poseidon Initialization Check Failed. Tables not initialized.')
 
     IF ( .NOT. lPF_Init_Flags(iPF_Init_MPI))         &
         CALL Warning_Message('Poseidon Initialization Check Failed. MPI variables not initialized.')
@@ -178,8 +184,7 @@ ELSE
     IF ( .NOT. lPF_Init_Flags(iPF_Init_Caller_Vars))         &
         CALL Warning_Message('Poseidon Initialization Check Failed. Caller variables not initalized.')
 
-
-    IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars))         &
+    IF ( .NOT. lPF_Init_Flags(iPF_Init_Alloc_Source))         &
         CALL Warning_Message('Poseidon Initialization Check Failed. Source variables not allocated.')
 
     Poseidon_Initialization_Check = .FALSE.
@@ -191,14 +196,30 @@ END FUNCTION Poseidon_Initialization_Check
 
  !+201+####################################################!
 !                                                           !
-!          Poseidon_Init_Matrices_Check                   !
+!          Poseidon_Init_Matrices_Check                     !
 !                                                           !
  !#########################################################!
 LOGICAL FUNCTION Poseidon_Init_Matrices_Check()
 
+IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+    Poseidon_Init_Matrices_Check = Poseidon_Init_Matrices_Check_Poisson()
+ELSE
+    Poseidon_Init_Matrices_Check = Poseidon_Init_Matrices_Check_XCFC()
+END IF ! lPF_Flags_Core(iPF_Core_Poisson_Mode)
+
+END FUNCTION Poseidon_Init_Matrices_Check
+
+
+ !+202+####################################################!
+!                                                           !
+!          Poseidon_Init_Matrices_Check_XCFC                !
+!                                                           !
+ !#########################################################!
+LOGICAL FUNCTION Poseidon_Init_Matrices_Check_XCFC()
+
 IF ( ALL( [ lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A), &
-            lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A)] ) ) THEN
-    Poseidon_Init_Matrices_Check = .TRUE.
+            lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B)] ) ) THEN
+    Poseidon_Init_Matrices_Check_XCFC = .TRUE.
 ELSE
 
     IF ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A))         &
@@ -213,14 +234,36 @@ ELSE
 !    IF ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU))         &
 !        CALL Warning_Message('Poseidon Initialization Check Failed. Vector laplace matrix not factorized.')
 
-    Poseidon_Init_Matrices_Check = .FALSE.
+    Poseidon_Init_Matrices_Check_XCFC = .FALSE.
 END IF
 
-END FUNCTION Poseidon_Init_Matrices_Check
 
+END FUNCTION Poseidon_Init_Matrices_Check_XCFC
 
 
  !+202+####################################################!
+!                                                           !
+!          Poseidon_Init_Matrices_Check_Poisson             !
+!                                                           !
+ !#########################################################!
+LOGICAL FUNCTION Poseidon_Init_Matrices_Check_Poisson()
+
+IF ( lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A) ) THEN
+    Poseidon_Init_Matrices_Check_Poisson = .TRUE.
+ELSE
+
+    IF ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A))         &
+        CALL Warning_Message('Poseidon Initialization Check Failed. Scalar laplace matrix not built.')
+
+!    IF ( .NOT. lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky))         &
+!        CALL Warning_Message('Poseidon Initialization Check Failed. Scalar laplace matrix not factorized.')
+
+    Poseidon_Init_Matrices_Check_Poisson = .FALSE.
+END IF
+
+END FUNCTION Poseidon_Init_Matrices_Check_Poisson
+
+ !+301+####################################################!
 !                                                           !
 !          Poseidon_Init_Quadrature_Check                   !
 !                                                           !
@@ -249,7 +292,7 @@ END FUNCTION Poseidon_Init_Quadrature_Check
 
 
 
- !+202+####################################################!
+ !+401+####################################################!
 !                                                           !
 !          Poseidon_Init_Mesh_Check                         !
 !                                                           !
@@ -277,7 +320,7 @@ END FUNCTION Poseidon_Init_Mesh_Check
 
 
 
- !+202+####################################################!
+ !+501+####################################################!
 !                                                           !
 !          Poseidon_Init_Mesh_Check                         !
 !                                                           !
@@ -304,7 +347,7 @@ END FUNCTION Poseidon_Init_Tables_Check
 
 
 
- !+203+####################################################!
+ !+601+####################################################!
 !                                                           !
 !          Poseidon_Init_MTGV_Check                   !
 !                                                           !

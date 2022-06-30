@@ -45,9 +45,6 @@ USE Variables_Interface, &
                     Caller_PQ_xlocs,                &
                     Translation_Matrix
 
-USE Variables_Poisson, &
-            ONLY :  Source_Terms
-
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS,     &
                     NUM_T_ELEMENTS,     &

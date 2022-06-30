@@ -53,7 +53,7 @@ USE Variables_Derived, &
 
 USE Variables_Vectors,  &
             ONLY :  cVB_Coeff_Vector,          &
-                    cVB_Source_Vector
+                    cVB_Load_Vector
 
 USE Variables_Matrices,  &
             ONLY :  Beta_Diagonals,             &
@@ -152,7 +152,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 
     ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
-    Work_Vec = cVB_Source_Vector(:,iVB)
+    Work_Vec = cVB_Load_Vector(:,iVB)
 
 
 

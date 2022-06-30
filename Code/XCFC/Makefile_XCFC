@@ -4,8 +4,8 @@ XCFC = \
   XCFC_Functions_Coeff.f90           \
   XCFC_Functions_Calc_Values.F90     \
   XCFC_Functions_Physical_Source.F90 \
-  XCFC_Source_Vector_TypeA.F90       \
-  XCFC_Source_Vector_TypeB.F90       \
+  XCFC_Load_Vector_TypeA.F90         \
+  XCFC_Load_Vector_TypeB.F90         \
   XCFC_System_Solvers_TypeA.F90      \
   XCFC_System_Solvers_TypeB.F90      \
   XCFC_Fixed_Point.f90               \

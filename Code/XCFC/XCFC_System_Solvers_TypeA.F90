@@ -53,7 +53,7 @@ USE Variables_MPI, &
 
 USE Variables_Vectors,  &
             ONLY :  cVA_Coeff_Vector,           &
-                    cVA_Source_Vector   
+                    cVA_Load_Vector
                     
 USE Variables_Matrices,  &
             ONLY :  Factored_NNZ,               &
@@ -62,8 +62,7 @@ USE Variables_Matrices,  &
                     Laplace_Factored_Row
 
 USE Variables_FP,  &
-            ONLY :  FP_Update_Vector,           &
-                    CFA_Var_Map
+            ONLY :  FP_Update_Vector
 
 USE Matrix_Cholesky_Factorization_Module,   &
             ONLY :  CCS_Back_Substitution,          &
@@ -179,8 +178,11 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     DO m = -l,l
 
         lm_loc = Map_To_lm(l,m)
-        WORK_VEC = -cVA_Source_Vector(:,lm_loc,iU)
-        WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_Map(iU))
+        WORK_VEC = -cVA_Load_Vector(:,lm_loc,iU)
+        WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l)
+
+!        PRINT*,WORK_ELEM_VAL(:)
+
 
 !        PRINT*,"Work_Vec, Type A l = ",l," m = ",m
 !        PRINT*,Work_Vec
@@ -224,6 +226,9 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                                         Laplace_Factored_ROW(:,l),      &
                                         WORK_VEC                        )
 
+
+!        PRINT*,"After"
+!        PRINT*,Work_Vec(:)
 
         FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,iU)
         cVA_Coeff_Vector( :,lm_loc,iU) = WORK_VEC(:)

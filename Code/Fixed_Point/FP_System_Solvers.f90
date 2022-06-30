@@ -79,14 +79,11 @@ USE Variables_FP,  &
                     FP_Residual_Vector,         &
                     FP_Laplace_Vector_Beta,     &
                     FP_Residual_Vector_Beta,    &
-                    FP_Anderson_M,              &
-                    CFA_Eq_Map,                 &
-                    CFA_MAT_Map,                &
-                    CFA_Var_Map
+                    FP_Anderson_M
 
 USE Variables_Vectors,  &
-            ONLY :  cVA_Source_Vector,         &
-                    cVB_Source_Vector,         &
+            ONLY :  cVA_Load_Vector,         &
+                    cVB_Load_Vector,         &
                     cVA_Coeff_Vector,          &
                     cVB_Coeff_Vector
 
@@ -105,7 +102,6 @@ USE Variables_Matrices,  &
                     Beta_Diagonals,             &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
-                    Num_Matrices,               &
                     Beta_Bandwidth,             &
                     Beta_IPIV
 
@@ -113,8 +109,8 @@ USE Functions_Mesh, &
             ONLY :  Create_Logarithmic_1D_Mesh,     &
                     Create_Uniform_1D_Mesh
 
-USE FP_Source_Vector_Module, &
-            ONLY :  Calc_FP_Source_Vector,          &
+USE FP_Load_Vector_Module, &
+            ONLY :  Calc_FP_Load_Vector,          &
                     Allocate_FP_Source_Variables,   &
                     Deallocate_FP_Source_Variables
 
@@ -248,7 +244,7 @@ IF (LINEAR_SOLVER =='Full') THEN
 
             lm_loc   = Map_To_lm(l,m)
             WORK_MAT = Laplace_Matrix_Full(:,:,l)
-            WORK_VEC = cVA_Source_Vector(:,lm_loc,ui)
+            WORK_VEC = cVA_Load_Vector(:,lm_loc,ui)
 
 
             CALL DIRICHLET_BC(WORK_MAT, WORK_VEC, l, m, ui)
@@ -266,7 +262,7 @@ IF (LINEAR_SOLVER =='Full') THEN
             END IF
 
         
-            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,CFA_EQ_Map(ui))
+            FP_Update_Vector(:,lm_loc,ui) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,ui)
             cVA_Coeff_Vector(:,lm_loc,ui) = WORK_VEC(:)
 
 
@@ -295,8 +291,8 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 
 
             lm_loc = Map_To_lm(l,m)
-            WORK_VEC = -cVA_Source_Vector(:,lm_loc,ui)
-            WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l,CFA_Var_MAP(ui))
+            WORK_VEC = -cVA_Load_Vector(:,lm_loc,ui)
+            WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l)
 
     
 
@@ -430,7 +426,7 @@ IF (LINEAR_SOLVER =='Full') THEN
     ALLOCATE( WORK_MAT( 1:Beta_Prob_Dim, 1:Beta_Prob_Dim ) )
 
     WORK_MAT(:,:) = Laplace_Matrix_Beta(:,:)
-    WORK_VEC(:)   = cVB_Source_Vector(:,iVB_S)
+    WORK_VEC(:)   = cVB_Load_Vector(:,iVB_S)
 
     
 
@@ -494,7 +490,7 @@ ELSE IF (LINEAR_SOLVER == "CHOL") THEN
 !    ALLOCATE( WORK_MAT( 1:(3*Beta_Diagonals+1), 1:Beta_Prob_Dim ) )
     
 !    Work_Mat = Beta_MVL_Banded
-    Work_Vec = cVB_Source_Vector(:,iVB_S)
+    Work_Vec = cVB_Load_Vector(:,iVB_S)
 
 
 
