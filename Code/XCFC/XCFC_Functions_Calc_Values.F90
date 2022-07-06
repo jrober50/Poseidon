@@ -131,6 +131,9 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 
 END DO
+
+!    PRINT*,sin_val(tpd),DTOT,INT_T_WEIGHTS(td)
+
 END DO
 
 END SUBROUTINE Calc_Int_Weights

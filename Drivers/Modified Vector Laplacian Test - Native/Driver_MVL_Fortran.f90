@@ -74,6 +74,9 @@ USE IO_Write_Final_Results, &
 USE IO_Print_Results, &
             ONLY :  Print_Results
 
+USE External_IO_Test_Results_Module, &
+            ONLY :  Print_MVL_Error
+
 USE Poseidon_Utilities_Module, &
             ONLY :  Poseidon_Calc_ADM_Mass,         &
                     Poseidon_Calc_ADM_Mass_Parts,   &
@@ -177,9 +180,6 @@ INTEGER                                                 ::  M_Index
 INTEGER                                                 ::  M_Index_Min
 INTEGER                                                 ::  M_Index_Max
 
-REAL(idp)                                               ::  Kappa
-REAL(idp)                                               ::  Gamma
-
 INTEGER                                                 ::  AMReX_Levels
 INTEGER                                                 ::  Max_Iterations
 REAL(idp)                                               ::  CC_Option
@@ -221,11 +221,11 @@ RE_Table            = (/ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 L_Values            = (/ 5, 10 /)
 
-RE_Index_Min        =  1
-RE_Index_Max        =  10
+RE_Index_Min        =  6
+RE_Index_Max        =  6
 
 Degree_Min          =  1
-Degree_Max          =  4
+Degree_Max          =  1
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -237,9 +237,6 @@ L_Limit_Max         =  0
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 Perturbation        =  -0.01_idp    !  If Guess_Type == 3, rho is the perturbation parameter
-
-Kappa               = 953946015514834.4
-Gamma               = 1.30_idp
 
 !Suffix_Tail         = "A"
 !Convergence_Criteria = 1.0E-8_idp
@@ -259,13 +256,13 @@ NE(1)               = 128 ! 1.5*128                       ! Number of Radial Ele
 NE(2)               = 1                        ! Number of Theta Elements
 NE(3)               = 1                        ! Number of Phi Elements
 
-NQ(1)               = 5                        ! Number of Radial Quadrature Points
+NQ(1)               = 10                        ! Number of Radial Quadrature Points
 NQ(2)               = 1                        ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
 Suffix_Input        = "Params"
@@ -474,11 +471,11 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     IF ((Print_Results_Flag .EQV. .TRUE.) .OR. (Verbose .EQV. .TRUE. )) THEN
-        WRITE(*,'(A)')" Final Results "
+!        WRITE(*,'(A)')" Final Results "
 
-        CALL Print_Single_Var_Results( iU_X1, iVB_X )
-
-
+!        CALL Print_Single_Var_Results( iU_X1, iVB_X )
+        CALL Print_MVL_Error()
+        
     END IF
 
     CALL Write_Final_Results(CFA_Eq_Overide = (/ 1, 1, 1, 1, 1 /))

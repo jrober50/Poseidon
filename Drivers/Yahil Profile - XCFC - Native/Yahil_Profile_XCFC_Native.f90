@@ -189,7 +189,7 @@ Units_Input         = "G"
 Solver_Type         = 3
 
 
-RE_Table            = (/ 32, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
+RE_Table            = (/ 10, 128, 256, 384, 512, 640, 768, 896, 1024, 4096 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.51_idp, 0.275_idp, 0.15_idp /)
 L_Values            = (/ 5, 10 /)
@@ -200,8 +200,8 @@ T_Index_Max         =  6
 M_Index_Min         =  1
 M_Index_Max         =  1
 
-RE_Index_Min        =  5
-RE_Index_Max        =  5
+RE_Index_Min        =  1
+RE_Index_Max        =  1
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -244,13 +244,13 @@ NE(3)               = 1                        ! Number of Phi Elements
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
 NQ(2)               = 1                        ! Number of Theta Quadrature Points
-NQ(3)               = 1                         ! Number of Phi Quadrature Points
+NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
 !Verbose             = .TRUE.
 Verbose             = .FALSE.
-!Print_Results_Flag  = .TRUE.
-Print_Results_Flag  = .FALSE.
+Print_Results_Flag  = .TRUE.
+!Print_Results_Flag  = .FALSE.
 
 Suffix_Input        = "Params"
 

@@ -57,11 +57,9 @@ USE Variables_External, &
                     SELFSIM_V_SWITCH,   &
                     OUTPUT_PRIMATIVES_FLAG
 
-
 USE Variables_Functions, &
             ONLY :  Potential_Solution,             &
                     Shift_Solution
-
 
 USE Allocation_Yahil_Profile, &
             ONLY :  Allocate_Yahil_Profile,         &

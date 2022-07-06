@@ -53,6 +53,9 @@ USE IO_Write_Final_Results, &
 USE IO_Convergence_Output, &
             ONLY :  Output_Convergence_Reports
 
+USE External_IO_Test_Results_Module, &
+            ONLY :  Print_HCT_Error
+
 USE Poseidon_Interface_Run, &
             ONLY :  Poseidon_Run
 
@@ -81,9 +84,6 @@ USE Timer_Variables_Module, &
                     Timer_Driver_SetGuess,      &
                     Timer_Driver_Run,           &
                     Timer_Driver_Extra
-
-USE IO_Write_Final_Results, &
-            ONLY :  Write_Final_Results
 
 
 USE MPI
@@ -203,7 +203,7 @@ ALLOCATE( RE_Table(1:9) )
 !#                      Test Parameters                     #!
 !#                                                          #!
 !############################################################!
-Units_Input         = "G"
+Units_Input         = "U"
 Solver_Type         = 3
 
 RE_Table          = (/ 2, 4, 6, 8, 16, 32, 512, 1024 /)
@@ -218,11 +218,11 @@ External_Iter_Max   =  500
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  8
-RE_Index_Max        =  8
+RE_Index_Min        =  4
+RE_Index_Max        =  4
 
-Degree_Min          =  1
-Degree_Max          =  1
+Degree_Min          =  2
+Degree_Max          =  2
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
@@ -238,7 +238,7 @@ Star_Radius         =  1.0E+5_idp               ! (cm)
 
 Dimension_Input     = 3
 
-Max_Iterations      = 100
+Max_Iterations      = 10
 CC_Option           = 1.0E-12_idp
 
 
@@ -251,15 +251,15 @@ NE(1)               = 128                       ! Number of Radial Elements
 NE(2)               = 1                         ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
-NQ(1)               = 10                        ! Number of Radial Quadrature Points
-NQ(2)               = 1                         ! Number of Theta Quadrature Points
+NQ(1)               = 5                        ! Number of Radial Quadrature Points
+NQ(2)               = 5                         ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
-!Print_Results_Flag  = .TRUE.
-Print_Results_Flag  = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
+Print_Results_Flag  = .TRUE.
+!Print_Results_Flag  = .FALSE.
 Suffix_Input        = "Params"
 
 !CFA_Eqs = (/ 1, 0, 0, 0, 0 /)
@@ -273,10 +273,6 @@ Write_Results_T_Samps = 1
 
 CALL Set_Units(Units_Input)
 
-
-
-Star_Radius = Star_Radius*Centimeter
-Domain_Edge = Domain_Edge*Centimeter
 
 
 DO Tol_Index = Tolerance_Index_Min, Tolerance_Index_Max
@@ -389,16 +385,16 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
 
-        !############################################################!
-        !#                                                          #!
-        !#              Calculate and Set Initial Guess             #!
-        !#                                                          #!
-        !############################################################!
-        CALL TimerStart( Timer_Driver_SetGuess )
+    !############################################################!
+    !#                                                          #!
+    !#              Calculate and Set Initial Guess             #!
+    !#                                                          #!
+    !############################################################!
+    CALL TimerStart( Timer_Driver_SetGuess )
 
-        CALL Driver_SetGuess( )
+    CALL Driver_SetGuess( )
 
-        CALL TimerStop( Timer_Driver_SetGuess )
+    CALL TimerStop( Timer_Driver_SetGuess )
 
 
     !############################################################!
@@ -453,7 +449,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
     Call Poseidon_Run()
-
+    
 
     
 
@@ -487,13 +483,13 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
 
     !Write_Results_Flag = 1
-    IF ( .TRUE. ) THEN
+    IF ( Print_Results_Flag ) THEN
 !        CALL Output_Convergence_Reports()
-        CALL Write_Final_Results( Output_Locations_Flag = 2)
+
+!        CALL Write_Final_Results( Output_Locations_Flag = 2)
+
+        CALL Print_HCT_Error()
     END IF
-
-
-
 
 
 
@@ -526,75 +522,6 @@ END DO ! Degree_Index
 END DO ! RE_Index
 END DO ! Tol_Index
 END DO ! M_Index
-
-
-CONTAINS
-
-!############################################################!
-!#                                                          #!
-!#                   HCT_Solution Function                  #!
-!#                                                          #!
-!############################################################!
-REAL FUNCTION HCT_Solution( r, Alpha, Beta, C, Star_Radius )
-
-REAL(idp), INTENT(IN)                      ::   r
-REAL(idp), INTENT(IN)                      ::   Alpha
-REAL(idp), INTENT(IN)                      ::   Beta
-REAL(idp), INTENT(IN)                      ::   C
-REAL(idp), INTENT(IN)                      ::   Star_Radius
-
-
-IF ( r .LE. Star_Radius ) THEN
-
-    HCT_Solution = C*SQRT( (Alpha*Star_Radius)/(r*r + (Alpha*Star_Radius)**2 ) )
-
-ELSE
-
-    HCT_Solution = Beta/r + 1.0_idp
-
-END IF
-
- 
-
-END FUNCTION HCT_Solution
-
-
-
-
-!############################################################!
-!#                                                          #!
-!#                   HCT_Solution Function                  #!
-!#                                                          #!
-!############################################################!
-REAL FUNCTION HCT_Perturbed_Solution( r, Alpha, Beta, C, Star_Radius, rho, Domain_Edge )
-
-REAL(idp), INTENT(IN)                       ::  r
-REAL(idp), INTENT(IN)                       ::  Alpha
-REAL(idp), INTENT(IN)                       ::  Beta
-REAL(idp), INTENT(IN)                       ::  C
-REAL(idp), INTENT(IN)                       ::  Star_Radius
-REAL(idp), INTENT(IN)                       ::  rho
-REAL(idp), INTENT(IN)                       ::  Domain_Edge
-
-REAL(idp)                                   ::  Perturbation
-REAL(idp)                                   ::  Sol
-
-Perturbation = (1.0_idp - r/Domain_Edge) * rho
-
-IF ( r .LE. Star_Radius ) THEN
-
-    Sol = C*SQRT( (Alpha*Star_Radius)/(r*r + (Alpha*Star_Radius)**2 ) )
-
-ELSE
-
-    Sol = Beta/r + 1.0_idp
-
-END IF
-
-HCT_Perturbed_Solution = Sol * ( 1.0_idp + Perturbation )
- 
-
-END FUNCTION HCT_Perturbed_Solution
 
 
 

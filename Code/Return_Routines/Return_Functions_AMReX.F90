@@ -70,7 +70,8 @@ USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
 
 USE Maps_Quadrature, &
-            ONLY :  Map_To_tpd
+            ONLY :  Map_To_tpd,             &
+                    Quad_Map
 
 USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node,        &
@@ -205,7 +206,7 @@ INTEGER                                                 ::  nComp
 INTEGER,    CONTIGUOUS, POINTER                 ::  Mask_PTR(:,:,:,:)
 REAL(idp),  CONTIGUOUS, POINTER                 ::  Result_PTR(:,:,:,:)
 REAL(idp),  DIMENSION(1:Local_Quad_DOF)         ::  Var_Holder_Elem
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE         ::  TransMat
+REAL(idp),  DIMENSION(:,:), ALLOCATABLE         ::  Translation_Matrix
 
 
 INTEGER, DIMENSION(3)                           ::  iEL, iEU
@@ -217,9 +218,9 @@ CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 DOF_Input = NQ(1)*NQ(2)*NQ(3)
 
-Allocate( TransMat(1:Local_Quad_DOF,1:DOF_Input))
+Allocate( Translation_Matrix(1:Local_Quad_DOF,1:DOF_Input))
 
-TransMat = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+Translation_Matrix = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
                                         [xLeftLimit, xRightLimit ],            &
                                         Int_R_Locations,      &
                                         Int_R_Locations,      &
@@ -298,9 +299,7 @@ DO lvl = nLevels-1,0,-1
 
                 END DO ! d Loop
 
-                Here = (pd-1)*NQ(2)*NQ(1)           &
-                    + (td-1)*NQ(1)                  &
-                    + rd
+                Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
                 Var_Holder_Elem(Here) = Tmp_U_Value
             END DO ! rd
             END DO ! td
@@ -312,7 +311,7 @@ DO lvl = nLevels-1,0,-1
 
                 Here = (iU-1)*DOF_Input+Output_Here
 
-                Result_PTR(re,te,pe,Here) = DOT_PRODUCT( TransMat(:,Output_Here), &
+                Result_PTR(re,te,pe,Here) = DOT_PRODUCT( Translation_Matrix(:,Output_Here), &
                                                          Var_Holder_Elem(:)         )
 
             END DO
@@ -388,7 +387,7 @@ INTEGER                                                 ::  nComp
 INTEGER,    CONTIGUOUS, POINTER                         ::  Mask_PTR(:,:,:,:)
 REAL(idp),  CONTIGUOUS, POINTER                         ::  Result_PTR(:,:,:,:)
 REAL(idp),  DIMENSION(1:Local_Quad_DOF)         ::  Var_Holder_Elem
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE         ::  TransMat
+REAL(idp),  DIMENSION(:,:), ALLOCATABLE         ::  Translation_Matrix
 
 Quad_Span = Right_Limit - Left_Limit
 
@@ -397,9 +396,9 @@ CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 DOF_Input = NQ(1)*NQ(2)*NQ(3)
 
-Allocate( TransMat(1:Local_Quad_DOF,1:DOF_Input))
+Allocate( Translation_Matrix(1:Local_Quad_DOF,1:DOF_Input))
 
-TransMat = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+Translation_Matrix = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
                                         [xLeftLimit, xRightLimit ],            &
                                         Int_R_Locations,      &
                                         Int_R_Locations,      &
@@ -484,9 +483,7 @@ DO lvl = nLevels-1,0,-1
 
                     END DO ! d Loop
 
-                    Here = (pd-1)*NQ(2)*NQ(1)           &
-                        + (td-1)*NQ(1)                  &
-                        + rd
+                    Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
                     Var_Holder_Elem(Here) = Tmp_U_Value
 
                 END DO ! rd
@@ -499,7 +496,7 @@ DO lvl = nLevels-1,0,-1
 
                     Here = (iU-1)*DOF_Input+Output_Here
 
-                    Result_PTR(re,te,pe,Here) = DOT_PRODUCT( TransMat(:,Output_Here), &
+                    Result_PTR(re,te,pe,Here) = DOT_PRODUCT( Translation_Matrix(:,Output_Here), &
                                                              Var_Holder_Elem(:)         )
 
                 END DO
@@ -597,9 +594,7 @@ INTEGER                                     ::  Num_QP
 ! K23 = 10
 ! K33 = 11
 
-Here = (pd-1)*NQ(1)*NQ(2)   &
-     + (td-1)*NQ(1)         &
-     + rd
+Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
 Num_QP = NQ(1)*NQ(2)*NQ(3)
 
 AMReX_nCOMP_Map = (iU-1)*Num_QP + Here

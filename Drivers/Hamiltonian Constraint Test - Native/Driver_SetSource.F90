@@ -33,7 +33,8 @@ USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
 USE Poseidon_Units_Module, &
-            ONLY :  Centimeter
+            ONLY :  Gram,           &
+                    Centimeter
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
@@ -47,8 +48,17 @@ USE Poseidon_IO_Parameters, &
 USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
+USE Variables_External, &
+            ONLY :  HCT_Rhoo
+
 USE Variables_IO, &
             ONLY :  File_Suffix
+
+USE Maps_Quadrature, &
+            ONLY :  Quad_Map
+
+USE External_HCT_Solution_Module, &
+            ONLY :  Set_HCT_Test_Params
 
 USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File
@@ -140,25 +150,14 @@ IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing the Hamiltonian const
 
 
 
-HCT_Fileid = 4242
 
-WRITE(HCT_Filename,'(A,A,A,A)') Poseidon_Results_Dir,"HCT_Params_",TRIM(File_Suffix),".out"
-Call Open_New_File(HCT_Filename,HCT_Fileid)
-WRITE(HCT_Fileid,'(2ES22.15)') Alpha, Star_Radius/Centimeter
-CLOSE( HCT_Fileid)
-
-
-
-
-fofalpha            =  Alpha**5/(1.0_idp+Alpha*Alpha)**3
-
-rho_o               =  (3.0_idp/(2.0_idp*pi*Star_Radius*Star_Radius) )*fofalpha*fofalpha
-
+CALL Set_HCT_Test_Params( Alpha, Star_Radius )
 
 
 DO re = 1,NE(1)
 DO te = 1,NE(2)
 DO pe = 1,NE(3)
+
     Cur_R_Locs(:) = dx_c(re)*(R_Quad(:) + LeftLimit)+  x_e(re)
 
     DO pq = 1,NQ(3)
@@ -166,14 +165,12 @@ DO pe = 1,NE(3)
     DO rq = 1,NQ(1)
 
 
-        Here = (pq-1)*NQ(1)*NQ(2)       &
-             + (tq-1)*NQ(1)             &
-             + rq
+        Here = Quad_Map(rq,tq,pq)
 
         IF ( cur_r_locs(rq) .LE. Star_Radius ) THEN
 
-            Local_E(Here, re-1, te-1, pe-1) = rho_o
-!            Print*,Local_E(rq, re-1, 0, 0)
+            Local_E(Here, re-1, te-1, pe-1) = HCT_Rhoo
+!            Print*,re,rq,cur_r_locs(rq),Local_E(Here, re-1, te-1, pe-1)
         ELSE
             Local_E(Here, re-1, te-1, pe-1) = 0.0_idp
         END IF
@@ -191,10 +188,6 @@ Local_Si = 0.0_idp
 
 
 
-
-IF ( Verbose_Flag ) THEN
-    WRITE(*,'(A)')"-Inputing Sources"
-END IF
 
 CALL Poseidon_Input_Sources(Local_E,                &
                             Local_Si,               &

@@ -29,6 +29,9 @@ USE Poseidon_Kinds_Module, &
 USE Maps_X_Space, &
             ONLY :  Map_Between_Spaces
 
+USE Maps_Quadrature, &
+            ONLY :  Quad_Map
+
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
@@ -38,7 +41,11 @@ IMPLICIT NONE
 CONTAINS
 
 
-
+ !+101+####################################################!
+!                                                           !
+!        Create_Translation_Matrix                          !
+!                                                           !
+ !#########################################################!
 FUNCTION Create_Translation_Matrix( Source_NQ,          &
                                     Source_xL,          &
                                     Source_RQ_xlocs,    &
@@ -73,6 +80,7 @@ INTEGER                                             ::  Dest_R
 INTEGER                                             ::  Dest_T
 INTEGER                                             ::  Dest_P
 
+INTEGER                                             ::  Source_R
 INTEGER                                             ::  Source_T
 INTEGER                                             ::  Source_P
 
@@ -114,20 +122,22 @@ Scaled_Source_P_Quad = Map_Between_Spaces(  Source_PQ_xlocs,    &
                                             Dest_xL(2)          )
 
 
+!
 
 
 DO Dest_R = 1,Dest_NQ(1)
  R_Lag_Poly_Values(:,Dest_R) = Lagrange_Poly(Dest_RQ_xlocs(Dest_R), &
                                              Source_NQ(1)-1,        &
                                              Scaled_Source_R_Quad   )
-
 END DO
+
+
+
 
 DO Dest_T = 1,Dest_NQ(2)
  T_Lag_Poly_Values(:,Dest_T) = Lagrange_Poly(Dest_TQ_xlocs(Dest_T), &
                                              Source_NQ(2)-1,        &
                                              Scaled_Source_T_Quad   )
-
 END DO
 
 DO Dest_P = 1,Dest_NQ(3)
@@ -138,28 +148,24 @@ DO Dest_P = 1,Dest_NQ(3)
 END DO
 
 
-
+TransMat = 0.0_idp
 DO Dest_P = 1,Dest_NQ(3)
 DO Dest_T = 1,Dest_NQ(2)
 DO Dest_R = 1,Dest_NQ(1)
-
-Dest_Here = (Dest_P-1) * Dest_NQ(2) * Dest_NQ(1)      &
-          + (Dest_T-1) * Dest_NQ(1)                   &
-          + Dest_R
-
 DO Source_P = 1,Source_NQ(3)
 DO Source_T = 1,Source_NQ(2)
+DO Source_R = 1,Source_NQ(1)
 
-    Here = (Source_P-1) * Source_NQ(2) * Source_NQ(1)   &
-         + (Source_T-1) * Source_NQ(1)
+    Dest_Here = Quad_Map(Dest_R,Dest_T,Dest_P)
+    Here = Quad_Map(Source_R,Source_T,Source_P)
 
-    There = Here + Source_NQ(1)
 
-    TransMat(Here+1:There, Dest_Here)  =                    &
-                R_Lag_Poly_Values(1:Source_NQ(1),Dest_R)    &
-              * T_Lag_Poly_Values(Source_T,Source_T)        &
-              * P_Lag_Poly_Values(Source_P,Source_P)
+    TransMat(Here, Dest_Here)  =                    &
+                R_Lag_Poly_Values(Source_R,Dest_R)    &
+              * T_Lag_Poly_Values(Source_T,Dest_T)        &
+              * P_Lag_Poly_Values(Source_P,Dest_P)
 
+END DO  !   Source_R Loop
 END DO  !   Source_T Loop
 END DO  !   Source_P Loop
 END DO  !   Dest_R Loop
@@ -171,6 +177,9 @@ END DO  !   Dest_P Loop
 DEALLOCATE( R_Lag_Poly_Values )
 DEALLOCATE( T_Lag_Poly_Values )
 DEALLOCATE( P_Lag_Poly_Values )
+
+
+
 
 
 

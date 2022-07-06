@@ -33,7 +33,7 @@ USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
 USE Poseidon_Units_Module, &
-            ONLY :  Centimeter
+            ONLY :  Centimeter, gram, C_Square
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
@@ -50,6 +50,10 @@ USE Poseidon_Interface_Source_Input, &
 USE Variables_IO, &
             ONLY :  File_Suffix
 
+USE Variables_External, &
+            ONLY :  HCT_Rhoo,       &
+                    HCT_Star_Radius
+
 USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File
 
@@ -61,6 +65,9 @@ USE Poseidon_Interface_Run, &
 
 USE Poseidon_Interface_Return_Routines, &
             ONLY :  Poseidon_Return_Conformal_Factor
+
+USE Maps_Quadrature, &
+            ONLY :  Quad_Map
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
@@ -162,14 +169,6 @@ ALLOCATE( Cur_R_Locs(1:NQ(1)) )
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing the Hamiltonian constraint test source.')
 
 
-HCT_Fileid = 4242
-
-WRITE(HCT_Filename,'(A,A,A,A)') Poseidon_Results_Dir,"HCT_Params_",TRIM(File_Suffix),".out"
-Call Open_New_File(HCT_Filename,HCT_Fileid)
-WRITE(HCT_Fileid,'(2ES22.15)') Alpha, Star_Radius/Centimeter
-CLOSE( HCT_Fileid)
-
-
 
 
 CALL Poseidon_Return_Conformal_Factor( NE, NQ,                 &
@@ -188,15 +187,6 @@ Flag = .TRUE.
 DO WHILE ( Flag )
 
 
-
-    fofalpha            =  Alpha**5/(1.0_idp+Alpha*Alpha)**3
-
-    rho_o               =  (3.0_idp/(2.0_idp*pi*Star_Radius*Star_Radius) )*fofalpha*fofalpha
-    uaR                 =  sqrt(Alpha/((1.0_idp+Alpha*Alpha)*Star_Radius))
-    C                   =  1.0_idp/sqrt(sqrt( (2.0_idp/3.0_idp)*pi*rho_o  ) )
-    Beta                =  (C*uaR-1.0_idp)*Star_Radius
-
-
     DO re = 1,NE(1)
     DO te = 1,NE(2)
     DO pe = 1,NE(3)
@@ -207,13 +197,14 @@ DO WHILE ( Flag )
         DO rq = 1,NQ(1)
 
 
-            Here = (pq-1)*NQ(1)*NQ(2)       &
-                 + (tq-1)*NQ(1)             &
-                 + rq
+            Here = Quad_Map(rq, tq, pq, NQ(1), NQ(2),NQ(3))
 
-            IF ( cur_r_locs(rq) .LE. Star_Radius ) THEN
-!                Local_E(Here, re-1, te-1, pe-1) = rho_o*ConFactor_New(Here,re-1,te-1,pe-1)**6
-                Local_E(Here, re-1, te-1, pe-1) = rho_o
+
+            IF ( cur_r_locs(rq) .LE. HCT_Star_Radius ) THEN
+                Local_E(Here, re-1, te-1, pe-1) = HCT_Rhoo*ConFactor_New(Here,re-1,te-1,pe-1)**6
+!                Local_E(Here, re-1, te-1, pe-1) = HCT_Rhoo
+!                PRINT*,HCT_Rhoo*ConFactor_New(Here,re-1,te-1,pe-1)**6,      &
+!                        HCT_Rhoo,ConFactor_New(Here,re-1,te-1,pe-1)**6
             ELSE
                 Local_E(Here, re-1, te-1, pe-1) = 0.0_idp
             END IF
@@ -231,9 +222,9 @@ DO WHILE ( Flag )
 
 
 
-    IF ( Verbose_Flag ) THEN
-        WRITE(*,'(A)')"-Inputing Sources"
-    END IF
+
+
+
 
     CALL Poseidon_Input_Sources(Local_E,                &
                                 Local_Si,               &
@@ -261,7 +252,8 @@ DO WHILE ( Flag )
     Max_Difference = maxval(Difference)
     ConFactor_Old = ConFactor_New
 
-    IF ( Verbose_Flag ) THEN
+    IF ( .TRUE. ) THEN
+!    IF ( Verbose_Flag ) THEN
         WRITE(*,'(A,I3.3)') "End of ConFactor Iter ",Iter
         PRINT*,"Max_Difference",Max_Difference, Tolerance
     END IF

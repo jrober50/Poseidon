@@ -54,10 +54,13 @@ PURE INTEGER FUNCTION Quad_Map_Short(rd, td, pd)
 
 INTEGER, INTENT(IN)     :: rd, td, pd
 
-Quad_Map_Short =  (rd-1) * Num_P_Quad_Points * Num_T_Quad_Points   &
-                + (td-1) * Num_P_Quad_Points                       &
-                + pd
+!Quad_Map_Short =  (rd-1) * Num_P_Quad_Points * Num_T_Quad_Points   &
+!                + (td-1) * Num_P_Quad_Points                       &
+!                + pd
 
+Quad_Map_Short =  (pd-1) * Num_R_Quad_Points * Num_T_Quad_Points   &
+                + (td-1) * Num_R_Quad_Points                       &
+                + rd
 
 
 END FUNCTION Quad_Map_Short
@@ -76,11 +79,13 @@ PURE INTEGER FUNCTION Quad_Map_Long( rd, td, pd,     &   ! Quadrature point in q
 INTEGER, INTENT(IN)     :: rd, td, pd
 INTEGER, INTENT(IN)     :: nr, nt, np
 
-Quad_Map_Long = (rd-1) * np * nt     &
-              + (td-1) * np          &
-              + pd
+!Quad_Map_Long = (rd-1) * np * nt     &
+!              + (td-1) * np          &
+!              + pd
 
-
+Quad_Map_Long = (pd-1) * nr * nt     &
+              + (td-1) * nr          &
+              + rd
 
 END FUNCTION Quad_Map_Long
 
@@ -97,11 +102,13 @@ PURE INTEGER FUNCTION Quad_Map_Long_Array( rd, td, pd,  &   ! Current Quad Point
 INTEGER, INTENT(IN)     :: rd, td, pd
 INTEGER, INTENT(IN)     :: nq(3)
 
-Quad_Map_Long_Array = (rd-1) * nq(3) * nq(2)   &
-                    + (td-1) * nq(3)           &
-                    + pd
+!Quad_Map_Long_Array = (rd-1) * nq(3) * nq(2)   &
+!                    + (td-1) * nq(3)           &
+!                    + pd
 
-
+Quad_Map_Long_Array = (pd-1) * nq(1) * nq(2)   &
+                    + (td-1) * nq(1)           &
+                    + rd
 
 END FUNCTION Quad_Map_Long_Array
 

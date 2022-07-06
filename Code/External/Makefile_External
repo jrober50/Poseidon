@@ -2,3 +2,8 @@ EXTERNAL = \
   Allocation_Yahil_Profile.f90      \
   External_Yahil_Profile.f90        \
   External_MacLaurin_Profile.f90    \
+  External_HCT_Solution.f90         \
+  External_MVL_Solution.f90         \
+  External_IO_Test_Results.f90      \
+
+

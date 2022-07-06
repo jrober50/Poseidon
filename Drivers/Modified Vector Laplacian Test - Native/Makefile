@@ -59,7 +59,7 @@ Main : $(POSEIDON_o) $(DRIVER_o)
 
 
 run : 
-	./$(BIN)/$(DRIVER_NAME).x
+	$(BIN)/$(DRIVER_NAME).x
 
 
 clean:

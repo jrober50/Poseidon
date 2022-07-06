@@ -32,14 +32,11 @@ USE Poseidon_Parameters, &
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Driver_Init_Message
 
-USE Poseidon_Numbers_Module, &
-            ONLY :  pi
+USE Variables_Mesh, &
+            ONLY :  R_Outer
 
-USE Poseidon_Units_Module, &
-            ONLY :  C_Square
-
-USE Variables_Functions, &
-            ONLY :  Potential_Solution
+USE External_HCT_Solution_Module, &
+            ONLY :  HCT_Solution
 
 USE Poseidon_Interface_Boundary_Conditions, &
             ONLY :  Poseidon_Set_Uniform_Boundary_Conditions
@@ -83,18 +80,9 @@ REAL(idp)                                               ::  fofalpha
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Calculating boundary conditions.')
 
 
-fofalpha            =  Alpha**5/(1.0_idp+Alpha*Alpha)**3
-
-rho_o               =  (3.0_idp/(2.0_idp*pi*Star_Radius*Star_Radius) )*fofalpha*fofalpha
-uaR                 =  sqrt(Alpha/((1.0_idp+Alpha*Alpha)*Star_Radius))
-C                   =  1.0_idp/sqrt(sqrt( (2.0_idp/3.0_idp)*pi*rho_o  ) )
-Beta                =  (C*uaR-1.0_idp)*Star_Radius
-
-Psi_BC          = 1.0250_idp
-!Psi_BC          = HCT_Solution( Domain_Edge, Alpha, Beta, C, Star_Radius )
+Psi_BC          = HCT_Solution(R_Outer)
 AlphaPsi_BC     = 1.0_idp
 Shift_Vector_BC = 0.0_idp
-
 
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)
@@ -110,6 +98,7 @@ OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Setting boundary conditions.')
 
+
 CALL Poseidon_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
 CALL Poseidon_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
 
@@ -123,35 +112,6 @@ END SUBROUTINE Driver_SetBC
 
 
 
-
-
-!############################################################!
-!#                                                          #!
-!#                   HCT_Solution Function                  #!
-!#                                                          #!
-!############################################################!
-REAL FUNCTION HCT_Solution( r, Alpha, Beta, C, Star_Radius )
-
-REAL(idp), INTENT(IN)                      ::   r
-REAL(idp), INTENT(IN)                      ::   Alpha
-REAL(idp), INTENT(IN)                      ::   Beta
-REAL(idp), INTENT(IN)                      ::   C
-REAL(idp), INTENT(IN)                      ::   Star_Radius
-
-
-IF ( r .LE. Star_Radius ) THEN
-
-    HCT_Solution = C*SQRT( (Alpha*Star_Radius)/(r*r + (Alpha*Star_Radius)**2 ) )
-
-ELSE
-
-    HCT_Solution = Beta/r + 1.0_idp
-
-END IF
-
- 
-
-END FUNCTION HCT_Solution
 
 END MODULE Driver_SetBC_Module
 

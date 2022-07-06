@@ -68,7 +68,8 @@ USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
 
 USE Maps_Quadrature, &
-            ONLY :  Map_To_tpd
+            ONLY :  Map_To_tpd,             &
+                    Quad_Map
 
 USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node,        &
@@ -166,7 +167,8 @@ DO rd = 1,NQ(1)
     END DO ! d Loop
     END DO ! lm Loop
 
-    Here = rd + (td-1)*NQ(1) + (pd-1)*NQ(1)*NQ(2)
+    
+    Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
     Return_Variable(Here,re,te,pe) = REAL(Tmp_U_Value, KIND = idp)
 
 
@@ -251,7 +253,8 @@ DO rd = 1,NQ(1)
 
     END DO ! d Loop
     END DO ! lm Loop
-    Here = rd + (td-1)*NQ(1) + (pd-1)*NQ(1)*NQ(2)
+    
+    Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
     Return_Variable(Here,re,te,pe) = REAL(Tmp_U_Value, KIND = idp)
 
 END DO ! rd Loop

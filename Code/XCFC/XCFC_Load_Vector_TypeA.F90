@@ -457,14 +457,18 @@ DO d = 0,DEGREE
 
 !        IF ( iU == iU_CF ) THEN
 !            PRINT*,iE(1),d,rd, RHS_TMP
-!!
+
+!            PRINT*,iE(1),d,rd,                                  &
+!                SUM( SourceTerm( :, rd, iU )                     &
+!                    * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+!                    * TP_Int_Weights(:)                     )
 !            PRINT*,SourceTerm( :, rd, iU )
 !            PRINT*,"++++++++++++++++++++++"
 !            PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
 !            PRINT*,"======================"
 !            PRINT*,TP_Int_Weights(:)
 !            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
-!
+
 !            PRINT*,SUM( SourceTerm( :, rd, iU )             &
 !            * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))       &
 !            * TP_Int_Weights(:)                     ),      &
