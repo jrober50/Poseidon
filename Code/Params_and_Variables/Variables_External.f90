@@ -61,12 +61,16 @@ REAL(idp)                                               ::  MVL_C1
 REAL(idp)                                               ::  MVL_C2
 
 
-
 REAL(idp)                                               ::  HCT_Alpha
 REAL(idp)                                               ::  HCT_Star_Radius
 REAL(idp)                                               ::  HCT_Rhoo
 REAL(idp)                                               ::  HCT_Beta
 REAL(idp)                                               ::  HCT_C
+
+
+REAL(idp)                                               ::  UST_Rhoo
+REAL(idp)                                               ::  UST_Star_Radius
+
 
 END MODULE Variables_External
 

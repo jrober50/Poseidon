@@ -1,23 +1,8 @@
 Allocation_Poisson.o:                \
   Allocation_Poisson.f90             \
 
-Poisson_Matrix_Routines.o:           \
-  Poisson_Matrix_Routines.f90        \
-
 Poisson_Load_Vector.o:               \
   Poisson_Load_Vector.F90            \
-
-Poisson_Cholesky_Module.o:           \
-  Poisson_Cholesky_Module.f90        \
-
-Poisson_Boundary_Conditions.o:       \
-  Poisson_Boundary_Conditions.f90    \
-
-Poisson_Forward_Substitution.o:      \
-  Poisson_Forward_Substitution.f90   \
-
-Poisson_Back_Substitution.o:         \
-  Poisson_Back_Substitution.f90      \
 
 Poisson_Linear_Solve.o:              \
   Poisson_Linear_Solve.f90           \

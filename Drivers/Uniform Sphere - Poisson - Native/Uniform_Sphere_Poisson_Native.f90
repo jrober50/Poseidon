@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-PROGRAM Yahil_Profile_Poisson_Native                                                !##!
+PROGRAM Uniform_Sphere_Poisson_Native                                                !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
@@ -14,7 +14,7 @@ PROGRAM Yahil_Profile_Poisson_Native                                            
 
 
 USE Poseidon_Kinds_Module, &
-               ONLY :  idp
+            ONLY :  idp
 
 USE Poseidon_Letters_Module, &
             ONLY :  Letter_Table_Upper
@@ -29,22 +29,25 @@ USE Poseidon_Interface_Close, &
             ONLY :  Poseidon_Close
 
 USE Variables_MPI, &
-               ONLY :  ierr
+            ONLY :  ierr
 
 USE Functions_Mesh, &
-               ONLY :  Create_3D_Mesh
+            ONLY :  Create_3D_Mesh
+
+USE External_IO_Test_Results_Module, &
+            ONLY :  Print_UST_Error
 
 USE Functions_Quadrature, &
-               ONLY :  Initialize_LG_Quadrature_Locations
+            ONLY :  Initialize_LG_Quadrature_Locations
 
 USE Maps_X_Space, &
-               ONLY :  Map_From_X_Space
+            ONLY :  Map_From_X_Space
 
 USE Driver_SetSource_Module, &
-                ONLY:  Driver_SetSource
+            ONLY:  Driver_SetSource
 
 USE Driver_SetBC_Module, &
-                ONLY:  Driver_SetBC
+            ONLY:  Driver_SetBC
 
 
 USE MPI
@@ -87,6 +90,8 @@ REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_P_Quad
 REAL(idp)                                               ::  Left_Limit
 REAL(idp)                                               ::  Right_Limit
 
+INTEGER                                                 ::  Surface_RE
+REAL(idp)                                               ::  rho_o
 
 INTEGER                                                 ::  myID, nPROCS
 
@@ -94,6 +99,7 @@ INTEGER                                                 ::  Guess_Type
 
 INTEGER, DIMENSION(:), ALLOCATABLE                      ::  RE_Table
 
+INTEGER                                                 ::  Surface_RE_Index
 INTEGER                                                 ::  RE_Index
 INTEGER                                                 ::  RE_Index_Min
 INTEGER                                                 ::  RE_Index_Max
@@ -116,7 +122,6 @@ INTEGER                                                 ::  T_Index_Max
 
 REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
-REAL(idp), DIMENSION(3)                                 ::  Yahil_Params
 
 
 INTEGER                                                 ::  Max_Iterations
@@ -142,10 +147,10 @@ ALLOCATE( RE_Table(1:9) )
 !#                      Test Parameters                     #!
 !#                                                          #!
 !############################################################!
-Units_Input         = "G"
+Units_Input         = "C"
 Solver_Type         = 3
 
-RE_Table            = (/ 32, 128, 160, 240, 320, 400, 600, 256, 512 /)
+RE_Table            = (/ 22, 2, 128, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
@@ -156,19 +161,19 @@ T_Index_Max         =  1
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-RE_Index_Min        =  9
-RE_Index_Max        =  9
+Surface_RE_Index    =  3
+RE_Index_Min        =  Surface_RE_Index
+RE_Index_Max        =  Surface_RE_Index
 
-Degree_Min          =  1
-Degree_Max          =  1
+Degree_Min          =  2
+Degree_Max          =  2
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
 
 Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Educated.
 
-Kappa               = 953946015514834.4
-Gamma               = 1.30_idp
+rho_o               =  1.0_idp
 
 !Suffix_Tail         = "A"
 !Convergence_Criteria = 1.0E-8_idp
@@ -176,9 +181,9 @@ Gamma               = 1.30_idp
 Dimension_Input     = 3
 
 Max_Iterations      = 10
-CC_Option           = 1.0E-10_idp
+CC_Option           = 1.0E-14_idp
 
-Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
 Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
@@ -187,16 +192,15 @@ NE(1)               = 128                       ! Number of Radial Elements
 NE(2)               = 1                        ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
-NQ(1)               = 10                        ! Number of Radial Quadrature Points
+NQ(1)               = 5                        ! Number of Radial Quadrature Points
 NQ(2)               = 1                         ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
 Suffix_Input        = "Params"
 
-CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
 
 
 DO M_Index = M_Index_Min, M_Index_Max
@@ -206,11 +210,11 @@ DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     NE(1) = RE_Table(RE_Index)
-    NQ(3) = 2*L_Limit_Input + 1
+!    NQ(3) = 2*L_Limit_Input + 1
 
     Suffix_Tail = Letter_Table(Solver_Type)
 
-
+    Surface_RE = RE_Table(Surface_RE_Index)
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
@@ -250,7 +254,19 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         y_e, y_c, dy_c,    &
                         z_e, z_c, dz_c,     &
                         Zoom = 1.032034864238313_idp )
+!    Uniform
+!    x_e = [ 0.0000000000000000_idp, 500000000.00000000_idp, 1000000000.0000000_idp]
+!    dx_c = [500000000.00000000_idp, 500000000.00000000_idp ]
 
+!   Offset
+!    x_e = [ 0.0000000000000000_idp, 500000100.00000000_idp, 1000000000.0000000_idp]
+!    dx_c = [500000100.00000000_idp, 499999900.00000000_idp ]
+!    dx_c = [499999999.99999999_idp, 500000000.00000001_idp ]
+
+!    PRINT*,"x_e"
+!    PRINT*,x_e
+!    PRINT*,"dx_c"
+!    PRINT*,dx_c
 
     !############################################################!
     !#                                                          #!
@@ -276,10 +292,6 @@ CALL Initialize_Poseidon &
             Source_T_Option              = y_e,                          &
             Source_P_Option              = z_e,                          &
             Method_Flag_Option           = Solver_Type,                  &
-            CFA_Eq_Flags_Option          = CFA_Eqs,                      &
-            Max_Iterations_Option        = Max_Iterations,               &
-            Convergence_Criteria_Option  = CC_Option,                    &
-            Anderson_M_Option            = Anderson_M_Values(M_Index),   &
             Verbose_Option               = Verbose,                      &
             WriteAll_Option              = .FALSE.,                      &
             Print_Setup_Option           = .TRUE.,                       &
@@ -301,15 +313,15 @@ CALL Initialize_Poseidon &
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
-    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
     CALL Driver_SetSource(  NE, NQ,                 &
+                            Surface_RE,             &
+                            rho_o,                  &
                             dx_c, x_e,              &
                             Input_R_Quad,           &
                             Input_T_Quad,           &
                             Input_P_Quad,           &
                             Left_Limit,             &
-                            Right_Limit,            &
-                            Yahil_Params            )
+                            Right_Limit            )
 
 
 
@@ -319,7 +331,8 @@ CALL Initialize_Poseidon &
     !#          Calculate and Set Boundary Conditions           #!
     !#                                                          #!
     !############################################################!
-    CALL Driver_SetBC( )
+    CALL Driver_SetBC(  Surface_RE,             &
+                        rho_o                   )
 
 
 
@@ -336,6 +349,9 @@ CALL Initialize_Poseidon &
 
 
 
+
+
+    CALL Print_UST_Error()
 
 
 
@@ -372,7 +388,7 @@ CALL MPI_Finalize(ierr)
 
 
 
-END PROGRAM Yahil_Profile_Poisson_Native
+END PROGRAM Uniform_Sphere_Poisson_Native
 
 
 

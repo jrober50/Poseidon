@@ -35,8 +35,8 @@ USE Poseidon_Parameters, &
 USE Poseidon_Message_Routines_Module, &
                 ONLY :  Driver_Init_Message
 
-USE External_Yahil_Profile_Module, &
-                ONLY :  Initialize_Yahil_Density
+USE External_UST_Solution_Module, &
+                ONLY :  Set_UST_Test_Params
 
 USE Poseidon_Interface_Source_Input, &
                 ONLY :  Poseidon_Input_Sources
@@ -69,8 +69,7 @@ SUBROUTINE Driver_SetSource( NE, NQ,                    &
                              rho_o,                     &
                              dx_c, x_e,                 &
                              R_Quad, T_Quad, P_Quad,    &
-                             LeftLimit, RightLimit,     &
-                             Yahil_Params               )
+                             LeftLimit, RightLimit      )
 
 INTEGER,    INTENT(IN), DIMENSION(3)                    ::  NE
 INTEGER,    INTENT(IN), DIMENSION(3)                    ::  NQ
@@ -87,12 +86,10 @@ REAL(idp),  INTENT(IN), DIMENSION(1:NQ(3))              ::  P_Quad
 
 REAL(idp),  INTENT(IN)                                  ::  LeftLimit
 REAL(idp),  INTENT(IN)                                  ::  RightLimit
-    
-REAL(idp),  INTENT(IN), DIMENSION(3)                    ::  Yahil_Params
 
 
 
-
+INTEGER                                                 ::  re
 INTEGER                                                 ::  Num_DOF
 
 REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  Density
@@ -105,8 +102,13 @@ ALLOCATE( Density(1:Num_DOF, 0:NE(1)-1, 0:NE(2)-1, 0:NE(3)-1 )  )
 
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
+
+CALL Set_UST_Test_Params(   rho_o,               &
+                            x_e(Surface_RE)      )
+
+
 Density = 0.0_idp
-DO re = 0:NE(1)-1
+DO re = 0,NE(1)-1
 
     IF ( re .LE. Surface_RE ) THEN
         Density(:,re,:,:) = rho_o

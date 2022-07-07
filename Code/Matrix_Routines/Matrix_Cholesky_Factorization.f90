@@ -329,8 +329,7 @@ DO l = 0,L_LIMIT
 
 END DO
 
-!PRINT*,"After Chol_Factorizer"
-!PRINT*,NEW_ELEM_VAL
+
 
 
 
@@ -378,8 +377,7 @@ DEALLOCATE(NEW_ELEM_VAL, NEW_ROW_IND)
 CALL TimerStop(Timer_XCFC_Matrix_Cholesky)
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .TRUE.
 
-!PRINT*,"STOPing at end of CHOLESKY_FACTORIZATION"
-!STOP
+
 
 END SUBROUTINE CHOLESKY_FACTORIZATION
 
@@ -404,9 +402,6 @@ INTEGER(KIND = 1), DIMENSION(0:N-1,0:N-1), INTENT(INOUT)                :: LogMa
 INTEGER                                                                 :: k, i, j, row_here
 INTEGER                                                                 :: PARENT
 
-
-!PRINT*,"LOGMAP_INIT FIRST COUNT"
-
 !
 !   Map nonzeros to logic map
 !   1 -> nonzero value
@@ -428,7 +423,6 @@ END DO
 
 
 
-!PRINT*,"LOGMAP_INIT PARENT COUNT"
 !
 !   Use logical map to determine parentage of
 !   matrix elements, and mark where new non-zero 
@@ -455,7 +449,6 @@ END DO
 
 
 
-!PRINT*,"LOGMAP_INIT NEW_NNZ COUNT"
 !
 ! Count number of nonzeros including and below the diagonal.
 !   Only count below the diagonal as we will only need to store the

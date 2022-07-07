@@ -1,4 +1,4 @@
-TEST_NAME    =Yahil_Profile_Poisson_Native
+TEST_NAME    =Uniform_Sphere_Poisson_Native
 TEST_EXT     =f90
 
 ## Select Number of Processes (Mostly for MacBook)

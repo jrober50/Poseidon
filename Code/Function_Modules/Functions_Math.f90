@@ -55,13 +55,13 @@ PURE FUNCTION Lagrange_Poly(x, Ord, xlocs)
 
 
 INTEGER, INTENT(IN)                                 :: Ord
-REAL(KIND = idp), INTENT(IN)                        :: x
-REAL(KIND = idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
+REAL(idp), INTENT(IN)                        :: x
+REAL(idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
 
 
 INTEGER                                             :: i,j
-REAL(KIND = idp), DIMENSION(0:Ord)                  :: tmp
-REAL(KIND = idp), DIMENSION(0:Ord)                  :: Lagrange_Poly
+REAL(idp), DIMENSION(0:Ord)                  :: tmp
+REAL(idp), DIMENSION(0:Ord)                  :: Lagrange_Poly
 
 
 
@@ -96,14 +96,14 @@ END FUNCTION Lagrange_Poly
 PURE FUNCTION Lagrange_Poly_Deriv(x, Ord, xlocs)
 
 INTEGER, INTENT(IN)                                 :: Ord
-REAL(KIND = idp), INTENT(IN)                        :: x
-REAL(KIND = idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
+REAL(idp), INTENT(IN)                        :: x
+REAL(idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
 
 
 
 INTEGER                                             :: i,j,k
-REAL(KIND = idp), DIMENSION(0:Ord)                  :: tmp,tmp2
-REAL(KIND = idp), DIMENSION(0:Ord)                  :: Lagrange_Poly_Deriv
+REAL(idp), DIMENSION(0:Ord)                  :: tmp,tmp2
+REAL(idp), DIMENSION(0:Ord)                  :: Lagrange_Poly_Deriv
 
 
 tmp(:) = 1.0_idp
@@ -148,14 +148,14 @@ END FUNCTION Lagrange_Poly_Deriv
 PURE FUNCTION Lagrange_Second_Deriv(x, Ord, xlocs)
 
 INTEGER, INTENT(IN)                                 :: Ord
-REAL(KIND = idp), INTENT(IN)                        :: x
-REAL(KIND = idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
+REAL(idp), INTENT(IN)                        :: x
+REAL(idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
 
 
 
 INTEGER                                             :: i, j, k, l
-REAL(KIND = idp), DIMENSION(0:Ord)                  :: tmp,tmp2
-REAL(KIND = idp), DIMENSION(0:Ord)                  :: Lagrange_Second_Deriv
+REAL(idp), DIMENSION(0:Ord)                  :: tmp,tmp2
+REAL(idp), DIMENSION(0:Ord)                  :: Lagrange_Second_Deriv
 
 
 
@@ -235,13 +235,13 @@ PURE FUNCTION Legendre_Poly(l,m,num_points,theta)
 !  If m > n then returns 0 as the poly doesn't exist there.
 
 INTEGER, INTENT(IN)                                     :: l,m, num_points
-REAL(KIND = idp),  INTENT(IN), DIMENSION(1:num_points)  :: theta
-REAL(KIND = idp), DIMENSION(1:num_points)               :: Legendre_Poly
+REAL(idp),  INTENT(IN), DIMENSION(1:num_points)  :: theta
+REAL(idp), DIMENSION(1:num_points)               :: Legendre_Poly
 
 INTEGER                                         :: i, n
-REAL(KIND = idp)                                :: factor, normfactor
-REAL(KIND = idp), DIMENSION(1:num_points)       :: costheta, sqrfactor
-REAL(KIND = idp), DIMENSION(0:l,1:num_points)   :: Plm
+REAL(idp)                                :: factor, normfactor
+REAL(idp), DIMENSION(1:num_points)       :: costheta, sqrfactor
+REAL(idp), DIMENSION(0:l,1:num_points)   :: Plm
 
 
 n = abs(m)
@@ -312,13 +312,13 @@ FUNCTION Legendre_Poly_Array(l,m,num_points,theta)
 !  If m > n then returns 0 as the poly doesn't exist there.
 
 INTEGER, INTENT(IN)                                     :: l,m, num_points
-REAL(KIND = idp),  INTENT(IN), DIMENSION(1:num_points)  :: theta
-REAL(KIND = idp), DIMENSION(0:l,1:num_points)           :: Legendre_Poly_Array
+REAL(idp),  INTENT(IN), DIMENSION(1:num_points)  :: theta
+REAL(idp), DIMENSION(0:l,1:num_points)           :: Legendre_Poly_Array
 
 INTEGER                                         :: i, n
-REAL(KIND = idp)                                :: factor, normfactor
-REAL(KIND = idp), DIMENSION(1:num_points)       :: costheta, sqrfactor
-REAL(KIND = idp), DIMENSION(0:l,1:num_points)   :: Plm
+REAL(idp)                                :: factor, normfactor
+REAL(idp), DIMENSION(1:num_points)       :: costheta, sqrfactor
+REAL(idp), DIMENSION(0:l,1:num_points)   :: Plm
 
 
 n = abs(m)
@@ -380,10 +380,10 @@ END FUNCTION Legendre_Poly_Array
 PURE ELEMENTAL FUNCTION Norm_Factor(l,m)
 
 INTEGER, INTENT(IN)         :: l,m
-REAL(KIND = idp)            :: Norm_Factor
+REAL(idp)            :: Norm_Factor
 
-REAL(KIND = idp)            ::  Real_L
-REAL(KIND = idp)            ::  Real_M
+REAL(idp)            ::  Real_L
+REAL(idp)            ::  Real_M
 
 Real_L = REAL( l, Kind = idp)
 Real_M = REAL( m, Kind = idp)
@@ -413,10 +413,10 @@ END FUNCTION Norm_Factor
 PURE ELEMENTAL FUNCTION Sqrt_Factor(l,m)
 
 INTEGER, INTENT(IN)         :: l,m
-REAL(KIND = idp)            :: Sqrt_Factor
+REAL(idp)            :: Sqrt_Factor
 
-REAL(KIND = idp)            ::  Real_L
-REAL(KIND = idp)            ::  Real_M
+REAL(idp)            ::  Real_L
+REAL(idp)            ::  Real_M
 
 Real_L = REAL( l, Kind = idp)
 Real_M = REAL( m, Kind = idp)
@@ -435,13 +435,13 @@ END FUNCTION Sqrt_Factor
 !       Factorial - Calulcates N!, for use in Legendre_Poly             !
 !                                                                       !
  !#####################################################################!
-PURE ELEMENTAL REAL(KIND = idp) FUNCTION Factorial(n)
+PURE ELEMENTAL REAL(idp) FUNCTION Factorial(n)
 
 INTEGER, INTENT(IN) :: n
 
 
 INTEGER             :: i
-REAL(KIND = idp)  :: fact
+REAL(idp)  :: fact
 
 
 fact = 1
@@ -474,10 +474,10 @@ PURE FUNCTION Spherical_Harmonic(l,m,theta,phi)
 
 
 INTEGER, INTENT(IN)                         :: l,m
-REAL(KIND = idp), INTENT(IN)                :: theta, phi
+REAL(idp), INTENT(IN)                :: theta, phi
 
-REAL(KIND = idp), DIMENSION(0:0)            :: Plm
-COMPLEX(KIND = idp)                         :: Spherical_Harmonic
+REAL(idp), DIMENSION(0:0)            :: Plm
+COMPLEX(idp)                         :: Spherical_Harmonic
 
 
 Plm = Legendre_Poly(l,m,1,[theta])

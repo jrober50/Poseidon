@@ -153,17 +153,15 @@ CONTAINS
  REAL(KIND = idp),   INTENT(IN)          ::  BC_Value_Input
 
 
-
  IF (    BC_Location_Input == "I"    ) THEN
 
-     INNER_Poisson_BC_TYPE  = BC_Type_Input
-     INNER_Poisson_BC_VALUE = BC_Value_Input
+    INNER_CFA_BC_TYPE(1)   = BC_Type_Input
+    INNER_CFA_BC_VALUES(1) = BC_Value_Input
 
  ELSE IF (    BC_Location_Input == "O"    ) THEN
 
-     OUTER_Poisson_BC_TYPE  = BC_Type_Input
-     OUTER_Poisson_BC_VALUE = BC_Value_Input
-
+    OUTER_CFA_BC_TYPE(1)   = BC_Type_Input
+    OUTER_CFA_BC_VALUES(1) = BC_Value_Input
 
  END IF
 
