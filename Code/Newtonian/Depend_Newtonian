@@ -1,0 +1,15 @@
+Allocation_Newtonian.o:                \
+  Allocation_Newtonian.f90             \
+
+Newtonian_Load_Vector.o:               \
+  Newtonian_Load_Vector.F90            \
+
+Newtonian_Linear_Solve.o:              \
+  Newtonian_Linear_Solve.f90           \
+
+Newtonian_Main.o:                      \
+  Newtonian_Main.f90                   \
+
+
+
+

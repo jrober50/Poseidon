@@ -130,7 +130,6 @@ INTEGER                                                 ::  Max_Iterations
 REAL(idp)                                               ::  CC_Option
 
 INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
-CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
 REAL(idp), DIMENSION(1:6)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
 
@@ -163,7 +162,7 @@ T_Index_Max         =  1
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-Surface_RE_Index    =  2
+Surface_RE_Index    =  1
 RE_Index_Min        =  Surface_RE_Index
 RE_Index_Max        =  Surface_RE_Index
 
@@ -218,8 +217,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     NE(1) = RE_Table(RE_Index)
 !    NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(Solver_Type)
-
+    Suffix_Tail = Letter_Table_Upper(1)
+    
     Surface_RE = RE_Table(Surface_RE_Index)
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -261,7 +260,6 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         z_e, z_c, dz_c,     &
                         Zoom = 1.032034864238313_idp )
 
-
     !############################################################!
     !#                                                          #!
     !#                   Initialize Poseidon                    #!
@@ -288,10 +286,10 @@ CALL Initialize_Poseidon &
             Method_Flag_Option           = Solver_Type,                  &
             Verbose_Option               = Verbose,                      &
             WriteAll_Option              = .FALSE.,                      &
-            Print_Setup_Option           = .FALSE.,                       &
+            Print_Setup_Option           = .TRUE.,                       &
             Write_Setup_Option           = .TRUE.,                       &
             Print_Results_Option         = Print_Results_Flag,            &
-            Write_Results_Option         = .FALSE.,                       &
+            Write_Results_Option         = .TRUE.,                       &
             Print_Timetable_Option       = .FALSE.,                       &
             Write_Timetable_Option       = .TRUE.,                       &
             Write_Sources_Option         = .TRUE.,                       &

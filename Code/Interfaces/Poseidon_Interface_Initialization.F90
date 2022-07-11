@@ -203,6 +203,10 @@ USE Flags_Initialization_Module, &
                     lPF_Init_AMReX_Flags,   &
                     iPF_Init_AMReX_Maps
 
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,               &
+                    iPF_IO_Write_Setup
+
 
 IMPLICIT NONE
 
@@ -511,7 +515,7 @@ CALL TimerStop( Timer_Initialization_Core )
 IF ( Verbose_Flag ) CALL Init_Message('Poseidon Initialization Core Complete.')
 
 
-IF ( Verbose_Flag ) THEN
+IF ( lPF_IO_Flags(iPF_IO_Write_Setup) ) THEN
     CALL Output_Setup_Report()
 END IF
 

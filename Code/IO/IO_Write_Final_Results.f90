@@ -168,7 +168,7 @@ INTEGER,    INTENT(IN), OPTIONAL                            ::  Output_Locations
 INTEGER,    INTENT(IN), OPTIONAL,   DIMENSION(1:5)          ::  CFA_Eq_Overide
 
 
-CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Filenames
+CHARACTER(LEN = 200), DIMENSION(:), ALLOCATABLE             ::  Filenames
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
 INTEGER                                                     ::  Num_Files
 
@@ -189,6 +189,8 @@ ELSE
         CFA_Eq_Flag_Used = CFA_Eq_Flags
     END IF
 END IF
+
+
 
 IF ( PRESENT(Output_Locations_Flag) ) THEN
     Output_Locations_Mode = Output_Locations_Flag
@@ -213,6 +215,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
     WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
     WRITE(Filenames(3),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
     WRITE(Filenames(4),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
+
     Here = 5
     DO i = 1,5
         IF ( CFA_Eq_Flag_Used(i) == 1 ) THEN
@@ -408,14 +411,33 @@ DO k = 1,NUM_PHI_RAYS
 DO j = 1,NUM_THETA_RAYS
 DO i = 1,NUM_RADIAL_SAMPLES
 
-    CF = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_CF)
-    
-    Var_Holder(k,j,i,1) = CF
-    Var_Holder(k,j,i,2) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_LF)/CF
-    Var_Holder(k,j,i,3) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_S1, iVB_S)
-    Var_Holder(k,j,i,4) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_S2, iVB_S)
-    Var_Holder(k,j,i,5) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_S3, iVB_S)
-    Var_Holder(k,j,i,6) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_X1, iVB_X)
+
+    IF ( ANY(CFA_Eq_Flags(1:2) == 1) ) THEN
+        CF = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_CF)
+        
+        Var_Holder(k,j,i,1) = CF
+    END IF
+
+    IF ( CFA_Eq_Flags(2) == 1 ) THEN
+        Var_Holder(k,j,i,2) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_LF)/CF
+    END IF
+
+    IF ( CFA_Eq_Flags(3) == 1 ) THEN
+        Var_Holder(k,j,i,3) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_S1, iVB_S)
+    END IF
+
+
+    IF ( CFA_Eq_Flags(4) == 1 ) THEN
+        Var_Holder(k,j,i,4) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_S2, iVB_S)
+    END IF
+
+    IF ( CFA_Eq_Flags(5) == 1 ) THEN
+        Var_Holder(k,j,i,5) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_S3, iVB_S)
+    END IF
+
+    IF ( .FALSE. ) THEN
+        Var_Holder(k,j,i,6) = Calc_Var_at_Location(R_Holder(i),T_Holder(j),P_Holder(k), iU_X1, iVB_X)
+    END IF
 
 END DO ! i Loop
 END DO ! j Loop

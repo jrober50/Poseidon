@@ -17,7 +17,7 @@ POSEIDON = \
   $(MATRIX)          \
   $(FP)              \
   $(XCFC)            \
-  $(POISSON)         \
+  $(NEWTONIAN)       \
   $(EXTERNAL)        \
   $(INIT)            \
   $(UTILITIES)       \

@@ -24,8 +24,7 @@ $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules:          \
 $(POSEIDON_ACTIVE_DIR)/Code/Initialization:            \
 $(POSEIDON_ACTIVE_DIR)/Code/Source_Input:              \
 $(POSEIDON_ACTIVE_DIR)/Code/Interfaces:                \
-$(POSEIDON_ACTIVE_DIR)/Code/Poisson:                   \
-$(POSEIDON_ACTIVE_DIR)/Code/Newton_Raphson:            \
+$(POSEIDON_ACTIVE_DIR)/Code/Newtonian:                 \
 $(POSEIDON_ACTIVE_DIR)/Code/Params_And_Variables:      \
 $(POSEIDON_ACTIVE_DIR)/Code/Utilities:                 \
 ..

@@ -1,0 +1,6 @@
+NEWTONIAN = \
+  Allocation_Newtonian.f90             \
+  Newtonian_Load_Vector.F90            \
+  Newtonian_Main.f90                   \
+  Initialization_Newtonian.f90         \
+

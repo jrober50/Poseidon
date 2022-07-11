@@ -1,6 +1,0 @@
-POISSON = \
-  Allocation_Poisson.f90             \
-  Poisson_Load_Vector.F90            \
-  Poisson_Main.f90                   \
-  Initialization_Poisson.f90         \
-
