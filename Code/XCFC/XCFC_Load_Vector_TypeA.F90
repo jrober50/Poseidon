@@ -639,11 +639,20 @@ IF ( iU == iU_CF ) THEN
 !    PRINT*,PhysSrc(:,:)
 !    PRINT*,"3"
 !    PRINT*,AA_Array(:,:)
+
+
+
+!   XCFC Source
+!
     SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar / Cur_Val_Psi(:,:)   &
                         * PhysSrc(:,:)                                  &
                       -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
                         * AA_Array(:,:)
 
+
+
+
+!   CFA Source
 !
 !    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar * Cur_Val_Psi(:,:)**5   &
 !                        * PhysSrc(:,:)                                  &

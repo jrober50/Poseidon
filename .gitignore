@@ -13,6 +13,7 @@ Tests/.DS_Store
 *.png
 *.dSYM
 *.ex
+*.dat
 
 ~$ConditionNumber.xlsx
 
@@ -22,3 +23,8 @@ Tests/.DS_Store
 *.DS_Store
 
 Params/CFA_Coeffs.coefs
+
+Old/*
+Trash/*
+
+

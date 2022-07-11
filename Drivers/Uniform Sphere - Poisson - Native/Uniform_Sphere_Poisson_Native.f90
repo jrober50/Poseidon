@@ -76,6 +76,8 @@ REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_e, y_e, z_e
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_c, y_c, z_c
 
 LOGICAL                                                 ::  Verbose
+LOGICAL                                                 ::  Print_Results_Flag
+
 
 INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
@@ -150,7 +152,7 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "C"
 Solver_Type         = 3
 
-RE_Table            = (/ 22, 2, 128, 240, 320, 400, 600, 256, 512 /)
+RE_Table            = (/ 2, 32, 128, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
@@ -161,7 +163,7 @@ T_Index_Max         =  1
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-Surface_RE_Index    =  3
+Surface_RE_Index    =  2
 RE_Index_Min        =  Surface_RE_Index
 RE_Index_Max        =  Surface_RE_Index
 
@@ -183,7 +185,7 @@ Dimension_Input     = 3
 Max_Iterations      = 10
 CC_Option           = 1.0E-14_idp
 
-Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
 Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
@@ -199,6 +201,10 @@ NQ(3)               = 1                         ! Number of Phi Quadrature Point
 
 !Verbose             = .TRUE.
 Verbose             = .FALSE.
+
+Print_Results_Flag  = .TRUE.
+!Print_Results_Flag  = .FALSE.
+
 Suffix_Input        = "Params"
 
 
@@ -254,19 +260,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         y_e, y_c, dy_c,    &
                         z_e, z_c, dz_c,     &
                         Zoom = 1.032034864238313_idp )
-!    Uniform
-!    x_e = [ 0.0000000000000000_idp, 500000000.00000000_idp, 1000000000.0000000_idp]
-!    dx_c = [500000000.00000000_idp, 500000000.00000000_idp ]
 
-!   Offset
-!    x_e = [ 0.0000000000000000_idp, 500000100.00000000_idp, 1000000000.0000000_idp]
-!    dx_c = [500000100.00000000_idp, 499999900.00000000_idp ]
-!    dx_c = [499999999.99999999_idp, 500000000.00000001_idp ]
-
-!    PRINT*,"x_e"
-!    PRINT*,x_e
-!    PRINT*,"dx_c"
-!    PRINT*,dx_c
 
     !############################################################!
     !#                                                          #!
@@ -294,11 +288,11 @@ CALL Initialize_Poseidon &
             Method_Flag_Option           = Solver_Type,                  &
             Verbose_Option               = Verbose,                      &
             WriteAll_Option              = .FALSE.,                      &
-            Print_Setup_Option           = .TRUE.,                       &
+            Print_Setup_Option           = .FALSE.,                       &
             Write_Setup_Option           = .TRUE.,                       &
-            Print_Results_Option         = .TRUE.,                       &
+            Print_Results_Option         = Print_Results_Flag,            &
             Write_Results_Option         = .FALSE.,                       &
-            Print_Timetable_Option       = .TRUE.,                       &
+            Print_Timetable_Option       = .FALSE.,                       &
             Write_Timetable_Option       = .TRUE.,                       &
             Write_Sources_Option         = .TRUE.,                       &
             Print_Condition_Option       = .FALSE.,                       &
@@ -349,10 +343,11 @@ CALL Initialize_Poseidon &
 
 
 
+    IF ( Print_Results_Flag ) THEN
 
+        CALL Print_UST_Error()
 
-    CALL Print_UST_Error()
-
+    END IF
 
 
     !############################################################!

@@ -125,7 +125,7 @@ SUBROUTINE Calculate_Poisson_Load_Vector()
 COMPLEX(idp)                                        ::  Tmp_Val
 
 
-INTEGER                                             ::  lm,l,m, re, rd, te, td, pe, pd, p
+INTEGER                                             ::  lm,l,m, re, rd, te, td, pe, pd, d
 
 
 REAL(idp)                                           ::  drot, dtot
@@ -142,7 +142,7 @@ REAL(KIND = idp), DIMENSION(0:DEGREE)               ::  LagP
 INTEGER                                             ::  There, Here
 
 
-REAL(idp),           DIMENSION(:,:),   ALLOCATABLE  ::  R_Pre
+REAL(idp),           DIMENSION(:,:,:), ALLOCATABLE  ::  R_Pre
 REAL(idp),           DIMENSION(:,:,:), ALLOCATABLE  ::  T_Pre
 COMPLEX(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  ::  P_Pre
 
@@ -152,7 +152,7 @@ ALLOCATE(P_locs(1:Num_P_Quad_Points ) )
 
 
 
-ALLOCATE( R_Pre(1:Num_R_Quad_Points,1:Num_R_Nodes) )
+ALLOCATE( R_Pre(1:Num_R_Quad_Points,0:Degree,0:Num_R_Elements-1) )
 ALLOCATE( T_Pre(1:Num_T_Quad_Points,0:Num_T_Elements-1,1:LM_Length) )
 ALLOCATE( P_Pre(1:Num_P_Quad_Points,0:Num_P_Elements-1,1:LM_Length) )
 
@@ -187,24 +187,24 @@ T_locs = Map_From_X_Space(0.0_idp, Pi, Int_T_Locations)
 CALL TimerStart( Timer_Poisson_SourceVector_Subparts )
 
 DO re = 0, Num_R_Elements -1
-DO  p = 0, Degree
+DO  d = 0, Degree
 
-    There = Map_To_FEM_Node(re,p)
+    There = Map_To_FEM_Node(re,d)
     R_locs = Map_From_X_Space(rlocs(re), rlocs(re+1), Int_R_Locations)
     drot = 0.5_idp *(rlocs(re+1) - rlocs(re))
-
 
     DO rd = 1, Num_R_Quad_Points
 
         LagP = Lagrange_Poly(Int_R_Locations(rd), DEGREE, Poly_xlocs)
 
-        R_Pre(rd,There) = 4.0_idp * pi          &
+        R_Pre(rd,d,re) = 4.0_idp * pi          &
                         * Grav_Constant_G       &
                         * R_locs(rd)            &
                         * R_locs(rd)            &
                         * drot                  &
                         * Int_R_weights(rd)     &
-                        * LagP(p)
+                        * LagP(d)
+
 
     END DO
 END DO
@@ -277,10 +277,12 @@ Tmp_Val = 0.0_idp
 
 DO lm = 1, LM_Length
 DO re = 0,NUM_R_ELEMENTS - 1
-DO p = 0,DEGREE
+DO d = 0,DEGREE
 
     
-    There = Map_To_FEM_Node( re, p )
+    There = Map_To_FEM_Node( re, d )
+    
+!    PRINT*,re,p,there
 
     DO pe = 0,NUM_P_ELEMENTS - 1
     DO te = 0,NUM_T_ELEMENTS - 1
@@ -295,24 +297,24 @@ DO p = 0,DEGREE
 
         Tmp_Val = Tmp_Val                       &
                 - Source_Rho(Here,re,te,pe)   &
-                * R_PRE(rd,There)               &
+                * R_PRE(rd,d,re)               &
                 * T_PRE(td,te,lm)               &
                 * P_PRE(pd,pe,lm)
 
-        
     END DO ! rd Loop
     END DO ! td Loop
     END DO ! pd Loop
 
     END DO  ! te Loop
     END DO  ! pe Loop
-
-
+    
     cVA_Load_Vector(There,lm,1) = cVA_Load_Vector(There,lm,1) + Tmp_Val
+
+!    PRINT*,"cVA_Load",cVA_Load_Vector(There,lm,1)
 
     TMP_Val = 0.0_idp
 
-END DO ! p Loop
+END DO  ! d Loop
 END DO  ! re Loop
 END DO  ! lm Loop
 
