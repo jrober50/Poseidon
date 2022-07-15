@@ -55,7 +55,7 @@ USE Flags_Initialization_Module, &
 
 USE Flags_Core_Module, &
             ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Poisson_Mode
+                    iPF_Core_Newtonian_Mode
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -96,7 +96,7 @@ ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
 
 #else
 
-IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
 
     ALLOCATE(Source_Rho(    1:Local_Quad_DOF,       &
                             0:NUM_R_ELEMENTS-1,     &
@@ -158,11 +158,17 @@ DEALLOCATE( GM_Source )
 DEALLOCATE( iLeafElementsPerLvl )
 
 #else
+IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
 
+    DEALLOCATE( Source_Rho )
 
-DEALLOCATE( Block_Source_E )
-DEALLOCATE( Block_Source_S )
-DEALLOCATE( Block_Source_Si )
+ELSE
+
+    DEALLOCATE( Block_Source_E )
+    DEALLOCATE( Block_Source_S )
+    DEALLOCATE( Block_Source_Si )
+
+END IF
 
 #endif
 

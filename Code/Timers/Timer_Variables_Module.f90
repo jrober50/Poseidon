@@ -38,6 +38,7 @@ REAL(idp), PUBLIC   ::  Timer_Core_Utilities
 REAL(idp), PUBLIC   ::  Timer_Initialization_Total
 REAL(idp), PUBLIC   ::  Timer_Initialization_Core
 REAL(idp), PUBLIC   ::  Timer_Initialization_XCFC
+REAL(idp), PUBLIC   ::  Timer_Initialization_Newtonian
 
 REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput
 REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput_PartA

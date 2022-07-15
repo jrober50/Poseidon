@@ -86,11 +86,11 @@ CONTAINS
 
 
 
-!+101+##########################################################################!
-!                                                                               !
-!                                                     				!
-!                                                                               !
-!###############################################################################!
+ !+101+####################################################!
+!                                                           !
+!          Get_Physical_Source                              !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Get_Physical_Source( Source, iU, iE)
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
@@ -112,11 +112,38 @@ END SUBROUTINE Get_Physical_Source
 
 
 
-!+101+##########################################################################!
-!                                                                               !
-!                                                                     !
-!                                                                               !
-!###############################################################################!
+
+ !+101+####################################################!
+!                                                           !
+!          Get_Newtonian_Source                             !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Get_Newtonian_Source( Source, iE)
+
+REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
+INTEGER,   DIMENSION(3),                                     INTENT(IN)     :: iE
+
+#ifdef POSEIDON_AMREX_FLAG
+
+    CALL Get_Newtonian_Source_AMReX( Source, iE)
+
+#else
+
+    CALL Get_Newtonian_Source_Native( Source, iE)
+
+#endif
+
+END SUBROUTINE Get_Newtonian_Source
+
+
+
+
+
+ !+201+####################################################!
+!                                                           !
+!          Get_Physical_Source_Native                       !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Get_Physical_Source_Native( Source, iU, iE)
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
@@ -136,7 +163,7 @@ IF ( iU == 1 ) THEN
         tpd  = Map_To_tpd(td,pd)
         Here = Quad_Map(rd,td,pd)
         Source(tpd,rd) = Block_Source_E(Here,iE(1),iE(2),iE(3))
-!        PRINT*,iE,rd,Source(tpd,rd)
+
     END DO ! pd
     END DO ! td
     END DO ! rd
@@ -150,12 +177,10 @@ ELSEIF ( iU == 2 ) THEN
 
         tpd  = Map_To_tpd(td,pd)
         Here = Quad_Map(rd,td,pd)
+
         Source(tpd,rd) = Block_Source_E(Here,iE(1),iE(2),iE(3))                &
                        + 2.0_idp*Block_Source_S(Here,iE(1),iE(2),iE(3))
 
-!        PRINT*,iE, rd,td,pd
-!        PRINT*,Block_Source_E(Here,iE(1),iE(2),iE(3)),                &
-!                2.0_idp*Block_Source_S(Here,iE(1),iE(2),iE(3))
 
     END DO ! pd
     END DO ! td
@@ -170,15 +195,10 @@ ELSEIF ( iU == 3) THEN
        tpd  = Map_To_tpd(td,pd)
        Here = Quad_Map(rd,td,pd)
 
-!       PRINT*,iE,rd,td,pd,Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
-       Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
+        Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),1)
 
    END DO ! pd
    END DO ! td
-!
-!    PRINT*,iE,rd
-!    PRINT*,Source(:,rd)
-
    END DO ! rd
 
 ELSE IF ( iU == 4) THEN
@@ -189,8 +209,8 @@ ELSE IF ( iU == 4) THEN
 
        tpd  = Map_To_tpd(td,pd)
        Here = Quad_Map(rd,td,pd)
+    
        Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),2)
-
 
    END DO ! pd
    END DO ! td
@@ -204,8 +224,8 @@ ELSE IF ( iU == 5 ) THEN
 
        tpd  = Map_To_tpd(td,pd)
        Here = Quad_Map(rd,td,pd)
-       Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),3)
 
+       Source(tpd,rd) = Block_Source_Si(Here,iE(1),iE(2),iE(3),3)
 
    END DO ! pd
    END DO ! td
@@ -218,11 +238,11 @@ END SUBROUTINE Get_Physical_Source_Native
 
 
 
-!+101+##########################################################################!
-!                                                                               !
-!                                                                     !
-!                                                                               !
-!###############################################################################!
+ !+202+####################################################!
+!                                                           !
+!          Get_Physical_Source_AMReX                        !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Get_Physical_Source_AMReX( Source, iU, iE)
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
@@ -261,7 +281,6 @@ IF ( iU == 1 ) THEN
         tpd = Map_To_tpd(td,pd)
         Here = (iS_E-1)*Local_Quad_DOF + Quad_Map(rd,td,pd)
         Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
-!        PRINT*,Source_PTR(iE(1),iE(2),iE(3),Here)
 
     END DO ! pd
     END DO ! td
@@ -337,6 +356,45 @@ END SUBROUTINE Get_Physical_Source_AMReX
 
 
 
+
+
+ !+301+####################################################!
+!                                                           !
+!          Get_Newtonian_Source_Native                      !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Get_Newtonian_Source_Native( Source, iE)
+
+REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
+INTEGER,   DIMENSION(3),                                     INTENT(IN)     :: iE
+
+INTEGER                                                                     :: iU = iU_CF
+
+CALL Get_Physical_Source_Native( Source, iU, iE)
+
+
+END SUBROUTINE Get_Newtonian_Source_Native
+
+
+
+
+
+ !+302+####################################################!
+!                                                           !
+!          Get_Newtonian_Source_AMReX                       !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Get_Newtonian_Source_AMReX( Source, iE)
+
+REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points), INTENT(OUT)    :: Source
+INTEGER,   DIMENSION(3),                                     INTENT(IN)     :: iE
+
+INTEGER                                                                     :: iU = iU_CF
+
+CALL Get_Physical_Source_AMReX( Source, iU, iE)
+
+
+END SUBROUTINE Get_Newtonian_Source_AMReX
 
 
 

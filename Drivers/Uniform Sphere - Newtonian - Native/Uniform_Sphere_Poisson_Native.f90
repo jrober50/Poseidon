@@ -44,10 +44,10 @@ USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
 USE Driver_SetSource_Module, &
-            ONLY:  Driver_SetSource
+            ONLY :  Driver_SetSource
 
 USE Driver_SetBC_Module, &
-            ONLY:  Driver_SetBC
+            ONLY :  Driver_SetBC
 
 
 USE MPI
@@ -122,8 +122,7 @@ INTEGER                                                 ::  T_Index
 INTEGER                                                 ::  T_Index_Min
 INTEGER                                                 ::  T_Index_Max
 
-REAL(idp)                                               ::  Kappa
-REAL(idp)                                               ::  Gamma
+REAL(idp)                                               ::  ADM_Mass
 
 
 INTEGER                                                 ::  Max_Iterations
@@ -151,7 +150,7 @@ ALLOCATE( RE_Table(1:9) )
 Units_Input         = "C"
 Solver_Type         = 3
 
-RE_Table            = (/ 2, 32, 128, 240, 320, 400, 600, 256, 512 /)
+RE_Table            = (/ 8, 16, 32, 64, 128, 256, 512, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.15_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
@@ -162,12 +161,12 @@ T_Index_Max         =  1
 M_Index_Min         =  3
 M_Index_Max         =  3
 
-Surface_RE_Index    =  1
-RE_Index_Min        =  Surface_RE_Index
-RE_Index_Max        =  Surface_RE_Index
+!Surface_RE_Index    =  1
+RE_Index_Min        =  7
+RE_Index_Max        =  7
 
-Degree_Min          =  2
-Degree_Max          =  2
+Degree_Min          =  1
+Degree_Max          =  1
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
@@ -184,7 +183,7 @@ Dimension_Input     = 3
 Max_Iterations      = 10
 CC_Option           = 1.0E-14_idp
 
-Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
 Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
 
@@ -217,9 +216,10 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     NE(1) = RE_Table(RE_Index)
 !    NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table_Upper(1)
+    Suffix_Tail = Letter_Table_Upper(2)
     
-    Surface_RE = RE_Table(Surface_RE_Index)
+    Surface_RE = RE_Table(RE_Index)/16
+
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
 

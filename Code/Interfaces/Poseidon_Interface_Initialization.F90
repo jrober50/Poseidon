@@ -188,7 +188,7 @@ USE Variables_AMReX_Core, &
 
 USE Flags_Core_Module, &
             ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Poisson_Mode,  &
+                    iPF_Core_Newtonian_Mode,&
                     iPF_Core_CFA_Mode,      &
                     iPF_Core_XCFC_Mode,     &
                     iPF_Core_AMReX_Mode
@@ -338,16 +338,16 @@ CALL Set_Units(Source_Units)
 
 IF ( PRESENT(Poisson_Mode_Option) ) THEN
     IF ( Poisson_Mode_Option ) THEN
-        lPF_Core_Flags(iPF_Core_Poisson_Mode)   = .TRUE.
+        lPF_Core_Flags(iPF_Core_Newtonian_Mode)   = .TRUE.
         lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
         lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .FALSE.
     ELSE
-        lPF_Core_Flags(iPF_Core_Poisson_Mode)   = .FALSE.
+        lPF_Core_Flags(iPF_Core_Newtonian_Mode)   = .FALSE.
         lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
         lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .TRUE.
     END IF
 ELSE
-    lPF_Core_Flags(iPF_Core_Poisson_Mode)   = .FALSE.
+    lPF_Core_Flags(iPF_Core_Newtonian_Mode)   = .FALSE.
     lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
     lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .TRUE.
 END IF
@@ -456,7 +456,7 @@ END IF
 
 
 
-IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
     !=======================================================!
     !                                                       !
     !               Initialize Poisson Solver               !
@@ -514,10 +514,7 @@ CALL TimerStop( Timer_Initialization_Core )
 
 IF ( Verbose_Flag ) CALL Init_Message('Poseidon Initialization Core Complete.')
 
-
-IF ( lPF_IO_Flags(iPF_IO_Write_Setup) ) THEN
-    CALL Output_Setup_Report()
-END IF
+CALL Output_Setup_Report()
 
 
 

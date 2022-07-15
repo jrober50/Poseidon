@@ -90,7 +90,7 @@ USE Timer_Variables_Module, &
 
 USE Flags_Core_Module, &
             ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Poisson_Mode
+                    iPF_Core_Newtonian_Mode
 
 IMPLICIT NONE
 
@@ -167,7 +167,7 @@ phi = 0.5_idp * pi
 
 
 
-IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
 
 
     CALL Print_Single_Var_Results_A( 1 )
@@ -205,7 +205,7 @@ ELSE
 
     END DO
 
-END IF ! lPF_Core_Flags(iPF_Core_Poisson_Mode)
+END IF ! lPF_Core_Flags(iPF_Core_Newtonian_Mode)
 
 
 CALL TimerStop( Timer_Core_PrintResults )

@@ -30,7 +30,7 @@ IMPLICIT NONE
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_Num_Flags      = 4
 
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_AMReX_Mode     = 1
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_Poisson_Mode   = 2
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_Newtonian_Mode = 2
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_CFA_Mode       = 3
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_XCFC_Mode      = 4
 

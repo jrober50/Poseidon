@@ -75,7 +75,7 @@ USE Flags_Main_Module, &
 
 USE Flags_Core_Module, &
             ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Poisson_Mode
+                    iPF_Core_Newtonian_Mode
 
 
 IMPLICIT NONE
@@ -111,8 +111,12 @@ IF ( Caller_Set ) THEN
 END IF
 
 
-IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+    CALL Deallocate_Poseidon_Source_Variables
     CALL Deallocate_Poisson_Linear_System
+
+    CALL Deallocate_Quadrature()
+    CALL Deallocate_Tables()
 
 ELSE
     !!!!  Deallocate Data Space !!!!

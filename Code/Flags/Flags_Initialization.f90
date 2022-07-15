@@ -24,7 +24,7 @@ USE Poseidon_Message_Routines_Module,   &
 
 USE Flags_Core_Module, &
             ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Poisson_Mode
+                    iPF_Core_Newtonian_Mode
 
 IMPLICIT NONE
 
@@ -201,11 +201,11 @@ END FUNCTION Poseidon_Initialization_Check
  !#########################################################!
 LOGICAL FUNCTION Poseidon_Init_Matrices_Check()
 
-IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
     Poseidon_Init_Matrices_Check = Poseidon_Init_Matrices_Check_Poisson()
 ELSE
     Poseidon_Init_Matrices_Check = Poseidon_Init_Matrices_Check_XCFC()
-END IF ! lPF_Flags_Core(iPF_Core_Poisson_Mode)
+END IF ! lPF_Flags_Core(iPF_Core_Newtonian_Mode)
 
 END FUNCTION Poseidon_Init_Matrices_Check
 

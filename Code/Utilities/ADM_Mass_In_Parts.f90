@@ -125,7 +125,7 @@ REAL(idp), DIMENSION(1:Num_TP_Quad_Points,          &
 
 REAL(idp), DIMENSION(3)                             ::  Int_Val
 
-
+INTEGER                                             ::  Level = 0
 
 ADM_Mass = 0.0_idp
 ADM_Phys = 0.0_idp
@@ -136,13 +136,14 @@ DO te = 0,Num_T_Elements-1
 DO pe = 0,Num_P_Elements-1
 
 
-    CALL Calc_Cur_Values( re, te, pe,           &
+    CALL Calc_Cur_Values( [re,te,pe],                   &
                           DROT, DTOT, DPOT,     &
                           crlocs, ctlocs,       &
                           rSquare,              &
                           TP_Sin_Val,           &
                           TP_Cotan_Val,         &
-                          TP_rSin_Square        )
+                          TP_rSin_Square,       &
+                          Level                 )
 
 
     CALL Calc_Int_Weights( DROT, DTOT,              &

@@ -1,5 +1,5 @@
 ADM = \
-  ADM_Mass.f90           \
+  ADM_Mass.F90           \
   ADM_Mass_In_Parts.f90  \
  
 KOMAR = \

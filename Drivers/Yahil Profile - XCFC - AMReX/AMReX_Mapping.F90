@@ -73,6 +73,9 @@ USE Variables_MPI, &
 USE Variables_Driver_AMReX, &
             ONLY :  nLevels
 
+USE ADM_Mass_Module, &
+            ONLY :  Calc_ADM_Mass
+
 
 USE MPI
 
@@ -87,6 +90,11 @@ CHARACTER(LEN = 1)                                      ::  Units_Input
 INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
 LOGICAL                                                 ::  Verbose
+LOGICAL                                                 ::  Print_Results_Flag
+LOGICAL                                                 ::  Print_Setup_Flag
+LOGICAL                                                 ::  Print_Time_Flag
+LOGICAL                                                 ::  Print_Cond_Flag
+
 CHARACTER(LEN=10)                                       ::  Suffix_Input
 CHARACTER(LEN=1)                                        ::  Suffix_Tail
 
@@ -112,6 +120,7 @@ REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
 REAL(idp), DIMENSION(3)                                 ::  Yahil_Params
 
+REAL(idp)                                               ::  ADM_Mass
 
 INTEGER                                                 ::  IRL
 INTEGER                                                 ::  IFL
@@ -136,8 +145,8 @@ Units_Input         = "G"
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  4
-T_Index_Max         =  4
+T_Index_Min         =  1
+T_Index_Max         =  1
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -157,6 +166,20 @@ NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 Verbose             = .TRUE.
 !Verbose             = .FALSE.
+
+Print_Results_Flag  = .TRUE.
+!Print_Results_Flag  = .FALSE.
+
+Print_Setup_Flag    = .TRUE.
+!Print_Setup_Flag    = .FALSE.
+
+Print_Time_Flag     = .TRUE.
+!Print_Time_Flag     = .FALSE.
+
+Print_Cond_Flag     = .TRUE.
+!Print_Cond_Flag     = .FALSE.
+
+
 Suffix_Input        = "Params"
 
 
@@ -243,14 +266,14 @@ DO T_Index = T_Index_Min, T_Index_Max
             Poisson_Mode_Option                 = .FALSE.,              &
             Verbose_Option                      = Verbose,              &
             WriteAll_Option                     = .FALSE.,              &
-            Print_Setup_Option                  = .TRUE.,               &
+            Print_Setup_Option                  = Print_Setup_Flag,     &
             Write_Setup_Option                  = .FALSE.,              &
-            Print_Results_Option                = .TRUE.,               &
+            Print_Results_Option                = Print_Results_Flag,   &
             Write_Results_Option                = .TRUE.,               &
-            Print_Timetable_Option              = .TRUE.,               &
+            Print_Timetable_Option              = Print_Time_Flag,      &
             Write_Timetable_Option              = .TRUE.,               &
             Write_Sources_Option                = .FALSE.,              &
-            Print_Condition_Option              = .TRUE.,               &
+            Print_Condition_Option              = Print_Cond_Flag,      &
             Write_Condition_Option              = .TRUE.,               &
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
@@ -300,6 +323,10 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                                                          #!
     !############################################################!
     !CALL Return_Test(nLevels, NQ, MF_Source)
+
+    CALL Calc_ADM_Mass(ADM_Mass)
+    PRINT*,"ADM Mass",ADM_Mass
+
 
 
     !############################################################!

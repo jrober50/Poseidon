@@ -145,7 +145,7 @@ USE Flags_IO_Module, &
 
 USE Flags_Core_Module, &
             ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Poisson_Mode
+                    iPF_Core_Newtonian_Mode
 
 
 IMPLICIT NONE
@@ -183,7 +183,7 @@ INTEGER                                                     ::  Output_Locations
 IF ( PRESENT(CFA_Eq_Overide) ) THEN
     CFA_Eq_Flag_Used = CFA_Eq_Overide
 ELSE
-    IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+    IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
         CFA_Eq_Flag_Used = [1,0,0,0,0]
     ELSE
         CFA_Eq_Flag_Used = CFA_Eq_Flags

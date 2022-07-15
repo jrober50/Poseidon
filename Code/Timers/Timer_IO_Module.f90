@@ -45,7 +45,7 @@ USE Flags_IO_Module, &
 
 USE Flags_Core_Module, &
             ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Poisson_Mode
+                    iPF_Core_Newtonian_Mode
 
 IMPLICIT NONE
 
@@ -62,7 +62,7 @@ CONTAINS
 SUBROUTINE Output_Time_Report()
 
 
-IF ( lPF_Core_Flags(iPF_Core_Poisson_Mode) ) THEN
+IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
     CALL Output_Poisson_Time_Report()
 ELSE
     CALL Output_XCFC_Time_Report()

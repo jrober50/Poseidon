@@ -210,7 +210,7 @@ INTEGER                                 ::  re, te, pe
 #endif
 
 IF ( Verbose_Flag ) THEN
-    WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_Var_Names(iU)),' Source Vector.'
+    WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_Var_Names(iU)),' Load Vector.'
     CALL Run_Message(TRIM(Message))
 END IF
 
@@ -344,30 +344,22 @@ DO rd = 1,NUM_R_QUAD_POINTS
 END DO
 
 
-!PRINT*,"Before Calc_Int_Weights",iE
 
-#ifdef POSEIDON_AMREX_FLAG
-CALL Calc_Int_Weights_AMReX( DROT, DTOT,                    &
-                             R_Square, TP_Sin_Val,          &
-                             R_Int_Weights, TP_Int_Weights, &
-                             Level  )
 
-#else
 CALL Calc_Int_Weights( DROT, DTOT,                  &
                        R_Square, TP_Sin_Val,        &
                        R_Int_Weights, TP_Int_Weights )
 
-#endif
 
 
-!PRINT*,"Before Calc_XCFC_CurVals_TypeA",iE
 CALL Calc_XCFC_CurVals_TypeA( iE,       &
                               iU,       &
                               DROT,     &
                               DTOT,     &
                               Level     )
 
-!PRINT*,"Before Create_XCFC_Vector_TypeA",iE
+
+
 CALL Create_XCFC_Vector_TypeA( iE, iU, Level, FEM_Elem )
 
 
@@ -629,6 +621,7 @@ END DO ! j
 !PRINT*,"G"
 CALL Get_Physical_Source( PhysSrc, iU, iE )
 
+!PRINT*,iE(1),PhysSrc
 
 !PRINT*,"H",iU
 IF ( iU == iU_CF ) THEN

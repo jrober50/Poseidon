@@ -77,6 +77,8 @@ USE Timer_Variables_Module, &
                     Timer_Driver_Run,           &
                     Timer_Driver_Extra
 
+USE ADM_Mass_Module, &
+            ONLY :  Calc_ADM_Mass
 
 USE MPI
 
@@ -106,6 +108,8 @@ REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_c, y_c, z_c
 
 LOGICAL                                                 ::  Verbose
 LOGICAL                                                 ::  Print_Results_Flag
+LOGICAL                                                 ::  Print_Setup_Flag
+LOGICAL                                                 ::  Print_Time_Flag
 
 INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
@@ -170,6 +174,7 @@ INTEGER, DIMENSION(1:8)                                 ::  Anderson_M_Values
 REAL(idp), DIMENSION(1:7)                               ::  Time_Values
 INTEGER, DIMENSION(1:2)                                 ::  L_Values
 
+REAL(idp)                                               ::  ADM_Mass
 REAL(idp)                                               ::  Komar_Mass
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Output_Kij
 
@@ -194,14 +199,14 @@ Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.51_idp, 0.275_idp, 0.15_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  6
-T_Index_Max         =  6
+T_Index_Min         =  1
+T_Index_Max         =  1
 
 M_Index_Min         =  1
 M_Index_Max         =  1
 
-RE_Index_Min        =  1
-RE_Index_Max        =  1
+RE_Index_Min        =  5
+RE_Index_Max        =  5
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -231,7 +236,7 @@ Dimension_Input     = 3
 Max_Iterations      = 100
 CC_Option           = 1.0E-10_idp
 
-Mesh_Type           = 4                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
+Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
 Domain_Edge(2)      = 8.0E8_idp                   ! Outer Radius (cm)
 
@@ -247,10 +252,17 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
+
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
+
+Print_Setup_Flag    = .TRUE.
+!Print_Setup_Flag    = .FALSE.
+
+Print_Time_Flag     = .TRUE.
+!Print_Time_Flag     = .FALSE.
 
 Suffix_Input        = "Params"
 
@@ -355,14 +367,14 @@ CALL Initialize_Poseidon &
        Anderson_M_Option            = Anderson_M_Values(M_Index),   &
        Verbose_Option               = Verbose,                      &
        WriteAll_Option              = .FALSE.,                      &
-       Print_Setup_Option           = .FALSE.,                       &
+       Print_Setup_Option           = Print_Setup_Flag,             &
        Write_Setup_Option           = .TRUE.,                       &
        Print_Results_Option         = Print_Results_Flag,           &
        Write_Results_Option         = .TRUE.,                       &
-       Print_Timetable_Option       = .FALSE.,                       &
+       Print_Timetable_Option       = Print_Time_Flag,              &
        Write_Timetable_Option       = .TRUE.,                       &
        Write_Sources_Option         = .TRUE.,                       &
-       Print_Condition_Option       = .FALSE.,                       &
+       Print_Condition_Option       = .FALSE.,                      &
        Write_Condition_Option       = .TRUE.,                       &
        Suffix_Flag_Option           = Suffix_Input,                 &
        Suffix_Tail_Option           = Suffix_Tail                   )
@@ -472,7 +484,8 @@ CALL Initialize_Poseidon &
         CALL Print_Results()
         CALL Write_Final_Results()
 
-
+        CALL Calc_ADM_Mass(ADM_Mass)
+        PRINT*,"ADM Mass",ADM_Mass
     END IF
 
 
