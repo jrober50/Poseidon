@@ -168,7 +168,7 @@ INTEGER,    INTENT(IN), OPTIONAL                            ::  Output_Locations
 INTEGER,    INTENT(IN), OPTIONAL,   DIMENSION(1:5)          ::  CFA_Eq_Overide
 
 
-CHARACTER(LEN = 200), DIMENSION(:), ALLOCATABLE             ::  Filenames
+CHARACTER(LEN = 500), DIMENSION(:), ALLOCATABLE             ::  Filenames
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  File_IDs
 INTEGER                                                     ::  Num_Files
 
@@ -207,9 +207,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
     ALLOCATE( Filenames(1:Num_Files) )
     ALLOCATE( File_IDs(1:Num_Files) )
-
-
-
 
     WRITE(Filenames(1),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
     WRITE(Filenames(2),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
@@ -327,7 +324,6 @@ ALLOCATE( P_Holder(1:NUM_PHI_RAYS) )
 
 
 
-
 ! Create Output Spacing
 ! Pull Number of Samples From Parameters !
 IF ( OL_Flag == 1 ) THEN
@@ -392,14 +388,14 @@ ELSE
     END DO
 
     DO i = 0,Num_T_Elements-1
-        T_Holder = 0.5_idp * (tlocs(i+1) + tlocs(i))
+        T_Holder(i+1) = 0.5_idp * (tlocs(i+1) + tlocs(i))
+        PRINT*,i,0.5_idp * (tlocs(i+1) + tlocs(i)),tlocs(i+1), tlocs(i)
     END DO
 
 
     DO i = 0,Num_P_Elements-1
-        P_Holder = 0.5_idp * (plocs(i+1) + plocs(i))
+        P_Holder(i+1) = 0.5_idp * (plocs(i+1) + plocs(i))
     END DO
-
 
 
 END IF
