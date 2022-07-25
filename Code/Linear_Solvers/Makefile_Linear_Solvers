@@ -1,5 +1,6 @@
 LINEAR_SOLVERS = \
    Poseidon_Linear_Solvers.f90   \
    Poseidon_Preconditioners.f90  \
-
+   Linear_Solvers_TypeA.F90      \
+   Linear_Solvers_TypeB.F90
 

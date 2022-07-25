@@ -162,8 +162,8 @@ M_Index_Min         =  3
 M_Index_Max         =  3
 
 !Surface_RE_Index    =  1
-RE_Index_Min        =  7
-RE_Index_Max        =  7
+RE_Index_Min        =  2
+RE_Index_Max        =  2
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -185,14 +185,14 @@ CC_Option           = 1.0E-14_idp
 
 Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 1E9_idp                  ! Outer Radius (cm)
+Domain_Edge(2)      = 1E9_idp                   ! Outer Radius (cm)
 
 
 NE(1)               = 128                       ! Number of Radial Elements
-NE(2)               = 1                        ! Number of Theta Elements
+NE(2)               = 1                         ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
-NQ(1)               = 5                        ! Number of Radial Quadrature Points
+NQ(1)               = 5                         ! Number of Radial Quadrature Points
 NQ(2)               = 1                         ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
@@ -259,6 +259,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
                         y_e, y_c, dy_c,    &
                         z_e, z_c, dz_c,     &
                         Zoom = 1.032034864238313_idp )
+
+    
 
     !############################################################!
     !#                                                          #!

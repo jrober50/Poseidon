@@ -54,8 +54,9 @@ USE XCFC_Fixed_Point_Module, &
 USE XCFC_Load_Vector_TypeB_Module, &
             ONLY :  XCFC_Calc_Load_Vector_TypeB
 
-USE XCFC_System_Solvers_TypeB_Module, &
-            ONLY :  XCFC_Solve_System_TypeB
+
+USE Linear_System_Solvers_TypeB_Module, &
+            ONLY :  Solve_Linear_System_TypeB
 
 
 USE Timer_Routines_Module, &
@@ -113,7 +114,7 @@ CALL TimerStop(  Timer_XCFC_X_SourceVector )
 
 !PRINT*,"Before Solve"
 CALL TimerStart( Timer_XCFC_X_LinearSolve )
-CALL XCFC_Solve_System_TypeB( iU, iVB )
+CALL Solve_Linear_System_TypeB( iU, iVB )
 CALL TimerStop(  Timer_XCFC_X_LinearSolve )
 
 CALL TimerStop( Timer_XCFC_X )
@@ -228,7 +229,7 @@ CALL XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
 CALL TimerStop(  Timer_XCFC_Shift_SourceVector )
 
 CALL TimerStart( Timer_XCFC_Shift_LinearSolve )
-CALL XCFC_Solve_System_TypeB( iU, iVB )
+CALL Solve_Linear_System_TypeB( iU, iVB )
 CALL TimerStop(  Timer_XCFC_Shift_LinearSolve )
 
 

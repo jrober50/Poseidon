@@ -64,8 +64,8 @@ USE Variables_FP, &
 USE XCFC_Load_Vector_TypeA_Module, &
             ONLY :  XCFC_Calc_Load_Vector_TypeA
 
-USE XCFC_System_Solvers_TypeA_Module, &
-            ONLY :  XCFC_Solve_System_TypeA
+USE Linear_System_Solvers_TypeA_Module, &
+            ONLY :  Solve_Linear_System_TypeA
 
 USE XCFC_Functions_Coeff_Module, &
             ONLY :  Coeff_To_Vector_TypeA,  &
@@ -168,9 +168,8 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     !
     !   Solve Systems
     !
-    CALL XCFC_Solve_System_TypeA(iU)
-
-
+    CALL Solve_Linear_System_TypeA(iU)
+    
 
     
 

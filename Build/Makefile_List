@@ -13,8 +13,8 @@ POSEIDON = \
   $(TABLES)          \
   $(RETURN_ROUTINES) \
   $(IO)              \
-  $(LINEAR_SOLVERS)  \
   $(MATRIX)          \
+  $(LINEAR_SOLVERS)  \
   $(FP)              \
   $(XCFC)            \
   $(NEWTONIAN)       \

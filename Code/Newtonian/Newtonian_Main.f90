@@ -35,8 +35,8 @@ USE Poseidon_Message_Routines_Module, &
 USE Poisson_Load_Vector, &
             ONLY :  Calculate_Poisson_Load_Vector
 
-USE XCFC_System_Solvers_TypeA_Module, &
-            ONLY :  XCFC_Solve_System_TypeA
+USE Linear_System_Solvers_TypeA_Module, &
+            ONLY :  Solve_Linear_System_TypeA
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -72,7 +72,7 @@ CALL TimerStop( Timer_Poisson_SourceVector )
 
 !!! Calculate Solution Coefficients !!!
 CALL TimerStart( Timer_Poisson_LinearSolve )
-CALL XCFC_Solve_System_TypeA(1)
+CALL Solve_Linear_System_TypeA(1)
 CALL TimerStop( Timer_Poisson_LinearSolve )
 
 

@@ -110,7 +110,7 @@ CALL Set_UST_Test_Params(   rho_o,               &
 Density = 0.0_idp
 DO re = 0,NE(1)-1
 
-    IF ( re .LE. Surface_RE ) THEN
+    IF ( re .LE. Surface_RE-1 ) THEN
         Density(:,re,:,:) = rho_o
     END IF
     

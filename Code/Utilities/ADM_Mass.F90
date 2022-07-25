@@ -171,7 +171,6 @@ CALL Calc_ADM_Mass_Native(ADM_Mass)
 
 #endif
 
-!PRINT*,"ADM_Mass Before",myID_Poseidon,ADM_Mass
 CALL MPI_ALLREDUCE( MPI_IN_PLACE,       &
                     ADM_Mass,           &
                     1,                  &
@@ -180,8 +179,6 @@ CALL MPI_ALLREDUCE( MPI_IN_PLACE,       &
                     POSEIDON_COMM_WORLD,&
                     ierr                )
                     
-!PRINT*,"ADM_MAss After",myID_Poseidon,ADM_Mass
-
 END SUBROUTINE Calc_ADM_Mass
 
 
