@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Source_Input_Native_Module                                      	     !##!
+MODULE Source_Input_XCFC_Native_Module                                      	     !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -486,4 +486,4 @@ END SUBROUTINE Poseidon_Input_Sources_XCFC_Native_Caller
 
 
 
-END MODULE Source_Input_Native_Module
+END MODULE Source_Input_XCFC_Native_Module

@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE  Source_Input_Newtonian_Module                                        !##!
+MODULE  Source_Input_Newtonian_Native_Module                                 !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -227,4 +227,8 @@ END SUBROUTINE Poseidon_Input_Sources_Newtonian_Native_Caller
 
 
 
-END MODULE Source_Input_Newtonian_Module
+
+
+
+
+END MODULE Source_Input_Newtonian_Native_Module

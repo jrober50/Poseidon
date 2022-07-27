@@ -26,21 +26,26 @@ MODULE Poseidon_Interface_Source_Input                                       !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Source_Input_AMReX_Module, &
+USE Source_Input_XCFC_AMReX_Module, &
             ONLY :  Poseidon_Input_Sources_XCFC_AMReX,              &
                     Poseidon_Input_Sources_XCFC_AMReX_Caller,       &
                     Poseidon_Input_Sources_Part1_AMReX,             &
                     Poseidon_Input_Sources_Part1_AMReX_Caller
 
-USE Source_Input_Native_Module, &
+USE Source_Input_XCFC_Native_Module, &
             ONLY :  Poseidon_Input_Sources_XCFC_Native,             &
                     Poseidon_Input_Sources_XCFC_Native_Caller,      &
                     Poseidon_Input_Sources_Part1_Native,            &
                     Poseidon_Input_Sources_Part1_Native_Caller
 
-USE Source_Input_Newtonian_Module, &
+USE Source_Input_Newtonian_Native_Module, &
             ONLY :  Poseidon_Input_Sources_Newtonian_Native,        &
                     Poseidon_Input_Sources_Newtonian_Native_Caller
+
+USE Source_Input_Newtonian_AMReX_Module, &
+            ONLY :  Poseidon_Input_Sources_Newtonian_AMReX,        &
+                    Poseidon_Input_Sources_Newtonian_AMReX_Caller
+
 
 IMPLICIT NONE
 

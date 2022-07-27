@@ -1,5 +1,6 @@
 SOURCE_INPUT = \
-  Source_Input_Newtonian.F90 \
-  Source_Input_AMReX.F90     \
-  Source_Input_Native.F90    \
+  Source_Input_Newtonian_AMReX.F90  \
+  Source_Input_Newtonian_Native.F90 \
+  Source_Input_XCFC_AMReX.F90       \
+  Source_Input_XCFC_Native.F90      \
 

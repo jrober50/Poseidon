@@ -214,14 +214,12 @@ Energy   = 0.0_idp
 Spec_Ent = C_Square + (Energy + Pressure)/Density
 
 
-!PRINT*,Rho_O
 
 
 
 DO pe = 1,Num_Elem(3)
 DO te = 1,Num_Elem(2)
 DO re = 1,Num_Elem(1)
-!    PRINT*,R_Locs(re)
     
     Cur_R_Locs(:) = Map_From_X_Space(R_locs(re),R_locs(re+1),RQ_Loc)
     Cur_T_Locs(:) = Map_From_X_Space(T_locs(te),T_locs(te+1),TQ_Loc)
@@ -253,8 +251,6 @@ DO re = 1,Num_Elem(1)
         ELSE
             Output_E(Here,re-1,te-1,pe-1) = 0.0_idp
         END IF
-
-!        PRINT*,Here,re-1,te-1,pe-1,Output_E(Here,re-1,te-1,pe-1)
 
     END DO ! pd
     END DO ! td

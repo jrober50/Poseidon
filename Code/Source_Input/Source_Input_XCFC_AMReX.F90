@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Source_Input_AMReX_Module                                                    !##!
+MODULE Source_Input_XCFC_AMReX_Module                                                    !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
@@ -653,4 +653,4 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller
 
 
 
-END MODULE Source_Input_AMReX_Module
+END MODULE Source_Input_XCFC_AMReX_Module

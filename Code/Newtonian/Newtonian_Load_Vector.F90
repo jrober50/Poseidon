@@ -282,8 +282,6 @@ DO d = 0,DEGREE
     
     There = Map_To_FEM_Node( re, d )
     
-!    PRINT*,re,p,there
-
     DO pe = 0,NUM_P_ELEMENTS - 1
     DO te = 0,NUM_T_ELEMENTS - 1
 
@@ -309,8 +307,6 @@ DO d = 0,DEGREE
     END DO  ! pe Loop
     
     cVA_Load_Vector(There,lm,1) = cVA_Load_Vector(There,lm,1) + Tmp_Val
-
-!    PRINT*,"cVA_Load",cVA_Load_Vector(There,lm,1)
 
     TMP_Val = 0.0_idp
 

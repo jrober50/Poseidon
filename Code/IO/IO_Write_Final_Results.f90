@@ -389,7 +389,6 @@ ELSE
 
     DO i = 0,Num_T_Elements-1
         T_Holder(i+1) = 0.5_idp * (tlocs(i+1) + tlocs(i))
-        PRINT*,i,0.5_idp * (tlocs(i+1) + tlocs(i)),tlocs(i+1), tlocs(i)
     END DO
 
 
