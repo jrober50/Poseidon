@@ -1,0 +1,37 @@
+Flags_Allocation.o:              \
+  Flags_Allocation.f90           \
+
+Flags_Boundary_Conditions.o:     \
+  Flags_Boundary_Conditions.f90  \
+
+Flags_Debug.o:                   \
+  Flags_Debug.F90                \
+
+Flags_Initial_Guess.o:           \
+  Flags_Initial_Guess.f90        \
+
+Flags_Initialization.o:          \
+  Flags_Initialization.f90       \
+
+Flags_IO.o:                      \
+  Flags_IO.f90                   \
+
+Flags_Run_Check.o:               \
+  Flags_Run_Check.f90            \
+
+Flags_Routines.o:                \
+  Flags_Routines.f90             \
+
+Flags_Source_Input.o:            \
+  Flags_Source_Input.f90         \
+
+Flags_Check_Routines.o:          \
+  Flags_Check_Routines.f90       \
+
+Flags_Main.o:                    \
+  Flags_Main.F90                 \
+
+Flags_Core.o:                    \
+  Flags_Core.f90                 \
+
+

@@ -1,0 +1,30 @@
+
+ConditionNumber.rtf
+ConditionNumber.xlsx
+*.h5
+*.jpg
+*.fig
+*.m
+*.out
+Poseidon BKUP 01092020.zip
+Tests/.DS_Store
+*.out
+*.out
+*.png
+*.dSYM
+*.ex
+*.dat
+
+~$ConditionNumber.xlsx
+
+# Object files
+*.o
+*.mod
+*.DS_Store
+
+Params/CFA_Coeffs.coefs
+
+Old/*
+Trash/*
+
+

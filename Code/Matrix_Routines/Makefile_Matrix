@@ -1,0 +1,6 @@
+MATRIX = \
+  Matrix_Boundary_Conditions.f90    \
+  Matrix_Vector_Laplacian_Routines.f90  \
+  Matrix_Cholesky_Factorization.f90 \
+  Matrix_Initialization.f90         \
+

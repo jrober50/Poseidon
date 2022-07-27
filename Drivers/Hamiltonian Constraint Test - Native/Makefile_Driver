@@ -1,0 +1,8 @@
+DRIVER = \
+  Driver_SetBC.f90      \
+  Driver_SetGuess.f90   \
+  Driver_SetSource.F90  \
+  Driver_ConFactor_Loop \
+
+
+DRIVER_o = $(addsuffix .o,$(basename $(DRIVER)))

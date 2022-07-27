@@ -1,0 +1,14 @@
+FLAG_MODULES = \
+  Flags_Core.f90                 \
+  Flags_Allocation.f90           \
+  Flags_Boundary_Conditions.f90  \
+  Flags_Debug.F90                \
+  Flags_Initial_Guess.f90        \
+  Flags_Initialization.f90       \
+  Flags_IO.f90                   \
+  Flags_Run_Check.f90            \
+  Flags_Routines.f90             \
+  Flags_Source_Input.f90         \
+  Flags_Check_Routines.f90       \
+  Flags_Main.F90                 \
+

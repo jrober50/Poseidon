@@ -1,0 +1,14 @@
+MPI_Communication_TypeA.o:    \
+  MPI_Communication_TypeA.f90 \
+
+MPI_Communication_TypeB.o:    \
+  MPI_Communication_TypeB.f90 \
+
+MPI_Utilities.o:              \
+  MPI_Utilities.f90           \
+
+MPI_Functions.o:              \
+  MPI_Functions.f90           \
+
+
+

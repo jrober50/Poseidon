@@ -1,0 +1,66 @@
+Allocation_Yahil_Profile.o:     \
+  Variables_Mesh.o              \
+  Variables_External.o          \
+  Allocation_Yahil_Profile.f90
+
+External_Yahil_Profile.o:       \
+  Poseidon_Kinds.o              \
+  Poseidon_Numbers.o            \
+  Poseidon_Message_Routines.o   \
+  Poseidon_Parameters.o         \
+  Poseidon_Units.o              \
+  Variables_MPI.o               \
+  Variables_External.o          \
+  Variables_Functions.o         \
+  Allocation_Yahil_Profile.o    \
+  IO_Output_Sources.o           \
+  Maps_Quadrature.o             \
+  Timer_Routines_Module.o       \
+  Timer_Variables_Module.o      \
+  Flags_IO.o                    \
+  External_Yahil_Profile.f90    \
+
+
+External_MacLaurin_Profile.o:   \
+  Poseidon_Kinds.o              \
+  Poseidon_Units.o              \
+  Poseidon_Numbers.o            \
+  Parameters_Poseidon.o         \
+  Variables_MPI.o               \
+  Variables_Functions.o         \
+  Variables_External.o          \
+  Maps_X_Space.o                \
+  Maps_Quadrature.o             \
+  Flags_IO.o                    \
+  External_MacLaurin_Profile.f90\
+
+External_HCT_Solution.o:        \
+  Poseidon_Kinds.o              \
+  Poseidon_Numbers.o            \
+  Variables_External.o          \
+  External_HCT_Solution.f90     \
+
+External_MVL_Solution.o         \
+  Poseidon_Kinds.o              \
+  Poseidon_Numbers.o            \
+  Variables_Mesh.o              \ 
+  Variables_External.o          \
+  External_MVL_Solution.f90     \
+
+External_MVL_Solution.o         \
+  Poseidon_Kinds.o              \
+  Poseidon_Numbers.o            \
+  Poseidon_Units.o              \
+  Variables_Mesh.o              \
+  Variables_External.o          \
+  External_MVL_Solution.f90     \
+
+External_IO_Test_Results.o:     \
+  Poseiond_Kinds.o              \
+  Parameters_Variables_Indices.o\
+  External_HCT_Solution.o       \
+  Variables_Functions.o         \
+  Return_Routines_Main.o        \
+  Functions_Mesh.o              \
+  External_IO_Test_Results.f90  \
+

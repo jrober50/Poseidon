@@ -1,0 +1,26 @@
+include $(POSEIDON_ACTIVE_DIR)/Code/Common/Depend_Common
+include $(POSEIDON_ACTIVE_DIR)/Code/Params_and_Variables/Depend_Variables
+include $(POSEIDON_ACTIVE_DIR)/Code/Flags/Depend_Flags
+include $(POSEIDON_ACTIVE_DIR)/Code/Timers/Depend_Timers
+include $(POSEIDON_ACTIVE_DIR)/Code/AMReX_Utilities/Depend_AMReX_Utilities
+include $(POSEIDON_ACTIVE_DIR)/Code/Mapping_Routines/Depend_Maps
+include $(POSEIDON_ACTIVE_DIR)/Code/Mesh/Depend_Mesh
+include $(POSEIDON_ACTIVE_DIR)/Code/Quadrature/Depend_Quadrature
+include $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules/Depend_Functions
+include $(POSEIDON_ACTIVE_DIR)/Code/Initial_Guess/Depend_Initial_Guess
+include $(POSEIDON_ACTIVE_DIR)/Code/Return_Routines/Depend_Return_Routines
+include $(POSEIDON_ACTIVE_DIR)/Code/Tables/Depend_Tables
+include $(POSEIDON_ACTIVE_DIR)/Code/MPI/Depend_MPI
+include $(POSEIDON_ACTIVE_DIR)/Code/Linear_Solvers/Depend_Linear_Solvers
+include $(POSEIDON_ACTIVE_DIR)/Code/IO/Depend_IO
+include $(POSEIDON_ACTIVE_DIR)/Code/Newtonian/Depend_Newtonian
+include $(POSEIDON_ACTIVE_DIR)/Code/Matrix_Routines/Depend_Matrix
+include $(POSEIDON_ACTIVE_DIR)/Code/Fixed_Point/Depend_FP
+include $(POSEIDON_ACTIVE_DIR)/Code/XCFC/Depend_XCFC
+include $(POSEIDON_ACTIVE_DIR)/Code/External/Depend_External
+include $(POSEIDON_ACTIVE_DIR)/Code/Utilities/Depend_Utilities
+include $(POSEIDON_ACTIVE_DIR)/Code/Interfaces/Depend_Interfaces
+include $(POSEIDON_ACTIVE_DIR)/Code/Initialization/Depend_Init
+include $(POSEIDON_ACTIVE_DIR)/Code/Source_Input/Depend_Source_Input
+
+

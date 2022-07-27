@@ -1,0 +1,15 @@
+ADM_Mass.o:                   \
+  ADM_Mass.f90                \
+
+ADM_Mass_In_Parts.o:          \
+  ADM_Mass_In_Parts.f90       \
+
+Komar_Mass_Utilities.o:       \
+  Komar_Mass_Utilities.f90    \
+
+Komar_Mass.o:                 \
+  Komar_Mass.f90              \
+
+Poseidon_Utilities.o:         \
+  Poseidon_Utilities.f90      \
+

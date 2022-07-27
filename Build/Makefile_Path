@@ -1,0 +1,30 @@
+VPATH += \
+$(OBJ)                                          \
+$(POSEIDON_ACTIVE_DIR)/Code:                           \
+$(POSEIDON_ACTIVE_DIR)/Code/Common:                    \
+$(POSEIDON_ACTIVE_DIR)/Code/Params_and_Variables:      \
+$(POSEIDON_ACTIVE_DIR)/Code/Flags:                     \
+$(POSEIDON_ACTIVE_DIR)/Code/Timers:                    \
+$(POSEIDON_ACTIVE_DIR)/Code/Initial_Guess              \
+$(POSEIDON_ACTIVE_DIR)/Code/AMReX_Utilities:           \
+$(POSEIDON_ACTIVE_DIR)/Code/Mapping_Routines:          \
+$(POSEIDON_ACTIVE_DIR)/Code/Mesh:                      \
+$(POSEIDON_ACTIVE_DIR)/Code/Quadrature                 \
+$(POSEIDON_ACTIVE_DIR)/Code/Tables:                    \
+$(POSEIDON_ACTIVE_DIR)/Code/Return_Routines:           \
+$(POSEIDON_ACTIVE_DIR)/Code/IO:                        \
+$(POSEIDON_ACTIVE_DIR)/Code/MPI                        \
+$(POSEIDON_ACTIVE_DIR)/Code/Linear_Solvers:            \
+$(POSEIDON_ACTIVE_DIR)/Code/Drivers:                   \
+$(POSEIDON_ACTIVE_DIR)/Code/External:                  \
+$(POSEIDON_ACTIVE_DIR)/Code/Matrix_Routines:           \
+$(POSEIDON_ACTIVE_DIR)/Code/Fixed_Point:               \
+$(POSEIDON_ACTIVE_DIR)/Code/XCFC:                      \
+$(POSEIDON_ACTIVE_DIR)/Code/Function_Modules:          \
+$(POSEIDON_ACTIVE_DIR)/Code/Initialization:            \
+$(POSEIDON_ACTIVE_DIR)/Code/Source_Input:              \
+$(POSEIDON_ACTIVE_DIR)/Code/Interfaces:                \
+$(POSEIDON_ACTIVE_DIR)/Code/Newtonian:                 \
+$(POSEIDON_ACTIVE_DIR)/Code/Params_And_Variables:      \
+$(POSEIDON_ACTIVE_DIR)/Code/Utilities:                 \
+..

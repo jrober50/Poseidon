@@ -1,0 +1,26 @@
+include $(POSEIDON_ACTIVE_DIR)/Code/Common/Makefile_Common
+include $(POSEIDON_ACTIVE_DIR)/Code/Params_and_Variables/Makefile_Variables
+include $(POSEIDON_ACTIVE_DIR)/Code/Flags/Makefile_Flags
+include $(POSEIDON_ACTIVE_DIR)/Code/Timers/Makefile_Timers
+include $(POSEIDON_ACTIVE_DIR)/Code/AMReX_Utilities/Makefile_AMReX_Utilities
+include $(POSEIDON_ACTIVE_DIR)/Code/Mapping_Routines/Makefile_Maps
+include $(POSEIDON_ACTIVE_DIR)/Code/Mesh/Makefile_Mesh
+include $(POSEIDON_ACTIVE_DIR)/Code/Quadrature/Makefile_Quadrature
+include $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules/Makefile_Functions
+include $(POSEIDON_ACTIVE_DIR)/Code/Initial_Guess/Makefile_Initial_Guess
+include $(POSEIDON_ACTIVE_DIR)/Code/Return_Routines/Makefile_Return_Routines
+include $(POSEIDON_ACTIVE_DIR)/Code/Tables/Makefile_Tables
+include $(POSEIDON_ACTIVE_DIR)/Code/MPI/Makefile_MPI
+include $(POSEIDON_ACTIVE_DIR)/Code/Linear_Solvers/Makefile_Linear_Solvers
+include $(POSEIDON_ACTIVE_DIR)/Code/IO/Makefile_IO
+include $(POSEIDON_ACTIVE_DIR)/Code/Matrix_Routines/Makefile_Matrix
+include $(POSEIDON_ACTIVE_DIR)/Code/Newtonian/Makefile_Newtonian
+include $(POSEIDON_ACTIVE_DIR)/Code/Fixed_Point/Makefile_FP
+include $(POSEIDON_ACTIVE_DIR)/Code/XCFC/Makefile_XCFC
+include $(POSEIDON_ACTIVE_DIR)/Code/External/Makefile_External
+include $(POSEIDON_ACTIVE_DIR)/Code/Utilities/Makefile_Utilities
+include $(POSEIDON_ACTIVE_DIR)/Code/Interfaces/Makefile_Interfaces
+include $(POSEIDON_ACTIVE_DIR)/Code/Initialization/Makefile_Init
+include $(POSEIDON_ACTIVE_DIR)/Code/Source_Input/Makefile_Source_Input
+
+

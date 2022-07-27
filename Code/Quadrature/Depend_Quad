@@ -1,0 +1,10 @@
+Allocation_Quadrature.o:        \
+  Allocation_Quadrature.f90     \
+
+Functions_Quadrature.o:         \
+  Functions_Quadrature.f90      \
+
+Initialization_Quadrature.o:    \
+  Initialization_Quadrature.f90 \
+
+

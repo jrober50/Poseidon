@@ -1,0 +1,30 @@
+POSEIDON = \
+  $(COMMON)          \
+  $(VARIABLES)       \
+  $(FLAG_MODULES)    \
+  $(TIMERS)          \
+  $(AMREX_UTILITIES) \
+  $(MAPS)            \
+  $(MESH)            \
+  $(QUAD)            \
+  $(FUNCTIONS)       \
+  $(INITIAL_GUESS)   \
+  $(MPI)             \
+  $(TABLES)          \
+  $(RETURN_ROUTINES) \
+  $(IO)              \
+  $(MATRIX)          \
+  $(LINEAR_SOLVERS)  \
+  $(FP)              \
+  $(XCFC)            \
+  $(NEWTONIAN)       \
+  $(EXTERNAL)        \
+  $(INIT)            \
+  $(UTILITIES)       \
+  $(SOURCE_INPUT)    \
+  $(INTERFACES)      \
+
+
+POSEIDON_o = $(addsuffix .o,$(basename $(POSEIDON)))
+
+
