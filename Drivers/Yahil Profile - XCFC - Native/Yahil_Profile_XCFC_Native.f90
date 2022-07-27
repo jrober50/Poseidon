@@ -30,7 +30,7 @@ USE Poseidon_Interface_Run, &
 USE Poseidon_Interface_Close, &
             ONLY :  Poseidon_Close
 
-USE Poseidon_Return_Routines_Module, &
+USE Poseidon_Interface_Return_Routines, &
             ONLY : Poseidon_Return_Extrinsic_Curvature
 
 USE Variables_MPI, &
