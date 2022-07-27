@@ -155,8 +155,6 @@ SUBROUTINE  Initialization_XCFC_with_AMReX( )
 ! Determine Radial Base Variables from Multifab
 IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     
-
-
     IF ( Verbose_Flag ) CALL Init_Message('Initializing XCFC system with AMReX.')
 
     CALL TimerStart(Timer_Initialization_XCFC)
@@ -181,14 +179,16 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     VAR_DIM             = LM_LENGTH*NUM_R_NODES
     PROB_DIM            = NUM_CFA_VARS*VAR_DIM
     Beta_Prob_Dim       = 3*Var_Dim
-    Beta_Diagonals = Beta_Elem_Prob_Dim-1
-    Beta_Bandwidth = 2*Beta_Diagonals+1
+
+    Beta_Diagonals      = Beta_Elem_Prob_Dim-1
+    Beta_Bandwidth      = 2*Beta_Diagonals+1
 
     Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
 
 
     CALL Allocate_Mesh()
     CALL Determine_AMReX_Mesh()
+
 
     ! Allocate Arrays
     CALL Allocate_XCFC_Linear_Systems()

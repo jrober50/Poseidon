@@ -268,7 +268,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
 CALL Initialize_Poseidon &
-        (   Poisson_Mode_Option          = .TRUE.,                       &
+        (   Newtonian_Mode_Option        = .TRUE.,                       &
             Dimensions_Option            = Dimension_Input,              &
             FEM_Degree_Option            = Degree_Input,                 &
             L_Limit_Option               = L_Limit_Input,                &

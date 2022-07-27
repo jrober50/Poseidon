@@ -3,11 +3,12 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE  Source_Input_Poisson_Module                                          !##!
+MODULE  Source_Input_Newtonian_Module                                        !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
-!##!    +i01+   Poseidon_Input_Sources_Poisson_Native                        !##!
+!##!    +101+   Poseidon_Input_Sources_Newtonian_Native                      !##!
+!##!    +201+   Poseidon_Input_Sources_Newtonian_Native_Caller               !##!
 !##!                                                                         !##!
 !##!                                                                         !##!
 !##!=========================================================================!##!
@@ -87,7 +88,7 @@ CONTAINS
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Poisson_Native(   Input_Rho,        &
+SUBROUTINE Poseidon_Input_Sources_Newtonian_Native(   Input_Rho,        &
                                                     Input_NE,         &
                                                     Input_NQ,         &
                                                     Input_R_Quad,     &
@@ -119,7 +120,7 @@ INTEGER                                             ::  Their_DOF
 INTEGER                                             ::  re, te, pe
 
 
-IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : Fortran Array.')
+IF ( Verbose_Flag ) CALL Run_Message('Receiving Newtonian Sources. Container : Fortran Array.')
 CALL TimerStart(Timer_Poisson_SourceInput)
 
 
@@ -167,11 +168,63 @@ CALL TimerStop(Timer_Poisson_SourceInput)
 
 
 
-END SUBROUTINE Poseidon_Input_Sources_Poisson_Native
+END SUBROUTINE Poseidon_Input_Sources_Newtonian_Native
 
 
 
 
 
 
-END MODULE Source_Input_Poisson_Module
+!+201+##########################################################################!
+!                                                                               !
+!                           Poseidon_Input_Sources                              !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Poseidon_Input_Sources_Newtonian_Native_Caller(   Input_Rho     )
+
+
+REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
+                                    0:Num_R_Elements-1,             &
+                                    0:Num_T_Elements-1,             &
+                                    0:Num_P_Elements-1  )           ::  Input_Rho
+
+
+
+INTEGER                                                             ::  Local_Here
+INTEGER                                                             ::  re, te, pe
+
+
+IF ( Verbose_Flag ) CALL Run_Message('Receiving Newtonian Sources. Container : Fortran Array.')
+CALL TimerStart(Timer_Poisson_SourceInput)
+
+
+DO pe = 0,Num_P_Elements-1
+DO te = 0,Num_T_Elements-1
+DO re = 0,Num_R_Elements-1
+
+DO Local_Here = 1,Local_Quad_DOF
+
+
+
+    Source_Rho(Local_Here,re,te,pe) = DOT_PRODUCT( Translation_Matrix(:,Local_Here),    &
+                                                    Input_Rho(:,re,te,pe)               )
+
+
+END DO  ! Local_Here
+
+END DO ! re Loop
+END DO ! te Loop
+END DO ! pe Loop
+
+
+CALL TimerStop(Timer_Poisson_SourceInput)
+
+
+
+END SUBROUTINE Poseidon_Input_Sources_Newtonian_Native_Caller
+
+
+
+
+
+END MODULE Source_Input_Newtonian_Module

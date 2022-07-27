@@ -117,11 +117,14 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     Beta_Diagonals = Beta_Elem_Prob_Dim-1
     Beta_Bandwidth = 2*Beta_Diagonals+1
 
-
     Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
 
+
+    ! Allocate Arrays
     CALL Allocate_XCFC_Linear_Systems()
 
+
+    ! Construct Matrices
     CALL TimerStart( Timer_XCFC_Matrix_Init )
     CALL Initialize_XCFC_Matrices()
     CALL TimerStop( Timer_XCFC_Matrix_Init )

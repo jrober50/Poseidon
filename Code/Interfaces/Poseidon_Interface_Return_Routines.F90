@@ -35,12 +35,6 @@ USE Parameters_Variable_Indices, &
                     iU_S3,                  &
                     iVB_S
 
-USE Return_Functions_FP, &
-            ONLY :  Calc_Var_At_Location_Type_A,        &
-                    Calc_Var_At_Location_Type_B,        &
-                    Calc_Values_Here_Type_A,            &
-                    Calc_Values_Here_Type_B
-                    
 
 USE Poseidon_Return_Routines_CF, &
             ONLY :  Poseidon_Return_CF_Native,          &
@@ -78,6 +72,14 @@ USE Poseidon_Return_Routines_All, &
                     Poseidon_Return_All_Native_Caller,   &
                     Poseidon_Return_All_AMReX,           &
                     Poseidon_Return_All_AMReX_Caller
+
+
+USE Poseidon_Return_Routines_Potential, &
+            ONLY :  Poseidon_Return_Potential_Native,          &
+                    Poseidon_Return_Potential_Native_Caller,   &
+                    Poseidon_Return_Potential_AMReX,           &
+                    Poseidon_Return_Potential_AMReX_Caller
+
 
 IMPLICIT NONE
 
@@ -127,17 +129,13 @@ END INTERFACE Poseidon_Return_All
 
 
 
-INTERFACE Calc_Var_At_Location
-    MODULE PROCEDURE Calc_Var_At_Location_Type_A
-    MODULE PROCEDURE Calc_Var_At_Location_Type_B
-END INTERFACE Calc_Var_At_Location
 
-
-INTERFACE Calc_Values_Here_XCFC
-    MODULE PROCEDURE Calc_Values_Here_Type_A
-    MODULE PROCEDURE Calc_Values_Here_Type_B
-END INTERFACE Calc_Values_Here_XCFC
-
+INTERFACE Poseidon_Return_Newtonian_Potential
+    MODULE PROCEDURE Poseidon_Return_Potential_Native
+    MODULE PROCEDURE Poseidon_Return_Potential_Native_Caller
+    MODULE PROCEDURE Poseidon_Return_Potential_AMReX
+    MODULE PROCEDURE Poseidon_Return_Potential_AMReX_Caller
+END INTERFACE Poseidon_Return_Newtonian_Potential
 
 
 CONTAINS

@@ -247,7 +247,7 @@ SUBROUTINE Initialize_Poseidon( Source_NE,                          &
                                 CFA_Eq_Flags_Option,                &
                                 AMReX_FEM_Refinement_Option,        &
                                 AMReX_Integral_Refinement_Option,   &
-                                Poisson_Mode_Option,                &
+                                Newtonian_Mode_Option,                &
                                 Flat_Guess_Option,                  &
                                 Verbose_Option,                     &
                                 WriteAll_Option,                    &
@@ -294,7 +294,7 @@ INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL                   ::  CFA_EQ_Flags
 INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_FEM_Refinement_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Integral_Refinement_Option
 
-LOGICAL,                 INTENT(IN), OPTIONAL               ::  Poisson_Mode_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Newtonian_Mode_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Flat_Guess_Option
 
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Verbose_Option
@@ -336,8 +336,8 @@ CALL Set_Units(Source_Units)
 
 
 
-IF ( PRESENT(Poisson_Mode_Option) ) THEN
-    IF ( Poisson_Mode_Option ) THEN
+IF ( PRESENT(Newtonian_Mode_Option) ) THEN
+    IF ( Newtonian_Mode_Option ) THEN
         lPF_Core_Flags(iPF_Core_Newtonian_Mode)   = .TRUE.
         lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
         lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .FALSE.

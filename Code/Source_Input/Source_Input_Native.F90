@@ -414,20 +414,20 @@ SUBROUTINE Poseidon_Input_Sources_XCFC_Native_Caller( Input_E, Input_Si, Input_S
 
 
 REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
-                                    0:Num_R_Elements-1,               &
-                                    0:Num_T_Elements-1,               &
-                                    0:Num_P_Elements-1  )             ::  Input_E
+                                    0:Num_R_Elements-1,             &
+                                    0:Num_T_Elements-1,             &
+                                    0:Num_P_Elements-1  )           ::  Input_E
 
 REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
-                                    0:Num_R_Elements-1,               &
-                                    0:Num_T_Elements-1,               &
-                                    0:Num_P_Elements-1,               &
+                                    0:Num_R_Elements-1,             &
+                                    0:Num_T_Elements-1,             &
+                                    0:Num_P_Elements-1,             &
                                     1:3         )                   ::  Input_Si
 
 REAL(idp),  INTENT(IN), DIMENSION(  1:Caller_Quad_DOF,              &
-                                    0:Num_R_Elements-1,               &
-                                    0:Num_T_Elements-1,               &
-                                    0:Num_P_Elements-1  )             ::  Input_S
+                                    0:Num_R_Elements-1,             &
+                                    0:Num_T_Elements-1,             &
+                                    0:Num_P_Elements-1  )           ::  Input_S
 
 
 

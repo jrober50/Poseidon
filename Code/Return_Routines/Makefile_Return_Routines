@@ -2,6 +2,7 @@ RETURN_ROUTINES = \
   Return_Functions_FP.f90            \
   Return_Functions_Native.F90        \
   Return_Functions_AMReX.F90         \
+  Return_Routines_Potential.F90      \
   Return_Routines_CF.F90             \
   Return_Routines_LF.F90             \
   Return_Routines_SV.F90             \
