@@ -61,6 +61,8 @@ USE Flags_Run_Check_Module, &
 USE Flags_Source_Input_Module, &
             ONLY :  lPF_SI_Flags
 
+USE Flags_Core_Module, &
+            ONLY :  iPF_Core_Flags
 
 
 IMPLICIT NONE
@@ -75,6 +77,7 @@ CONTAINS
 !#########################################################!
 SUBROUTINE Poseidon_Clear_All_Flags()
 
+iPF_Core_Flags = 0
 
 CALL Poseidon_Clear_Flag( lPF_Alloc_Flags )
 

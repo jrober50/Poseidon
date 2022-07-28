@@ -74,8 +74,9 @@ USE Flags_Main_Module, &
             ONLY : Poseidon_Clear_All_Flags
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
 
 
 IMPLICIT NONE
@@ -111,7 +112,7 @@ IF ( Caller_Set ) THEN
 END IF
 
 
-IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian) THEN
     CALL Deallocate_Poseidon_Source_Variables
     CALL Deallocate_Poisson_Linear_System
 

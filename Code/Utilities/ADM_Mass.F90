@@ -140,8 +140,9 @@ USE XCFC_Functions_Physical_Source_Module, &
             ONLY : Get_Physical_Source
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
 
 USE MPI
 
@@ -304,7 +305,7 @@ CALL Calc_Int_Weights( DROT, DTOT,              &
                        rSquare, TP_Sin_Val,     &
                        Int_Weights              )
 
-IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
     CALL Calc_Int_Source_Newtonian( iE, Int_Source  )
 

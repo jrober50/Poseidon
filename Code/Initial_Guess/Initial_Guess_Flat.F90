@@ -54,8 +54,9 @@ USE Variables_Quadrature, &
                     xRightLimit
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,             &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,             &
+                    iPF_Core_Method_Mode,       &
+                    iPF_Core_Method_Newtonian
 
 IMPLICIT NONE
 
@@ -68,7 +69,7 @@ CONTAINS
  !#####################################################################!
 SUBROUTINE IG_Init_Flat_Guess
 
-IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
     CALL IG_Init_Flat_Guess_Poisson()
 ELSE
     CALL IG_Init_Flat_Guess_XCFC()

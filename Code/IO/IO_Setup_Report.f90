@@ -81,8 +81,9 @@ USE Flags_IO_Module, &
                     iPF_IO_Write_Setup
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
 
 IMPLICIT NONE
 
@@ -113,7 +114,7 @@ IF (myID_Poseidon == MasterID_Poseidon ) THEN
 
     CALL Output_Params_Report( Report_IDs(iRF_Setup) )
 
-    IF ( .NOT. lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+    IF ( .NOT. ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) ) THEN
         CALL Output_NL_Solver_Report( Report_IDs(iRF_Setup) )
     END IF
 
@@ -164,7 +165,7 @@ INTEGER, INTENT(IN)                                 ::  Report_ID
 IF ( lPF_IO_Flags(iPF_IO_Print_Setup) ) THEN
     WRITE(*,1400)
     WRITE(*,1401)
-    IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) WRITE(*,1301)
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) WRITE(*,1301)
     WRITE(*,1402)
     WRITE(*,1403)Degree
     WRITE(*,1404)L_LIMIT
@@ -186,7 +187,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Setup) ) THEN
 
     WRITE(Report_ID,1400)
     WRITE(Report_ID,1401)
-    IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) WRITE(Report_ID,1301)
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) WRITE(Report_ID,1301)
     WRITE(Report_ID,1402)
     WRITE(Report_ID,1403)Degree
     WRITE(Report_ID,1404)L_LIMIT

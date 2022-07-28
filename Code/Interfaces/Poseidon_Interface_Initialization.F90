@@ -187,11 +187,18 @@ USE Variables_AMReX_Core, &
                     Table_Offsets
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode,&
-                    iPF_Core_CFA_Mode,      &
-                    iPF_Core_XCFC_Mode,     &
-                    iPF_Core_AMReX_Mode
+            ONLY :  iPF_Core_Flags,             &
+                    iPF_Core_Unit_Mode,         &
+                    iPF_Core_Method_Mode,       &
+                    iPF_Core_AMReX_Mode,        &
+                    iPF_Core_Units_CGS,         &
+                    iPF_Core_Units_MKS,         &
+                    iPF_Core_Units_Geometrized, &
+                    iPF_Core_Units_Unitless,    &
+                    iPF_Core_Method_Newtonian,  &
+                    iPF_Core_Method_XCFC,       &
+                    iPF_Core_AMReX_Off,         &
+                    iPF_Core_AMReX_On
 
 USE Flags_Initial_Guess_Module, &
             ONLY :  lPF_IG_Flags,           &
@@ -332,24 +339,27 @@ END IF
 IF ( Verbose_Flag ) CALL Init_Message('Beginning Poseidon Core Initialization.')
 
 
+IF ( Source_Units == "C" ) THEN
+    iPF_Core_Flags(iPF_Core_Unit_Mode) = iPF_Core_Units_CGS
+ELSE IF ( Source_Units == "S" ) THEN
+    iPF_Core_Flags(iPF_Core_Unit_Mode) = iPF_Core_Units_MKS
+ELSE IF ( Source_Units == "G" ) THEN
+    iPF_Core_Flags(iPF_Core_Unit_Mode) = iPF_Core_Units_Geometrized
+ELSE IF ( Source_Units == "U" ) THEN
+    iPF_Core_Flags(iPF_Core_Unit_Mode) = iPF_Core_Units_Unitless
+END IF
 CALL Set_Units(Source_Units)
 
 
 
 IF ( PRESENT(Newtonian_Mode_Option) ) THEN
     IF ( Newtonian_Mode_Option ) THEN
-        lPF_Core_Flags(iPF_Core_Newtonian_Mode)   = .TRUE.
-        lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
-        lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .FALSE.
+        iPF_Core_Flags(iPF_Core_Method_Mode)   = iPF_Core_Method_Newtonian
     ELSE
-        lPF_Core_Flags(iPF_Core_Newtonian_Mode)   = .FALSE.
-        lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
-        lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .TRUE.
+        iPF_Core_Flags(iPF_Core_Method_Mode)   = iPF_Core_Method_XCFC
     END IF
 ELSE
-    lPF_Core_Flags(iPF_Core_Newtonian_Mode)   = .FALSE.
-    lPF_Core_Flags(iPF_Core_CFA_Mode)       = .FALSE.
-    lPF_Core_Flags(iPF_Core_XCFC_Mode)      = .TRUE.
+    iPF_Core_Flags(iPF_Core_Method_Mode)   = iPF_Core_Method_XCFC
 END IF
 
 IF ( PRESENT( Method_Flag_Option ) ) THEN
@@ -375,10 +385,10 @@ CALL Set_Caller_Data(   Source_NQ,                      &
 
 #ifdef POSEIDON_AMREX_FLAG
     DOMAIN_DIM = amrex_spacedim
-    lPF_Core_Flags(iPF_Core_AMReX_Mode) = .TRUE.
+    iPF_Core_Flags(iPF_Core_AMReX_Mode) = iPF_Core_AMReX_On
     CALL Init_Parameters_From_AMReX_Input_File()
 #else
-    lPF_Core_Flags(iPF_Core_AMReX_Mode) = .FALSE.
+    iPF_Core_Flags(iPF_Core_AMReX_Mode) = iPF_Core_AMReX_Off
 
     IF ( PRESENT( Dimensions_Option ) ) THEN
         Domain_Dim = Dimensions_Option
@@ -456,7 +466,7 @@ END IF
 
 
 
-IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
     !=======================================================!
     !                                                       !
     !               Initialize Poisson Solver               !

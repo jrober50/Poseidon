@@ -23,28 +23,36 @@ USE Poseidon_Message_Routines_Module,   &
             ONLY :  Warning_Message
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,             &
+                    iPF_Core_Unit_Mode,         &
+                    iPF_Core_Method_Mode,       &
+                    iPF_Core_AMReX_Mode,        &
+                    iPF_Core_Method_Newtonian,  &
+                    iPF_Core_Method_CFA,        &
+                    iPF_Core_Method_XCFC,       &
+                    iPF_Core_Num_Unit_Modes,    &
+                    iPF_Core_Num_Method_Modes,  &
+                    iPF_Core_Num_AMReX_Modes
 
 IMPLICIT NONE
 
 !  Initialization Flags
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Num_Flags          = 13
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Num_Flags          = 14
 
-!INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Units_Set          = 1
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Expansion_Params   = 1
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Matrices           = 2
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_IO_Params          = 3
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_FP_Params          = 4
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Mesh               = 5
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Quadrature         = 6
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Tables             = 7
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_MPI                = 8
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_MTGV               = 9
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Method_Vars        = 10
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Alloc_LinSys       = 11
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Caller_Vars        = 12
-INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Alloc_Source       = 13
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Core               = 1
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Expansion_Params   = 2
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Matrices           = 3
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_IO_Params          = 4
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_FP_Params          = 5
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Mesh               = 6
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Quadrature         = 7
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Tables             = 8
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_MPI                = 9
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_MTGV               = 10
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Method_Vars        = 11
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Alloc_LinSys       = 12
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Caller_Vars        = 13
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Init_Alloc_Source       = 14
 
 LOGICAL,    PUBLIC, DIMENSION(1:iPF_Init_Num_Flags)     ::  lPF_Init_Flags
 
@@ -133,6 +141,7 @@ CONTAINS
 LOGICAL FUNCTION Poseidon_Initialization_Check()
 
 
+lPF_Init_Flags(iPF_Init_Core) = Poseidon_Init_Core_Check()
 lPF_Init_Flags(iPF_Init_Matrices) = Poseidon_Init_Matrices_Check()
 lPF_Init_Flags(iPF_Init_Quadrature) = Poseidon_Init_Quadrature_Check()
 lPF_Init_Flags(iPF_Init_MTGV) = Poseidon_Init_MTGV_Check()
@@ -194,6 +203,44 @@ END FUNCTION Poseidon_Initialization_Check
 
 
 
+
+ !+201+####################################################!
+!                                                           !
+!          Poseidon_Init_Core_Check                         !
+!                                                           !
+ !#########################################################!
+LOGICAL FUNCTION Poseidon_Init_Core_Check()
+
+IF (( iPF_Core_Flags(iPF_Core_Unit_Mode) .LE. 0 ) .OR.                    &
+    ( iPF_Core_Flags(iPF_Core_Unit_Mode) > iPF_Core_Num_Unit_Modes ) ) THEN
+    CALL Warning_Message('Poseidon Initialization Check Failed. Units are not set.')
+    Poseidon_Init_Core_Check = .FALSE.
+ELSE
+    Poseidon_Init_Core_Check = .TRUE.
+END IF
+
+IF (( iPF_Core_Flags(iPF_Core_Method_Mode) .LE. 0 ) .OR.                    &
+    ( iPF_Core_Flags(iPF_Core_Method_Mode) > iPF_Core_Num_Method_Modes ) ) THEN
+    CALL Warning_Message('Poseidon Initialization Check Failed. Method is not set.')
+    Poseidon_Init_Core_Check = .FALSE.
+ELSE
+    Poseidon_Init_Core_Check = .TRUE.
+END IF
+
+
+IF (( iPF_Core_Flags(iPF_Core_AMReX_Mode) .LE. 0 ) .OR.                    &
+    ( iPF_Core_Flags(iPF_Core_AMReX_Mode) > iPF_Core_Num_AMReX_Modes ) ) THEN
+    CALL Warning_Message('Poseidon Initialization Check Failed. AMReX mode is not set.')
+    Poseidon_Init_Core_Check = .FALSE.
+ELSE
+    Poseidon_Init_Core_Check = .TRUE.
+END IF
+
+
+END FUNCTION Poseidon_Init_Core_Check
+
+
+
  !+201+####################################################!
 !                                                           !
 !          Poseidon_Init_Matrices_Check                     !
@@ -201,13 +248,23 @@ END FUNCTION Poseidon_Initialization_Check
  !#########################################################!
 LOGICAL FUNCTION Poseidon_Init_Matrices_Check()
 
-IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
     Poseidon_Init_Matrices_Check = Poseidon_Init_Matrices_Check_Poisson()
-ELSE
+
+
+ELSE IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_CFA ) THEN
+    CALL Warning_Message('CFA Formalism is currently unavailable.')
+    Poseidon_Init_Matrices_Check = .FALSE.
+
+
+ELSE IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_XCFC ) THEN
     Poseidon_Init_Matrices_Check = Poseidon_Init_Matrices_Check_XCFC()
+
+
 END IF ! lPF_Flags_Core(iPF_Core_Newtonian_Mode)
 
 END FUNCTION Poseidon_Init_Matrices_Check
+
 
 
  !+202+####################################################!

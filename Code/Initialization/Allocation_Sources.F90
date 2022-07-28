@@ -54,8 +54,9 @@ USE Flags_Initialization_Module, &
                     iPF_Init_Alloc_Source
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -96,7 +97,7 @@ ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
 
 #else
 
-IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
     ALLOCATE(Source_Rho(    1:Local_Quad_DOF,       &
                             0:NUM_R_ELEMENTS-1,     &
@@ -158,7 +159,7 @@ DEALLOCATE( GM_Source )
 DEALLOCATE( iLeafElementsPerLvl )
 
 #else
-IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
     DEALLOCATE( Source_Rho )
 

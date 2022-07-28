@@ -144,8 +144,9 @@ USE Flags_IO_Module, &
                     iPF_IO_Write_Results
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
 
 
 IMPLICIT NONE
@@ -183,7 +184,7 @@ INTEGER                                                     ::  Output_Locations
 IF ( PRESENT(CFA_Eq_Overide) ) THEN
     CFA_Eq_Flag_Used = CFA_Eq_Overide
 ELSE
-    IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
         CFA_Eq_Flag_Used = [1,0,0,0,0]
     ELSE
         CFA_Eq_Flag_Used = CFA_Eq_Flags

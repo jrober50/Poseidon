@@ -44,8 +44,9 @@ USE Flags_IO_Module, &
                     iPF_IO_Write_TimeTable
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
 
 IMPLICIT NONE
 
@@ -62,7 +63,7 @@ CONTAINS
 SUBROUTINE Output_Time_Report()
 
 
-IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) ) THEN
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
     CALL Output_Poisson_Time_Report()
 ELSE
     CALL Output_XCFC_Time_Report()

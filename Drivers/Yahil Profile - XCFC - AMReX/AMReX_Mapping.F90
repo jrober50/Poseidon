@@ -263,7 +263,6 @@ DO T_Index = T_Index_Min, T_Index_Max
             CFA_Eq_Flags_Option                 = CFA_Eqs,              &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
-            Poisson_Mode_Option                 = .FALSE.,              &
             Verbose_Option                      = Verbose,              &
             WriteAll_Option                     = .FALSE.,              &
             Print_Setup_Option                  = Print_Setup_Flag,     &

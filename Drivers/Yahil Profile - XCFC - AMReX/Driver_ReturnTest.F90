@@ -83,7 +83,7 @@ USE Variables_AMReX_Source, &
             ONLY :  iLeaf,                &
                     iTrunk
 
-USE Poseidon_Return_Routines_Module, &
+USE Poseidon_Interface_Return_Routines, &
             ONLY :  Poseidon_Return_Conformal_Factor,    &
                     Poseidon_Return_All
 

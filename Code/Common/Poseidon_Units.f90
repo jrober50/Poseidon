@@ -35,30 +35,33 @@ USE Poseidon_Kinds_Module, &
 
 IMPLICIT NONE
 
-REAL(idp)             :: Speed_of_Light_MKS  = 2.99792458e8_idp
-REAL(idp)             :: Grav_Constant_MKS   = 6.673e-11_idp
+REAL(idp)               ::  Speed_of_Light_MKS  = 2.99792458e8_idp
+REAL(idp)               ::  Grav_Constant_MKS   = 6.673e-11_idp
 
-REAL(idp)             :: Grav_Constant_G
-REAL(idp)             :: Speed_of_Light
-REAL(idp)             :: C_Square
-REAL(idp)             :: GR_Source_Scalar
-REAL(idp)             :: Meter, Kilometer, Centimeter
-REAL(idp)             :: Gram, Kilogram, SolarMass
-REAL(idp)             :: Second, Millisecond
-REAL(idp)             :: Joule, Erg, Newton
-REAL(idp)             :: GravPot_Units, Shift_Units
-REAL(idp)             :: E_Units, S_Units, Si_Units
+REAL(idp)               ::  Grav_Constant_G
+REAL(idp)               ::  Speed_of_Light
+REAL(idp)               ::  C_Square
+REAL(idp)               ::  GR_Source_Scalar
+REAL(idp)               ::  Meter, Kilometer, Centimeter
+REAL(idp)               ::  Gram, Kilogram, SolarMass
+REAL(idp)               ::  Second, Millisecond
+REAL(idp)               ::  Joule, Erg, Newton
+REAL(idp)               ::  GravPot_Units, Shift_Units
+REAL(idp)               ::  E_Units, S_Units, Si_Units
 
-REAL(idp)             :: Solar_Mass
+REAL(idp)               ::  Solar_Mass
 
-                        !*F&S*==========================================!
-                        !                                               !
-                        !           Functions & Subroutines             !
-                        !                                               !
-                        !===============================================!
+
+
 CONTAINS
 
 
+
+ !+101+####################################################!
+!                                                           !
+!          Set_Units                                        !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Set_Units( Units_Flag )
 
 

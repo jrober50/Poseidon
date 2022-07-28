@@ -67,8 +67,9 @@ USE Flags_Initial_Guess_Module, &
                     iPF_IG_Flat_Guess
 
 USE Flags_Core_Module, &
-            ONLY :  lPF_Core_Flags,         &
-                    iPF_Core_Newtonian_Mode
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
 
 IMPLICIT NONE
 
@@ -99,7 +100,7 @@ Readiness_Flag = Poseidon_Run_Check()
 
 IF ( Readiness_Flag ) THEN
 
-    IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) .eqv. .TRUE. ) THEN
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
         CALL Newtonian_Solve()
     
