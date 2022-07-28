@@ -56,7 +56,7 @@ External_MVL_Solution.o:        \
   External_MVL_Solution.f90     \
 
 External_IO_Test_Results.o:     \
-  Poseiond_Kinds.o              \
+  Poseidon_Kinds.o              \
   Parameters_Variables_Indices.o\
   External_HCT_Solution.o       \
   Variables_Functions.o         \
