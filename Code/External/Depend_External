@@ -40,14 +40,14 @@ External_HCT_Solution.o:        \
   Variables_External.o          \
   External_HCT_Solution.f90     \
 
-External_MVL_Solution.o         \
+External_MVL_Solution.o:        \
   Poseidon_Kinds.o              \
   Poseidon_Numbers.o            \
-  Variables_Mesh.o              \ 
+  Variables_Mesh.o              \
   Variables_External.o          \
   External_MVL_Solution.f90     \
 
-External_MVL_Solution.o         \
+External_MVL_Solution.o:        \
   Poseidon_Kinds.o              \
   Poseidon_Numbers.o            \
   Poseidon_Units.o              \
