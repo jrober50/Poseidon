@@ -5,7 +5,7 @@ POSEIDON = \
   $(TIMERS)          \
   $(AMREX_UTILITIES) \
   $(MAPS)            \
-  $(MESH)            \
+  $(POSEIDON_MESH)            \
   $(QUAD)            \
   $(FUNCTIONS)       \
   $(INITIAL_GUESS)   \
