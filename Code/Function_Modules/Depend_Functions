@@ -4,9 +4,6 @@ Functions_Info.o:           \
 Functions_Jacobian.o:       \
   Functions_Jacobian.f90    \
 
-Functions_Quadrature.o:     \
-  Functions_Quadrature.f90  \
-
 Functions_Math.o:           \
   Functions_Math.f90        \
 
