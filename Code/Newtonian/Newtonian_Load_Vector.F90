@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Poisson_Load_Vector                                                 !##!
+MODULE Newtonian_Load_Vector                                                 !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -111,7 +111,7 @@ CONTAINS
 
  !+201b+####################################################################!
 !                                                                           !
-!                      Calculate_Poisson_Load_Vector                      !
+!                      Calculate_Newtonian_Load_Vector                      !
 !                                                                           !
 !---------------------------------------------------------------------------!
 !                                                                           !
@@ -120,7 +120,7 @@ CONTAINS
 !       established by the mixed spectral/fintie element method.            !
 !                                                                           !
  !#########################################################################!
-SUBROUTINE Calculate_Poisson_Load_Vector()
+SUBROUTINE Calculate_Newtonian_Load_Vector()
 
 COMPLEX(idp)                                        ::  Tmp_Val
 
@@ -328,7 +328,7 @@ END DO  ! lm Loop
 CALL TimerStop( Timer_Poisson_SourceVector_Main )
 
 
-END SUBROUTINE Calculate_Poisson_Load_Vector
+END SUBROUTINE Calculate_Newtonian_Load_Vector
 
 
 
@@ -338,4 +338,4 @@ END SUBROUTINE Calculate_Poisson_Load_Vector
 
 
 
-END MODULE Poisson_Load_Vector
+END MODULE Newtonian_Load_Vector

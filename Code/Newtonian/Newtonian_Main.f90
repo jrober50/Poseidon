@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Poisson_Main_Module                                                   !##!
+MODULE Newtonian_Main_Module                                                   !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -32,8 +32,8 @@ USE Poseidon_Parameters, &
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Run_Message
 
-USE Poisson_Load_Vector, &
-            ONLY :  Calculate_Poisson_Load_Vector
+USE Newtonian_Load_Vector, &
+            ONLY :  Calculate_Newtonian_Load_Vector
 
 USE Linear_System_Solvers_TypeA_Module, &
             ONLY :  Solve_Linear_System_TypeA
@@ -58,14 +58,14 @@ CONTAINS
 !                                                     				!
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poisson_Solve()
+SUBROUTINE Newtonian_Solve()
 
 IF ( Verbose_Flag ) CALL Run_Message("Begining Newtonian Gravity Poisson Solve.")
 
 
 !!! Generate Src Vector !!!
 CALL TimerStart( Timer_Poisson_SourceVector )
-CALL Calculate_Poisson_Load_Vector()
+CALL Calculate_Newtonian_Load_Vector()
 CALL TimerStop( Timer_Poisson_SourceVector )
 
 
@@ -78,11 +78,11 @@ CALL TimerStop( Timer_Poisson_LinearSolve )
 
 
 
-END SUBROUTINE Poisson_Solve
+END SUBROUTINE Newtonian_Solve
 
 
 
 
 
 
-END MODULE Poisson_Main_Module
+END MODULE Newtonian_Main_Module

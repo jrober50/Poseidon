@@ -27,8 +27,8 @@ USE Poseidon_Parameters, &
             ONLY :  Poseidon_Frame,             &
                     Method_Flag
 
-USE Poisson_Main_Module, &
-            ONLY :  Poisson_Solve
+USE Newtonian_Main_Module, &
+            ONLY :  Newtonian_Solve
 
 USE FP_AndersonM_Module, &
             ONLY :  Fixed_Point_AndersonM
@@ -101,7 +101,7 @@ IF ( Readiness_Flag ) THEN
 
     IF ( lPF_Core_Flags(iPF_Core_Newtonian_Mode) .eqv. .TRUE. ) THEN
 
-        CALL Poisson_Solve()
+        CALL Newtonian_Solve()
     
     ELSE IF ( Method_Flag == 1 ) THEN
         WRITE(*,'(A)')"The Newton-Raphson method is not currently available in Poseidon. STOPING"
