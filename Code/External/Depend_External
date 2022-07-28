@@ -7,7 +7,7 @@ External_Yahil_Profile.o:       \
   Poseidon_Kinds.o              \
   Poseidon_Numbers.o            \
   Poseidon_Message_Routines.o   \
-  Poseidon_Parameters.o         \
+  Parameters_Poseidon.o         \
   Poseidon_Units.o              \
   Variables_MPI.o               \
   Variables_External.o          \
