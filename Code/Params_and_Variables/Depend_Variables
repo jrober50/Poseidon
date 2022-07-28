@@ -25,10 +25,10 @@ Variables_Functions.o:           \
 Variables_IO.o:                  \
   Variables_IO.f90               \
 
-Variables_Vectors.o              \
+Variables_Vectors.o:             \
   Variables_Vectors.f90          \
 
-Variables_Matrices.o             \
+Variables_Matrices.o:            \
   Variables_Matrices.f90         \
 
 Variables_Mesh.o:                \
