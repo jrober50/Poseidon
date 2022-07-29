@@ -1,4 +1,4 @@
-XCFC = \
+POSEIDON_XCFC = \
   Allocation_XCFC_Linear_System.f90  \
   XCFC_Source_Routine_Variables.f90  \
   XCFC_Functions_Calc_Values.F90     \

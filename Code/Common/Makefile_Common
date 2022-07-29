@@ -1,4 +1,4 @@
- COMMON = \
+ POSEIDON_COMMON = \
   Poseidon_Kinds.f90             \
   Poseidon_Numbers.f90           \
   Poseidon_Letters.f90           \

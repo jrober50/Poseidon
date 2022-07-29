@@ -1,4 +1,4 @@
-MAPS = \
+POSEIDON_MAPS = \
   Maps_X_Space.f90                  \
   Maps_Quadrature.f90               \
   Maps_Fixed_Point.f90              \

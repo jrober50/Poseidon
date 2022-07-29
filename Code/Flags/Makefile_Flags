@@ -1,4 +1,4 @@
-FLAG_MODULES = \
+POSEIDON_FLAGS = \
   Flags_Core.f90                 \
   Flags_Allocation.f90           \
   Flags_Boundary_Conditions.f90  \

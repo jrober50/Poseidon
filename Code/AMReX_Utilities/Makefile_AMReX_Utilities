@@ -1,4 +1,4 @@
-AMREX_UTILITIES = \
+POSEIDON_AMREX_UTILITIES = \
   Poseidon_AMReX_Multilayer_Utilities.F90        \
   Poseidon_AMReX_MakeFineMask_fi.cpp \
   Poseidon_AMReX_MakeFineMask.F90    \

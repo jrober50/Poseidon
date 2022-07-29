@@ -1,4 +1,4 @@
-QUAD = \
+POSEIDON_QUAD = \
   Allocation_Quadrature.f90     \
   Functions_Quadrature.f90      \
   Initialization_Quadrature.f90 \

@@ -1,28 +1,28 @@
 POSEIDON = \
-  $(COMMON)          \
-  $(VARIABLES)       \
-  $(FLAG_MODULES)    \
-  $(TIMERS)          \
-  $(AMREX_UTILITIES) \
-  $(MAPS)            \
-  $(MESH)            \
-  $(QUAD)            \
-  $(FUNCTIONS)       \
-  $(INITIAL_GUESS)   \
-  $(MPI)             \
-  $(TABLES)          \
-  $(RETURN_ROUTINES) \
-  $(IO)              \
-  $(MATRIX)          \
-  $(LINEAR_SOLVERS)  \
+  $(POSEIDON_COMMON)          \
+  $(POSEIDON_VARIABLES)       \
+  $(POSEIDON_FLAGS)           \
+  $(POSEIDON_TIMERS)          \
+  $(POSEIDON_AMREX_UTILITIES) \
+  $(POSEIDON_MAPS)            \
+  $(POSEIDON_MESH)            \
+  $(POSEIDON_QUAD)            \
+  $(POSEIDON_FUNCTIONS)       \
+  $(POSEIDON_INITIAL_GUESS)   \
+  $(POSEIDON_MPI)             \
+  $(POSEIDON_TABLES)          \
+  $(POSEIDON_RETURN_ROUTINES) \
+  $(POSEIDON_IO)              \
+  $(POSEIDON_MATRIX)          \
+  $(POSEIDON_LINEAR_SOLVERS)  \
   $(POSEIDON_CFA)    \
-  $(XCFC)            \
-  $(NEWTONIAN)       \
-  $(EXTERNAL)        \
-  $(INIT)            \
-  $(UTILITIES)       \
-  $(SOURCE_INPUT)    \
-  $(INTERFACES)      \
+  $(POSEIDON_XCFC)            \
+  $(POSEIDON_NEWTONIAN)       \
+  $(POSEIDON_EXTERNAL)        \
+  $(POSEIDON_INIT)            \
+  $(POSEIDON_UTILITIES)       \
+  $(POSEIDON_SOURCE_INPUT)    \
+  $(POSEIDON_INTERFACES)      \
 
 
 POSEIDON_o = $(addsuffix .o,$(basename $(POSEIDON)))

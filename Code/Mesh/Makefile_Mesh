@@ -1,4 +1,4 @@
-MESH = \
+POSEIDON_MESH = \
   Allocation_Mesh.f90      \
   Functions_Mesh.f90       \
   Initialization_Mesh_AMReX.F90 \
