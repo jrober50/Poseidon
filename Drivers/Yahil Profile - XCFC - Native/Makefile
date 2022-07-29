@@ -53,7 +53,7 @@ include ../../Build/Makefile_Core
 include Makefile_Driver
 
 
-Main : $(POSEIDON_o) $(DRIVER_o)
+main : $(POSEIDON_o) $(DRIVER_o)
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Yahil_Profile_XCFC_Native.f90  -o $(OBJ)/Yahil_Profile_XCFC_Native.o
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Yahil_Profile_XCFC_Native.x

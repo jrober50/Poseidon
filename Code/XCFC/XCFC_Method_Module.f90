@@ -32,7 +32,7 @@ USE Poseidon_Message_Routines_Module, &
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag,               &
-                    CFA_Eq_Flags
+                    Eq_Flags
 
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,                      &
@@ -114,7 +114,7 @@ CALL XCFC_X_Solve()
 
 
 ! Solve for Conformal Factor
-IF ( CFA_Eq_Flags(iU_CF) == 1 ) THEN
+IF ( Eq_Flags(iU_CF) == 1 ) THEN
     CALL XCFC_ConFactor_Solve()
 END IF
 
@@ -122,7 +122,7 @@ END IF
 
 
 ! Solve for Lapse Function
-IF ( CFA_Eq_Flags(iU_LF) == 1 ) THEN
+IF ( Eq_Flags(iU_LF) == 1 ) THEN
     CALL XCFC_Lapse_Solve()
 END IF
 
@@ -130,7 +130,7 @@ END IF
 
 
 ! Solve for Shift Vector
-IF ( ANY(CFA_Eq_Flags(iU_S1:iU_S3) == 1) ) THEN
+IF ( ANY(Eq_Flags(iU_S1:iU_S3) == 1) ) THEN
     CALL XCFC_Shift_Solve()
 END IF
 
@@ -220,7 +220,7 @@ CALL XCFC_X_Solve()
 
 
 ! Solve for Conformal Factor
-IF ( CFA_Eq_Flags(1) == 1 ) THEN
+IF ( Eq_Flags(1) == 1 ) THEN
     CALL XCFC_ConFactor_Solve()
 END IF
 
@@ -263,13 +263,13 @@ IF ( Verbose_Flag ) CALL Run_Message('Begining XCFC Metric Solve (Part 2 of 2).'
 
 
 ! Solve for Lapse Function
-IF ( CFA_Eq_Flags(2) == 1 ) THEN
+IF ( Eq_Flags(2) == 1 ) THEN
     CALL XCFC_Lapse_Solve()
 END IF
 
 
 ! Solve for Shift Vector
-IF ( ANY(CFA_Eq_Flags(3:5) == 1) ) THEN
+IF ( ANY(Eq_Flags(3:5) == 1) ) THEN
     CALL XCFC_Shift_Solve()
 END IF
 

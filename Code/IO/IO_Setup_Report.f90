@@ -36,7 +36,6 @@ USE Poseidon_Parameters, &
                     Method_Flag,            &
                     Verbose_Flag,           &
                     Convergence_Criteria,   &
-                    Num_CFA_Vars,           &
                     Max_Iterations
 
 USE Poseidon_IO_Parameters, &

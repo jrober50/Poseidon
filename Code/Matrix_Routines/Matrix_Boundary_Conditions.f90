@@ -44,7 +44,7 @@ USE Poseidon_Numbers_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Degree,                     &
                     L_Limit,                    &
-                    NUM_CFA_EQs
+                    Num_Eqs
 
 USE Variables_Matrices, &
             ONLY :  First_Column_Storage,       &
@@ -183,7 +183,7 @@ INTEGER                 :: ui
 
 
 
-DO ui = 1,NUM_CFA_EQs
+DO ui = 1,Num_Eqs
     IF (    L_VALUE == 0    )   THEN
 
 
@@ -251,7 +251,7 @@ COMPLEX(KIND = idp)                                                         :: B
 
 
 
-DO ui = 1,NUM_CFA_EQs
+DO ui = 1,Num_Eqs
     IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
 
@@ -394,7 +394,7 @@ REAL(KIND = idp)                                                            ::  
 
 
 
-DO ui = 1,NUM_CFA_EQs
+DO ui = 1,Num_Eqs
 
 
     IF (    INNER_CFA_BC_TYPE(ui) .EQ. "N"   ) THEN

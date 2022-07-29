@@ -27,7 +27,7 @@ USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
 USE Poseidon_Parameters, &
-            ONLY :  Num_CFA_Vars
+            ONLY :  Num_Vars
 
 USE Variables_BC, &
             ONLY :  INNER_CFA_BC_VALUES,            &
@@ -87,21 +87,21 @@ CONTAINS
 
 
  CHARACTER(LEN = 1),                                INTENT(IN)      ::  BC_Location_Input
- CHARACTER(LEN = 1),    DIMENSION(1:NUM_CFA_VARS),  INTENT(IN)      ::  BC_Type_Input
+ CHARACTER(LEN = 1),    DIMENSION(1:Num_Vars),  INTENT(IN)      ::  BC_Type_Input
 
- REAL(idp),             DIMENSION(1:NUM_CFA_VARS),  INTENT(IN)      ::  BC_Value_Input
+ REAL(idp),             DIMENSION(1:Num_Vars),  INTENT(IN)      ::  BC_Value_Input
 
 
 
  IF (    BC_Location_Input == "I"    ) THEN
 
-     INNER_CFA_BC_TYPE(1:NUM_CFA_VARS) = BC_Type_Input(1:NUM_CFA_VARS)
-     INNER_CFA_BC_VALUES(1:NUM_CFA_VARS) = BC_Value_Input(1:NUM_CFA_VARS)
+     INNER_CFA_BC_TYPE(1:Num_Vars) = BC_Type_Input(1:Num_Vars)
+     INNER_CFA_BC_VALUES(1:Num_Vars) = BC_Value_Input(1:Num_Vars)
 
  ELSE IF (    BC_Location_Input == "O"    ) THEN
 
-     OUTER_CFA_BC_TYPE(1:NUM_CFA_VARS) = BC_Type_Input(1:NUM_CFA_VARS)
-     OUTER_CFA_BC_VALUES(1:NUM_CFA_VARS) = BC_Value_Input(1:NUM_CFA_VARS)
+     OUTER_CFA_BC_TYPE(1:Num_Vars) = BC_Type_Input(1:Num_Vars)
+     OUTER_CFA_BC_VALUES(1:Num_Vars) = BC_Value_Input(1:Num_Vars)
 
  END IF
 

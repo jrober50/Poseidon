@@ -30,8 +30,8 @@ USE Poseidon_Parameters, &
 USE Newtonian_Main_Module, &
             ONLY :  Newtonian_Solve
 
-USE FP_AndersonM_Module, &
-            ONLY :  Fixed_Point_AndersonM
+USE CFA_Method_Module, &
+            ONLY :  CFA_Method
 
 USE XCFC_Method_Module, &
             ONLY :  XCFC_Method,                &
@@ -112,7 +112,7 @@ IF ( Readiness_Flag ) THEN
 
     ELSE IF ( Method_Flag == 2 ) THEN
 
-        Call Fixed_Point_AndersonM()
+        Call CFA_Method()
 
     ELSE IF ( Method_Flag == 3 ) THEN
         CALL XCFC_Method()

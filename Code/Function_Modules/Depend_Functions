@@ -10,6 +10,9 @@ Functions_Quadrature.o:     \
 Functions_Math.o:           \
   Functions_Math.f90        \
 
+Functions_Coeffs.o:         \
+  Functions_Coeffs.f90      \
+
 Functions_Additional.o:     \
   Functions_Additional.f90  \
 

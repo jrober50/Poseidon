@@ -25,7 +25,7 @@ USE Poseidon_Parameters, &
                     Degree,                 &
                     L_Limit,                &
                     Verbose_Flag,           &
-                    Num_CFA_Vars
+                    Num_Vars
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Init_Message
@@ -98,9 +98,9 @@ ELEM_VAR_DIM        = LM_LENGTH*(DEGREE + 1)
 !
 !   PROB_DIM - Length of vector required to hold coefficients for all variables
 !
-ULM_LENGTH          = NUM_CFA_VARS*LM_LENGTH
-PROB_DIM            = NUM_CFA_VARS*VAR_DIM
-ELEM_PROB_DIM       = NUM_CFA_VARS*ELEM_VAR_DIM
+ULM_LENGTH          = Num_Vars*LM_LENGTH
+PROB_DIM            = Num_Vars*VAR_DIM
+ELEM_PROB_DIM       = Num_Vars*ELEM_VAR_DIM
 ELEM_PROB_DIM_SQR   = ELEM_PROB_DIM*ELEM_PROB_DIM
 
 
@@ -159,8 +159,8 @@ ELEM_VAR_DIM        = LM_LENGTH*(DEGREE + 1)
 !
 !   PROB_DIM - Length of vector required to hold coefficients for all variables
 !
-ULM_LENGTH          = NUM_CFA_VARS*LM_LENGTH
-ELEM_PROB_DIM       = NUM_CFA_VARS*ELEM_VAR_DIM
+ULM_LENGTH          = Num_Vars*LM_LENGTH
+ELEM_PROB_DIM       = Num_Vars*ELEM_VAR_DIM
 ELEM_PROB_DIM_SQR   = ELEM_PROB_DIM*ELEM_PROB_DIM
 
 

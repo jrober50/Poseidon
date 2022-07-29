@@ -33,9 +33,8 @@ USE Poseidon_Numbers_Module, &
             ONLY :  pi
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE,                 &
-                    L_LIMIT,                &
-                    NUM_CFA_VARS
+            ONLY :  Degree,                 &
+                    L_Limit
 
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,                  &

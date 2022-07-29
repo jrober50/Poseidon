@@ -66,6 +66,7 @@ CHARACTER(LEN=20), PUBLIC, DIMENSION(1:iPF_Core_Num_Method_Modes)   ::      &
                                             'CFA Metric          ',         &
                                             'XCFC Metric         '          /)
 
+INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_Method_Too_Many  = -1
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_Method_Newtonian = 1
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_Method_CFA       = 2
 INTEGER,    PUBLIC, PARAMETER       ::  iPF_Core_Method_XCFC      = 3

@@ -57,9 +57,7 @@ USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,             &
                     DEGREE,                 &
                     L_LIMIT,                &
-                    Num_CFA_Eqs,            &
-                    Num_CFA_Vars,           &
-                    CFA_Eq_Flags,           &
+                    Num_Vars,               &
                     Verbose_Flag
 
 USE Variables_Derived, &
@@ -109,7 +107,7 @@ USE Timer_Routines_Module, &
 
 USE Timer_Variables_Module, &
             ONLY :  Timer_Initialization_XCFC, &
-                    Timer_XCFC_Matrix_Init
+                    Timer_Matrix_Init
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
@@ -177,7 +175,7 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
 
     VAR_DIM             = LM_LENGTH*NUM_R_NODES
-    PROB_DIM            = NUM_CFA_VARS*VAR_DIM
+    PROB_DIM            = NUM_VARS*VAR_DIM
     Beta_Prob_Dim       = 3*Var_Dim
 
     Beta_Diagonals      = Beta_Elem_Prob_Dim-1
@@ -195,9 +193,9 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
 
     ! Construct Matrices
-    CALL TimerStart( Timer_XCFC_Matrix_Init )
+    CALL TimerStart( Timer_Matrix_Init )
     CALL Initialize_XCFC_Matrices()
-    CALL TimerStop( Timer_XCFC_Matrix_Init )
+    CALL TimerStop( Timer_Matrix_Init )
 
 
 

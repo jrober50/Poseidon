@@ -15,7 +15,7 @@ include $(POSEIDON_ACTIVE_DIR)/Code/Linear_Solvers/Depend_Linear_Solvers
 include $(POSEIDON_ACTIVE_DIR)/Code/IO/Depend_IO
 include $(POSEIDON_ACTIVE_DIR)/Code/Newtonian/Depend_Newtonian
 include $(POSEIDON_ACTIVE_DIR)/Code/Matrix_Routines/Depend_Matrix
-include $(POSEIDON_ACTIVE_DIR)/Code/Fixed_Point/Depend_FP
+include $(POSEIDON_ACTIVE_DIR)/Code/CFA/Depend_CFA
 include $(POSEIDON_ACTIVE_DIR)/Code/XCFC/Depend_XCFC
 include $(POSEIDON_ACTIVE_DIR)/Code/External/Depend_External
 include $(POSEIDON_ACTIVE_DIR)/Code/Utilities/Depend_Utilities

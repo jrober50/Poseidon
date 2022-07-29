@@ -55,16 +55,10 @@ USE Parameters_Variable_Indices, &
                     iVB_X
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE,                 &
-                    L_LIMIT,                &
-                    Num_CFA_Vars,           &
+            ONLY :  Degree,                 &
+                    L_Limit,                &
                     Domain_Dim,             &
-                    CUR_ITERATION,          &
-                    Poseidon_Frame,         &
-                    Convergence_Type,       &
-                    Convergence_Flag,       &
-                    Max_Iterations,         &
-                    CFA_Eq_Flags
+                    Poseidon_Frame
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
@@ -74,7 +68,7 @@ USE Variables_Derived, &
 
 
 USE Variables_Mesh, &
-            ONLY :  NUM_R_ELEMENTS,         &
+            ONLY :  Num_R_Elements,         &
                     rlocs,                  &
                     tlocs,                  &
                     R_Inner,                &

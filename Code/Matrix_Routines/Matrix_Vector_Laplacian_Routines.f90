@@ -102,7 +102,7 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_XCFC_Banded_Factorization
+            ONLY :  Timer_Banded_Factorization
 
 
 USE Flags_Initialization_Module, &
@@ -136,7 +136,7 @@ CHARACTER(LEN = 300)                                    ::  Message
 IF ( Verbose_Flag ) CALL Init_Message('Factorizing vector Laplace matrix using LAPAK LU factorization.')
 
 
-CALL TimerStart( Timer_XCFC_Banded_Factorization )
+CALL TimerStart( Timer_Banded_Factorization )
 
 !   Dirichlet BCs modify the stiffness matrix so we modify it now.
 !   But to apply the BCs we will need values from the original matrix,
@@ -170,7 +170,7 @@ END IF
 
 
 
-CALL TimerStop( Timer_XCFC_Banded_Factorization )
+CALL TimerStop( Timer_Banded_Factorization )
 
 
 

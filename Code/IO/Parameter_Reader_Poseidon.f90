@@ -35,7 +35,6 @@ USE Poseidon_Parameters, &
                     ONLY :  DEGREE,                 &
                             L_LIMIT,                &
                             Domain_Dim,             &
-                            Num_CFA_Vars,           &
                             Max_Iterations,         &
                             Convergence_Criteria,   &
                             Method_Flag,            &

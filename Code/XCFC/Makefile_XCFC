@@ -1,7 +1,6 @@
 XCFC = \
   Allocation_XCFC_Linear_System.f90  \
   XCFC_Source_Routine_Variables.f90  \
-  XCFC_Functions_Coeff.f90           \
   XCFC_Functions_Calc_Values.F90     \
   XCFC_Functions_Physical_Source.F90 \
   XCFC_Load_Vector_TypeA.F90         \
