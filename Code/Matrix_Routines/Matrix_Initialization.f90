@@ -437,10 +437,10 @@ DO l = 1,L_LIMIT
 
     DO m = -M_VALUES(l),M_VALUES(l)
 
-        Tmp_Value_A = COMPLEX( (2.0_idp * REAL_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp )
-        Tmp_Value_B = COMPLEX( (l-m)*(l+m),0.0_idp )
+        Tmp_Value_A = CMPLX( (2.0_idp * REAL_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp,idp )
+        Tmp_Value_B = CMPLX( (l-m)*(l+m),0.0_idp,idp )
 
-        Sqrt_Term(Map_To_lm(l,m)) = zsqrt( Tmp_Value_A)*zsqrt(Tmp_Value_B)
+        Sqrt_Term(Map_To_lm(l,m)) = sqrt( Tmp_Value_A)*sqrt(Tmp_Value_B)
 
     END DO ! m Loop
 END DO ! l Loop
