@@ -55,16 +55,9 @@ USE Parameters_Variable_Indices, &
                     iVB_X
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE,                 &
-                    L_LIMIT,                &
-                    Num_CFA_Vars,           &
-                    Domain_Dim,             &
-                    CUR_ITERATION,          &
-                    Poseidon_Frame,         &
-                    Convergence_Type,       &
-                    Convergence_Flag,       &
-                    Max_Iterations,         &
-                    CFA_Eq_Flags
+            ONLY :  Degree,                 &
+                    L_Limit,                &
+                    Eq_Flags
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
@@ -187,7 +180,7 @@ ELSE
     IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
         CFA_Eq_Flag_Used = [1,0,0,0,0]
     ELSE
-        CFA_Eq_Flag_Used = CFA_Eq_Flags
+        CFA_Eq_Flag_Used = Eq_Flags
     END IF
 END IF
 
@@ -265,7 +258,7 @@ END SUBROUTINE Write_Final_Results
 !          Write_Final_Results_Samples                                      !
 !                                                                           !
  !#########################################################################!
-SUBROUTINE Write_Final_Results_Samples( Num_Files, File_IDs, CFA_Eq_Flags,OL_Flag )
+SUBROUTINE Write_Final_Results_Samples( Num_Files, File_IDs, CFA_Eq_Flags, OL_Flag )
 
 INTEGER,                            INTENT(IN)              ::  Num_Files
 INTEGER, DIMENSION(1:Num_Files),    INTENT(IN)              ::  File_IDs

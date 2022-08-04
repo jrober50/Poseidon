@@ -29,7 +29,7 @@ USE Poseidon_Kinds_Module, &
 
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                     &
-                    NUM_CFA_VARS
+                    Num_Vars
 
 USE Variables_Mesh, &
             ONLY :  rlocs,                      &
@@ -42,8 +42,8 @@ USE Variables_Derived, &
                     Elem_Prob_Dim_Sqr,          &
                     BLOCK_PROB_DIM
 
-USE Maps_Legacy, &
-            ONLY :  CFA_ALL_Matrix_Map
+USE Maps_Fixed_Point, &
+            ONLY :  FP_Array_Map
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
@@ -87,7 +87,7 @@ DO re = 0,Num_R_Elements-1
     END IF
 
     DO d = 0,DEGREE
-        Start  = CFA_ALL_Matrix_Map(1, 0, re, d)
+        Start  = FP_Array_Map(re, d, 1, 0)
         Finish = Start + ULM_LENGTH - 1
 
         Modifier(Start:Finish) = 1.0_idp/Node_R_Locs(d)
@@ -105,12 +105,12 @@ b_Vec(:) = b_Vec(:)*Modifier(:)
 ! Modify Jacobian
 DO re = 0,Num_R_Elements-1
     DO d = 0,DEGREE
-        DO F = 1,NUM_CFA_VARS
+        DO F = 1,Num_Vars
             DO lm_loc = 0,LM_LENGTH-1
 
                 Start  = (d*ULM_LENGTH + (F-1)*LM_LENGTH + lm_loc)*ELEM_PROB_DIM
                 Finish = Start + ELEM_PROB_DIM-1
-                Here = CFA_ALL_Matrix_Map(F, lm_loc, re, d)
+                Here = FP_Array_Map(re, d, F, lm_loc)
 
 !                PRINT*,"Start: ",start," Finish: ",Finish," Here : ",Here
                 A_Mat(Start:Finish,re) = A_Mat(Start:Finish,re) * Modifier(Here)
@@ -172,12 +172,12 @@ b_Vec(:) = b_Vec(:)*Modifier(:)
 ! Modify Jacobian
 DO re = 0,Num_R_Elements-1
     DO d = 0,DEGREE
-        DO F = 1,NUM_CFA_VARS
+        DO F = 1,Num_Vars
             DO lm_loc = 0,LM_LENGTH-1
 
                 Start  = (d*ULM_LENGTH + (F-1)*LM_LENGTH + lm_loc)*ELEM_PROB_DIM
                 Finish = Start + ELEM_PROB_DIM-1
-                Here = CFA_ALL_Matrix_Map(F, lm_loc, re, d)
+                Here = FP_Array_Map(re, d, F, lm_loc)
 
                 A_Mat(Start:Finish,re) = A_Mat(Start:Finish,re) * Modifier(Here)
 

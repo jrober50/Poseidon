@@ -39,10 +39,9 @@ USE Poseidon_Parameters, &
                     Method_Flag,            &
                     Verbose_Flag,           &
                     Convergence_Criteria,   &
-                    Num_CFA_Vars,           &
                     Max_Iterations,         &
-                    CFA_EQ_Flags,           &
-                    Num_CFA_Eqs
+                    Eq_Flags,           &
+                    Num_Eqs
 
 USE Allocation_Sources, &
             ONLY :  Allocate_Poseidon_Source_Variables
@@ -96,7 +95,8 @@ USE Initialization_Subroutines, &
                     Init_Mesh_Params,               &
                     Initialize_Mesh,                &
                     Init_AMReX_Params,              &
-                    Set_Caller_Data
+                    Set_Caller_Data,                &
+                    Set_Method_Flags
 
 
 USE Initialization_Subroutines_AMReX, &
@@ -238,7 +238,6 @@ SUBROUTINE Initialize_Poseidon( Source_NE,                          &
                                 Source_Radial_Boundary_Units,       &
                                 Domain_Edge_Option,                     &
                                 Dimensions_Option,                      &
-                                Method_Flag_Option,                     &
                                 FEM_Degree_Option,                      &
                                 L_Limit_Option,                         &
                                 Source_R_Option,                        &
@@ -251,10 +250,12 @@ SUBROUTINE Initialize_Poseidon( Source_NE,                          &
                                 Max_Iterations_Option,                  &
                                 Convergence_Criteria_Option,        &
                                 Anderson_M_Option,                      &
-                                CFA_Eq_Flags_Option,                &
+                                Eq_Flags_Option,                &
                                 AMReX_FEM_Refinement_Option,        &
                                 AMReX_Integral_Refinement_Option,   &
-                                Newtonian_Mode_Option,                &
+                                Newtonian_Mode_Option,              &
+                                CFA_Mode_Option,                    &
+                                XCFC_Mode_Option,                   &
                                 Flat_Guess_Option,                  &
                                 Verbose_Option,                     &
                                 WriteAll_Option,                    &
@@ -273,13 +274,13 @@ SUBROUTINE Initialize_Poseidon( Source_NE,                          &
 
 
 
-INTEGER,    DIMENSION(3),               INTENT(IN)              ::  Source_NQ
-REAL(idp),  DIMENSION(2),               INTENT(IN)              ::  Source_xL
-REAL(idp),  DIMENSION(Source_NQ(1)),    INTENT(IN)              ::  Source_RQ_xlocs
-REAL(idp),  DIMENSION(Source_NQ(2)),    INTENT(IN)              ::  Source_TQ_xlocs
-REAL(idp),  DIMENSION(Source_NQ(3)),    INTENT(IN)              ::  Source_PQ_xlocs
-CHARACTER(LEN=1),                       INTENT(IN)              ::  Source_Units
-CHARACTER(LEN=2),                       INTENT(IN)              ::  Source_Radial_Boundary_Units
+INTEGER,    DIMENSION(3),               INTENT(IN)          ::  Source_NQ
+REAL(idp),  DIMENSION(2),               INTENT(IN)          ::  Source_xL
+REAL(idp),  DIMENSION(Source_NQ(1)),    INTENT(IN)          ::  Source_RQ_xlocs
+REAL(idp),  DIMENSION(Source_NQ(2)),    INTENT(IN)          ::  Source_TQ_xlocs
+REAL(idp),  DIMENSION(Source_NQ(3)),    INTENT(IN)          ::  Source_PQ_xlocs
+CHARACTER(LEN=1),                       INTENT(IN)          ::  Source_Units
+CHARACTER(LEN=2),                       INTENT(IN)          ::  Source_Radial_Boundary_Units
 REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  Source_R_Option
 REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  Source_T_Option
 REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  Source_P_Option
@@ -295,13 +296,16 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  L_Limit_Option
 INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  Source_NE
 REAL(idp), DIMENSION(2), INTENT(IN), OPTIONAL               ::  Domain_Edge_Option
 
-INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL                   ::  Integration_NQ_Option
-INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL                   ::  CFA_EQ_Flags_Option
+INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  Integration_NQ_Option
+INTEGER,   DIMENSION(5), INTENT(IN), OPTIONAL               ::  Eq_Flags_Option
 
 INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_FEM_Refinement_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  AMReX_Integral_Refinement_Option
 
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Newtonian_Mode_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  CFA_Mode_Option
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  XCFC_Mode_Option
+
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Flat_Guess_Option
 
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Verbose_Option
@@ -324,7 +328,6 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  Max_Iterations_O
 REAL(idp),               INTENT(IN), OPTIONAL               ::  Convergence_Criteria_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Anderson_M_Option
 
-INTEGER,                 INTENT(IN), OPTIONAL               ::  Method_Flag_Option
 
 
 CALL Init_Timers
@@ -352,21 +355,10 @@ CALL Set_Units(Source_Units)
 
 
 
-IF ( PRESENT(Newtonian_Mode_Option) ) THEN
-    IF ( Newtonian_Mode_Option ) THEN
-        iPF_Core_Flags(iPF_Core_Method_Mode)   = iPF_Core_Method_Newtonian
-    ELSE
-        iPF_Core_Flags(iPF_Core_Method_Mode)   = iPF_Core_Method_XCFC
-    END IF
-ELSE
-    iPF_Core_Flags(iPF_Core_Method_Mode)   = iPF_Core_Method_XCFC
-END IF
+CALL Set_Method_Flags(  Newtonian_Mode_Option,      &
+                        CFA_Mode_Option,            &
+                        XCFC_Mode_Option            )
 
-IF ( PRESENT( Method_Flag_Option ) ) THEN
-    Method_Flag = Method_Flag_Option
-ELSE
-    Method_Flag = 3
-END IF
 
 
 CALL Init_MPI_Params()
@@ -490,13 +482,13 @@ ELSE
     Method_Flag = 3
 
 
-    IF ( PRESENT(CFA_Eq_Flags_Option) ) THEN
-        CFA_EQ_Flags = CFA_Eq_Flags_Option
+    IF ( PRESENT(Eq_Flags_Option) ) THEN
+        Eq_Flags = Eq_Flags_Option
     ELSE
-        CFA_EQ_Flags = [1,1,1,0,0]
+        Eq_Flags = [1,1,1,0,0]
     END IF
 
-    NUM_CFA_Eqs = SUM(CFA_EQ_Flags)
+    Num_Eqs = SUM(Eq_Flags)
 
 #ifdef POSEIDON_AMREX_FLAG
     CALL Initialize_Derived_AMReX()

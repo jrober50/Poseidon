@@ -15,7 +15,7 @@ include $(POSEIDON_ACTIVE_DIR)/Code/Linear_Solvers/Makefile_Linear_Solvers
 include $(POSEIDON_ACTIVE_DIR)/Code/IO/Makefile_IO
 include $(POSEIDON_ACTIVE_DIR)/Code/Matrix_Routines/Makefile_Matrix
 include $(POSEIDON_ACTIVE_DIR)/Code/Newtonian/Makefile_Newtonian
-include $(POSEIDON_ACTIVE_DIR)/Code/Fixed_Point/Makefile_FP
+include $(POSEIDON_ACTIVE_DIR)/Code/CFA/Makefile_CFA
 include $(POSEIDON_ACTIVE_DIR)/Code/XCFC/Makefile_XCFC
 include $(POSEIDON_ACTIVE_DIR)/Code/External/Makefile_External
 include $(POSEIDON_ACTIVE_DIR)/Code/Utilities/Makefile_Utilities

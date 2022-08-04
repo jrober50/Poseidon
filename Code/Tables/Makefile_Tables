@@ -1,4 +1,4 @@
-TABLES = \
+POSEIDON_TABLES = \
   Allocation_Tables.F90            \
   Initialization_Tables.F90        \
 

@@ -110,7 +110,7 @@ IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
 
 
 
-    WRITE(*,101) '- Matrix Construction              :', Timer_XCFC_Matrix_Init,' s     '
+    WRITE(*,101) '- Matrix Construction              :', Timer_Matrix_Init,' s     '
     WRITE(*,*)
 
 
@@ -179,38 +179,38 @@ IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
 
 
 
-    WRITE(*,101) '- Matrix Construction              :', Timer_XCFC_Matrix_Init,' s     '
+    WRITE(*,101) '- Matrix Construction              :', Timer_Matrix_Init,' s     '
     WRITE(*,*)
 
-    WRITE(*,101) '- Matrix Factorization, Total      :', Timer_XCFC_Matrix_Factorization, ' s     '
-    WRITE(*,101) '   - Cholesky Factorization        :', Timer_XCFC_Matrix_Cholesky,' s     '
-    WRITE(*,101) '   - Banded Matrix Factorization   :', Timer_XCFC_Banded_Factorization,' s     '
-    WRITE(*,*)
-
-
-
-    WRITE(*,101) '- XCFC, X                          :', Timer_XCFC_X,' s'
-    WRITE(*,101) '   - Source Vector Construction    :', Timer_XCFC_X_SourceVector,' s'
-    WRITE(*,101) '   - Linear Solve                  :', Timer_XCFC_X_LinearSolve,' s'
-    WRITE(*,*)
-
-
-    WRITE(*,101) '- XCFC, Conformal Factor           :', Timer_XCFC_ConFactor,' s'
-    WRITE(*,101) '   - Source Vector Construction    :', Timer_XCFC_ConFactor_SourceVector,' s'
-    WRITE(*,101) '   - Linear Solve                  :', Timer_XCFC_ConFactor_LinearSolve, ' s'
+    WRITE(*,101) '- Matrix Factorization, Total      :', Timer_Matrix_Factorization, ' s     '
+    WRITE(*,101) '   - Cholesky Factorization        :', Timer_Matrix_Cholesky,' s     '
+    WRITE(*,101) '   - Banded Matrix Factorization   :', Timer_Banded_Factorization,' s     '
     WRITE(*,*)
 
 
 
-    WRITE(*,101) '- XCFC, Lapse Function             :', Timer_XCFC_Lapse,' s'
-    WRITE(*,101) '   - Source Vector Construction    :', Timer_XCFC_Lapse_SourceVector,' s'
-    WRITE(*,101) '   - Linear Solve                  :', Timer_XCFC_Lapse_LinearSolve, ' s'
+    WRITE(*,101) '- XCFC, X                          :', Timer_X,' s'
+    WRITE(*,101) '   - Source Vector Construction    :', Timer_X_SourceVector,' s'
+    WRITE(*,101) '   - Linear Solve                  :', Timer_X_LinearSolve,' s'
     WRITE(*,*)
 
 
-    WRITE(*,101) '- XCFC Variable, Shift Vector      :', Timer_XCFC_Shift
-    WRITE(*,101) '   - Source Vector Construction    :', Timer_XCFC_Shift_SourceVector, ' s'
-    WRITE(*,101) '   - Linear Solve                  :', Timer_XCFC_Shift_LinearSolve, ' s'
+    WRITE(*,101) '- XCFC, Conformal Factor           :', Timer_ConFactor,' s'
+    WRITE(*,101) '   - Source Vector Construction    :', Timer_ConFactor_SourceVector,' s'
+    WRITE(*,101) '   - Linear Solve                  :', Timer_ConFactor_LinearSolve, ' s'
+    WRITE(*,*)
+
+
+
+    WRITE(*,101) '- XCFC, Lapse Function             :', Timer_Lapse,' s'
+    WRITE(*,101) '   - Source Vector Construction    :', Timer_Lapse_SourceVector,' s'
+    WRITE(*,101) '   - Linear Solve                  :', Timer_Lapse_LinearSolve, ' s'
+    WRITE(*,*)
+
+
+    WRITE(*,101) '- XCFC Variable, Shift Vector      :', Timer_Shift
+    WRITE(*,101) '   - Source Vector Construction    :', Timer_Shift_SourceVector, ' s'
+    WRITE(*,101) '   - Linear Solve                  :', Timer_Shift_LinearSolve, ' s'
     WRITE(*,*)
 
 
@@ -270,24 +270,24 @@ REAL(idp)           :: Timer_Multi_Time_Costs
 
 Timer_Accountable = Timer_GR_SourceInput                &
                     + Timer_Initialization_Total        &
-                    + Timer_XCFC_Matrix_Factorization   &
-                    + Timer_XCFC_X                      &
-                    + Timer_XCFC_ConFactor              &
-                    + Timer_XCFC_Lapse                  &
-                    + Timer_XCFC_Shift                  &
+                    + Timer_Matrix_Factorization   &
+                    + Timer_X                      &
+                    + Timer_ConFactor              &
+                    + Timer_Lapse                  &
+                    + Timer_Shift                  &
                     + Timer_Core_Utilities              &
                     + Timer_Core_PrintResults
 
 
 Timer_One_Time_Costs = Timer_Initialization_Total       &
-                     + Timer_XCFC_Matrix_Factorization  &
+                     + Timer_Matrix_Factorization  &
                      + Timer_Core_Utilities             &
                      + Timer_Core_PrintResults
 
-Timer_Multi_Time_Costs = Timer_XCFC_X                      &
-                        + Timer_XCFC_ConFactor              &
-                        + Timer_XCFC_Lapse                  &
-                        + Timer_XCFC_Shift
+Timer_Multi_Time_Costs = Timer_X                      &
+                        + Timer_ConFactor              &
+                        + Timer_Lapse                  &
+                        + Timer_Shift
 
 101 FORMAT (7X,A,5X,ES12.6E2,A)
 
@@ -344,21 +344,21 @@ IF ( lPF_IO_Flags(iPF_IO_Write_TimeTable) )  THEN
 
     WRITE(File_ID,'(ES12.6E2)') Timer_Poseidon
     WRITE(File_ID,'(ES12.6E2)') Timer_Initialization_Total
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Matrix_Init
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Matrix_Cholesky
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Banded_Factorization
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_X
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_X_SourceVector
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_X_LinearSolve
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_ConFactor
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_ConFactor_SourceVector
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_ConFactor_LinearSolve
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Lapse
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Lapse_SourceVector
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Lapse_LinearSolve
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Shift
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Shift_SourceVector
-    WRITE(File_ID,'(ES12.6E2)') Timer_XCFC_Shift_LinearSolve
+    WRITE(File_ID,'(ES12.6E2)') Timer_Matrix_Init
+    WRITE(File_ID,'(ES12.6E2)') Timer_Matrix_Cholesky
+    WRITE(File_ID,'(ES12.6E2)') Timer_Banded_Factorization
+    WRITE(File_ID,'(ES12.6E2)') Timer_X
+    WRITE(File_ID,'(ES12.6E2)') Timer_X_SourceVector
+    WRITE(File_ID,'(ES12.6E2)') Timer_X_LinearSolve
+    WRITE(File_ID,'(ES12.6E2)') Timer_ConFactor
+    WRITE(File_ID,'(ES12.6E2)') Timer_ConFactor_SourceVector
+    WRITE(File_ID,'(ES12.6E2)') Timer_ConFactor_LinearSolve
+    WRITE(File_ID,'(ES12.6E2)') Timer_Lapse
+    WRITE(File_ID,'(ES12.6E2)') Timer_Lapse_SourceVector
+    WRITE(File_ID,'(ES12.6E2)') Timer_Lapse_LinearSolve
+    WRITE(File_ID,'(ES12.6E2)') Timer_Shift
+    WRITE(File_ID,'(ES12.6E2)') Timer_Shift_SourceVector
+    WRITE(File_ID,'(ES12.6E2)') Timer_Shift_LinearSolve
 
     CLOSE(File_ID)
 

@@ -49,9 +49,6 @@ Variables_Source.o:              \
 Variables_External.o:            \
   Variables_External.f90         \
 
-Variables_Poisson.o:             \
-  Variables_Poisson.f90          \
-
 Variables_Driver_AMReX.o:       \
   Variables_Driver_AMReX.F90    \
 

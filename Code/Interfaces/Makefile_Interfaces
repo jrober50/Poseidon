@@ -1,4 +1,4 @@
-INTERFACES = \
+POSEIDON_INTERFACES = \
  Poseidon_Interface_BC.f90              \
  Poseidon_Interface_Initial_Guess.F90   \
  Poseidon_Interface_Source_Input.F90    \

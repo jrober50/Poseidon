@@ -1,4 +1,4 @@
-IO = \
+POSEIDON_IO = \
   IO_Output_Sources.F90          \
   IO_Output_Mesh.f90            \
   IO_Setup_Report.f90           \

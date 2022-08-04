@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE FP_Source_Terms_Module                                             !##!
+MODULE CFA_Source_Terms_Module                                                      !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -34,10 +34,8 @@ USE Poseidon_Units_Module, &
             ONLY :  GR_Source_Scalar
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE,                     &
-                    L_LIMIT,                    &
-                    NUM_CFA_EQs,                &
-                    NUM_CFA_VARs
+            ONLY :  Degree,                     &
+                    L_Limit
 
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,                      &
@@ -330,4 +328,4 @@ END SUBROUTINE Calc_Source_Terms_AMReX
 
 
 
-END MODULE FP_Source_Terms_Module
+END MODULE CFA_Source_Terms_Module

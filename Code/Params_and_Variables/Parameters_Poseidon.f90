@@ -29,15 +29,15 @@ IMPLICIT NONE
 
 
 
-INTEGER, PUBLIC                     ::  DOMAIN_DIM
+INTEGER, PUBLIC                     ::  Domain_Dim
 INTEGER, PUBLIC                     ::  Degree
 INTEGER, PUBLIC, PARAMETER          ::  Degree_Default = 1
 INTEGER, PUBLIC                     ::  L_Limit
 INTEGER, PUBLIC, PARAMETER          ::  L_Limit_Default = 0
 
-INTEGER, PUBLIC                     ::  NUM_CFA_VARS = 5
-INTEGER, PUBLIC                     ::  NUM_CFA_EQs
-INTEGER, DIMENSION(1:5)             ::  CFA_EQ_Flags
+INTEGER, PUBLIC                     ::  NUM_VARS = 5
+INTEGER, PUBLIC                     ::  NUM_EQs
+INTEGER, DIMENSION(1:5)             ::  EQ_Flags
 
 
 INTEGER, PUBLIC                     ::  POSEIDON_FRAME          = 1

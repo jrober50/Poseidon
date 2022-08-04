@@ -104,6 +104,14 @@ USE Variables_Interface, &
                     Caller_R_Units,             &
                     Translation_Matrix
 
+USE Flags_Core_Module, &
+            ONLY :  iPF_Core_Flags,             &
+                    iPF_Core_Method_Mode,       &
+                    iPF_Core_Method_Newtonian,  &
+                    iPF_Core_Method_CFA,        &
+                    iPF_Core_Method_XCFC,       &
+                    iPF_Core_Method_Too_Many
+
 
 USE Flags_IO_Module, &
             ONLY :  lPF_IO_Flags,               &
@@ -869,6 +877,94 @@ Mesh_Set(3) = .TRUE.
 
 
 END SUBROUTINE Mesh_Check
+
+
+
+
+
+
+ !+102+####################################################################!
+!                                                                           !
+!       Set_Method_Flags                                                   !
+!                                                                           !
+ !#########################################################################!
+SUBROUTINE Set_Method_Flags(Newtonian_Mode_Option,      &
+                            CFA_Mode_Option,            &
+                            XCFC_Mode_Option            )
+
+LOGICAL,                 INTENT(IN), OPTIONAL       ::  Newtonian_Mode_Option
+LOGICAL,                 INTENT(IN), OPTIONAL       ::  CFA_Mode_Option
+LOGICAL,                 INTENT(IN), OPTIONAL       ::  XCFC_Mode_Option
+
+LOGICAL,    DIMENSION(3)                            ::  Roll_Call
+INTEGER                                             ::  Attendence
+
+LOGICAL,    DIMENSION(3)                            ::  Status
+INTEGER                                             ::  Total
+
+
+Roll_Call = (/  PRESENT(Newtonian_Mode_Option), &
+                PRESENT(CFA_Mode_Option),       &
+                PRESENT(XCFC_Mode_Option)       /)
+Attendence = COUNT(Roll_Call)
+
+
+
+
+IF ( Attendence == 0 ) THEN ! Nothing set => Go to Default => XCFC
+
+    iPF_Core_Flags(iPF_Core_Method_Mode) = iPF_Core_Method_XCFC
+
+
+ELSE
+
+
+
+    Status = .FALSE.
+    IF ( Roll_Call(1) ) THEN
+        Status(1) = Newtonian_Mode_Option
+    END IF
+
+    IF ( Roll_Call(2) ) THEN
+        Status(2) = CFA_Mode_Option
+    END IF
+
+    IF ( Roll_Call(3) ) THEN
+        Status(3) = XCFC_Mode_Option
+    END IF
+
+
+
+    Total = COUNT(Status)
+
+
+
+    IF ( Total .GE. 2 ) THEN
+        iPF_Core_Flags(iPF_Core_Method_Mode) = iPF_Core_Method_Too_Many
+    ELSE
+
+        IF ( Status(1) ) THEN
+            iPF_Core_Flags(iPF_Core_Method_Mode) = iPF_Core_Method_Newtonian
+        END IF
+
+        IF ( Status(2) ) THEN
+            iPF_Core_Flags(iPF_Core_Method_Mode) = iPF_Core_Method_CFA
+        END IF
+
+        IF ( Status(3) ) THEN
+            iPF_Core_Flags(iPF_Core_Method_Mode) = iPF_Core_Method_XCFC
+        END IF
+
+    END IF ! Total .GE. 2
+
+
+
+END IF ! Attendence == 0
+
+
+
+
+END SUBROUTINE Set_Method_Flags
 
 
 

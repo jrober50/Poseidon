@@ -18,7 +18,7 @@ $(POSEIDON_ACTIVE_DIR)/Code/Linear_Solvers:            \
 $(POSEIDON_ACTIVE_DIR)/Code/Drivers:                   \
 $(POSEIDON_ACTIVE_DIR)/Code/External:                  \
 $(POSEIDON_ACTIVE_DIR)/Code/Matrix_Routines:           \
-$(POSEIDON_ACTIVE_DIR)/Code/Fixed_Point:               \
+$(POSEIDON_ACTIVE_DIR)/Code/CFA:                       \
 $(POSEIDON_ACTIVE_DIR)/Code/XCFC:                      \
 $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules:          \
 $(POSEIDON_ACTIVE_DIR)/Code/Initialization:            \

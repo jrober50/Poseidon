@@ -138,8 +138,8 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_XCFC_Lapse_SourceVector,  &
-                    Timer_XCFC_ConFactor_SourceVector
+            ONLY :  Timer_Lapse_SourceVector,  &
+                    Timer_ConFactor_SourceVector
 
 USE MPI
 
@@ -217,9 +217,9 @@ END IF
 
 
 IF ( iU == iU_CF ) THEN
-    CALL TimerStart( Timer_XCFC_ConFactor_SourceVector)
+    CALL TimerStart( Timer_ConFactor_SourceVector)
 ELSEIF ( iU == iU_LF ) THEN
-    CALL TimerStart( Timer_XCFC_Lapse_SourceVector)
+    CALL TimerStart( Timer_Lapse_SourceVector)
 END IF
 
 
@@ -245,9 +245,9 @@ END IF
 
 
 IF ( iU == iU_CF ) THEN
-    CALL TimerStop( Timer_XCFC_ConFactor_SourceVector)
+    CALL TimerStop( Timer_ConFactor_SourceVector)
 ELSEIF ( iU == iU_LF ) THEN
-    CALL TimerStop( Timer_XCFC_Lapse_SourceVector)
+    CALL TimerStop( Timer_Lapse_SourceVector)
 END IF
 
 

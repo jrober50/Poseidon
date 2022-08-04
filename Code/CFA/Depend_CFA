@@ -1,0 +1,20 @@
+Allocation_CFA.o:              \
+  Allocation_CFA.f90           \
+
+CFA_Source_Terms.o:            \
+  CFA_Source_Terms.F90         \
+
+CFA_Load_Vector.o:             \
+  CFA_Load_Vector.F90          \
+
+CFA_System_Solvers.o:          \
+  CFA_System_Solvers.f90       \
+
+CFA_Method_Module.o:           \
+  CFA_Method_Module.f90        \
+
+Initialization_CFA.o:          \
+  Initialization_CFA.f90       \
+
+
+

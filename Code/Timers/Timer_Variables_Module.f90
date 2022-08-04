@@ -54,42 +54,36 @@ REAL(idp), PUBLIC   ::  Timer_GR_SourceInput
 REAL(idp), PUBLIC   ::  Timer_GR_SourceInput_PartA
 REAL(idp), PUBLIC   ::  Timer_GR_SourceInput_PartB
 
-REAL(idp), PUBLIC   ::  Timer_XCFC_Initialization
-REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Init
+REAL(idp), PUBLIC   ::  Timer_Initialization
+REAL(idp), PUBLIC   ::  Timer_Matrix_Init
 
 REAL(idp), PUBLIC   ::  Timer_Poisson_Initialization
 REAL(idp), PUBLIC   ::  Timer_Poisson_Matrix_Init
 
-REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Factorization
-REAL(idp), PUBLIC   ::  Timer_XCFC_Matrix_Cholesky
-REAL(idp), PUBLIC   ::  Timer_XCFC_Banded_Factorization
+REAL(idp), PUBLIC   ::  Timer_Matrix_Factorization
+REAL(idp), PUBLIC   ::  Timer_Matrix_Cholesky
+REAL(idp), PUBLIC   ::  Timer_Banded_Factorization
 
-REAL(idp), PUBLIC   ::  Timer_XCFC_X
-REAL(idp), PUBLIC   ::  Timer_XCFC_X_SourceVector
-REAL(idp), PUBLIC   ::  Timer_XCFC_X_LinearSolve
+REAL(idp), PUBLIC   ::  Timer_X
+REAL(idp), PUBLIC   ::  Timer_X_SourceVector
+REAL(idp), PUBLIC   ::  Timer_X_LinearSolve
 
-REAL(idp), PUBLIC   ::  Timer_XCFC_Shift
-REAL(idp), PUBLIC   ::  Timer_XCFC_Shift_SourceVector
-REAL(idp), PUBLIC   ::  Timer_XCFC_Shift_LinearSolve
+REAL(idp), PUBLIC   ::  Timer_Shift
+REAL(idp), PUBLIC   ::  Timer_Shift_SourceVector
+REAL(idp), PUBLIC   ::  Timer_Shift_LinearSolve
 
-REAL(idp), PUBLIC   ::  Timer_XCFC_Lapse
-REAL(idp), PUBLIC   ::  Timer_XCFC_Lapse_SourceVector
-REAL(idp), PUBLIC   ::  Timer_XCFC_Lapse_LinearSolve
+REAL(idp), PUBLIC   ::  Timer_Lapse
+REAL(idp), PUBLIC   ::  Timer_Lapse_SourceVector
+REAL(idp), PUBLIC   ::  Timer_Lapse_LinearSolve
 
-REAL(idp), PUBLIC   ::  Timer_XCFC_ConFactor
-REAL(idp), PUBLIC   ::  Timer_XCFC_ConFactor_SourceVector
-REAL(idp), PUBLIC   ::  Timer_XCFC_ConFactor_LinearSolve
+REAL(idp), PUBLIC   ::  Timer_ConFactor
+REAL(idp), PUBLIC   ::  Timer_ConFactor_SourceVector
+REAL(idp), PUBLIC   ::  Timer_ConFactor_LinearSolve
 
 
-REAL(idp), PUBLIC   ::  Timer_FP_Initialization
-REAL(idp), PUBLIC   ::  Timer_FP_Matrix_Init
 
-REAL(idp), PUBLIC   ::  Timer_FP_Load_Vector
-REAL(idp), PUBLIC   ::  Timer_FP_CFLF_Solve
-REAL(idp), PUBLIC   ::  Timer_FP_Beta_Solve
+REAL(idp), PUBLIC   ::  Timer_CFA_Load_Vector
 
-REAL(idp), PUBLIC   ::  Timer_FP_Matrix_Cholesky
-REAL(idp), PUBLIC   ::  Timer_FP_Banded_Factorization
 
 REAL(idp), PUBLIC   ::  Timer_Driver_SetSource
 REAL(idp), PUBLIC   ::  Timer_Driver_SetSource_InitTest

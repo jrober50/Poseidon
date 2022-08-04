@@ -1,4 +1,4 @@
-RETURN_ROUTINES = \
+POSEIDON_RETURN_ROUTINES = \
   Return_Functions_FP.f90            \
   Return_Functions_Native.F90        \
   Return_Functions_AMReX.F90         \

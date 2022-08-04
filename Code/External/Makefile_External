@@ -1,4 +1,4 @@
-EXTERNAL = \
+POSEIDON_EXTERNAL = \
   Allocation_Yahil_Profile.f90      \
   External_Yahil_Profile.f90        \
   External_MacLaurin_Profile.f90    \

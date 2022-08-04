@@ -36,11 +36,8 @@ USE Poseidon_Numbers_Module, &
 
 
 USE Poseidon_Parameters, &
-            ONLY :  Domain_Dim,             &
-                    DEGREE,                 &
-                    L_LIMIT,                &
-                    Num_CFA_Eqs,            &
-                    CFA_Eq_Flags,           &
+            ONLY :  Degree,                 &
+                    L_Limit,                &
                     Verbose_Flag
 
 USE Variables_Derived, &
@@ -75,8 +72,8 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_FP_Initialization,      &
-                    Timer_FP_Matrix_Init
+            ONLY :  Timer_Initialization,      &
+                    Timer_Matrix_Init
 
 
 
@@ -106,7 +103,7 @@ CONTAINS
 
  !+101+####################################################################################!
 !                                                                                           !
-!       Initialize_FP                                                          !
+!       Initialize_CFA                                                          !
 !                                                                                           !
 !===========================================================================================!
 !                                                                                           !
@@ -120,7 +117,7 @@ INTEGER, DIMENSION(5), INTENT(IN), OPTIONAL             ::  CFA_EQ_Flags_Input
 IF ( Verbose_Flag ) THEN
     PRINT*,"-Initializing Fixed Point Method variables. "
 END IF
-CALL TimerStart( Timer_FP_Initialization )
+CALL TimerStart( Timer_Initialization )
 
 
 Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
@@ -130,9 +127,9 @@ Beta_Bandwidth = 2*Beta_Diagonals+1
 
 CALL Allocate_CFA_Linear_Systems()
 
-CALL TimerStart( Timer_FP_Matrix_Init )
+CALL TimerStart( Timer_Matrix_Init )
 CALL Initialize_XCFC_Matrices()
-CALL TimerStop( Timer_FP_Matrix_Init )
+CALL TimerStop( Timer_Matrix_Init )
 
 
 Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
@@ -141,7 +138,7 @@ Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
 
 
-CALL TimerStop( Timer_FP_Initialization )
+CALL TimerStop( Timer_Initialization )
 
 
 END SUBROUTINE Initialize_CFA

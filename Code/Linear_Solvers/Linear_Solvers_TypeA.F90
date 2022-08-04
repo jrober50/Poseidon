@@ -87,8 +87,8 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_XCFC_Lapse_LinearSolve,   &
-                    Timer_XCFC_ConFactor_LinearSolve
+            ONLY :  Timer_Lapse_LinearSolve,   &
+                    Timer_ConFactor_LinearSolve
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Matrices_Flags,    &
@@ -145,9 +145,9 @@ END IF
 
 
 IF ( iU == iU_CF ) THEN
-    CALL TimerStart( Timer_XCFC_ConFactor_LinearSolve)
+    CALL TimerStart( Timer_ConFactor_LinearSolve)
 ELSEIF ( iU == iU_LF ) THEN
-    CALL TimerStart( Timer_XCFC_Lapse_LinearSolve)
+    CALL TimerStart( Timer_Lapse_LinearSolve)
 END IF
 
 
@@ -276,9 +276,9 @@ CALL MPI_BCAST_Coeffs_TypeA(iU,                     &
 
 
 IF ( iU == iU_CF ) THEN
-    CALL TimerStop( Timer_XCFC_ConFactor_LinearSolve)
+    CALL TimerStop( Timer_ConFactor_LinearSolve)
 ELSEIF ( iU == iU_LF ) THEN
-    CALL TimerStop( Timer_XCFC_Lapse_LinearSolve)
+    CALL TimerStop( Timer_Lapse_LinearSolve)
 END IF
 
 

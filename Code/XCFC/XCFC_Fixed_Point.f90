@@ -67,9 +67,9 @@ USE XCFC_Load_Vector_TypeA_Module, &
 USE Linear_System_Solvers_TypeA_Module, &
             ONLY :  Solve_Linear_System_TypeA
 
-USE XCFC_Functions_Coeff_Module, &
-            ONLY :  Coeff_To_Vector_TypeA,  &
-                    Vector_To_Coeff_TypeA
+USE Functions_Coeffs_Module, &
+            ONLY :  Coeff_To_Vector_TypeA_SV,  &
+                    Vector_To_Coeff_TypeA_SV
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
@@ -152,15 +152,12 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         CALL Run_Message(TRIM(Message))
     END IF
 
-
-    
     mk = MIN(Cur_Iteration, M)
-
 
     IF ( Cur_Iteration .NE. 1 ) THEN
         UVector = GVectorM
     ELSE
-        CALL Coeff_To_Vector_TypeA( UVector, iU )
+        CALL Coeff_To_Vector_TypeA_SV( UVector, iU )
     END IF
 
 
@@ -170,11 +167,8 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     !
     CALL Solve_Linear_System_TypeA(iU)
     
-
+    CALL Coeff_To_Vector_TypeA_SV( GVector(:,mk), iU )
     
-
-!    PRINT*,"Before Acceleration"
-    CALL Coeff_To_Vector_TypeA( GVector(:,mk), iU )
     FVector(:,mk) = GVector(:,mk) - UVector(:)
 
 
@@ -200,21 +194,19 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         Alpha(mk)     = 1.0_idp - SUM( Alpha(1:mk-1) )
 
         
-
         GVectorM = 0.0_idp
         DO i = 1,mk
             GVectorM = GVectorM + Alpha(i)*GVector(:,i)
         END DO
     END IF
+
     FVectorM = GVectorM - UVector(:)
 
 
 
 
     ! Check for Convergence
-    CALL FP_Convergence_Check( FVectorM, Cur_Iteration, Converged )
-
-
+    CALL Convergence_Check( FVectorM, Cur_Iteration, Converged )
 
 
 
@@ -229,20 +221,16 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
     !   Update Coefficient Vector
-    CALL Vector_To_Coeff_TypeA( GVectorM, iU )
+    CALL Vector_To_Coeff_TypeA_SV( GVectorM, iU )
 
 
-!    PRINT*,"Before XCFC_Calc_Load_Vector_TypeA"
+
     !   Calculate Source Vector with updated solution
     CALL XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
     
 
 
-!    IF ( PR ) THEN
-!        WRITE(*,'(A,I3.3,A)')'Iteration ',Cur_Iteration,' Results'
-!        CALL Print_Results()
-!        PRINT*," "
-!    END IF
+
 
 
     IF ( Verbose_Flag ) THEN
@@ -281,12 +269,12 @@ END SUBROUTINE XCFC_Fixed_Point
 
 
 
-!+201+##########################################################################!
-!                                                                               !
-!           FP_Convergence_Check                                                !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE FP_Convergence_Check( Update, Iter, Flag )
+ !+201+########################################################!
+!                                                               !
+!           Convergence_Check                                   !
+!                                                               !
+ !#############################################################!
+SUBROUTINE Convergence_Check( Update, Iter, Flag )
 
 
 COMPLEX(idp),DIMENSION(Var_Dim), INTENT(IN)         :: Update
@@ -321,7 +309,7 @@ END IF
 
 
 
-END SUBROUTINE FP_Convergence_Check
+END SUBROUTINE Convergence_Check
 
 
 

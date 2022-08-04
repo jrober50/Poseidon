@@ -171,26 +171,26 @@ SUBROUTINE Initialize_Ylm_Tables
 INTEGER                                                         ::  l, m, te, pe, td, pd
 
 
-REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  T_Locations
-REAL(KIND = idp), DIMENSION(1:NUM_P_QUAD_POINTS)                ::  P_Locations
+REAL(idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  T_Locations
+REAL(idp), DIMENSION(1:NUM_P_QUAD_POINTS)                ::  P_Locations
 
-REAL(KIND = idp), DIMENSION(1:1)                                ::  Legendre_Poly_Value
+REAL(idp), DIMENSION(1:1)                                ::  Legendre_Poly_Value
 
 
-REAL(KIND = idp)                                                ::  Norm_Storage
-REAL(KIND = idp)                                                ::  REAL_L
+REAL(idp)                                                ::  Norm_Storage
+REAL(idp)                                                ::  REAL_L
 
-REAL(KIND = idp), DIMENSION(-L_LIMIT:L_LIMIT)                   :: M_POWER_TABLE
+REAL(idp), DIMENSION(-L_LIMIT:L_LIMIT)                   :: M_POWER_TABLE
 
 INTEGER                                                         ::  lm_loc, tpd_loc
 
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:,:,:,:,:,:)        ::  Ylm_Table
+COMPLEX(idp), ALLOCATABLE, DIMENSION(:,:,:,:,:,:)        ::  Ylm_Table
 
-COMPLEX(KIND = idp), DIMENSION(1:LM_LENGTH)                     ::  Sqrt_Term
-REAL(KIND = idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  CSC_VAL, COT_VAL
+COMPLEX(idp), DIMENSION(1:LM_LENGTH)                     ::  Sqrt_Term
+REAL(idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  CSC_VAL, COT_VAL
 
-COMPLEX(Kind = idp)                                             ::  Tmp_Value_A
-COMPLEX(Kind = idp)                                             ::  Tmp_Value_B
+COMPLEX(idp)                                             ::  Tmp_Value_A
+COMPLEX(idp)                                             ::  Tmp_Value_B
 
 ALLOCATE( Ylm_Table(-L_LIMIT:L_LIMIT, -1:L_LIMIT,                           &
                     1:NUM_T_QUAD_POINTS, 1:NUM_P_QUAD_POINTS,               &
@@ -226,10 +226,10 @@ DO l = 1,L_LIMIT
 
     DO m = -M_VALUES(l),M_VALUES(l)
 
-        Tmp_Value_A = COMPLEX( (2.0_idp * REAL_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp )
-        Tmp_Value_B = COMPLEX( (l-m)*(l+m),0.0_idp )
+        Tmp_Value_A = CMPLX( (2.0_idp * REAL_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp,idp )
+        Tmp_Value_B = CMPLX( (l-m)*(l+m),0.0_idp, idp )
 
-        Sqrt_Term(Map_To_lm(l,m)) = zsqrt( Tmp_Value_A)*zsqrt(Tmp_Value_B)
+        Sqrt_Term(Map_To_lm(l,m)) = sqrt( Tmp_Value_A)*sqrt(Tmp_Value_B)
 
     END DO ! m Loop
 END DO ! l Loop
@@ -378,9 +378,9 @@ INTEGER, INTENT(IN)                         ::  Ord
 INTEGER, INTENT(IN)                         ::  Num_Quad_Points
 
 
-REAL(KIND = idp), DIMENSION(0:Ord)          ::  Local_Locations
-REAL(KIND = idp), DIMENSION(0:Ord)          ::  Lagrange_Poly_Values
-REAL(KIND = idp), DIMENSION(0:Ord)          ::  Lagrange_DRV_Values
+REAL(idp), DIMENSION(0:Ord)          ::  Local_Locations
+REAL(idp), DIMENSION(0:Ord)          ::  Lagrange_Poly_Values
+REAL(idp), DIMENSION(0:Ord)          ::  Lagrange_DRV_Values
 
 INTEGER                                     ::  Eval_Point
 INTEGER                                     ::  rd, d, dp,dd
@@ -497,7 +497,7 @@ INTEGER                                                         ::  l, m
 DO l = 0,L_LIMIT
 DO m = -l,l
     Ylm_Norm_Table( m,l ) = Norm_Factor(l,m)
-    Ylm_Sqrt_Table( m,l ) = COMPLEX( Sqrt_Factor(l,m), 0.0_idp )
+    Ylm_Sqrt_Table( m,l ) = CMPLX( Sqrt_Factor(l,m), 0.0_idp, idp )
 END DO ! m Loop
 END DO ! l Loop
 
@@ -613,7 +613,7 @@ REAL(idp), DIMENSION(1:Num_T_Quad_Points)           ::  Csc_Val
 REAL(idp), DIMENSION(1:Num_T_Quad_Points)           ::  tlocs
 REAL(idp), DIMENSION(1:Num_P_Quad_Points)           ::  plocs
 
-REAL(KIND = idp), DIMENSION(-L_LIMIT:L_LIMIT)       :: M_POWER_TABLE
+REAL(idp), DIMENSION(-L_LIMIT:L_LIMIT)       :: M_POWER_TABLE
 
 !PRINT*,"In Init_Ylm_Tables",iTE,iPE
 

@@ -360,8 +360,7 @@ CALL Initialize_Poseidon &
        Source_R_Option              = x_e,                          &
        Source_T_Option              = y_e,                          &
        Source_P_Option              = z_e,                          &
-       Method_Flag_Option           = Solver_Type,                  &
-       CFA_Eq_Flags_Option          = CFA_Eqs,                      &
+       Eq_Flags_Option              = CFA_Eqs,                      &
        Max_Iterations_Option        = Max_Iterations,               &
        Convergence_Criteria_Option  = CC_Option,                    &
        Anderson_M_Option            = Anderson_M_Values(M_Index),   &

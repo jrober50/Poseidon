@@ -37,10 +37,8 @@ USE Poseidon_Units_Module, &
             ONLY :  GR_Source_Scalar
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE,                     &
-                    L_LIMIT,                    &
-                    NUM_CFA_EQs,                &
-                    NUM_CFA_VARs,               &
+            ONLY :  Degree,                     &
+                    L_Limit,                    &
                     Verbose_Flag
 
 USE Parameters_Variable_Indices, &

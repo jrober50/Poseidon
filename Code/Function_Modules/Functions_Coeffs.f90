@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE FP_Functions_Coeffs_Module                                            !##!
+MODULE Functions_Coeffs_Module                                               !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -62,13 +62,13 @@ INTEGER                                         :: ui
 
 DO ui = iU_CF,iU_LF
 
-    CALL CoeffA_To_Vector(Vector, ui)
+    CALL Coeff_To_Vector_TypeA(Vector, ui)
 
 END DO
 
 DO ui = iU_S1,iU_S3
 
-    CALL CoeffB_To_Vector(Vector, ui, iVB_S)
+    CALL Coeff_To_Vector_TypeB(Vector, ui, iVB_S)
 
 END DO
 
@@ -77,7 +77,7 @@ END SUBROUTINE Coeff_To_Vector
 
 
 
-!+101+##########################################################################!
+!+102+##########################################################################!
 !                                                                               !
 !                  Vector_To_Coeff                                  !
 !                                                                               !
@@ -90,13 +90,13 @@ INTEGER                                         :: ui
 
 DO ui = iU_CF,iU_LF
 
-    CALL Vector_To_CoeffA(Vector, ui)
+    CALL Vector_To_Coeff_TypeA(Vector, ui)
 
 END DO
 
 DO ui = iU_S1,iU_S3
 
-    CALL Vector_To_CoeffB(Vector, ui, iVB_S)
+    CALL Vector_To_Coeff_TypeB(Vector, ui, iVB_S)
 
 END DO
 
@@ -105,12 +105,12 @@ END SUBROUTINE Vector_To_Coeff
 
 
 
-!+101+##########################################################################!
-!                                                                               !
-!                  CoeffA_To_Vector                                  !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE CoeffA_To_Vector( Vector, iU )
+ !+201+####################################################!
+!                                                           !
+!          Coeff_To_Vector_TypeA                            !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Coeff_To_Vector_TypeA( Vector, iU )
 
 COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(INOUT) :: Vector
 INTEGER                         , INTENT(IN)    :: iU
@@ -125,15 +125,15 @@ DO LM_loc = 1,LM_Length
 END DO
 
 
-END SUBROUTINE CoeffA_To_Vector
+END SUBROUTINE Coeff_To_Vector_TypeA
 
 
-!+101+##########################################################################!
-!                                                                               !
-!                  CoeffB_To_Vector                                  !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE CoeffB_To_Vector( Vector, iU, iVB )
+ !+202+####################################################!
+!                                                           !
+!          Coeff_To_Vector_TypeB                            !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Coeff_To_Vector_TypeB( Vector, iU, iVB )
 
 COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(INOUT) :: Vector
 INTEGER                          , INTENT(IN)    :: iU, iVB
@@ -155,17 +155,17 @@ ThereB = (iU-Offset + 1)*Var_Dim
 Vector(HereA:ThereA) = cVB_Coeff_Vector(HereB:ThereB,iVB)
 
 
-END SUBROUTINE CoeffB_To_Vector
+END SUBROUTINE Coeff_To_Vector_TypeB
 
 
 
 
-!+202+##########################################################################!
-!                                                                               !
-!                    Vector_To_CoeffA                                  !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE Vector_To_CoeffA( Vector, iU )
+ !+301+####################################################!
+!                                                           !
+!                    Vector_To_Coeff_TypeA                  !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Vector_To_Coeff_TypeA( Vector, iU )
 
 COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(IN)        :: Vector
 INTEGER                         , INTENT(IN)        :: iU
@@ -179,15 +179,15 @@ DO LM_loc = 1,LM_Length
 END DO
 
 
-END SUBROUTINE Vector_To_CoeffA
+END SUBROUTINE Vector_To_Coeff_TypeA
 
 
-!+101+##########################################################################!
-!                                                                               !
-!                 Vector_To_CoeffB                                  !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE Vector_To_CoeffB( Vector, iU, iVB )
+ !+302+####################################################!
+!                                                           !
+!                    Vector_To_Coeff_TypeB                  !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Vector_To_Coeff_TypeB( Vector, iU, iVB )
 
 COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(IN)    :: Vector
 INTEGER                         , INTENT(IN)    :: iU, iVB
@@ -208,10 +208,60 @@ ThereB = (iU-Offset + 1)*Var_Dim
 cVB_Coeff_Vector(HereB:ThereB,iVB) = Vector(HereA:ThereA)
 
 
-END SUBROUTINE Vector_To_CoeffB
+END SUBROUTINE Vector_To_Coeff_TypeB
 
 
 
 
 
-END MODULE FP_Functions_Coeffs_Module
+
+
+!+101+##########################################################################!
+!                                                                               !
+!                  Coeff_To_Vector_TypeA                                  !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Coeff_To_Vector_TypeA_SV( Vector, iU )
+
+COMPLEX(idp), DIMENSION(Var_Dim), INTENT(INOUT) :: Vector
+INTEGER                         , INTENT(IN)    :: iU
+
+INTEGER                                         :: LM_loc, Here, There
+
+DO LM_loc = 1,LM_Length
+    Here  = (lm_loc-1)*Num_R_Nodes + 1
+    There = lm_loc*Num_R_Nodes
+
+    Vector(here:there) = cVA_Coeff_Vector(:,lm_loc,iU)
+END DO
+
+
+END SUBROUTINE Coeff_To_Vector_TypeA_SV
+
+
+
+
+!+202+##########################################################################!
+!                                                                               !
+!                    Vector_To_Coeff_TypeA                                  !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Vector_To_Coeff_TypeA_SV( Vector, iU )
+
+COMPLEX(idp), DIMENSION(Var_Dim), INTENT(IN)        :: Vector
+INTEGER                         , INTENT(IN)        :: iU
+
+INTEGER                                             :: LM_loc, Here, There
+
+DO LM_loc = 1,LM_Length
+    Here = (lm_loc-1)*Num_R_Nodes + 1
+    There = lm_loc*Num_R_Nodes
+    cVA_Coeff_Vector(:,lm_loc,iU) = Vector(here:There)
+END DO
+
+
+END SUBROUTINE Vector_To_Coeff_TypeA_SV
+
+
+
+END MODULE Functions_Coeffs_Module

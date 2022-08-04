@@ -23,6 +23,11 @@ MODULE XCFC_Solvers_Main_Module                                                 
    !################################################################################!
 
 
+!*D*================================!
+!                                   !
+!           Dependencies            !
+!                                   !
+!===================================!
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
@@ -64,14 +69,14 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_XCFC_X,                   &
-                    Timer_XCFC_X_SourceVector,      &
-                    Timer_XCFC_X_LinearSolve,       &
-                    Timer_XCFC_Shift,               &
-                    Timer_XCFC_Shift_SourceVector,  &
-                    Timer_XCFC_Shift_LinearSolve,   &
-                    Timer_XCFC_Lapse,               &
-                    Timer_XCFC_ConFactor
+            ONLY :  Timer_X,                   &
+                    Timer_X_SourceVector,      &
+                    Timer_X_LinearSolve,       &
+                    Timer_Shift,               &
+                    Timer_Shift_SourceVector,  &
+                    Timer_Shift_LinearSolve,   &
+                    Timer_Lapse,               &
+                    Timer_ConFactor
 
 USE IO_Print_Results, &
             ONLY :  Print_Single_Var_Results
@@ -99,7 +104,7 @@ IF ( Verbose_Flag ) THEN
     WRITE(*,'()')
     CALL Run_Message('Beginning X System.')
 END IF
-CALL TimerStart( Timer_XCFC_X )
+CALL TimerStart( Timer_X )
 
 
 iU = [iU_X1, iU_X2, iU_X3]
@@ -108,16 +113,16 @@ iEL = [0, 0, 0]
 iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
 !PRINT*,"Before Calc_Source"
-CALL TimerStart( Timer_XCFC_X_SourceVector )
+CALL TimerStart( Timer_X_SourceVector )
 CALL XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
-CALL TimerStop(  Timer_XCFC_X_SourceVector )
+CALL TimerStop(  Timer_X_SourceVector )
 
 !PRINT*,"Before Solve"
-CALL TimerStart( Timer_XCFC_X_LinearSolve )
+CALL TimerStart( Timer_X_LinearSolve )
 CALL Solve_Linear_System_TypeB( iU, iVB )
-CALL TimerStop(  Timer_XCFC_X_LinearSolve )
+CALL TimerStop(  Timer_X_LinearSolve )
 
-CALL TimerStop( Timer_XCFC_X )
+CALL TimerStop( Timer_X )
 
 !CALL Print_Single_Var_Results( iU_X1, iVB_X )
 
@@ -149,9 +154,9 @@ IF ( Verbose_Flag ) THEN
     CALL Run_Message('Beginning Conformal Factor System.')
 END IF
 
-CALL TimerStart( Timer_XCFC_ConFactor )
+CALL TimerStart( Timer_ConFactor )
 CALL XCFC_Fixed_Point(iU_CF)
-CALL TimerStop( Timer_XCFC_ConFactor )
+CALL TimerStop( Timer_ConFactor )
 
 IF ( .FALSE. ) THEN
     STOP "Stopping at the end of XCFC_ConFactor_Solve"
@@ -179,11 +184,11 @@ IF ( Verbose_Flag ) THEN
 END IF
 
 
-CALL TimerStart( Timer_XCFC_Lapse )
+CALL TimerStart( Timer_Lapse )
 
 CALL XCFC_Fixed_Point(iU_LF)
 
-CALL TimerStop( Timer_XCFC_Lapse )
+CALL TimerStop( Timer_Lapse )
 
 
 IF ( .FALSE. ) THEN
@@ -216,7 +221,7 @@ END IF
 
 
 
-CALL TimerStart( Timer_XCFC_Shift )
+CALL TimerStart( Timer_Shift )
 
 
 iU = [iU_S1, iU_S2, iU_S3]
@@ -224,16 +229,16 @@ iVB = iVB_S
 iEL = [0, 0, 0]
 iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
-CALL TimerStart( Timer_XCFC_Shift_SourceVector )
+CALL TimerStart( Timer_Shift_SourceVector )
 CALL XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
-CALL TimerStop(  Timer_XCFC_Shift_SourceVector )
+CALL TimerStop(  Timer_Shift_SourceVector )
 
-CALL TimerStart( Timer_XCFC_Shift_LinearSolve )
+CALL TimerStart( Timer_Shift_LinearSolve )
 CALL Solve_Linear_System_TypeB( iU, iVB )
-CALL TimerStop(  Timer_XCFC_Shift_LinearSolve )
+CALL TimerStop(  Timer_Shift_LinearSolve )
 
 
-CALL TimerStop( Timer_XCFC_Shift )
+CALL TimerStop( Timer_Shift )
 
 !CALL Print_Single_Var_Results( iU_S1, iVB_S )
 

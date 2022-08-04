@@ -1,0 +1,8 @@
+POSEIDON_CFA = \
+  Allocation_CFA.f90           \
+  CFA_Source_Terms.F90         \
+  CFA_Load_Vector.F90          \
+  CFA_System_Solvers.f90       \
+  CFA_Method_Module.f90        \
+  Initialization_CFA.f90        \
+

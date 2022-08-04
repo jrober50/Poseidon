@@ -68,8 +68,8 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_XCFC_Initialization,      &
-                    Timer_XCFC_Matrix_Init
+            ONLY :  Timer_Initialization,      &
+                    Timer_Matrix_Init
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,     &
@@ -110,7 +110,7 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
     IF ( Verbose_Flag ) CALL Init_Message('Initializing XCFC system variables.')
 
-    CALL TimerStart( Timer_XCFC_Initialization )
+    CALL TimerStart( Timer_Initialization )
 
 
 
@@ -125,9 +125,9 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
 
     ! Construct Matrices
-    CALL TimerStart( Timer_XCFC_Matrix_Init )
+    CALL TimerStart( Timer_Matrix_Init )
     CALL Initialize_XCFC_Matrices()
-    CALL TimerStop( Timer_XCFC_Matrix_Init )
+    CALL TimerStop( Timer_Matrix_Init )
 
 
 
@@ -137,7 +137,7 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
 
     !lPF_Init_Flag(iPF_Init_XCFC) = .TRUE.
-    CALL TimerStop( Timer_XCFC_Initialization )
+    CALL TimerStop( Timer_Initialization )
 
     lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
 END IF

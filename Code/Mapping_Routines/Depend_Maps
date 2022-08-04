@@ -7,9 +7,6 @@ Maps_Quadrature.o:                  \
 Maps_Fixed_Point.o:                 \
   Maps_Fixed_Point.f90              \
 
-Maps_Legacy.o:                      \
-  Maps_Legacy.f90                   \
-
 Maps_Domain.o:                      \
   Maps_Domain.f90                   \
 

@@ -43,9 +43,8 @@ USE Poseidon_Message_Routines_Module, &
         ONLY :  Init_Message
 
 USE Poseidon_Parameters, &
-        ONLY :  DEGREE,             &
-                L_LIMIT,            &
-                NUM_CFA_EQs,        &
+        ONLY :  Degree,             &
+                L_Limit,            &
                 Verbose_Flag
 
 
@@ -79,7 +78,7 @@ USE Timer_Routines_Module, &
                 TimerStop
 
 USE Timer_Variables_Module, &
-        ONLY :  Timer_XCFC_Matrix_Cholesky
+        ONLY :  Timer_Matrix_Cholesky
 
 USE Flags_Initialization_Module, &
         ONLY :  lPF_Init_Matrices_Flags,    &
@@ -121,7 +120,7 @@ COMPLEX(idp),       ALLOCATABLE,    DIMENSION(:,:)      ::  NEW_ELEM_VAL
 
 
 IF ( Verbose_Flag ) CALL Init_Message('Factorizing scalar Laplace matrix using Cholesky factorization.')
-CALL TimerStart(Timer_XCFC_Matrix_Cholesky)
+CALL TimerStart(Timer_Matrix_Cholesky)
 
 
 
@@ -374,7 +373,7 @@ Laplace_Factored_ROW = NEW_ROW_IND
 !
 DEALLOCATE(NEW_ELEM_VAL, NEW_ROW_IND)
 
-CALL TimerStop(Timer_XCFC_Matrix_Cholesky)
+CALL TimerStop(Timer_Matrix_Cholesky)
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .TRUE.
 
 
