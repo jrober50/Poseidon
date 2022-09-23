@@ -1,6 +1,7 @@
 HDF5_DIR       = /usr/local/hdf5
 
 AMREX_HOME    ?= /Users/nickroberts/amrex
+#AMREX_HOME    ?= $(AMREX_DIR)
 HDF5_HOME     ?= $(HDF5_DIR)
 LAPACK_HOME   ?= $(LAPACK_DIR)
 

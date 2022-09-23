@@ -96,7 +96,6 @@ DO re = 1,Num_R_Elements
 !    rlocs(re) = R_Inner + sum(drlocs(0:re-1)
 END DO
 
-
 lPF_Init_Mesh_Flags(iPF_Init_Mesh_Init) = .TRUE.
 
 END SUBROUTINE Determine_AMReX_Mesh

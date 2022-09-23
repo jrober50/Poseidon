@@ -61,8 +61,8 @@ USE Variables_BC, &
                 OUTER_CFA_BC_TYPE
 
 USE Variables_Matrices, &
-        ONLY :  First_Column_Storage,   &
-                Last_Column_Storage,    &
+        ONLY :  zMA_First_Col_Storage,   &
+                zMA_Last_Col_Storage,    &
                 Laplace_NNZ,            &
                 Factored_NNZ,           &
                 Laplace_Matrix_Full,    &
@@ -156,7 +156,7 @@ IF ( ANY(INNER_CFA_BC_TYPE == "D") ) THEN
     !
     !   Save the needed values first.
     !
-    First_Column_Storage(1:DEGREE,:) = Laplace_Factored_VAL(1:DEGREE,:)
+    zMA_First_Col_Storage(1:DEGREE,:) = Laplace_Factored_VAL(1:DEGREE,:)
 
 
     !
@@ -184,7 +184,7 @@ IF ( ANY(OUTER_CFA_BC_TYPE == "D") ) THEN
     !
     DO l = 0,L_LIMIT
     DO i = 0,Degree
-        Last_Column_Storage(i,l) = Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES,l) - 1 - i, l)
+        zMA_Last_Col_Storage(i,l) = Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES,l) - 1 - i, l)
     END DO
     END DO
 

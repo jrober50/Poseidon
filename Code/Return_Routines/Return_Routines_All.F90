@@ -58,8 +58,8 @@ USE Variables_Derived, &
            ONLY :  LM_LENGTH
 
 USE Variables_Vectors, &
-ONLY :  cVA_Coeff_Vector,      &
-        cVB_Coeff_Vector
+            ONLY :  cVA_Coeff_Vector,      &
+                    cVB_Coeff_Vector
 
 USE Variables_Mesh, &
            ONLY :  rlocs,              &
@@ -69,6 +69,9 @@ USE Variables_Mesh, &
 USE Variables_AMReX_Source, &
            ONLY :  iLeaf,                &
                    iTrunk
+
+USE Variables_FEM_Module, &
+            ONLY :  FEM_Node_xlocs
 
 USE Maps_Fixed_Point, &
            ONLY :  FP_Array_Map_TypeB
@@ -360,7 +363,6 @@ REAL(idp),  CONTIGUOUS, POINTER                                 ::  Results_PTR(
 
 
 REAL(idp)                                                       ::  Quad_Span
-REAL(idp), DIMENSION(0:DEGREE)                                  ::  Local_Locations
 REAL(idp), DIMENSION(0:DEGREE)                                  ::  LagP
 REAL(idp), DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
 REAL(idp), DIMENSION(1:NQ(1))                                   ::  Cur_RX_Locs
@@ -389,7 +391,6 @@ INTEGER                                                         ::  Num_DOF
 
 Quad_Span = Right_Limit - Left_Limit
 
-Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 CUR_RX_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 CUR_TX_LOCS = 2.0_idp * ( TQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 CUR_PX_LOCS = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
@@ -465,7 +466,7 @@ DO lvl = 0,nLevels-1
             DO rd = 1,NQ(1)
 
                 tpd = Map_To_tpd(td,pd)
-                LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,Local_Locations)
+                LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
                 Tmp_Val_A = 0.0_idp
                 Tmp_Val_B = 0.0_idp
                 Tmp_Drv_B = 0.0_idp
@@ -528,24 +529,24 @@ DO lvl = 0,nLevels-1
                     iU_Offset = iU-3*iVB+1
 
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
-                            + SUM( cVB_Coeff_Vector( Here:There, iVB )     &
+                            + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
                                     * Ylm_Elem_Values( :, tpd )   )         &
                             * Lagrange_Poly_Table( d, rd, 0 )
 
                     TMP_Drv_B(1,iU_Offset) = TMP_Drv_B(1,iU_Offset)         &
-                               + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
+                               + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_Values( :, tpd  )     )     &
                                * Lagrange_Poly_Table( d, rd, 1 )            &
                                / DROT
 
                     TMP_Drv_B(2,iU_Offset) = TMP_Drv_B(2,iU_Offset)         &
-                               + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
+                               + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_dt_Values( :, tpd )   )     &
                                * Lagrange_Poly_Table( d, rd, 0)
 
 
                     TMP_Drv_B(3,iU_Offset) = TMP_Drv_B(3,iU_Offset)         &
-                               + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
+                               + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_dp_Values( :, tpd)   )      &
                                * Lagrange_Poly_Table( d, rd, 0)
 
@@ -651,6 +652,7 @@ DO lvl = 0,nLevels-1
                            +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val_B(1,iVB_X)     &
                            +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val_B(2,iVB_X)     &
                            +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
+
 
 
 

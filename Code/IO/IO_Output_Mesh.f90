@@ -46,6 +46,9 @@ USE Variables_Mesh, &
 USE Variables_IO, &
             ONLY :  File_Suffix
 
+USE Variables_FEM_Module, &
+            ONLY :  FEM_Node_xlocs
+
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations,     &
                     Initialize_LGL_Quadrature_Locations
@@ -145,7 +148,6 @@ CHARACTER(LEN = 300)                                        ::  FILE_NAMEb
 CHARACTER(LEN = 40)                                         ::  fmt
 
 REAL(KIND = idp)                                            ::  DROT
-REAL(KIND = idp), DIMENSION(0:Degree)                       ::  Local_Locations
 REAL(KIND = idp), DIMENSION(0:Degree)                       ::  Cur_R_Locs
 
 INTEGER                                                     ::  rows
@@ -176,10 +178,6 @@ CLOSE(FILE_ID)
 
 
 
-
-Local_Locations = Initialize_LGL_Quadrature_Locations(Degree)
-
-
 IF ( present(flag) ) THEN
     WRITE(FILE_NAME,100) Poseidon_Mesh_Dir,"Mesh_Nodal_Loc_",trim(File_Suffix),"_",flag,".out"
 ELSE
@@ -191,7 +189,7 @@ WRITE(File_ID,fmt) Mesh(1)
 DO re = 1,NUM_R_ELEMENTS
 
     DROT = 0.50_idp*(Mesh(re+1) - Mesh(re))
-    CUR_R_LOCS(:) = DROT * (Local_Locations(:)+1.0_idp) + Mesh(re)
+    CUR_R_LOCS(:) = DROT * (FEM_Node_xlocs(:)+1.0_idp) + Mesh(re)
 
     DO d = 1,Degree
         WRITE(FILE_ID,fmt) Cur_R_Locs(d)

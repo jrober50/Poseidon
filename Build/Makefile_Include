@@ -7,6 +7,7 @@ include $(POSEIDON_ACTIVE_DIR)/Code/Mapping_Routines/Makefile_Maps
 include $(POSEIDON_ACTIVE_DIR)/Code/Mesh/Makefile_Mesh
 include $(POSEIDON_ACTIVE_DIR)/Code/Quadrature/Makefile_Quadrature
 include $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules/Makefile_Functions
+include $(POSEIDON_ACTIVE_DIR)/Code/FEM/Makefile_FEM
 include $(POSEIDON_ACTIVE_DIR)/Code/Initial_Guess/Makefile_Initial_Guess
 include $(POSEIDON_ACTIVE_DIR)/Code/Return_Routines/Makefile_Return_Routines
 include $(POSEIDON_ACTIVE_DIR)/Code/Tables/Makefile_Tables

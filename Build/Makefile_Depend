@@ -7,6 +7,7 @@ include $(POSEIDON_ACTIVE_DIR)/Code/Mapping_Routines/Depend_Maps
 include $(POSEIDON_ACTIVE_DIR)/Code/Mesh/Depend_Mesh
 include $(POSEIDON_ACTIVE_DIR)/Code/Quadrature/Depend_Quadrature
 include $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules/Depend_Functions
+include $(POSEIDON_ACTIVE_DIR)/Code/FEM/Depend_FEM
 include $(POSEIDON_ACTIVE_DIR)/Code/Initial_Guess/Depend_Initial_Guess
 include $(POSEIDON_ACTIVE_DIR)/Code/Return_Routines/Depend_Return_Routines
 include $(POSEIDON_ACTIVE_DIR)/Code/Tables/Depend_Tables

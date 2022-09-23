@@ -46,8 +46,16 @@ USE Variables_Derived, &
                     Elem_Prob_Dim_Sqr,      &
                     Block_Prob_Dim,         &
                     Num_Off_Diagonals,      &
-                    Beta_Prob_Dim,          &
-                    Beta_Elem_Prob_Dim
+                    iVB_Prob_Dim,           &
+                    iVB_Elem_Prob_Dim
+
+USE Variables_Matrices, &
+            ONLY :  iMB_Bandwidth,         &
+                    iMB_Diagonals,         &
+                    Laplace_NNZ
+
+USE Variables_AMReX_Core, &
+            ONLY :  iNumLeafElements
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_MTGV_Flags,    &
@@ -104,8 +112,8 @@ ELEM_PROB_DIM       = Num_Vars*ELEM_VAR_DIM
 ELEM_PROB_DIM_SQR   = ELEM_PROB_DIM*ELEM_PROB_DIM
 
 
-Beta_Prob_Dim       = 3*Var_Dim
-Beta_Elem_Prob_Dim  = 3*Elem_Var_Dim
+iVB_Prob_Dim        = 3*Var_Dim
+iVB_Elem_Prob_Dim  = 3*Elem_Var_Dim
 
 
 NUM_OFF_DIAGONALS = ULM_LENGTH*(DEGREE + 1) - 1
@@ -128,9 +136,9 @@ END SUBROUTINE Initialize_Derived
 !       Initialize_Derived_AMReX                            !
 !                                                           !
  !#########################################################!
-SUBROUTINE Initialize_Derived_AMReX
+SUBROUTINE Initialize_Derived_AMReX_Part1
 
-IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables, AMReX.')
+IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables, AMReX - Part 1.')
 
 IF ( DOMAIN_DIM == 1 ) THEN
 
@@ -147,7 +155,7 @@ ELSE IF ( DOMAIN_DIM == 3 ) THEN
 END IF
 
 
-
+!LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
 
 
 !
@@ -164,7 +172,7 @@ ELEM_PROB_DIM       = Num_Vars*ELEM_VAR_DIM
 ELEM_PROB_DIM_SQR   = ELEM_PROB_DIM*ELEM_PROB_DIM
 
 
-Beta_Elem_Prob_Dim  = 3*Elem_Var_Dim
+iVB_Elem_Prob_Dim  = 3*Elem_Var_Dim
 
 
 NUM_OFF_DIAGONALS   = ULM_LENGTH*(DEGREE + 1) - 1
@@ -173,7 +181,42 @@ NUM_OFF_DIAGONALS   = ULM_LENGTH*(DEGREE + 1) - 1
 lPF_Init_MTGV_Flags(iPF_Init_MTGV_Derived) = .TRUE.
 
 
-END SUBROUTINE Initialize_Derived_AMReX
+END SUBROUTINE Initialize_Derived_AMReX_Part1
+
+
+
+
+ !+201+####################################################!
+!                                                           !
+!       Initialize_Derived_AMReX                            !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Initialize_Derived_AMReX_Part2
+
+IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables, AMReX - Part 2.')
+
+
+Num_R_Elements = iNumLeafElements
+
+
+
+! Determine Derived Varaibles
+Num_R_Nodes         = Degree*NUM_R_ELEMENTS + 1
+Num_R_Nodesp1       = Num_R_Nodes + 1
+
+
+VAR_DIM             = LM_Length*NUM_R_NODES
+PROB_DIM            = NUM_VARS*VAR_DIM
+iVB_Prob_Dim        = 3*Var_Dim
+
+iMB_Diagonals       = iVB_Elem_Prob_Dim-1
+iMB_Bandwidth       = 2*iMB_Diagonals+1
+
+Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
+
+
+END SUBROUTINE Initialize_Derived_AMReX_Part2
+
 
 
 

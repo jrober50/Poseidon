@@ -42,8 +42,7 @@ USE Poseidon_IO_Parameters, &
             ONLY :  CFA_Var_Names
 
 USE Variables_Derived, &
-            ONLY :  Beta_Prob_Dim,              &
-                    Num_R_Nodes,                &
+            ONLY :  Num_R_Nodes,                &
                     LM_Length
 
 USE Variables_MPI, &

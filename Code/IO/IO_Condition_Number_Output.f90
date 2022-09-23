@@ -34,13 +34,13 @@ USE Poseidon_Message_Routines_Module, &
                     Warning_Message
 
 USE Variables_Derived, &
-            ONLY :  Beta_Prob_Dim
+            ONLY :  iVB_Prob_Dim
 
 
 USE Variables_Matrices, &
-            ONLY :  Beta_Diagonals,             &
-                    Beta_IPIV,                  &
-                    Beta_MVL_Banded
+            ONLY :  iMB_Diagonals,             &
+                    iMB_IPIV,                  &
+                    zMB_Matrix_Banded
 
 
 USE Variables_IO, &
@@ -76,8 +76,8 @@ SUBROUTINE IO_Output_Condition_Number( )
 
 INTEGER                                         ::  i
 INTEGER                                         ::  Info
-COMPLEX(idp),   DIMENSION(2*Beta_Prob_Dim)      ::  Work
-REAL(idp),      DIMENSION(Beta_Prob_Dim)        ::  RWork
+COMPLEX(idp),   DIMENSION(2*iVB_Prob_Dim)       ::  Work
+REAL(idp),      DIMENSION(iVB_Prob_Dim)         ::  RWork
 REAL(idp)                                       ::  RCond_One
 REAL(idp)                                       ::  Norm
 CHARACTER(LEN = 300)                            ::  Message
@@ -86,19 +86,19 @@ CHARACTER(LEN = 300)                            ::  Message
 IF ( lPF_IO_Flags(iPF_IO_Print_Cond) .OR. lPF_IO_Flags(iPF_IO_Write_Cond) ) THEN
 
     NORM = 0.0_idp
-    DO i = 1,Beta_Prob_Dim
+    DO i = 1,iVB_Prob_Dim
 
-        NORM = MAX( NORM, ABS(SUM(Beta_MVL_Banded(:,i) ) ) )
+        NORM = MAX( NORM, ABS(SUM(zMB_Matrix_Banded(:,i) ) ) )
 
     END DO
 
     CALL ZGBCON( '1',                   &
-                 Beta_Prob_Dim,         &
-                 Beta_Diagonals,        &
-                 Beta_Diagonals,        &
-                 Beta_MVL_Banded,       &
-                 3*Beta_Diagonals+1,    &
-                 Beta_IPIV,             &
+                 iVB_Prob_Dim,          &
+                 iMB_Diagonals,         &
+                 iMB_Diagonals,         &
+                 zMB_Matrix_Banded,     &
+                 3*iMB_Diagonals+1,     &
+                 iMB_IPIV,              &
                  Norm,                  &
                  RCond_One,             &
                  Work,                  &

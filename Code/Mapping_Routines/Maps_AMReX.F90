@@ -156,6 +156,28 @@ END SUBROUTINE Initialize_AMReX_Maps
 
 
 
+ !+102+############################################################!
+!                                                                   !
+!          Reinitialize_AMReX_Maps                                  !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Reinitialize_AMReX_Maps()
+
+INTEGER                         :: lvl
+
+lPF_Init_AMReX_Flags(iPF_Init_AMReX_Maps) = .FALSE.
+
+iNumLeafElements = 0
+iLeafElementsPerLvl = 0
+
+CALL Deallocate_AMReX_Maps()
+CALL Initialize_AMReX_Maps()
+
+lPF_Init_AMReX_Flags(iPF_Init_AMReX_Maps) = .TRUE.
+
+END SUBROUTINE Reinitialize_AMReX_Maps
+
+
 
 
 
@@ -166,32 +188,9 @@ END SUBROUTINE Initialize_AMReX_Maps
  !#################################################################!
 SUBROUTINE Allocate_AMReX_Maps()
 
-
-
-IF ( .NOT. ALLOCATED(FindLoc_Table) ) THEN
-    ALLOCATE( FindLoc_Table(0:iNumLeafElements-1) )
-ELSE
-    DEALLOCATE( FindLoc_Table )
-    ALLOCATE( FindLoc_Table(0:iNumLeafElements-1) )
-END IF
-
-
-IF ( .NOT. ALLOCATED(FEM_Elem_Table) ) THEN
-    ALLOCATE( FEM_Elem_Table(0:iNumLeafElements-1) )
-ELSE
-    DEALLOCATE( FEM_Elem_Table )
-    ALLOCATE( FEM_Elem_Table(0:iNumLeafElements-1) )
-END IF
-
-
-
-IF ( .NOT. ALLOCATED(Table_Offsets) ) THEN
-    ALLOCATE( Table_Offsets(0:AMReX_Num_Levels) )
-ELSE
-    DEALLOCATE( Table_Offsets )
-    ALLOCATE( Table_Offsets(0:AMReX_Num_Levels) )
-END IF
-
+ALLOCATE( FindLoc_Table(0:iNumLeafElements-1)  )
+ALLOCATE( FEM_Elem_Table(0:iNumLeafElements-1) )
+ALLOCATE( Table_Offsets(0:AMReX_Num_Levels)    )
 
 END SUBROUTINE Allocate_AMReX_Maps
 
@@ -207,12 +206,26 @@ END SUBROUTINE Allocate_AMReX_Maps
  !#################################################################!
 SUBROUTINE Deallocate_AMReX_Maps()
 
-DEALLOCATE( FindLoc_Table )
+DEALLOCATE( FindLoc_Table  )
 DEALLOCATE( FEM_Elem_Table )
+DEALLOCATE( Table_Offsets  )
 
 END SUBROUTINE Deallocate_AMReX_Maps
 
 
+
+
+ !+101+############################################################!
+!                                                                   !
+!          Reallocate_AMReX_Maps                                      !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Reallocate_AMReX_Maps()
+
+CALL Deallocate_AMReX_Maps()
+CALL Allocate_AMReX_Maps
+
+END SUBROUTINE Reallocate_AMReX_Maps
 
 
 
@@ -304,8 +317,6 @@ DO lvl = 0,AMReX_Num_Levels-1
     CALL amrex_distromap_destroy(DM)
     DEALLOCATE( mypmap )
 END DO
-
-!PRINT*,"Num Leaf Elements per Level ",iLeafElementsPerLvl
 
 
 #endif
@@ -423,8 +434,6 @@ DO lvl = 0,AMReX_Num_Levels-1
 
 END DO
 
-!PRINT*,"FindLoc_Table"
-!PRINT*,FindLoc_Table
 
 #endif
 END SUBROUTINE Create_Findloc_Table
@@ -481,8 +490,6 @@ DO elem = iNumLeafElements-1,0,-1
                                             ! Here-1 must be used as the array index.
 END DO
 
-!PRINT*,"FEM_Elem_Table"
-!PRINT*,FEM_Elem_Table
 
 
 #endif

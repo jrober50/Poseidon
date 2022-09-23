@@ -92,11 +92,11 @@ IMPLICIT NONE
 CONTAINS
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_Int_Weights          !
-!                                                                                !
-!################################################################################!
+ !+101+####################################################!
+!                                                           !
+!                  Calc_Int_Weights                         !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Calc_Int_Weights( DROT, DTOT,            &
                              R_Square, Sin_Val,     &
                              rWeights, tpWeights    )
@@ -132,7 +132,6 @@ DO pd = 1,NUM_P_QUAD_POINTS
 
 END DO
 
-!    PRINT*,sin_val(tpd),DTOT,INT_T_WEIGHTS(td)
 
 END DO
 
@@ -142,11 +141,11 @@ END SUBROUTINE Calc_Int_Weights
 
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_Int_Weights          !
-!                                                                                !
-!################################################################################!
+ !+02+####################################################!
+!                                                           !
+!                  Calc_Int_Weights                         !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Calc_Int_Weights_AMReX( DROT, DTOT,              &
                                     R_Square, Sin_Val,      &
                                     rWeights, tpWeights,    &
@@ -185,7 +184,6 @@ DO pd = 1,NUM_P_QUAD_POINTS
                     * DTOT * INT_T_WEIGHTS(td)      &
                     * Int_P_Weights(pd)
 
-!    PRINT*,tpWeights(tpd),SIN_VAL(tpd)
 END DO
 END DO
 
@@ -195,14 +193,92 @@ END SUBROUTINE Calc_Int_Weights_AMReX
 
 
 
+! !+202+####################################################!
+!!                                                           !
+!!           Calc_Geometry_Terms                             !
+!!                                                           !
+! !#########################################################!
+!SUBROUTINE Calc_Geometry_Terms( iE, iEoff, iCE, iRE)
+!
+!
+!
+!
+!#ifdef POSEIDON_AMREX_FLAG
+!
+!IF ( amrex_spacedim == 1 ) THEN
+!    iEoff(2:3) = 0
+!ELSEIF ( amrex_spacedim == 2) THEN
+!    iEoff(2)   = iE(2)
+!    iEoff(3)   = 0
+!ELSEIF ( amrex_spacedim == 3 ) THEN
+!    iEoff(2:3) = iE(2:3)
+!END IF
+!
+!
+!DO i = 1,3
+!    iCE(i) = Find_Coarsest_Parent(iE(i), Level)
+!    iRE(i) = 2.0_idp*MOD(iE(i),Level_Ratios(Level))
+!END DO
+!
+!FEM_Elem = FEM_Elem_Map(iE(1),Level)
+!
+!DROT = drlocs(FEM_Elem)/2.0_idp
+!DTOT = Level_dx(Level,2)/2.0_idp
+!
+!CUR_R_LOCS(:) = DROT * (Int_R_Locations(:) + 1.0_idp) + rlocs(FEM_Elem)
+!CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
+!
+!
+!
+!#else
+!
+!FEM_Elem = iE(1)
+!DROT = 0.5_idp * (rlocs(iE(1)+1) - rlocs(iE(1)))
+!DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
+!
+!
+!CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
+!CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
+!
+!
+!#endif
+!
+!
+!
+!
+!
+!R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
+!DO td = 1,NUM_T_QUAD_POINTS
+!DO pd = 1,NUM_P_QUAD_POINTS
+!    tpd = Map_To_tpd(td,pd)
+!    TP_Sin_Val(tpd)    = DSIN(CUR_T_LOCS(td))
+!    TP_Cotan_Val(tpd)  = 1.0_idp/DTAN(CUR_T_LOCS(td))
+!END DO
+!END DO
+!TP_Sin_Square(:) = TP_Sin_Val(:)*TP_Sin_Val
+!
+!
+!DO rd = 1,NUM_R_QUAD_POINTS
+!    TP_RSIN_SQUARE(:,rd) = R_SQUARE(rd)*TP_SIN_SQUARE(:)
+!END DO
+!
+!
+!
+!
+!END SUBROUTINE Calc_Geometry_Terms
 
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_ConFact_Values         !
-!                                                                                !
-!################################################################################!
+
+
+
+
+
+ !+201+####################################################!
+!                                                           !
+!          Calc_Val_On_Elem_TypeA                           !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Calc_Val_On_Elem_TypeA( iE, Val, iU, Level )
 
 INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
@@ -217,7 +293,6 @@ INTEGER,        DIMENSION(0:DEGREE)         :: Here
 INTEGER                                     :: iRE, iCT
 
 
-!PRINT*,"1A"
 #ifdef POSEIDON_AMREX_FLAG
     iRE = FEM_Elem_Map(iE(1),Level)
 #else
@@ -227,7 +302,6 @@ INTEGER                                     :: iRE, iCT
 
 
 
-!PRINT*,"2A"
 
 DO d = 0,DEGREE
     Here(d) = Map_To_FEM_Node(iRE,d)
@@ -236,7 +310,6 @@ END DO ! d
 
 
 
-!PRINT*,"3A"
 iCT = 0
 
 DO rd = 1,NUM_R_QUAD_POINTS
@@ -279,11 +352,14 @@ END SUBROUTINE Calc_Val_On_Elem_TypeA
 
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_ConFact_Values         !
-!                                                                                !
-!################################################################################!
+
+
+
+ !+202+####################################################!
+!                                                           !
+!          Calc_Drv_On_Elem_TypeA                           !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Calc_Drv_On_Elem_TypeA( iE, DROT, Drv, iU, Level )
 
 INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
@@ -379,11 +455,15 @@ END SUBROUTINE Calc_Drv_On_Elem_TypeA
 
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_ConFact_Values         !
-!                                                                                !
-!################################################################################!
+
+
+
+
+ !+203+####################################################!
+!                                                           !
+!          Calc_Val_And_Drv_On_Elem_TypeA                   !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeA( iE, DROT, Val, Drv, iU, Level)
 
 INTEGER,   INTENT(IN), DIMENSION(3)         ::  iE
@@ -507,11 +587,11 @@ END SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeA
 
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_ConFact_Values         !
-!                                                                                !
-!################################################################################!
+ !+301+####################################################!
+!                                                           !
+!          Calc_Val_On_Elem_TypeB                           !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Calc_Val_On_Elem_TypeB( iE, Val, iU, iVB, Level )
 
 INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
@@ -581,11 +661,11 @@ END SUBROUTINE Calc_Val_On_Elem_TypeB
 
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_ConFact_Values         !
-!                                                                                !
-!################################################################################!
+ !+302+####################################################!
+!                                                           !
+!          Calc_Drv_On_Elem_TypeB                           !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Calc_Drv_On_Elem_TypeB( iE, DROT, Drv, iU, iVB, Level )
 
 INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
@@ -681,11 +761,11 @@ END SUBROUTINE Calc_Drv_On_Elem_TypeB
 
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_ConFact_Values         !
-!                                                                                !
-!################################################################################!
+ !+301+####################################################!
+!                                                           !
+!          Calc_Val_And_Drv_On_Elem_TypeB                   !
+!                                                           !
+ !#########################################################!
 SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT, Val, Drv, iU, iVB, Level )
 
 INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE

@@ -55,13 +55,20 @@ REAL(idp), PUBLIC   ::  Timer_GR_SourceInput_PartA
 REAL(idp), PUBLIC   ::  Timer_GR_SourceInput_PartB
 
 REAL(idp), PUBLIC   ::  Timer_Initialization
-REAL(idp), PUBLIC   ::  Timer_Matrix_Init
+
 
 REAL(idp), PUBLIC   ::  Timer_Poisson_Initialization
 REAL(idp), PUBLIC   ::  Timer_Poisson_Matrix_Init
 
+REAL(idp), PUBLIC   ::  Timer_Matrix_Init
+REAL(idp), PUBLIC   ::  Timer_Matrix_Radial_Terms
+REAL(idp), PUBLIC   ::  Timer_Matrix_Angular_Terms
+REAL(idp), PUBLIC   ::  Timer_Matrix_Laplace_Init
+REAL(idp), PUBLIC   ::  Timer_Matrix_MVL_Init
+
 REAL(idp), PUBLIC   ::  Timer_Matrix_Factorization
 REAL(idp), PUBLIC   ::  Timer_Matrix_Cholesky
+
 REAL(idp), PUBLIC   ::  Timer_Banded_Factorization
 
 REAL(idp), PUBLIC   ::  Timer_X
@@ -81,6 +88,14 @@ REAL(idp), PUBLIC   ::  Timer_ConFactor_SourceVector
 REAL(idp), PUBLIC   ::  Timer_ConFactor_LinearSolve
 
 
+REAL(idp), PUBLIC   ::  Timer_Remesh
+REAL(idp), PUBLIC   ::  Timer_Remesh_MakeCopies
+REAL(idp), PUBLIC   ::  Timer_Remesh_FillTotal
+REAL(idp), PUBLIC   ::  Timer_Remesh_MakeLambdaArray
+REAL(idp), PUBLIC   ::  Timer_Remesh_FillTypeA
+REAL(idp), PUBLIC   ::  Timer_Remesh_FillX
+REAL(idp), PUBLIC   ::  Timer_Remesh_FillS
+REAL(idp), PUBLIC   ::  Timer_Remesh_DestroyCopies
 
 REAL(idp), PUBLIC   ::  Timer_CFA_Load_Vector
 

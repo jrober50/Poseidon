@@ -64,6 +64,9 @@ USE Variables_AMReX_Source, &
             ONLY :  iLeaf,                &
                     iTrunk
 
+USE Variables_FEM_Module, &
+            ONLY :  FEM_Node_xlocs
+
 USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
 
@@ -133,7 +136,6 @@ INTEGER                                                         ::  rd, td, pd, 
 INTEGER                                                         ::  d, lm, Here
 
 REAL(KIND = idp)                                                ::  Quad_Span
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  Local_Locations
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
 REAL(KIND = idp), DIMENSION(1:NQ(1))                            ::  CUR_X_LOCS
 COMPLEX(KIND = idp)                                             ::  Tmp_U_Value
@@ -141,7 +143,6 @@ INTEGER                                                         ::  Current_Loca
 
 Quad_Span = Right_Limit - Left_Limit
 
-Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 
@@ -154,7 +155,7 @@ DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
 
     tpd = Map_To_tpd(td,pd)
-    LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
+    LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,FEM_Node_xlocs)
     Tmp_U_Value = 0.0_idp
 
     DO lm = 1,LM_Length
@@ -219,7 +220,6 @@ INTEGER                                                         ::  rd, td, pd, 
 INTEGER                                                         ::  d, lm, Here
 
 REAL(KIND = idp)                                                ::  Quad_Span
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  Local_Locations
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
 REAL(KIND = idp), DIMENSION(1:NQ(1))                            ::  CUR_X_LOCS
 COMPLEX(KIND = idp)                                             ::  TMP_U_Value
@@ -227,7 +227,6 @@ INTEGER                                                         ::  Current_Loca
 
 Quad_Span = Right_Limit - Left_Limit
 
-Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 
@@ -239,7 +238,7 @@ DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
 
     tpd = Map_To_tpd(td,pd)
-    LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,Local_Locations)
+    LagP = Lagrange_Poly(CUR_X_LOCS(rd),DEGREE,FEM_Node_xlocs)
     Tmp_U_Value = 0.0_idp
 
     DO lm = 1,LM_Length

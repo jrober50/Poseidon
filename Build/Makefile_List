@@ -8,6 +8,7 @@ POSEIDON = \
   $(POSEIDON_MESH)            \
   $(POSEIDON_QUAD)            \
   $(POSEIDON_FUNCTIONS)       \
+  $(POSEIDON_FEM)             \
   $(POSEIDON_INITIAL_GUESS)   \
   $(POSEIDON_MPI)             \
   $(POSEIDON_TABLES)          \

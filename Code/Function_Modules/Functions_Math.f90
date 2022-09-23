@@ -53,15 +53,14 @@ CONTAINS
  !#####################################################################!
 PURE FUNCTION Lagrange_Poly(x, Ord, xlocs)
 
+REAL(idp),  INTENT(IN)                          :: x
+INTEGER,    INTENT(IN)                          :: Ord
+REAL(idp),  INTENT(IN), DIMENSION(0:Ord)        :: xlocs
 
-INTEGER, INTENT(IN)                                 :: Ord
-REAL(idp), INTENT(IN)                        :: x
-REAL(idp), INTENT(IN), DIMENSION(0:Ord)      :: xlocs
 
-
-INTEGER                                             :: i,j
-REAL(idp), DIMENSION(0:Ord)                  :: tmp
-REAL(idp), DIMENSION(0:Ord)                  :: Lagrange_Poly
+INTEGER                                         :: i,j
+REAL(idp), DIMENSION(0:Ord)                     :: tmp
+REAL(idp), DIMENSION(0:Ord)                     :: Lagrange_Poly
 
 
 

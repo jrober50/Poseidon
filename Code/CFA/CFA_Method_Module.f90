@@ -48,10 +48,7 @@ USE Variables_Mesh, &
                     R_Outer
 
 USE Variables_Derived, &
-            ONLY :  LM_Length,                  &
-                    Num_R_Nodes,                &
-                    Var_Dim,                    &
-                    Beta_Prob_Dim,              &
+            ONLY :  Var_Dim,                    &
                     Prob_Dim
 
 USE Variables_FP,  &

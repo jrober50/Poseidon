@@ -46,6 +46,8 @@ INTEGER, PUBLIC                                 ::  AMReX_Max_Level     = -1
 INTEGER, PUBLIC                                 ::  AMReX_Num_Levels    = -1
 INTEGER, PUBLIC, DIMENSION(3)                   ::  AMReX_Max_Grid_Size = -1
 
+INTEGER, PUBLIC                                 ::  AMReX_Tag_Style     = 3
+
 INTEGER, PUBLIC                                 ::  iFRL    ! FEM Refinement Level
 INTEGER, PUBLIC                                 ::  iFEME   ! Num FEM Elements
 

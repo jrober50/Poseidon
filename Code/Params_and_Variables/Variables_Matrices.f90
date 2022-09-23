@@ -30,8 +30,8 @@ USE Poseidon_Kinds_Module, &
 IMPLICIT NONE
 
 
-CHARACTER(LEN = 4)                                      :: Matrix_Format = 'CCS'
-CHARACTER(LEN = 4)                                      :: Linear_Solver = 'CHOL'
+CHARACTER(LEN = 4)                                      ::  Matrix_Format = 'CCS'
+CHARACTER(LEN = 4)                                      ::  Linear_Solver = 'CHOL'
 
 INTEGER                                                 ::  Laplace_NNZ
 INTEGER                                                 ::  Factored_NNZ
@@ -47,18 +47,22 @@ INTEGER,        ALLOCATABLE,    DIMENSION(:,:)          ::  Laplace_Factored_ROW
 INTEGER,        ALLOCATABLE,    DIMENSION(:,:)          ::  Laplace_Factored_COL
 
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  First_Column_Storage
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  Last_Column_Storage
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  zMA_First_Col_Storage
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  zMA_Last_Col_Storage
 
-INTEGER                                                 ::  Beta_Diagonals
-INTEGER                                                 ::  Beta_Bandwidth
-INTEGER,        ALLOCATABLE,    DIMENSION(:)            ::  Beta_IPIV
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  Beta_MVL_Banded
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  Beta_MVL_Diagonal
-LOGICAL                                                 ::  Beta_Factorized_Flag = .FALSE.
+!
+! Type B Matrix Variables
+!
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  First_Column_Beta_Storage
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  Last_Column_Beta_Storage
+INTEGER                                                 ::  iMB_Diagonals
+INTEGER                                                 ::  iMB_Bandwidth
+INTEGER,        ALLOCATABLE,    DIMENSION(:)            ::  iMB_IPIV
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  zMB_Matrix_Banded
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  zMB_Matrix_Diagonal
+
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  zMB_First_Col_Storage
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  zMB_Last_Col_Storage
+
 
 CONTAINS
 

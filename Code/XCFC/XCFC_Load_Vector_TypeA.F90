@@ -300,6 +300,8 @@ ELSEIF ( amrex_spacedim == 3 ) THEN
     iEoff(2:3) = iE(2:3)
 END IF
 
+
+
 DO i = 1,3
     iCE(i) = Find_Coarsest_Parent(iE(i), Level)
     iRE(i) = 2.0_idp*MOD(iE(i),Level_Ratios(Level))

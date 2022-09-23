@@ -47,22 +47,22 @@ USE Poseidon_IO_Parameters, &
             ONLY :  CFA_VecVar_Names
 
 USE Variables_Derived, &
-            ONLY :  Beta_Prob_Dim,              &
+            ONLY :  iVB_Prob_Dim,               &
                     Num_R_Nodes,                &
                     LM_Length
 
 USE Variables_Vectors,  &
-            ONLY :  cVB_Coeff_Vector,          &
+            ONLY :  cVB_Coeff_Vector,           &
                     cVB_Load_Vector
 
 USE Variables_Matrices,  &
-            ONLY :  Beta_Diagonals,             &
-                    Beta_MVL_Banded,            &
-                    Beta_IPIV
+            ONLY :  iMB_Diagonals,              &
+                    zMB_Matrix_Banded,          &
+                    iMB_IPIV
 
 
 USE Matrix_Vector_Laplacian_Routines, &
-            ONLY :  Factorize_Vector_Laplacian,     &
+            ONLY :  Factorize_Vector_Laplacian, &
                     Jacobi_PC_MVL_Banded_Vector
 
 USE Matrix_Boundary_Condition_Routines,  &
@@ -131,7 +131,7 @@ END IF
 
 #ifdef POSEIDON_AMREX_FLAG
 Lower_Limit = 1
-Upper_Limit = Beta_Prob_Dim
+Upper_Limit = iVB_Prob_Dim
 CALL MPI_RTM_Source_TypeB(  iVB,                    &
                             Lower_Limit,            &
                             Upper_Limit,            &
@@ -151,26 +151,26 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 
 
-    ALLOCATE( WORK_VEC( 1:Beta_Prob_Dim ) )
+    ALLOCATE( WORK_VEC( 1:iVB_Prob_Dim ) )
     Work_Vec = cVB_Load_Vector(:,iVB)
 
 
 
-    CALL DIRICHLET_BC_Beta_Banded(Beta_Prob_Dim, Work_Vec )
+    CALL DIRICHLET_BC_Beta_Banded(iVB_Prob_Dim, Work_Vec )
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
 !    PRINT*,Work_Vec
 
     CALL ZGBTRS( 'N',                   &
-                 Beta_Prob_Dim,         &
-                 Beta_Diagonals,        &
-                 Beta_Diagonals,        &
+                 iVB_Prob_Dim,          &
+                 iMB_Diagonals,         &
+                 iMB_Diagonals,         &
                  1,                     &
-                 Beta_MVL_Banded,       &
-                 3*Beta_Diagonals+1,    &
-                 Beta_IPIV,             &
-                 Work_Vec,             &
-                 Beta_Prob_Dim,         &
+                 zMB_Matrix_Banded,     &
+                 3*iMB_Diagonals+1,     &
+                 iMB_IPIV,              &
+                 Work_Vec,              &
+                 iVB_Prob_Dim,          &
                  INFO                   )
 
     IF (INFO .NE. 0) THEN
@@ -194,7 +194,7 @@ END IF
 
 #ifdef POSEIDON_AMREX_FLAG
 Lower_Limit = 1
-Upper_Limit = Beta_Prob_Dim
+Upper_Limit = iVB_Prob_Dim
 CALL MPI_BCAST_Coeffs_TypeB(iVB,                     &
                             Lower_Limit,            &
                             Upper_Limit,            &

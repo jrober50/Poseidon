@@ -21,6 +21,7 @@ $(POSEIDON_ACTIVE_DIR)/Code/Matrix_Routines:           \
 $(POSEIDON_ACTIVE_DIR)/Code/CFA:                       \
 $(POSEIDON_ACTIVE_DIR)/Code/XCFC:                      \
 $(POSEIDON_ACTIVE_DIR)/Code/Function_Modules:          \
+$(POSEIDON_ACTIVE_DIR)/Code/FEM:                       \
 $(POSEIDON_ACTIVE_DIR)/Code/Initialization:            \
 $(POSEIDON_ACTIVE_DIR)/Code/Source_Input:              \
 $(POSEIDON_ACTIVE_DIR)/Code/Interfaces:                \

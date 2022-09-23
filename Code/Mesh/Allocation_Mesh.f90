@@ -83,12 +83,6 @@ END SUBROUTINE Allocate_Mesh
 
 
 
-
-
-
-
-
-
 !+102+##########################################################################!
 !                                                                               !
 !                           Deallocate_Mesh                                     !
@@ -96,6 +90,7 @@ END SUBROUTINE Allocate_Mesh
 !###############################################################################!
 SUBROUTINE Deallocate_Mesh()
 
+IF ( Verbose_Flag ) CALL Init_Message('Deallocating Mesh Variables.')
 
 DEALLOCATE(rlocs)
 DEALLOCATE(tlocs)
@@ -112,6 +107,18 @@ END SUBROUTINE Deallocate_Mesh
 
 
 
+
+!+102+##########################################################################!
+!                                                                               !
+!                           Reallocate_Mesh                                     !
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Reallocate_Mesh()
+
+CALL Deallocate_Mesh()
+CALL Allocate_Mesh()
+
+END SUBROUTINE Reallocate_Mesh
 
 
 END MODULE Allocation_Mesh

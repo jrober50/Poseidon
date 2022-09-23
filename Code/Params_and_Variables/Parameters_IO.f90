@@ -70,6 +70,16 @@ CFA_ShortVars = ['ConFactor ', &
                  'X3        ' ]
 
 
+INTEGER, PARAMETER                                          :: N_Kij_ShortVars = 6
+CHARACTER(LEN = 2),DIMENSION(N_Kij_ShortVars), PARAMETER    :: &
+Kij_ShortVars = ['K11', &
+                 'K12', &
+                 'K13', &
+                 'K21', &
+                 'K22', &
+                 'K33' ]
+
+
 INTEGER, PARAMETER                                      :: N_Methods = 3
 CHARACTER(LEN = 32),DIMENSION(N_Methods), PARAMETER     :: &
 Method_Names = ['Newton-Raphson                  ', &

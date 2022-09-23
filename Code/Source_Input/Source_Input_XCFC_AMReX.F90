@@ -28,6 +28,19 @@ USE amrex_multifab_module,  ONLY: &
   amrex_mfiter, &
   amrex_mfiter_build, &
   amrex_mfiter_destroy
+
+USE Variables_AMReX_Core, &
+            ONLY :  MF_Source,          &
+                    AMReX_Num_Levels,   &
+                    MF_Source_nComps
+
+USE Initialization_XCFC_with_AMReX_Module, &
+            ONLY :  Initialization_XCFC_with_AMReX,     &
+                    Reinitialization_XCFC_with_AMReX
+
+USE Poseidon_AMReX_Utilities_Module, &
+            ONLY :  Destroy_MF,         &
+                    Build_MF_from_MF
 #endif
 
 
@@ -46,7 +59,6 @@ USE Parameters_Variable_Indices, &
                     iS_S2,              &
                     iS_S3
 
-
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
                     Num_T_Quad_Points,      &
@@ -58,22 +70,8 @@ USE Variables_Quadrature, &
                     xLeftLimit,             &
                     xRightLimit
 
-
 USE Functions_Translation_Matrix_Module, &
             ONLY :  Create_Translation_Matrix
-
-#ifdef POSEIDON_AMREX_FLAG
-USE Variables_AMReX_Core, &
-            ONLY :  MF_Source,          &
-                    AMReX_Num_Levels,   &
-                    MF_Source_nComps
-
-USE Initialization_XCFC_with_AMReX_Module, &
-            ONLY :  Initialization_XCFC_with_AMReX
-
-
-#endif
-
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &
@@ -120,7 +118,8 @@ SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX(   MF_Src_Input,          &
                                                 Input_R_Quad,          &
                                                 Input_T_Quad,          &
                                                 Input_P_Quad,          &
-                                                Input_xL               )
+                                                Input_xL,               &
+                                                Remesh_Flag_Option      )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
@@ -131,6 +130,7 @@ REAL(idp),  DIMENSION(Input_NQ(1)),     INTENT(IN)  ::  Input_R_Quad
 REAL(idp),  DIMENSION(Input_NQ(2)),     INTENT(IN)  ::  Input_T_Quad
 REAL(idp),  DIMENSION(Input_NQ(3)),     INTENT(IN)  ::  Input_P_Quad
 REAL(idp),  DIMENSION(2),               INTENT(IN)  ::  Input_xL
+LOGICAL,                    OPTIONAL,   INTENT(IN)  ::  Remesh_Flag_Option
 
 INTEGER                                             ::  RE, TE, PE
 INTEGER,    DIMENSION(3)                            ::  iEL, iEU
@@ -152,11 +152,22 @@ TYPE(amrex_box)                                     ::  Box
 REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
 INTEGER                                             ::  Their_DOF
 
+LOGICAL                                             ::  Remesh_Flag
+
 
 
 
 IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
+
+IF ( PRESENT(Remesh_Flag_Option) ) THEN
+    Remesh_Flag = Remesh_Flag_Option
+ELSE
+    Remesh_Flag = .FALSE.
+END IF
+
+
+
 
 ! Define Interpolation Matrix
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
@@ -191,8 +202,8 @@ IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
                                     MF_Src_Input(Level)%DM,     &
                                     MF_Source_nComps, 1         )
 
-        lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
     END DO
+    lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
 END IF
 
 
@@ -254,10 +265,12 @@ END SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller(    MF_Src_Input,           &
-                                                        MF_Src_Input_nComps     )
+                                                        MF_Src_Input_nComps,    &
+                                                        Remesh_Flag_Option      )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_SRC_Input(0:AMReX_Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
+LOGICAL,                    OPTIONAL,   INTENT(IN)  ::  Remesh_Flag_Option
 
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)
@@ -276,22 +289,39 @@ INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
-
+LOGICAL                                             ::  Remesh_Flag
 
 
 IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
+
+
+IF ( PRESENT(Remesh_Flag_Option) ) THEN
+    Remesh_Flag = Remesh_Flag_Option
+ELSE
+    Remesh_Flag = .FALSE.
+END IF
+
+IF ( Remesh_Flag ) THEN
+
+    lPF_SI_Flags(iPF_SI_MF_Ready) = .FALSE.
+    CALL Destroy_MF( MF_Source,         &
+                     AMReX_Num_Levels   )
+
+END IF
+
+
+
+
 IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
-    DO level = 0,AMReX_Num_Levels-1
 
-        CALL amrex_multifab_build(  MF_Source(level),           &
-                                    MF_Src_Input(Level)%BA,     &
-                                    MF_Src_Input(Level)%DM,     &
-                                    MF_Source_nComps, 1         )
+    CALL Build_MF_From_MF(  MF_Src_Input,       &
+                            MF_Source_nComps,   &
+                            AMReX_Num_Levels,   &
+                            MF_Source           )
 
-        lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
-    END DO
+    lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
 END IF
 
 
@@ -343,8 +373,11 @@ END DO          ! level
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-CALL Initialization_XCFC_with_AMReX()
-
+IF ( Remesh_Flag ) THEN
+    CALL Reinitialization_XCFC_with_AMReX()
+ELSE
+    CALL Initialization_XCFC_with_AMReX()
+END IF
 
 END SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller
 
@@ -361,14 +394,15 @@ END SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Part1_AMReX( MF_Src_Input,          &
-                                          MF_Src_Input_nComps,         &
-                                          Num_Levels,            &
-                                          Input_NQ,              &
-                                          Input_R_Quad,          &
-                                          Input_T_Quad,          &
-                                          Input_P_Quad,          &
-                                          Input_xL               )
+SUBROUTINE Poseidon_Input_Sources_Part1_AMReX(  MF_Src_Input,           &
+                                                MF_Src_Input_nComps,    &
+                                                Num_Levels,             &
+                                                Input_NQ,               &
+                                                Input_R_Quad,           &
+                                                Input_T_Quad,           &
+                                                Input_P_Quad,           &
+                                                Input_xL,               &
+                                                Remesh_Flag_Option      )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
@@ -379,6 +413,8 @@ REAL(idp),  DIMENSION(Input_NQ(1)),     INTENT(IN)  ::  Input_R_Quad
 REAL(idp),  DIMENSION(Input_NQ(2)),     INTENT(IN)  ::  Input_T_Quad
 REAL(idp),  DIMENSION(Input_NQ(3)),     INTENT(IN)  ::  Input_P_Quad
 REAL(idp),  DIMENSION(2),               INTENT(IN)  ::  Input_xL
+
+LOGICAL,                    OPTIONAL,   INTENT(IN)  ::  Remesh_Flag_Option
 
 INTEGER                                             ::  RE, TE, PE
 INTEGER,    DIMENSION(3)                            ::  iEL, iEU
@@ -404,6 +440,12 @@ INTEGER                                             ::  Their_DOF
 
 IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
+
+IF ( PRESENT(Remesh_Flag_Option) ) THEN
+    IF ( Remesh_Flag_Option ) THEN
+!        CALL Poseidon_Remesh()
+    END IF
+END IF
 
 ! Define Interpolation Matrix
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
@@ -513,11 +555,14 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller( MF_Src_Input,       &
-                                                      MF_Src_Input_nComps       )
+SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller( MF_Src_Input,         &
+                                                      MF_Src_Input_nComps,  &
+                                                      Remesh_Flag_Option    )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:AMReX_Num_Levels-1)
 INTEGER,                                INTENT(IN)  ::  MF_Src_Input_nComps
+
+LOGICAL,                    OPTIONAL,   INTENT(IN)  ::  Remesh_Flag_Option
 
 REAL(idp), CONTIGUOUS, POINTER                      ::  My_PTR(:,:,:,:)
 REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)
@@ -539,6 +584,13 @@ INTEGER                                             ::  Local_Here
 
 IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
+
+IF ( PRESENT(Remesh_Flag_Option) ) THEN
+    IF ( Remesh_Flag_Option ) THEN
+!        CALL Poseidon_Remesh()
+    END IF
+END IF
+
 
 
 IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN

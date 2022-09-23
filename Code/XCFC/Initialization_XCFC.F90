@@ -39,7 +39,7 @@ USE Poseidon_Parameters, &
                     Verbose_Flag
 
 USE Variables_Derived, &
-            ONLY :  Beta_Elem_Prob_Dim
+            ONLY :  iVB_Elem_Prob_Dim
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
@@ -50,8 +50,8 @@ USE Variables_Functions, &
 
 USE Variables_Matrices, &
             ONLY :  Laplace_NNZ,                &
-                    Beta_Diagonals,             &
-                    Beta_Bandwidth
+                    iMB_Diagonals,             &
+                    iMB_Bandwidth
 
 USE Allocation_XCFC_Linear_Systems, &
             ONLY :  Allocate_XCFC_Linear_Systems
@@ -114,8 +114,8 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
 
 
-    Beta_Diagonals = Beta_Elem_Prob_Dim-1
-    Beta_Bandwidth = 2*Beta_Diagonals+1
+    iMB_Diagonals = iVB_Elem_Prob_Dim-1
+    iMB_Bandwidth = 2*iMB_Diagonals+1
 
     Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
 
@@ -125,9 +125,7 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
 
     ! Construct Matrices
-    CALL TimerStart( Timer_Matrix_Init )
     CALL Initialize_XCFC_Matrices()
-    CALL TimerStop( Timer_Matrix_Init )
 
 
 

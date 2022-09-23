@@ -67,6 +67,9 @@ USE Allocation_CFA_Linear_Systems, &
 USE Allocation_XCFC_Linear_Systems, &
             ONLY :  Deallocate_XCFC_Linear_Systems
 
+USE Allocation_FEM, &
+            ONLY :  Deallocate_FEM
+
 USE Timer_Routines_Module, &
             ONLY :  Finalize_Timers
 
@@ -118,6 +121,7 @@ IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian) THEN
 
     CALL Deallocate_Quadrature()
     CALL Deallocate_Tables()
+    CALL Deallocate_FEM()
 
 ELSE
     !!!!  Deallocate Data Space !!!!
@@ -126,7 +130,7 @@ ELSE
 
     CALL Deallocate_Quadrature()
     CALL Deallocate_Tables()
-
+    CALL Deallocate_FEM()
 
     IF ( Method_Flag == 1 ) THEN
         WRITE(*,'(A)')"The Newton-Raphson method is not currently available in Poseidon. STOPING"
@@ -139,6 +143,7 @@ ELSE
     END IF
 
 END IF
+
 
 
 CALL Finalize_Timers()

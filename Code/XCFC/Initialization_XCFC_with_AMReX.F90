@@ -49,57 +49,45 @@ USE Poseidon_Message_Routines_Module, &
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-USE Poseidon_Numbers_Module, &
-            ONLY :  pi
-
-
 USE Poseidon_Parameters, &
-            ONLY :  Domain_Dim,             &
-                    DEGREE,                 &
-                    L_LIMIT,                &
-                    Num_Vars,               &
-                    Verbose_Flag
-
-USE Variables_Derived, &
-            ONLY :  Num_R_Nodes,            &
-                    Num_R_Nodesp1,          &
-                    Var_Dim,                &
-                    Elem_Var_Dim,           &
-                    Block_Var_Dim,          &
-                    LM_Length,              &
-                    ULM_Length,             &
-                    Prob_Dim,               &
-                    Elem_Prob_Dim,          &
-                    Elem_Prob_Dim_Sqr,      &
-                    Block_Prob_Dim,         &
-                    Num_Off_Diagonals,      &
-                    Beta_Prob_Dim,          &
-                    Beta_Elem_Prob_Dim
-
-USE Variables_Mesh, &
-            ONLY :  Num_R_Elements
+            ONLY :  Verbose_Flag
 
 USE Variables_Functions, &
             ONLY :  Calc_3D_Values_At_Location,     &
                     Calc_1D_CFA_Values
 
-USE Variables_Matrices, &
-            ONLY :  Laplace_NNZ,                &
-                    Beta_Diagonals,             &
-                    Beta_Bandwidth
-
 USE Allocation_XCFC_Linear_Systems, &
-            ONLY :  Allocate_XCFC_Linear_Systems
+            ONLY :  Allocate_XCFC_Linear_Systems,   &
+                    Reallocate_XCFC_Linear_Systems
 
 USE Allocation_Mesh, &
-            ONLY :  Allocate_Mesh
+            ONLY :  Allocate_Mesh,          &
+                    Reallocate_Mesh
+
+USE Initialization_Mesh_AMReX_Module, &
+            ONLY :  Determine_AMReX_Mesh
+
+USE Initialization_Derived, &
+            ONLY :  Initialize_Derived_AMReX_Part2
+
+USE Matrix_Initialization_Module, &
+            ONLY :  Initialize_XCFC_Matrices
+
+USE Poseidon_Remesh_Module, &
+            ONLY :  Make_Remesh_Copies,             &
+                    Fill_Coeff_Vector_From_Copy,    &
+                    Destroy_Remesh_Copies
+
+USE Maps_AMReX, &
+            ONLY :  Initialize_AMReX_Maps,  &
+                    Reinitialize_AMReX_Maps
 
 USE Return_Functions_FP,   &
             ONLY :  Calc_FP_Values_At_Location, &
                     Calc_1D_CFA_Values_FP
-                
-USE Matrix_Initialization_Module, &
-            ONLY :  Initialize_XCFC_Matrices
+
+USE IO_Setup_Report_Module, &
+            ONLY :  PRINT_AMReX_Setup
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -108,27 +96,6 @@ USE Timer_Routines_Module, &
 USE Timer_Variables_Module, &
             ONLY :  Timer_Initialization_XCFC, &
                     Timer_Matrix_Init
-
-USE Variables_AMReX_Core, &
-            ONLY :  MF_Source,          &
-                    AMReX_Num_Levels,   &
-                    iNumLeafElements
-
-USE Poseidon_AMReX_BoxArraySize_Module, &
-            ONLY : AMReX_BoxArraySize
-
-USE Maps_AMReX, &
-            ONLY :  Initialize_AMReX_Maps
-
-USE Initialization_Mesh_AMReX_Module, &
-            ONLY :  Determine_AMReX_Mesh
-
-USE IO_Setup_Report_Module, &
-            ONLY :  PRINT_AMReX_Setup
-
-USE Return_Functions_FP, &
-            ONLY :  Calc_Var_At_Location_Type_A,    &
-                    Calc_Var_At_Location_Type_B
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,     &
@@ -154,43 +121,18 @@ SUBROUTINE  Initialization_XCFC_with_AMReX( )
 IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     
     IF ( Verbose_Flag ) CALL Init_Message('Initializing XCFC system with AMReX.')
-
     CALL TimerStart(Timer_Initialization_XCFC)
 
 
     CALL Initialize_AMReX_Maps()
 
-
-    IF ( Verbose_Flag ) THEN
-        CALL PRINT_AMReX_Setup()
-    END IF
-
-    Num_R_Elements = iNumLeafElements
-
-
-
-    ! Determine Derived Varaibles
-    Num_R_Nodes         = DEGREE*NUM_R_ELEMENTS + 1
-    Num_R_Nodesp1       = Num_R_Nodes + 1
-
-
-    VAR_DIM             = LM_LENGTH*NUM_R_NODES
-    PROB_DIM            = NUM_VARS*VAR_DIM
-    Beta_Prob_Dim       = 3*Var_Dim
-
-    Beta_Diagonals      = Beta_Elem_Prob_Dim-1
-    Beta_Bandwidth      = 2*Beta_Diagonals+1
-
-    Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-
+    CALL Initialize_Derived_AMReX_Part2()
 
     CALL Allocate_Mesh()
     CALL Determine_AMReX_Mesh()
 
-
     ! Allocate Arrays
     CALL Allocate_XCFC_Linear_Systems()
-
 
     ! Construct Matrices
     CALL TimerStart( Timer_Matrix_Init )
@@ -198,23 +140,80 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     CALL TimerStop( Timer_Matrix_Init )
 
 
+    Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
+    Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
+
+
+    CALL TimerStop(Timer_Initialization_XCFC)
+
+    lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
+
+    IF ( Verbose_Flag ) THEN
+        CALL PRINT_AMReX_Setup()
+    END IF
+END IF
+
+END SUBROUTINE  Initialization_XCFC_with_AMReX
+
+
+
+
+
+
+ !+101+############################################################!
+!                                                                   !
+!              Reinitialization_XCFC_with_AMReX                       !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE  Reinitialization_XCFC_with_AMReX( )
+
+
+! Determine Radial Base Variables from Multifab
+IF ( lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
+
+    lPF_Init_Flags(iPF_Init_Method_Vars) = .FALSE.
+    
+    IF ( Verbose_Flag ) CALL Init_Message('Initializing XCFC system with AMReX.')
+    CALL TimerStart(Timer_Initialization_XCFC)
+
+    
+    CALL Make_Remesh_Copies()
+
+    CALL Reinitialize_AMReX_Maps()
+
+    CALL Initialize_Derived_AMReX_Part2()
+
+    CALL Reallocate_Mesh()
+    CALL Determine_AMReX_Mesh()
+
+
+    CALL Reallocate_XCFC_Linear_Systems()
+
+
+    CALL Fill_Coeff_Vector_From_Copy()
+    CALL Destroy_Remesh_Copies
+
+    ! Construct Matrices
+    CALL TimerStart( Timer_Matrix_Init )
+    CALL Initialize_XCFC_Matrices()
+    CALL TimerStop( Timer_Matrix_Init )
 
 
     Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
     Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
 
-
-
-
-
     CALL TimerStop(Timer_Initialization_XCFC)
 
-
     lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
+
+    IF ( Verbose_Flag ) THEN
+        CALL PRINT_AMReX_Setup()
+    END IF
+
 END IF
 
-END SUBROUTINE  Initialization_XCFC_with_AMReX
+END SUBROUTINE  Reinitialization_XCFC_with_AMReX
 
 #endif
 

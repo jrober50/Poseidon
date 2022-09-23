@@ -39,7 +39,7 @@ Use Variables_Derived, &
                     LM_Length,              &
                     Var_Dim,                &
                     Prob_Dim,               &
-                    Beta_Prob_Dim
+                    iVB_Prob_Dim
 
 USE Variables_FP,  &
             ONLY :  FP_Update_Vector,       &
@@ -64,17 +64,16 @@ USE Variables_Matrices,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
-                    Beta_MVL_Banded,            &
-                    Beta_MVL_Diagonal,          &
-                    Beta_Diagonals,             &
-                    Beta_IPIV,                  &
+                    zMB_Matrix_Banded,            &
+                    zMB_Matrix_Diagonal,          &
+                    iMB_Diagonals,              &
+                    iMB_IPIV,                   &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
-                    Beta_Bandwidth,           &
-                    First_Column_Storage,   &
-                    Last_Column_Storage,    &
-                    First_Column_Beta_Storage,   &
-                    Last_Column_Beta_Storage
+                    zMA_First_Col_Storage,       &
+                    zMA_Last_Col_Storage,        &
+                    zMB_First_Col_Storage,  &
+                    zMB_Last_Col_Storage
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,         &
@@ -96,7 +95,7 @@ SUBROUTINE Allocate_XCFC_Linear_Systems()
 IF ( MATRIX_FORMAT == 'Full' ) THEN
 
     ALLOCATE( Laplace_Matrix_Full(1:NUM_R_NODES,1:NUM_R_NODES,0:L_LIMIT) )
-    ALLOCATE( Laplace_Matrix_Beta(1:Beta_Prob_Dim,1:Beta_Prob_Dim) )
+    ALLOCATE( Laplace_Matrix_Beta(1:iVB_Prob_Dim,1:iVB_Prob_Dim) )
 
 
 ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
@@ -109,24 +108,24 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     ALLOCATE( Laplace_Factored_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
     ALLOCATE( Laplace_Factored_COL(0:NUM_R_NODES, 0:L_LIMIT) )
 
-    ALLOCATE( Beta_IPIV(1:Beta_Prob_Dim) )
-    ALLOCATE( Beta_MVL_Banded(1:(3*Beta_Diagonals+1), 1:Beta_Prob_Dim))
-    ALLOCATE( Beta_MVL_Diagonal(1:Beta_Prob_Dim) )
+    ALLOCATE( iMB_IPIV(1:iVB_Prob_Dim) )
+    ALLOCATE( zMB_Matrix_Banded(1:(3*iMB_Diagonals+1), 1:iVB_Prob_Dim))
+    ALLOCATE( zMB_Matrix_Diagonal(1:iVB_Prob_Dim) )
 
-    ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT)   )
-    ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT)    )
+    ALLOCATE( zMA_First_Col_Storage(0:DEGREE,0:L_LIMIT)   )
+    ALLOCATE( zMA_Last_Col_Storage(0:DEGREE,0:L_LIMIT)    )
 
-    ALLOCATE( First_Column_Beta_Storage(1:LM_Length,0:DEGREE,1:6)   )
-    ALLOCATE( Last_Column_Beta_Storage(1:LM_Length,0:DEGREE,1:6)    )
+    ALLOCATE( zMB_First_Col_Storage(1:LM_Length,0:DEGREE,1:6)   )
+    ALLOCATE( zMB_Last_Col_Storage(1:LM_Length,0:DEGREE,1:6)    )
 
 END IF
 
 
 ALLOCATE( cVA_Load_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
-ALLOCATE( cVB_Load_Vector(1:Beta_Prob_Dim,1:2) )
+ALLOCATE( cVB_Load_Vector(1:iVB_Prob_Dim,1:2) )
 
 ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
-ALLOCATE( cVB_Coeff_Vector(1:Beta_Prob_Dim,1:2) )
+ALLOCATE( cVB_Coeff_Vector(1:iVB_Prob_Dim,1:2) )
 
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
 
@@ -163,15 +162,15 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     DEALLOCATE( Laplace_Factored_ROW )
     DEALLOCATE( Laplace_Factored_COL )
 
-    DEALLOCATE( Beta_IPIV )
-    DEALLOCATE( Beta_MVL_Banded )
-    DEALLOCATE( Beta_MVL_Diagonal )
+    DEALLOCATE( iMB_IPIV )
+    DEALLOCATE( zMB_Matrix_Banded )
+    DEALLOCATE( zMB_Matrix_Diagonal )
 
-    DEALLOCATE( First_Column_Storage )
-    DEALLOCATE( Last_Column_Storage )
+    DEALLOCATE( zMA_First_Col_Storage )
+    DEALLOCATE( zMA_Last_Col_Storage )
 
-    DEALLOCATE( First_Column_Beta_Storage )
-    DEALLOCATE( Last_Column_Beta_Storage )
+    DEALLOCATE( zMB_First_Col_Storage )
+    DEALLOCATE( zMB_Last_Col_Storage )
     
 END IF
 
@@ -190,6 +189,19 @@ END SUBROUTINE Deallocate_XCFC_Linear_Systems
 
 
 
+
+
+ !+103+####################################################!
+!                                                           !
+!          Reallocate_XCFC_Linear_Systems                   !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Reallocate_XCFC_Linear_Systems()
+
+CALL Deallocate_XCFC_Linear_Systems()
+CALL Allocate_XCFC_Linear_Systems()
+
+END SUBROUTINE Reallocate_XCFC_Linear_Systems
 
 
 

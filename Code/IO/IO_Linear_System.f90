@@ -29,43 +29,45 @@ MODULE IO_Linear_System                                                         
 
 
 USE Poseidon_Kinds_Module, &
-                    ONLY : idp
+            ONLY : idp
 
 USE Poseidon_Numbers_Module, &
-                    ONLY : pi
+            ONLY : pi
 
 
 USE Poseidon_Units_Module, &
-                    ONLY :  Centimeter
+            ONLY :  Centimeter
 
 USE Poseidon_IO_Parameters, &
-                    ONLY :  Poseidon_LinSys_Dir,    &
-                            Poseidon_Objects_Dir
+            ONLY :  Poseidon_LinSys_Dir,    &
+                    Poseidon_Objects_Dir
 
 USE Poseidon_Parameters, &
-                    ONLY :  DEGREE,                 &
-                            L_LIMIT,                &
-                            CUR_ITERATION,          &
-                            Poseidon_Frame
+            ONLY :  DEGREE,                 &
+                    L_LIMIT,                &
+                    CUR_ITERATION,          &
+                    Poseidon_Frame
 
 
 USE Variables_Mesh, &
-                    ONLY :  NUM_R_ELEMENTS,         &
-                            rlocs
+            ONLY :  NUM_R_ELEMENTS,         &
+                    rlocs
 
 USE Variables_Derived, &
-                    ONLY :  Block_Prob_Dim,         &
-                            SubShell_Prob_Dim,      &
-                            Elem_Prob_Dim_Sqr,      &
-                            Num_Off_Diagonals
+            ONLY :  Block_Prob_Dim,         &
+                    SubShell_Prob_Dim,      &
+                    Elem_Prob_Dim_Sqr,      &
+                    Num_Off_Diagonals
 
+USE Variables_FEM_Module, &
+            ONLY :  FEM_Node_xlocs
 
 USE Poseidon_File_Routines_Module, &
-                    ONLY :  Open_New_File,                  &
-                            Open_Existing_File
+            ONLY :  Open_New_File,                  &
+                    Open_Existing_File
 
 USE Functions_Quadrature, &
-                    ONLY :  Initialize_LGL_Quadrature_Locations
+            ONLY :  Initialize_LGL_Quadrature_Locations
 
 
 IMPLICIT NONE
@@ -429,11 +431,9 @@ CHARACTER(LEN = 57)                                     ::  FILE_NAME
 INTEGER                                                 ::  FILE_ID
 INTEGER                                                 ::  re, rd
 
-REAL(KIND = idp), DIMENSION(0:DEGREE)                   ::  Local_Locations
 REAL(KIND = idp), DIMENSION(0:DEGREE)                   ::  CUR_R_LOCS
 REAL(KIND = idp)                                        ::  deltar_overtwo
 
-Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 
 
 WRITE(FILE_NAME,'(A,A)') Poseidon_LinSys_Dir,"Nodal_Mesh.out"
@@ -441,14 +441,14 @@ CALL OPEN_NEW_FILE( FILE_NAME, FILE_ID, 300 )
 
 
 deltar_overtwo = (rlocs(1) - rlocs(0))/2.0_idp
-CUR_R_LOCS(:) = deltar_overtwo * (Local_Locations(:)+1.0_idp) + rlocs(0)
+CUR_R_LOCS(:) = deltar_overtwo * (FEM_Node_xlocs(:)+1.0_idp) + rlocs(0)
 
 
 WRITE(FILE_ID, '(ES24.16E3)') CUR_R_LOCS(0)/centimeter
 DO re = 0,NUM_R_ELEMENTS-1
 
     deltar_overtwo = (rlocs(re + 1) - rlocs(re))/2.0_idp
-    CUR_R_LOCS(:) = deltar_overtwo * (Local_Locations(:)+1.0_idp) + rlocs(re)
+    CUR_R_LOCS(:) = deltar_overtwo * (FEM_Node_xlocs(:)+1.0_idp) + rlocs(re)
 
     DO rd = 1,DEGREE
 

@@ -107,6 +107,15 @@ Timer_ConFactor                = 0.0_idp
 Timer_ConFactor_SourceVector   = 0.0_idp
 Timer_ConFactor_LinearSolve    = 0.0_idp
 
+Timer_Remesh                    = 0.0_idp
+Timer_Remesh_MakeCopies         = 0.0_idp
+Timer_Remesh_FillTotal          = 0.0_idp
+Timer_Remesh_MakeLambdaArray    = 0.0_idp
+Timer_Remesh_FillTypeA          = 0.0_idp
+Timer_Remesh_FillX              = 0.0_idp
+Timer_Remesh_FillS              = 0.0_idp
+Timer_Remesh_DestroyCopies      = 0.0_idp
+
 
 Timer_Driver_SetSource              = 0.0_idp
 Timer_Driver_SetSource_InitTest     = 0.0_idp

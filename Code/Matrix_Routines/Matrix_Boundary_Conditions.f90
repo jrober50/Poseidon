@@ -47,10 +47,10 @@ USE Poseidon_Parameters, &
                     Num_Eqs
 
 USE Variables_Matrices, &
-            ONLY :  First_Column_Storage,       &
-                    Last_Column_Storage,        &
-                    First_Column_Beta_Storage,  &
-                    Last_Column_Beta_Storage
+            ONLY :  zMA_First_Col_Storage,       &
+                    zMA_Last_Col_Storage,        &
+                    zMB_First_Col_Storage,      &
+                    zMB_Last_Col_Storage
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,             &
@@ -59,8 +59,8 @@ USE Variables_Mesh, &
 
 USE Variables_Derived, &
             ONLY :  Num_R_Nodes,                &
-                    Beta_Prob_Dim,              &
-                    Beta_Elem_Prob_Dim,         &
+                    iVB_Prob_Dim,               &
+                    iVB_Elem_Prob_Dim,          &
                     LM_Length
 
 USE Variables_BC, &
@@ -513,7 +513,7 @@ IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
     DO i = 1,DEGREE
 
-        WORK_VEC(i) = WORK_VEC(i) - First_Column_Storage(i,L)*BC_Value
+        WORK_VEC(i) = WORK_VEC(i) - zMA_First_Col_Storage(i,L)*BC_Value
 
     END DO
     !!! MODIFY MATRIX !!!
@@ -547,7 +547,7 @@ IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
     DO i = DEGREE-shift,1,-1
 
         WORK_VEC(NUM_R_NODES - 1 - i) = WORK_VEC(NUM_R_NODES - 1 - i)                           &
-                                        - Last_Column_Storage(i,L)*BC_Value
+                                        - zMA_Last_Col_Storage(i,L)*BC_Value
 
 
 
@@ -589,9 +589,9 @@ END SUBROUTINE DIRICHLET_BC_CHOL
  !#################################################################################!
 SUBROUTINE DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
-COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim), INTENT(INOUT)                  :: WORK_VEC
+COMPLEX(KIND = idp), DIMENSION(1:iVB_Prob_Dim), INTENT(INOUT)                  :: WORK_VEC
 
-COMPLEX(KIND = idp), DIMENSION(1:Beta_Prob_Dim,1:Beta_Prob_Dim), INTENT(INOUT)  :: WORK_MAT
+COMPLEX(KIND = idp), DIMENSION(1:iVB_Prob_Dim,1:iVB_Prob_Dim), INTENT(INOUT)  :: WORK_MAT
 
 
 
@@ -651,14 +651,14 @@ DO ui = 3,1,-1
                 Here = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,l,m)
 
 
-                DO i = 0,Beta_Elem_Prob_Dim-1
-                    Work_Vec(Beta_Prob_Dim-i) = Work_Vec(Beta_Prob_Dim-i)       &
-                                              - Work_Mat(Beta_Prob_Dim-i,Here)*BC_Value
+                DO i = 0,iVB_Elem_Prob_Dim-1
+                    Work_Vec(iVB_Prob_Dim-i) = Work_Vec(iVB_Prob_Dim-i)       &
+                                              - Work_Mat(iVB_Prob_Dim-i,Here)*BC_Value
     
-!                    PRINT*,Beta_Prob_Dim-i,                         &
-!                            Work_Vec(Beta_Prob_Dim-i),              &
+!                    PRINT*,iVB_Prob_Dim-i,                         &
+!                            Work_Vec(iVB_Prob_Dim-i),              &
 !                            BC_Value,                               &
-!                            Work_Mat(Beta_Prob_Dim-i,Here)
+!                            Work_Mat(iVB_Prob_Dim-i,Here)
 
                 END DO
 
@@ -727,7 +727,7 @@ DO ui = 3,5
         DO d =  1,DEGREE
 
             Row = FP_Beta_Array_Map(Num_R_Elements-1, d, ui-2, 0, 0)
-            Work_Vec(Row) = Work_Vec(Row) - First_Column_Beta_Storage(0,d,ui-2)*BC_Value
+            Work_Vec(Row) = Work_Vec(Row) - zMB_First_Col_Storage(0,d,ui-2)*BC_Value
         
         END DO  ! d
 
@@ -767,7 +767,7 @@ DO ui = 3,5
                 
                 Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui-2,lm)
                 
-                Work_Vec(Row) = Work_Vec(Row) - Last_Column_Beta_Storage(lm,d,ui-2)*BC_Value
+                Work_Vec(Row) = Work_Vec(Row) - zMB_Last_Col_Storage(lm,d,ui-2)*BC_Value
 
             END DO  ! d
 

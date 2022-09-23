@@ -73,6 +73,9 @@ USE Variables_AMReX_Source, &
            ONLY :  iLeaf,                &
                    iTrunk
 
+USE Variables_FEM_Module, &
+            ONLY :  FEM_Node_xlocs
+
 USE Maps_Fixed_Point, &
            ONLY :  FP_Array_Map_TypeB
 
@@ -185,7 +188,6 @@ INTEGER                                                         ::  Here, There
 INTEGER                                                         ::  i, j
 
 REAL(idp)                                                       ::  Quad_Span
-REAL(idp), DIMENSION(0:DEGREE)                                  ::  Local_Locations
 REAL(idp), DIMENSION(0:DEGREE)                                  ::  LagP
 REAL(idp), DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
 REAL(idp), DIMENSION(1:NQ(1))                                   ::  Cur_RX_Locs
@@ -220,7 +222,6 @@ iU(3) = iU_X3
 
 Quad_Span = Right_Limit - Left_Limit
 
-Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 CUR_RX_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 CUR_TX_LOCS = 2.0_idp * ( TQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 CUR_PX_LOCS = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
@@ -247,7 +248,7 @@ DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
 
     tpd = Map_To_tpd(td,pd)
-    LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,Local_Locations)
+    LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
 
     TMP_Val = 0.0_idp
     TMP_Drv = 0.0_idp
@@ -509,7 +510,6 @@ TYPE(amrex_multifab),                           INTENT(INOUT)   ::  MF_Results(0
 
 
  REAL(idp)                                                       ::  Quad_Span
- REAL(idp), DIMENSION(0:DEGREE)                                  ::  Local_Locations
  REAL(idp), DIMENSION(0:DEGREE)                                  ::  LagP
  REAL(idp), DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
  REAL(idp), DIMENSION(1:NQ(1))                                   ::  Cur_RX_Locs
@@ -543,7 +543,6 @@ TYPE(amrex_multifab),                           INTENT(INOUT)   ::  MF_Results(0
 
  Quad_Span = Right_Limit - Left_Limit
 
- Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
  CUR_RX_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
  CUR_TX_LOCS = 2.0_idp * ( TQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
  CUR_PX_LOCS = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
@@ -617,14 +616,14 @@ TYPE(amrex_multifab),                           INTENT(INOUT)   ::  MF_Results(0
              DO rd = 1,NQ(1)
 
                  tpd = Map_To_tpd(td,pd)
-                 LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,Local_Locations)
+                 LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
                  Tmp_Val = 0.0_idp
                  Tmp_Drv = 0.0_idp
 
                  DO i  = 1,3
                  DO d  = 0,DEGREE
 
-                     Here  = FP_Array_Map_TypeB(iU(i),iVB,iRE,d,1)
+                     Here  = FP_Array_Map_TypeB(iU(i),iVB,iRE,d,1)                      ! Check iRE index
                      There = FP_Array_Map_TypeB(iU(i),iVB,iRE,d,LM_Length)
 
 
@@ -793,6 +792,342 @@ END SUBROUTINE Poseidon_Return_Kij_AMReX
 
 
 
+
+
+
+
+!+101+######################################################################################!
+!                                                                                           !
+!       Poseidon_Return_ConFactor_AMReX                                                     !
+!           - Uses the results from the routine, Poseidon_XCFC_Run_Part1(), to calculate    !
+!             the value of the Conformal Factor at the desired locations, and fill an       !
+!             AMReX multifab with the data.                                                 !
+!                                                                                           !
+!###########################################################################################!
+SUBROUTINE Poseidon_Return_Kij_AMReXtoNative(  NE,                     &
+                                               NQ,                     &
+                                               RQ_Input,               &
+                                               TQ_Input,               &
+                                               PQ_Input,               &
+                                               Left_Limit,             &
+                                               Right_Limit,            &
+                                               nLevels,                &
+                                               Return_Kij              )
+
+
+INTEGER,    DIMENSION(3),                       INTENT(IN)      ::  NE
+INTEGER,    DIMENSION(3),                       INTENT(IN)      ::  NQ
+REAL(idp),  DIMENSION(NQ(1)),                   INTENT(IN)      ::  RQ_Input
+REAL(idp),  DIMENSION(NQ(2)),                   INTENT(IN)      ::  TQ_Input
+REAL(idp),  DIMENSION(NQ(3)),                   INTENT(IN)      ::  PQ_Input
+REAL(idp),                                      INTENT(IN)      ::  Left_Limit
+REAL(idp),                                      INTENT(IN)      ::  Right_Limit
+
+INTEGER,                                        INTENT(IN)      ::  nLevels
+REAL(idp),  DIMENSION(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3),1:6), INTENT(OUT) ::  Return_Kij
+
+
+INTEGER                                                 ::  iRE
+INTEGER                                                 ::  re, te, pe
+INTEGER                                                 ::  rd, td, pd, tpd
+INTEGER                                                 ::  d
+INTEGER                                                 ::  i, j, lvl
+INTEGER                                                 ::  nComp
+INTEGER                                                 ::  Here, There
+
+TYPE(amrex_mfiter)                                              ::  mfi
+TYPE(amrex_box)                                                 ::  Box
+TYPE(amrex_imultifab)                                           ::  Level_Mask
+INTEGER, DIMENSION(3)                                           ::  iEL, iEU
+INTEGER,    CONTIGUOUS, POINTER                                 ::  Mask_PTR(:,:,:,:)
+
+
+
+REAL(idp)                                                       ::  Quad_Span
+REAL(idp), DIMENSION(0:DEGREE)                                  ::  LagP
+REAL(idp), DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
+REAL(idp), DIMENSION(1:NQ(1))                                   ::  Cur_RX_Locs
+REAL(idp), DIMENSION(1:NQ(2))                                   ::  CUR_T_LOCS
+REAL(idp), DIMENSION(1:NQ(2))                                   ::  Cur_TX_Locs
+REAL(idp), DIMENSION(1:NQ(3))                                   ::  CUR_P_LOCS
+REAL(idp), DIMENSION(1:NQ(3))                                   ::  Cur_PX_Locs
+
+REAL(idp)                                                       ::  DROT
+REAL(idp)                                                       ::  DTOT
+REAL(idp)                                                       ::  DPOT
+
+REAL(idp), DIMENSION(3)                                         ::  gamma
+REAL(idp), DIMENSION(3,3,3)                                     ::  Christoffel
+COMPLEX(idp), DIMENSION(3)                                      ::  TMP_Val
+COMPLEX(idp), DIMENSION(3,3)                                    ::  TMP_Drv
+
+COMPLEX(idp), DIMENSION(4)                                      ::  Reusable_Vals
+COMPLEX(idp), DIMENSION(6)                                      ::  Tmp_A
+
+INTEGER                                                         ::  iVB
+INTEGER, DIMENSION(3)                                           ::  iU
+
+INTEGER                                                         ::  Num_DOF
+
+
+iVB   = iVB_X
+iU(1) = iU_X1
+iU(2) = iU_X2
+iU(3) = iU_X3
+
+Quad_Span = Right_Limit - Left_Limit
+
+CUR_RX_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
+CUR_TX_LOCS = 2.0_idp * ( TQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
+CUR_PX_LOCS = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
+
+Num_DOF = NQ(1)*NQ(2)*NQ(3)
+
+! nComp order : ij = 11, 12, 13, 22, 23, 33
+Gamma(1) = 1.0_idp
+Christoffel = 0.0_idp
+
+
+DO lvl = nLevels-1,0,-1
+
+
+    DROT = 0.5_idp * Level_dx(lvl,1)
+    DTOT = 0.5_idp * Level_dx(lvl,2)
+    DPOT = 0.5_idp * Level_dx(lvl,3)
+
+    !
+    !   MakeFineMask
+    !
+    IF ( lvl < AMReX_Num_Levels-1 ) THEN
+        CALL AMReX_MakeFineMask(Level_Mask,               &
+                                MF_Results(lvl)%ba,       &
+                                MF_Results(lvl)%dm,       &
+                                MF_Results(lvl+1)%ba,     &
+                                iLeaf, iTrunk            )
+    ELSE
+     ! Create Level_Mask all equal to 1
+    CALL amrex_imultifab_build( Level_Mask,             &
+                                MF_Results(lvl)%ba,     &
+                                MF_Results(lvl)%dm,     &
+                                1,                      &  ! ncomp = 1
+                                0                       )  ! nghost = 0
+    CALL Level_Mask%SetVal(iLeaf)
+    END IF
+
+    CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
+
+    CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
+
+    DO WHILE(mfi%next())
+
+        Result_PTR => MF_Results(lvl)%dataPtr(mfi)
+        Mask_PTR   => Level_Mask%dataPtr(mfi)
+
+        Box = mfi%tilebox()
+        nComp =  MF_Results(lvl)%ncomp()
+
+        iEL = Box%lo
+        iEU = Box%hi
+
+        DO re = iEL(1),iEU(1)
+        DO te = iEL(2),iEU(2)
+        DO pe = iEL(3),iEU(3)
+
+
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
+                iRE = FEM_Elem_Map(re,lvl)
+
+                CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
+
+                Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
+                Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
+                Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
+
+
+
+                DO pd = 1,NQ(3)
+                DO td = 1,NQ(2)
+                DO rd = 1,NQ(1)
+
+                tpd = Map_To_tpd(td,pd)
+                LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+                Tmp_Val = 0.0_idp
+                Tmp_Drv = 0.0_idp
+
+                DO i  = 1,3
+                DO d  = 0,DEGREE
+
+                    Here  = FP_Array_Map_TypeB(iU(i),iVB,iRE,d,1)                      ! Check iRE index
+                    There = FP_Array_Map_TypeB(iU(i),iVB,iRE,d,LM_Length)
+
+
+                    TMP_Val(i) = TMP_Val(i)                                 &
+                                + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
+                                        * Ylm_Elem_Values( :, tpd )   )     &
+                                * Lagrange_Poly_Table( d, rd, 0 )
+
+
+                    TMP_Drv(1,i) = TMP_Drv(1,i)                             &
+                                + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
+                                    * Ylm_Elem_Values( :, tpd  )     )      &
+                                * Lagrange_Poly_Table( d, rd, 1 )           &
+                                / DROT
+
+
+                    TMP_Drv(2,i) = TMP_Drv(2,i)                             &
+                                + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
+                                    * Ylm_Elem_dt_Values( :, tpd )   )      &
+                                * Lagrange_Poly_Table( d, rd, 0)
+
+                    TMP_Drv(3,i) = TMP_Drv(3,i)                             &
+                                + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
+                                    * Ylm_Elem_dp_Values( :, tpd)   )       &
+                                * Lagrange_Poly_Table( d, rd, 0)
+
+                END DO ! d Loop
+                END DO ! i Loop
+
+                Gamma(2) = 1.0_idp/(Cur_R_Locs(rd)*Cur_R_Locs(rd))
+                Gamma(3) = Gamma(2) * 1.0_idp/( DSIN(Cur_T_Locs(td))*DSIN(Cur_T_Locs(td)) )
+
+                !    PRINT*,"r",re,rd,Cur_R_Locs(rd)
+                !    PRINT*,"Sin, Theta",DSIN(Cur_T_Locs(td)),Cur_T_locs(Td)
+                !    PRINT*,"Gamma",1.0_idp/Gamma
+
+                Christoffel(1,2,2) = -Cur_R_Locs(rd)
+                Christoffel(1,3,3) = -Cur_R_Locs(rd)*DSIN(Cur_T_Locs(td))*DSIN(Cur_T_Locs(td))
+
+                Christoffel(2,1,2) = 1.0_idp/Cur_R_Locs(rd)
+                Christoffel(2,2,1) = 1.0_idp/Cur_R_Locs(rd)
+                Christoffel(2,3,3) = -DSIN(Cur_T_Locs(td))*DCOS(Cur_P_Locs(pd))
+
+                Christoffel(3,3,1) = 1.0_idp/Cur_R_Locs(rd)
+                Christoffel(3,1,3) = 1.0_idp/Cur_R_Locs(rd)
+                Christoffel(3,3,2) = 1.0_idp/DTAN(CUR_T_LOCS(td))
+                Christoffel(3,2,3) = 1.0_idp/DTAN(CUR_T_LOCS(td))
+
+
+                Reusable_Vals(1) = 2.0_idp/3.0_idp*(Tmp_Drv(1,1)+Tmp_Drv(2,2)+Tmp_Drv(3,3))
+                Reusable_Vals(2) = 2.0_idp/3.0_idp*(Christoffel(1,1,1)+Christoffel(2,2,1)+Christoffel(3,3,1))
+                Reusable_Vals(3) = 2.0_idp/3.0_idp*(Christoffel(1,1,2)+Christoffel(2,2,2)+Christoffel(3,3,2))
+                Reusable_Vals(4) = 2.0_idp/3.0_idp*(Christoffel(1,1,3)+Christoffel(2,2,3)+Christoffel(3,3,3))
+
+
+
+                 
+
+
+                ! Ahat^11
+                Tmp_A(1) = Gamma(1)                                                         &
+                         * ( 2.0_idp * Tmp_Drv(1,1) - Reusable_Vals(1)                      &
+                           +(2.0_idp * Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val(1)   &
+                           +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val(2)   &
+                           +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val(3)   )
+
+                 
+
+
+                 ! Ahat^12
+                i=1
+                j=2
+                Tmp_A(2) = Gamma(i)*Tmp_Drv(i,j)             &
+                         + Gamma(j)*Tmp_Drv(j,i)             &
+                         +( Gamma(i)*Christoffel(j,i,1)      &
+                          + Gamma(j)*Christoffel(i,j,1)      &
+                          )*Tmp_Val(1)                       &
+                         +( Gamma(i)*Christoffel(j,i,2)      &
+                          + Gamma(j)*Christoffel(i,j,2)      &
+                          )*Tmp_Val(2)                       &
+                         +( Gamma(i)*Christoffel(j,i,3)      &
+                          + Gamma(j)*Christoffel(i,j,3)      &
+                          )*Tmp_Val(3)
+                  
+
+                 ! Ahat^13
+                i=1
+                j=3
+                Tmp_A(3) = Gamma(i)*Tmp_Drv(i,j)             &
+                         + Gamma(j)*Tmp_Drv(j,i)             &
+                         +( Gamma(i)*Christoffel(j,i,1)      &
+                          + Gamma(j)*Christoffel(i,j,1)      &
+                          )*Tmp_Val(1)                       &
+                         +( Gamma(i)*Christoffel(j,i,2)      &
+                          + Gamma(j)*Christoffel(i,j,2)      &
+                          )*Tmp_Val(2)                       &
+                        +( Gamma(i)*Christoffel(j,i,3)      &
+                          + Gamma(j)*Christoffel(i,j,3)      &
+                          )*Tmp_Val(3)
+                  
+
+
+                 ! Ahat^22
+                Tmp_A(4) = Gamma(2)                                                             &
+                         * ( 2.0_idp * Tmp_Drv(2,2) - Reusable_Vals(1)                          &
+                           +(2.0_idp * Christoffel(2,2,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
+                           +(2.0_idp * Christoffel(2,2,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
+                           +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
+                  
+
+
+                 ! Ahat^23
+                i=2
+                j=3
+                Tmp_A(5) = Gamma(i)*Tmp_Drv(i,j)             &
+                         + Gamma(j)*Tmp_Drv(j,i)             &
+                         +( Gamma(i)*Christoffel(j,i,1)      &
+                          + Gamma(j)*Christoffel(i,j,1)      &
+                          )*Tmp_Val(1)                       &
+                         +( Gamma(i)*Christoffel(j,i,2)      &
+                          + Gamma(j)*Christoffel(i,j,2)      &
+                          )*Tmp_Val(2)                       &
+                         +( Gamma(i)*Christoffel(j,i,3)      &
+                          + Gamma(j)*Christoffel(i,j,3)      &
+                          )*Tmp_Val(3)
+                 
+
+
+                 ! Ahat^33
+                Tmp_A(6) = Gamma(3)                                                             &
+                         * ( 2.0_idp * Tmp_Drv(3,3) - Reusable_Vals(1)                          &
+                           +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
+                           +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
+                           +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
+
+
+                
+                 
+                ! map from AMReX re,te,pe to Global
+                rRE = FEM_Elem_Map(re,lvl)
+                rTE = FEM_Elem_Map(te,lvl)
+                rPE = FEM_Elem_Map(pe,lvl)
+
+                Return_Kij(rRE,rTE,rPE,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ )) = Tmp_A(1)/(Gamma(1)*Gamma(1))
+                Return_Kij(rRE,rTE,rPE,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ )) = Tmp_A(2)/(Gamma(1)*Gamma(2))
+                Return_Kij(rRE,rTE,rPE,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ )) = Tmp_A(3)/(Gamma(1)*Gamma(3))
+                Return_Kij(rRE,rTE,rPE,AMReX_nCOMP_Map( iU_K22, rd, td, pd, NQ )) = Tmp_A(4)/(Gamma(2)*Gamma(2))
+                Return_Kij(rRE,rTE,rPE,AMReX_nCOMP_Map( iU_K23, rd, td, pd, NQ )) = Tmp_A(5)/(Gamma(2)*Gamma(3))
+                Return_Kij(rRE,rTE,rPE,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ )) = Tmp_A(6)/(Gamma(3)*Gamma(3))
+
+            END DO ! rd Loop
+            END DO ! td Loop
+            END DO ! pd Loop
+
+
+
+        END IF
+
+        END DO ! pe
+        END DO ! te
+        END DO ! re
+
+    END DO
+
+    CALL amrex_mfiter_destroy(mfi)
+    CALL amrex_imultifab_destroy( Level_Mask )
+
+ END DO ! lvl
+
+END SUBROUTINE Poseidon_Return_Kij_AMReXtoNative
 
 
 

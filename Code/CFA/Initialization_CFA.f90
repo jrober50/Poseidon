@@ -42,7 +42,7 @@ USE Poseidon_Parameters, &
 
 USE Variables_Derived, &
             ONLY :  LM_Length,              &
-                    Beta_Elem_Prob_Dim
+                    iVB_Elem_Prob_Dim
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
@@ -53,8 +53,8 @@ USE Variables_Functions, &
 
 USE Variables_Matrices, &
             ONLY :  Laplace_NNZ,                &
-                    Beta_Diagonals,             &
-                    Beta_Bandwidth
+                    iMB_Diagonals,             &
+                    iMB_Bandwidth
 
 USE Allocation_CFA_Linear_Systems, &
             ONLY :  Allocate_CFA_Linear_Systems
@@ -121,8 +121,8 @@ CALL TimerStart( Timer_Initialization )
 
 
 Laplace_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
-Beta_Diagonals = Beta_Elem_Prob_Dim
-Beta_Bandwidth = 2*Beta_Diagonals+1
+iMB_Diagonals = iVB_Elem_Prob_Dim
+iMB_Bandwidth = 2*iMB_Diagonals+1
 
 
 CALL Allocate_CFA_Linear_Systems()

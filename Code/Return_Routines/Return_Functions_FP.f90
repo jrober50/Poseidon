@@ -56,6 +56,9 @@ USE Variables_Vectors, &
             ONLY :  cVA_Coeff_Vector,      &
                     cVB_Coeff_Vector
 
+USE Variables_FEM_Module, &
+            ONLY :  FEM_Node_xlocs
+
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations,    &
                     Initialize_LGL_Quadrature
@@ -209,14 +212,12 @@ REAL(KIND = idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::
 INTEGER                                                         ::  re, x, u, d
 
 REAL(KIND = idp)                                                ::  Quad_Span
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  Local_Locations
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
 REAL(KIND = idp), DIMENSION(1:Num_RQ_Input)                     ::  CUR_X_LOCS
 COMPLEX(KIND = idp), DIMENSION(1:3)                             ::  TMP_U_Value
 INTEGER                                                         ::  Current_Location
 
 Quad_Span = Right_Limit - Left_Limit
-Local_Locations = Initialize_LGL_Quadrature_Locations(DEGREE)
 
 DO re = 0,NUM_R_ELEMENTS-1
 
@@ -224,7 +225,7 @@ DO re = 0,NUM_R_ELEMENTS-1
 
     DO x = 1,Num_RQ_Input
     
-        LagP = Lagrange_Poly(CUR_X_LOCS(x),DEGREE,Local_Locations)
+        LagP = Lagrange_Poly(CUR_X_LOCS(x),DEGREE,FEM_Node_xlocs)
         Tmp_U_Value = 0.0_idp
 
         DO u = 1,2
@@ -587,6 +588,76 @@ END FUNCTION Calc_Values_Here_Type_B
 
 
 
+
+!!+603+###########################################################################!
+!!                                                                                !
+!!                  Calc_1D_CFA_Values_FP          !
+!!                                                                                !
+!!################################################################################!
+!FUNCTION Calc_x_Deriv_Here_Type_B( re, theta, phi, LagP, iU, iVB )
+!
+!
+!REAL(idp), DIMENSION(3),                           ::  Calc_Values_Here_Type_B
+!INTEGER,                        INTENT(IN)                      ::  re
+!REAL(idp),                      INTENT(IN)                      ::  theta, phi
+!REAL(idp), DIMENSION(0:DEGREE), INTENT(IN)                      ::  LagP
+!INTEGER,                        INTENT(IN)                      ::  iU
+!INTEGER,                        INTENT(IN)                      ::  iVB
+!
+!
+!COMPLEX(idp)                                                    ::  Tmp_U_Value
+!INTEGER                                                         ::  l, m, d
+!INTEGER                                                         ::  Loc_RED
+!
+!
+!Tmp_U_Value = 0.0_idp
+!DO l = 0,L_Limit
+!DO m = -l,l
+!DO d = 0,DEGREE
+!
+!    Loc_RED = FP_Array_Map_TypeB(iU,iVB,re,d,l,m)
+!    Tmp_U_Value = Tmp_U_Value                           &
+!                + cVB_Coeff_Vector(Loc_RED,iVB)        &
+!                * Spherical_Harmonic(l,m,theta,phi)     &
+!                * LagP(d)
+!
+!
+!END DO  !   d Loop
+!END DO  !   m Loop
+!END DO  !   l Loop
+!
+!
+!
+!DO d  = 0,DEGREE
+!    Here  = FP_Array_Map_TypeB(iU,iVB,re-1,d,1)
+!    There = FP_Array_Map_TypeB(iU,iVB,re-1,d,LM_Length)
+!
+!
+!    TMP_Drv(1) = TMP_Drv(1)                                     &
+!               + SUM( cVB_Coeff_Vector( Here:There, iVB )       &
+!                     * Ylm_Values( :, tpd, te-1, pe-1 )     )   &
+!               * Lagrange_Poly_Table( d, rd, 1 )                &
+!               / DROT
+!
+!
+!    TMP_Drv(2) = TMP_Drv(2)                                     &
+!               + SUM( cVB_Coeff_Vector( Here:There, iVB )       &
+!                     * Ylm_dt_Values( :, tpd, te-1, pe-1)   )    &
+!               * Lagrange_Poly_Table( d, rd, 0)
+!
+!
+!    TMP_Drv(3) = TMP_Drv(3)                                     &
+!               + SUM( cVB_Coeff_Vector( Here:There, iVB )       &
+!                     * Ylm_dp_Values( :, tpd, te-1, pe-1)   )    &
+!               * Lagrange_Poly_Table( d, rd, 0)
+!
+!END DO  ! d
+!END DO  ! i
+!
+!
+!Calc_Values_Here_Type_B = REAL( Tmp_U_Value, KIND = idp)
+!
+!END FUNCTION Calc_Derivs_Here_Type_B
 
 
 

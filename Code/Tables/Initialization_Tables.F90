@@ -86,6 +86,9 @@ USE Variables_Tables, &
                     LagPoly_MultiLayer_Table,&
                     LagPoly_Num_Tables
 
+USE Variables_FEM_Module, &
+            ONLY :  FEM_Node_xlocs
+
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
 
@@ -378,7 +381,6 @@ INTEGER, INTENT(IN)                         ::  Ord
 INTEGER, INTENT(IN)                         ::  Num_Quad_Points
 
 
-REAL(idp), DIMENSION(0:Ord)          ::  Local_Locations
 REAL(idp), DIMENSION(0:Ord)          ::  Lagrange_Poly_Values
 REAL(idp), DIMENSION(0:Ord)          ::  Lagrange_DRV_Values
 
@@ -397,7 +399,6 @@ INTEGER                                     ::  iNLE, Cur_Table
 REAL(idp)                                   ::  ra, rb, wl
 REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  Local_R
 
-Local_Locations = Initialize_LGL_Quadrature_Locations(Ord)
 
 
 DO lvl = 0,AMReX_Num_Levels-1
@@ -416,8 +417,8 @@ DO elem = 0,iNLE
     DO Eval_Point = 1,Num_R_Quad_Points
         
 
-        Lagrange_Poly_Values = Lagrange_Poly(Local_R(Eval_Point), Ord, Local_Locations)
-        Lagrange_DRV_Values  = Lagrange_Poly_Deriv(Local_R(Eval_Point), Ord, Local_Locations)
+        Lagrange_Poly_Values = Lagrange_Poly(Local_R(Eval_Point), Ord, FEM_Node_xlocs)
+        Lagrange_DRV_Values  = Lagrange_Poly_Deriv(Local_R(Eval_Point), Ord, FEM_Node_xlocs)
 
         LagPoly_MultiLayer_Table( :, Eval_Point, 0, Cur_Table) = Lagrange_Poly_Values
         LagPoly_MultiLayer_Table( :, Eval_Point, 1, Cur_Table) = Lagrange_DRV_Values
@@ -431,13 +432,12 @@ END DO
 #endif
 
 
-Local_Locations = Initialize_LGL_Quadrature_Locations(Ord)
 Lagrange_Poly_Table = 0.0_idp
 
 DO Eval_Point = 1,Num_Quad_Points
     
-    Lagrange_Poly_Values = Lagrange_Poly(INT_R_Locations(Eval_Point), Ord, Local_Locations)
-    Lagrange_DRV_Values  = Lagrange_Poly_Deriv(INT_R_Locations(Eval_Point), Ord, Local_Locations)
+    Lagrange_Poly_Values = Lagrange_Poly(INT_R_Locations(Eval_Point), Ord, FEM_Node_xlocs)
+    Lagrange_DRV_Values  = Lagrange_Poly_Deriv(INT_R_Locations(Eval_Point), Ord, FEM_Node_xlocs)
 
     Lagrange_Poly_Table( :, Eval_Point, 0) = Lagrange_Poly_Values
     Lagrange_Poly_Table( :, Eval_Point, 1) = Lagrange_DRV_Values

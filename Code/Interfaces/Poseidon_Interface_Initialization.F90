@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Poseidon_Interface_Initialization                                      !##!
+MODULE Poseidon_Interface_Initialization                                     !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -83,8 +83,8 @@ USE Initialization_Tables, &
             ONLY :  Initialize_Tables
 
 USE Initialization_Derived, &
-            ONLY :  Initialize_Derived,         &
-                    Initialize_Derived_AMReX
+            ONLY :  Initialize_Derived,             &
+                    Initialize_Derived_AMReX_Part1
 
 USE Initialization_Subroutines, &
             ONLY :  Init_Fixed_Point_Params,        &
@@ -167,6 +167,8 @@ USE Variables_AMReX_Core, &
 USE Functions_Translation_Matrix_Module, &
             ONLY :  Create_Translation_Matrix
 
+USE Initialization_FEM_Module, &
+            ONLY :  Initialization_FEM
 
 USE Variables_Interface, &
             ONLY :  Caller_NQ,                  &
@@ -453,7 +455,7 @@ ELSE
 END IF
 
 
-
+CALL Initialization_FEM()
 
 
 
@@ -491,7 +493,7 @@ ELSE
     Num_Eqs = SUM(Eq_Flags)
 
 #ifdef POSEIDON_AMREX_FLAG
-    CALL Initialize_Derived_AMReX()
+    CALL Initialize_Derived_AMReX_Part1()
 #else
     CALL Initialize_Derived()
 #endif

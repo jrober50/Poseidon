@@ -53,8 +53,8 @@ USE Variables_Matrices,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_NNZ,                &
-                    First_Column_Storage,       &
-                    Last_Column_Storage
+                    zMA_First_Col_Storage,       &
+                    zMA_Last_Col_Storage
 
 USE Variables_Quadrature, &
             ONLY :  Local_Quad_DOF
@@ -98,8 +98,8 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     ALLOCATE( Laplace_Factored_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
     ALLOCATE( Laplace_Factored_COL(0:NUM_R_NODES, 0:L_LIMIT) )
 
-    ALLOCATE( First_Column_Storage(0:DEGREE,0:L_LIMIT)   )
-    ALLOCATE( Last_Column_Storage(0:DEGREE,0:L_LIMIT)    )
+    ALLOCATE( zMA_First_Col_Storage(0:DEGREE,0:L_LIMIT)   )
+    ALLOCATE( zMA_Last_Col_Storage(0:DEGREE,0:L_LIMIT)    )
 
 
 END IF
@@ -140,8 +140,8 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     DEALLOCATE( Laplace_Factored_ROW )
     DEALLOCATE( Laplace_Factored_COL )
 
-    DEALLOCATE( First_Column_Storage )
-    DEALLOCATE( Last_Column_Storage )
+    DEALLOCATE( zMA_First_Col_Storage )
+    DEALLOCATE( zMA_Last_Col_Storage )
 
 END IF
 

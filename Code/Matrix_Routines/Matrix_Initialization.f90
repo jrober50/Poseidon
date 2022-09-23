@@ -63,9 +63,11 @@ USE Variables_Matrices, &
                     Laplace_Factored_VAL,       &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
-                    Beta_MVL_Banded,            &
-                    Beta_Bandwidth
+                    zMB_Matrix_Banded,            &
+                    iMB_Bandwidth
 
+USE Variables_FEM_Module, &
+            ONLY :  FEM_Node_xlocs
 
 USE Matrix_Cholesky_Factorization_Module,   &
             ONLY :  Cholesky_Factorization
@@ -98,6 +100,17 @@ USE Flags_Initialization_Module, &
                     iPF_Init_Matrices_Type_A_Cholesky,  &
                     iPF_Init_Matrices_Type_B_LU
 
+
+USE Timer_Routines_Module, &
+            ONLY :  TimerStart,                     &
+                    TimerStop
+
+USE Timer_Variables_Module, &
+            ONLY :  Timer_Matrix_Init,              &
+                    Timer_Matrix_Radial_Terms,      &
+                    Timer_Matrix_Angular_Terms,     &
+                    Timer_Matrix_Laplace_Init,      &
+                    Timer_Matrix_MVL_Init
 
 USE MPI
 
@@ -147,6 +160,7 @@ SUBROUTINE Initialize_XCFC_Matrices()
 
 
 IF ( Verbose_Flag ) CALL Init_Message('Beginning Matrix Initialization.')
+CALL TimerStart( Timer_Matrix_Init )
 
 
 ! Set number of quadrature points for different dimensions
@@ -189,6 +203,10 @@ CALL Calculate_MVL_Banded()
 
 
 Call Deallocate_Matrix_Init_Variables()
+
+
+
+CALL TimerStop( Timer_Matrix_Init )
 
 
 END SUBROUTINE Initialize_XCFC_Matrices
@@ -321,20 +339,20 @@ END SUBROUTINE Deallocate_Matrix_Init_Variables
 !###############################################################################!
 SUBROUTINE Calculate_Radial_Terms()
 
-REAL(idp),  DIMENSION(0:Degree)                     ::  Local_Locations
-
 REAL(idp),  DIMENSION(0:Degree)                     ::  Lagrange_Poly_Values
 REAL(idp),  DIMENSION(0:Degree)                     ::  Lagrange_DRV_Values
 REAL(idp),  DIMENSION(0:Degree, 0:Int_R_Deg, 0:1)   ::  Lagrange_Poly_Table
 
 INTEGER                                             ::  d, dp, dv, rd
 
-Local_Locations = Initialize_LGL_Quadrature_Locations(Degree)
+
+CALL TimerStart(Timer_Matrix_Radial_Terms)
+
 
 DO rd = 1,Int_R_Deg
     
-    Lagrange_Poly_Values = Lagrange_Poly(Int_R_Locs(rd), Degree, Local_Locations)
-    Lagrange_DRV_Values  = Lagrange_Poly_Deriv(Int_R_Locs(rd), Degree, Local_Locations)
+    Lagrange_Poly_Values = Lagrange_Poly(Int_R_Locs(rd), Degree, FEM_Node_xlocs)
+    Lagrange_DRV_Values  = Lagrange_Poly_Deriv(Int_R_Locs(rd), Degree, FEM_Node_xlocs)
 
     Lagrange_Poly_Table(:, rd, 0) = Lagrange_Poly_Values
     Lagrange_Poly_Table(:, rd, 1) = Lagrange_DRV_Values
@@ -355,7 +373,7 @@ END DO
 END DO
 END DO
 
-
+CALL TimerStop(Timer_Matrix_Radial_Terms)
 
 END SUBROUTINE Calculate_Radial_Terms
 
@@ -406,6 +424,8 @@ REAL(idp), ALLOCATABLE, DIMENSION(:)                            ::  TP_Int_Weigh
 
 INTEGER,        ALLOCATABLE, DIMENSION(:)                       ::  M_Values
 
+
+CALL TimerStart(Timer_Matrix_Angular_Terms)
 
 ALLOCATE( Ylm_Table(1:Int_TP_Deg, -L_LIMIT:L_LIMIT, -1:L_LIMIT )    )
 ALLOCATE( TP_Int_Weights( 1:Int_TP_Deg)     )
@@ -635,6 +655,8 @@ END DO
 DEALLOCATE( Ylm_Table)
 
 
+CALL TimerStop(Timer_Matrix_Angular_Terms)
+
 END SUBROUTINE Calculate_Angular_Terms
 
 
@@ -661,6 +683,8 @@ REAL(KIND = idp)                                        ::  L_Lp1
 REAL(idp),  DIMENSION(:),   ALLOCATABLE                 ::  CUR_R_LOCS
 REAL(idp),  DIMENSION(:),   ALLOCATABLE                 ::  R_SQUARE
 
+
+CALL TimerStart(Timer_Matrix_Laplace_Init)
 
 
 
@@ -819,6 +843,10 @@ lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .FALSE.
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A) = .TRUE.
 
 
+
+CALL TimerStop(Timer_Matrix_Laplace_Init)
+
+
 END SUBROUTINE Calculate_Laplace_Matrix
 
 
@@ -860,10 +888,11 @@ REAL(idp)                                               ::  DR, TODR
 
 
 IF ( Verbose_Flag ) CALL Init_Message('Initializing Modified Vector Laplacian Matrix.  Format: Banded.')
+CALL TimerStart(Timer_Matrix_MVL_Init)
 
 
 
-Beta_MVL_Banded = 0.0_idp
+zMB_Matrix_Banded = 0.0_idp
 
 
 
@@ -908,11 +937,11 @@ DO l = 0,L_LIMIT
         j = FP_Beta_Array_Map(re,d,ui,l,m)
 
         DO dp = 0,Degree
-            i = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,l,m)
+            i = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,l,m)
 
             
-            Beta_MVL_Banded(i-j,j)                   &
-                        = Beta_MVL_Banded(i-j,j)     &
+            zMB_Matrix_Banded(i-j,j)                   &
+                        = zMB_Matrix_Banded(i-j,j)     &
                           + Reusable_Values(dp)
 
         END DO ! dp Loop
@@ -985,6 +1014,9 @@ DEALLOCATE( DRDR_Factor  )
 
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) = .FALSE.
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B)    = .TRUE.
+
+CALL TimerStop(Timer_Matrix_MVL_Init)
+
 
 END SUBROUTINE Calculate_MVL_Banded
 
@@ -1075,7 +1107,7 @@ INTEGER                                                     :: lm_loc, lpmp_loc
 
 ui       = 1
 lpmp_loc = Map_To_lm(lp,mp)
-Row      = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
+Row      = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
 
 
 
@@ -1088,7 +1120,7 @@ DO d = 0,Degree
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
 
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+        zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
                                       - SUM( dRdR_Factor(:, d, dp) )/3.0_idp        &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 1)     &
                                       - 8.0_idp/3.0_idp * SUM( RR_Factor(:, d, dp)  &
@@ -1107,7 +1139,7 @@ DO d = 0,Degree
     DO lm_loc = 1,LM_Length
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+        zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
                                       - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 2 )    &
                                       - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
@@ -1119,7 +1151,7 @@ DO d = 0,Degree
                                                         / CUR_R_LOCS(:)         )   &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
 
-!        PRINT*,Row-Beta_Bandwidth,Col,Beta_MVL_Banded(Row-Col, Col),        &
+!        PRINT*,Row-iMB_Bandwidth,Col,zMB_Matrix_Banded(Row-Col, Col),        &
 !            - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
 !              * TP_TP_Integrals( lm_loc, lpmp_loc, 2 )    &
 !            - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
@@ -1132,7 +1164,7 @@ DO d = 0,Degree
 !              * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
 
 
-!        PRINT*,Row-Beta_Bandwidth,Col,                          &
+!        PRINT*,Row-iMB_Bandwidth,Col,                          &
 !                TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
 
 
@@ -1147,7 +1179,7 @@ DO d = 0,Degree
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
 
-        Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+        zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
                                       - SUM( dRR_Factor(:, d, dp)  )/3.0_idp        &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 5 )    &
                                       - 2.0_idp * SUM( RR_Factor(:, d, dp)         &
@@ -1199,7 +1231,7 @@ INTEGER                                                     :: lm_loc, lpmp_loc
 
 ui       = 2
 lpmp_loc = Map_To_lm(lp,mp)
-Row      = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
+Row      = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
 
 
 DO d = 0,Degree
@@ -1209,7 +1241,7 @@ DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
     
 
-    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
                                   + SUM( RdR_Factor(:, d, dp)                   &
                                          /(3.0_idp*R_Square(:) )       )        &   ! Term 1
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )    &
@@ -1226,7 +1258,7 @@ uj = 2
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
                                   - SUM( RR_Factor(:, d, dp)                    &
                                          /(3.0_idp*R_Square(:) )       )        &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 7 )    &
@@ -1255,7 +1287,7 @@ uj = 3 ! beta^phi
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)           &
                                   - SUM( RR_Factor(:, d, dp)                    &
                                          / (3.0_idp*R_Square(:) )           )   &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 10 )   &
@@ -1315,7 +1347,7 @@ lpmp_loc = Map_To_lm(lp,mp)
 
 ui       = 3
 lpmp_loc = Map_To_lm(lp,mp)
-Row      = Beta_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
+Row      = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp_loc)
 
 
 
@@ -1327,7 +1359,7 @@ DO lm_loc = 1,LM_Length
 
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)                   &
+    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)                   &
                                   - SUM( RdR_Factor(:, d, dp)                       &   ! Term 1
                                         /(3.0_idp * R_Square(:) )    )              &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 6 )        &
@@ -1347,7 +1379,7 @@ DO lm_loc = 1,LM_Length
 
 
 
-    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)               &
+    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
                                   - SUM( RR_Factor(:, d, dp)                    &   ! Term 1
                                          /( 3.0_idp * R_Square(:) )   )         &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 13 )   &
@@ -1363,7 +1395,7 @@ uj = 3 ! beta^phi
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    Beta_MVL_Banded(Row-Col, Col) = Beta_MVL_Banded(Row-Col, Col)           &
+    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)           &
                                   - SUM( RR_Factor(:, d, dp )                   &   ! Term 1
                                          /(3.0_idp * R_Square(:) )    )         &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 15 )   &

@@ -122,6 +122,8 @@ CALL TimerStart( Timer_X_LinearSolve )
 CALL Solve_Linear_System_TypeB( iU, iVB )
 CALL TimerStop(  Timer_X_LinearSolve )
 
+
+
 CALL TimerStop( Timer_X )
 
 !CALL Print_Single_Var_Results( iU_X1, iVB_X )

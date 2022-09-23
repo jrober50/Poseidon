@@ -214,6 +214,8 @@ IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
     WRITE(*,*)
 
 
+    CALL Output_Remesh_Time_Report()
+
     CALL Output_Footer()
 
 END IF
@@ -319,7 +321,41 @@ END SUBROUTINE Output_Footer
 
 
 
+ !+202+########################################################!
+!                                                               !
+!          Output_Remesh_Time_Report                            !
+!                                                               !
+ !#############################################################!
+SUBROUTINE Output_Remesh_Time_Report()
 
+
+
+101 FORMAT (7X,A,5X,ES12.6E2,A)
+
+Timer_Remesh_FillTotal = Timer_Remesh_MakeLambdaArray       &
+                       + Timer_Remesh_FillTypeA             &
+                       + Timer_Remesh_FillX                 &
+                       + Timer_Remesh_FillS
+
+Timer_Remesh = Timer_Remesh_MakeCopies      &
+             + Timer_Remesh_FillTotal       &
+             + Timer_Remesh_DestroyCopies
+
+WRITE(*,101) '- Total Remesh Time                :', Timer_Remesh, ' s'
+WRITE(*,101) '   - Make Variable Copies Time     :', Timer_Remesh_MakeCopies, ' s'
+WRITE(*,101) '   - Transfer Coefficents Time     :', Timer_Remesh_FillTotal, ' s'
+WRITE(*,101) '      - Create Lambda Array Time   :', Timer_Remesh_MakeLambdaArray, ' s'
+WRITE(*,101) '      - Transfer Type A Coefficents:', Timer_Remesh_FillTypeA, ' s'
+WRITE(*,101) '      - Transfer X Vector          :', Timer_Remesh_FillX, ' s'
+WRITE(*,101) '      - Transfer Shift Vector      :', Timer_Remesh_FillS, ' s'
+WRITE(*,101) '   - Destroy Variable Copies Time  :', Timer_Remesh_DestroyCopies, ' s'
+WRITE(*,*)
+
+
+
+
+
+END SUBROUTINE Output_Remesh_Time_Report
 
 
 
