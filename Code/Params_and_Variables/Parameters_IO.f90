@@ -71,7 +71,7 @@ CFA_ShortVars = ['ConFactor ', &
 
 
 INTEGER, PARAMETER                                          :: N_Kij_ShortVars = 6
-CHARACTER(LEN = 2),DIMENSION(N_Kij_ShortVars), PARAMETER    :: &
+CHARACTER(LEN = 3),DIMENSION(N_Kij_ShortVars), PARAMETER    :: &
 Kij_ShortVars = ['K11', &
                  'K12', &
                  'K13', &

@@ -65,7 +65,10 @@ USE Functions_Quadrature, &
 
 USE Functions_Math, &
             ONLY :  Lagrange_Poly,          &
-                    Spherical_Harmonic
+                    Lagrange_Poly_Deriv,    &
+                    Spherical_Harmonic,     &
+                    Spherical_Harmonic_dt,  &
+                    Spherical_Harmonic_dp
 
 USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB, &
@@ -101,24 +104,24 @@ SUBROUTINE Calc_FP_Values_At_Location( r, theta, phi, Return_Psi, Return_AlphaPs
                                         Return_Beta1, Return_Beta2, Return_Beta3    )
 
 
-REAL(KIND = idp), INTENT(IN)                                ::  r, theta, phi
-REAL(KIND = idp), INTENT(INOUT)                             ::  Return_Psi,         &
-                                                                Return_AlphaPsi,    &
-                                                                Return_Beta1,       &
-                                                                Return_Beta2,       &
-                                                                Return_Beta3
+REAL(idp), INTENT(IN)                                   ::  r, theta, phi
+REAL(idp), INTENT(INOUT)                                ::  Return_Psi,         &
+                                                            Return_AlphaPsi,    &
+                                                            Return_Beta1,       &
+                                                            Return_Beta2,       &
+                                                            Return_Beta3
 
 
 
-COMPLEX(KIND = idp), DIMENSION(1:5)                         ::  Tmp_U_Value
+COMPLEX(idp), DIMENSION(1:5)                            ::  Tmp_U_Value
 
 
-REAL(KIND = idp)                                                ::  r_tmp
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
+REAL(idp)                                                ::  r_tmp
+REAL(idp), DIMENSION(0:DEGREE)                           ::  LagP
 
 INTEGER                                                         ::  re
 
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  xlocP, weightP
+REAL(idp), DIMENSION(0:DEGREE)                           ::  xlocP, weightP
 
 
 Tmp_U_Value = 0.0_idp
@@ -198,24 +201,24 @@ SUBROUTINE Calc_1D_CFA_Values_FP(   Num_RE_Input, Num_RQ_Input, RQ_Input,   &
 INTEGER, INTENT(IN)                                         ::  Num_RE_Input,   &
                                                                 Num_RQ_Input
 
-REAL(KIND = idp), DIMENSION(1:Num_RQ_Input), INTENT(IN)     ::  RQ_Input
-REAL(KIND = idp), INTENT(IN)                                ::  Left_Limit,     &
+REAL(idp), DIMENSION(1:Num_RQ_Input), INTENT(IN)            ::  RQ_Input
+REAL(idp), INTENT(IN)                                       ::  Left_Limit,     &
                                                                 Right_Limit
 
 
-REAL(KIND = idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Lapse
-REAL(KIND = idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_ConFactor
-REAL(KIND = idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Shift
+REAL(idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Lapse
+REAL(idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_ConFactor
+REAL(idp), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Shift
 
 
 
-INTEGER                                                         ::  re, x, u, d
+INTEGER                                                     ::  re, x, u, d
 
-REAL(KIND = idp)                                                ::  Quad_Span
-REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
-REAL(KIND = idp), DIMENSION(1:Num_RQ_Input)                     ::  CUR_X_LOCS
-COMPLEX(KIND = idp), DIMENSION(1:3)                             ::  TMP_U_Value
-INTEGER                                                         ::  Current_Location
+REAL(idp)                                                   ::  Quad_Span
+REAL(idp), DIMENSION(0:DEGREE)                              ::  LagP
+REAL(idp), DIMENSION(1:Num_RQ_Input)                        ::  CUR_X_LOCS
+COMPLEX(idp), DIMENSION(1:3)                                ::  TMP_U_Value
+INTEGER                                                     ::  Current_Location
 
 Quad_Span = Right_Limit - Left_Limit
 
@@ -279,15 +282,15 @@ INTEGER,    INTENT(IN)                              ::  iU
 
 
 
-COMPLEX(KIND = idp)                                 ::  Tmp_U_Value
+COMPLEX(idp)                                        ::  Tmp_U_Value
 
 
-REAL(KIND = idp)                                    ::  r_tmp
-REAL(KIND = idp), DIMENSION(0:DEGREE)               ::  LagP
+REAL(idp)                                           ::  r_tmp
+REAL(idp), DIMENSION(0:DEGREE)                      ::  LagP
 
 INTEGER                                             ::  re
 
-REAL(KIND = idp), DIMENSION(0:DEGREE)               ::  xlocP, weightP
+REAL(idp), DIMENSION(0:DEGREE)                      ::  xlocP, weightP
 
 
 Tmp_U_Value = 0.0_idp
@@ -356,15 +359,15 @@ INTEGER,    INTENT(IN)                              ::  iU, iVB
 
 
 
-COMPLEX(KIND = idp)                                 ::  Tmp_U_Value
+COMPLEX(idp)                                        ::  Tmp_U_Value
 
 
-REAL(KIND = idp)                                    ::  r_tmp
-REAL(KIND = idp), DIMENSION(0:DEGREE)               ::  LagP
+REAL(idp)                                           ::  r_tmp
+REAL(idp), DIMENSION(0:DEGREE)                      ::  LagP
 
 INTEGER                                             ::  re
 
-REAL(KIND = idp), DIMENSION(0:DEGREE)               ::  xlocP, weightP
+REAL(idp), DIMENSION(0:DEGREE)                      ::  xlocP, weightP
 
 
 Tmp_U_Value = 0.0_idp
@@ -589,75 +592,132 @@ END FUNCTION Calc_Values_Here_Type_B
 
 
 
-!!+603+###########################################################################!
-!!                                                                                !
-!!                  Calc_1D_CFA_Values_FP          !
-!!                                                                                !
-!!################################################################################!
-!FUNCTION Calc_x_Deriv_Here_Type_B( re, theta, phi, LagP, iU, iVB )
-!
-!
-!REAL(idp), DIMENSION(3),                           ::  Calc_Values_Here_Type_B
-!INTEGER,                        INTENT(IN)                      ::  re
-!REAL(idp),                      INTENT(IN)                      ::  theta, phi
-!REAL(idp), DIMENSION(0:DEGREE), INTENT(IN)                      ::  LagP
-!INTEGER,                        INTENT(IN)                      ::  iU
-!INTEGER,                        INTENT(IN)                      ::  iVB
-!
-!
-!COMPLEX(idp)                                                    ::  Tmp_U_Value
-!INTEGER                                                         ::  l, m, d
-!INTEGER                                                         ::  Loc_RED
-!
-!
-!Tmp_U_Value = 0.0_idp
-!DO l = 0,L_Limit
-!DO m = -l,l
-!DO d = 0,DEGREE
-!
-!    Loc_RED = FP_Array_Map_TypeB(iU,iVB,re,d,l,m)
-!    Tmp_U_Value = Tmp_U_Value                           &
-!                + cVB_Coeff_Vector(Loc_RED,iVB)        &
-!                * Spherical_Harmonic(l,m,theta,phi)     &
-!                * LagP(d)
-!
-!
-!END DO  !   d Loop
-!END DO  !   m Loop
-!END DO  !   l Loop
-!
-!
-!
-!DO d  = 0,DEGREE
-!    Here  = FP_Array_Map_TypeB(iU,iVB,re-1,d,1)
-!    There = FP_Array_Map_TypeB(iU,iVB,re-1,d,LM_Length)
-!
-!
-!    TMP_Drv(1) = TMP_Drv(1)                                     &
-!               + SUM( cVB_Coeff_Vector( Here:There, iVB )       &
-!                     * Ylm_Values( :, tpd, te-1, pe-1 )     )   &
-!               * Lagrange_Poly_Table( d, rd, 1 )                &
-!               / DROT
-!
-!
-!    TMP_Drv(2) = TMP_Drv(2)                                     &
-!               + SUM( cVB_Coeff_Vector( Here:There, iVB )       &
-!                     * Ylm_dt_Values( :, tpd, te-1, pe-1)   )    &
-!               * Lagrange_Poly_Table( d, rd, 0)
-!
-!
-!    TMP_Drv(3) = TMP_Drv(3)                                     &
-!               + SUM( cVB_Coeff_Vector( Here:There, iVB )       &
-!                     * Ylm_dp_Values( :, tpd, te-1, pe-1)   )    &
-!               * Lagrange_Poly_Table( d, rd, 0)
-!
-!END DO  ! d
-!END DO  ! i
-!
-!
-!Calc_Values_Here_Type_B = REAL( Tmp_U_Value, KIND = idp)
-!
-!END FUNCTION Calc_Derivs_Here_Type_B
+
+
+
+
+
+
+
+
+!+502+########################################################!
+!                                                               !
+!          Calc_Var_At_Location_Type_B                          !
+!                                                               !
+!#############################################################!
+SUBROUTINE Calc_Drv_At_Location_Type_B( r, theta, phi, iU, iVB, Derivs )
+
+
+REAL(idp),      INTENT(OUT),    DIMENSION(3)        ::  Derivs
+REAL(idp),      INTENT(IN)                          ::  r, theta, phi
+INTEGER,        INTENT(IN)                          ::  iU, iVB
+
+
+REAL(idp)                                           ::  r_tmp
+REAL(idp), DIMENSION(0:DEGREE)                      ::  LagP
+REAL(idp), DIMENSION(0:DEGREE)                      ::  dLagP
+
+INTEGER                                             ::  re
+
+REAL(idp), DIMENSION(0:DEGREE)                      ::  xlocP, weightP
+
+
+
+IF ( r .LE. rlocs(0) ) THEN
+
+
+    LagP    = 0.0_idp
+    LagP(0) = 1.0_idp
+    dLagP   = 0.0_idp
+
+    CALL Calc_Derivs_Here_Type_B( re, theta, phi, LagP, dLagP, iU, iVB, Derivs )
+
+ELSE
+
+   CALL Initialize_LGL_Quadrature(DEGREE,xlocP,weightP)
+
+   DO re = 0,NUM_R_ELEMENTS-1
+   IF ( r > rlocs(re) .AND. r <= rlocs(re+1) ) THEN
+
+
+        r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
+        LagP  = Lagrange_Poly(r_tmp,Degree,xlocP)
+        dLagP = Lagrange_Poly_Deriv(r_tmp,Degree,xLocP)
+
+        dLagP = 2.0_idp*dLagP/( rlocs(re+1)-rlocs(re))
+
+        CALL Calc_Derivs_Here_Type_B( re, theta, phi, LagP, dLagP, iU, iVB, Derivs )
+
+        EXIT
+   END IF
+   END DO
+
+   IF ( r > rlocs(NUM_R_ELEMENTS) ) THEN
+
+        LagP         = 0.0_idp
+        LagP(DEGREE) = 1.0_idp
+        dLagP        = 0.0_idp
+
+        CALL Calc_Derivs_Here_Type_B( re, theta, phi, LagP, dLagP, iU, iVB, Derivs )
+
+   END IF
+
+END IF
+
+
+END SUBROUTINE Calc_Drv_At_Location_Type_B
+
+
+
+
+!+603+###########################################################################!
+!                                                                                !
+!                  Calc_1D_CFA_Values_FP          !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Calc_Derivs_Here_Type_B( re, theta, phi, LagP, dLagP, iU, iVB, Derivs )
+
+
+INTEGER,                                INTENT(IN)              ::  re
+REAL(idp),                              INTENT(IN)              ::  theta, phi
+REAL(idp),      DIMENSION(0:DEGREE),    INTENT(IN)              ::  LagP
+REAL(idp),      DIMENSION(0:DEGREE),    INTENT(IN)              ::  dLagP
+INTEGER,                                INTENT(IN)              ::  iU
+INTEGER,                                INTENT(IN)              ::  iVB
+
+REAL(idp),      DIMENSION(3),           INTENT(OUT)             ::  Derivs
+
+INTEGER                                                         ::  l, m, d
+INTEGER                                                         ::  Loc_RED
+
+
+Derivs = 0.0_idp
+
+DO l = 0,L_Limit
+DO m = -l,l
+DO d = 0,DEGREE
+ 
+    Loc_RED = FP_Array_Map_TypeB(iU,iVB,re,d,l,m)
+
+    Derivs(1) = Derivs(1)                               &
+                + REAL(cVB_Coeff_Vector(Loc_RED,iVB)         &
+                * Spherical_Harmonic(l,m,theta,phi)     &
+                * dLagP(d), idp )
+    Derivs(2) = Derivs(2)                               &
+              + REAL( cVB_Coeff_Vector(Loc_Red, iVB)          &
+              * Spherical_Harmonic_dt(l,m,theta,phi)    &
+              * LagP(d), idp )
+    Derivs(3) = Derivs(3)                               &
+              + REAL(cVB_Coeff_Vector(Loc_Red, iVB)          &
+              * Spherical_Harmonic_dp(l,m,theta,phi)    &
+              * LagP(d), idp )
+
+END DO  !   d Loop
+END DO  !   m Loop
+END DO  !   l Loop
+
+
+END SUBROUTINE Calc_Derivs_Here_Type_B
 
 
 

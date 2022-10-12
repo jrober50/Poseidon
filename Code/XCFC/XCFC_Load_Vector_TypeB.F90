@@ -78,7 +78,6 @@ USE Variables_Tables, &
             ONLY :  Ylm_CC_Values,              &
                     Ylm_Elem_CC_Values,         &
                     Lagrange_Poly_Table,        &
-                    Lagpoly_MultiLayer_Table,   &
                     Level_dx,                   &
                     Level_Ratios
 
@@ -412,7 +411,7 @@ DO d = 0,DEGREE
                 + SUM( SourceTerm( :, rd, ui )                  &
                     * Ylm_Elem_CC_Values( :, lm_loc )           &
                     * TP_Int_Weights(:)                     )   &
-                * Lagpoly_MultiLayer_Table( d, rd, 0, iCT )     &
+                * Lagrange_Poly_Table( d, rd, 0)     &
                 * R_Int_Weights(rd)
 
 
@@ -433,11 +432,6 @@ DO d = 0,DEGREE
 !            PRINT*,TP_Int_Weights(:)
 !            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
 
-!            PRINT*,SUM( SourceTerm( :, rd, ui )             &
-!            * Ylm_Elem_CC_Values( :, lm_loc )               &
-!            * TP_Int_Weights(:)                     ),      &
-!            Lagpoly_MultiLayer_Table( d, rd, 0, iCT ),      &
-!            R_Int_Weights(rd)
 !        END IF
 
 #else

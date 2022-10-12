@@ -59,9 +59,8 @@ USE Variables_Tables, &
                     Ylm_Elem_Values,            &
                     Ylm_Elem_dt_Values,         &
                     Ylm_Elem_dp_Values,         &
-                    Lagrange_Poly_Table,        &
-                    LagPoly_MultiLayer_Table
-
+                    Lagrange_Poly_Table
+                    
 USE Variables_Vectors, &
             ONLY :  cVA_Coeff_Vector,          &
                     cVB_Coeff_Vector
@@ -324,7 +323,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
         TMP_Val = TMP_Val                               &
             + SUM( cVA_Coeff_Vector( Here(d), :, iU )  &
                    * Ylm_Elem_Values( :, tpd )   )      &
-            * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+            * Lagrange_Poly_Table( d, rd, 0)
 
 #else
 
@@ -403,19 +402,19 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
         TMP_Drv(1) = TMP_Drv(1)                                 &
                    + SUM( cVA_Coeff_Vector( Here, :, iU )      &
                          * Ylm_Elem_Values( :, tpd ) )          &
-                   * LagPoly_MultiLayer_Table( d, rd, 1, iCT)   &
+                   * Lagrange_Poly_Table( d, rd, 1)   &
                    / DROT
 
 
         TMP_Drv(2) = TMP_Drv(2)                                 &
                    + SUM( cVA_Coeff_Vector( Here, :, iU )      &
                          * Ylm_Elem_dt_Values( :, tpd )     )   &
-                   * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+                   * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_Drv(3) = TMP_Drv(3)                                 &
                    + SUM( cVA_Coeff_Vector( Here, :, iU )      &
                          * Ylm_Elem_dp_Values( :, tpd )     )   &
-                   * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+                   * Lagrange_Poly_Table( d, rd, 0)
 
 #else
 
@@ -507,25 +506,25 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
         TMP_Val = TMP_Val                                       &
             + SUM( cVA_Coeff_Vector( Here, :, iU )             &
                    * Ylm_Elem_Values( :, tpd )   )              &
-            * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+            * Lagrange_Poly_Table( d, rd, 0)
 
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                    + SUM( cVA_Coeff_Vector( Here, :, iU )      &
                          * Ylm_Elem_Values( :, tpd ) )          &
-                   * LagPoly_MultiLayer_Table( d, rd, 1, iCT)   &
+                   * Lagrange_Poly_Table( d, rd, 1)   &
                    / DROT
 
 
         TMP_Drv(2) = TMP_Drv(2)                                 &
                    + SUM( cVA_Coeff_Vector( Here, :, iU )      &
                          * Ylm_Elem_dt_Values( :, tpd )     )   &
-                   * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+                   * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_Drv(3) = TMP_Drv(3)                                 &
                    + SUM( cVA_Coeff_Vector( Here, :, iU )      &
                          * Ylm_Elem_dp_Values( :, tpd )     )   &
-                   * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+                   * Lagrange_Poly_Table( d, rd, 0)
 
 #else
 
@@ -632,10 +631,11 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
 #ifdef POSEIDON_AMREX_FLAG
 
+
         TMP_Val = TMP_Val                                   &
                + SUM( cVB_Coeff_Vector( Here:There, iVB )  &
                        * Ylm_Elem_Values( :, tpd )      )   &
-               * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+               * Lagrange_Poly_Table( d, rd, 0 )
 
 #else
 
@@ -709,19 +709,19 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
         TMP_Drv(1) = TMP_Drv(1)                                 &
                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                         * Ylm_Elem_Values( :, tpd )         )   &
-                  * LagPoly_MultiLayer_Table( d, rd, 1, iCT)             &
+                  * Lagrange_Poly_Table( d, rd, 1 )             &
                   / DROT
 
 
         TMP_Drv(2) = TMP_Drv(2)                                 &
                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                         * Ylm_Elem_dt_Values( :, tpd )      )   &
-                  * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+                  * Lagrange_Poly_Table( d, rd, 0)
 
         TMP_Drv(3) = TMP_Drv(3)                                 &
                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                         * Ylm_Elem_dp_Values( :, tpd )      )   &
-                  * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+                  * Lagrange_Poly_Table( d, rd, 0)
 
 #else
 
@@ -813,26 +813,26 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
         TMP_Val = TMP_Val                                       &
                + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
                        * Ylm_Elem_Values( :, tpd )          )   &
-               * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+               * Lagrange_Poly_Table( d, rd, 0)
 
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                         * Ylm_Elem_Values( :, tpd )         )   &
-                  * LagPoly_MultiLayer_Table( d, rd, 1, iCT)             &
+                  * Lagrange_Poly_Table( d, rd, 1)             &
                   / DROT
 
 
         TMP_Drv(2) = TMP_Drv(2)                                 &
                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                         * Ylm_Elem_dt_Values( :, tpd )      )   &
-                  * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+                  * Lagrange_Poly_Table( d, rd, 0)
 
 
         TMP_Drv(3) = TMP_Drv(3)                                 &
                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                         * Ylm_Elem_dp_Values( :, tpd )      )   &
-                  * LagPoly_MultiLayer_Table( d, rd, 0, iCT)
+                  * Lagrange_Poly_Table( d, rd, 0)
 
 #else
 

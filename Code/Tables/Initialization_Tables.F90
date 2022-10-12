@@ -82,9 +82,7 @@ USE Variables_Tables, &
                     Ylm_Elem_dp_Values,     &
                     Ylm_Elem_CC_Values,     &
                     Level_dx,               &
-                    Level_Ratios,            &
-                    LagPoly_MultiLayer_Table,&
-                    LagPoly_Num_Tables
+                    Level_Ratios
 
 USE Variables_FEM_Module, &
             ONLY :  FEM_Node_xlocs
@@ -136,9 +134,6 @@ CONTAINS
 SUBROUTINE Initialize_Tables()
 
 IF ( Verbose_Flag ) CALL Init_Message('Initializing Basis Functions Tables.')
-LagPoly_Num_Tables = 2**(AMReX_Num_Levels+1) - 1  ! Sum of power of 2
-
-
 
 #ifdef POSEIDON_AMREX_FLAG
 
@@ -387,49 +382,6 @@ REAL(idp), DIMENSION(0:Ord)          ::  Lagrange_DRV_Values
 INTEGER                                     ::  Eval_Point
 INTEGER                                     ::  rd, d, dp,dd
 
-
-
-
-
-
-#ifdef POSEIDON_AMREX_FLAG
-
-INTEGER                                     ::  lvl, elem
-INTEGER                                     ::  iNLE, Cur_Table
-REAL(idp)                                   ::  ra, rb, wl
-REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  Local_R
-
-
-
-DO lvl = 0,AMReX_Num_Levels-1
-iNLE = 2**lvl-1
-DO elem = 0,iNLE
-
-    Cur_Table = iNLE+elem
-    wl = 2.0_idp/2.0_idp**lvl
-    ra = REAL(     -1 + wl*elem, Kind = idp)
-    rb = REAL( -1 + wl*(elem+1), Kind = idp)
-
-
-    Local_R(:) = Map_From_X_Space(ra, rb, Int_R_Locations(:))
-
-
-    DO Eval_Point = 1,Num_R_Quad_Points
-        
-
-        Lagrange_Poly_Values = Lagrange_Poly(Local_R(Eval_Point), Ord, FEM_Node_xlocs)
-        Lagrange_DRV_Values  = Lagrange_Poly_Deriv(Local_R(Eval_Point), Ord, FEM_Node_xlocs)
-
-        LagPoly_MultiLayer_Table( :, Eval_Point, 0, Cur_Table) = Lagrange_Poly_Values
-        LagPoly_MultiLayer_Table( :, Eval_Point, 1, Cur_Table) = Lagrange_DRV_Values
-
-
-    END DO
-
-END DO
-END DO
-
-#endif
 
 
 Lagrange_Poly_Table = 0.0_idp

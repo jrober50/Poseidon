@@ -87,7 +87,8 @@ USE Functions_Quadrature, &
            ONLY :  Initialize_LGL_Quadrature_Locations
 
 USE Functions_Math, &
-           ONLY :  Lagrange_Poly
+           ONLY :   Lagrange_Poly,       &
+                    Lagrange_Poly_Deriv
 
 USE Initialization_Tables, &
            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
@@ -364,6 +365,7 @@ REAL(idp),  CONTIGUOUS, POINTER                                 ::  Results_PTR(
 
 REAL(idp)                                                       ::  Quad_Span
 REAL(idp), DIMENSION(0:DEGREE)                                  ::  LagP
+REAL(idp), DIMENSION(0:DEGREE)                                  ::  dLagP
 REAL(idp), DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
 REAL(idp), DIMENSION(1:NQ(1))                                   ::  Cur_RX_Locs
 REAL(idp), DIMENSION(1:NQ(2))                                   ::  CUR_T_LOCS
@@ -387,6 +389,7 @@ COMPLEX(idp), DIMENSION(1:6)                                    ::  Tmp_A
 
 INTEGER                                                         ::  Current_Location
 INTEGER                                                         ::  Num_DOF
+
 
 
 Quad_Span = Right_Limit - Left_Limit
@@ -458,7 +461,7 @@ DO lvl = 0,nLevels-1
             Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
             Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
             Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
-
+            
 
 
             DO pd = 1,NQ(3)
@@ -467,6 +470,7 @@ DO lvl = 0,nLevels-1
 
                 tpd = Map_To_tpd(td,pd)
                 LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+                dLagP = Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
                 Tmp_Val_A = 0.0_idp
                 Tmp_Val_B = 0.0_idp
                 Tmp_Drv_B = 0.0_idp
@@ -502,7 +506,7 @@ DO lvl = 0,nLevels-1
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
                             + SUM( cVB_Coeff_Vector( Here:There, iVB )     &
                                     * Ylm_Elem_Values( :, tpd )   )         &
-                            * Lagrange_Poly_Table( d, rd, 0 )
+                            * LagP(d)
 
                 END DO ! d Loop
                 END DO ! iU Loop
@@ -518,7 +522,7 @@ DO lvl = 0,nLevels-1
 
 
 
-                ! Calculate the B Type Variable, The X Vector, and its derivatives
+                ! Calculate the X Vector, and its derivatives
                 iVB = iVB_X
                 DO iU = iU_X1,iU_X3
                 DO d  = 0,DEGREE
@@ -527,28 +531,32 @@ DO lvl = 0,nLevels-1
                     Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
                     There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
                     iU_Offset = iU-3*iVB+1
+                    
+                
 
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
                             + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
                                     * Ylm_Elem_Values( :, tpd )   )         &
-                            * Lagrange_Poly_Table( d, rd, 0 )
+                            * LagP(d)
 
                     TMP_Drv_B(1,iU_Offset) = TMP_Drv_B(1,iU_Offset)         &
                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_Values( :, tpd  )     )     &
-                               * Lagrange_Poly_Table( d, rd, 1 )            &
+                               * dLagP(d)            &
                                / DROT
+
+
 
                     TMP_Drv_B(2,iU_Offset) = TMP_Drv_B(2,iU_Offset)         &
                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_dt_Values( :, tpd )   )     &
-                               * Lagrange_Poly_Table( d, rd, 0)
+                               * LagP(d)
 
 
                     TMP_Drv_B(3,iU_Offset) = TMP_Drv_B(3,iU_Offset)         &
                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_dp_Values( :, tpd)   )      &
-                               * Lagrange_Poly_Table( d, rd, 0)
+                               * LagP(d)
 
                 END DO ! d Loop
                 END DO ! iU Loop
@@ -583,10 +591,8 @@ DO lvl = 0,nLevels-1
                            +(2.0_idp * Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val_B(1,iVB_X)   &
                            +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val_B(2,iVB_X)   &
                            +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val_B(3,iVB_X)   )
-
-
-
-
+        
+        
                 ! Ahat^12
                 i=1
                 j=2
@@ -628,7 +634,6 @@ DO lvl = 0,nLevels-1
                            +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
 
 
-
                 ! Ahat^23
                 i=2
                 j=3
@@ -655,15 +660,36 @@ DO lvl = 0,nLevels-1
 
 
 
-
                 ! Tmp_A values are A^ij.
                 ! Return Results are A_ij so we multiply by Gamma_ij
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ )) = Tmp_A(1)/(Gamma(1)*Gamma(1))
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ )) = Tmp_A(2)/(Gamma(1)*Gamma(2))
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ )) = Tmp_A(3)/(Gamma(1)*Gamma(3))
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K22, rd, td, pd, NQ )) = Tmp_A(4)/(Gamma(2)*Gamma(2))
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K23, rd, td, pd, NQ )) = Tmp_A(5)/(Gamma(2)*Gamma(3))
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ )) = Tmp_A(6)/(Gamma(3)*Gamma(3))
+                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))                         &
+                        = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+                
+                
+!                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
+!                        = Tmp_Val_B(1,iVB_X)
+!
+!                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ ))                         &
+!                        = Tmp_Drv_B(1,1)
+
+                
+                
+                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
+                        = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ ))                         &
+                        = REAL(Tmp_A(3)/(Gamma(1)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K22, rd, td, pd, NQ ))                         &
+                        = REAL(Tmp_A(4)/(Gamma(2)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K23, rd, td, pd, NQ ))                         &
+                        = REAL(Tmp_A(5)/(Gamma(2)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ ))                         &
+                        = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                
 
             END DO ! rd Loop
             END DO ! td Loop

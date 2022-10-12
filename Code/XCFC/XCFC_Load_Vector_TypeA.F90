@@ -83,8 +83,7 @@ USE Variables_Tables, &
                     Ylm_Elem_CC_Values,         &
                     Level_dx,                   &
                     Level_Ratios,               &
-                    Lagrange_Poly_Table,        &
-                    LagPoly_MultiLayer_Table
+                    Lagrange_Poly_Table
 
 USE Variables_Derived, &
             ONLY :  LM_LENGTH
@@ -341,6 +340,7 @@ END DO
 TP_Sin_Square(:) = TP_Sin_Val(:)*TP_Sin_Val
 
 
+
 DO rd = 1,NUM_R_QUAD_POINTS
     TP_RSIN_SQUARE(:,rd) = R_SQUARE(rd)*TP_SIN_SQUARE(:)
 END DO
@@ -413,7 +413,7 @@ DO d = 0,DEGREE
                  + SUM( SourceTerm( :, rd, iU )                     &
                        * Ylm_Elem_CC_Values( :, lm_loc )            &
                        * TP_Int_Weights(:)                     )    &
-               * LagPoly_MultiLayer_Table( d, rd, 0, iCT)            &
+               * Lagrange_Poly_Table( d, rd, 0)            &
                * R_Int_Weights(rd)
 
 !        IF ( iU == iU_CF ) THEN
@@ -426,15 +426,7 @@ DO d = 0,DEGREE
 !            PRINT*,TP_Int_Weights(:)
 !            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
 !
-!            PRINT*,SUM( SourceTerm( :, rd, iU )             &
-!            * Ylm_Elem_CC_Values( :, lm_loc )               &
-!            * TP_Int_Weights(:)                     ),      &
-!            Lagpoly_MultiLayer_Table( d, rd, 0, iCT ),      &
-!            R_Int_Weights(rd)
-!            PRINT*,""
-!            PRINT*,""
-!            PRINT*,""
-!            PRINT*,""
+
 !            PRINT*,""
 !        END IF
 

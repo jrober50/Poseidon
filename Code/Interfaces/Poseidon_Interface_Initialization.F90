@@ -28,7 +28,10 @@ USE Poseidon_Kinds_Module, &
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Init_Message
-
+            
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Warning_Message
+            
 USE Poseidon_Units_Module, &
             ONLY :  Set_Units
 

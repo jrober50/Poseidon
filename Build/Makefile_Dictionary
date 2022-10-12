@@ -15,7 +15,7 @@ EXT	= F90
 
 ### Fortran Compiler
 FORT_ISAAC         = mpif90
-FORT_NicksMacBook  = /usr/local/openmpi/bin/mpif90 -cpp
+FORT_NicksMacBook  = $(MPI_DIR)/bin/mpif90
 FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
 FORT_kkadoogan     = $(MPI_HOME)/bin/mpif90
 FORT_accre_gnu     = /cvmfs/oasis.opensciencegrid.org/accre/mirror/optimized/sandy_bridge/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/bin/mpif90
@@ -29,7 +29,7 @@ FORT_BlueWaters    = ftn
 ### C Compiler
 
 CC_ISAAC           = mpicxx
-CC_NicksMacBook    = /usr/local/openmpi/bin/mpic++
+CC_NicksMacBook    = $(MPI_DIR)/bin/mpic++
 
 
 
@@ -108,52 +108,10 @@ AMREX_DEF_FLAG_OFF     =
 
 
 
-### PETSc Linkers
-PETSC_ISAAC_ON          =
-PETSC_ISAAC_OFF         =
-
-PETSC_Rhea_ON		= -cpp -B /sw/rhea/petsc/3.7.2/rhel6.7_gnu4.8.2  -B /sw/rhea/openmpi/1.8.4/rhel6.6_intell4.0.4
-PETSC_Rhea_OFF		=
-
-PETSC_NicksMacBook_DIR       = /usr/local/petsc/petsc-3.10.4
-PETSC_NicksMacBook_ARCH      = /usr/local/petsc/petsc-3.10.4/arch-darwin-c-debug
-PETSC_NicksMacBook_ON        = -I$(PETSC_NicksMacBook_DIR)/include -I$(PETSC_NicksMacBook_ARCH)/include -L$(PETSC_NicksMacBook_DIR)/lib -L$(PETSC_NicksMacBook_ARCH)/lib -lpetsc
-PETSC_NicksMacBook_Off       =
-
-PETSC_sjdunham_DIR  = $(PETSC_DIR)
-PETSC_sjdunham_ARCH = $(PETSC_DIR)/$(PETSC_ARCH)
-PETSC_sjdunham_ON   = -I$(PETSC_sjdunham_DIR)/include -I$(PETSC_sjdunham_ARCH)/include -L$(PETSC_sjdunham_DIR)/lib -L$(PETSC_sjdunham_ARCH)/lib -lpetsc
-PETSC_sjdunham_Off  =
-
-PETSC_kkadoogan_DIR  =
-PETSC_kkadoogan_ARCH =
-PETSC_kkadoogan_ON   =
-PETSC_kkadoogan_Off  =
-
-PETSC_accre_gnu_DIR  =
-PETSC_accre_gnu_ARCH =
-PETSC_accre_gnu_ON   =
-PETSC_accre_gnu_Off  =
-
-PETSC_MacBook_DIR       = $(PETSC_$(MACHINE_NAME)_DIR)
-PETSC_MacBook_ARCH      = arch-darwin-c-debug
-PETSC_MacBook_ON	= -I$(PETSC_MacBook_DIR)/include -I$(PETSC_MacBook_ARCH)/include -L$(PETSC_MacBook_DIR)/lib -L$(PETSC_MacBook_ARCH)/lib -lpetsc
-PETSC_MacBook_Off	=
-
-PETSC_BlueWaters_ON	=
-PETSC_BlueWaters_OFF	=
-
-
-#include ${PETSC_MacBook_DIR}/lib/petsc/conf/variables
-
-
-PETSC_DEF_FLAG_ON       =-DPOSEIDON_PETSC_FLAG
-PETSC_DEF_FLAG_OFF      =
-
 
 #### HDF5
 
-HDF5_NicksMacBook_ON         = -I/usr/local/hdf5/include -L/usr/local/hdf5/lib  -lhdf5_fortran -lhdf5
+HDF5_NicksMacBook_ON         = -I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib  -lhdf5_fortran -lhdf5
 HDF5_NicksMacBook_OFF        =
 HDF5_sjdunham_ON             = -I$(HDF5_DIR)/include -L$(HDF5_DIR)/lib -lhdf5_fortran -lhdf5
 HDF5_sjdunham_OFF            =
@@ -173,8 +131,8 @@ HDF5_Bluewaters_OFF     =
 
 #### MPI
 
-MPI_NicksMacBook_Lib        = -I/usr/local/openmpi/lib
-MPI_NicksMacBook_Include    = -L/usr/local/openmpi/include
+MPI_NicksMacBook_Lib        = -I$(MPI_DIR)/lib
+MPI_NicksMacBook_Include    = -L$(MPI_DIR)/include
 
 MPI_sjdunham_Lib            = -I$(MPICH_DIR)/lib
 MPI_sjdunham_Include        = -L$(MPICH_DIR)/include
@@ -235,7 +193,6 @@ COMP_BlueWaters    = ftn
 STD 		=$(STD_$(CMODE)_$(MACHINE_NAME))
 OPENMP_COMP 	=$(OPENMP_$(MACHINE_NAME)_$(OPENMP_MODE))
 AMREX_COMP      =$(AMREX_DEF_FLAG_$(AMREX_MODE)) $(AMREX_$(MACHINE_NAME)_$(AMREX_MODE))
-PETSC_COMP	=$(PETSC_DEF_FLAG_$(PETSC_MODE)) $(PETSC_$(MACHINE_NAME)_$(PETSC_MODE))
 HDF5_COMP       =$(HDF5_$(MACHINE_NAME)_$(HDF5_MODE))
 MPI_COMP        =$(MPI_$(MPI_MODE))
 FORT		=$(FORT_$(MACHINE_NAME)) $(PETSC_COMP) $(AMREX_COMP) $(HDF5_COMP) $(OPENMP_COMP) $(MPI_COMP)  $(LAPACK_$(MACHINE_NAME))
@@ -244,7 +201,7 @@ INCLUDE_LINKER	=$(INCLUDE_LINKER_$(COMP_$(MACHINE_NAME)))
 OUTPUT_LINKER	=$(OUTPUT_LINKER_$(COMP_$(MACHINE_NAME)))
 DRIVER_OBJ	=$(OBJ)/d.main_$(DIMENSION).o
 
-POSEIDON_DEFS   =$(AMREX_DEF_FLAG_$(AMREX_MODE)) $(PETSC_DEF_FLAG_$(PETSC_MODE)) $(POSEIDON_DEBUG_FLAG_$(DEBUG_MODE))
+POSEIDON_DEFS   =$(AMREX_DEF_FLAG_$(AMREX_MODE)) $(POSEIDON_DEBUG_FLAG_$(DEBUG_MODE))
 
 
 

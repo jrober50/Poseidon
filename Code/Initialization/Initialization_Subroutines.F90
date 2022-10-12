@@ -383,7 +383,7 @@ IF ( PRESENT(Suffix_Flag_Option) ) THEN
         END IF
     END IF
 ELSE
-    WRITE(File_Suffix,'(I5.5)') 1
+    WRITE(File_Suffix,'(I5.5)') 2
 END IF
 
 

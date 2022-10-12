@@ -70,9 +70,7 @@ USE Variables_Tables, &
                     Ylm_Elem_dp_Values,         &
                     Ylm_Elem_CC_Values,         &
                     Level_dx,                   &
-                    Level_Ratios,               &
-                    LagPoly_MultiLayer_Table,   &
-                    LagPoly_Num_Tables
+                    Level_Ratios
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,        &
@@ -136,11 +134,6 @@ ALLOCATE( Ylm_Elem_dp_Values(   1:LM_Length,                &
 ALLOCATE( Ylm_Elem_CC_Values(   1:Num_TP_Quad_Points,       &
                                 1:LM_Length            )   )
 
-
-ALLOCATE( LagPoly_MultiLayer_Table( 0:DEGREE,               &
-                                    1:NUM_R_QUAD_POINTS,    &
-                                    0:1,                    &
-                                    0:LagPoly_Num_Tables-1  )   )
 
 ALLOCATE( Level_dx( 0:AMReX_Num_Levels-1, 3 ) )
 ALLOCATE( Level_Ratios(0:AMReX_Num_Levels) )
@@ -226,8 +219,6 @@ DEALLOCATE( Ylm_Elem_dt_Values )
 DEALLOCATE( Ylm_Elem_dp_Values )
 DEALLOCATE( Ylm_Elem_CC_Values )
 
-
-DEALLOCATE( LagPoly_MultiLayer_Table )
 
 DEALLOCATE( Level_dx )
 DEALLOCATE( Level_Ratios )

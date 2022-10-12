@@ -139,9 +139,7 @@ USE Variables_Tables, &
             ONLY :  Ylm_CC_Values,              &
                     Ylm_Elem_CC_Values,         &
                     Lagrange_Poly_Table,        &
-                    Lagpoly_MultiLayer_Table,   &
-                    Level_dx,                   &
-                    Level_Ratios
+                    Level_dx
 
 
 USE Poseidon_File_Routines_Module, &
@@ -233,7 +231,7 @@ P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
 !                                      nLevels,              &
 !                                      MF_Results            )
 
-CALL Poseidon_Return_Conformal_Factor( MF_Results )
+!CALL Poseidon_Return_Conformal_Factor( MF_Results )
 
 
 
@@ -458,8 +456,8 @@ DO lvl = nLevels-1,0,-1
 
 
 
-                PRINT*,re,te,pe,rd,td,pd
-                DO iU = 1,11
+!                PRINT*,re,te,pe,rd,td,pd
+                DO iU = 6,6 !1,11
                     Here = (iU-1) * Num_Quad        &
                          + (pd-1)*NQ(1)*NQ(2)       &
                          + (td-1)*NQ(1)             &

@@ -130,7 +130,7 @@ END IF
 
 
 
-
+INFO = 0
 M = FP_Anderson_M
 LWORK = 2*M
 
@@ -172,7 +172,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     FVector(:,mk) = GVector(:,mk) - UVector(:)
 
 
-
     IF ( mk == 1 ) THEN
         GVectorM = GVector(:,mk)
     ELSE
@@ -185,7 +184,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
                     BVector, Var_Dim,               &
                     WORK, LWORK, INFO )
 
-
         IF ( INFO .NE. 0 ) THEN
             WRITE(Message,'(A,I1.1,A,I1.1)')'In XCFC_Fixed_Point, iU = ',iU,' : ZGELS failed with INFO = ',INFO
             CALL WARNING_MESSAGE(Message)
@@ -193,7 +191,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         Alpha(1:mk-1) = BVector(1:mk-1)
         Alpha(mk)     = 1.0_idp - SUM( Alpha(1:mk-1) )
 
-        
         GVectorM = 0.0_idp
         DO i = 1,mk
             GVectorM = GVectorM + Alpha(i)*GVector(:,i)
@@ -203,8 +200,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     FVectorM = GVectorM - UVector(:)
 
 
-
-
+    
     ! Check for Convergence
     CALL Convergence_Check( FVectorM, Cur_Iteration, Converged )
 
@@ -216,7 +212,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         GVector = CSHIFT( GVector, SHIFT = +1, DIM = 2)
         FVector = CSHIFT( FVector, SHIFT = +1, DIM = 2)
     END IF
-
 
 
 

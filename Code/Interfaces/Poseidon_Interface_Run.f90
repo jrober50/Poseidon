@@ -48,7 +48,8 @@ USE IO_Print_Results, &
             ONLY :  Print_Results
 
 USE IO_Write_Final_Results, &
-            ONLY :  Write_Final_Results
+            ONLY :  Write_Final_Results,        &
+                    Write_Final_Results_AMReX
 
 USE Poseidon_Interface_Initial_Guess,       &
             ONLY :  Poseidon_Initialize_Flat_Guess
@@ -138,7 +139,7 @@ IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
 END IF
 
 IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
-    Call Write_Final_Results()
+    Call Write_Final_Results_AMReX()
 END IF
 
 
@@ -181,11 +182,11 @@ END IF
 
 
 
- IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
- IF ( myID_Poseidon == MasterID_Poseidon ) THEN
-     Call Write_Final_Results()
- END IF
- END IF
+! IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
+! IF ( myID_Poseidon == MasterID_Poseidon ) THEN
+!     Call Write_Final_Results()
+! END IF
+! END IF
 
 
  END SUBROUTINE Poseidon_XCFC_Run_Part1
@@ -230,7 +231,7 @@ END IF
 
  IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
  IF ( myID_Poseidon == MasterID_Poseidon ) THEN
-     Call Write_Final_Results()
+     Call Write_Final_Results_AMReX()
  END IF
  END IF
 
