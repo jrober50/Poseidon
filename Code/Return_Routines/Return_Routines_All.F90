@@ -390,6 +390,7 @@ COMPLEX(idp), DIMENSION(1:6)                                    ::  Tmp_A
 INTEGER                                                         ::  Current_Location
 INTEGER                                                         ::  Num_DOF
 
+REAL(idp), DIMENSION(:,:,:), ALLOCATABLE                        ::  Caller_LPT
 
 
 Quad_Span = Right_Limit - Left_Limit
@@ -404,6 +405,8 @@ Num_DOF = NQ(1)*NQ(2)*NQ(3)
 Gamma(1) = 1.0_idp
 Christoffel = 0.0_idp
 
+
+ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
 DO lvl = 0,nLevels-1
 
 
@@ -462,15 +465,17 @@ DO lvl = 0,nLevels-1
             Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
             Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
             
-
+            DO rd = 1,NQ(1)
+                Caller_LPT(0,:,rd)=Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+                Caller_LPT(1,:,rd)=Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+            END DO
 
             DO pd = 1,NQ(3)
             DO td = 1,NQ(2)
             DO rd = 1,NQ(1)
 
                 tpd = Map_To_tpd(td,pd)
-                LagP = Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
-                dLagP = Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+
                 Tmp_Val_A = 0.0_idp
                 Tmp_Val_B = 0.0_idp
                 Tmp_Drv_B = 0.0_idp
@@ -483,7 +488,7 @@ DO lvl = 0,nLevels-1
                     Current_Location = Map_To_FEM_Node(iRE,d)
                     TMP_Val_A(iU) = TMP_Val_A(iU)                               &
                                 + cVA_Coeff_Vector(Current_Location,lm,iU)     &
-                                * LagP(d) * Ylm_Elem_Values( lm, tpd )
+                                * Caller_LPT(0,d,rd) * Ylm_Elem_Values( lm, tpd )
 
 
 
@@ -506,7 +511,7 @@ DO lvl = 0,nLevels-1
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
                             + SUM( cVB_Coeff_Vector( Here:There, iVB )     &
                                     * Ylm_Elem_Values( :, tpd )   )         &
-                            * LagP(d)
+                            * Caller_LPT(0,d,rd)
 
                 END DO ! d Loop
                 END DO ! iU Loop
@@ -537,12 +542,12 @@ DO lvl = 0,nLevels-1
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
                             + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
                                     * Ylm_Elem_Values( :, tpd )   )         &
-                            * LagP(d)
+                            * Caller_LPT(0,d,rd)
 
                     TMP_Drv_B(1,iU_Offset) = TMP_Drv_B(1,iU_Offset)         &
                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_Values( :, tpd  )     )     &
-                               * dLagP(d)            &
+                               * Caller_LPT(1,d,rd)            &
                                / DROT
 
 
@@ -550,13 +555,13 @@ DO lvl = 0,nLevels-1
                     TMP_Drv_B(2,iU_Offset) = TMP_Drv_B(2,iU_Offset)         &
                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_dt_Values( :, tpd )   )     &
-                               * LagP(d)
+                               * Caller_LPT(0,d,rd)
 
 
                     TMP_Drv_B(3,iU_Offset) = TMP_Drv_B(3,iU_Offset)         &
                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
                                      * Ylm_Elem_dp_Values( :, tpd)   )      &
-                               * LagP(d)
+                               * Caller_LPT(0,d,rd)
 
                 END DO ! d Loop
                 END DO ! iU Loop
