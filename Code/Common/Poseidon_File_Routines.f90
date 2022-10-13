@@ -100,14 +100,75 @@ END SUBROUTINE OPEN_NEW_FILE
 
 
 
+ !+501+############################################################################!
+!                                                                                   !
+!                     OPEN_NEW_FILE                                                 !
+!                                                                                   !
+ !#################################################################################!
+SUBROUTINE Open_Existing_File_Append(File_Name, File_Number, Suggested_Number)
 
+
+
+CHARACTER(LEN = *), INTENT(IN)                          ::  File_Name
+INTEGER,            INTENT(INOUT)                       ::  File_Number
+INTEGER, OPTIONAL,  INTENT(IN)                          ::  Suggested_Number
+
+INTEGER                                                 ::  Temp_Number
+INTEGER                                                 ::  istat = 0
+LOGICAL                                                 ::  FLAG, OP
+LOGICAL                                                 ::  UNIT_FLAG, NAME_FLAG
+
+
+UNIT_FLAG = .FALSE.
+NAME_FLAG = .FALSE.
+
+
+!  Assigned an unused number, and assign it to new file
+FLAG = .TRUE.
+IF ( Present(Suggested_Number) ) THEN
+    Temp_Number = Suggested_Number
+ELSE
+    Temp_Number = 3000
+END IF
+
+
+DO WHILE (FLAG)
+    INQUIRE( UNIT = Temp_Number, OPENED = OP )
+
+    IF ( OP ) THEN
+        Temp_Number = Temp_Number + 1
+    ELSE
+        File_Number = Temp_Number
+        FLAG = .FALSE.
+        UNIT_FLAG = .TRUE.
+    END IF
+END DO
+
+
+
+
+! Open New File
+IF ( UNIT_FLAG  ) THEN
+
+    OPEN( Unit = File_Number, File = File_Name, IOSTAT = istat, POSITION='APPEND' )
+    IF ( istat .NE. 0 ) THEN
+
+        PRINT*,"WARNING: Could not open file at ", File_Name, istat
+
+    END IF
+END IF
+
+
+
+
+END SUBROUTINE OPEN_Existing_File_Append
 
  !+501+############################################################################!
 !                                                                                   !
 !                     OPEN_EXISTING_FILE                                            !
 !                                                                                   !
  !#################################################################################!
-SUBROUTINE OPEN_EXISTING_FILE(File_Name, File_Number, istat)
+SUBROUTINE OPEN_EXISTING_FILE_Rewind(File_Name, File_Number, istat)
 
 
 
@@ -171,7 +232,7 @@ END IF
 
 
 
-END SUBROUTINE OPEN_EXISTING_FILE
+END SUBROUTINE OPEN_EXISTING_FILE_Rewind
 
 
 

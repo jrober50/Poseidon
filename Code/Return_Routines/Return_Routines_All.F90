@@ -668,22 +668,23 @@ DO lvl = 0,nLevels-1
                 ! Tmp_A values are A^ij.
                 ! Return Results are A_ij so we multiply by Gamma_ij
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
-                
-                
-!                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
-!                        = Tmp_Val_B(1,iVB_X)
-!
-!                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ ))                         &
-!                        = Tmp_Drv_B(1,1)
-
+                        = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)   &
+                        
                 
                 
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+                        = Tmp_Val_B(1,iVB_X)
 
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(3)/(Gamma(1)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+                        = Tmp_Drv_B(1,1)
+
+                
+                
+!                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
+!                        = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+!
+!                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ ))                         &
+!                        = REAL(Tmp_A(3)/(Gamma(1)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
 
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K22, rd, td, pd, NQ ))                         &
                         = REAL(Tmp_A(4)/(Gamma(2)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)

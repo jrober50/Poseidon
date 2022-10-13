@@ -64,7 +64,7 @@ USE Variables_FEM_Module, &
 
 USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File,                  &
-                    Open_Existing_File
+                    Open_Existing_File_Rewind
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
@@ -400,7 +400,7 @@ fmt = '(ES24.16E3,SP,ES24.16E3,"i")'
 !fmt = '(F16.10,SP,F16.10,"i")'
 
 WRITE(FILE_NAME,Filename_Format_B)"OUTPUT/Poseidon_Objects/COEFF_VEC_F",Frame_Num,"_I",Iter_Num,".out"
-CALL OPEN_EXISTING_FILE( FILE_NAME, FILE_ID, istat )
+CALL Open_Existing_File_Rewind( FILE_NAME, FILE_ID, istat )
 
 READ(FILE_ID,*)Test
 

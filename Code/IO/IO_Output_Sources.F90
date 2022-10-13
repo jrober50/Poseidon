@@ -130,8 +130,7 @@ USE Functions_Info,   &
             ONLY  : PQ_ITERATIONS_MAX
 
 USE Poseidon_File_Routines_Module, &
-            ONLY :  Open_New_File,                  &
-                    Open_Existing_File
+            ONLY :  Open_New_File
 
 
 USE Flags_IO_Module, &

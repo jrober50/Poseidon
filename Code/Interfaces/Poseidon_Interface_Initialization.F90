@@ -483,7 +483,7 @@ ELSE
     !           Initialize CFA/XCFC Metric Solver           !
     !                                                       !
     !=======================================================!
-    nProcs_Poseidon = 1
+!    nProcs_Poseidon = 1
     Method_Flag = 3
 
 

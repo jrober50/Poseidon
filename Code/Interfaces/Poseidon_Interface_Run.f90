@@ -230,9 +230,7 @@ END IF
 
 
  IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
- IF ( myID_Poseidon == MasterID_Poseidon ) THEN
      Call Write_Final_Results_AMReX()
- END IF
  END IF
 
 

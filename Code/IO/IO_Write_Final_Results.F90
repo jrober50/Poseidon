@@ -66,7 +66,9 @@ USE Poseidon_Interface_Return_Routines, &
             ONLY :  Poseidon_Return_All
 
 USE Variables_MPI, &
-            ONLY :  myID_Poseidon
+            ONLY :  myID_Poseidon,          &
+                    nProcs_Poseidon,        &
+                    Poseidon_Comm_World
 
 USE Variables_Derived, &
             ONLY :  Num_R_Nodes
@@ -157,7 +159,7 @@ USE Poseidon_IO_Parameters, &
 
 USE Poseidon_File_Routines_Module, &
             ONLY :  Open_New_File,                  &
-                    Open_Existing_File
+                    Open_Existing_File_Append
 
 USE Flags_IO_Module, &
             ONLY :  lPF_IO_Flags,               &
@@ -364,7 +366,84 @@ END SUBROUTINE Write_Final_Results
 
 
 
+ !+401+####################################################################!
+!                                                                           !
+!          Create_Final_Results_Filenames                                   !
+!                                                                           !
+ !#########################################################################!
+SUBROUTINE Create_Final_Results_Filenames(  uNum_Files, uFilenames,     &
+                                            xNum_Files, xFilenames,     &
+                                            kNum_Files, kFilenames,     &
+                                            mNum_Files, mFilenames,     &
+                                            U_Flag                      )
 
+INTEGER,                                            INTENT(IN)      ::  uNum_Files
+CHARACTER(LEN = 500),   DIMENSION(uNum_Files),      INTENT(INOUT)   ::  uFilenames
+
+INTEGER,                                            INTENT(IN)      ::  xNum_Files
+CHARACTER(LEN = 500),   DIMENSION(uNum_Files),      INTENT(INOUT)   ::  xFilenames
+
+INTEGER,                                            INTENT(IN)      ::  kNum_Files
+CHARACTER(LEN = 500),   DIMENSION(uNum_Files),      INTENT(INOUT)   ::  kFilenames
+
+INTEGER,                                            INTENT(IN)      ::  mNum_Files
+CHARACTER(LEN = 500),   DIMENSION(uNum_Files),      INTENT(INOUT)   ::  mFilenames
+
+INTEGER,                DIMENSION(1:5),             INTENT(IN)      ::  U_Flag
+
+
+INTEGER                                                             ::  i
+
+116 FORMAT (A,A,A,A,A,A)
+
+!
+!   Create Filenames
+!
+
+!   Dimension and Location Files
+WRITE(mFilenames(1),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
+WRITE(mFilenames(2),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
+WRITE(mFilenames(3),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
+WRITE(mFilenames(4),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
+
+
+
+!   Base Metric Variables
+DO i = 1,5
+    IF ( U_Flag(i) == 1 ) THEN
+        WRITE(uFilenames(i),116)                &
+                Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
+    END IF
+
+END DO
+
+
+!   X Vector
+IF ( xNum_Files .GE. 1 ) THEN
+
+    DO i = 1,xNum_Files
+        WRITE(xFilenames(i),116)                &
+                Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(5+i)),"_",TRIM(File_Suffix),".out"
+    END DO
+
+END IF
+
+
+
+!   Kij
+IF ( kNum_Files .GE. 1 ) THEN
+
+    DO i = 1,kNum_Files
+
+        WRITE(kFilenames(i),116)                &
+                Poseidon_Results_Dir,"Results_",TRIM(Kij_ShortVars(i)),"_",TRIM(File_Suffix),".out"
+    END DO
+
+END IF
+
+
+
+END SUBROUTINE Create_Final_Results_Filenames
 
 
 
@@ -407,23 +486,25 @@ CHARACTER(LEN = 500),   DIMENSION(mNum_Files)                       ::  mFilenam
 !   Create Filenames
 !
 
-!   Dimension and Location Files
-WRITE(mFilenames(1),116) Poseidon_Results_Dir,"Results_Dimensions_",TRIM(File_Suffix),".out"
-WRITE(mFilenames(2),116) Poseidon_Results_Dir,"Results_Radial_Locs_",TRIM(File_Suffix),".out"
-WRITE(mFilenames(3),116) Poseidon_Results_Dir,"Results_Theta_Locs_",TRIM(File_Suffix),".out"
-WRITE(mFilenames(4),116) Poseidon_Results_Dir,"Results_Phi_Locs_",TRIM(File_Suffix),".out"
+
+CALL Create_Final_Results_Filenames( uNum_Files, uFilenames,     &
+                                     xNum_Files, xFilenames,     &
+                                     kNum_Files, kFilenames,     &
+                                     mNum_Files, mFilenames,     &
+                                     U_Flag                      )
+
 
 DO i = 1,4
-    CALL OPEN_NEW_FILE( mFilenames(i), mFile_IDs(i),200)
+!    CALL OPEN_NEW_FILE( mFilenames(i), mFile_IDs(i),200)
+    CALL Open_Existing_File_Append(mFilenames(i), mFile_IDs(i),200)
 END DO
 
 !   Base Metric Variables
 DO i = 1,5
     IF ( U_Flag(i) == 1 ) THEN
-        WRITE(uFilenames(i),116)                &
-                Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(i)),"_",TRIM(File_Suffix),".out"
 
-        CALL OPEN_NEW_FILE( uFilenames(i), uFile_IDs(i),205)
+!        CALL OPEN_NEW_FILE( uFilenames(i), uFile_IDs(i),205)
+        CALL Open_Existing_File_Append(uFilenames(i), uFile_IDs(i),205)
     END IF
 
 END DO
@@ -433,31 +514,19 @@ END DO
 IF ( xNum_Files .GE. 1 ) THEN
 
     DO i = 1,xNum_Files
-        WRITE(xFilenames(i),116)                &
-                Poseidon_Results_Dir,"Results_",TRIM(CFA_ShortVars(5+i)),"_",TRIM(File_Suffix),".out"
-    END DO
-
-    DO i = 1,xNum_Files
-        CALL OPEN_NEW_FILE( xFilenames(i), xFile_IDs(i), 210 )
+!        CALL OPEN_NEW_FILE( xFilenames(i), xFile_IDs(i), 210 )
+        CALL Open_Existing_File_Append(xFilenames(i), xFile_IDs(i), 210 )
     END DO
 
 END IF
-
-
 
 !   Kij
 IF ( kNum_Files .GE. 1 ) THEN
 
     DO i = 1,kNum_Files
-
-        WRITE(kFilenames(i),116)                &
-                Poseidon_Results_Dir,"Results_",TRIM(Kij_ShortVars(i)),"_",TRIM(File_Suffix),".out"
+!        CALL OPEN_NEW_FILE( kFilenames(i), kFile_IDs(i), 220 )
+        CALL Open_Existing_File_Append(kFilenames(i), kFile_IDs(i), 220 )
     END DO
-
-    DO i = 1,kNum_Files
-        CALL OPEN_NEW_FILE( kFilenames(i), kFile_IDs(i), 220 )
-    END DO
-
 
 END IF
 
@@ -1018,6 +1087,8 @@ INTEGER                                                     ::  nLevels
 INTEGER                                                     ::  lvl
 INTEGER                                                     ::  MF_Results_nComps
 
+INTEGER                                                     ::  ierr, CurID
+
 INTEGER                                                     ::  iU_K11 = 6
 INTEGER                                                     ::  iU_K12 = 7
 INTEGER                                                     ::  iU_K13 = 8
@@ -1123,162 +1194,176 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
         ALLOCATE( mFile_IDs(1:mNum_Files) )
 
 
-        CALL Create_Final_Results_Files(uNum_Files, uFile_IDs,      &
-                                        xNum_Files, xFile_IDs,      &
-                                        kNum_Files, kFile_IDs,      &
-                                        mNum_Files, mFile_IDs,      &
-                                        U_Flag_Used                 )
 
-
-
-        ! Write Output Location Files
-        R_Dim = Num_R_Elements*Degree + 1
-        T_Dim = Num_T_Elements
-        P_Dim = Num_P_Elements
+        PRINT*,"nProcs_Poseidon",nProcs_Poseidon,"myID",myID_Poseidon
         
-        WRITE(mFile_IDs(1),*)R_Dim, T_Dim, P_Dim
+        DO CurID = 0,nProcs_Poseidon
+            IF ( CurID == myID_Poseidon ) THEN
 
+                PRINT*,"myID",myID_Poseidon,"CurID",CurID
 
-        !
-        !   Write Results
-        !
-        !   Base Metric Variables
-
-        CALL Poseidon_Return_ALL( MF_Results )
-        
-        
-        
-        Quad_Span = Caller_xL(2) - Caller_xL(1)
-
-        CUR_RX_LOCS = 2.0_idp * ( Caller_RQ_xlocs(:) - Caller_xL(1) )/Quad_Span - 1.0_idp
-        CUR_TX_LOCS = 2.0_idp * ( Caller_TQ_xlocs(:) - Caller_xL(1) )/Quad_Span - 1.0_idp
-        CUR_PX_LOCS = 2.0_idp * ( Caller_PQ_xlocs(:) - Caller_xL(1) )/Quad_Span - 1.0_idp
-
-         
-        DO lvl = nLevels-1,0,-1
-
-            DROT = 0.5_idp * Level_dx(lvl,1)
-            DTOT = 0.5_idp * Level_dx(lvl,2)
-            DPOT = 0.5_idp * Level_dx(lvl,3)
-            
-            !
-            !   MakeFineMask
-            !
-            IF ( lvl < nLevels-1 ) THEN
-                CALL AMReX_MakeFineMask(  Level_Mask,               &
-                                          MF_Results(lvl)%ba,        &
-                                          MF_Results(lvl)%dm,        &
-                                          MF_Results(lvl+1)%ba,      &
-                                          iLeaf, iTrunk            )
-            ELSE
-                ! Create Level_Mask all equal to 1
-                CALL amrex_imultifab_build( Level_Mask,             &
-                                            MF_Results(lvl)%ba,      &
-                                            MF_Results(lvl)%dm,      &
-                                            1,                      &
-                                            0                       )
-                CALL Level_Mask%SetVal(iLeaf)
-            END IF
-
-
-            CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
-
-            DO WHILE(mfi%next())
-
-                Results_PTR => MF_Results(lvl)%dataPtr(mfi)
-                Mask_PTR   => Level_Mask%dataPtr(mfi)
-
-                Box = mfi%tilebox()
-                nComp =  MF_Results(lvl)%ncomp()
-
-                iEL = Box%lo
-                iEU = Box%hi
+                CALL Create_Final_Results_Files(uNum_Files, uFile_IDs,      &
+                                                xNum_Files, xFile_IDs,      &
+                                                kNum_Files, kFile_IDs,      &
+                                                mNum_Files, mFile_IDs,      &
+                                                U_Flag_Used                 )
 
 
 
-                DO re = iEL(1),iEU(1)
-                DO te = iEL(2),iEU(2)
-                DO pe = iEL(3),iEU(3)
-
-                    IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
-
-
-                    Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
-                    Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
-                    Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
+                ! Write Output Location Files
+                R_Dim = Num_R_Elements*Degree + 1
+                T_Dim = Num_T_Elements
+                P_Dim = Num_P_Elements
+                
+                
+                
+                WRITE(mFile_IDs(1),*)R_Dim, T_Dim, P_Dim
 
 
-                    DO rd = 1,Caller_NQ(1)
-                        
-                        WRITE(mFile_IDs(2),*)Cur_R_Locs(rd)/Centimeter
-                    END DO
-                    DO td = 1,Caller_NQ(2)
-                        WRITE(mFile_IDs(3),*)Cur_T_Locs(td)
-                    END DO
-                    DO pd = 1,Caller_NQ(3)
-                        WRITE(mFile_IDs(4),*)Cur_P_Locs(pd)
-                    END DO
+                !
+                !   Write Results
+                !
+                !   Base Metric Variables
 
+                CALL Poseidon_Return_ALL( MF_Results )
+                
+                
+                
+                Quad_Span = Caller_xL(2) - Caller_xL(1)
 
+                CUR_RX_LOCS = 2.0_idp * ( Caller_RQ_xlocs(:) - Caller_xL(1) )/Quad_Span - 1.0_idp
+                CUR_TX_LOCS = 2.0_idp * ( Caller_TQ_xlocs(:) - Caller_xL(1) )/Quad_Span - 1.0_idp
+                CUR_PX_LOCS = 2.0_idp * ( Caller_PQ_xlocs(:) - Caller_xL(1) )/Quad_Span - 1.0_idp
 
+                 
+                DO lvl = nLevels-1,0,-1
 
-                    DO pd = 1,Caller_NQ(3)
-                    DO td = 1,Caller_NQ(2)
-                    DO rd = 1,Caller_NQ(1)
-
-
-            
-                        DO i = 1,3
-                            Here = AMReX_nCOMP_Map( i, rd, td, pd, Caller_NQ )
-                            WRITE(uFile_IDs(i),*) Results_PTR(re,te,pe,Here)/Units(i)
-                        END DO
-
-                        ! K_11
-                        Here = AMReX_nCOMP_Map( iU_K11, rd, td, pd, Caller_NQ )
-                        WRITE(kFile_IDs(1),*) Results_PTR(re,te,pe,Here)
-                        
-                        ! X1 Value
-                        Here = AMReX_nCOMP_Map( iU_K12, rd, td, pd, Caller_NQ )
-                        WRITE(xFile_IDs(1),*)Results_PTR(re,te,pe,Here)
-                        
-                        ! X1 Deriv
-                        Here = AMReX_nCOMP_Map( iU_K13, rd, td, pd, Caller_NQ )
-                        WRITE(xFile_IDs(2),*)Results_PTR(re,te,pe,Here)
-
-                    END DO ! rd Loop
-                    END DO ! td Loop
-                    END DO ! pd Loop
-
+                    DROT = 0.5_idp * Level_dx(lvl,1)
+                    DTOT = 0.5_idp * Level_dx(lvl,2)
+                    DPOT = 0.5_idp * Level_dx(lvl,3)
+                    
+                    !
+                    !   MakeFineMask
+                    !
+                    IF ( lvl < nLevels-1 ) THEN
+                        CALL AMReX_MakeFineMask(  Level_Mask,               &
+                                                  MF_Results(lvl)%ba,        &
+                                                  MF_Results(lvl)%dm,        &
+                                                  MF_Results(lvl+1)%ba,      &
+                                                  iLeaf, iTrunk            )
+                    ELSE
+                        ! Create Level_Mask all equal to 1
+                        CALL amrex_imultifab_build( Level_Mask,             &
+                                                    MF_Results(lvl)%ba,      &
+                                                    MF_Results(lvl)%dm,      &
+                                                    1,                      &
+                                                    0                       )
+                        CALL Level_Mask%SetVal(iLeaf)
                     END IF
 
-                END DO ! pe
-                END DO ! te
-                END DO ! re
 
-            END DO
+                    CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
 
-            CALL amrex_mfiter_destroy(mfi)
-            CALL amrex_imultifab_destroy( Level_Mask )
+                    DO WHILE(mfi%next())
 
-        END DO ! lvl
+                        Results_PTR => MF_Results(lvl)%dataPtr(mfi)
+                        Mask_PTR   => Level_Mask%dataPtr(mfi)
 
+                        Box = mfi%tilebox()
+                        nComp =  MF_Results(lvl)%ncomp()
 
-
-        !
-        !   Close Files
-        !
-        CALL Close_Final_Results_Files( uNum_Files, uFile_IDs,      &
-                                        xNum_Files, xFile_IDs,      &
-                                        kNum_Files, kFile_IDs,      &
-                                        mNum_Files, mFile_IDs       )
+                        iEL = Box%lo
+                        iEU = Box%hi
 
 
-        DEALLOCATE( uFile_IDs )
-        DEALLOCATE( xFile_IDs )
-        DEALLOCATE( kFile_IDs )
-        DEALLOCATE( mFile_IDs )
 
-    
+                        DO re = iEL(1),iEU(1)
+                        DO te = iEL(2),iEU(2)
+                        DO pe = iEL(3),iEU(3)
+
+                            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
+
+
+                            Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
+                            Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
+                            Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
+
+
+                            DO rd = 1,Caller_NQ(1)
+                                
+                                WRITE(mFile_IDs(2),*)Cur_R_Locs(rd)/Centimeter
+                            END DO
+                            DO td = 1,Caller_NQ(2)
+                                WRITE(mFile_IDs(3),*)Cur_T_Locs(td)
+                            END DO
+                            DO pd = 1,Caller_NQ(3)
+                                WRITE(mFile_IDs(4),*)Cur_P_Locs(pd)
+                            END DO
+
+
+
+
+                            DO pd = 1,Caller_NQ(3)
+                            DO td = 1,Caller_NQ(2)
+                            DO rd = 1,Caller_NQ(1)
+
+
+                    
+                                DO i = 1,3
+                                    Here = AMReX_nCOMP_Map( i, rd, td, pd, Caller_NQ )
+                                    WRITE(uFile_IDs(i),*) Results_PTR(re,te,pe,Here)/Units(i)
+                                END DO
+
+                                ! K_11
+                                Here = AMReX_nCOMP_Map( iU_K11, rd, td, pd, Caller_NQ )
+                                WRITE(kFile_IDs(1),*) Results_PTR(re,te,pe,Here)/Second
+                                
+                                ! X1 Value
+                                Here = AMReX_nCOMP_Map( iU_K12, rd, td, pd, Caller_NQ )
+                                WRITE(xFile_IDs(1),*)Results_PTR(re,te,pe,Here)/Units(i)
+                                
+                                ! X1 Deriv
+                                Here = AMReX_nCOMP_Map( iU_K13, rd, td, pd, Caller_NQ )
+                                WRITE(xFile_IDs(2),*)Results_PTR(re,te,pe,Here)
+
+                            END DO ! rd Loop
+                            END DO ! td Loop
+                            END DO ! pd Loop
+
+                            END IF
+
+                        END DO ! pe
+                        END DO ! te
+                        END DO ! re
+
+                    END DO
+
+                    CALL amrex_mfiter_destroy(mfi)
+                    CALL amrex_imultifab_destroy( Level_Mask )
+
+                END DO ! lvl
+
+
+
+                !
+                !   Close Files
+                !
+                CALL Close_Final_Results_Files( uNum_Files, uFile_IDs,      &
+                                                xNum_Files, xFile_IDs,      &
+                                                kNum_Files, kFile_IDs,      &
+                                                mNum_Files, mFile_IDs       )
+
+
+                DEALLOCATE( uFile_IDs )
+                DEALLOCATE( xFile_IDs )
+                DEALLOCATE( kFile_IDs )
+                DEALLOCATE( mFile_IDs )
+
+            END IF  ! CurID == myID_Poseidon
+            
+            CALL MPI_Barrier(Poseidon_Comm_World,ierr)
+            
+        END DO
 
     END IF
     
