@@ -1195,12 +1195,10 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
 
 
-        PRINT*,"nProcs_Poseidon",nProcs_Poseidon,"myID",myID_Poseidon
         
         DO CurID = 0,nProcs_Poseidon
             IF ( CurID == myID_Poseidon ) THEN
 
-                PRINT*,"myID",myID_Poseidon,"CurID",CurID
 
                 CALL Create_Final_Results_Files(uNum_Files, uFile_IDs,      &
                                                 xNum_Files, xFile_IDs,      &
@@ -1316,7 +1314,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
                                 ! K_11
                                 Here = AMReX_nCOMP_Map( iU_K11, rd, td, pd, Caller_NQ )
-                                WRITE(kFile_IDs(1),*) Results_PTR(re,te,pe,Here)/Second
+                                WRITE(kFile_IDs(1),*) Results_PTR(re,te,pe,Here)
                                 
                                 ! X1 Value
                                 Here = AMReX_nCOMP_Map( iU_K12, rd, td, pd, Caller_NQ )
