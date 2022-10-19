@@ -89,9 +89,9 @@ IF ( Verbose_Flag ) CALL Init_Message('Allocating Source Variables.')
 #ifdef POSEIDON_AMREX_FLAG
 
 ALLOCATE( MF_Source(0:AMReX_Max_Level))
-ALLOCATE( BA_Source(0:AMReX_Max_Level))
-ALLOCATE( DM_Source(0:AMReX_Max_Level))
-ALLOCATE( GM_Source(0:AMReX_Max_Level))
+!ALLOCATE( BA_Source(0:AMReX_Max_Level))
+!ALLOCATE( DM_Source(0:AMReX_Max_Level))
+!ALLOCATE( GM_Source(0:AMReX_Max_Level))
 
 ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
 
@@ -152,9 +152,9 @@ SUBROUTINE Deallocate_Poseidon_Source_Variables()
 
 
 DEALLOCATE( MF_Source )
-DEALLOCATE( BA_Source )
-DEALLOCATE( DM_Source )
-DEALLOCATE( GM_Source )
+!DEALLOCATE( BA_Source )
+!DEALLOCATE( DM_Source )
+!DEALLOCATE( GM_Source )
 
 DEALLOCATE( iLeafElementsPerLvl )
 

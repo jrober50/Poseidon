@@ -31,96 +31,95 @@ USE Poseidon_Parameters, &
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
-                   iVB_S,                      &
-                   iU_CF,                      &
-                   iU_LF,                      &
-                   iU_S1,                      &
-                   iU_S2,                      &
-                   iU_S3,                      &
-                   iU_X1,                      &
-                   iU_X2,                      &
-                   iU_X3
+                    iVB_S,                      &
+                    iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X3
 
 
 USE Variables_Tables, &
-           ONLY :  Ylm_Elem_Values,        &
-                   Ylm_Elem_dt_Values,     &
-                   Ylm_Elem_dp_Values,              &
-                   Lagrange_Poly_Table,        &
-                   Level_DX
+            ONLY :  Ylm_Elem_Values,        &
+                    Ylm_Elem_dt_Values,     &
+                    Ylm_Elem_dp_Values,              &
+                    Lagrange_Poly_Table,        &
+                    Level_DX
 
 USE Variables_Mesh, &
-           ONLY :  Num_R_Elements,         &
-                   Num_T_Elements,         &
-                   Num_P_Elements
+            ONLY :  Num_R_Elements,         &
+                    Num_T_Elements,         &
+                    Num_P_Elements,         &
+                    iNE_Base,               &
+                    rlocs,                  &
+                    tlocs,                  &
+                    plocs
 
 USE Variables_Derived, &
-           ONLY :  LM_LENGTH
+            ONLY :  LM_LENGTH
 
 USE Variables_Vectors, &
             ONLY :  cVA_Coeff_Vector,      &
                     cVB_Coeff_Vector
 
-USE Variables_Mesh, &
-           ONLY :  rlocs,              &
-                   tlocs,              &
-                   plocs
-
 USE Variables_AMReX_Source, &
-           ONLY :  iLeaf,                &
-                   iTrunk
+            ONLY :  iLeaf,                &
+                    iTrunk
 
 USE Variables_FEM_Module, &
             ONLY :  FEM_Node_xlocs
 
 USE Maps_Fixed_Point, &
-           ONLY :  FP_Array_Map_TypeB
+            ONLY :  FP_Array_Map_TypeB
 
 USE Maps_Quadrature, &
-           ONLY :  Map_To_tpd
+            ONLY :  Map_To_tpd
 
 USE Maps_Domain, &
-           ONLY :  Map_To_FEM_Node,        &
-                   FEM_Elem_Map
+            ONLY :  Map_To_FEM_Node,        &
+                    FEM_Elem_Map
 
 USE Functions_Quadrature, &
-           ONLY :  Initialize_LGL_Quadrature_Locations
+            ONLY :  Initialize_LGL_Quadrature_Locations
 
 USE Functions_Math, &
-           ONLY :   Lagrange_Poly,       &
-                    Lagrange_Poly_Deriv
+            ONLY :   Lagrange_Poly,       &
+                        Lagrange_Poly_Deriv
 
 USE Initialization_Tables, &
-           ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                   Initialize_Ylm_Tables_On_Elem
+            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
+                    Initialize_Ylm_Tables_On_Elem
 
 
 USE Variables_Interface, &
-           ONLY :  Caller_NQ,                      &
-                   Caller_Quad_DOF,                      &
-                   Caller_xL,                      &
-                   Caller_RQ_xlocs,                &
-                   Caller_TQ_xlocs,                &
-                   Caller_PQ_xlocs
+            ONLY :  Caller_NQ,                      &
+                    Caller_Quad_DOF,                      &
+                    Caller_xL,                      &
+                    Caller_RQ_xlocs,                &
+                    Caller_TQ_xlocs,                &
+                    Caller_PQ_xlocs
 
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
 
 USE amrex_box_module,   &
-           ONLY :  amrex_box
+                ONLY :  amrex_box
 
 USE amrex_boxarray_module, &
-           ONLY :  amrex_boxarray
+            ONLY :  amrex_boxarray
 
 use amrex_fort_module, &
-           ONLY :  amrex_spacedim
+            ONLY :  amrex_spacedim
 
 USE amrex_multifab_module,  &
-           ONLY :  amrex_multifab,         &
-                   amrex_multifab_build,   &
-                   amrex_imultifab_build,  &
-                   amrex_imultifab_destroy
+            ONLY :  amrex_multifab,                 &
+                    amrex_multifab_build,           &
+                    amrex_imultifab_build,          &
+                    amrex_imultifab_destroy
 
 USE Variables_AMReX_Core, &
            ONLY :  AMReX_Num_Levels
@@ -323,75 +322,88 @@ END SUBROUTINE Poseidon_Return_All_Native_Caller
 !             AMReX multifab with the data.                                                 !
 !                                                                                           !
 !###########################################################################################!
-SUBROUTINE Poseidon_Return_All_AMReX( NQ,                     &
-                                      RQ_Input,               &
-                                      TQ_Input,               &
-                                      PQ_Input,               &
-                                      Left_Limit,             &
-                                      Right_Limit,            &
-                                      nLevels,                &
-                                      MF_Results              )
+SUBROUTINE Poseidon_Return_All_AMReX( NQ,                       &
+                                      RQ_Input,                 &
+                                      TQ_Input,                 &
+                                      PQ_Input,                 &
+                                      Left_Limit,               &
+                                      Right_Limit,              &
+                                      nLevels,                  &
+                                      MF_Results,               &
+                                      FillGhostCells_Option     )
 
 
-INTEGER,    DIMENSION(3),                   INTENT(IN)  ::  NQ
-REAL(idp),  DIMENSION(NQ(1)),               INTENT(IN)  ::  RQ_Input
-REAL(idp),  DIMENSION(NQ(2)),               INTENT(IN)  ::  TQ_Input
-REAL(idp),  DIMENSION(NQ(3)),               INTENT(IN)  ::  PQ_Input
-REAL(idp),                                  INTENT(IN)  ::  Left_Limit
-REAL(idp),                                  INTENT(IN)  ::  Right_Limit
-INTEGER,                                    INTENT(IN)  ::  nLevels
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  NQ
+REAL(idp),  DIMENSION(NQ(1)),               INTENT(IN)      ::  RQ_Input
+REAL(idp),  DIMENSION(NQ(2)),               INTENT(IN)      ::  TQ_Input
+REAL(idp),  DIMENSION(NQ(3)),               INTENT(IN)      ::  PQ_Input
+REAL(idp),                                  INTENT(IN)      ::  Left_Limit
+REAL(idp),                                  INTENT(IN)      ::  Right_Limit
+INTEGER,                                    INTENT(IN)      ::  nLevels
 
-TYPE(amrex_multifab),                       INTENT(INOUT)  ::  MF_Results(0:nLevels-1)
+TYPE(amrex_multifab),                       INTENT(INOUT)   ::  MF_Results(0:nLevels-1)
+
+LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_Option
+
+INTEGER                                                     ::  iRE
+INTEGER                                                     ::  re, te, pe
+INTEGER                                                     ::  rd, td, pd, tpd
+INTEGER                                                     ::  d, lm
+INTEGER                                                     ::  i, j, lvl
+INTEGER                                                     ::  nComp
+INTEGER                                                     ::  Here, There
+INTEGER                                                     ::  iU, iVB
+INTEGER                                                     ::  iU_Offset
+
+TYPE(amrex_mfiter)                                          ::  mfi
+TYPE(amrex_box)                                             ::  Box
+TYPE(amrex_imultifab)                                       ::  Level_Mask
+INTEGER, DIMENSION(3)                                       ::  iEL, iEU
+INTEGER, DIMENSION(3)                                       ::  iEL_A, iEU_A
+INTEGER,    CONTIGUOUS, POINTER                             ::  Mask_PTR(:,:,:,:)
+REAL(idp),  CONTIGUOUS, POINTER                             ::  Results_PTR(:,:,:,:)
+
+LOGICAL                                                     ::  FillGhostCells
+
+REAL(idp)                                                   ::  Quad_Span
+REAL(idp),      DIMENSION(0:DEGREE)                                  ::  LagP
+REAL(idp),      DIMENSION(0:DEGREE)                                  ::  dLagP
+REAL(idp),      DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
+REAL(idp),      DIMENSION(1:NQ(1))                                   ::  Cur_RX_Locs
+REAL(idp),      DIMENSION(1:NQ(2))                                   ::  CUR_T_LOCS
+REAL(idp),      DIMENSION(1:NQ(2))                                   ::  Cur_TX_Locs
+REAL(idp),      DIMENSION(1:NQ(3))                                   ::  CUR_P_LOCS
+REAL(idp),      DIMENSION(1:NQ(3))                                   ::  Cur_PX_Locs
+
+REAL(idp)                                                   ::  DROT
+REAL(idp)                                                   ::  DTOT
+REAL(idp)                                                   ::  DPOT
+
+REAL(idp),      DIMENSION(3)                                ::  gamma
+REAL(idp),      DIMENSION(3,3,3)                            ::  Christoffel
+
+COMPLEX(idp),   DIMENSION(1:2)                              ::  TMP_Val_A
+COMPLEX(idp),   DIMENSION(1:3,1:2)                          ::  TMP_Val_B
+COMPLEX(idp),   DIMENSION(1:3,1:3)                          ::  TMP_Drv_B
+
+COMPLEX(idp),   DIMENSION(1:4)                              ::  Reusable_Vals
+COMPLEX(idp),   DIMENSION(1:6)                              ::  Tmp_A
+
+INTEGER                                                     ::  Current_Location
+INTEGER                                                     ::  Num_DOF
+
+INTEGER                                                     ::  nGhost
+INTEGER,        DIMENSION(1:3)                              ::  nGhost_Vec
+
+REAL(idp), DIMENSION(:,:,:), ALLOCATABLE                    ::  Caller_LPT
 
 
-INTEGER                                                 ::  iRE
-INTEGER                                                 ::  re, te, pe
-INTEGER                                                 ::  rd, td, pd, tpd
-INTEGER                                                 ::  d, lm
-INTEGER                                                 ::  i, j, lvl
-INTEGER                                                 ::  nComp
-INTEGER                                                 ::  Here, There
-INTEGER                                                 ::  iU, iVB
-INTEGER                                                 ::  iU_Offset
 
-TYPE(amrex_mfiter)                                              ::  mfi
-TYPE(amrex_box)                                                 ::  Box
-TYPE(amrex_imultifab)                                           ::  Level_Mask
-INTEGER, DIMENSION(3)                                           ::  iEL, iEU
-INTEGER,    CONTIGUOUS, POINTER                                 ::  Mask_PTR(:,:,:,:)
-REAL(idp),  CONTIGUOUS, POINTER                                 ::  Results_PTR(:,:,:,:)
-
-
-
-REAL(idp)                                                       ::  Quad_Span
-REAL(idp), DIMENSION(0:DEGREE)                                  ::  LagP
-REAL(idp), DIMENSION(0:DEGREE)                                  ::  dLagP
-REAL(idp), DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
-REAL(idp), DIMENSION(1:NQ(1))                                   ::  Cur_RX_Locs
-REAL(idp), DIMENSION(1:NQ(2))                                   ::  CUR_T_LOCS
-REAL(idp), DIMENSION(1:NQ(2))                                   ::  Cur_TX_Locs
-REAL(idp), DIMENSION(1:NQ(3))                                   ::  CUR_P_LOCS
-REAL(idp), DIMENSION(1:NQ(3))                                   ::  Cur_PX_Locs
-
-REAL(idp)                                                       ::  DROT
-REAL(idp)                                                       ::  DTOT
-REAL(idp)                                                       ::  DPOT
-
-REAL(idp), DIMENSION(3)                                         ::  gamma
-REAL(idp), DIMENSION(3,3,3)                                     ::  Christoffel
-
-COMPLEX(idp), DIMENSION(1:2)                                    ::  TMP_Val_A
-COMPLEX(idp), DIMENSION(1:3,1:2)                                ::  TMP_Val_B
-COMPLEX(idp), DIMENSION(1:3,1:3)                                ::  TMP_Drv_B
-
-COMPLEX(idp), DIMENSION(1:4)                                    ::  Reusable_Vals
-COMPLEX(idp), DIMENSION(1:6)                                    ::  Tmp_A
-
-INTEGER                                                         ::  Current_Location
-INTEGER                                                         ::  Num_DOF
-
-REAL(idp), DIMENSION(:,:,:), ALLOCATABLE                        ::  Caller_LPT
-
+IF ( PRESENT(FillGhostCells_Option) ) THEN
+    FillGhostCells = FillGhostCells_Option
+ELSE
+    FillGhostCells = .FALSE.
+END IF
 
 Quad_Span = Right_Limit - Left_Limit
 
@@ -418,36 +430,69 @@ DO lvl = 0,nLevels-1
     !   MakeFineMask
     !
     IF ( lvl < AMReX_Num_Levels-1 ) THEN
+        
+    
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
                                   MF_Results(lvl+1)%ba,     &
                                   iLeaf, iTrunk            )
+                                  
     ELSE
         ! Create Level_Mask all equal to 1
+        
+!        IF ( FillGhostCells ) THEN
+!            nGhost = MF_Results(lvl)%nghost()
+!        ELSE
+!            nGhost = 0
+!        END IF
+            
         CALL amrex_imultifab_build( Level_Mask,             &
                                     MF_Results(lvl)%ba,     &
                                     MF_Results(lvl)%dm,     &
                                     1,                      &  ! ncomp = 1
-                                    0                       )  ! nghost = 0
+                                    0                  )  ! nghost = 0
         CALL Level_Mask%SetVal(iLeaf)
     END IF
 
 
 
+    IF ( FillGhostCells ) THEN
+        nGhost_Vec = MF_Results(lvl)%nghostvect()
+    ELSE
+        nGhost_Vec = 0
+    END IF
+
 
     CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
 
     DO WHILE(mfi%next())
+    
 
+        
+!        PRINT*,"lvl",nGhost_Vec
+        
         Results_PTR => MF_Results(lvl)%dataPtr(mfi)
         Mask_PTR   => Level_Mask%dataPtr(mfi)
 
         Box = mfi%tilebox()
         nComp =  MF_Results(lvl)%ncomp()
 
-        iEL = Box%lo
-        iEU = Box%hi
+        iEL_A = Box%lo
+        iEU_A = Box%hi
+        iEL = iEL_A-nGhost_Vec
+        iEU = iEU_A+nGhost_Vec
+
+        IF ( ANY( iEL < 0 ) ) THEN
+            ! Reflecting Conditions
+            iEL = iEL_A
+        END IF
+        
+        IF ( ANY( iEU .GE. (2**lvl)*iNE_Base(1) ) ) THEN
+            iEU = iEU_A
+        END IF
+
+
 
 
         CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
@@ -731,10 +776,10 @@ END SUBROUTINE Poseidon_Return_All_AMReX
 !             and fill an AMReX multifab with the data.                                     !
 !                                                                                           !
 !###########################################################################################!
-SUBROUTINE Poseidon_Return_All_AMReX_Caller( MF_Results )
+SUBROUTINE Poseidon_Return_All_AMReX_Caller( MF_Results, FillGhostCells_Option )
 
-TYPE(amrex_multifab),   INTENT(INOUT)           ::  MF_Results(0:AMReX_Num_Levels-1)
-
+TYPE(amrex_multifab),               INTENT(INOUT)       ::  MF_Results(0:AMReX_Num_Levels-1)
+LOGICAL,                OPTIONAL,   INTENT(IN)          ::  FillGhostCells_Option
 
 
 CALL Poseidon_Return_All_AMReX( Caller_NQ,                      &
@@ -744,7 +789,8 @@ CALL Poseidon_Return_All_AMReX( Caller_NQ,                      &
                                 Caller_xL(1),                   &
                                 Caller_xL(2),                   &
                                 AMReX_Num_Levels,               &
-                                MF_Results                      )
+                                MF_Results,                     &
+                                FillGhostCells_Option           )
 
 
 END SUBROUTINE Poseidon_Return_All_AMReX_Caller

@@ -56,6 +56,7 @@ USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
                     Num_T_Elements,         &
                     Num_P_Elements,         &
+                    iNE_Base,               &
                     R_Inner,                &
                     R_Outer
 
@@ -135,7 +136,7 @@ CALL amrex_parmparse_build( PP, 'amr' )
     CALL PP % get   ( 'max_level'        , Max_Level_In         )
     CALL PP % query ( 'UseTiling'        , Tiling_In            )
 CALL amrex_parmparse_destroy( PP )
-
+iNE_Base = nCells_In
 
 
 Degree_In = Degree_Default

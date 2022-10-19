@@ -30,6 +30,8 @@ INTEGER, PUBLIC                     :: NUM_LOC_R_ELEMENTS   !! # of Radial Eleme
 INTEGER, PUBLIC                     :: NUM_LOC_T_ELEMENTS   !! # of Theta Elements
 INTEGER, PUBLIC                     :: NUM_LOC_P_ELEMENTS   !! # of Phi Elements,
 
+INTEGER,    PUBLIC,    DIMENSION(3)     ::  iNE_Base
+
 REAL(KIND = idp)                                            ::  R_INNER
 REAL(KIND = idp)                                            ::  R_OUTER
 

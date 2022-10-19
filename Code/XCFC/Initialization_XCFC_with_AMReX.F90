@@ -100,6 +100,10 @@ USE Timer_Variables_Module, &
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,     &
                     iPF_Init_Method_Vars
+                    
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,               &
+                    iPF_IO_Print_Setup
 
 
 IMPLICIT NONE
@@ -148,7 +152,7 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
     lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
 
-    IF ( Verbose_Flag ) THEN
+    IF ( lPF_IO_Flags(iPF_IO_Print_Setup) ) THEN
         CALL PRINT_AMReX_Setup()
     END IF
 END IF
