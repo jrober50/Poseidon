@@ -62,8 +62,7 @@ USE Poseidon_Parameters, &
                     L_Limit,                &
                     Eq_Flags
                     
-USE Poseidon_Interface_Return_Routines, &
-            ONLY :  Poseidon_Return_All
+
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon,          &
@@ -136,6 +135,9 @@ USE Poseidon_Return_Routines_Module, &
 
 USE Return_Functions_FP , &
             ONLY :  Calc_Drv_At_Location_Type_B
+            
+USE Poseidon_Return_Routines_All, &
+            ONLY :  Poseidon_Return_All_AMReX_Caller
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations,     &
@@ -810,24 +812,26 @@ DO i = 1,5
     END IF
 END DO
 
+DO i = 1,xNum_Files
 DO k = 1,P_Dim
 DO j = 1,T_Dim
 
-    WRITE(xFile_IDs(1),*)xVar_Holder(k,j,:,1)/Units(3)
+    WRITE(xFile_IDs(i),*)xVar_Holder(k,j,:,1)/Units(3)
 
 END DO ! j Loop
 END DO ! k Loop
+END DO ! i Loop
 
 
-
+DO i = 1,kNum_Files
 DO k = 1,P_Dim
 DO j = 1,T_Dim
 
-    WRITE(kFile_IDs(1),*)kVar_Holder(k,j,:,1)
+    WRITE(kFile_IDs(i),*)kVar_Holder(k,j,:,1)
 
 END DO ! j Loop
 END DO ! k Loop
-
+END DO ! i Loop
 
 
 END SUBROUTINE Write_Final_Results_All
@@ -1038,6 +1042,9 @@ INTEGER,    INTENT(IN), OPTIONAL,   DIMENSION(1:5)          ::  U_Overide
 LOGICAL,    INTENT(IN), OPTIONAL                            ::  Kij_Flag_Option
 LOGICAL,    INTENT(IN), OPTIONAL                            ::  X_Flag_Option
 
+
+#ifdef POSEIDON_AMREX_FLAG
+
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  mFile_IDs
 INTEGER                                                     ::  mNum_Files
 
@@ -1223,7 +1230,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                 !
                 !   Base Metric Variables
 
-                CALL Poseidon_Return_ALL( MF_Results )
+                CALL Poseidon_Return_All_AMReX_Caller( MF_Results )
                 
                 
                 
@@ -1372,6 +1379,8 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
     
 END IF
 
+
+#endif
 
 END SUBROUTINE Write_Final_Results_AMReX
 

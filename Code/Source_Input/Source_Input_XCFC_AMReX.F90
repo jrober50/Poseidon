@@ -596,10 +596,11 @@ END IF
 IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
     DO level = 0,AMReX_Num_Levels-1
 
+
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
-                                    MF_Source_nComps, 1         )
+                                    MF_Source_nComps, 0         )
 
         lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
     END DO

@@ -11,7 +11,7 @@ IO_Print_Results.o:             \
   IO_Print_Results.f90          \
 
 IO_Write_Final_Results.o:        \
-  IO_Write_Final_Results.f90    \
+  IO_Write_Final_Results.F90    \
 
 IO_Linear_System.o:             \
   IO_Linear_System.f90          \
