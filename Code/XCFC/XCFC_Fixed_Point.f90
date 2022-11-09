@@ -179,10 +179,24 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         BVector = -FVector(:,mk)
         AMatrix(:,1:mk-1) = FVector(:,1:mk-1) - SPREAD( FVector(:,mk), DIM=2, NCOPIES = mk-1)
 
-        CALL ZGELS('N',Var_Dim,mk-1,1,              &
-                    AMatrix(:,1:mk-1), Var_Dim,     &
-                    BVector, Var_Dim,               &
-                    WORK, LWORK, INFO )
+        
+
+
+
+
+!        PRINT*,"Before ZGELS"
+        CALL ZGELS( 'N',                &
+                    Var_Dim,mk-1,       &
+                    1,                  &
+                    AMatrix(:,1:mk-1),  &
+                    Var_Dim,            &
+                    BVector,            &
+                    Var_Dim,            &
+                    WORK,               &
+                    LWORK,              &
+                    INFO                )
+!        PRINT*,"After ZGELS"
+!        STOP
 
         IF ( INFO .NE. 0 ) THEN
             WRITE(Message,'(A,I1.1,A,I1.1)')'In XCFC_Fixed_Point, iU = ',iU,' : ZGELS failed with INFO = ',INFO
@@ -206,8 +220,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
-
-
     IF ( mk == M .AND. .NOT. Converged ) THEN
         GVector = CSHIFT( GVector, SHIFT = +1, DIM = 2)
         FVector = CSHIFT( FVector, SHIFT = +1, DIM = 2)
@@ -223,9 +235,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     !   Calculate Source Vector with updated solution
     CALL XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
     
-
-
-
 
 
     IF ( Verbose_Flag ) THEN

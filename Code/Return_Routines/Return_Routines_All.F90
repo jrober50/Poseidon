@@ -417,14 +417,22 @@ Num_DOF = NQ(1)*NQ(2)*NQ(3)
 Gamma(1) = 1.0_idp
 Christoffel = 0.0_idp
 
-
 ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
+DO rd = 1,NQ(1)
+    Caller_LPT(0,:,rd)=Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+    Caller_LPT(1,:,rd)=Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+END DO
+
+
 DO lvl = 0,nLevels-1
 
 
-    DROT = 0.5_idp * Level_dx(lvl,1)
-    DTOT = 0.5_idp * Level_dx(lvl,2)
-    DPOT = 0.5_idp * Level_dx(lvl,3)
+    IF ( FillGhostCells ) THEN
+        nGhost_Vec = MF_Results(lvl)%nghostvect()
+    ELSE
+        nGhost_Vec = 0
+    END IF
+
 
     !
     !   MakeFineMask
@@ -439,39 +447,25 @@ DO lvl = 0,nLevels-1
                                   iLeaf, iTrunk            )
                                   
     ELSE
-        ! Create Level_Mask all equal to 1
-        
-!        IF ( FillGhostCells ) THEN
-!            nGhost = MF_Results(lvl)%nghost()
-!        ELSE
-!            nGhost = 0
-!        END IF
             
         CALL amrex_imultifab_build( Level_Mask,             &
                                     MF_Results(lvl)%ba,     &
                                     MF_Results(lvl)%dm,     &
                                     1,                      &  ! ncomp = 1
-                                    0                  )  ! nghost = 0
+                                    nGhost_Vec(1)           )
         CALL Level_Mask%SetVal(iLeaf)
     END IF
 
 
-
-    IF ( FillGhostCells ) THEN
-        nGhost_Vec = MF_Results(lvl)%nghostvect()
-    ELSE
-        nGhost_Vec = 0
-    END IF
+    DROT = 0.5_idp * Level_dx(lvl,1)
+    DTOT = 0.5_idp * Level_dx(lvl,2)
+    DPOT = 0.5_idp * Level_dx(lvl,3)
 
 
     CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
 
     DO WHILE(mfi%next())
     
-
-        
-!        PRINT*,"lvl",nGhost_Vec
-        
         Results_PTR => MF_Results(lvl)%dataPtr(mfi)
         Mask_PTR   => Level_Mask%dataPtr(mfi)
 
@@ -484,16 +478,13 @@ DO lvl = 0,nLevels-1
         iEU = iEU_A+nGhost_Vec
 
         IF ( ANY( iEL < 0 ) ) THEN
-            ! Reflecting Conditions
+            ! TO DO: Impliment Reflecting Conditions
             iEL = iEL_A
         END IF
         
         IF ( ANY( iEU .GE. (2**lvl)*iNE_Base(1) ) ) THEN
             iEU = iEU_A
         END IF
-
-
-
 
         CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
 
@@ -503,17 +494,13 @@ DO lvl = 0,nLevels-1
 
         IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
             iRE = FEM_Elem_Map(re,lvl)
-
             CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
     
             Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
             Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
             Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
             
-            DO rd = 1,NQ(1)
-                Caller_LPT(0,:,rd)=Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
-                Caller_LPT(1,:,rd)=Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
-            END DO
+
 
             DO pd = 1,NQ(3)
             DO td = 1,NQ(2)

@@ -15,7 +15,7 @@ EXT	= F90
 
 ### Fortran Compiler
 FORT_ISAAC         = mpif90
-FORT_NicksMacBook  = $(MPI_DIR)/bin/mpif90
+FORT_NicksMacBook  = $(MPI_DIR)/bin/mpif90 -cpp
 FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
 FORT_kkadoogan     = $(MPI_HOME)/bin/mpif90
 FORT_accre_gnu     = /cvmfs/oasis.opensciencegrid.org/accre/mirror/optimized/sandy_bridge/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/bin/mpif90

@@ -209,10 +209,10 @@ END SUBROUTINE Poseidon_Return_CF_AMReX
 !             and fill an AMReX multifab with the data.                                     !
 !                                                                                           !
 !###########################################################################################!
-SUBROUTINE Poseidon_Return_CF_AMReX_Caller( MF_Results )
+SUBROUTINE Poseidon_Return_CF_AMReX_Caller( MF_Results, FillGhostCells_Option )
 
-TYPE(amrex_multifab),   INTENT(INOUT)           ::  MF_Results(0:AMReX_Num_Levels-1)
-
+TYPE(amrex_multifab),               INTENT(INOUT)   ::  MF_Results(0:AMReX_Num_Levels-1)
+LOGICAL,                OPTIONAL,   INTENT(IN)      ::  FillGhostCells_Option
 
 
 INTEGER                                                         ::  iU
@@ -228,7 +228,8 @@ CALL Poseidon_Return_AMReX_Type_A(  iU,                     &
                                     Caller_xL(1),           &
                                     Caller_xL(2),           &
                                     AMReX_Num_Levels,       &
-                                    MF_Results              )
+                                    MF_Results,             &
+                                    FillGhostCells_Option   )
 
 END SUBROUTINE Poseidon_Return_CF_AMReX_Caller
 
