@@ -15,7 +15,7 @@ EXT	= F90
 
 ### Fortran Compiler
 FORT_ISAAC         = mpif90
-FORT_NicksMacBook  = $(MPI_DIR)/bin/mpif90 -cpp
+FORT_NicksMacBook  = $(MPI_DIR)/bin/mpif90 
 FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
 FORT_kkadoogan     = $(MPI_HOME)/bin/mpif90
 FORT_accre_gnu     = /cvmfs/oasis.opensciencegrid.org/accre/mirror/optimized/sandy_bridge/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/bin/mpif90
@@ -38,7 +38,7 @@ CC_NicksMacBook    = $(MPI_DIR)/bin/mpic++
 STD_DEBUG_ISAAC           = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
 STD_OPTIMIZE_ISAAC        = -O2
 
-STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
+STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow -ffpe-summary=invalid,zero,overflow,underflow -fbounds-check -fcheck=all -Wmaybe-uninitialized
 #STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wall -Wextra
 STD_OPTIMIZE_NicksMacBook = -O2
 
@@ -164,17 +164,6 @@ LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl
 LAPACK_BlueWaters	=
 
-
-
-INCLUDE_LINKER_gfortran	= -I
-INCLUDE_LINKER_ifort	= -I
-INCLUDE_LINKER_ftn	= -I
-
-
-
-OUTPUT_LINKER_gfortran 	= -J
-OUTPUT_LINKER_ifort	= -module
-OUTPUT_LINKER_ftn	= -J
 
 
 
