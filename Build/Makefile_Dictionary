@@ -15,7 +15,7 @@ EXT	= F90
 
 ### Fortran Compiler
 FORT_ISAAC         = mpif90
-FORT_NicksMacBook  = $(MPI_DIR)/bin/mpif90 
+FORT_NicksMacBook  = $(MPI_DIR)/bin/mpif90 -cpp
 FORT_sjdunham      = $(MPICH_DIR)/bin/mpif90
 FORT_kkadoogan     = $(MPI_HOME)/bin/mpif90
 FORT_accre_gnu     = /cvmfs/oasis.opensciencegrid.org/accre/mirror/optimized/sandy_bridge/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/bin/mpif90
@@ -38,7 +38,7 @@ CC_NicksMacBook    = $(MPI_DIR)/bin/mpic++
 STD_DEBUG_ISAAC           = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
 STD_OPTIMIZE_ISAAC        = -O2
 
-STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow -ffpe-summary=invalid,zero,overflow,underflow -fbounds-check -fcheck=all -Wmaybe-uninitialized
+STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
 #STD_DEBUG_NicksMacBook    = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wall -Wextra
 STD_OPTIMIZE_NicksMacBook = -O2
 
@@ -131,11 +131,11 @@ HDF5_Bluewaters_OFF     =
 
 #### MPI
 
-MPI_NicksMacBook_Lib        = -I$(MPI_DIR)/lib
-MPI_NicksMacBook_Include    = -L$(MPI_DIR)/include
+MPI_NicksMacBook_Lib        = -L$(MPI_DIR)/lib
+MPI_NicksMacBook_Include    = -I$(MPI_DIR)/include
 
-MPI_sjdunham_Lib            = -I$(MPICH_DIR)/lib
-MPI_sjdunham_Include        = -L$(MPICH_DIR)/include
+MPI_sjdunham_Lib            = -L$(MPICH_DIR)/lib
+MPI_sjdunham_Include        = -I$(MPICH_DIR)/include
 
 MPI_kkadoogan_Lib            = -L$(MPI_HOME)/lib
 MPI_kkadoogan_Include        = -I$(MPI_HOME)/include
@@ -143,8 +143,8 @@ MPI_kkadoogan_Include        = -I$(MPI_HOME)/include
 MPI_accre_gnu_Lib            = -L/accre/arch/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/lib
 MPI_accre_gnu_Include        = -I/accre/arch/easybuild/software/Compiler/GCC/10.2.0/OpenMPI/4.0.5/include
 
-MPI_MacBook_Lib             = -I/usr/local/openmpi/lib
-MPI_MacBook_Include         = -L/usr/local/openmpi/include
+MPI_MacBook_Lib             = -/usr/local/openmpi/lib
+MPI_MacBook_Include         = -I/usr/local/openmpi/include
 
 MPI_ON                      = $(MPI_$(MACHINE_NAME)_Lib) $(MPI_$(MACHINE_NAME)_Include)
 MPI_OFF                     =
@@ -155,7 +155,7 @@ MPI_OFF                     =
 
 #### LAPACK
 
-LAPACK_NicksMacBook     = -lblas -llapack
+LAPACK_NicksMacBook     = -L$(LAPACK_DIR)/LIB -lblas -llapack
 #LAPACK_NicksMacBook     = -framework Accelerate
 LAPACK_sjdunham         = -framework Accelerate -fallow-argument-mismatch
 LAPACK_kkadoogan        = -L$(LAPACK_DIR)/lib -llapack -lblas
@@ -164,6 +164,17 @@ LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl
 LAPACK_BlueWaters	=
 
+
+
+INCLUDE_LINKER_gfortran	= -I
+INCLUDE_LINKER_ifort	= -I
+INCLUDE_LINKER_ftn	= -I
+
+
+
+OUTPUT_LINKER_gfortran 	= -J
+OUTPUT_LINKER_ifort	= -module
+OUTPUT_LINKER_ftn	= -J
 
 
 
@@ -183,7 +194,7 @@ STD 		=$(STD_$(CMODE)_$(MACHINE_NAME))
 OPENMP_COMP 	=$(OPENMP_$(MACHINE_NAME)_$(OPENMP_MODE))
 AMREX_COMP      =$(AMREX_DEF_FLAG_$(AMREX_MODE)) $(AMREX_$(MACHINE_NAME)_$(AMREX_MODE))
 HDF5_COMP       =$(HDF5_$(MACHINE_NAME)_$(HDF5_MODE))
-MPI_COMP        =$(MPI_$(MPI_MODE))
+MPI_COMP        =  #$(MPI_$(MPI_MODE))
 FORT		=$(FORT_$(MACHINE_NAME)) $(PETSC_COMP) $(AMREX_COMP) $(HDF5_COMP) $(OPENMP_COMP) $(MPI_COMP)  $(LAPACK_$(MACHINE_NAME))
 CC              =$(CC_$(MACHINE_NAME))
 INCLUDE_LINKER	=$(INCLUDE_LINKER_$(COMP_$(MACHINE_NAME)))
