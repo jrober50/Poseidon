@@ -126,7 +126,8 @@ HDF5_Rhea_OFF           =
 HDF5_BlueWaters_ON      =
 HDF5_Bluewaters_OFF     =
 
-
+HDF5_ISAAC_ON           = $(HDF5_INC) $(HDF5_LIB)
+HDF5_ISAAC_OFF          =
 
 
 #### MPI
@@ -146,16 +147,18 @@ MPI_accre_gnu_Include        = -I/accre/arch/easybuild/software/Compiler/GCC/10.
 MPI_MacBook_Lib             = -/usr/local/openmpi/lib
 MPI_MacBook_Include         = -I/usr/local/openmpi/include
 
-MPI_ON                      = $(MPI_$(MACHINE_NAME)_Lib) $(MPI_$(MACHINE_NAME)_Include)
+MPI_ISAAC_Lib               = $(OPENMPI_LIB)
+MPI_ISAAC_Include           = $(OPENMPI_INC)
+
+MPI_ON                      = $(MPI_$(MACHINE_NAME)_Include) $(MPI_$(MACHINE_NAME)_Lib) -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi_mpifh -lmpi -lmpi_cxx -lmpi
 MPI_OFF                     =
 
 
 
 
-
 #### LAPACK
-
-LAPACK_NicksMacBook     = -L$(LAPACK_DIR)/LIB -lblas -llapack
+LAPACK_ISAAC            = $(LAPACK_INC) $(LAPACK_LIB) -llapack -lblas
+LAPACK_NicksMacBook     = -L$(LAPACK_DIR)/LIB -llapack -lblas
 #LAPACK_NicksMacBook     = -framework Accelerate
 LAPACK_sjdunham         = -framework Accelerate -fallow-argument-mismatch
 LAPACK_kkadoogan        = -L$(LAPACK_DIR)/lib -llapack -lblas
@@ -180,7 +183,7 @@ OUTPUT_LINKER_ftn	= -J
 
 
 ### Legacy, Only Used to Create Variable Names ###
-COMP_ISAAC         = mpif90
+COMP_ISAAC         = gfortran
 COMP_NicksMacBook  = gfortran
 COMP_sjdunham      = gfortran
 COMP_kkadoogan     = gfortran
@@ -194,8 +197,8 @@ STD 		=$(STD_$(CMODE)_$(MACHINE_NAME))
 OPENMP_COMP 	=$(OPENMP_$(MACHINE_NAME)_$(OPENMP_MODE))
 AMREX_COMP      =$(AMREX_DEF_FLAG_$(AMREX_MODE)) $(AMREX_$(MACHINE_NAME)_$(AMREX_MODE))
 HDF5_COMP       =$(HDF5_$(MACHINE_NAME)_$(HDF5_MODE))
-MPI_COMP        =  #$(MPI_$(MPI_MODE))
-FORT		=$(FORT_$(MACHINE_NAME)) $(PETSC_COMP) $(AMREX_COMP) $(HDF5_COMP) $(OPENMP_COMP) $(MPI_COMP)  $(LAPACK_$(MACHINE_NAME))
+MPI_COMP        =$(MPI_$(MPI_MODE))
+FORT		=$(FORT_$(MACHINE_NAME)) $(STD) $(PETSC_COMP) $(AMREX_COMP) $(HDF5_COMP) $(OPENMP_COMP) $(MPI_COMP)  $(LAPACK_$(MACHINE_NAME))
 CC              =$(CC_$(MACHINE_NAME))
 INCLUDE_LINKER	=$(INCLUDE_LINKER_$(COMP_$(MACHINE_NAME)))
 OUTPUT_LINKER	=$(OUTPUT_LINKER_$(COMP_$(MACHINE_NAME)))

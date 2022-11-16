@@ -1,5 +1,3 @@
-include ../../Build/Makefile_Core
-
 TEST_NAME    =Yahil_Test
 
 
@@ -9,7 +7,8 @@ NPROCS=1
 
 ## Select Machine
 
-MACHINE_NAME    =NicksMacBook
+MACHINE_NAME    =ISAAC
+#MACHINE_NAME    =NicksMacBook
 #MACHINE_NAME = sjdunham
 #MACHINE_NAME   =MacBook
 #MACHINE_NAME   =Rhea
@@ -18,8 +17,8 @@ MACHINE_NAME    =NicksMacBook
 
 ## Select Mode
 
-CMODE   =DEBUG
-#CMODE  =OPTIMIZE
+#CMODE   =DEBUG
+CMODE  =OPTIMIZE
 
 
 ## Compile with Openmp
@@ -37,8 +36,8 @@ PETSC_MODE     =OFF
 
 ## Compile with HDF5
 
-HDF5_MODE       =ON
-#HDF5_MODE      =OFF
+#HDF5_MODE       =ON
+HDF5_MODE      =OFF
 
 
 ## Compile with MPI
@@ -53,11 +52,10 @@ include ../../Build/Makefile_Core
 include Makefile_Driver
 
 
-main : $(POSEIDON_o) $(DRIVER_o)
+main : $(POSEIDON_o) $(DRIVER_o) Yahil_Profile_XCFC_Native.o
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) Yahil_Profile_XCFC_Native.f90  -o $(OBJ)/Yahil_Profile_XCFC_Native.o
-	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/Yahil_Profile_XCFC_Native.x
-	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
+	$(FORT) $(OBJ)/*.o -o $(BIN)/Yahil_Profile_XCFC_Native.x
+	echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 
 
