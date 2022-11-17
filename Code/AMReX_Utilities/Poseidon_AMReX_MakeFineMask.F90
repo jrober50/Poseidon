@@ -95,7 +95,7 @@ SUBROUTINE AMReX_MakeFineMask(  Mask,                   &
 
     Mask%owner  = .TRUE.
     Mask%nc     = 1
-    Mask%ng     = 0
+!    Mask%ng     = 0
     CALL amrex_fi_makefinemask( Mask%p,                     &
                                 Coarse_BA%p, Coarse_DM%p,   &
                                 Fine_BA%p,                  &
