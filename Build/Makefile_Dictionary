@@ -23,11 +23,12 @@ FORT_MacBook 	   = /usr/local/openmpi/bin/mpif90
 FORT_Rhea	   = mpifort
 FORT_BlueWaters    = ftn
 
-
+FORT_Summit        = mpif90
 
 
 ### C Compiler
 
+CC_Summit          = mpicxx
 CC_ISAAC           = mpicxx
 CC_NicksMacBook    = $(MPI_DIR)/bin/mpic++
 
@@ -35,6 +36,10 @@ CC_NicksMacBook    = $(MPI_DIR)/bin/mpic++
 
 
 #### Debuging Options
+
+STD_DEBUG_Summit           = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
+STD_OPTIMIZE_Summit        = -O2
+
 STD_DEBUG_ISAAC           = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
 STD_OPTIMIZE_ISAAC        = -O2
 
@@ -66,7 +71,10 @@ POSEIDON_DEBUG_FLAG_OFF =
 
 
 ### OpenMP
-OPENMP_ISAAC_ON                      =
+OPENMP_Summit__ON               = -fopenmp
+OPENMP_Summit_OFF               =
+
+OPENMP_ISAAC_ON                      = -fopenmp
 OPENMP_ISAAC_OFF                     =
 
 OPENMP_NicksMacBook_ON               = -fopenmp
@@ -129,6 +137,8 @@ HDF5_Bluewaters_OFF     =
 HDF5_ISAAC_ON           = $(HDF5_INC) $(HDF5_LIB)
 HDF5_ISAAC_OFF          =
 
+HDF5_Summit_ON          = -I$(myHDF5_DIR)/include -L$(myHDF5_DIR)/lib -lhdf5_fortran -lhdf5
+HDF5_Summit_OFF         =
 
 #### MPI
 
@@ -150,7 +160,8 @@ MPI_MacBook_Include         = -I/usr/local/openmpi/include
 MPI_ISAAC_Lib               = $(OPENMPI_LIB)
 MPI_ISAAC_Include           = $(OPENMPI_INC)
 
-MPI_ON                      = $(MPI_$(MACHINE_NAME)_Include) $(MPI_$(MACHINE_NAME)_Lib) -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi_mpifh -lmpi -lmpi_cxx -lmpi
+
+MPI_ON                      = $(MPI_$(MACHINE_NAME)_Include) $(MPI_$(MACHINE_NAME)_Lib)
 MPI_OFF                     =
 
 
@@ -167,6 +178,7 @@ LAPACK_MacBook		= -framework Accelerate
 LAPACK_Rhea		= -mkl
 LAPACK_BlueWaters	=
 
+LAPACK_Summit           = -I$(myLAPACK_DIR)/include -L$(myLAPACK_DIR)/lib64 -llapack -lblas
 
 
 INCLUDE_LINKER_gfortran	= -I
@@ -191,7 +203,7 @@ COMP_accre_gnu     = gfortran
 COMP_MacBook       = gfortran
 COMP_Rhea          = ifort
 COMP_BlueWaters    = ftn
-
+COMP_Summit        = gfortran
 
 STD 		=$(STD_$(CMODE)_$(MACHINE_NAME))
 OPENMP_COMP 	=$(OPENMP_$(MACHINE_NAME)_$(OPENMP_MODE))
