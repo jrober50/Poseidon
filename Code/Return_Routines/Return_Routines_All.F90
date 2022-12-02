@@ -444,7 +444,8 @@ DO lvl = 0,nLevels-1
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
                                   MF_Results(lvl+1)%ba,     &
-                                  iLeaf, iTrunk            )
+                                  iLeaf, iTrunk,            &
+                                  nGhost_Vec                )
                                   
     ELSE
             

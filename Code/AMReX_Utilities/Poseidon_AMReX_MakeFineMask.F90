@@ -83,7 +83,8 @@ CONTAINS
 SUBROUTINE AMReX_MakeFineMask(  Mask,                   &
                                 Coarse_BA, Coarse_DM,   &
                                 Fine_BA,                &
-                                C_Coarse, C_Fine )
+                                C_Coarse, C_Fine,       &
+                                nGhost_Vec              )
 
     type(amrex_imultifab), INTENT(INOUT)            :: Mask
     type(amrex_boxarray),  INTENT(IN)               :: Coarse_BA
@@ -92,10 +93,15 @@ SUBROUTINE AMReX_MakeFineMask(  Mask,                   &
     
     INTEGER(c_int), INTENT(IN)                      :: C_Coarse
     INTEGER(c_int), INTENT(IN)                      :: C_Fine
+    INTEGER(c_int), DIMENSION(1:3), INTENT(IN),OPTIONAL      :: nGhost_Vec
 
     Mask%owner  = .TRUE.
     Mask%nc     = 1
-!    Mask%ng     = 0
+    
+    IF ( present(nGhost_Vec) ) THEN
+        Mask%ng     = nGhost_Vec(1)
+    END IF
+    
     CALL amrex_fi_makefinemask( Mask%p,                     &
                                 Coarse_BA%p, Coarse_DM%p,   &
                                 Fine_BA%p,                  &

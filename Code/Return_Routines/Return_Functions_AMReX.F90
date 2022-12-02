@@ -273,7 +273,8 @@ DO lvl = nLevels-1,0,-1
                                   MF_Results(lvl)%ba,        &
                                   MF_Results(lvl)%dm,        &
                                   MF_Results(lvl+1)%ba,      &
-                                  iLeaf, iTrunk            )
+                                  iLeaf, iTrunk,            &
+                                  nGhost_Vec                )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
@@ -389,7 +390,8 @@ SUBROUTINE Poseidon_Return_AMReX_Type_B(iU,                     &
                                         Left_Limit,             &
                                         Right_Limit,            &
                                         nLevels,                &
-                                        MF_Results              )
+                                        MF_Results,             &
+                                        FillGhostCells_Option   )
 
 
 INTEGER,                                    INTENT(IN)  ::  iU
@@ -403,6 +405,9 @@ REAL(idp),                                  INTENT(IN)  ::  Right_Limit
 
 INTEGER,                                    INTENT(IN)  ::  nLevels
 TYPE(amrex_multifab),                       INTENT(INOUT)  ::  MF_Results(0:nLevels-1)
+
+LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_Option
+
 
 INTEGER                                                 ::  Num_DOF
 INTEGER                                                 ::  Output_Here
@@ -429,6 +434,9 @@ REAL(idp),  CONTIGUOUS, POINTER                         ::  Result_PTR(:,:,:,:)
 REAL(idp),  DIMENSION(1:Local_Quad_DOF)         ::  Var_Holder_Elem
 REAL(idp),  DIMENSION(:,:), ALLOCATABLE         ::  Translation_Matrix
 
+LOGICAL                                                     ::  FillGhostCells
+INTEGER,        DIMENSION(1:3)                              ::  nGhost_Vec
+
 Quad_Span = Right_Limit - Left_Limit
 
 Cur_RX_Locs = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
@@ -436,6 +444,16 @@ Cur_RX_Locs = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
 Allocate( Translation_Matrix(1:Local_Quad_DOF,1:Num_DOF))
+
+
+
+IF ( PRESENT(FillGhostCells_Option) ) THEN
+    FillGhostCells = FillGhostCells_Option
+ELSE
+    FillGhostCells = .FALSE.
+END IF
+
+
 
 Translation_Matrix = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
                                         [xLeftLimit, xRightLimit ],            &
@@ -455,6 +473,13 @@ Translation_Matrix = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_P
 
 DO lvl = nLevels-1,0,-1
 
+    IF ( FillGhostCells ) THEN
+        nGhost_Vec = MF_Results(lvl)%nghostvect()
+    ELSE
+        nGhost_Vec = 0
+    END IF
+
+
     !
     !   MakeFineMask
     !
@@ -463,7 +488,8 @@ DO lvl = nLevels-1,0,-1
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
                                   MF_Results(lvl+1)%ba,     &
-                                  iLeaf, iTrunk            )
+                                  iLeaf, iTrunk,            &
+                                  nGhost_Vec                )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
