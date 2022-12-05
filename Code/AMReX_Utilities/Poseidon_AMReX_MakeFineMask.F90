@@ -50,11 +50,14 @@ INTERFACE
 
     !+101+##########################################################################!
     !                                                                               !
-    !                                                     				!
+    !                                                                                   !
     !                                                                               !
     !###############################################################################!
     SUBROUTINE amrex_fi_makefinemask( Mask,                   &
-                                      Coarse_BA, Coarse_DM,   &
+                                      Coarse_BA,              &
+                                      Coarse_DM,              &
+                                      nGhost_Vec,             &
+                                      Periodicity,            &
                                       Fine_BA,                &
                                       C_Coarse, C_Fine ) BIND(c)
 
@@ -63,6 +66,8 @@ INTERFACE
         type(c_ptr)                                     :: Mask
         type(c_ptr), VALUE                              :: Coarse_BA
         type(c_ptr), VALUE                              :: Coarse_DM
+        INTEGER(c_int), DIMENSION(1:3)                  :: nGhost_Vec
+        INTEGER(c_int), DIMENSION(1:3)                  :: Periodicity
         type(c_ptr), VALUE                              :: Fine_BA
 
         INTEGER(c_int), VALUE                           :: C_Coarse
@@ -81,33 +86,40 @@ CONTAINS
 !                                                                               !
 !###############################################################################!
 SUBROUTINE AMReX_MakeFineMask(  Mask,                   &
-                                Coarse_BA, Coarse_DM,   &
+                                Coarse_BA,              &
+                                Coarse_DM,              &
+                                nGhost_Vec,             &
                                 Fine_BA,                &
-                                C_Coarse, C_Fine,       &
-                                nGhost_Vec              )
+                                C_Coarse,               &
+                                C_Fine                  )
 
     type(amrex_imultifab), INTENT(INOUT)            :: Mask
     type(amrex_boxarray),  INTENT(IN)               :: Coarse_BA
     type(amrex_distromap), INTENT(IN)               :: Coarse_DM
     type(amrex_boxarray),  INTENT(IN)               :: Fine_BA
-    
+
+    INTEGER(c_int), DIMENSION(1:3), INTENT(IN)      :: nGhost_Vec
     INTEGER(c_int), INTENT(IN)                      :: C_Coarse
     INTEGER(c_int), INTENT(IN)                      :: C_Fine
-    INTEGER(c_int), DIMENSION(1:3), INTENT(IN),OPTIONAL      :: nGhost_Vec
+
+    INTEGER(c_int), DIMENSION(1:3)                         :: Periodicity
+
+    Periodicity = 0
 
     Mask%owner  = .TRUE.
     Mask%nc     = 1
-    
-    IF ( present(nGhost_Vec) ) THEN
-        Mask%ng     = nGhost_Vec(1)
-    END IF
-    
-    CALL amrex_fi_makefinemask( Mask%p,                     &
-                                Coarse_BA%p, Coarse_DM%p,   &
-                                Fine_BA%p,                  &
+!    Mask%ng     = 0
+    CALL amrex_fi_makefinemask( Mask%p,                 &
+                                Coarse_BA%p,            &
+                                Coarse_DM%p,            &
+                                nGhost_Vec,             &
+                                Periodicity,            &
+                                Fine_BA%p,              &
                                 C_Coarse, C_Fine     )
 
 
+
+    print*,"In AMReX_MakeFineMask",Mask%ng
 END SUBROUTINE AMReX_MakeFineMask
 
 

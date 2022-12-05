@@ -443,9 +443,9 @@ DO lvl = 0,nLevels-1
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
+                                  nGhost_Vec,               &
                                   MF_Results(lvl+1)%ba,     &
-                                  iLeaf, iTrunk,            &
-                                  nGhost_Vec                )
+                                  iLeaf, iTrunk             )
                                   
     ELSE
             

@@ -252,7 +252,7 @@ INTEGER                                         ::  iLeaf  = 1
 INTEGER                                         ::  iTrunk = 0
 
 INTEGER, DIMENSION(3)                           ::  EOff
-
+INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
 
 IF ( amrex_spacedim == 1 ) THEN
     Eoff(2:3) = 1
@@ -263,7 +263,10 @@ ELSEIF ( amrex_spacedim == 3 ) THEN
     Eoff(2:3) = 0
 END IF
 
+nGhost_Vec = 0
+
 iLeafElementsPerLvl = 0
+
 
 DO lvl = 0,AMReX_Num_Levels-1
 
@@ -284,6 +287,7 @@ DO lvl = 0,AMReX_Num_Levels-1
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Source(lvl)%ba,        &
                                   DM,                       &
+                                  nGhost_Vec,               &
                                   MF_Source(lvl+1)%ba,      &
                                   iLeaf, iTrunk  )
     ELSE
@@ -353,7 +357,9 @@ INTEGER, CONTIGUOUS, POINTER                    :: Mask(:,:,:,:)
 
 
 INTEGER, DIMENSION(3)                           ::  EOff
+INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
 
+nGhost_Vec = 0
 
 IF ( amrex_spacedim == 1 ) THEN
     Eoff(2:3) = 1
@@ -385,6 +391,7 @@ DO lvl = 0,AMReX_Num_Levels-1
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Source(lvl)%ba,        &
                                   DM,                       &
+                                  nGhost_Vec,               &
                                   MF_Source(lvl+1)%ba,      &
                                   iLeaf, iTrunk  )
     ELSE

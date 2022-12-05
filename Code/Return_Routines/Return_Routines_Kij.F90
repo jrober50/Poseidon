@@ -67,7 +67,8 @@ USE Variables_Vectors, &
 USE Variables_Mesh, &
            ONLY :  rlocs,              &
                    tlocs,              &
-                   plocs
+                   plocs,              &
+                   iNE_Base
 
 USE Variables_AMReX_Source, &
            ONLY :  iLeaf,                &
@@ -475,7 +476,8 @@ SUBROUTINE Poseidon_Return_Kij_AMReX( NQ,                     &
                                    Left_Limit,             &
                                    Right_Limit,            &
                                    nLevels,                &
-                                   MF_Results              )
+                                   MF_Results,             &
+                                   FillGhostCells_Option   )
 
 
 INTEGER,    DIMENSION(3),                       INTENT(IN)      ::  NQ
@@ -488,6 +490,7 @@ REAL(idp),                                      INTENT(IN)      ::  Right_Limit
 INTEGER,                                        INTENT(IN)      ::  nLevels
 TYPE(amrex_multifab),                           INTENT(INOUT)   ::  MF_Results(0:nLevels-1)
 
+LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_Option
 
 
  INTEGER                                                 ::  iRE
@@ -533,6 +536,17 @@ TYPE(amrex_multifab),                           INTENT(INOUT)   ::  MF_Results(0
  INTEGER                                                         ::  Num_DOF
  
  REAL(idp), DIMENSION(:,:,:), ALLOCATABLE                        ::  Caller_LPT
+ 
+INTEGER, DIMENSION(3)                                       ::  iEL_A, iEU_A
+LOGICAL                                                     ::  FillGhostCells
+INTEGER,        DIMENSION(1:3)                              ::  nGhost_Vec
+
+
+IF ( PRESENT(FillGhostCells_Option) ) THEN
+    FillGhostCells = FillGhostCells_Option
+ELSE
+    FillGhostCells = .FALSE.
+END IF
 
 
  iVB   = iVB_X
@@ -556,6 +570,11 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
 
  DO lvl = nLevels-1,0,-1
 
+    IF ( FillGhostCells ) THEN
+        nGhost_Vec = MF_Results(lvl)%nghostvect()
+    ELSE
+        nGhost_Vec = 0
+    END IF
 
      DROT = 0.5_idp * Level_dx(lvl,1)
      DTOT = 0.5_idp * Level_dx(lvl,2)
@@ -568,6 +587,7 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
          CALL AMReX_MakeFineMask(  Level_Mask,               &
                                    MF_Results(lvl)%ba,       &
                                    MF_Results(lvl)%dm,       &
+                                   nGhost_Vec,               &
                                    MF_Results(lvl+1)%ba,     &
                                    iLeaf, iTrunk            )
      ELSE
@@ -592,8 +612,20 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
         Box = mfi%tilebox()
         nComp =  MF_Results(lvl)%ncomp()
 
-        iEL = Box%lo
-        iEU = Box%hi
+        iEL_A = Box%lo
+        iEU_A = Box%hi
+        
+        iEL = iEL_A-nGhost_Vec
+        iEU = iEU_A+nGhost_Vec
+
+        IF ( ANY( iEL < 0 ) ) THEN
+            ! Reflecting Conditions
+            iEL = iEL_A
+        END IF
+
+        IF ( ANY( iEU .GE. (2**lvl)*iNE_Base(1) ) ) THEN
+            iEU = iEU_A
+        END IF
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)

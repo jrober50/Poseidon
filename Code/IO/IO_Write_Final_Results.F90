@@ -1107,7 +1107,7 @@ TYPE(amrex_geometry),           ALLOCATABLE                 ::  GM_Results(:)
 
 INTEGER                                                     ::  MF_Results_nVars    = 11
 INTEGER                                                     ::  MF_Results_nGhosts  = 0
-
+INTEGER, DIMENSION(1:3)                                     ::  nGhost_Vec
 
 
 
@@ -1139,8 +1139,11 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
         CALL MF_Results(lvl)%SetVal(0.0_idp)
     END DO
-
-
+    
+    nGhost_Vec = 0
+    If (MF_Results_nGhosts == 1) THEN
+        nGhost_vec(1) = 1
+    END IF
 
     
 
@@ -1254,6 +1257,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                                   MF_Results(lvl)%ba,        &
                                                   MF_Results(lvl)%dm,        &
+                                                  nGhost_Vec,               &
                                                   MF_Results(lvl+1)%ba,      &
                                                   iLeaf, iTrunk            )
                     ELSE

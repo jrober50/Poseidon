@@ -270,16 +270,16 @@ DO lvl = nLevels-1,0,-1
     !
     IF ( lvl < AMReX_Num_Levels-1 ) THEN
         CALL AMReX_MakeFineMask(  Level_Mask,               &
-                                  MF_Results(lvl)%ba,        &
-                                  MF_Results(lvl)%dm,        &
-                                  MF_Results(lvl+1)%ba,      &
-                                  iLeaf, iTrunk,            &
-                                  nGhost_Vec                )
+                                  MF_Results(lvl)%ba,       &
+                                  MF_Results(lvl)%dm,       &
+                                  nGhost_Vec,               &
+                                  MF_Results(lvl+1)%ba,     &
+                                  iLeaf, iTrunk             )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
-                                    MF_Results(lvl)%ba,      &
-                                    MF_Results(lvl)%dm,      &
+                                    MF_Results(lvl)%ba,     &
+                                    MF_Results(lvl)%dm,     &
                                     1,                      &
                                     nGhost_Vec(1)           )
         CALL Level_Mask%SetVal(iLeaf)
@@ -487,9 +487,9 @@ DO lvl = nLevels-1,0,-1
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
+                                  nGhost_Vec,               &
                                   MF_Results(lvl+1)%ba,     &
-                                  iLeaf, iTrunk,            &
-                                  nGhost_Vec                )
+                                  iLeaf, iTrunk              )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
