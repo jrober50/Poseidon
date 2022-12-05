@@ -119,7 +119,6 @@ SUBROUTINE AMReX_MakeFineMask(  Mask,                   &
 
 
 
-    print*,"In AMReX_MakeFineMask",Mask%ng
 END SUBROUTINE AMReX_MakeFineMask
 
 
