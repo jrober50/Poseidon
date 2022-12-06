@@ -24,8 +24,6 @@ USE Poseidon_Kinds_Module, &
 !   Ylm Table                                                       !
 !                                                                   !
 !===================================================================!
-COMPLEX(KIND = idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:,:,:)    :: Ylm_Table_Block
-
 INTEGER,             PUBLIC, ALLOCATABLE, DIMENSION(:)              :: M_VALUES
 
 COMPLEX(KIND = idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)        :: Ylm_Values
@@ -37,7 +35,13 @@ COMPLEX(KIND = idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)        :: Ylm_CC_DT
 COMPLEX(KIND = idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)        :: Ylm_CC_DP_Values
 
 
+REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Plm_Values
+REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Plm_dt_Values
 
+REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:)                     :: Nlm_Values
+
+REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Alm_Values
+REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Alm_dp_Values
 
 
 !===================================================================!
