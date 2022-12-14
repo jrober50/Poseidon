@@ -1,7 +1,7 @@
 include $(POSEIDON_ACTIVE_DIR)/Code/Common/Makefile_Common
 include $(POSEIDON_ACTIVE_DIR)/Code/Params_and_Variables/Makefile_Variables
 include $(POSEIDON_ACTIVE_DIR)/Code/Flags/Makefile_Flags
-include $(POSEIDON_ACTIVE_DIR)/Code/Timers/Makefile_Timers
+include $(POSEIDON_ACTIVE_DIR)/Code/Diagnostics/Makefile_Diagnostics
 include $(POSEIDON_ACTIVE_DIR)/Code/AMReX_Utilities/Makefile_AMReX_Utilities
 include $(POSEIDON_ACTIVE_DIR)/Code/Mapping_Routines/Makefile_Maps
 include $(POSEIDON_ACTIVE_DIR)/Code/Mesh/Makefile_Mesh

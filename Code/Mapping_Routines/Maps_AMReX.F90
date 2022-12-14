@@ -70,6 +70,11 @@ USE Variables_AMReX_Core, &
             ONLY :  MF_Source
 #endif
 
+USE Allocation_Maps, &
+            ONLY :  Allocate_AMReX_Maps,    &
+                    Deallocate_AMReX_Maps,  &
+                    Reallocate_AMReX_Maps
+
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Num_Levels,       &
                     iNumLeafElements,       &
@@ -176,57 +181,6 @@ CALL Initialize_AMReX_Maps()
 lPF_Init_AMReX_Flags(iPF_Init_AMReX_Maps) = .TRUE.
 
 END SUBROUTINE Reinitialize_AMReX_Maps
-
-
-
-
-
- !+101+############################################################!
-!                                                                   !
-!          Allocate_AMReX_Maps                                      !
-!                                                                   !
- !#################################################################!
-SUBROUTINE Allocate_AMReX_Maps()
-
-ALLOCATE( FindLoc_Table(0:iNumLeafElements-1)  )
-ALLOCATE( FEM_Elem_Table(0:iNumLeafElements-1) )
-ALLOCATE( Table_Offsets(0:AMReX_Num_Levels)    )
-
-END SUBROUTINE Allocate_AMReX_Maps
-
-
-
-
-
-
- !+101+############################################################!
-!                                                                   !
-!          Deallocate_AMReX_Maps                                    !
-!                                                                   !
- !#################################################################!
-SUBROUTINE Deallocate_AMReX_Maps()
-
-DEALLOCATE( FindLoc_Table  )
-DEALLOCATE( FEM_Elem_Table )
-DEALLOCATE( Table_Offsets  )
-
-END SUBROUTINE Deallocate_AMReX_Maps
-
-
-
-
- !+101+############################################################!
-!                                                                   !
-!          Reallocate_AMReX_Maps                                      !
-!                                                                   !
- !#################################################################!
-SUBROUTINE Reallocate_AMReX_Maps()
-
-CALL Deallocate_AMReX_Maps()
-CALL Allocate_AMReX_Maps
-
-END SUBROUTINE Reallocate_AMReX_Maps
-
 
 
 

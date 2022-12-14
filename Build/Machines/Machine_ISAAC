@@ -1,0 +1,20 @@
+# Machine : ISAAC Legacy 
+
+myFORT       = mpif90
+myCC         = mpicxx
+
+myDEBUG      = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
+myOPTIMIZE   = -O2
+
+myOPENMP     = -fopenmp
+
+myMPI_INC    = 
+myMPI_LIB    = $(OPENMPI_LIB)
+
+myLAPACK_INC = 
+myLAPACK_LIB = $(LAPACK_LIB) -llapack -lblas
+
+
+
+
+

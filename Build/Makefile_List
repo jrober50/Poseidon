@@ -2,7 +2,7 @@ POSEIDON = \
   $(POSEIDON_COMMON)          \
   $(POSEIDON_VARIABLES)       \
   $(POSEIDON_FLAGS)           \
-  $(POSEIDON_TIMERS)          \
+  $(POSEIDON_DIAGNOSTICS)     \
   $(POSEIDON_AMREX_UTILITIES) \
   $(POSEIDON_MAPS)            \
   $(POSEIDON_MESH)            \

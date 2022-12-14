@@ -72,6 +72,9 @@ USE Allocation_FEM, &
 
 USE Timer_Routines_Module, &
             ONLY :  Finalize_Timers
+            
+USE Allocation_Maps, &
+            ONLY :  Deallocate_AMReX_Maps
 
 USE Flags_Main_Module, &
             ONLY : Poseidon_Clear_All_Flags
@@ -144,7 +147,9 @@ ELSE
 
 END IF
 
-
+#ifdef POSEIDON_AMREX_FLAG
+CALL Deallocate_AMReX_Maps
+#endif
 
 CALL Finalize_Timers()
 CALL Poseidon_Clear_All_Flags()

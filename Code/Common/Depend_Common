@@ -18,5 +18,3 @@ Poseidon_File_Routines.o:     \
 Poseidon_Message_Routines.o:  \
   Poseidon_Message_Routines.f90  
 
-Psoeidon_Memory_Routines.o:   \
-  Posieodn_Memory_Routines.F90

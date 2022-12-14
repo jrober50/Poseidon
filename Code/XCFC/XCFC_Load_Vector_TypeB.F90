@@ -178,6 +178,13 @@ USE Poseidon_AMReX_MakeFineMask_Module, &
 
 USE Poseidon_AMReX_Multilayer_Utilities_Module, &
             ONLY :  Find_Coarsest_Parent
+            
+USE Poseidon_Memory_Routines, &
+            ONLY :  Poseidon_Mark_Memory
+            
+USE Memory_Variables_Module, &
+            ONLY :  Memory_FineMask_Before_LVB, &
+                    Memory_FineMask_After_LVB
 
 #endif
 
@@ -658,6 +665,14 @@ ELSE IF ( iVB == iVB_S ) THEN
 !        PRINT*,Cur_Val_AlphaPsi(:,rd)
 !        PRINT*,"Cur_Val_Psi"
 !        pRINT*,Cur_Val_Psi(:,rd)
+!        PRINT*,"Cur_Drv_AlphaPsi",iE
+!        PRINT*,Cur_Drv_AlphaPsi(:,rd,1)
+!        PRINT*,"Cur_Drv_Psi"
+!        pRINT*,Cur_Drv_Psi(:,rd,1)
+!        PRINT*,"Cur_Val_X"
+!        pRINT*,Cur_Val_X(:,rd,1)
+!        PRINT*,"Cur_Drv_X"
+!        pRINT*,Cur_Drv_X(:,rd,1,1)
 !        PRINT*,"PhysSrc(:,:,ui)"
 !        PRINT*,PhysSrc(:,rd,ui)
 !        PRINT*,"SourceTerm"
@@ -723,12 +738,21 @@ DO lvl = AMReX_Num_Levels-1,0,-1
     !   MakeFineMask
     !
     IF ( lvl < AMReX_Num_Levels-1 ) THEN
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_FineMask_Before_LVB)
+    PRINT*,lvl,"Before MakeFineMask (LVB) : ",Memory_FineMask_Before_LVB
+#endif
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Source(lvl)%ba,        &
                                   MF_Source(lvl)%dm,        &
                                   nGhost_Vec,               &
                                   MF_Source(lvl+1)%ba,      &
                                   iLeaf, iTrunk            )
+                                  
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_FineMask_After_LVB)
+    PRINT*,lvl,"After MakeFineMask (LVB) : ",Memory_FineMask_After_LVB
+#endif
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &

@@ -25,10 +25,8 @@ USE_OMP   = FALSE
 
 DIM       = 1
 
-EBASE     = AMReX_Mapping
+EBASE     = Yahil_Profile_XCFC
 
-PETSC_MODE = OFF
-AMREX_MODE = ON
 
 
 #INCLUDE_LOCATIONS += $(LAPACK_INC)
@@ -49,8 +47,16 @@ include $(AMREX_HOME)/Src/AmrCore/Make.package
 include $(AMREX_HOME)/Src/F_Interfaces/Base/Make.package
 include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 
+
+
 # Include directories and source files needed from Poseidon
+POSEIDON_MACHINE_NAME ?= jrober50
 include /Users/nickroberts/Poseidon/Build/Make.Poseidon
+
+
+
+
+# Include dicrectories and source files needed for the Driver
 include Makefile_Driver
 include Makefile_Path
 include AMReX_Routines/Makefile_AMReX_Routines
@@ -61,7 +67,6 @@ F90EXE_sources += $(DRIVER_AMREX_ROUTINES)
 F90EXE_sources += $(DRIVER_F90)
 
 
-DEFINES += $(POSEIDON_DEFS)
 
 
 # Include rules for compilation

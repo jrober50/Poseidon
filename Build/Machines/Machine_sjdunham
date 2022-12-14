@@ -1,0 +1,20 @@
+# Machine : Nick's Laptop 
+
+myFORT       = $(MPICH_DIR)/bin/mpif90
+myCC         = 
+
+myDEBUG      = -g -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all
+myOPTIMIZE   = -O2
+
+myOPENMP     = -fopenmp
+
+myMPI_INC    = -I$(MPICH_DIR)/include
+myMPI_LIB    = -L$(MPICH_DIR)/lib
+
+myLAPACK_LIB = -framework Accelerate -fallow-argument-mismatch
+
+
+
+
+
+

@@ -14,7 +14,7 @@ Poseidon_Interface_Return_Routines.o:   \
  Poseidon_Interface_Return_Routines.F90 \
 
 Poseidon_Interface_Close.o:             \
- Poseidon_Interface_Close.f90           \
+ Poseidon_Interface_Close.F90           \
 
 Poseidon_Interface_Initialization.o:    \
  Poseidon_Interface_Initialization.F90  \

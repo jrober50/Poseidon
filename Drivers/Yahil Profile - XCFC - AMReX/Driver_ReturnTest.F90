@@ -143,8 +143,7 @@ USE Variables_Tables, &
 
 
 USE Poseidon_File_Routines_Module, &
-            ONLY :  Open_New_File,                  &
-                    Open_Existing_File
+            ONLY :  Open_New_File
 
 IMPLICIT NONE
 
@@ -174,7 +173,7 @@ TYPE(amrex_multifab),   INTENT(IN)              ::  MF_Source(0:nLevels-1)
 
 
 INTEGER                                         ::  MF_Results_nVars    = 11
-INTEGER                                         ::  MF_Results_nGhosts  = 0
+INTEGER                                         ::  MF_Results_nGhosts  = 1
 
 
 INTEGER                                         ::  Num_Quad
@@ -231,7 +230,7 @@ P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
 !                                      nLevels,              &
 !                                      MF_Results            )
 
-!CALL Poseidon_Return_Conformal_Factor( MF_Results )
+CALL Poseidon_Return_Conformal_Factor( MF_Results, FillGhostCells_Option=.TRUE. )
 
 
 
@@ -249,11 +248,11 @@ P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
 
 
 
-CALL Poseidon_Return_ALL( MF_Results )
+!CALL Poseidon_Return_ALL( MF_Results )
 
  
 
-CALL Output_All_Variables( nLevels, NQ, MF_Results )
+!CALL Output_All_Variables( nLevels, NQ, MF_Results )
 
 !CALL Write_Final_Results_Kij( nLevels, NQ, MF_Results )
 
@@ -294,9 +293,10 @@ INTEGER                                         ::  re, te, pe
 INTEGER                                         ::  rd, td, pd
 INTEGER                                         ::  Here
 INTEGER                                         ::  Num_Quad
+INTEGER, DIMENSION(3)                           ::  nGhost_Vec
 
 Num_Quad = NQ(1)*NQ(2)*NQ(3)
-
+nGhost_Vec = 0
 
 DO lvl = nLevels-1,0,-1
 
@@ -305,15 +305,16 @@ DO lvl = nLevels-1,0,-1
     !
     IF ( lvl < nLevels-1 ) THEN
         CALL AMReX_MakeFineMask(  Level_Mask,               &
-                                  MF_Results(lvl)%ba,        &
-                                  MF_Results(lvl)%dm,        &
-                                  MF_Results(lvl+1)%ba,      &
+                                  MF_Results(lvl)%ba,       &
+                                  MF_Results(lvl)%dm,       &
+                                  nGhost_Vec,               &
+                                  MF_Results(lvl+1)%ba,     &
                                   iLeaf, iTrunk            )
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &
-                                    MF_Results(lvl)%ba,      &
-                                    MF_Results(lvl)%dm,      &
+                                    MF_Results(lvl)%ba,     &
+                                    MF_Results(lvl)%dm,     &
                                     1,                      &
                                     0                       )
         CALL Level_Mask%SetVal(iLeaf)
@@ -401,10 +402,10 @@ INTEGER                                         ::  rd, td, pd
 INTEGER                                         ::  Here
 INTEGER                                         ::  Num_Quad
 INTEGER                                         ::  iU
-
+INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
 
 Num_Quad = NQ(1)*NQ(2)*NQ(3)
-
+nGhost_Vec = 0
 
 DO lvl = nLevels-1,0,-1
 
@@ -415,6 +416,7 @@ DO lvl = nLevels-1,0,-1
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Results(lvl)%ba,        &
                                   MF_Results(lvl)%dm,        &
+                                  nGhost_Vec,               &
                                   MF_Results(lvl+1)%ba,      &
                                   iLeaf, iTrunk            )
     ELSE
@@ -530,8 +532,12 @@ INTEGER                                         ::  FEM_Elem
 INTEGER                                         ::  i
 
 REAL(idp)                                       ::  Trace
+INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
 
 116 FORMAT (A,A,A,A,A,A)
+
+
+nGhost_Vec = 0
 
 Num_Files = 1
 ALLOCATE( Filenames(1:Num_Files) )
@@ -553,9 +559,10 @@ DO lvl = nLevels-1,0,-1
     !   MakeFineMask
     !
     IF ( lvl < nLevels-1 ) THEN
-        CALL AMReX_MakeFineMask(  Level_Mask,               &
+        CALL AMReX_MakeFineMask(  Level_Mask,                &
                                   MF_Results(lvl)%ba,        &
                                   MF_Results(lvl)%dm,        &
+                                  nGhost_Vec,                &
                                   MF_Results(lvl+1)%ba,      &
                                   iLeaf, iTrunk            )
     ELSE
@@ -640,15 +647,11 @@ DO lvl = nLevels-1,0,-1
 
 END DO ! lvl
 
-
-
-
-
-
-
-
-
 END SUBROUTINE Write_Final_Results_Kij
+
+
+
+
 
 
 

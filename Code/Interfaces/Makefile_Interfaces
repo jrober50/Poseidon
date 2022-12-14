@@ -4,6 +4,6 @@ POSEIDON_INTERFACES = \
  Poseidon_Interface_Source_Input.F90    \
  Poseidon_Interface_Run.f90             \
  Poseidon_Interface_Return_Routines.F90 \
- Poseidon_Interface_Close.f90           \
+ Poseidon_Interface_Close.F90           \
  Poseidon_Interface_Initialization.F90  \
  Poseidon_Remesh.F90

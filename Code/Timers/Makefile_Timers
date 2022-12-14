@@ -1,5 +1,0 @@
-POSEIDON_TIMERS = \
-  Timer_Variables_Module.f90  \
-  Timer_IO_Module.f90         \
-  Timer_Routines_Module.f90   \
-

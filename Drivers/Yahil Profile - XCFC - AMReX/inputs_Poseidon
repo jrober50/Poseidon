@@ -10,7 +10,7 @@ amr.max_grid_size_z   = 8
 amr.blocking_factor_x = 8
 amr.blocking_factor_y = 8
 amr.blocking_factor_z = 8
-amr.max_level         = 3
+amr.max_level         = 1
 
 amr.n_error_buf       = 0
 

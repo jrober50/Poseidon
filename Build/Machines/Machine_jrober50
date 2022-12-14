@@ -1,0 +1,20 @@
+# Machine : Nick's Laptop 
+
+myFORT       = $(MPI_DIR)/bin/mpif90 -cpp
+myCC         = $(MPI_DIR)/bin/mpic++
+
+myDEBUG      = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
+myOPTIMIZE   = -O2
+
+myOPENMP     = -fopenmp
+
+myMPI_INC    = -I$(MPI_DIR)/include
+myMPI_LIB    = -L$(MPI_DIR)/lib
+
+myLAPACK_LIB = $(LAPACK_LIB) -llapack -lblas 
+
+
+
+
+
+

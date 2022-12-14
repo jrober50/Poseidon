@@ -383,13 +383,13 @@ INTEGER,                                            INTENT(IN)      ::  uNum_Fil
 CHARACTER(LEN = 500),   DIMENSION(uNum_Files),      INTENT(INOUT)   ::  uFilenames
 
 INTEGER,                                            INTENT(IN)      ::  xNum_Files
-CHARACTER(LEN = 500),   DIMENSION(uNum_Files),      INTENT(INOUT)   ::  xFilenames
+CHARACTER(LEN = 500),   DIMENSION(xNum_Files),      INTENT(INOUT)   ::  xFilenames
 
 INTEGER,                                            INTENT(IN)      ::  kNum_Files
-CHARACTER(LEN = 500),   DIMENSION(uNum_Files),      INTENT(INOUT)   ::  kFilenames
+CHARACTER(LEN = 500),   DIMENSION(kNum_Files),      INTENT(INOUT)   ::  kFilenames
 
 INTEGER,                                            INTENT(IN)      ::  mNum_Files
-CHARACTER(LEN = 500),   DIMENSION(uNum_Files),      INTENT(INOUT)   ::  mFilenames
+CHARACTER(LEN = 500),   DIMENSION(mNum_Files),      INTENT(INOUT)   ::  mFilenames
 
 INTEGER,                DIMENSION(1:5),             INTENT(IN)      ::  U_Flag
 

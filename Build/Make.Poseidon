@@ -1,10 +1,13 @@
 # For use with GNUmake for AMREX compilation.
 POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
 
-AMREX_MODE =ON
+POSEIDON_AMREX_MODE =ON
+#POSEIDON_TIMER_MODE =ON
+POSEIDON_MEMORY_MODE =ON
+
 
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Include
-include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Dictionary
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_DictionaryB
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Path
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_List
 

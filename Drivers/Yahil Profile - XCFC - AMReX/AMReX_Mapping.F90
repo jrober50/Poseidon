@@ -71,13 +71,28 @@ USE Variables_MPI, &
             ONLY :  ierr
 
 USE Variables_Driver_AMReX, &
-            ONLY :  nLevels
+            ONLY :  nLevels,            &
+                    MF_Driver_Source
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source
 
 USE ADM_Mass_Module, &
             ONLY :  Calc_ADM_Mass
+            
+USE Poseidon_Memory_Routines, &
+            ONLY :  Poseidon_Mark_Memory
+            
+USE Memory_Variables_Module, &
+            ONLY :  Memory_Start,               &
+                    Memory_End,                 &
+                    Memory_Loop_Start,          &
+                    Memory_Loop_Before_Init,    &
+                    Memory_Loop_Before_Run,     &
+                    Memory_Loop_After_Run,      &
+                    Memory_Loop_Before_Close,   &
+                    Memory_Loop_End
+                    
 
 
 USE MPI
@@ -118,6 +133,10 @@ INTEGER                                                 ::  M_Index_Max
 INTEGER                                                 ::  T_Index
 INTEGER                                                 ::  T_Index_Min
 INTEGER                                                 ::  T_Index_Max
+
+INTEGER                                                 ::  Loop
+INTEGER                                                 ::  Loop_Min
+INTEGER                                                 ::  Loop_Max
 
 REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
@@ -167,20 +186,20 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
 
-Print_Results_Flag  = .TRUE.
-!Print_Results_Flag  = .FALSE.
+!Print_Results_Flag  = .TRUE.
+Print_Results_Flag  = .FALSE.
 
-Print_Setup_Flag    = .TRUE.
-!Print_Setup_Flag    = .FALSE.
+!Print_Setup_Flag    = .TRUE.
+Print_Setup_Flag    = .FALSE.
 
-Print_Time_Flag     = .TRUE.
-!Print_Time_Flag     = .FALSE.
+!Print_Time_Flag     = .TRUE.
+Print_Time_Flag     = .FALSE.
 
-Print_Cond_Flag     = .TRUE.
-!Print_Cond_Flag     = .FALSE.
+!Print_Cond_Flag     = .TRUE.
+Print_Cond_Flag     = .FALSE.
 
 
 Suffix_Input        = "Params"
@@ -193,7 +212,10 @@ CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
 Write_Results_R_Samps = 256
 Write_Results_T_Samps = 1
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+        CALL Poseidon_Mark_Memory(Memory_Start)
+        PRINT*,"Beginning : ",Memory_Start
+#endif
 
 
 !############################################################!
@@ -220,11 +242,19 @@ CALL amrex_amrcore_init()
 CALL Init_AMReX_Parameters()
 
 
+Loop_Min = 1
+Loop_Max = 5
 
+DO Loop = Loop_Min, Loop_Max
 
+PRINT*,"Loop : ",Loop
 DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
 
+#ifdef POSEIDON_MEMORY_FLAG
+        CALL Poseidon_Mark_Memory(Memory_Loop_Start)
+        PRINT*,Loop,"Beginning of Loop : ",Memory_Loop_Start
+#endif
 
     Suffix_Tail = Letter_Table(nLevels)
 
@@ -254,6 +284,10 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                   Initialize Poseidon                    #!
     !#                                                          #!
     !############################################################!
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Init)
+    PRINT*,Loop,"Before Init : ",Memory_Loop_Before_Init
+#endif
     CALL Initialize_Poseidon &
        (    Source_NQ                           = NQ,                   &
             Source_xL                           = [Left_Limit, Right_Limit],    &
@@ -315,8 +349,16 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                         Run Poseidon                     #!
     !#                                                          #!
     !############################################################!
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Run)
+    PRINT*,Loop,"Before Poseidon_Run : ",Memory_Loop_Before_Run
+#endif
+    
     CALL Poseidon_Run()
-
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_Loop_After_Run)
+    PRINT*,Loop,"After Poseidon_Run : ",Memory_Loop_After_Run
+#endif
 
 
     !############################################################!
@@ -324,7 +366,7 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                       Output Results                     #!
     !#                                                          #!
     !############################################################!
-!    CALL Return_Test(nLevels, NQ, MF_Source)
+    CALL Return_Test(nLevels, NQ, MF_Source)
 
 !    CALL Calc_ADM_Mass(ADM_Mass)
 !    PRINT*,"ADM Mass",ADM_Mass
@@ -336,20 +378,29 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                      Close Poseidon                      #!
     !#                                                          #!
     !############################################################!
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Close)
+    PRINT*,Loop,"Before Close : ",Memory_Loop_Before_Close
+#endif
+    
     CALL Poseidon_Close()
     CALL Deallocate_Yahil_Profile()
-
+    
+    DEALLOCATE( MF_Driver_Source )
     DEALLOCATE( Input_R_Quad )
     DEALLOCATE( Input_T_Quad )
     DEALLOCATE( Input_P_Quad )
 
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_Loop_End)
+    PRINT*,Loop,"After Deallocation, Loop End : ",Memory_Loop_End
+#endif
 
 END DO ! T_Index
 END DO ! M_Index
 
-
+END DO ! Loop Loop
 
 
 !############################################################!
@@ -359,6 +410,13 @@ END DO ! M_Index
 !############################################################!
 call amrex_finalize()
 CALL MPI_Finalize(ierr)
+
+
+
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_End)
+    PRINT*," Fin : ",Memory_End
+#endif
 
 
 END PROGRAM AMReX_Mapping

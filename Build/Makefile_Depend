@@ -1,7 +1,7 @@
 include $(POSEIDON_ACTIVE_DIR)/Code/Common/Depend_Common
 include $(POSEIDON_ACTIVE_DIR)/Code/Params_and_Variables/Depend_Variables
 include $(POSEIDON_ACTIVE_DIR)/Code/Flags/Depend_Flags
-include $(POSEIDON_ACTIVE_DIR)/Code/Timers/Depend_Timers
+include $(POSEIDON_ACTIVE_DIR)/Code/Diagnostics/Depend_Diagnostics
 include $(POSEIDON_ACTIVE_DIR)/Code/AMReX_Utilities/Depend_AMReX_Utilities
 include $(POSEIDON_ACTIVE_DIR)/Code/Mapping_Routines/Depend_Maps
 include $(POSEIDON_ACTIVE_DIR)/Code/Mesh/Depend_Mesh

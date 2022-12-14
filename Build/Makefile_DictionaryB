@@ -1,0 +1,91 @@
+#================================ Makefile Dictionary ================================#
+#
+# 	Contains the definitions of the terms used to compile the Poseidon code.
+#
+#=====================================================================================#
+
+
+SRC	= ./Code
+OBJ	= ./Obj
+BIN	= ./Bin
+OUT     = ./Poseidon_Output
+DRV     = ./Code/Drivers
+
+
+include $(POSEIDON_DIR)/Build/Machines/Machine_$(POSEIDON_MACHINE_NAME)
+
+
+OUTPUT_LINKER_FLAG  ?= -J
+INCLUDE_LINKER_FLAG ?= -I
+
+POSEIDON_DEBUG_FLAG_ON   = -DPOSEIDON_DEBUG_FLAG
+POSEIDON_DEBUG_FLAG_OFF  =
+
+POSEIDON_TIMER_FLAG_ON   = -DPOSEIDON_TIMER_FLAG
+POSEIDON_TIMER_FLAG_OFF  = 
+
+POSEIDON_MEMORY_FLAG_ON  = -DPOSEIDON_MEMORY_FLAG
+POSEIDON_MEMORY_FLAG_OFF = 
+
+POSEIDON_AMREX_FLAG_ON   = -DPOSEIDON_AMREX_FLAG
+POSEIDON_AMREX_FLAG_OFF  =
+
+
+
+
+
+#----------------#
+#     OPENMP     #
+#----------------#
+
+myOPENMP_ON     = $(myOPENMP)
+myOPENMP_OFF    = 
+myOPENMP_LINK   = $(myOPENMP_$(OPENMP_MODE))
+
+
+
+#----------------#
+#     OPENMPI    #
+#----------------#
+
+myMPI_INC_ON    = $(myMPI_INC) 
+myMPI_INC_OFF   =
+myMPI_INC_LINK  = myMPI_INC_$(MPI_MODE)       
+
+myMPI_LIB_ON    = $(myMPI_LIB)
+myMPI_LIB_OFF   = 
+myMPI_LIB_LINK  = $(myMPI_LIB_$(MPI_MODE))
+
+myMPI_LINK      = $(myMPI_INC_LINK) $(myMPI_LIB_LINK)
+
+
+
+
+#----------------#
+#     LAPACK     #
+#----------------#
+
+myLAPACK_INC_ON = $(myLAPACK_INC)
+myLAPACK_INC_OFF=
+myLAPACK_INC_LINK = $(myLAPACK_INC_$(LAPACK_MODE))
+
+myLAPACK_LIB_ON = $(myLAPACK_LIB)
+myLAPACK_LIB_OFF=
+myLAPACK_LIB_LINK = $(myLAPACK_LIB_$(LAPACK_MODE))
+
+myLAPACK_LINK    = $(myLAPACK_INC_LINK) $(myLAPACK_LIB_LINK)
+
+
+
+#---------------------#
+#  Final Definitions  #
+#---------------------# 
+
+FORT		=$(myFORT) $(my$(CMODE) $(myOPENMP_LINK) $(myMPI_LINK) $(myLAPACK_LINK)
+CC              =$(myCC)
+
+OUTPUT_LINKER   =$(OUTPUT_LINKER_FLAG)$(OBJ)
+INPUT_LINKER    =$(INPUT_LINKER_FLAG)$(OBJ)
+
+POSEIDON_DEFS   =$(POSEIDON_AMREX_FLAG_$(POSEIDON_AMREX_MODE)) $(POSEIDON_DEBUG_FLAG_$(POSEIDON_DEBUG_MODE)) $(POSEIDON_MEMORY_FLAG_$(POSEIDON_MEMORY_MODE)) $(POSEIDON_TIMER_FLAG_$(POSEIDON_TIMER_MODE))
+

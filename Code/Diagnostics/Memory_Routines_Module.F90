@@ -26,7 +26,7 @@ MODULE Poseidon_Memory_Routines                                              !##
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-
+USE Memory_Variables_Module
 
 
 IMPLICIT NONE
@@ -35,14 +35,15 @@ IMPLICIT NONE
 CONTAINS
 
 
+
 !+101+##########################################################################!
 !                                                                               !
 !        Poseidon_Memory_Usage                                    				!
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Memory_Usage( RSS_Mem )
+SUBROUTINE Poseidon_Mark_Memory( RSS_Memory_Marker )
 
-INTEGER,    INTENT(OUT)         ::  RSS_Mem
+INTEGER,    INTENT(OUT)         ::  RSS_Memory_Marker
 
 
 CHARACTER(LEN = 500)            ::  Filename=''
@@ -54,7 +55,7 @@ INTEGER                         ::  pid
 LOGICAL                         ::  ifxst
 
 
-RSS_Mem=-1    ! return negative number if not found
+RSS_Memory_Marker = -1    ! return negative number if not found
 
 !--- get process ID
 
@@ -64,27 +65,30 @@ filename='/proc/'//trim(adjustl(Pid_Str))//'/status'
 
 !--- read system file
 
-inquire (file=filename,exist=ifxst)
-if (.not.ifxst) then
-  write (*,*) 'system file does not exist'
-  return
-endif
+INQUIRE (file=filename,exist=ifxst)
+IF (.NOT. ifxst) THEN
+  WRITE(*,*) 'system file does not exist'
+  RETURN
+ENDIF
 
-open(unit=100, file=filename, action='read')
-do
-  read (100,'(a)',end=120) line
-  if (line(1:6).eq.'VmRSS:') then
-     read (line(7:),*) RSS_Mem
-     exit
-  endif
-enddo
-120 continue
-close(100)
+OPEN(unit=100, file=filename, action='read')
+DO
+  READ (100,'(a)',end=120) line
+  IF (line(1:6).eq.'VmRSS:') then
+     READ (line(7:),*) RSS_Memory_Marker
+     EXIT
+  ENDIF
+ENDDO
+120 CONTINUE
+CLOSE(100)
 
 RETURN
 
 
-END SUBROUTINE Poseidon_Memory_Usage
+END SUBROUTINE Poseidon_Mark_Memory
+
+
+
 
 
 

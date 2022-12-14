@@ -1,0 +1,21 @@
+# Machine :  
+
+myFORT       = 
+myCC         = 
+
+myDEBUG      = 
+myOPTIMIZE   = 
+
+myOPENMP     = 
+
+myMPI_INC    = 
+myMPI_LIB    = 
+
+myLAPACK_INC = 
+myLAPACK_LIB = 
+
+
+#OUTPUT_LINKER_FLAG =
+#INPUT_LINKER_FLAG  =
+
+
