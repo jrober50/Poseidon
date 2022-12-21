@@ -1,16 +1,17 @@
 HDF5_DIR       = /usr/local/hdf5
 
-AMREX_HOME    ?= /Users/nickroberts/amrex
-#AMREX_HOME    ?= $(AMREX_DIR)
-HDF5_HOME     ?= $(HDF5_DIR)
-LAPACK_HOME   ?= $(LAPACK_DIR)
+#AMREX_HOME    ?= /Users/nickroberts/amrex
+AMREX_HOME    ?= $(AMREX_DIR)
+HDF5_HOME     ?= $(myHDF5_DIR)
+LAPACK_HOME   ?= $(myLAPACK_DIR)
+
 
 
 HDF5_INC       = $(HDF5_HOME)/include
 HDF5_LIB       = $(HDF5_HOME)/lib
 
-#LAPACK_INC     = $(LAPACK_HOME)/include
-#LAPACK_LIB     = $(LAPACK_HOME)/lib
+LAPACK_INC     = $(LAPACK_HOME)/include
+LAPACK_LIB     = $(LAPACK_HOME)/lib
 
 USE_F_INTERFACES = TRUE
 
@@ -29,9 +30,16 @@ EBASE     = Yahil_Profile_XCFC
 
 
 
-#INCLUDE_LOCATIONS += $(LAPACK_INC)
-#LIBRARY_LOCATIONS += $(LAPACK_LIB)
-LIBRARIES += -framework Accelerate
+INCLUDE_LOCATIONS += $(LAPACK_INC)
+LIBRARY_LOCATIONS += $(LAPACK_LIB)
+#LIBRARIES += -framework Accelerate
+LIBRARIES += -llapack -lblas
+
+ifneq ("$(wildcard $(AMREX_HOME)/Src/DG/Make.package)","")
+  # Requires amrex fork from github.com:dunhamsj/amrex
+  # Branch: MeshRefinement_DG
+  include $(AMREX_HOME)/Src/DG/Make.package
+endif
 
 
 # Set pre-processor directives
@@ -50,8 +58,8 @@ include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 
 
 # Include directories and source files needed from Poseidon
-POSEIDON_MACHINE_NAME ?= jrober50
-include /Users/nickroberts/Poseidon/Build/Make.Poseidon
+POSEIDON_MACHINE_NAME ?= Summit
+include $(POSEIDON_DIR)/Build/Make.Poseidon
 
 
 

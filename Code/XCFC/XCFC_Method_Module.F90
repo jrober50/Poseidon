@@ -80,6 +80,16 @@ USE Flags_IO_Module, &
             ONLY :  lPF_IO_Flags,           &
                     iPF_IO_Print_Results
 
+USE Poseidon_Memory_Routines, &
+            ONLY :  Poseidon_Mark_Memory
+            
+USE Memory_Variables_Module, &
+            ONLY :  Memory_Method_Start,     &
+                    Memory_Method_Before_CF, &
+                    Memory_Method_Before_LF, &
+                    Memory_Method_Before_SV, &
+                    Memory_Method_End
+
 USE MPI
 
 IMPLICIT NONE
@@ -107,11 +117,20 @@ IF ( Verbose_Flag ) CALL Run_Message('Beginning XCFC System Solve.')
 CALL Output_Initial_Guess(PR)
 
 
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_Start)
+PRINT*,"Before XV Solve              : ",Memory_Method_Start
+#endif
 
 ! Solve for X
 CALL XCFC_X_Solve()
 
 
+
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_Before_CF)
+PRINT*,"Before CF Solve              : ",Memory_Method_Before_CF
+#endif
 
 ! Solve for Conformal Factor
 IF ( Eq_Flags(iU_CF) == 1 ) THEN
@@ -119,7 +138,10 @@ IF ( Eq_Flags(iU_CF) == 1 ) THEN
 END IF
 
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_Before_LF)
+PRINT*,"Before LF Solve              : ",Memory_Method_Before_LF
+#endif
 
 ! Solve for Lapse Function
 IF ( Eq_Flags(iU_LF) == 1 ) THEN
@@ -127,7 +149,10 @@ IF ( Eq_Flags(iU_LF) == 1 ) THEN
 END IF
 
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_Before_SV)
+PRINT*,"Before SV Solve              : ",Memory_Method_Before_SV
+#endif
 
 ! Solve for Shift Vector
 IF ( ANY(Eq_Flags(iU_S1:iU_S3) == 1) ) THEN
@@ -135,7 +160,10 @@ IF ( ANY(Eq_Flags(iU_S1:iU_S3) == 1) ) THEN
 END IF
 
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_End)
+PRINT*,"After SV Solve               : ",Memory_Method_End
+#endif
 
 
 

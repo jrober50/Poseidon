@@ -71,7 +71,7 @@ POSEIDON_DEBUG_FLAG_OFF =
 
 
 ### OpenMP
-OPENMP_Summit__ON               = -fopenmp
+OPENMP_Summit_ON               = -fopenmp
 OPENMP_Summit_OFF               =
 
 OPENMP_ISAAC_ON                      = -fopenmp

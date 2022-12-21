@@ -1329,7 +1329,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                                 
                                 ! X1 Value
                                 Here = AMReX_nCOMP_Map( iU_K12, rd, td, pd, Caller_NQ )
-                                WRITE(xFile_IDs(1),*)Results_PTR(re,te,pe,Here)/Units(i)
+                                WRITE(xFile_IDs(1),*)Results_PTR(re,te,pe,Here)/Units(1)
                                 
                                 ! X1 Deriv
                                 Here = AMReX_nCOMP_Map( iU_K13, rd, td, pd, Caller_NQ )

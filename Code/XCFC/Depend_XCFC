@@ -32,7 +32,7 @@ XCFC_Solvers_Main.o:                 \
   XCFC_Solvers_Main.f90              \
 
 XCFC_Method_Module.o:                \
-  XCFC_Method_Module.f90             \
+  XCFC_Method_Module.F90             \
 
 Initialization_XCFC.o:               \
   Initialization_XCFC.F90            \

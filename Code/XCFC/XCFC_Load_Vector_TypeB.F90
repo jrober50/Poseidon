@@ -738,10 +738,6 @@ DO lvl = AMReX_Num_Levels-1,0,-1
     !   MakeFineMask
     !
     IF ( lvl < AMReX_Num_Levels-1 ) THEN
-#ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_FineMask_Before_LVB)
-    PRINT*,lvl,"Before MakeFineMask (LVB) : ",Memory_FineMask_Before_LVB
-#endif
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Source(lvl)%ba,        &
                                   MF_Source(lvl)%dm,        &
@@ -749,10 +745,6 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                                   MF_Source(lvl+1)%ba,      &
                                   iLeaf, iTrunk            )
                                   
-#ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_FineMask_After_LVB)
-    PRINT*,lvl,"After MakeFineMask (LVB) : ",Memory_FineMask_After_LVB
-#endif
     ELSE
         ! Create Level_Mask all equal to 1
         CALL amrex_imultifab_build( Level_Mask,             &

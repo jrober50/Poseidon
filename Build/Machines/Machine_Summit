@@ -1,0 +1,21 @@
+# Machine : Summit
+
+myFORT       = mpif90
+myCC         = 
+
+myDEBUG      = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
+myOPTIMIZE   = -O2
+
+myOPENMP     = -fopenmp
+
+myMPI_INC    = 
+myMPI_LIB    = 
+
+myLAPACK_INC = -I$(myLAPACK_DIR)/include
+myLAPACK_LIB = -L$(myLAPACK_DIR)/lib64 -llapack -lblas
+
+
+#OUTPUT_LINKER_FLAG =
+#INPUT_LINKER_FLAG  =
+
+

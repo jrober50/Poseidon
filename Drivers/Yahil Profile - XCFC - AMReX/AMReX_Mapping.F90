@@ -85,15 +85,22 @@ USE Poseidon_Memory_Routines, &
             
 USE Memory_Variables_Module, &
             ONLY :  Memory_Start,               &
+                    Memory_After_MPI_Init,      &
+                    Memory_After_AMReX_Init,    &
+                    Memory_After_AMReX_Finalize,&
                     Memory_End,                 &
                     Memory_Loop_Start,          &
                     Memory_Loop_Before_Init,    &
+                    Memory_Loop_After_Init,     &
                     Memory_Loop_Before_Run,     &
                     Memory_Loop_After_Run,      &
                     Memory_Loop_Before_Close,   &
-                    Memory_Loop_End
+                    Memory_Loop_End,            &
+                    Memory_HWM
                     
-
+USE Memory_IO_Module, &
+            ONLY :  Output_Poseidon_Memory_Loop_Report, &
+                    Output_Poseidon_Memory_Total_Report
 
 USE MPI
 
@@ -213,8 +220,8 @@ Write_Results_R_Samps = 256
 Write_Results_T_Samps = 1
 
 #ifdef POSEIDON_MEMORY_FLAG
-        CALL Poseidon_Mark_Memory(Memory_Start)
-        PRINT*,"Beginning : ",Memory_Start
+        CALL Poseidon_Mark_Memory(Memory_Start,Memory_HWM)
+        PRINT*,"Beginning                    : ",Memory_Start
 #endif
 
 
@@ -227,10 +234,20 @@ CALL MPI_INIT(ierr)
 CALL MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
 CALL MPI_COMM_SIZE(MPI_COMM_WORLD, nPROCS,ierr)
 
+
+#ifdef POSEIDON_MEMORY_FLAG
+        CALL Poseidon_Mark_Memory(Memory_After_MPI_Init,Memory_HWM)
+        PRINT*,"After MPI Init               : ",Memory_After_MPI_Init
+#endif
+
+
 call amrex_init()
 CALL amrex_amrcore_init()
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+        CALL Poseidon_Mark_Memory(Memory_After_AMReX_Init,Memory_HWM)
+        PRINT*,"After AMReX Init             : ",Memory_After_AMReX_Init
+#endif
 
 
 
@@ -243,17 +260,17 @@ CALL Init_AMReX_Parameters()
 
 
 Loop_Min = 1
-Loop_Max = 5
+Loop_Max = 100
 
 DO Loop = Loop_Min, Loop_Max
 
-PRINT*,"Loop : ",Loop
+PRINT*,"Loop                         : ",Loop
 DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
 
 #ifdef POSEIDON_MEMORY_FLAG
-        CALL Poseidon_Mark_Memory(Memory_Loop_Start)
-        PRINT*,Loop,"Beginning of Loop : ",Memory_Loop_Start
+        CALL Poseidon_Mark_Memory(Memory_Loop_Start,Memory_HWM)
+        PRINT*,"Beginning of Loop            : ",Memory_Loop_Start
 #endif
 
     Suffix_Tail = Letter_Table(nLevels)
@@ -285,8 +302,8 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                                                          #!
     !############################################################!
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Init)
-    PRINT*,Loop,"Before Init : ",Memory_Loop_Before_Init
+    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Init,Memory_HWM)
+    PRINT*,"Before Init                  : ",Memory_Loop_Before_Init
 #endif
     CALL Initialize_Poseidon &
        (    Source_NQ                           = NQ,                   &
@@ -314,7 +331,10 @@ DO T_Index = T_Index_Min, T_Index_Max
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_Loop_After_Init,Memory_HWM)
+    PRINT*,"After Init                   : ",Memory_Loop_After_Init
+#endif
 
     !############################################################!
     !#                                                          #!
@@ -350,14 +370,14 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                                                          #!
     !############################################################!
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Run)
-    PRINT*,Loop,"Before Poseidon_Run : ",Memory_Loop_Before_Run
+    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Run,Memory_HWM)
+    PRINT*,"Before Poseidon_Run          : ",Memory_Loop_Before_Run
 #endif
     
     CALL Poseidon_Run()
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_Loop_After_Run)
-    PRINT*,Loop,"After Poseidon_Run : ",Memory_Loop_After_Run
+    CALL Poseidon_Mark_Memory(Memory_Loop_After_Run,Memory_HWM)
+    PRINT*,"After Poseidon_Run           : ",Memory_Loop_After_Run
 #endif
 
 
@@ -379,8 +399,8 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                                                          #!
     !############################################################!
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Close)
-    PRINT*,Loop,"Before Close : ",Memory_Loop_Before_Close
+    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Close,Memory_HWM)
+    PRINT*,"Before Close                 : ",Memory_Loop_Before_Close
 #endif
     
     CALL Poseidon_Close()
@@ -393,9 +413,11 @@ DO T_Index = T_Index_Min, T_Index_Max
 
 
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_Loop_End)
-    PRINT*,Loop,"After Deallocation, Loop End : ",Memory_Loop_End
+    CALL Poseidon_Mark_Memory(Memory_Loop_End,Memory_HWM)
+    PRINT*,"After Deallocation, Loop End : ",Memory_Loop_End
 #endif
+
+    CALL Output_Poseidon_Memory_Loop_Report( Loop )
 
 END DO ! T_Index
 END DO ! M_Index
@@ -409,15 +431,21 @@ END DO ! Loop Loop
 !#                                                          #!
 !############################################################!
 call amrex_finalize()
-CALL MPI_Finalize(ierr)
+#ifdef POSEIDON_MEMORY_FLAG
+    CALL Poseidon_Mark_Memory(Memory_After_AMReX_Finalize,Memory_HWM)
+    PRINT*," After AMReX_Finalize        : ",Memory_After_AMReX_Finalize
+#endif
 
+CALL MPI_Finalize(ierr)
+    
 
 
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_End)
-    PRINT*," Fin : ",Memory_End
+    CALL Poseidon_Mark_Memory(Memory_End,Memory_HWM)
+    PRINT*," Fin                         : ",Memory_End,Memory_HWM
 #endif
 
+CALL Output_Poseidon_Memory_Total_Report()
 
 END PROGRAM AMReX_Mapping
 
