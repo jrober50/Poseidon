@@ -54,10 +54,31 @@ INTEGER, PUBLIC   ::  Memory_FineMask_After_LVB
 
 INTEGER, PUBLIC   ::  Memory_Method_Start
 INTEGER, PUBLIC   ::  Memory_Method_Before_CF
+
+INTEGER, PUBLIC   ::  Memory_Method_Before_CF_LoadVector
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_LoadVector
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_FixedPoint
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_DeallocWork
+
 INTEGER, PUBLIC   ::  Memory_Method_Before_LF
+
+INTEGER, PUBLIC   ::  Memory_Method_Before_LF_LoadVector
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_LoadVector
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_FixedPoint
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_DeallocWork
+
 INTEGER, PUBLIC   ::  Memory_Method_Before_SV
 INTEGER, PUBLIC   ::  Memory_Method_End
 
+
+INTEGER, PUBLIC   ::  Memory_Before_Init
+INTEGER, PUBLIC   ::  Memory_After_Init
+
+INTEGER, PUBLIC   ::  Memory_Before_Close
+INTEGER, PUBLIC   ::  Memory_After_Close
+
+INTEGER, PUBLIC   ::  Memory_Loop_After_Source
+INTEGER, PUBLIC   ::  Memory_Loop_After_SetBC
 
 #endif
 

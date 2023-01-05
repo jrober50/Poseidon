@@ -160,7 +160,6 @@ REAL(idp)                                               ::  Kappa_wUnits
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Creating AMReX source variables.')
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing Yahil Source Multifab.')
 
-
 CALL TimerStart( Timer_Driver_SetSource_InitTest )
 
 
@@ -219,6 +218,76 @@ CALL Poseidon_Input_Sources(MF_Driver_Source,    &   ! Source Multifab
 
 END SUBROUTINE Driver_SetSource
 
+
+
+!+101+##########################################################################!
+!                                                                               !
+!     Driver_SetSource                                                			!
+!                                                                               !
+!###############################################################################!
+SUBROUTINE Driver_CreateSource( Yahil_Params,               &
+                                nLevels_Input               )
+
+REAL(idp),  INTENT(IN), DIMENSION(3)                    ::  Yahil_Params
+INTEGER,    INTENT(IN)                                  ::  nLevels_Input
+
+INTEGER                                                 ::  nVars_Source
+
+
+REAL(idp)                                               ::  Kappa_wUnits
+
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Creating AMReX source variables.')
+IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing Yahil Source Multifab.')
+
+
+CALL TimerStart( Timer_Driver_SetSource_InitTest )
+
+
+SelfSim_T     = Yahil_Params(1)
+SelfSim_Kappa = Yahil_Params(2)
+SelfSim_Gamma = Yahil_Params(3)
+
+Kappa_wUnits = SelfSim_Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**SelfSim_Gamma)
+
+
+Central_E = Calc_Yahil_Central_E(SelfSim_T, SelfSim_Kappa, SelfSim_Gamma)
+
+
+IF ( Verbose_Flag ) THEN
+    WRITE(*,'(A)')'------------- Test Parameters ----------------'
+    WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
+    WRITE(*,'(A,ES12.5,A)') ' - Yahil Time      : ', SelfSim_T,' ms'
+    WRITE(*,'(A,ES12.5)')   ' - Kappa           : ', Kappa_wUnits
+    WRITE(*,'(A,ES12.5)')   ' - Gamma           : ', SelfSim_Gamma
+    WRITE(*,'(A,ES12.5,A)') ' - Central E       : ', Central_E/E_Units," Erg/cm^3"
+    WRITE(*,'(/)')
+END IF
+
+
+CALL amrex_init_virtual_functions &
+       ( VF_Make_New_Level_From_Scratch, &
+         VF_Make_New_Level_From_Coarse, &
+         VF_Remake_Level, &
+         VF_Clear_Level, &
+         VF_Error_Estimate )
+
+
+
+nVars_Source    = 5
+MF_Src_nComps   = nVars_Source*Caller_Quad_DOF
+MF_Src_nGhost   = 0
+
+
+ALLOCATE( MF_Driver_Source(0:nLevels_Input-1) )
+CALL amrex_init_from_scratch( 0.0_idp )
+
+CALL TimerStop( Timer_Driver_SetSource_InitTest )
+
+
+CALL Poseidon_Input_Sources(MF_Driver_Source,    &   ! Source Multifab
+                            MF_Src_nComps        )   ! AMReX Levels
+
+END SUBROUTINE Driver_CreateSource
 
 
 

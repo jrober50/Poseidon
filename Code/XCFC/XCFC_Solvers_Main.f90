@@ -160,6 +160,9 @@ CALL TimerStart( Timer_ConFactor )
 CALL XCFC_Fixed_Point(iU_CF)
 CALL TimerStop( Timer_ConFactor )
 
+
+!CALL Print_Single_Var_Results( iU_CF )
+
 IF ( .FALSE. ) THEN
     STOP "Stopping at the end of XCFC_ConFactor_Solve"
 END IF

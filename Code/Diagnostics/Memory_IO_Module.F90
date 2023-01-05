@@ -59,6 +59,8 @@ INTEGER                                     ::  Suggested_Number = 475
 INTEGER                                     ::  File_ID
 
 
+#ifdef POSEIDON_MEMORY_FLAG
+
 WRITE(Report_Name,'(A,A,A,A,I3.3,A)') Poseidon_Reports_Dir,            &
                                     "Memory_Report_",               &
                                     trim(File_Suffix),              &
@@ -77,7 +79,20 @@ WRITE(File_ID,'(I16)') Memory_Loop_Before_Run
 
 WRITE(File_ID,'(I16)') Memory_Method_Start
 WRITE(File_ID,'(I16)') Memory_Method_Before_CF
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_CF_LoadVector
+WRITE(File_ID,'(I16)') Memory_Method_After_CF_LoadVector
+WRITE(File_ID,'(I16)') Memory_Method_After_CF_FixedPoint
+WRITE(File_ID,'(I16)') Memory_Method_After_CF_DeallocWork
+
 WRITE(File_ID,'(I16)') Memory_Method_Before_LF
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_LF_LoadVector
+WRITE(File_ID,'(I16)') Memory_Method_After_LF_LoadVector
+WRITE(File_ID,'(I16)') Memory_Method_After_LF_FixedPoint
+WRITE(File_ID,'(I16)') Memory_Method_After_LF_DeallocWork
+
+
 WRITE(File_ID,'(I16)') Memory_Method_Before_SV
 WRITE(File_ID,'(I16)') Memory_Method_End
 
@@ -86,6 +101,9 @@ WRITE(File_ID,'(I16)') Memory_Loop_Before_Close
 WRITE(File_ID,'(I16)') Memory_Loop_End
 
 CLOSE( File_ID)
+
+
+#endif
 
 END SUBROUTINE Output_Poseidon_Memory_Loop_Report
 
@@ -104,7 +122,7 @@ INTEGER                                     ::  Suggested_Number = 475
 INTEGER                                     ::  File_ID
 
 
-
+#ifdef POSEIDON_MEMORY_FLAG
 
 WRITE(Report_Name,'(A,A,A,A,A,A)') Poseidon_Reports_Dir,            &
                                     "Memory_Report_",               &
@@ -120,6 +138,8 @@ WRITE(File_ID,'(I16)') Memory_End
 
 
 CLOSE( File_ID)
+
+#endif
 
 END SUBROUTINE Output_Poseidon_Memory_Total_Report
 

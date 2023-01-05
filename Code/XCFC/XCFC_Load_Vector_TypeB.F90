@@ -181,10 +181,6 @@ USE Poseidon_AMReX_Multilayer_Utilities_Module, &
             
 USE Poseidon_Memory_Routines, &
             ONLY :  Poseidon_Mark_Memory
-            
-USE Memory_Variables_Module, &
-            ONLY :  Memory_FineMask_Before_LVB, &
-                    Memory_FineMask_After_LVB
 
 #endif
 

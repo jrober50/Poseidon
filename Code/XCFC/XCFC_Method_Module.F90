@@ -82,13 +82,15 @@ USE Flags_IO_Module, &
 
 USE Poseidon_Memory_Routines, &
             ONLY :  Poseidon_Mark_Memory
-            
+
+#ifdef POSEIDON_MEMORY_FLAG
 USE Memory_Variables_Module, &
             ONLY :  Memory_Method_Start,     &
                     Memory_Method_Before_CF, &
                     Memory_Method_Before_LF, &
                     Memory_Method_Before_SV, &
                     Memory_Method_End
+#endif
 
 USE MPI
 

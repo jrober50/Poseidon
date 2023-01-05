@@ -73,6 +73,24 @@ USE Functions_Coeffs_Module, &
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
+            
+#ifdef POSEIDON_MEMORY_FLAG
+USE Poseidon_Memory_Routines, &
+            ONLY :  Poseidon_Mark_Memory
+ 
+
+USE Memory_Variables_Module, &
+            ONLY :  Memory_Method_Before_CF_LoadVector, &
+                    Memory_Method_After_CF_LoadVector,  &
+                    Memory_Method_After_CF_FixedPoint,  &
+                    Memory_Method_After_CF_DeallocWork, &
+                    Memory_Method_Before_LF_LoadVector, &
+                    Memory_Method_After_LF_LoadVector,  &
+                    Memory_Method_After_LF_FixedPoint,  &
+                    Memory_Method_After_LF_DeallocWork, &
+                    Memory_HWM
+  
+#endif
 
 IMPLICIT NONE
 
@@ -119,7 +137,7 @@ COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Work
 INTEGER                                                 ::  Cur_Iteration
 LOGICAL                                                 ::  CONVERGED
 
-CHARACTER(LEN = 300)                                ::  Message
+CHARACTER(LEN = 300)                                    ::  Message
 
 
 IF ( Verbose_Flag ) THEN
@@ -138,9 +156,27 @@ iEL = [0, 0, 0]
 iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 ALLOCATE( Work(1:LWORK) )
 
+#ifdef POSEIDON_MEMORY_FLAG
+IF ( iU == iU_CF ) THEN
+    CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_LoadVector,Memory_HWM)
+    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_Before_CF_LoadVector
+ELSE IF ( iU == iU_LF ) THEN
+    CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_LoadVector,Memory_HWM)
+    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_Before_LF_LoadVector
+END IF
+#endif
 
 CALL XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
 
+#ifdef POSEIDON_MEMORY_FLAG
+IF ( iU == iU_CF ) THEN
+    CALL Poseidon_Mark_Memory(Memory_Method_After_CF_LoadVector,Memory_HWM)
+    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_After_CF_LoadVector
+ELSE IF ( iU == iU_LF ) THEN
+    CALL Poseidon_Mark_Memory(Memory_Method_After_LF_LoadVector,Memory_HWM)
+    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_After_LF_LoadVector
+END IF
+#endif
 
 Cur_Iteration = 0
 CONVERGED     = .FALSE.
@@ -178,9 +214,6 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
         BVector = -FVector(:,mk)
         AMatrix(:,1:mk-1) = FVector(:,1:mk-1) - SPREAD( FVector(:,mk), DIM=2, NCOPIES = mk-1)
-
-        
-
 
 
 
@@ -247,11 +280,28 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 END DO ! Converged Loop
 
 
+#ifdef POSEIDON_MEMORY_FLAG
+IF ( iU == iU_CF ) THEN
+    CALL Poseidon_Mark_Memory(Memory_Method_After_CF_FixedPoint,Memory_HWM)
+    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_After_CF_FixedPoint
+ELSE IF ( iU == iU_LF ) THEN
+    CALL Poseidon_Mark_Memory(Memory_Method_After_LF_FixedPoint,Memory_HWM)
+    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_After_LF_FixedPoint
+END IF
+#endif
 
 DEALLOCATE( Work )
 
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+IF ( iU == iU_CF ) THEN
+    CALL Poseidon_Mark_Memory(Memory_Method_After_CF_DeallocWork,Memory_HWM)
+    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_After_CF_DeallocWork
+ELSE IF ( iU == iU_LF ) THEN
+    CALL Poseidon_Mark_Memory(Memory_Method_After_LF_DeallocWork,Memory_HWM)
+    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_After_LF_DeallocWork
+END IF
+#endif
 
 END SUBROUTINE XCFC_Fixed_Point
 
