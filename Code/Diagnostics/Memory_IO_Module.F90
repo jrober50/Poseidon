@@ -73,8 +73,8 @@ WRITE(Report_Name,'(A,A,A,A,I3.3,A)') Poseidon_Reports_Dir,            &
 CALL Open_New_File( Report_Name, File_ID, Suggested_Number)
 
 WRITE(File_ID,'(I16)') Memory_Loop_Start
-WRITE(File_ID,'(I16)') Memory_Loop_Before_Init
-WRITE(File_ID,'(I16)') Memory_Loop_After_Init
+WRITE(File_ID,'(I16)') Memory_Loop_After_Source
+WRITE(File_ID,'(I16)') Memory_Loop_After_SetBC
 WRITE(File_ID,'(I16)') Memory_Loop_Before_Run
 
 WRITE(File_ID,'(I16)') Memory_Method_Start
@@ -130,7 +130,6 @@ WRITE(File_ID,'(I16)') Memory_Method_Before_SV
 WRITE(File_ID,'(I16)') Memory_Method_End
 
 WRITE(File_ID,'(I16)') Memory_Loop_After_Run
-WRITE(File_ID,'(I16)') Memory_Loop_Before_Close
 WRITE(File_ID,'(I16)') Memory_Loop_End
 
 
