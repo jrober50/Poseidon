@@ -78,17 +78,50 @@ WRITE(File_ID,'(I16)') Memory_Loop_After_Init
 WRITE(File_ID,'(I16)') Memory_Loop_Before_Run
 
 WRITE(File_ID,'(I16)') Memory_Method_Start
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_X_Load
+WRITE(File_ID,'(I16)') Memory_Method_X_Between
+WRITE(File_ID,'(I16)') Memory_Method_Before_Bnd_Factorize
+WRITE(File_ID,'(I16)') Memory_Method_After_Bnd_Factorize
+
 WRITE(File_ID,'(I16)') Memory_Method_Before_CF
 
-WRITE(File_ID,'(I16)') Memory_Method_Before_CF_LoadVector
-WRITE(File_ID,'(I16)') Memory_Method_After_CF_LoadVector
+WRITE(File_ID,'(I16)') Memory_Method_Before_CF_LoadVector1
+WRITE(File_ID,'(I16)') Memory_Method_After_CF_LoadVector1
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_CF_Solve1
+WRITE(File_ID,'(I16)') Memory_Method_Before_Chol_Fact
+WRITE(File_ID,'(I16)') Memory_Method_After_Chol_Fact
+WRITE(File_ID,'(I16)') Memory_Method_After_CF_Solve1
+WRITE(File_ID,'(I16)') Memory_Method_Before_CF_LoadVector2
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_CF_Solve2
+WRITE(File_ID,'(I16)') Memory_Method_After_CF_Solve2
+WRITE(File_ID,'(I16)') Memory_Method_Before_CF_LoadVector3
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_CF_Solve3
+WRITE(File_ID,'(I16)') Memory_Method_After_CF_Solve3
+WRITE(File_ID,'(I16)') Memory_Method_Before_CF_LoadVector4
+
 WRITE(File_ID,'(I16)') Memory_Method_After_CF_FixedPoint
 WRITE(File_ID,'(I16)') Memory_Method_After_CF_DeallocWork
 
 WRITE(File_ID,'(I16)') Memory_Method_Before_LF
 
-WRITE(File_ID,'(I16)') Memory_Method_Before_LF_LoadVector
-WRITE(File_ID,'(I16)') Memory_Method_After_LF_LoadVector
+WRITE(File_ID,'(I16)') Memory_Method_Before_LF_LoadVector1
+WRITE(File_ID,'(I16)') Memory_Method_After_LF_LoadVector1
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_LF_Solve1
+WRITE(File_ID,'(I16)') Memory_Method_After_LF_Solve1
+WRITE(File_ID,'(I16)') Memory_Method_Before_LF_LoadVector2
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_LF_Solve2
+WRITE(File_ID,'(I16)') Memory_Method_After_LF_Solve2
+WRITE(File_ID,'(I16)') Memory_Method_Before_LF_LoadVector3
+
+WRITE(File_ID,'(I16)') Memory_Method_Before_LF_Solve3
+WRITE(File_ID,'(I16)') Memory_Method_After_LF_Solve3
+WRITE(File_ID,'(I16)') Memory_Method_Before_LF_LoadVector4
 WRITE(File_ID,'(I16)') Memory_Method_After_LF_FixedPoint
 WRITE(File_ID,'(I16)') Memory_Method_After_LF_DeallocWork
 
@@ -99,6 +132,12 @@ WRITE(File_ID,'(I16)') Memory_Method_End
 WRITE(File_ID,'(I16)') Memory_Loop_After_Run
 WRITE(File_ID,'(I16)') Memory_Loop_Before_Close
 WRITE(File_ID,'(I16)') Memory_Loop_End
+
+
+
+
+
+
 
 CLOSE( File_ID)
 

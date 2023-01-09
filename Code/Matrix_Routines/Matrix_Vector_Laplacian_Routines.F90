@@ -110,7 +110,14 @@ USE Flags_Initialization_Module, &
                     iPF_Init_Matrices_Type_B_LU
 
 
+#ifdef POSEIDON_MEMORY_FLAG
+USE Poseidon_Memory_Routines, &
+            ONLY :  Poseidon_Mark_Memory
 
+USE Memory_Variables_Module, &
+            ONLY :  Memory_Method_Before_Bnd_Factorize,     &
+                    Memory_Method_After_Bnd_Factorize
+#endif
 USE MPI
 
 IMPLICIT NONE
@@ -134,6 +141,15 @@ INTEGER                                                 :: INFO
 CHARACTER(LEN = 300)                                    ::  Message
 
 IF ( Verbose_Flag ) CALL Init_Message('Factorizing vector Laplace matrix using LAPAK LU factorization.')
+
+
+
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_Before_Bnd_Factorize)
+PRINT*,"Before Banded Factorization  : ",Memory_Method_Before_Bnd_Factorize
+#endif
+
+
 
 
 CALL TimerStart( Timer_Banded_Factorization )
@@ -180,6 +196,11 @@ CALL IO_Output_Condition_Number()
 
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) = .TRUE.
 
+
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_After_Bnd_Factorize)
+PRINT*,"After Banded Factorization   : ",Memory_Method_After_Bnd_Factorize
+#endif
 
 
 END SUBROUTINE Factorize_Vector_Laplacian

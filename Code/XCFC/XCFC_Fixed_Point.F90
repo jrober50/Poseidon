@@ -80,12 +80,30 @@ USE Poseidon_Memory_Routines, &
  
 
 USE Memory_Variables_Module, &
-            ONLY :  Memory_Method_Before_CF_LoadVector, &
-                    Memory_Method_After_CF_LoadVector,  &
+            ONLY :  Memory_Method_Before_CF_LoadVector1, &
+                    Memory_Method_Before_CF_LoadVector2, &
+                    Memory_Method_Before_CF_LoadVector3, &
+                    Memory_Method_Before_CF_LoadVector4, &
+                    Memory_Method_After_CF_LoadVector1,  &
+                    Memory_Method_Before_CF_Solve1,     &
+                    Memory_Method_Before_CF_Solve2,     &
+                    Memory_Method_Before_CF_Solve3,     &
+                    Memory_Method_After_CF_Solve1,     &
+                    Memory_Method_After_CF_Solve2,     &
+                    Memory_Method_After_CF_Solve3,     &
                     Memory_Method_After_CF_FixedPoint,  &
                     Memory_Method_After_CF_DeallocWork, &
-                    Memory_Method_Before_LF_LoadVector, &
-                    Memory_Method_After_LF_LoadVector,  &
+                    Memory_Method_Before_LF_LoadVector1, &
+                    Memory_Method_Before_LF_LoadVector2, &
+                    Memory_Method_Before_LF_LoadVector3, &
+                    Memory_Method_Before_LF_LoadVector4, &
+                    Memory_Method_Before_LF_Solve1,     &
+                    Memory_Method_Before_LF_Solve2,     &
+                    Memory_Method_Before_LF_Solve3,     &
+                    Memory_Method_After_LF_Solve1,     &
+                    Memory_Method_After_LF_Solve2,     &
+                    Memory_Method_After_LF_Solve3,     &
+                    Memory_Method_After_LF_LoadVector1,  &
                     Memory_Method_After_LF_FixedPoint,  &
                     Memory_Method_After_LF_DeallocWork, &
                     Memory_HWM
@@ -158,11 +176,11 @@ ALLOCATE( Work(1:LWORK) )
 
 #ifdef POSEIDON_MEMORY_FLAG
 IF ( iU == iU_CF ) THEN
-    CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_LoadVector,Memory_HWM)
-    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_Before_CF_LoadVector
+    CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_LoadVector1,Memory_HWM)
+    PRINT*,"Before First CF Load Vector         : ",Memory_Method_Before_CF_LoadVector1
 ELSE IF ( iU == iU_LF ) THEN
-    CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_LoadVector,Memory_HWM)
-    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_Before_LF_LoadVector
+    CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_LoadVector1,Memory_HWM)
+    PRINT*,"Before First LF Load Vector          : ",Memory_Method_Before_LF_LoadVector1
 END IF
 #endif
 
@@ -170,11 +188,11 @@ CALL XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
 
 #ifdef POSEIDON_MEMORY_FLAG
 IF ( iU == iU_CF ) THEN
-    CALL Poseidon_Mark_Memory(Memory_Method_After_CF_LoadVector,Memory_HWM)
-    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_After_CF_LoadVector
+    CALL Poseidon_Mark_Memory(Memory_Method_After_CF_LoadVector1,Memory_HWM)
+    PRINT*,"After First CF Load Vector          : ",Memory_Method_After_CF_LoadVector1
 ELSE IF ( iU == iU_LF ) THEN
-    CALL Poseidon_Mark_Memory(Memory_Method_After_LF_LoadVector,Memory_HWM)
-    PRINT*,"After First Fixed Point Load Vector : ",Memory_Method_After_LF_LoadVector
+    CALL Poseidon_Mark_Memory(Memory_Method_After_LF_LoadVector1,Memory_HWM)
+    PRINT*,"After First LF Load Vector          : ",Memory_Method_After_LF_LoadVector1
 END IF
 #endif
 
@@ -198,10 +216,74 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
 
+#ifdef POSEIDON_MEMORY_FLAG
+    IF ( Cur_Iteration == 1 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_Solve1,Memory_HWM)
+            PRINT*,"Before First CF Liner Solve         : ",Memory_Method_Before_CF_Solve1
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_Solve1,Memory_HWM)
+            PRINT*,"Before First LF Liner Solve         : ",Memory_Method_Before_LF_Solve1
+        END IF
+    ELSE IF ( Cur_Iteration == 2 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_Solve2,Memory_HWM)
+            PRINT*,"Before Second CF Liner Solve        : ",Memory_Method_Before_CF_Solve2
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_Solve2,Memory_HWM)
+            PRINT*,"Before Second LF Liner Solve        : ",Memory_Method_Before_LF_Solve2
+        END IF
+    ELSE IF ( Cur_Iteration == 3 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_Solve3,Memory_HWM)
+            PRINT*,"Before Third CF Liner Solve         : ",Memory_Method_Before_CF_Solve3
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_Solve3,Memory_HWM)
+            PRINT*,"Before Third LF Liner Solve         : ",Memory_Method_Before_LF_Solve3
+        END IF
+    END IF
+
+#endif
+
+
+
     !
     !   Solve Systems
     !
     CALL Solve_Linear_System_TypeA(iU)
+    
+    
+    
+    
+#ifdef POSEIDON_MEMORY_FLAG
+    IF ( Cur_Iteration == 1 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_Solve1,Memory_HWM)
+            PRINT*,"After First CF Liner Solve          : ",Memory_Method_After_CF_Solve1
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_Solve1,Memory_HWM)
+            PRINT*,"After First LF Liner Solve          : ",Memory_Method_After_LF_Solve1
+        END IF
+    ELSE IF ( Cur_Iteration == 2 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_Solve2,Memory_HWM)
+            PRINT*,"After Second CF Liner Solve         : ",Memory_Method_After_CF_Solve2
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_Solve2,Memory_HWM)
+            PRINT*,"After Second LF Liner Solve         : ",Memory_Method_After_LF_Solve2
+        END IF
+    ELSE IF ( Cur_Iteration == 3 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_Solve3,Memory_HWM)
+            PRINT*,"After Third CF Liner Solve          : ",Memory_Method_After_CF_Solve3
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_Solve3,Memory_HWM)
+            PRINT*,"After Third LF Liner Solve          : ",Memory_Method_After_LF_Solve3
+        END IF
+    END IF
+#endif
+    
+    
     
     CALL Coeff_To_Vector_TypeA_SV( GVector(:,mk), iU )
     
@@ -259,10 +341,36 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
     END IF
 
 
-
     !   Update Coefficient Vector
     CALL Vector_To_Coeff_TypeA_SV( GVectorM, iU )
 
+#ifdef POSEIDON_MEMORY_FLAG
+    IF ( Cur_Iteration == 1 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_LoadVector2,Memory_HWM)
+            PRINT*,"After Second CF Load Vector          : ",Memory_Method_Before_CF_LoadVector2
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_LoadVector2,Memory_HWM)
+            PRINT*,"After Second LF Load Vector          : ",Memory_Method_Before_LF_LoadVector2
+        END IF
+    ELSE IF ( Cur_Iteration == 2 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_LoadVector3,Memory_HWM)
+            PRINT*,"After Third CF Load Vector           : ",Memory_Method_Before_CF_LoadVector3
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_LoadVector3,Memory_HWM)
+            PRINT*,"After Third LF Load Vector           : ",Memory_Method_Before_LF_LoadVector3
+        END IF
+    ELSE IF ( Cur_Iteration == 3 ) THEN
+        IF ( iU == iU_CF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_LoadVector4,Memory_HWM)
+            PRINT*,"After Forth CF Load Vector           : ",Memory_Method_Before_CF_LoadVector4
+        ELSE IF ( iU == iU_LF ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_LoadVector4,Memory_HWM)
+            PRINT*,"After Forth LF Load Vector           : ",Memory_Method_Before_LF_LoadVector4
+        END IF
+    END IF
+#endif
 
 
     !   Calculate Source Vector with updated solution

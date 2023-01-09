@@ -80,6 +80,19 @@ USE Timer_Variables_Module, &
 
 USE IO_Print_Results, &
             ONLY :  Print_Single_Var_Results
+            
+            
+#ifdef POSEIDON_MEMORY_FLAG
+USE Poseidon_Memory_Routines, &
+            ONLY :  Poseidon_Mark_Memory
+
+USE Memory_Variables_Module, &
+            ONLY :  Memory_Method_Before_X_Load,    &
+                    Memory_Method_X_Between
+                    
+                    
+#endif
+
 
 IMPLICIT NONE
 
@@ -113,14 +126,29 @@ iEL = [0, 0, 0]
 iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
 !PRINT*,"Before Calc_Source"
+
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_Before_X_Load)
+PRINT*,"Before X Load Vector          : ",Memory_Method_Before_X_Load
+#endif
+
+
+
 CALL TimerStart( Timer_X_SourceVector )
 CALL XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
 CALL TimerStop(  Timer_X_SourceVector )
+
+
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_X_Between)
+PRINT*,"Between X Vector and Solve    : ",Memory_Method_X_Between
+#endif
 
 !PRINT*,"Before Solve"
 CALL TimerStart( Timer_X_LinearSolve )
 CALL Solve_Linear_System_TypeB( iU, iVB )
 CALL TimerStop(  Timer_X_LinearSolve )
+
 
 
 

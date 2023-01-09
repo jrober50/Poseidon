@@ -2,10 +2,10 @@ Matrix_Boundary_Conditions.o:           \
   Matrix_Boundary_Conditions.f90        \
 
 Matrix_Vector_Laplacian_Routines.o:     \
-  Matrix_Vector_Laplacian_Routines.f90  \
+  Matrix_Vector_Laplacian_Routines.F90  \
 
 Matrix_Cholesky_Factorization.o:        \
-  Matrix_Cholesky_Factorization.f90     \
+  Matrix_Cholesky_Factorization.F90     \
 
 Matrix_Initialization.o:                \
   Matrix_Initialization.f90             \

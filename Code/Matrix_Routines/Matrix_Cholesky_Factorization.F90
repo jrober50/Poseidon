@@ -83,6 +83,16 @@ USE Timer_Variables_Module, &
 USE Flags_Initialization_Module, &
         ONLY :  lPF_Init_Matrices_Flags,    &
                 iPF_Init_Matrices_Type_A_Cholesky
+                
+                
+#ifdef POSEIDON_MEMORY_FLAG
+USE Poseidon_Memory_Routines, &
+            ONLY :  Poseidon_Mark_Memory
+
+USE Memory_Variables_Module, &
+            ONLY :  Memory_Method_Before_Chol_Fact, &
+                    Memory_Method_After_Chol_Fact
+#endif
 
 IMPLICIT NONE
 
@@ -122,6 +132,11 @@ COMPLEX(idp),       ALLOCATABLE,    DIMENSION(:,:)      ::  NEW_ELEM_VAL
 IF ( Verbose_Flag ) CALL Init_Message('Factorizing scalar Laplace matrix using Cholesky factorization.')
 CALL TimerStart(Timer_Matrix_Cholesky)
 
+
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_Before_Chol_Fact)
+PRINT*,"Before Cholesky Factorization: ",Memory_Method_Before_Chol_Fact
+#endif
 
 
 !
@@ -375,6 +390,13 @@ DEALLOCATE(NEW_ELEM_VAL, NEW_ROW_IND)
 
 CALL TimerStop(Timer_Matrix_Cholesky)
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .TRUE.
+
+
+
+#ifdef POSEIDON_MEMORY_FLAG
+CALL Poseidon_Mark_Memory(Memory_Method_Before_Chol_Fact)
+PRINT*,"After Cholesky Facotrization : ",Memory_Method_After_Chol_Fact
+#endif
 
 
 
