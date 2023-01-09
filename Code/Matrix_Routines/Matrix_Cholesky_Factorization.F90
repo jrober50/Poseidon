@@ -394,7 +394,7 @@ lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .TRUE.
 
 
 #ifdef POSEIDON_MEMORY_FLAG
-CALL Poseidon_Mark_Memory(Memory_Method_Before_Chol_Fact)
+CALL Poseidon_Mark_Memory(Memory_Method_After_Chol_Fact)
 PRINT*,"After Cholesky Facotrization : ",Memory_Method_After_Chol_Fact
 #endif
 
