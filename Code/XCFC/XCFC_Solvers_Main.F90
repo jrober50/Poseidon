@@ -129,7 +129,7 @@ iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
 #ifdef POSEIDON_MEMORY_FLAG
 CALL Poseidon_Mark_Memory(Memory_Method_Before_X_Load)
-PRINT*,"Before X Load Vector          : ",Memory_Method_Before_X_Load
+PRINT*,"Before X Load Vector                 : ",Memory_Method_Before_X_Load
 #endif
 
 
@@ -141,7 +141,7 @@ CALL TimerStop(  Timer_X_SourceVector )
 
 #ifdef POSEIDON_MEMORY_FLAG
 CALL Poseidon_Mark_Memory(Memory_Method_X_Between)
-PRINT*,"Between X Vector and Solve    : ",Memory_Method_X_Between
+PRINT*,"Between X Vector and Solve           : ",Memory_Method_X_Between
 #endif
 
 !PRINT*,"Before Solve"

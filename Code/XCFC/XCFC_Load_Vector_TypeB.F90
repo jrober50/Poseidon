@@ -184,8 +184,14 @@ USE Poseidon_Memory_Routines, &
 
 #endif
 
-USE MPI
+#ifdef POSEIDON_MEMORY_FLAG
+USE Poseidon_Memory_Routines, &
+            ONLY :  Poseidon_Mark_Memory
+ 
 
+USE Memory_Variables_Module
+  
+#endif
 
 
 
@@ -555,31 +561,7 @@ IF ( iVB == iVB_X ) THEN
 !    PRINT*,"A1"
     DO ui = iU(1),iU(3)
         CALL Get_Physical_Source( PhysSrc(:,:,ui-5), ui-3, iE )
-        
-!        CALL MPI_Barrier(Poseidon_Comm_World, ierr)
-!        DO i = 0,nPROCs_Poseidon-1
-!            IF( myID_Poseidon == i ) THEN
-!                PRINT*,"myID ",i
-!                PRINT*,PhysSrc(:,:,ui-5)
-!            END IF
-!            CALL MPI_Barrier(Poseidon_Comm_World, ierr)
-!        END DO
-!        IF ( ui == iU(1) ) THEN
-!        DO rd = 1,Num_R_Quad_Points
-!            PRINT*,"f(:,:,ui-5)",ui
-!            PRINT*,f(:,rd,ui-5)
-!            PRINT*,"PhysSrc(:,:,ui-5)"
-!            PRINT*,PhysSrc(:,rd,ui-5)
-!        END DO
-!        END IF
-!        PRINT*,"B1"
-!        PRINT*,pi
-!        PRINT*,GR_Source_Scalar
-!        PRINT*,f(:,:,ui-5)
-!        PRINT*," "
-!        PRINT*,PhysSrc(:,:,ui-5)
-!        PRINT*,""
-!        PRINT*, 8.0_idp * pi * GR_Source_Scalar * f(:,:,ui-5)*PhysSrc(:,:,ui-5)
+
         SourceTerm(:,:,ui) = 8.0_idp * pi * GR_Source_Scalar * f(:,:,ui-5)*PhysSrc(:,:,ui-5)
 
     END DO
@@ -729,7 +711,41 @@ E_Mass = 0.0_idp
 cVB_Load_Vector(:,iVB) = 0.0_idp
 DO lvl = AMReX_Num_Levels-1,0,-1
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+    IF ( lvl== 0 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_XV_Mask1,Memory_HWM)
+            PRINT*,"Before First XV MakeFineMask        : ",Memory_Method_Before_XV_Mask1
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_SV_Mask1,Memory_HWM)
+            PRINT*,"Before First SV MakeFineMask        : ",Memory_Method_Before_SV_Mask1
+        END IF
+    ELSE IF ( lvl== 1 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_XV_Mask2,Memory_HWM)
+            PRINT*,"Before Second XV MakeFineMask       : ",Memory_Method_Before_XV_Mask2
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_SV_Mask2,Memory_HWM)
+            PRINT*,"Before Second SV MakeFineMask       : ",Memory_Method_Before_SV_Mask2
+        END IF
+    ELSE IF ( lvl== 2 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_XV_Mask3,Memory_HWM)
+            PRINT*,"Before Third XV MakeFineMask        : ",Memory_Method_Before_XV_Mask3
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_SV_Mask3,Memory_HWM)
+            PRINT*,"Before Third SV MakeFineMask        : ",Memory_Method_Before_SV_Mask3
+        END IF
+    ELSE IF ( lvl== 3 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_XV_Mask4,Memory_HWM)
+            PRINT*,"Before Fourth XV MakeFineMask       : ",Memory_Method_Before_XV_Mask4
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_Before_SV_Mask4,Memory_HWM)
+            PRINT*,"Before Fourth SV MakeFineMask       : ",Memory_Method_Before_SV_Mask4
+        END IF
+    END IF
+#endif
     !
     !   MakeFineMask
     !
@@ -751,7 +767,41 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         CALL Level_Mask%SetVal(iLeaf)
     END IF
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+    IF ( lvl== 0 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_XV_Mask1,Memory_HWM)
+            PRINT*,"After First XV MakeFineMask         : ",Memory_Method_After_XV_Mask1
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_SV_Mask1,Memory_HWM)
+            PRINT*,"After First SV MakeFineMask         : ",Memory_Method_After_SV_Mask1
+        END IF
+    ELSE IF ( lvl== 1 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_XV_Mask2,Memory_HWM)
+            PRINT*,"After Second XV MakeFineMask        : ",Memory_Method_After_XV_Mask2
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_SV_Mask2,Memory_HWM)
+            PRINT*,"After Second SV MakeFineMask        : ",Memory_Method_After_SV_Mask2
+        END IF
+    ELSE IF ( lvl== 2 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_XV_Mask3,Memory_HWM)
+            PRINT*,"After Third XV MakeFineMask         : ",Memory_Method_After_XV_Mask3
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_SV_Mask3,Memory_HWM)
+            PRINT*,"After Third SV MakeFineMask         : ",Memory_Method_After_SV_Mask3
+        END IF
+    ELSE IF ( lvl== 3 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_XV_Mask4,Memory_HWM)
+            PRINT*,"After Fourth XV MakeFineMask        : ",Memory_Method_After_XV_Mask4
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_SV_Mask4,Memory_HWM)
+            PRINT*,"After Fourth SV MakeFineMask        : ",Memory_Method_Before_SV_Mask4
+        END IF
+    END IF
+#endif
 
     !
     !   Build mfiter
@@ -796,8 +846,44 @@ DO lvl = AMReX_Num_Levels-1,0,-1
 
     CALL amrex_mfiter_destroy( mfi )
     CALL amrex_imultifab_destroy( Level_Mask )
+    Source_PTR => Null()
+    Mask_PTR => Null()
 
-
+#ifdef POSEIDON_MEMORY_FLAG
+    IF ( lvl== 0 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_XV_lvl1,Memory_HWM)
+            PRINT*,"End of First XV lvl                 : ",Memory_Method_After_XV_lvl1
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_SV_lvl1,Memory_HWM)
+            PRINT*,"End of First SV lvl                 : ",Memory_Method_After_SV_lvl1
+        END IF
+    ELSE IF ( lvl== 1 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_XV_lvl2,Memory_HWM)
+            PRINT*,"End of Second XV lvl                : ",Memory_Method_After_XV_lvl2
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_SV_lvl2,Memory_HWM)
+            PRINT*,"End of Second SV lvl                : ",Memory_Method_After_SV_lvl2
+        END IF
+    ELSE IF ( lvl== 2 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_XV_lvl3,Memory_HWM)
+            PRINT*,"End of Third XV lvl                 : ",Memory_Method_After_XV_lvl3
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_SV_lvl3,Memory_HWM)
+            PRINT*,"End of Third SV lvl                 : ",Memory_Method_After_SV_lvl3
+        END IF
+    ELSE IF ( lvl== 3 ) THEN
+        IF ( iU(1) == iU_X1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_XV_lvl4,Memory_HWM)
+            PRINT*,"End of Fourth XV lvl                : ",Memory_Method_After_XV_lvl4
+        ELSE IF ( iU(1) == iU_S1 ) THEN
+            CALL Poseidon_Mark_Memory(Memory_Method_After_SV_lvl4,Memory_HWM)
+            PRINT*,"End of Fourth SV lvl                : ",Memory_Method_After_SV_lvl4
+        END IF
+    END IF
+#endif
 END DO ! lvl
 
 #endif

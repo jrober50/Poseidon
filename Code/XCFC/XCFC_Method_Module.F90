@@ -156,6 +156,7 @@ END IF
 #ifdef POSEIDON_MEMORY_FLAG
 CALL Poseidon_Mark_Memory(Memory_Method_Before_SV)
 PRINT*,"Before SV Solve              : ",Memory_Method_Before_SV
+
 #endif
 
 ! Solve for Shift Vector

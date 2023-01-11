@@ -80,6 +80,19 @@ WRITE(File_ID,'(I16)') Memory_Loop_Before_Run
 WRITE(File_ID,'(I16)') Memory_Method_Start
 
 WRITE(File_ID,'(I16)') Memory_Method_Before_X_Load
+WRITE(File_ID,'(I16)') Memory_Method_Before_XV_mask1
+WRITE(File_ID,'(I16)') Memory_Method_After_XV_mask1
+WRITE(File_ID,'(I16)') Memory_Method_After_XV_lvl1
+WRITE(File_ID,'(I16)') Memory_Method_Before_XV_mask2
+WRITE(File_ID,'(I16)') Memory_Method_After_XV_mask2
+WRITE(File_ID,'(I16)') Memory_Method_After_XV_lvl2
+WRITE(File_ID,'(I16)') Memory_Method_Before_XV_mask3
+WRITE(File_ID,'(I16)') Memory_Method_After_XV_mask3
+WRITE(File_ID,'(I16)') Memory_Method_After_XV_lvl3
+WRITE(File_ID,'(I16)') Memory_Method_Before_XV_mask4
+WRITE(File_ID,'(I16)') Memory_Method_After_XV_mask4
+WRITE(File_ID,'(I16)') Memory_Method_After_XV_lvl4
+
 WRITE(File_ID,'(I16)') Memory_Method_X_Between
 WRITE(File_ID,'(I16)') Memory_Method_Before_Bnd_Factorize
 WRITE(File_ID,'(I16)') Memory_Method_After_Bnd_Factorize
@@ -127,6 +140,18 @@ WRITE(File_ID,'(I16)') Memory_Method_After_LF_DeallocWork
 
 
 WRITE(File_ID,'(I16)') Memory_Method_Before_SV
+WRITE(File_ID,'(I16)') Memory_Method_Before_SV_mask1
+WRITE(File_ID,'(I16)') Memory_Method_After_sV_mask1
+WRITE(File_ID,'(I16)') Memory_Method_After_SV_lvl1
+WRITE(File_ID,'(I16)') Memory_Method_Before_SV_mask2
+WRITE(File_ID,'(I16)') Memory_Method_After_SV_mask2
+WRITE(File_ID,'(I16)') Memory_Method_After_SV_lvl2
+WRITE(File_ID,'(I16)') Memory_Method_Before_SV_mask3
+WRITE(File_ID,'(I16)') Memory_Method_After_SV_mask3
+WRITE(File_ID,'(I16)') Memory_Method_After_SV_lvl3
+WRITE(File_ID,'(I16)') Memory_Method_Before_SV_mask4
+WRITE(File_ID,'(I16)') Memory_Method_After_SV_mask4
+WRITE(File_ID,'(I16)') Memory_Method_After_SV_lvl4
 WRITE(File_ID,'(I16)') Memory_Method_End
 
 WRITE(File_ID,'(I16)') Memory_Loop_After_Run

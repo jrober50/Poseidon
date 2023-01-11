@@ -181,15 +181,6 @@ USE Poseidon_AMReX_Multilayer_Utilities_Module, &
 
 
 
-#ifdef POSEIDON_MEMORY_FLAG
-USE Poseidon_Memory_Routines, &
-            ONLY :  Poseidon_Mark_Memory
- 
-
-USE Memory_Variables_Module
-  
-#endif
-
 
 IMPLICIT NONE
 
@@ -713,41 +704,7 @@ cVA_Load_Vector(:,:,iU) = 0.0_idp
 DO lvl = AMReX_Num_Levels-1,0,-1
 
 
-#ifdef POSEIDON_MEMORY_FLAG
-    IF ( lvl== 0 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_Mask1,Memory_HWM)
-            PRINT*,"Before First CF MakeFineMask        : ",Memory_Method_Before_CF_Mask1
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_Mask1,Memory_HWM)
-            PRINT*,"Before First LF MakeFineMask        : ",Memory_Method_Before_LF_Mask1
-        END IF
-    ELSE IF ( lvl== 1 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_Mask2,Memory_HWM)
-            PRINT*,"Before Second CF MakeFineMask       : ",Memory_Method_Before_CF_Mask2
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_Mask2,Memory_HWM)
-            PRINT*,"Before Second LF MakeFineMask       : ",Memory_Method_Before_LF_Mask2
-        END IF
-    ELSE IF ( lvl== 2 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_Mask3,Memory_HWM)
-            PRINT*,"Before Third CF MakeFineMask        : ",Memory_Method_Before_CF_Mask3
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_Mask3,Memory_HWM)
-            PRINT*,"Before Third LF MakeFineMask        : ",Memory_Method_Before_LF_Mask3
-        END IF
-    ELSE IF ( lvl== 3 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_Before_CF_Mask4,Memory_HWM)
-            PRINT*,"Before Fourth CF MakeFineMask       : ",Memory_Method_Before_CF_Mask4
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_Before_LF_Mask4,Memory_HWM)
-            PRINT*,"Before Fourth LF MakeFineMask       : ",Memory_Method_Before_LF_Mask4
-        END IF
-    END IF
-#endif
+
 
     IF ( lvl < AMReX_Num_Levels-1 ) THEN
         CALL AMReX_MakeFineMask(  Level_Mask,               &
@@ -766,42 +723,6 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         CALL Level_Mask%SetVal(iLeaf)
     END IF
 
-
-#ifdef POSEIDON_MEMORY_FLAG
-    IF ( lvl== 0 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_Mask1,Memory_HWM)
-            PRINT*,"After First CF MakeFineMask         : ",Memory_Method_After_CF_Mask1
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_Mask1,Memory_HWM)
-            PRINT*,"After First LF MakeFineMask         : ",Memory_Method_After_LF_Mask1
-        END IF
-    ELSE IF ( lvl== 1 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_Mask2,Memory_HWM)
-            PRINT*,"After Second CF MakeFineMask        : ",Memory_Method_After_CF_Mask2
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_Mask2,Memory_HWM)
-            PRINT*,"After Second LF MakeFineMask        : ",Memory_Method_After_LF_Mask2
-        END IF
-    ELSE IF ( lvl== 2 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_Mask3,Memory_HWM)
-            PRINT*,"After Third CF MakeFineMask         : ",Memory_Method_After_CF_Mask3
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_Mask3,Memory_HWM)
-            PRINT*,"After Third LF MakeFineMask         : ",Memory_Method_After_LF_Mask3
-        END IF
-    ELSE IF ( lvl== 3 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_Mask4,Memory_HWM)
-            PRINT*,"After Fourth CF MakeFineMask        : ",Memory_Method_After_CF_Mask4
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_Mask4,Memory_HWM)
-            PRINT*,"After Fourth LF MakeFineMask        : ",Memory_Method_Before_LF_Mask4
-        END IF
-    END IF
-#endif
 
 
     CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .false. )
@@ -834,46 +755,15 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         END DO ! re
 
     END DO
+    
+    
     CALL amrex_mfiter_destroy(mfi)
+    CALL amrex_imultifab_destroy( Level_Mask )
     Source_PTR => Null()
     Mask_PTR => Null()
     
     
-#ifdef POSEIDON_MEMORY_FLAG
-    IF ( lvl== 0 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_lvl1,Memory_HWM)
-            PRINT*,"End of First CF lvl                 : ",Memory_Method_After_CF_lvl1
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_lvl1,Memory_HWM)
-            PRINT*,"End of First LF lvl                 : ",Memory_Method_After_LF_lvl1
-        END IF
-    ELSE IF ( lvl== 1 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_lvl2,Memory_HWM)
-            PRINT*,"End of Second CF lvl                : ",Memory_Method_After_CF_lvl2
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_lvl2,Memory_HWM)
-            PRINT*,"End of Second LF lvl                : ",Memory_Method_After_LF_lvl2
-        END IF
-    ELSE IF ( lvl== 2 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_lvl3,Memory_HWM)
-            PRINT*,"End of Third CF lvl                 : ",Memory_Method_After_CF_lvl3
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_lvl3,Memory_HWM)
-            PRINT*,"End of Third LF lvl                 : ",Memory_Method_After_LF_lvl3
-        END IF
-    ELSE IF ( lvl== 3 ) THEN
-        IF ( iU == iU_CF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_CF_lvl4,Memory_HWM)
-            PRINT*,"End of Fourth CF lvl                : ",Memory_Method_After_CF_lvl4
-        ELSE IF ( iU == iU_LF ) THEN
-            CALL Poseidon_Mark_Memory(Memory_Method_After_LF_lvl4,Memory_HWM)
-            PRINT*,"End of Fourth LF lvl                : ",Memory_Method_After_LF_lvl4
-        END IF
-    END IF
-#endif
+
 END DO ! lvl
 
 #endif
