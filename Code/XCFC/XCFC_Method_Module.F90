@@ -123,7 +123,7 @@ CALL Output_Initial_Guess(PR)
 
 #ifdef POSEIDON_MEMORY_FLAG
 CALL Poseidon_Mark_Memory(Memory_Method_Start)
-PRINT*,"Before XV Solve              : ",Memory_Method_Start
+PRINT*,"Before XV Solve                     : ",Memory_Method_Start
 #endif
 
 ! Solve for X
@@ -133,7 +133,8 @@ CALL XCFC_X_Solve()
 
 #ifdef POSEIDON_MEMORY_FLAG
 CALL Poseidon_Mark_Memory(Memory_Method_Before_CF)
-PRINT*,"Before CF Solve              : ",Memory_Method_Before_CF
+PRINT*,"Before CF Solve                     : ",Memory_Method_Before_CF
+
 #endif
 
 ! Solve for Conformal Factor
@@ -144,7 +145,7 @@ END IF
 
 #ifdef POSEIDON_MEMORY_FLAG
 CALL Poseidon_Mark_Memory(Memory_Method_Before_LF)
-PRINT*,"Before LF Solve              : ",Memory_Method_Before_LF
+PRINT*,"Before LF Solve                     : ",Memory_Method_Before_LF
 #endif
 
 ! Solve for Lapse Function
@@ -155,8 +156,7 @@ END IF
 
 #ifdef POSEIDON_MEMORY_FLAG
 CALL Poseidon_Mark_Memory(Memory_Method_Before_SV)
-PRINT*,"Before SV Solve              : ",Memory_Method_Before_SV
-
+PRINT*,"Before SV Solve                     : ",Memory_Method_Before_SV
 #endif
 
 ! Solve for Shift Vector
@@ -167,7 +167,7 @@ END IF
 
 #ifdef POSEIDON_MEMORY_FLAG
 CALL Poseidon_Mark_Memory(Memory_Method_End)
-PRINT*,"After SV Solve               : ",Memory_Method_End
+PRINT*,"After SV Solve                      : ",Memory_Method_End
 #endif
 
 

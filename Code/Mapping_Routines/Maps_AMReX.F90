@@ -270,9 +270,9 @@ DO lvl = 0,AMReX_Num_Levels-1
     END DO
     iNumLeafElements = Sum(iLeafElementsPerLvl)
 
-    CALL amrex_mfiter_destroy(mfi)
-    CALL amrex_imultifab_destroy(Level_Mask)
-    CALL amrex_distromap_destroy(DM)
+    CALL amrex_mfiter_destroy( mfi )
+    CALL amrex_imultifab_destroy( Level_Mask )
+    CALL amrex_distromap_destroy( DM )
     DEALLOCATE( mypmap )
 END DO
 
