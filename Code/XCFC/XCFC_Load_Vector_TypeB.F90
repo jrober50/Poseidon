@@ -752,36 +752,28 @@ DO lvl = AMReX_Num_Levels-1,0,-1
     END IF
 
 
-!    PRINT*,"After MakeFineMask"
 
     !
     !   Build mfiter
     !
-!    PRINT*,"Before mfiter build"
     CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .true. )
 
-!    PRINT*,"Before DO WHile"
     DO WHILE(mfi%next())
 
-!        PRINT*,"Before PTRs"
         Source_PTR => MF_Source(lvl)%dataPtr(mfi)
         Mask_PTR   => Level_Mask%dataPtr(mfi)
 
-!        PRINT*,"Before Box and nComp"
         Box = mfi%tilebox()
         nComp =  MF_Source(lvl)%ncomp()
 
-!        PRINT*,"Before lo hi"
         iEL = Box%lo
         iEU = Box%hi
 
-!        PRINT*,"Before Init_Normed_Legendre_Tables"
         !
         !   Initialize Legendre Polynomials on Box
         !
         CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
 
-!        PRINT*,"After Init_Normed_Legendre_Tables"
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
@@ -791,13 +783,10 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                 !
                 ! Initalize Ylm Table on Elem
                 !
-!                PRINT*,"Before Initialize_Ylm_Tables_on_Elem",lvl,re,te,pe
                 CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
 
                 iE = [re,te,pe]
-!                PRINT*,"Before XCFC_Calc_Load_Vector_On_Element_TypeB"
                 CALL XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, lvl )
-!                PRINT*,"After XCFC_Calc_Load_Vector_On_Element_TypeB"
             END IF
         END DO ! pe
         END DO ! te
@@ -805,18 +794,14 @@ DO lvl = AMReX_Num_Levels-1,0,-1
 
     END DO
 
-!    pRINT*,"Before Destroys"
-    CALL amrex_mfiter_destroy(mfi)
-!    PRINT*,"Between Destroys"
+    CALL amrex_mfiter_destroy( mfi )
     CALL amrex_imultifab_destroy( Level_Mask )
-!    PRINT*,"After Destroys"
+
 
 END DO ! lvl
 
-
 #endif
 
-!PRINT*,"E_Mass",E_Mass
 
 END SUBROUTINE XCFC_AMReX_Calc_Load_Vector_TypeB
 

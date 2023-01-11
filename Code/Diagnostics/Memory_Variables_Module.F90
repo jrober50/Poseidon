@@ -79,6 +79,22 @@ INTEGER, PUBLIC   ::  Memory_Method_Before_CF_Solve3
 INTEGER, PUBLIC   ::  Memory_Method_After_CF_Solve1
 INTEGER, PUBLIC   ::  Memory_Method_After_CF_Solve2
 INTEGER, PUBLIC   ::  Memory_Method_After_CF_Solve3
+
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_lvl1
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_lvl2
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_lvl3
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_lvl4
+
+INTEGER, PUBLIC   ::  Memory_Method_Before_CF_mask1
+INTEGER, PUBLIC   ::  Memory_Method_Before_CF_mask2
+INTEGER, PUBLIC   ::  Memory_Method_Before_CF_mask3
+INTEGER, PUBLIC   ::  Memory_Method_Before_CF_mask4
+
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_mask1
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_mask2
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_mask3
+INTEGER, PUBLIC   ::  Memory_Method_After_CF_mask4
+
 INTEGER, PUBLIC   ::  Memory_Method_After_CF_FixedPoint
 INTEGER, PUBLIC   ::  Memory_Method_After_CF_DeallocWork
 
@@ -95,6 +111,22 @@ INTEGER, PUBLIC   ::  Memory_Method_Before_LF_Solve3
 INTEGER, PUBLIC   ::  Memory_Method_After_LF_Solve1
 INTEGER, PUBLIC   ::  Memory_Method_After_LF_Solve2
 INTEGER, PUBLIC   ::  Memory_Method_After_LF_Solve3
+
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_lvl1
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_lvl2
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_lvl3
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_lvl4
+
+INTEGER, PUBLIC   ::  Memory_Method_Before_LF_mask1
+INTEGER, PUBLIC   ::  Memory_Method_Before_LF_mask2
+INTEGER, PUBLIC   ::  Memory_Method_Before_LF_mask3
+INTEGER, PUBLIC   ::  Memory_Method_Before_LF_mask4
+
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_mask1
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_mask2
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_mask3
+INTEGER, PUBLIC   ::  Memory_Method_After_LF_mask4
+
 INTEGER, PUBLIC   ::  Memory_Method_After_LF_FixedPoint
 INTEGER, PUBLIC   ::  Memory_Method_After_LF_DeallocWork
 
