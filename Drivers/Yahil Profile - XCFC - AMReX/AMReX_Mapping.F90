@@ -201,8 +201,8 @@ NQ(3)               = 1                        ! Number of Phi Quadrature Points
 !Verbose             = .TRUE.
 Verbose             = .FALSE.
 
-!Print_Results_Flag  = .TRUE.
-Print_Results_Flag  = .FALSE.
+Print_Results_Flag  = .TRUE.
+!Print_Results_Flag  = .FALSE.
 
 !Print_Setup_Flag    = .TRUE.
 Print_Setup_Flag    = .FALSE.
@@ -264,12 +264,6 @@ CALL amrex_amrcore_init()
 CALL Init_AMReX_Parameters()
 
 
-Loop_Min = 1
-Loop_Max = 100
-
-DO Loop = Loop_Min, Loop_Max
-
-PRINT*,"Loop                         : ",Loop
 DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
 
@@ -427,7 +421,6 @@ DO T_Index = T_Index_Min, T_Index_Max
 END DO ! T_Index
 END DO ! M_Index
 
-END DO ! Loop Loop
 
 
 !############################################################!
