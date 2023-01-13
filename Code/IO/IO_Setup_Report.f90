@@ -271,6 +271,8 @@ END SUBROUTINE Output_NL_Solver_Report
 !#######################################################################!
 SUBROUTINE PRINT_AMReX_Setup( )
 
+IF (myID_Poseidon == MasterID_Poseidon ) THEN
+
 1400 FORMAT(/)
 1401 FORMAT('--------------- AMReX PARAMETERS ---------------')
 1402 FORMAT(' Maximum Level of Refinement = ',I5.1)
@@ -284,6 +286,7 @@ WRITE(*,1402)AMReX_Max_Level
 WRITE(*,1404)iNumLeafElements
 WRITE(*,1400)
 
+END IF
 
 END SUBROUTINE PRINT_AMReX_Setup
 
