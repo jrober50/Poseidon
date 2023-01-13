@@ -14,10 +14,16 @@ MODULE ADM_Mass_Module                                                       !##
 !##!                                                                         !##!
 !##!        +101+                   Calc_ADM_Mass                            !##!
 !##!                                                                         !##!
-!##!        +201+                   Calc_Cur_Values                          !##!
-!##!        +202+                   Calc_Int_Weights                         !##!
-!##!        +203+                   Calc_Int_Source                          !##!
-!##!        +204+                   Calc_Element_ADM_Integral                !##!
+!##!        +201+                   Calc_ADM_Mass_Native                     !##!
+!##!        +202+                   Calc_ADM_Mass_AMReX                      !##!
+!##!                                                                         !##!
+!##!        +301+                   Calc_ADM_Mass_On_Element                 !##!
+!##!                                                                         !##!
+!##!        +401+                   Calc_Cur_Values                          !##!
+!##!        +402+                   Calc_Int_Weights                         !##!
+!##!        +403+                   Calc_Int_Source_XCFC                     !##!
+!##!        +404+                   Calc_Int_Source_Newtonian                !##!
+!##!        +405+                   Calc_Element_ADM_Integral                !##!
 !##!                                                                         !##!
 !###############################################################################!
  !\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/!
@@ -195,9 +201,9 @@ END SUBROUTINE Calc_ADM_Mass
 
 
 
-!+101+##################################################################!
+!+201+##################################################################!
 !                                                                       !
-!          Calc_ADM_Mass                                                  !
+!          Calc_ADM_Mass_Native                                         !
 !                                                                       !
 !#######################################################################!
 SUBROUTINE Calc_ADM_Mass_Native( ADM_Mass )
@@ -231,12 +237,104 @@ END SUBROUTINE Calc_ADM_Mass_Native
 
 
 
-
-
-
-!+101+##################################################################!
+!+202+##################################################################!
 !                                                                       !
-!          Calc_ADM_Mass                                                  !
+!          Calc_ADM_Mass_AMReX                                          !
+!                                                                       !
+!#######################################################################!
+SUBROUTINE Calc_ADM_Mass_AMReX( ADM_Mass )
+
+REAL(idp), INTENT(OUT)                          ::  ADM_Mass
+
+#ifdef POSEIDON_AMREX_FLAG
+
+TYPE(amrex_mfiter)                              ::  mfi
+TYPE(amrex_box)                                 ::  Box
+
+TYPE(amrex_imultifab)                           ::  Level_Mask
+
+INTEGER                                         ::  re, te, pe
+INTEGER, DIMENSION(3)                           ::  iE
+INTEGER, DIMENSION(3)                           ::  iEL, iEU
+INTEGER                                         ::  nComp
+INTEGER                                         ::  lvl
+
+REAL(idp)                                       ::  Int_Val
+
+INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
+
+nGhost_Vec = 0
+
+ADM_Mass = 0.0_idp
+Int_Val  = 0.0_idp
+nGhost_Vec = 0
+
+DO lvl = AMReX_Num_Levels-1,0,-1
+
+
+    IF ( lvl < AMReX_Num_Levels-1 ) THEN
+        CALL AMReX_MakeFineMask(  Level_Mask,               &
+                                  MF_Source(lvl)%ba,        &
+                                  MF_Source(lvl)%dm,        &
+                                  nGhost_Vec,               &
+                                  MF_Source(lvl+1)%ba,      &
+                                  iLeaf, iTrunk            )
+    ELSE
+        ! Create Level_Mask all equal to 1
+        CALL amrex_imultifab_build( Level_Mask,             &
+                                    MF_Source(lvl)%ba,      &
+                                    MF_Source(lvl)%dm,      &
+                                    1,                      &
+                                    0                       )
+        CALL Level_Mask%SetVal(iLeaf)
+    END IF
+
+
+
+    CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .false. )
+    DO WHILE(mfi%next())
+
+        Source_PTR => MF_Source(lvl)%dataPtr(mfi)
+        Mask_PTR   => Level_Mask%dataPtr(mfi)
+
+
+        Box = mfi%tilebox()
+
+        nComp =  MF_Source(lvl)%ncomp()
+
+        iEL = Box%lo
+        iEU = Box%hi
+
+        CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
+
+        DO re = iEL(1),iEU(1)
+        DO te = iEL(2),iEU(2)
+        DO pe = iEL(3),iEU(3)
+            
+            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
+                CALL Initialize_Ylm_Tables_On_Elem( te, pe, iEL, lvl )
+                iE = [re,te,pe]
+
+                CALL Calc_ADM_Mass_On_Element( iE, Int_Val )
+
+                ADM_Mass = ADM_Mass + Int_Val
+            END IF
+        END DO ! pe
+        END DO ! te
+        END DO ! re
+
+    END DO
+    CALL amrex_mfiter_destroy(mfi)
+END DO ! lvl
+
+#endif
+
+END SUBROUTINE Calc_ADM_Mass_AMReX
+
+
+!+301+##################################################################!
+!                                                                       !
+!          Calc_ADM_Mass_On_Element                                     !
 !                                                                       !
 !#######################################################################!
 SUBROUTINE Calc_ADM_Mass_On_Element( iE, Int_Val, Level_Option )
@@ -341,11 +439,11 @@ END SUBROUTINE Calc_ADM_Mass_On_Element
 
 
 
-!+201+###########################################################################!
-!                                                                                !
-!                  Calc_Cur_Values          !
-!                                                                                !
-!################################################################################!
+!+401+##################################################################!
+!                                                                       !
+!          Calc_Cur_Values                                              !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Calc_Cur_Values( iE,                     &
                             DROT, DTOT, DPOT,       &
                             crlocs, ctlocs,         &
@@ -424,11 +522,11 @@ END SUBROUTINE Calc_Cur_Values
 
 
 
-!+202+###########################################################################!
-!                                                                                !
-!                  Calc_Int_Weights          !
-!                                                                                !
-!################################################################################!
+!+402+##################################################################!
+!                                                                       !
+!          Calc_Int_Weights                                             !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Calc_Int_Weights( DROT, DTOT,            &
                              R_Square, Sin_Val,     &
                              Int_Weights            )
@@ -461,11 +559,11 @@ END SUBROUTINE Calc_Int_Weights
 
 
 
-!+203+###########################################################################!
-!                                                                                !
-!                  Calc_Current_Values          !
-!                                                                                !
-!################################################################################!
+!+403+##################################################################!
+!                                                                       !
+!          Calc_Int_Source_XCFC                                         !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Calc_Int_Source_XCFC(iE,        &
                                 DROT, DTOT, DPOT,  &
                                 rlocs, rSquare,    &
@@ -598,11 +696,11 @@ END SUBROUTINE Calc_Int_Source_XCFC
 
 
 
-!+203+###########################################################################!
-!                                                                                !
-!                  Calc_Current_Values          !
-!                                                                                !
-!################################################################################!
+!+404+##################################################################!
+!                                                                       !
+!          Calc_Int_Source_Newtonian                                    !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Calc_Int_Source_Newtonian(   iE, Int_Source         )
 
 INTEGER,    INTENT(IN),     DIMENSION(1:3)                      ::  iE
@@ -649,11 +747,11 @@ END SUBROUTINE Calc_Int_Source_Newtonian
 
 
 
-!+204+##########################################################################!
-!                                                                               !
-!                 Calc_Element_ADM_Integral                                     !
-!                                                                               !
-!###############################################################################!
+!+405+##################################################################!
+!                                                                       !
+!          Calc_Element_ADM_Integral                                    !
+!                                                                       !
+!#######################################################################!
 SUBROUTINE Calc_Element_ADM_Integral( Int_Weights,      &
                                       Int_Source,       &
                                       Int_Val           )
@@ -696,98 +794,10 @@ END SUBROUTINE Calc_Element_ADM_Integral
 
 
 
-!+102+##########################################################################!
-!                                                                               !
-!          XCFC_AMReX_Calc_Load_Vector_TypeA                                  !
-!                                                                               !
-!###############################################################################!
-SUBROUTINE Calc_ADM_Mass_AMReX( ADM_Mass )
-
-REAL(idp), INTENT(OUT)                          ::  ADM_Mass
-
-#ifdef POSEIDON_AMREX_FLAG
-
-TYPE(amrex_mfiter)                              ::  mfi
-TYPE(amrex_box)                                 ::  Box
-
-TYPE(amrex_imultifab)                           ::  Level_Mask
-
-INTEGER                                         ::  re, te, pe
-INTEGER, DIMENSION(3)                           ::  iE
-INTEGER, DIMENSION(3)                           ::  iEL, iEU
-INTEGER                                         ::  nComp
-INTEGER                                         ::  lvl
-
-REAL(idp)                                       ::  Int_Val
-
-INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
-
-nGhost_Vec = 0
-
-ADM_Mass = 0.0_idp
-Int_Val  = 0.0_idp
-
-DO lvl = AMReX_Num_Levels-1,0,-1
-
-
-    IF ( lvl < AMReX_Num_Levels-1 ) THEN
-        CALL AMReX_MakeFineMask(  Level_Mask,               &
-                                  MF_Source(lvl)%ba,        &
-                                  MF_Source(lvl)%dm,        &
-                                  nGhost_Vec,               &
-                                  MF_Source(lvl+1)%ba,      &
-                                  iLeaf, iTrunk            )
-    ELSE
-        ! Create Level_Mask all equal to 1
-        CALL amrex_imultifab_build( Level_Mask,             &
-                                    MF_Source(lvl)%ba,      &
-                                    MF_Source(lvl)%dm,      &
-                                    1,                      &
-                                    0                       )
-        CALL Level_Mask%SetVal(iLeaf)
-    END IF
 
 
 
-    CALL amrex_mfiter_build(mfi, MF_Source(lvl), tiling = .false. )
-    DO WHILE(mfi%next())
 
-        Source_PTR => MF_Source(lvl)%dataPtr(mfi)
-        Mask_PTR   => Level_Mask%dataPtr(mfi)
-
-
-        Box = mfi%tilebox()
-
-        nComp =  MF_Source(lvl)%ncomp()
-
-        iEL = Box%lo
-        iEU = Box%hi
-
-        CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
-
-        DO re = iEL(1),iEU(1)
-        DO te = iEL(2),iEU(2)
-        DO pe = iEL(3),iEU(3)
-            
-            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
-                CALL Initialize_Ylm_Tables_On_Elem( te, pe, iEL, lvl )
-                iE = [re,te,pe]
-
-                CALL Calc_ADM_Mass_On_Element( iE, Int_Val )
-
-                ADM_Mass = ADM_Mass + Int_Val
-            END IF
-        END DO ! pe
-        END DO ! te
-        END DO ! re
-
-    END DO
-    CALL amrex_mfiter_destroy(mfi)
-END DO ! lvl
-
-#endif
-
-END SUBROUTINE Calc_ADM_Mass_AMReX
 
 
 END MODULE ADM_Mass_Module
