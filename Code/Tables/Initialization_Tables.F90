@@ -81,6 +81,14 @@ USE Variables_Tables, &
                     Ylm_Elem_dt_Values,     &
                     Ylm_Elem_dp_Values,     &
                     Ylm_Elem_CC_Values,     &
+                    Slm_Elem_Values,        &
+                    Slm_Elem_dt_Values,     &
+                    Slm_Elem_dp_Values,     &
+                    Plm_Values,             &
+                    Plm_dt_Values,          &
+                    Nlm_Values,             &
+                    Am_Values,              &
+                    AM_dp_Values,           &
                     Level_dx,               &
                     Level_Ratios
 
@@ -105,13 +113,17 @@ USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
 USE Maps_Domain, &
-            ONLY :  Map_To_lm
+            ONLY :  Map_To_lm,              &
+                    Map_To_Short_lm
 
 USE Allocation_Tables, &
             ONLY :  Allocate_Tables
+            
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Slm_Tables
 
 USE Flags_Initialization_Module, &
-            ONLY :  lPF_Init_Tables_Flags,        &
+            ONLY :  lPF_Init_Tables_Flags,  &
                     iPF_Init_Tables_Init
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -133,6 +145,12 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE Initialize_Tables()
 
+
+INTEGER                                                 ::  l, m, te, pe, td, pd
+
+
+
+
 IF ( Verbose_Flag ) CALL Init_Message('Initializing Basis Functions Tables.')
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -146,7 +164,13 @@ IF ( Verbose_Flag ) CALL Init_Message('Initializing Basis Functions Tables.')
 
     CALL Allocate_Tables()
     CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
-    CALL Initialize_Ylm_Tables()
+    CALL Initialize_Slm_Tables()
+!    CALL Initialize_Ylm_Tables()
+    
+    
+
+    
+    
 #endif
 
 
@@ -166,7 +190,7 @@ END SUBROUTINE Initialize_Tables
 SUBROUTINE Initialize_Ylm_Tables
 
 
-INTEGER                                                         ::  l, m, te, pe, td, pd
+INTEGER                                                 ::  l, m, te, pe, td, pd
 
 
 REAL(idp), DIMENSION(1:NUM_T_QUAD_POINTS)                ::  T_Locations
@@ -350,11 +374,6 @@ END DO ! pe Loop
 
 
 DEALLOCATE( Ylm_Table)
-
-
-
-
-
 
 
 
@@ -569,6 +588,8 @@ REAL(idp), DIMENSION(-L_LIMIT:L_LIMIT)       :: M_POWER_TABLE
 
 !PRINT*,"In Init_Ylm_Tables",iTE,iPE
 
+
+
 teb = iTE - iEL(2)
 
 tlocs = Level_dx(Level,2)/2.0_idp * (Int_T_Locations(:) + 1.0_idp + 2.0_idp*iTE )
@@ -630,7 +651,17 @@ END DO ! l Loop
 END DO ! pd Loop
 END DO ! td Loop
 
+
+
+
+
+
+
 END SUBROUTINE Initialize_Ylm_Tables_on_Elem
+
+
+
+
 
 
 
@@ -692,6 +723,17 @@ END DO
 
 
 END SUBROUTINE Initialize_Level_Tables
+
+
+
+
+
+
+
+
+
+
+
 
 
 

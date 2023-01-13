@@ -43,12 +43,9 @@ USE Parameters_Variable_Indices, &
 
 
 USE Variables_Tables, &
-           ONLY :   Ylm_Values,                 &
-                    Ylm_dt_Values,              &
-                    Ylm_dp_Values,              &
-                    Ylm_Elem_Values,        &
-                    Ylm_Elem_dt_Values,     &
-                    Ylm_Elem_dp_Values,              &
+           ONLY :   Slm_Elem_Values,        &
+                    Slm_Elem_dt_Values,     &
+                    Slm_Elem_dp_Values,              &
                     Lagrange_Poly_Table,        &
                     Level_DX
 
@@ -61,8 +58,7 @@ USE Variables_Derived, &
            ONLY :  LM_LENGTH
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,      &
-                    cVB_Coeff_Vector
+            ONLY :  dVB_Coeff_Vector
 
 USE Variables_Mesh, &
            ONLY :  rlocs,              &
@@ -218,6 +214,14 @@ INTEGER, DIMENSION(3)                                           ::  iU
 
 REAL(idp), DIMENSION(:,:,:), ALLOCATABLE                        ::  Caller_LPT
 
+REAL(idp), DIMENSION(1:LM_Short_Length)                         ::  Nlm_Table
+
+REAL(idp), DIMENSION(1:NQ(3),-L_Limit:L_Limit,0:NE(3)-1)        ::  Am_Table
+REAL(idp), DIMENSION(1:NQ(3),-L_Limit:L_Limit,0:NE(3)-1)        ::  Am_dp_Table
+
+REAL(idp), DIMENSION(1:NQ(2),0:L_Limit,0:NE(2)-1)               ::  Plm_Table
+REAL(idp), DIMENSION(1:NQ(2),0:L_Limit,0:NE(2)-1)               ::  Plm_dt_Table
+
 ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
 
 iVB   = iVB_X
@@ -254,6 +258,60 @@ DO rd = 1,NQ(1)
     Caller_LPT(1,:,rd)=Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
 END DO
 
+
+CALL Initialize_Nlm_Table(  L_Limit,                &
+                            LM_Short_Length,        &
+                            Nlm_Table               )
+
+CALL Initialize_Am_Tables(  NQ(3),                  &
+                            CUR_PX_LOCS,            &
+                            L_Limit,                &
+                            NE(3),                  &
+                            [0, NE(3)],             &
+                            plocs,                  &
+                            Am_Table,               &
+                            Am_dp_Table             )
+
+CALL Initialize_Plm_Tables( NQ(2),                  &
+                            CUR_TX_LOCS,            &
+                            L_Limit,                &
+                            LM_Short_Length,        &
+                            NE(2),                  &
+                            [0, NE(2)],             &
+                            tlocs,                  &
+                            Plm_Table,              &
+                            Plm_dt_Table            )
+                            
+                            
+DO l = 0,L_Limit
+DO m = -l,l
+DO td = 1,Int_T_Deg
+DO pd = 1,Int_P_Deg
+
+    tpd = (td-1)*Int_P_Deg + pd
+    Short_LM = Map_To_Short_lm(l,abs(m))
+    Long_LM  = Map_to_LM(l,m)
+    
+    Slm_Table(tpd,Long_LM) = Nlm_Table(Short_LM)                &
+                             * Am_Table(pd,m,1)                 &
+                             * Plm_Table(td,Short_LM,1)
+                     
+    Slm_dt_Table(tpd,Long_LM) = Nlm_Table(Short_LM)             &
+                                * Am_Table(pd,m,1)              &
+                                * Plm_dt_Table(td,Short_LM,1)
+                    
+    Slm_dp_Table(tpd,Long_LM) = Nlm_Table(Short_LM)             &
+                                * Am_dp_Table(pd,m,1)           &
+                                * Plm_Table(td,Short_LM,1)
+
+END DO
+END DO
+END DO
+END DO
+
+
+
+
 DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
@@ -268,26 +326,26 @@ DO rd = 1,NQ(1)
         There = FP_Array_Map_TypeB(iU(i),iVB,re-1,d,LM_Length)
 
         TMP_Val(i) = TMP_Val(i)                                  &
-                + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
-                        * Ylm_Values( :, tpd, te-1, pe-1 )   )       &
+                + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
+                        * Slm_Elem_Values(:,tpd)   )       &
                 * Caller_LPT(0,d,rd)
 
 
         TMP_Drv(1,i) = TMP_Drv(1,i)                              &
-                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
-                         * Ylm_Values( :, tpd, te-1, pe-1 )     )    &
+                   + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                         * Slm_Elem_Values(:,tpd)     )    &
                    * Caller_LPT(1,d,rd)             &
                    / DROT
 
 
         TMP_Drv(2,i) = TMP_Drv(2,i)                              &
-                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
-                         * Ylm_dt_Values( :, tpd, te-1, pe-1)   )    &
+                   + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                         * Slm_Elem_dt_Values(:,tpd)   )    &
                    * Caller_LPT(0,d,rd)
 
         TMP_Drv(3,i) = TMP_Drv(3,i)                              &
-                   + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
-                         * Ylm_dp_Values( :, tpd, te-1, pe-1)   )    &
+                   + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                         * Slm_Elem_dp_Values(:,tpd)   )    &
                    * Caller_LPT(0,d,rd)
 
     END DO  ! d
@@ -663,25 +721,25 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
 
 
                      TMP_Val(i) = TMP_Val(i)                                  &
-                             + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
+                             + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
                                      * Ylm_Elem_Values( :, tpd )   )       &
                              * Caller_LPT(0,d,rd)
 
 
                      TMP_Drv(1,i) = TMP_Drv(1,i)                              &
-                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
+                                + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
                                       * Ylm_Elem_Values( :, tpd  )     )    &
                                 * Caller_LPT(1,d,rd)             &
                                 / DROT
 
 
                      TMP_Drv(2,i) = TMP_Drv(2,i)                              &
-                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
+                                + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
                                       * Ylm_Elem_dt_Values( :, tpd )   )    &
                                 * Caller_LPT(0,d,rd)
 
                      TMP_Drv(3,i) = TMP_Drv(3,i)                              &
-                                + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
+                                + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
                                       * Ylm_Elem_dp_Values( :, tpd)   )    &
                                 * Caller_LPT(0,d,rd)
 

@@ -47,10 +47,10 @@ USE Poseidon_Parameters, &
                     Num_Eqs
 
 USE Variables_Matrices, &
-            ONLY :  zMA_First_Col_Storage,       &
-                    zMA_Last_Col_Storage,        &
-                    zMB_First_Col_Storage,      &
-                    zMB_Last_Col_Storage
+            ONLY :  dMA_First_Col_Storage,       &
+                    dMA_Last_Col_Storage,        &
+                    dMB_First_Col_Storage,      &
+                    dMB_Last_Col_Storage
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,             &
@@ -96,12 +96,12 @@ CONTAINS
  !#################################################################################!
 SUBROUTINE DIRICHLET_BC(WORK_MAT, WORK_VEC, L, M, ui)
 
-COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES,1:NUM_R_NODES),    INTENT(INOUT)   :: WORK_MAT
-COMPLEX(KIND = idp), DIMENSION(1:NUM_R_NODES),                  INTENT(INOUT)   :: WORK_VEC
-INTEGER,                                                        INTENT(IN)      :: L, M, ui
+REAL(idp),  DIMENSION(1:NUM_R_NODES,1:NUM_R_NODES), INTENT(INOUT)   :: WORK_MAT
+REAL(idp),  DIMENSION(1:NUM_R_NODES),               INTENT(INOUT)   :: WORK_VEC
+INTEGER,                                            INTENT(IN)      :: L, M, ui
 
 INTEGER                             :: i, shift, uj
-COMPLEX(KIND = idp)                 :: BC_Value
+REAL(idp)                           :: BC_Value
 
 
 
@@ -172,8 +172,8 @@ END SUBROUTINE DIRICHLET_BC
  !#################################################################################!
 SUBROUTINE NEUMANN_BC(L_VALUE, WORK_VEC)
 
-INTEGER,                                            INTENT(IN)          ::  L_VALUE
-COMPLEX(KIND = idp), DIMENSION(0:NUM_R_NODES - 1),  INTENT(INOUT)       ::  WORK_VEC
+INTEGER,                                    INTENT(IN)          ::  L_VALUE
+REAL(idp),  DIMENSION(0:NUM_R_NODES - 1),   INTENT(INOUT)       ::  WORK_VEC
 
 
 INTEGER                 :: ui
@@ -233,19 +233,19 @@ END SUBROUTINE NEUMANN_BC
 SUBROUTINE DIRICHLET_BC_CCS(N, NNZ, L, M, ELEM_VAL, COL_PTR, ROW_IND, WORK_VEC)
 
 
-INTEGER,                                        INTENT(IN)                  ::  N, NNZ, L, M
+INTEGER,                                INTENT(IN)                  ::  N, NNZ, L, M
 
-INTEGER, DIMENSION(0:N),                        INTENT(IN)                  ::  COL_PTR
-INTEGER, DIMENSION(0:NNZ-1),                    INTENT(IN)                  ::  ROW_IND
+INTEGER, DIMENSION(0:N),                INTENT(IN)                  ::  COL_PTR
+INTEGER, DIMENSION(0:NNZ-1),            INTENT(IN)                  ::  ROW_IND
 
-COMPLEX(KIND = idp), DIMENSION(0:N - 1),        INTENT(INOUT)               ::  WORK_VEC
-
-
-COMPLEX(KIND = idp), DIMENSION(0:NNZ-1),           INTENT(INOUT)               ::  ELEM_VAL
+REAL(idp), DIMENSION(0:N - 1),          INTENT(INOUT)               ::  WORK_VEC
 
 
-INTEGER                                                                     :: i, shift, ui
-COMPLEX(KIND = idp)                                                         :: BC_Value
+REAL(idp), DIMENSION(0:NNZ-1),          INTENT(INOUT)               ::  ELEM_VAL
+
+
+INTEGER                                                             :: i, shift, ui
+REAL(idp)                                                           :: BC_Value
 
 
 
@@ -375,21 +375,21 @@ END SUBROUTINE DIRICHLET_BC_CCS
 SUBROUTINE NEUMANN_BC_CCS(N, NNZ, L, M, ELEM_VAL, COL_PTR, ROW_IND, WORK_VEC)
 
 
-INTEGER,                                        INTENT(IN)                  ::  N, NNZ, L, M
+INTEGER,                                INTENT(IN)                  ::  N, NNZ, L, M
 
-INTEGER, DIMENSION(0:N),                        INTENT(IN)                  ::  COL_PTR
-INTEGER, DIMENSION(0:NNZ-1),                    INTENT(IN)                  ::  ROW_IND
+INTEGER,    DIMENSION(0:N),             INTENT(IN)                  ::  COL_PTR
+INTEGER,    DIMENSION(0:NNZ-1),         INTENT(IN)                  ::  ROW_IND
 
-COMPLEX(KIND = idp), DIMENSION(0:N - 1),        INTENT(INOUT)               ::  WORK_VEC
-
-
-COMPLEX(KIND = idp), DIMENSION(0:NNZ-1),           INTENT(INOUT)            ::  ELEM_VAL
+REAL(idp),  DIMENSION(0:N - 1),         INTENT(INOUT)               ::  WORK_VEC
 
 
-INTEGER                                                                     ::  ui
+REAL(idp),  DIMENSION(0:NNZ-1),         INTENT(INOUT)               ::  ELEM_VAL
 
-REAL(KIND = idp)                                                            ::  BC_Enc_Mass,    &
-                                                                                Shift_Value
+
+INTEGER                                                             ::  ui
+
+REAL(KIND = idp)                                                    ::  BC_Enc_Mass,    &
+                                                                        Shift_Value
 
 
 
@@ -478,18 +478,18 @@ END SUBROUTINE NEUMANN_BC_CCS
 SUBROUTINE DIRICHLET_BC_CHOL(N, NNZ, L, M, COL_PTR, ROW_IND, WORK_VEC,ui)
 
 
-INTEGER,                                        INTENT(IN)                  ::  N, NNZ, L, M
+INTEGER,                                INTENT(IN)                  ::  N, NNZ, L, M
 
-INTEGER, DIMENSION(0:N),                        INTENT(IN)                  ::  COL_PTR
-INTEGER, DIMENSION(0:NNZ-1),                    INTENT(IN)                  ::  ROW_IND
+INTEGER, DIMENSION(0:N),                INTENT(IN)                  ::  COL_PTR
+INTEGER, DIMENSION(0:NNZ-1),            INTENT(IN)                  ::  ROW_IND
 
-COMPLEX(KIND = idp), DIMENSION(0:N - 1),        INTENT(INOUT)               ::  WORK_VEC
-INTEGER,                                        INTENT(IN)                  ::  ui
+REAL(idp), DIMENSION(0:N - 1),          INTENT(INOUT)               ::  WORK_VEC
+INTEGER,                                INTENT(IN)                  ::  ui
 
 
 
-INTEGER                                                                     :: i, shift
-COMPLEX(KIND = idp)                                                         :: BC_Value
+INTEGER                                                             :: i, shift
+REAL(idp)                                                           :: BC_Value
 
 
 
@@ -513,7 +513,7 @@ IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
 
     DO i = 1,DEGREE
 
-        WORK_VEC(i) = WORK_VEC(i) - zMA_First_Col_Storage(i,L)*BC_Value
+        WORK_VEC(i) = WORK_VEC(i) - dMA_First_Col_Storage(i,L)*BC_Value
 
     END DO
     !!! MODIFY MATRIX !!!
@@ -547,7 +547,7 @@ IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
     DO i = DEGREE-shift,1,-1
 
         WORK_VEC(NUM_R_NODES - 1 - i) = WORK_VEC(NUM_R_NODES - 1 - i)                           &
-                                        - zMA_Last_Col_Storage(i,L)*BC_Value
+                                        - dMA_Last_Col_Storage(i,L)*BC_Value
 
 
 
@@ -589,9 +589,9 @@ END SUBROUTINE DIRICHLET_BC_CHOL
  !#################################################################################!
 SUBROUTINE DIRICHLET_BC_Beta(WORK_MAT, WORK_VEC)
 
-COMPLEX(KIND = idp), DIMENSION(1:iVB_Prob_Dim), INTENT(INOUT)                  :: WORK_VEC
+REAL(idp), DIMENSION(1:iVB_Prob_Dim),                   INTENT(INOUT)   :: WORK_VEC
 
-COMPLEX(KIND = idp), DIMENSION(1:iVB_Prob_Dim,1:iVB_Prob_Dim), INTENT(INOUT)  :: WORK_MAT
+REAL(idp), DIMENSION(1:iVB_Prob_Dim,1:iVB_Prob_Dim),    INTENT(INOUT)   :: WORK_MAT
 
 
 
@@ -599,7 +599,7 @@ COMPLEX(KIND = idp), DIMENSION(1:iVB_Prob_Dim,1:iVB_Prob_Dim), INTENT(INOUT)  ::
 INTEGER                 :: i, shift, uj, ui, m, l, Here
 
 
-COMPLEX(KIND = idp)                                                         :: BC_Value
+REAL(idp)                                                               :: BC_Value
 
 
 DO ui = 3,1,-1
@@ -706,14 +706,14 @@ END SUBROUTINE DIRICHLET_BC_Beta
 SUBROUTINE DIRICHLET_BC_Beta_Banded( N, WORK_VEC )
 
 
-INTEGER,                                        INTENT(IN)                  ::  N
-COMPLEX(KIND = idp), DIMENSION(1:N),        INTENT(INOUT)               ::  WORK_VEC
+INTEGER,                            INTENT(IN)                  ::  N
+REAL(idp), DIMENSION(1:N),          INTENT(INOUT)               ::  WORK_VEC
 
-COMPLEX(KIND = idp)                                                         :: BC_Value
+REAL(idp)                                                       :: BC_Value
 
-INTEGER                                                                     :: ui
-INTEGER                                                                     :: lm, d, Row
-INTEGER                                                                     :: Shift
+INTEGER                                                         :: ui
+INTEGER                                                         :: lm, d, Row
+INTEGER                                                         :: Shift
 
 
 
@@ -727,7 +727,7 @@ DO ui = 3,5
         DO d =  1,DEGREE
 
             Row = FP_Beta_Array_Map(Num_R_Elements-1, d, ui-2, 0, 0)
-            Work_Vec(Row) = Work_Vec(Row) - zMB_First_Col_Storage(0,d,ui-2)*BC_Value
+            Work_Vec(Row) = Work_Vec(Row) - dMB_First_Col_Storage(0,d,ui-2)*BC_Value
         
         END DO  ! d
 
@@ -767,7 +767,7 @@ DO ui = 3,5
                 
                 Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui-2,lm)
                 
-                Work_Vec(Row) = Work_Vec(Row) - zMB_Last_Col_Storage(lm,d,ui-2)*BC_Value
+                Work_Vec(Row) = Work_Vec(Row) - dMB_Last_Col_Storage(lm,d,ui-2)*BC_Value
 
             END DO  ! d
 

@@ -1,5 +1,5 @@
 # For use with GNUmake for AMREX compilation.
-POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
+POSEIDON_ACTIVE_DIR = /Users/nickroberts/ssp4/Poseidon
 
 POSEIDON_AMREX_MODE   =ON
 POSEIDON_TIMER_MODE  ?=OFF

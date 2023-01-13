@@ -111,16 +111,16 @@ INTEGER                                                 ::  INFO
 
 CHARACTER(LEN = 300)                                    ::  Message
 
-COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Resid_Vector
-COMPLEX(idp),DIMENSION(:,:), ALLOCATABLE                :: FVector
-COMPLEX(idp),DIMENSION(:,:), ALLOCATABLE                :: GVector
-COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: BVector
-COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: UVector
-COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: GVectorM
-COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: FVectorM
-COMPLEX(idp),DIMENSION(:,:), ALLOCATABLE                :: AMatrix
-COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Work
-COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Alpha
+REAL(idp),DIMENSION(:),   ALLOCATABLE                :: Resid_Vector
+REAL(idp),DIMENSION(:,:), ALLOCATABLE                :: FVector
+REAL(idp),DIMENSION(:,:), ALLOCATABLE                :: GVector
+REAL(idp),DIMENSION(:),   ALLOCATABLE                :: BVector
+REAL(idp),DIMENSION(:),   ALLOCATABLE                :: UVector
+REAL(idp),DIMENSION(:),   ALLOCATABLE                :: GVectorM
+REAL(idp),DIMENSION(:),   ALLOCATABLE                :: FVectorM
+REAL(idp),DIMENSION(:,:), ALLOCATABLE                :: AMatrix
+REAL(idp),DIMENSION(:),   ALLOCATABLE                :: Work
+REAL(idp),DIMENSION(:),   ALLOCATABLE                :: Alpha
 
 
 M = FP_Anderson_M
@@ -287,7 +287,7 @@ END SUBROUTINE CFA_Method
 SUBROUTINE Convergence_Check( Update, Iter, Flag )
 
 
-COMPLEX(idp),DIMENSION(Var_Dim), INTENT(IN)         :: Update
+REAL(idp),DIMENSION(Var_Dim), INTENT(IN)         :: Update
 INTEGER,                         INTENT(IN)         :: Iter
 LOGICAL,                         INTENT(INOUT)      :: Flag
 

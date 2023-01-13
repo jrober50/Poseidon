@@ -52,8 +52,8 @@ USE Variables_MPI, &
                     nPROCS_Poseidon
 
 USE Variables_Vectors,  &
-            ONLY :  cVA_Coeff_Vector,           &
-                    cVA_Load_Vector
+            ONLY :  dVA_Coeff_Vector,           &
+                    dVA_Load_Vector
                     
 USE Variables_Matrices,  &
             ONLY :  Factored_NNZ,               &
@@ -107,18 +107,18 @@ CONTAINS
  !#################################################################!
 SUBROUTINE Solve_Linear_System_TypeA(iU)
 
-INTEGER, INTENT(IN)                                             ::  iU
+INTEGER, INTENT(IN)                                     ::  iU
 
-COMPLEX(KIND = idp), DIMENSION(NUM_R_NODES)                     ::  WORK_VEC
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                  ::  WORK_ELEM_VAL
+REAL(idp), DIMENSION(NUM_R_NODES)                       ::  WORK_VEC
+REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  WORK_ELEM_VAL
 
-INTEGER                                                         ::  l, m
-INTEGER                                                         ::  lm_loc, ierr
+INTEGER                                                 ::  l, m
+INTEGER                                                 ::  lm_loc, ierr
 
-INTEGER                                                         ::  Lower_Limit
-INTEGER                                                         ::  Upper_Limit
+INTEGER                                                 ::  Lower_Limit
+INTEGER                                                 ::  Upper_Limit
 
-CHARACTER(LEN = 300)                    ::  Message
+CHARACTER(LEN = 300)                                    ::  Message
 
 IF ( Verbose_Flag ) THEN
     WRITE(Message,'(A,A,A)')'Beginning ',TRIM(CFA_Var_Names(iU)),' Linear Solve.'
@@ -178,7 +178,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     DO m = -l,l
 
         lm_loc = Map_To_lm(l,m)
-        WORK_VEC = -cVA_Load_Vector(:,lm_loc,iU)
+        WORK_VEC = -dVA_Load_Vector(:,lm_loc,iU)
         WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l)
 
 !        PRINT*,WORK_ELEM_VAL(:)
@@ -230,8 +230,8 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 !        PRINT*,"After"
 !        PRINT*,Work_Vec(:)
 
-        FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,iU)
-        cVA_Coeff_Vector( :,lm_loc,iU) = WORK_VEC(:)
+        FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-dVA_Coeff_Vector(:,lm_loc,iU)
+        dVA_Coeff_Vector( :,lm_loc,iU) = WORK_VEC(:)
 
 
 
@@ -263,7 +263,7 @@ CALL MPI_BCAST_Coeffs_TypeA(iU,                     &
 !IF ( myID_Poseidon == i ) THEN
 !    PRINT*,"myID_Poseidon ",i
 !    DO lm_loc = 1,LM_Length
-!        PRINT*,cVA_Coeff_Vector(:,lm_loc, iU)
+!        PRINT*,dVA_Coeff_Vector(:,lm_loc, iU)
 !    END DO
 !END IF
 !CALL MPI_Barrier(Poseidon_Comm_World,ierr)
@@ -283,7 +283,7 @@ END IF
 
 
 
-!PRINT*,cVA_Coeff_Vector( :,1,iU)
+!PRINT*,dVA_Coeff_Vector( :,1,iU)
 
 
 

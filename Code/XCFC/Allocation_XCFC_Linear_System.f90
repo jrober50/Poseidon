@@ -51,7 +51,11 @@ USE Variables_Vectors,  &
             ONLY :  cVA_Load_Vector,         &
                     cVB_Load_Vector,         &
                     cVA_Coeff_Vector,          &
-                    cVB_Coeff_Vector
+                    cVB_Coeff_Vector,       &
+                    dVA_Load_Vector,         &
+                    dVB_Load_Vector,         &
+                    dVA_Coeff_Vector,          &
+                    dVB_Coeff_Vector
 
 USE Variables_Matrices,  &
             ONLY :  Matrix_Format,              &
@@ -64,16 +68,16 @@ USE Variables_Matrices,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_Matrix_Beta,        &
-                    zMB_Matrix_Banded,            &
-                    zMB_Matrix_Diagonal,          &
+                    dMB_Matrix_Banded,            &
+                    dMB_Matrix_Diagonal,          &
                     iMB_Diagonals,              &
                     iMB_IPIV,                   &
                     Laplace_NNZ,                &
                     Factored_NNZ,               &
-                    zMA_First_Col_Storage,       &
-                    zMA_Last_Col_Storage,        &
-                    zMB_First_Col_Storage,  &
-                    zMB_Last_Col_Storage
+                    dMA_First_Col_Storage,       &
+                    dMA_Last_Col_Storage,        &
+                    dMB_First_Col_Storage,  &
+                    dMB_Last_Col_Storage
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,         &
@@ -109,14 +113,14 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     ALLOCATE( Laplace_Factored_COL(0:NUM_R_NODES, 0:L_LIMIT) )
 
     ALLOCATE( iMB_IPIV(1:iVB_Prob_Dim) )
-    ALLOCATE( zMB_Matrix_Banded(1:(3*iMB_Diagonals+1), 1:iVB_Prob_Dim))
-    ALLOCATE( zMB_Matrix_Diagonal(1:iVB_Prob_Dim) )
+    ALLOCATE( dMB_Matrix_Banded(1:(3*iMB_Diagonals+1), 1:iVB_Prob_Dim))
+    ALLOCATE( dMB_Matrix_Diagonal(1:iVB_Prob_Dim) )
 
-    ALLOCATE( zMA_First_Col_Storage(0:DEGREE,0:L_LIMIT)   )
-    ALLOCATE( zMA_Last_Col_Storage(0:DEGREE,0:L_LIMIT)    )
+    ALLOCATE( dMA_First_Col_Storage(0:DEGREE,0:L_LIMIT)   )
+    ALLOCATE( dMA_Last_Col_Storage(0:DEGREE,0:L_LIMIT)    )
 
-    ALLOCATE( zMB_First_Col_Storage(1:LM_Length,0:DEGREE,1:6)   )
-    ALLOCATE( zMB_Last_Col_Storage(1:LM_Length,0:DEGREE,1:6)    )
+    ALLOCATE( dMB_First_Col_Storage(1:LM_Length,0:DEGREE,1:6)   )
+    ALLOCATE( dMB_Last_Col_Storage(1:LM_Length,0:DEGREE,1:6)    )
 
 END IF
 
@@ -126,6 +130,13 @@ ALLOCATE( cVB_Load_Vector(1:iVB_Prob_Dim,1:2) )
 
 ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
 ALLOCATE( cVB_Coeff_Vector(1:iVB_Prob_Dim,1:2) )
+
+
+ALLOCATE( dVA_Load_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
+ALLOCATE( dVB_Load_Vector(1:iVB_Prob_Dim,1:2) )
+
+ALLOCATE( dVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
+ALLOCATE( dVB_Coeff_Vector(1:iVB_Prob_Dim,1:2) )
 
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
 
@@ -163,14 +174,14 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     DEALLOCATE( Laplace_Factored_COL )
 
     DEALLOCATE( iMB_IPIV )
-    DEALLOCATE( zMB_Matrix_Banded )
-    DEALLOCATE( zMB_Matrix_Diagonal )
+    DEALLOCATE( dMB_Matrix_Banded )
+    DEALLOCATE( dMB_Matrix_Diagonal )
 
-    DEALLOCATE( zMA_First_Col_Storage )
-    DEALLOCATE( zMA_Last_Col_Storage )
+    DEALLOCATE( dMA_First_Col_Storage )
+    DEALLOCATE( dMA_Last_Col_Storage )
 
-    DEALLOCATE( zMB_First_Col_Storage )
-    DEALLOCATE( zMB_Last_Col_Storage )
+    DEALLOCATE( dMB_First_Col_Storage )
+    DEALLOCATE( dMB_Last_Col_Storage )
     
 END IF
 

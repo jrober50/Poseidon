@@ -79,8 +79,7 @@ USE Variables_Source, &
                     Block_Source_Si
 
 USE Variables_Tables, &
-            ONLY :  Ylm_CC_Values,              &
-                    Ylm_Elem_CC_Values,         &
+            ONLY :  Slm_Elem_Values,            &
                     Level_dx,                   &
                     Level_Ratios,               &
                     Lagrange_Poly_Table
@@ -89,7 +88,7 @@ USE Variables_Derived, &
             ONLY :  LM_LENGTH
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Load_Vector
+            ONLY :  dVA_Load_Vector
 
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
@@ -131,6 +130,9 @@ USE XCFC_Functions_Calc_Values_Module, &
 USE Initialization_Tables, &
             ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
                     Initialize_Ylm_Tables_On_Elem
+                    
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Slm_Tables_on_Elem
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -228,7 +230,7 @@ END IF
 
 #else
     
-    cVA_Load_Vector(:,:,iU) = 0.0_idp
+    dVA_Load_Vector(:,:,iU) = 0.0_idp
     DO re = iEL(1),iEU(1)
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
@@ -249,7 +251,7 @@ END IF
 
 
 
-!PRINT*,cVA_Load_Vector(:,:,iU)
+!PRINT*,dVA_Load_Vector(:,:,iU)
 
 
 END SUBROUTINE XCFC_Calc_Load_Vector_TypeA
@@ -324,7 +326,7 @@ CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
 
 
 
-
+CALL Initialize_Slm_Tables_on_Elem(iE(2), iE(3))
 
 
 R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
@@ -392,7 +394,7 @@ INTEGER, INTENT(IN)                                         ::  FEM_Elem
 INTEGER                                                     ::  rd, d, lm_loc
 INTEGER                                                     ::  Current_i_Location
 
-COMPLEX(KIND = idp)                                         ::  RHS_TMP
+REAL(idp)                                                   ::  RHS_TMP
 INTEGER                                                     ::  iCT
 
 !iCT = 2**(level+1) - mod(iE(1),2**level) - 2
@@ -409,7 +411,7 @@ DO d = 0,DEGREE
 #ifdef POSEIDON_AMREX_FLAG
         RHS_TMP =  RHS_TMP                                          &
                  + SUM( SourceTerm( :, rd, iU )                     &
-                       * Ylm_Elem_CC_Values( :, lm_loc )            &
+                       * Slm_Elem_Values( lm_loc, : )               &
                        * TP_Int_Weights(:)                     )    &
                * Lagrange_Poly_Table( d, rd, 0)            &
                * R_Int_Weights(rd)
@@ -434,7 +436,7 @@ DO d = 0,DEGREE
 
         RHS_TMP =  RHS_TMP                                          &
                  + SUM( SourceTerm( :, rd, iU )                     &
-                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+                       * Slm_Elem_Values( lm_loc, :)                &
                        * TP_Int_Weights(:)                     )    &
                * Lagrange_Poly_Table( d, rd, 0)                     &
                * R_Int_Weights(rd)
@@ -468,13 +470,13 @@ DO d = 0,DEGREE
 
 
     Current_i_Location = Map_To_FEM_Node(FEM_Elem,d)
-    cVA_Load_Vector(Current_i_Location,lm_loc,iU)          &
-        = cVA_Load_Vector(Current_i_Location,lm_loc,iU)    &
+    dVA_Load_Vector(Current_i_Location,lm_loc,iU)          &
+        = dVA_Load_Vector(Current_i_Location,lm_loc,iU)    &
         + RHS_TMP
 
     
 !    PRINT*,"*",iE,FEM_Elem,d,lm_loc,Current_i_Location, &
-!                cVA_Load_Vector(Current_i_Location,lm_loc,iU),RHS_TMP
+!                dVA_Load_Vector(Current_i_Location,lm_loc,iU),RHS_TMP
 
 END DO  ! d Loop
 END DO  ! lm_loc Loop
@@ -699,7 +701,7 @@ INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
 nGhost_Vec = 0
 
 
-cVA_Load_Vector(:,:,iU) = 0.0_idp
+dVA_Load_Vector(:,:,iU) = 0.0_idp
 
 DO lvl = AMReX_Num_Levels-1,0,-1
 

@@ -67,7 +67,9 @@ USE Variables_Interface, &
 
 USE Variables_Vectors, &
             ONLY :  cVA_Coeff_Vector,       &
-                    cVB_Coeff_Vector
+                    cVB_Coeff_Vector,       &
+                    dVA_Coeff_Vector,       &
+                    dVB_Coeff_Vector
 
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
@@ -173,15 +175,22 @@ DO re = 1,Input_RE
         Here = (re-1)*Degree + rqb + 1
 
         cVA_Coeff_Vector(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
+        dVA_Coeff_Vector(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
 
         Here = FP_Array_Map_TypeB(iU_S1,iVB_S,re-1,rqb,1)
         cVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
+        dVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
+
+
 
 !        Here = FP_Beta_Array_Map(re,rqb,2,0)
 !        cVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(4)
+!        dVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(4)
+
 !        Here = FP_Beta_Array_Map(re,rqb,3,0)
 !        cVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(5)
-        
+!        dVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(5)
+
     END DO ! rqb
 END DO ! re
 

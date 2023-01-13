@@ -61,8 +61,8 @@ USE Variables_BC, &
                 OUTER_CFA_BC_TYPE
 
 USE Variables_Matrices, &
-        ONLY :  zMA_First_Col_Storage,   &
-                zMA_Last_Col_Storage,    &
+        ONLY :  dMA_First_Col_Storage,   &
+                dMA_Last_Col_Storage,    &
                 Laplace_NNZ,            &
                 Factored_NNZ,           &
                 Laplace_Matrix_Full,    &
@@ -125,7 +125,7 @@ INTEGER                                                 ::  OLD_NNZ, NEW_NNZ
 INTEGER(KIND = 1),  ALLOCATABLE,    DIMENSION(:,:)      ::  LogMap
 
 INTEGER,            ALLOCATABLE,    DIMENSION(:,:)      ::  NEW_ROW_IND
-COMPLEX(idp),       ALLOCATABLE,    DIMENSION(:,:)      ::  NEW_ELEM_VAL
+REAL(idp),          ALLOCATABLE,    DIMENSION(:,:)      ::  NEW_ELEM_VAL
 
 
 
@@ -171,7 +171,7 @@ IF ( ANY(INNER_CFA_BC_TYPE == "D") ) THEN
     !
     !   Save the needed values first.
     !
-    zMA_First_Col_Storage(1:DEGREE,:) = Laplace_Factored_VAL(1:DEGREE,:)
+    dMA_First_Col_Storage(1:DEGREE,:) = Laplace_Factored_VAL(1:DEGREE,:)
 
 
     !
@@ -199,7 +199,7 @@ IF ( ANY(OUTER_CFA_BC_TYPE == "D") ) THEN
     !
     DO l = 0,L_LIMIT
     DO i = 0,Degree
-        zMA_Last_Col_Storage(i,l) = Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES,l) - 1 - i, l)
+        dMA_Last_Col_Storage(i,l) = Laplace_Factored_VAL(Laplace_Factored_COL(NUM_R_NODES,l) - 1 - i, l)
     END DO
     END DO
 
@@ -499,15 +499,15 @@ END SUBROUTINE Sym_Fact_Initialize
 !###########################################################################################!
 SUBROUTINE Sym_Fact_Matrix_Swap(LogMap, N, OLD_NNZ, NEW_NNZ, COL_PTR, OROW_IND, OELEM_VAL, ROW_IND, ELEM_VAL)
 
-INTEGER, INTENT(IN)                                             :: N, OLD_NNZ, NEW_NNZ
-INTEGER, DIMENSION(0:N), INTENT(INOUT)                          :: COL_PTR
-INTEGER, DIMENSION(0:OLD_NNZ-1), INTENT(IN)                     :: OROW_IND
-COMPLEX(KIND = idp), DIMENSION(0:OLD_NNZ-1), INTENT(IN)         :: OELEM_VAL
+INTEGER,                                INTENT(IN)      :: N, OLD_NNZ, NEW_NNZ
+INTEGER,    DIMENSION(0:N),             INTENT(INOUT)   :: COL_PTR
+INTEGER,    DIMENSION(0:OLD_NNZ-1),     INTENT(IN)      :: OROW_IND
+REAL(idp),  DIMENSION(0:OLD_NNZ-1),     INTENT(IN)      :: OELEM_VAL
 
-INTEGER, DIMENSION(0:NEW_NNZ-1), INTENT(INOUT)                  :: ROW_IND
-COMPLEX(KIND = idp), DIMENSION(0:NEW_NNZ-1), INTENT(INOUT)      :: ELEM_VAL
+INTEGER,    DIMENSION(0:NEW_NNZ-1),     INTENT(INOUT)   :: ROW_IND
+REAL(idp),  DIMENSION(0:NEW_NNZ-1),     INTENT(INOUT)   :: ELEM_VAL
 
-INTEGER(KIND = 1), DIMENSION(0:N-1,0:N-1), INTENT(INOUT)        :: LogMap
+INTEGER(KIND = 1), DIMENSION(0:N-1,0:N-1), INTENT(INOUT)    :: LogMap
 
 INTEGER                                                         :: i, j
 INTEGER                                                         :: counter, here, fhere
@@ -708,38 +708,32 @@ END FUNCTION Sym_Fact_Parent
 !###########################################################################################!
 SUBROUTINE Chol_Factorizer(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL)
 
-INTEGER, INTENT(IN)                                         :: N, NNZ
-INTEGER, DIMENSION(0:N), INTENT(IN)                         :: COL_PTR
-INTEGER, DIMENSION(0:NNZ-1), INTENT(IN)                     :: ROW_IND
-COMPLEX(KIND = idp), DIMENSION(0:NNZ-1), INTENT(INOUT)         :: ELEM_VAL
+INTEGER,                        INTENT(IN)              :: N, NNZ
+INTEGER,    DIMENSION(0:N),     INTENT(IN)              :: COL_PTR
+INTEGER,    DIMENSION(0:NNZ-1), INTENT(IN)              :: ROW_IND
+REAL(idp),  DIMENSION(0:NNZ-1), INTENT(INOUT)           :: ELEM_VAL
 
 INTEGER                                                     :: i,j,k
 
 
 DO j = 0,N-1
 
-
     DO k  = 0,j-1
+    DO i = COL_PTR(k), COL_PTR(k+1)-1
+
+        IF (ROW_IND(i) .EQ. j) THEN
+
+            CALL Chol_CMOD(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL, i, k)
+
+        END IF
+
+    END DO ! i Loop
+    END DO ! k Loop
+
+    CALL Chol_CDIV(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL, j)
 
 
-        DO i = COL_PTR(k), COL_PTR(k+1)-1
-
-
-            IF (ROW_IND(i) .EQ. j) THEN
-
-
-                CALL Chol_CMOD(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL, i, k)
-
-            END IF
-
-        END DO
-
-    END DO
-
-    call Chol_CDIV(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL, j)
-
-
-END DO
+END DO ! j Loop
 
 
 
@@ -761,22 +755,17 @@ END SUBROUTINE Chol_Factorizer
 !###################################################################################!
 SUBROUTINE Chol_CMOD(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL, j, k)
 
-INTEGER, INTENT(IN)                                         ::  N, NNZ, j, k
+INTEGER,                        INTENT(IN)              ::  N, NNZ, j, k
 
-INTEGER, DIMENSION(0:N),INTENT(IN)                          ::  COL_PTR
-INTEGER, DIMENSION(0:NNZ-1), INTENT(IN)                     ::  ROW_IND
-COMPLEX(KIND = idp), DIMENSION(0:NNZ-1), INTENT(INOUT)      ::  ELEM_VAL
+INTEGER,    DIMENSION(0:N),     INTENT(IN)              ::  COL_PTR
+INTEGER,    DIMENSION(0:NNZ-1), INTENT(IN)              ::  ROW_IND
+REAL(idp),  DIMENSION(0:NNZ-1), INTENT(INOUT)           ::  ELEM_VAL
 
-INTEGER                                                     ::  i, ij_here, j_row
-COMPLEX(KIND = idp)                                            ::  A_jk
-
-
+INTEGER                                                 ::  i, ij_here, j_row
+REAL(idp)                                               ::  A_jk
 
 
 A_jk = ELEM_VAL(j)
-
-
-
 
 
 IF (A_jk .NE. 0.0_idp ) THEN
@@ -785,27 +774,17 @@ IF (A_jk .NE. 0.0_idp ) THEN
     j_row = ROW_IND(j)
     ij_here = COL_PTR(ROW_IND(j))
 
-
-
     DO i = j, COL_PTR(k+1)-1
-
-
-
 
         DO WHILE(ROW_IND(ij_here) .NE. ROW_IND(i) .AND. ij_here < COL_PTR(j_row + 1))
 
             ij_here = ij_here+1
 
-        END DO
-
-
+        END DO ! While
 
         ELEM_VAL(ij_here) = ELEM_VAL(ij_here) - ELEM_VAL(i)*A_jk
 
-
-
-
-    END DO
+    END DO ! i Loop
 END IF
 
 
@@ -825,13 +804,13 @@ END SUBROUTINE Chol_CMOD
 !###################################################################################!
 SUBROUTINE Chol_CDIV(N, NNZ, COL_PTR, ROW_IND, ELEM_VAL, j)
 
-INTEGER, INTENT(IN)                                             ::  N, NNZ, j
+INTEGER,                        INTENT(IN)              ::  N, NNZ, j
 
-INTEGER, DIMENSION(0:N),INTENT(IN)                              ::  COL_PTR
-INTEGER, DIMENSION(0:NNZ-1), INTENT(IN)                         ::  ROW_IND
-COMPLEX(KIND = idp), DIMENSION(0:NNZ-1), INTENT(INOUT)          ::  ELEM_VAL
+INTEGER,    DIMENSION(0:N),     INTENT(IN)              ::  COL_PTR
+INTEGER,    DIMENSION(0:NNZ-1), INTENT(IN)              ::  ROW_IND
+REAL(idp),  DIMENSION(0:NNZ-1), INTENT(INOUT)           ::  ELEM_VAL
 
-INTEGER                                                         :: i, here
+INTEGER                                                 :: i, here
 
 
 
@@ -882,18 +861,18 @@ END SUBROUTINE Chol_CDIV
 !#######################################################################
 SUBROUTINE CCS_Back_Substitution(N, NNZ, ELEM_VAL, COL_PTR, ROW_IND, b)
 
-INTEGER, INTENT(IN)                                                 :: N, NNZ
+INTEGER,                        INTENT(IN)                  :: N, NNZ
 
-INTEGER, DIMENSION(0:N), INTENT(IN)                                 :: COL_PTR
-INTEGER, DIMENSION(0:NNZ-1), INTENT(IN)                             :: ROW_IND
-COMPLEX(KIND = idp), DIMENSION(0:NNZ-1), INTENT(IN)                 :: ELEM_VAL
+INTEGER,    DIMENSION(0:N),     INTENT(IN)                  :: COL_PTR
+INTEGER,    DIMENSION(0:NNZ-1), INTENT(IN)                  :: ROW_IND
+REAL(idp),  DIMENSION(0:NNZ-1), INTENT(IN)                  :: ELEM_VAL
 
-COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(INOUT)                :: b
+REAL(idp),  DIMENSION(0:N-1),   INTENT(INOUT)               :: b
 
 
 
-INTEGER                                                             :: i, j, here
-COMPLEX(KIND = idp)                                                 :: TMP
+INTEGER                                                     :: i, j, here
+REAL(idp)                                                   :: TMP
 
 
 
@@ -959,16 +938,16 @@ END SUBROUTINE CCS_Back_Substitution
 !#######################################################################
 SUBROUTINE CCS_Forward_Substitution(N, NNZ, ELEM_VAL, COL_PTR, ROW_IND, b)
 
-INTEGER, INTENT(IN)                                                 :: N, NNZ
+INTEGER,                        INTENT(IN)                  :: N, NNZ
 
-INTEGER, DIMENSION(0:N), INTENT(IN)                                 :: COL_PTR
-INTEGER, DIMENSION(0:NNZ-1), INTENT(IN)                             :: ROW_IND
-COMPLEX(KIND = idp), DIMENSION(0:NNZ-1), INTENT(IN)                 :: ELEM_VAL
+INTEGER,    DIMENSION(0:N),     INTENT(IN)                  :: COL_PTR
+INTEGER,    DIMENSION(0:NNZ-1), INTENT(IN)                  :: ROW_IND
+REAL(idp),  DIMENSION(0:NNZ-1), INTENT(IN)                  :: ELEM_VAL
 
-COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(INOUT)                :: b
+REAL(idp),  DIMENSION(0:N-1),   INTENT(INOUT)               :: b
 
 
-INTEGER                                                             :: i, j, here
+INTEGER                                                     :: i, j, here
 
 
 

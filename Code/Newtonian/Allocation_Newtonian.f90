@@ -31,8 +31,8 @@ USE Poseidon_Parameters, &
                     L_Limit
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,   &
-                    cVA_Load_Vector
+            ONLY :  dVA_Coeff_Vector,   &
+                    dVA_Load_Vector
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,     &
@@ -53,8 +53,8 @@ USE Variables_Matrices,  &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
                     Laplace_NNZ,                &
-                    zMA_First_Col_Storage,       &
-                    zMA_Last_Col_Storage
+                    dMA_First_Col_Storage,       &
+                    dMA_Last_Col_Storage
 
 USE Variables_Quadrature, &
             ONLY :  Local_Quad_DOF
@@ -98,15 +98,15 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     ALLOCATE( Laplace_Factored_ROW(0:Laplace_NNZ-1, 0:L_LIMIT) )
     ALLOCATE( Laplace_Factored_COL(0:NUM_R_NODES, 0:L_LIMIT) )
 
-    ALLOCATE( zMA_First_Col_Storage(0:DEGREE,0:L_LIMIT)   )
-    ALLOCATE( zMA_Last_Col_Storage(0:DEGREE,0:L_LIMIT)    )
+    ALLOCATE( dMA_First_Col_Storage(0:DEGREE,0:L_LIMIT)   )
+    ALLOCATE( dMA_Last_Col_Storage(0:DEGREE,0:L_LIMIT)    )
 
 
 END IF
 
 
-ALLOCATE( cVA_Load_Vector(1:NUM_R_NODES,1:LM_LENGTH,1)   )
-ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1) )
+ALLOCATE( dVA_Load_Vector(1:NUM_R_NODES,1:LM_LENGTH,1)   )
+ALLOCATE( dVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1) )
 
 
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
@@ -140,13 +140,13 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     DEALLOCATE( Laplace_Factored_ROW )
     DEALLOCATE( Laplace_Factored_COL )
 
-    DEALLOCATE( zMA_First_Col_Storage )
-    DEALLOCATE( zMA_Last_Col_Storage )
+    DEALLOCATE( dMA_First_Col_Storage )
+    DEALLOCATE( dMA_Last_Col_Storage )
 
 END IF
 
-DEALLOCATE( cVA_Load_Vector )
-DEALLOCATE( cVA_Coeff_Vector )
+DEALLOCATE( dVA_Load_Vector )
+DEALLOCATE( dVA_Coeff_Vector )
 
 DEALLOCATE( FP_Update_Vector )
 

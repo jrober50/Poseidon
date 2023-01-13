@@ -38,10 +38,14 @@ COMPLEX(KIND = idp), PUBLIC, ALLOCATABLE, DIMENSION(:,:,:,:)        :: Ylm_CC_DP
 REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Plm_Values
 REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Plm_dt_Values
 
-REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:)                     :: Nlm_Values
+REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:)                       :: Nlm_Values
 
-REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Alm_Values
-REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Alm_dp_Values
+REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Am_Values
+REAL(idp),  PUBLIC, ALLOCATABLE, DIMENSION(:,:,:)                   :: Am_dp_Values
+
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)                 ::  Slm_Elem_Values
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)                 ::  Slm_Elem_dt_Values
+COMPLEX(idp),   PUBLIC, ALLOCATABLE, DIMENSION(:,:)                 ::  Slm_Elem_dp_Values
 
 
 !===================================================================!

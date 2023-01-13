@@ -77,6 +77,7 @@ USE Variables_Mesh, &
 USE Variables_Tables, &
             ONLY :  Ylm_CC_Values,              &
                     Ylm_Elem_CC_Values,         &
+                    Slm_Elem_Values,            &
                     Lagrange_Poly_Table,        &
                     Level_dx,                   &
                     Level_Ratios
@@ -85,7 +86,8 @@ USE Variables_Derived, &
             ONLY :  LM_LENGTH
 
 USE Variables_Vectors, &
-            ONLY :  cVB_Load_Vector
+            ONLY :  cVB_Load_Vector,            &
+                    dVB_Load_Vector
 
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
@@ -143,6 +145,9 @@ USE Poseidon_MPI_Utilities_Module, &
 USE Initialization_Tables, &
             ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
                     Initialize_Ylm_Tables_On_Elem
+                    
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Slm_Tables_on_Elem
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -284,9 +289,6 @@ INTEGER                                         ::  iEOff(3)
 
 
 
-
-
-
 IF (Present(Level_Option)) THEN
     Level = Level_Option
 ELSE
@@ -327,7 +329,6 @@ FEM_Elem = iE(1)
 DROT = 0.5_idp * (rlocs(iE(1)+1) - rlocs(iE(1)))
 DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
 
-
 CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
 CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
 
@@ -335,6 +336,9 @@ CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
 #endif
 
 
+
+
+CALL Initialize_Slm_Tables_on_Elem(iE(2), iE(3))
 
 
 
@@ -446,34 +450,52 @@ DO d = 0,DEGREE
 #else
 
 
+!        RHS_TMP =  RHS_TMP                                          &
+!                + SUM( SourceTerm( :, rd, ui )                      &
+!                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+!                       * TP_Int_Weights(:)                     )    &
+!                * Lagrange_Poly_Table(d, rd, 0)                     &
+!                * R_Int_Weights(rd)
+!
+!
+!        MASS_TMP = MASS_TMP                                         &
+!                + SUM( SourceTerm( :, rd, ui )                      &
+!                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+!                       * TP_Int_Weights(:)                     )    &
+!                * R_Int_Weights(rd)
+
+
         RHS_TMP =  RHS_TMP                                          &
                 + SUM( SourceTerm( :, rd, ui )                      &
-                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+                       * Slm_Elem_Values( lm_loc, : )               &
                        * TP_Int_Weights(:)                     )    &
                 * Lagrange_Poly_Table(d, rd, 0)                     &
                 * R_Int_Weights(rd)
 
 
-        MASS_TMP = MASS_TMP                                         &
-                + SUM( SourceTerm( :, rd, ui )                      &
-                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
-                       * TP_Int_Weights(:)                     )    &
-                * R_Int_Weights(rd)
+!        MASS_TMP = MASS_TMP                                         &
+!                + SUM( SourceTerm( :, rd, ui )                      &
+!                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
+!                       * TP_Int_Weights(:)                     )    &
+!                * R_Int_Weights(rd)
+
+
+
 
 !        IF ( ui == iU(1) ) THEN
 !            PRINT*,Level,iE,lm_loc,d,rd
 !
 !            PRINT*,SourceTerm( :, rd, ui )
 !            PRINT*,"++++++++++++++++++++++"
-!            PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
+!            PRINT*,Slm_Elem_Values( lm_loc, : )
 !            PRINT*,"======================"
 !            PRINT*,TP_Int_Weights(:)
 !            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
-
-
-!            PRINT*,SUM( SourceTerm( :, rd, ui )             &
-!            * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))       &
-!            * TP_Int_Weights(:)                     ),      &
+!
+!
+!            PRINT*,SUM( SourceTerm( :, rd, ui )                      &
+!                       * Slm_Elem_Values( lm_loc, : )               &
+!                       * TP_Int_Weights(:)                     ),      &
 !            Lagrange_Poly_Table(d, rd, 0),                      &
 !            R_Int_Weights(rd)
 !        END IF
@@ -492,11 +514,13 @@ DO d = 0,DEGREE
                                             d, lm_loc   )
 
 
-    cVB_Load_Vector(Current_i_Location,iVB)          &
-        = cVB_Load_Vector(Current_i_Location,iVB)    &
+!    cVB_Load_Vector(Current_i_Location,iVB)          &
+!        = cVB_Load_Vector(Current_i_Location,iVB)    &
+!        + RHS_TMP
+
+    dVB_Load_Vector(Current_i_Location,iVB)          &
+        = dVB_Load_Vector(Current_i_Location,iVB)    &
         + RHS_TMP
-
-
     E_Mass = E_Mass + Mass_TMP
 
 !    PRINT*,Current_i_Location,cVB_Load_Vector(Current_i_Location,iVB)

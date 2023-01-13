@@ -53,11 +53,13 @@ USE Variables_Derived, &
 
 USE Variables_Vectors,  &
             ONLY :  cVB_Coeff_Vector,           &
-                    cVB_Load_Vector
-
+                    cVB_Load_Vector,            &
+                    dVB_Coeff_Vector,           &
+                    dVB_Load_Vector
+                    
 USE Variables_Matrices,  &
             ONLY :  iMB_Diagonals,              &
-                    zMB_Matrix_Banded,          &
+                    dMB_Matrix_Banded,          &
                     iMB_IPIV
 
 
@@ -111,7 +113,7 @@ INTEGER, DIMENSION(3), INTENT(IN)                                   :: iU
 INTEGER,               INTENT(IN)                                   :: iVB
 
 INTEGER                                                             ::  INFO
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                      ::  WORK_VEC
+REAL(idp), ALLOCATABLE, DIMENSION(:)                                ::  WORK_VEC
 
 INTEGER                                                             ::  Lower_Limit
 INTEGER                                                             ::  Upper_Limit
@@ -152,21 +154,23 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 
     ALLOCATE( WORK_VEC( 1:iVB_Prob_Dim ) )
-    Work_Vec = cVB_Load_Vector(:,iVB)
+    Work_Vec = dVB_Load_Vector(:,iVB)
 
-
+!    PRINT*,"Work_Vec"
+!    PRINT*,Work_Vec
 
     CALL DIRICHLET_BC_Beta_Banded(iVB_Prob_Dim, Work_Vec )
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
 !    PRINT*,Work_Vec
 
-    CALL ZGBTRS( 'N',                   &
+
+    CALL DGBTRS( 'N',                   &
                  iVB_Prob_Dim,          &
                  iMB_Diagonals,         &
                  iMB_Diagonals,         &
                  1,                     &
-                 zMB_Matrix_Banded,     &
+                 dMB_Matrix_Banded,     &
                  3*iMB_Diagonals+1,     &
                  iMB_IPIV,              &
                  Work_Vec,              &
@@ -181,7 +185,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 !    PRINT*,"Coeff_Vec"
 !    PRINT*,Work_Vec
 
-    cVB_Coeff_Vector(:,iVB) = Work_Vec(:)
+    dVB_Coeff_Vector(:,iVB) = Work_Vec(:)
 
 
     DEALLOCATE( Work_Vec )

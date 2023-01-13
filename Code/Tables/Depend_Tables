@@ -1,7 +1,11 @@
 Allocation_Tables.o:               \
   Allocation_Tables.F90            \
 
+Initialization_Tables_Slm.o:       \
+  Initialization_Tables_Slm.F90    \
+
 Initialization_Tables.o:           \
+  Initialization_Tables_Slm.o      \
   Initialization_Tables.F90        \
 
 

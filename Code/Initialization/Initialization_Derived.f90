@@ -84,7 +84,7 @@ IF ( DOMAIN_DIM == 1 ) THEN
 ELSE IF ( DOMAIN_DIM == 2 ) THEN
 
     LM_Length = L_Limit + 1
-    LM_Length = L_Limit + 1
+    LM_Short_Length = L_Limit + 1
 
 ELSE IF ( DOMAIN_DIM == 3 ) THEN
 
