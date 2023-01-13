@@ -185,7 +185,9 @@ CALL MPI_ALLREDUCE( MPI_IN_PLACE,       &
                     MPI_SUM,            &
                     POSEIDON_COMM_WORLD,&
                     ierr                )
-                    
+
+
+
 END SUBROUTINE Calc_ADM_Mass
 
 
@@ -267,7 +269,6 @@ nGhost_Vec = 0
 
 ADM_Mass = 0.0_idp
 Int_Val  = 0.0_idp
-nGhost_Vec = 0
 
 DO lvl = AMReX_Num_Levels-1,0,-1
 
@@ -314,8 +315,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
                 CALL Initialize_Ylm_Tables_On_Elem( te, pe, iEL, lvl )
                 iE = [re,te,pe]
-
-                CALL Calc_ADM_Mass_On_Element( iE, Int_Val )
+                CALL Calc_ADM_Mass_On_Element( iE, Int_Val, lvl )
 
                 ADM_Mass = ADM_Mass + Int_Val
             END IF
@@ -409,7 +409,7 @@ IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
 ELSE
 
-    CALL Calc_Int_Source_XCFC(  iE,              &
+    CALL Calc_Int_Source_XCFC(  iE, Level,       &
                                 DROT, DTOT, DPOT,&
                                 crlocs, rSquare, &
                                 TP_Sin_Val,      &
@@ -475,7 +475,6 @@ INTEGER                                                     ::  rd, td, pd, tpd
 
 
 #ifdef POSEIDON_AMREX_FLAG
-
     FEM_Elem = FEM_Elem_Map(iE(1),Level)
     DROT = Level_dx(Level,1)/2.0_idp
     DTOT = Level_dx(Level,2)/2.0_idp
@@ -564,7 +563,7 @@ END SUBROUTINE Calc_Int_Weights
 !          Calc_Int_Source_XCFC                                         !
 !                                                                       !
 !#######################################################################!
-SUBROUTINE Calc_Int_Source_XCFC(iE,        &
+SUBROUTINE Calc_Int_Source_XCFC(iE, Level,         &
                                 DROT, DTOT, DPOT,  &
                                 rlocs, rSquare,    &
                                 TP_Sin_Val,        &
@@ -573,6 +572,7 @@ SUBROUTINE Calc_Int_Source_XCFC(iE,        &
                                 Int_Source         )
 
 INTEGER,    INTENT(IN), DIMENSION(1:3)                      ::  iE
+INTEGER,    INTENT(IN)                                      ::  Level
 REAL(idp),  INTENT(IN)                                      ::  DROT, DTOT, DPOT
 
 REAL(idp),  INTENT(IN), DIMENSION(1:Num_R_Quad_Points)      ::  rlocs
@@ -604,7 +604,6 @@ INTEGER                                                         ::  tpd, rd, td,
 INTEGER                                                         ::  i, j, HEre
 
 
-INTEGER                                                         ::  Level = 0
 
 
 CALL Calc_Val_On_Elem_TypeA( iE, Cur_Val_Psi, iU_CF, Level )
