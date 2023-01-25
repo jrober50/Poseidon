@@ -49,7 +49,8 @@ USE Variables_Derived, &
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon,      &
-                    MasterID_Poseidon
+                    MasterID_Poseidon,  &
+                    nPROCS_Poseidon
 
 USE Variables_Functions, &
             ONLY :  Calc_3D_Values_At_Location
@@ -93,6 +94,7 @@ USE Flags_Core_Module, &
                     iPF_Core_Method_Mode,   &
                     iPF_Core_Method_Newtonian
 
+USE MPI
 IMPLICIT NONE
 
 
@@ -131,14 +133,17 @@ REAL(KIND = idp)                                        ::  Return_Beta3
 
 REAL(idp)                                               ::  Potential
 
+INTEGER                                                 ::  ierr, id
+
 INTEGER                                                 ::  Num_Samples = 20
 
 110 FORMAT (11X,A,17X,A,10X,A,12X,A,13X,A,14X,A)
 111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
 
 
-
 CALL TimerStart( Timer_Core_PrintResults )
+
+
 
 
 ALLOCATE( x_e(0:Num_Samples) )
@@ -162,7 +167,10 @@ phi = 0.5_idp * pi
 
 
 
+DO id = 0,nPROCS_Poseidon-1
 
+IF ( id == myID_Poseidon ) THEN
+PRINT*,"My id : ",myID_Poseidon
 
 IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
@@ -204,6 +212,10 @@ ELSE
 
 END IF ! iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian
 
+END IF
+
+CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+END DO
 
 CALL TimerStop( Timer_Core_PrintResults )
 

@@ -272,7 +272,7 @@ DO T_Index = T_Index_Min, T_Index_Max
         PRINT*,"Beginning of Loop            : ",Memory_Loop_Start
 #endif
 
-    Suffix_Tail = Letter_Table(nLevels)
+    Suffix_Tail = Letter_Table(nPROCS)
 
 
 
@@ -326,7 +326,7 @@ DO T_Index = T_Index_Min, T_Index_Max
             Write_Timetable_Option              = .TRUE.,               &
             Write_Sources_Option                = .FALSE.,              &
             Print_Condition_Option              = Print_Cond_Flag,      &
-            Write_Condition_Option              = .TRUE.,               &
+            Write_Condition_Option              = .FALSE.,               &
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
 
