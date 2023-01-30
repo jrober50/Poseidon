@@ -20,5 +20,6 @@ Memory_Routines_Module.o:     \
   Memory_Variables_Module.o   \
   Memory_Routines_Module.F90  \
 
-
+Diagnostics_Fixed_Point.o:    \
+  Diagnostics_Fixed_Point.F90 \
 

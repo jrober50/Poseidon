@@ -315,6 +315,7 @@ DO lvl = nLevels-1,0,-1
 
         CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
 
+        ! Fill Leaf Elements
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
@@ -363,6 +364,63 @@ DO lvl = nLevels-1,0,-1
         END DO ! pe
         END DO ! te
         END DO ! re
+        
+        
+        ! Fill Ghost Elements
+!        DO re = iEL(1),iEU(1)
+!        DO te = iEL(2),iEU(2)
+!        DO pe = iEL(3),iEU(3)
+!
+!            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
+!                iRE = FEM_Elem_Map(re,lvl)
+!                CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
+!
+!                DO pd = 1,Num_P_Quad_Points
+!                DO td = 1,NUM_T_QUAD_POINTS
+!                DO rd = 1,NUM_R_QUAD_POINTS
+!
+!                    tpd = Map_To_tpd(td,pd)
+!                    LagP = Lagrange_Poly(Int_R_Locations(rd),DEGREE,FEM_Node_xlocs)
+!                    Tmp_U_Value = 0.0_idp
+!
+!
+!                    DO d = 0,DEGREE
+!                        Current_Location = Map_To_FEM_Node(iRE,d)
+!                        Tmp_U_Value = Tmp_U_Value                                    &
+!                                    + SUM( cVA_Coeff_Vector(Current_Location,:,iU)  &
+!                                            * Ylm_Elem_Values( :, tpd )            ) &
+!                                    * LagP(d)
+!
+!                    END DO ! d Loop
+!
+!                    Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
+!                    Var_Holder_Elem(Here) = Tmp_U_Value
+!                END DO ! rd
+!                END DO ! td
+!                END DO ! pd
+!
+!
+!
+!                DO Output_Here = 1,Num_DOF
+!
+!                    Here = (iU-1)*Num_DOF+Output_Here
+!
+!                    Result_PTR(re,te,pe,Here) = DOT_PRODUCT( Translation_Matrix(:,Output_Here), &
+!                                                             Var_Holder_Elem(:)         )
+!
+!                END DO ! Output_Here
+!
+!            END IF !  Mask_PTR(RE,TE,PE,1) == iLeaf
+!
+!        END DO ! pe
+!        END DO ! te
+!        END DO ! re
+        
+        
+        
+        
+        
+        
 
     END DO
 

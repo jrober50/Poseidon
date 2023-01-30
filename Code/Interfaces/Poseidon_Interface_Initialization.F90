@@ -127,6 +127,10 @@ USE Variables_AMReX_Source, &
                     iTrunk,                 &
                     iLeaf
 
+USE Variables_FP, &
+            ONLY :  FP_Diagnostics_Flag
+
+
 USE Variables_Interface, &
             ONLY :  Caller_R_Units
 
@@ -252,10 +256,11 @@ SUBROUTINE Initialize_Poseidon( Source_NE,                          &
                                 Source_DT_Option,                       &
                                 Source_DP_Option,                       &
                                 Integration_NQ_Option,              &
-                                Max_Iterations_Option,                  &
+                                Max_Iterations_Option,              &
                                 Convergence_Criteria_Option,        &
-                                Anderson_M_Option,                      &
-                                Eq_Flags_Option,                &
+                                Anderson_M_Option,                  &
+                                Fixed_Point_Diagnostics_Option,     &
+                                Eq_Flags_Option,                    &
                                 AMReX_FEM_Refinement_Option,        &
                                 AMReX_Integral_Refinement_Option,   &
                                 Newtonian_Mode_Option,              &
@@ -273,6 +278,7 @@ SUBROUTINE Initialize_Poseidon( Source_NE,                          &
                                 Write_Sources_Option,               &
                                 Print_Condition_Option,             &
                                 Write_Condition_Option,             &
+                                Write_FP_Diagnostics_Option,        &
                                 Suffix_Flag_Option,                 &
                                 Suffix_Tail_Option,                 &
                                 Frame_Option                        )
@@ -325,6 +331,8 @@ LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Sources_Op
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Print_Condition_Option
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Condition_Option
 
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_FP_Diagnostics_Option
+
 CHARACTER(LEN=10),       INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
 CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Frame_Option
@@ -332,7 +340,7 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  Frame_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Max_Iterations_Option
 REAL(idp),               INTENT(IN), OPTIONAL               ::  Convergence_Criteria_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Anderson_M_Option
-
+LOGICAL,                 INTENT(IN), OPTIONAL               ::  Fixed_Point_Diagnostics_Option
 
 
 CALL Init_Timers
@@ -415,6 +423,15 @@ CALL Set_Caller_Data(   Source_NQ,                      &
 #endif
 
 
+IF ( PRESENT(Fixed_Point_Diagnostics_Option) ) THEN
+    FP_Diagnostics_Flag = Fixed_Point_Diagnostics_Option
+ELSE
+    FP_Diagnostics_Flag = .FALSE.
+END IF
+
+
+
+
 CALL Init_IO_Params(    WriteAll_Option,                &
                         Print_Setup_Option,             &
                         Write_Setup_Option,             &
@@ -423,8 +440,9 @@ CALL Init_IO_Params(    WriteAll_Option,                &
                         Print_Timetable_Option,         &
                         Write_Timetable_Option,         &
                         Write_Sources_Option,           &
-                        Print_Condition_Option,     &
-                        Write_Condition_Option,     &
+                        Print_Condition_Option,         &
+                        Write_Condition_Option,         &
+                        Write_FP_Diagnostics_Option,    &
                         Suffix_Flag_Option,             &
                         Suffix_Tail_Option,             &
                         Frame_Option                    )

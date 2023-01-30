@@ -1,3 +1,6 @@
+Matrix_CCS_Operations.o:                \
+  Matrix_CCS_Operations.f90             \
+
 Matrix_Boundary_Conditions.o:           \
   Matrix_Boundary_Conditions.f90        \
 

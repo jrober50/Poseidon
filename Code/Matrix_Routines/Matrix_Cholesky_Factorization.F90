@@ -60,6 +60,10 @@ USE Variables_BC, &
                 INNER_CFA_BC_TYPE,          &
                 OUTER_CFA_BC_TYPE
 
+USE Variables_FP, &
+        ONLY :  FP_Diagnostics_Flag,        &
+                FP_Iter_Matrix_Storage
+
 USE Variables_Matrices, &
         ONLY :  zMA_First_Col_Storage,   &
                 zMA_Last_Col_Storage,    &
@@ -373,7 +377,9 @@ Factored_NNZ =  New_NNZ
 
 ALLOCATE( Laplace_Factored_VAL(0:Factored_NNZ-1, 0:L_LIMIT) )
 ALLOCATE( Laplace_Factored_ROW(0:Factored_NNZ-1, 0:L_LIMIT) )
-
+IF ( FP_Diagnostics_Flag ) THEN
+    ALLOCATE( FP_Iter_Matrix_Storage(0:Factored_NNZ-1, 0:L_LIMIT) )
+END IF
 
 !
 !   Transfer the new values from function variables to the global variables.

@@ -50,10 +50,18 @@ USE IO_Print_Results, &
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results,        &
                     Write_Final_Results_AMReX
+                    
+USE IO_Fixed_Point_Diagnostics, &
+            ONLY :  Output_FP_Diagnostics
 
 USE Poseidon_Interface_Initial_Guess,       &
             ONLY :  Poseidon_Initialize_Flat_Guess
 
+
+USE Variables_FP, &
+            ONLY :  FP_Diagnostics_Flag
+            
+            
 USE Flags_Check_Routines, &
             ONLY :  Poseidon_Run_Check
 
@@ -136,6 +144,11 @@ Poseidon_Frame = Poseidon_Frame + 1
 
 IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
     Call Print_Results()
+END IF
+
+
+IF ( FP_Diagnostics_Flag ) THEN
+    CALL Output_FP_Diagnostics()
 END IF
 
 IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN

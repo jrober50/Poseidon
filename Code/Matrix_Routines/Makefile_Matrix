@@ -1,6 +1,7 @@
 POSEIDON_MATRIX = \
-  Matrix_Boundary_Conditions.f90    \
+  Matrix_CCS_Operations.f90             \
+  Matrix_Boundary_Conditions.f90        \
   Matrix_Vector_Laplacian_Routines.F90  \
-  Matrix_Cholesky_Factorization.F90 \
-  Matrix_Initialization.f90         \
+  Matrix_Cholesky_Factorization.F90     \
+  Matrix_Initialization.f90             \
 

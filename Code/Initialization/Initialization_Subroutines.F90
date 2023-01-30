@@ -66,7 +66,8 @@ USE Variables_IO, &
 
 USE Variables_FP, &
             ONLY :  FP_Anderson_M,          &
-                    FP_Anderson_M_Default
+                    FP_Anderson_M_Default,  &
+                    FP_Diagnostics_Flag
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,    &
@@ -124,7 +125,8 @@ USE Flags_IO_Module, &
                     iPF_IO_Write_Timetable,     &
                     iPF_IO_Write_Sources,       &
                     iPF_IO_Print_Cond,          &
-                    iPF_IO_Write_Cond
+                    iPF_IO_Write_Cond,          &
+                    iPF_IO_Write_FP_Diagnostics
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,             &
@@ -217,6 +219,7 @@ SUBROUTINE Init_IO_Params(  WriteAll_Option,            &
                             Write_Sources_Option,       &
                             Print_Condition_Option,     &
                             Write_Condition_Option,     &
+                            Write_FP_Diagnostics_Option,&
                             Suffix_Flag_Option,         &
                             Suffix_Tail_Option,         &
                             Frame_Option                )
@@ -233,6 +236,7 @@ LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Sources_Option
 LOGICAL,            INTENT(IN), OPTIONAL               ::  Print_Condition_Option
 LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Condition_Option
 
+LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_FP_Diagnostics_Option
 CHARACTER(LEN=10),  INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
 CHARACTER(LEN=1),   INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
 INTEGER,            INTENT(IN), OPTIONAL               ::  Frame_Option
@@ -360,6 +364,20 @@ END IF
 
 
 
+
+!
+!   Fixed Point Diagnostics
+!
+
+PRINT*,"Write_FP_Diagnostics_Option", Write_FP_Diagnostics_Option
+IF ( PRESENT(Write_FP_Diagnostics_Option ) ) THEN
+    IF ( Write_FP_Diagnostics_Option ) THEN
+        lPF_IO_Flags(iPF_IO_Write_FP_Diagnostics) = .TRUE.
+        FP_Diagnostics_Flag = .TRUE.
+    ELSE
+        lPF_IO_Flags(iPF_IO_Write_FP_Diagnostics) = .FALSE.
+    END IF
+END IF
 
 
 

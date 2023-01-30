@@ -8,10 +8,12 @@ POSEIDON_DIAGNOSTICS_MEMORY = \
   Memory_IO_Module.F90        \
   Memory_Routines_Module.F90  \
 
+POSEIDON_DIAGNOSTICS_FP =     \
+  Diagnostics_Fixed_Point.F90 \
 
 POSEIDON_DIAGNOSTICS = \
   $(POSEIDON_DIAGNOSTICS_TIMER)  \
   $(POSEIDON_DIAGNOSTICS_MEMORY) \
-
+  $(POSEIDON_DIAGNOSTICS_FP)     \
 
 

@@ -72,9 +72,7 @@ USE Variables_Matrices, &
 USE Variables_FP, &
             ONLY :  FP_Update_Vector,       &
                     FP_Laplace_Vector,      &
-                    FP_Laplace_Vector_Beta, &
-                    FP_Residual_Vector,     &
-                    FP_Residual_Vector_Beta
+                    FP_Residual_Vector
                     
 
 
@@ -132,10 +130,8 @@ ALLOCATE( cVB_Coeff_Vector(1:iVB_Prob_Dim,1:2) )
 ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
 
 ALLOCATE( FP_Laplace_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)  )
-ALLOCATE( FP_Laplace_Vector_Beta(1:iVB_Prob_Dim)  )
 
 ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:5)  )
-ALLOCATE( FP_Residual_Vector_Beta(1:iVB_Prob_Dim)  )
 
 !ALLOCATE( FP_Coeff_Vector(1:Prob_Dim) )
 !ALLOCATE( FP_Update_Vector(1:Prob_Dim) )
@@ -190,9 +186,7 @@ DEALLOCATE( cVA_Coeff_Vector )
 DEALLOCATE( cVB_Coeff_Vector )
 DEALLOCATE( FP_Update_Vector )
 DEALLOCATE( FP_Laplace_Vector )
-DEALLOCATE( FP_Laplace_Vector_Beta )
 DEALLOCATE( FP_Residual_Vector )
-DEALLOCATE( FP_Residual_Vector_Beta )
 
 
 

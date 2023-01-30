@@ -76,10 +76,6 @@ USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,        &
                     AMReX_Num_Levels
 
-USE Variables_IO, &
-            ONLY :  Frame_Update_Table,         &
-                    Frame_Residual_Table,       &
-                    Iteration_Histogram
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Tables_Flags,    &
@@ -180,15 +176,6 @@ ALLOCATE( Lagrange_Poly_Table(0:DEGREE, 1:NUM_R_QUAD_POINTS, 0:2)   )
 ALLOCATE( LPT_LPT( 1:NUM_R_QUAD_POINTS,0:DEGREE,0:DEGREE,0:1,0:2)       )
 
 
-
-ALLOCATE( Frame_Update_Table(1:MAX_ITERATIONS,1:5) )
-ALLOCATE( Frame_Residual_Table(1:3, 1:MAX_ITERATIONS,1:5) )
-ALLOCATE( Iteration_Histogram(1:MAX_ITERATIONS) )
-
-Frame_Update_Table = 0.0_idp
-Frame_Residual_Table = 0.0_idp
-Iteration_Histogram = 0
-
 lPF_Init_Tables_Flags(iPF_Init_Tables_Alloc) = .TRUE.
 
 END SUBROUTINE Allocate_Tables
@@ -240,11 +227,6 @@ DEALLOCATE( M_Values )
 
 DEALLOCATE( Lagrange_Poly_Table )
 DEALLOCATE( LPT_LPT )
-
-DEALLOCATE( Frame_Update_Table )
-DEALLOCATE( Frame_Residual_Table )
-DEALLOCATE( ITERATION_HISTOGRAM )
-
 
 END SUBROUTINE Deallocate_Tables
 

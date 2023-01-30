@@ -16,8 +16,8 @@ IO_Write_Final_Results.o:        \
 IO_Linear_System.o:             \
   IO_Linear_System.f90          \
 
-IO_Convergence_Output.o:        \
-  IO_Convergence_Output.f90     \
+IO_Fixed_Point_Diagnostics.o:        \
+  IO_Fixed_Point_Diagnostics.f90     \
 
 IO_Condition_Number_Output.o:   \
   IO_Condition_Number_Output.f90\

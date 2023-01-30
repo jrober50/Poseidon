@@ -5,7 +5,7 @@ POSEIDON_IO = \
   IO_Print_Results.f90          \
   IO_Write_Final_Results.F90    \
   IO_Linear_System.f90          \
-  IO_Convergence_Output.f90     \
+  IO_Fixed_Point_Diagnostics.f90     \
   IO_Condition_Number_Output.f90\
   Parameter_Reader_Poseidon.f90 \
 

@@ -170,7 +170,6 @@ phi = 0.5_idp * pi
 DO id = 0,nPROCS_Poseidon-1
 
 IF ( id == myID_Poseidon ) THEN
-PRINT*,"My id : ",myID_Poseidon
 
 IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 

@@ -31,7 +31,8 @@ USE Poseidon_Kinds_Module, &
 
 USE Poseidon_Parameters, &
             ONLY :  DEGREE,                 &
-                    L_LIMIT
+                    L_LIMIT,                &
+                    Max_Iterations
 
 Use Variables_Derived, &
             ONLY :  Num_R_Nodes,            &
@@ -43,14 +44,20 @@ Use Variables_Derived, &
 
 USE Variables_FP,  &
             ONLY :  FP_Update_Vector,       &
+                    FP_Residual_Vector,     &
                     FP_Laplace_Vector,      &
-                    FP_Laplace_Vector_Beta, &
-                    FP_Laplace_Vector_X
+                    FP_Diagnostics_Flag,    &
+                    FP_Iter_Matrix_Storage, &
+                    FP_Iter_Load_Storage,   &
+                    FP_Iteration_Log,       &
+                    Resid_Norms,            &
+                    Update_Norms
+            
 
 USE Variables_Vectors,  &
-            ONLY :  cVA_Load_Vector,         &
-                    cVB_Load_Vector,         &
-                    cVA_Coeff_Vector,          &
+            ONLY :  cVA_Load_Vector,        &
+                    cVB_Load_Vector,        &
+                    cVA_Coeff_Vector,       &
                     cVB_Coeff_Vector
 
 USE Variables_Matrices,  &
@@ -127,7 +134,21 @@ ALLOCATE( cVB_Load_Vector(1:iVB_Prob_Dim,1:2) )
 ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
 ALLOCATE( cVB_Coeff_Vector(1:iVB_Prob_Dim,1:2) )
 
-ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
+IF ( FP_Diagnostics_Flag ) THEN
+    ALLOCATE( FP_Update_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
+    ALLOCATE( FP_Laplace_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
+    ALLOCATE( FP_Residual_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
+    
+    ALLOCATE(FP_Iter_Load_Storage(1:NUM_R_NODES,1:LM_LENGTH) )
+    
+    ALLOCATE( FP_Iteration_Log(1:2) )
+    
+    ALLOCATE( Resid_Norms(1:3,1:LM_LENGTH,1:Max_Iterations,1:8) )
+    ALLOCATE( Update_Norms(1:3,1:Max_Iterations,1:8) )
+    
+    Resid_Norms = 0.0_idp
+    Update_Norms = 0.0_idp
+END IF
 
 lPF_Init_Flags(iPF_Init_Alloc_LinSys) = .TRUE.
 
@@ -180,7 +201,17 @@ DEALLOCATE( cVB_Load_Vector )
 DEALLOCATE( cVA_Coeff_Vector )
 DEALLOCATE( cVB_Coeff_Vector )
 
-DEALLOCATE( FP_Update_Vector )
+IF ( FP_Diagnostics_Flag ) THEN
+    DEALLOCATE( FP_Update_Vector )
+    DEALLOCATE( FP_Residual_Vector )
+    DEALLOCATE( FP_Laplace_Vector )
+    
+    IF ( ALLOCATED(FP_Iter_Matrix_Storage)) THEN
+        DEALLOCATE( FP_Iter_Matrix_Storage )
+    END IF
+    
+    DEALLOCATE(FP_Iter_Load_Storage)
+END IF
 
 lPF_Init_Flags(iPF_Init_Alloc_LinSys) = .FALSE.
 

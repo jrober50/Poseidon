@@ -36,15 +36,15 @@ USE Poseidon_Parameters, &
                     Convergence_Criteria
 
 USE Parameters_Variable_Indices, &
-            ONLY :  iU_CF,                        &
-                    iU_LF,                        &
-                    iU_S1,                        &
-                    iU_S2,                        &
-                    iU_S3,                        &
-                    iU_X1,                        &
-                    iU_X2,                        &
-                    iU_X3,                       &
-                    iVB_S,                       &
+            ONLY :  iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X3,                      &
+                    iVB_S,                      &
                     iVB_X
 
 USE Poseidon_IO_Parameters, &
@@ -59,7 +59,14 @@ USE Variables_Derived, &
             ONLY :  Var_Dim
 
 USE Variables_FP, &
-            ONLY :  FP_Anderson_M
+            ONLY :  FP_Anderson_M,              &
+                    FP_Diagnostics_Flag,        &
+                    FP_Iteration_Log,           &
+                    Update_Norms
+            
+USE Variables_Vectors,  &
+            ONLY :  cVA_Load_Vector,            &
+                    cVA_Coeff_Vector
 
 USE XCFC_Load_Vector_TypeA_Module, &
             ONLY :  XCFC_Calc_Load_Vector_TypeA
@@ -73,6 +80,10 @@ USE Functions_Coeffs_Module, &
 
 USE IO_Print_Results, &
             ONLY :  Print_Results
+            
+            
+USE Diagnostics_Fixed_Point, &
+            ONLY :  Calculate_Residual_A
             
 #ifdef POSEIDON_MEMORY_FLAG
 USE Poseidon_Memory_Routines, &
@@ -162,7 +173,6 @@ IF ( Verbose_Flag ) THEN
     WRITE(Message,'(A,A,A)')'Beginning ',TRIM(CFA_Var_Names(iU)),' fixed point iterations.'
     CALL Run_Message(TRIM(Message))
 END IF
-
 
 
 
@@ -331,7 +341,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
     
     ! Check for Convergence
-    CALL Convergence_Check( FVectorM, Cur_Iteration, Converged )
+    CALL Convergence_Check( FVectorM, Cur_Iteration, iU, Converged )
 
 
 
@@ -371,6 +381,12 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         END IF
     END IF
 #endif
+
+
+    IF ( FP_Diagnostics_Flag ) THEN
+        CALL Calculate_Residual_A( Cur_Iteration, iU )
+    END IF
+
 
 
     !   Calculate Source Vector with updated solution
@@ -436,14 +452,25 @@ END SUBROUTINE XCFC_Fixed_Point
 !           Convergence_Check                                   !
 !                                                               !
  !#############################################################!
-SUBROUTINE Convergence_Check( Update, Iter, Flag )
+SUBROUTINE Convergence_Check( Update, Iter, iU, Flag )
 
 
 COMPLEX(idp),DIMENSION(Var_Dim), INTENT(IN)         :: Update
 INTEGER,                         INTENT(IN)         :: Iter
+INTEGER,                         INTENT(IN)         :: iU
 LOGICAL,                         INTENT(INOUT)      :: Flag
 
 CHARACTER(LEN = 300)                                ::  Message
+
+
+IF ( FP_Diagnostics_Flag ) THEN
+    Update_Norms(1,iter,iU) = SUM(ABS(Update) )
+    Update_Norms(2,iter,iU) = SQRT( REAL( DOT_PRODUCT(Update,Update) ) )
+    Update_Norms(3,iter,iU) = MAXVAL( ABS(Update) )
+END IF
+
+
+!PRINT*,"Updates : ",Update_Norms(1,iU),Update_Norms(2,iU),Update_Norms(3,iU)
 
 
 IF ( Verbose_Flag ) THEN
@@ -469,6 +496,9 @@ IF ( Iter == Max_Iterations ) THEN
 END IF
 
 
+IF ( Flag ) THEN
+    FP_Iteration_Log(iU) = Iter
+END IF
 
 
 END SUBROUTINE Convergence_Check

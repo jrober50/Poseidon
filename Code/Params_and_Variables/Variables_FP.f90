@@ -25,23 +25,19 @@ USE Poseidon_Kinds_Module, &
 
 IMPLICIT NONE
 
-
+LOGICAL                                                 ::  FP_Diagnostics_Flag = .FALSE.
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
 COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_Beta
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_Beta
+INTEGER,        ALLOCATABLE,    DIMENSION(:)            ::  FP_Iteration_Log
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_X
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_X
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Iter_Matrix_Storage
+COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Iter_Load_Storage
 
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:,:)      ::  Resid_Norms
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  Update_Norms
 
-
-
-
-
-! Cholesky Factorizatio Flag
 INTEGER, PUBLIC                                         ::  FP_Anderson_M = 3
 INTEGER, PUBLIC, PARAMETER                              ::  FP_Anderson_M_Default = 3
 

@@ -62,7 +62,10 @@ USE Variables_Matrices,  &
                     Laplace_Factored_Row
 
 USE Variables_FP,  &
-            ONLY :  FP_Update_Vector
+            ONLY :  FP_Update_Vector,               &
+                    FP_Iter_Matrix_Storage,         &
+                    FP_Iter_Load_Storage,           &
+                    FP_Diagnostics_Flag
 
 USE Matrix_Cholesky_Factorization_Module,   &
             ONLY :  CCS_Back_Substitution,          &
@@ -181,14 +184,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
         WORK_VEC = -cVA_Load_Vector(:,lm_loc,iU)
         WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l)
 
-!        PRINT*,WORK_ELEM_VAL(:)
 
-
-!        PRINT*,"Work_Vec, Type A l = ",l," m = ",m
-!        PRINT*,Work_Vec
-!        PRINT*,"+++++++++++++++++++++++++++++++++++"
-
-!        STOP
         CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                 Factored_NNZ,               &
                                 l,                          &
@@ -207,8 +203,12 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                                 WORK_ELEM_VAL,              &
                                 Laplace_Factored_COL(:,l),  &
                                 Laplace_Factored_ROW(:,l),  &
-                                WORK_VEC                    )
+                                Work_Vec                    )
 
+        IF ( FP_Diagnostics_Flag ) THEN
+            FP_Iter_Matrix_Storage(:,l) = Work_Elem_Val
+            FP_Iter_Load_Storage(:,lm_loc) = Work_Vec
+        END IF
 
 
         CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
@@ -229,8 +229,9 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 !        PRINT*,"After"
 !        PRINT*,Work_Vec(:)
-
-        FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,iU)
+        IF ( FP_Diagnostics_Flag ) THEN
+            FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-cVA_Coeff_Vector(:,lm_loc,iU)
+        END IF
         cVA_Coeff_Vector( :,lm_loc,iU) = WORK_VEC(:)
 
 

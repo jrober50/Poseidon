@@ -166,8 +166,6 @@ CALL Dirichlet_BC_Beta_Banded_Mat()
 CALL Jacobi_PC_MVL_Banded()
 
 
-
-
 CALL ZGBTRF( iVB_Prob_Dim,              &
              iVB_Prob_Dim,              &
              iMB_Diagonals,             &

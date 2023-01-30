@@ -65,8 +65,8 @@ USE CFA_System_Solvers_Module, &
 USE IO_Print_Results, &
             ONLY :  Print_Results
 
-USE IO_Convergence_Output,  &
-            ONLY :  Output_Convergence_Reports
+USE IO_Fixed_Point_Diagnostics,  &
+            ONLY :  Output_FP_Diagnostics
 
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
@@ -271,7 +271,7 @@ CALL Deallocate_CFA_Source_Variables()
 
 CALL Write_Final_Results()
 
-CALL Output_Convergence_Reports()
+CALL Output_FP_Diagnostics()
 
 END SUBROUTINE CFA_Method
 
