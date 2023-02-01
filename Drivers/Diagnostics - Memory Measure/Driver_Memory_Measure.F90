@@ -62,9 +62,6 @@ USE Driver_SetBC_Module, &
 USE Driver_SetGuess_Module, &
             ONLY :  Driver_SetGuess
 
-USE Driver_ReturnTest,  &
-            ONLY :  Return_Test
-
 USE Poseidon_AMReX_Input_Parsing_Module, &
             ONLY :  Init_AMReX_Parameters
 
@@ -407,17 +404,6 @@ DO Loop = Loop_Min, Loop_Max
     CALL Poseidon_Mark_Memory(Memory_Loop_After_Run,Memory_HWM)
     PRINT*,"After Poseidon_Run                  : ",Memory_Loop_After_Run
 #endif
-
-
-    !############################################################!
-    !#                                                          #!
-    !#                       Output Results                     #!
-    !#                                                          #!
-    !############################################################!
-    CALL Return_Test(nLevels, NQ, MF_Source)
-
-!    CALL Calc_ADM_Mass(ADM_Mass)
-!    PRINT*,"ADM Mass",ADM_Mass
 
 #ifdef POSEIDON_MEMORY_FLAG
     CALL Poseidon_Mark_Memory(Memory_Loop_End,Memory_HWM)

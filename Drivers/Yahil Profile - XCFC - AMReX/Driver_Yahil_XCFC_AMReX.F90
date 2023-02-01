@@ -198,8 +198,8 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
@@ -272,7 +272,7 @@ DO T_Index = T_Index_Min, T_Index_Max
         PRINT*,"Beginning of Loop            : ",Memory_Loop_Start
 #endif
 
-    Suffix_Tail = Letter_Table(nPROCS)
+    Suffix_Tail = Letter_Table(T_Index)
 
 
 
@@ -316,6 +316,7 @@ DO T_Index = T_Index_Min, T_Index_Max
             Eq_Flags_Option                     = CFA_Eqs,              &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
+            Fixed_Point_Diagnostics_Option      = .TRUE.,               &
             Verbose_Option                      = Verbose,              &
             WriteAll_Option                     = .FALSE.,              &
             Print_Setup_Option                  = Print_Setup_Flag,     &
@@ -326,7 +327,8 @@ DO T_Index = T_Index_Min, T_Index_Max
             Write_Timetable_Option              = .TRUE.,               &
             Write_Sources_Option                = .FALSE.,              &
             Print_Condition_Option              = Print_Cond_Flag,      &
-            Write_Condition_Option              = .FALSE.,               &
+            Write_Condition_Option              = .FALSE.,              &
+            Write_FP_Diagnostics_Option         = .TRUE.,               &
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
 

@@ -26,7 +26,7 @@ USE_OMP   = FALSE
 
 DIM       = 1
 
-EBASE     = Yahil_XCFC_AMReX
+EBASE     = Yahil_Profile_XCFC
 
 
 
@@ -58,7 +58,7 @@ include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 
 
 # Include directories and source files needed from Poseidon
-POSEIDON_MACHINE_NAME ?= jrober
+POSEIDON_MACHINE_NAME ?= Summit
 include $(POSEIDON_DIR)/Build/Make.Poseidon
 
 
