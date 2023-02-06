@@ -1,3 +1,6 @@
+IO_Suffix.o:                    \
+  IO_Suffix.F90                 \
+
 IO_Output_Sources.o:            \
   IO_Output_Sources.F90         \
 
