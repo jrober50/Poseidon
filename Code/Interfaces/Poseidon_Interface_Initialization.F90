@@ -280,7 +280,9 @@ SUBROUTINE Initialize_Poseidon( Source_NE,                          &
                                 Write_Condition_Option,             &
                                 Write_FP_Diagnostics_Option,        &
                                 Suffix_Flag_Option,                 &
+                                Suffix_Param_Type_Option,           &
                                 Suffix_Tail_Option,                 &
+                                Suffix_Input_Option,                &
                                 Frame_Option                        )
 
 
@@ -334,7 +336,9 @@ LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_Condition_
 LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_FP_Diagnostics_Option
 
 CHARACTER(LEN=10),       INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
+INTEGER,                 INTENT(IN), OPTIONAL               ::  Suffix_Param_Type_Option
 CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
+CHARACTER(LEN=*),        INTENT(IN), OPTIONAL               ::  Suffix_Input_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Frame_Option
 
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Max_Iterations_Option
@@ -444,7 +448,9 @@ CALL Init_IO_Params(    WriteAll_Option,                &
                         Write_Condition_Option,         &
                         Write_FP_Diagnostics_Option,    &
                         Suffix_Flag_Option,             &
+                        Suffix_Param_Type_Option,       &
                         Suffix_Tail_Option,             &
+                        Suffix_Input_Option,            &
                         Frame_Option                    )
 
 

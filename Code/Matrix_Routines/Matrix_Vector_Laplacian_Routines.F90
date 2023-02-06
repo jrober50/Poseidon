@@ -189,7 +189,7 @@ CALL TimerStop( Timer_Banded_Factorization )
 
 
 
-CALL IO_Output_Condition_Number()
+!CALL IO_Output_Condition_Number()
 
 
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) = .TRUE.

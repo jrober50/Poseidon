@@ -211,7 +211,12 @@ IF ( FP_Diagnostics_Flag ) THEN
     END IF
     
     DEALLOCATE(FP_Iter_Load_Storage)
+    DEALLOCATE(FP_Iteration_Log)
+    DEALLOCATE( Resid_Norms )
+    DEALLOCATE( Update_Norms)
 END IF
+
+
 
 lPF_Init_Flags(iPF_Init_Alloc_LinSys) = .FALSE.
 

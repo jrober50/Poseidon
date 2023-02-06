@@ -80,7 +80,6 @@ USE ADM_Mass_Module, &
 USE Poseidon_Memory_Routines, &
             ONLY :  Poseidon_Mark_Memory
             
-            
 #ifdef POSEIDON_MEMORY_FLAG
 USE Memory_Variables_Module, &
             ONLY :  Memory_Start,               &
@@ -125,19 +124,15 @@ LOGICAL                                                 ::  Print_Cond_Flag
 CHARACTER(LEN=10)                                       ::  Suffix_Input
 CHARACTER(LEN=1)                                        ::  Suffix_Tail
 
-INTEGER, DIMENSION(3)                                   ::  NQ
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_T_Quad
-REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_P_Quad
+INTEGER,            DIMENSION(3)                        ::  NQ
+REAL(idp),          DIMENSION(:),   ALLOCATABLE         ::  Input_R_Quad
+REAL(idp),          DIMENSION(:),   ALLOCATABLE         ::  Input_T_Quad
+REAL(idp),          DIMENSION(:),   ALLOCATABLE         ::  Input_P_Quad
 REAL(idp)                                               ::  Left_Limit
 REAL(idp)                                               ::  Right_Limit
 
 
 INTEGER                                                 ::  myID, nPROCS
-
-INTEGER                                                 ::  M_Index
-INTEGER                                                 ::  M_Index_Min
-INTEGER                                                 ::  M_Index_Max
 
 INTEGER                                                 ::  T_Index
 INTEGER                                                 ::  T_Index_Min
@@ -149,16 +144,18 @@ INTEGER                                                 ::  Loop_Max
 
 REAL(idp)                                               ::  Kappa
 REAL(idp)                                               ::  Gamma
-REAL(idp), DIMENSION(3)                                 ::  Yahil_Params
+REAL(idp),          DIMENSION(3)                        ::  Yahil_Params
 
 REAL(idp)                                               ::  ADM_Mass
 
 INTEGER                                                 ::  IRL
 INTEGER                                                 ::  IFL
 
-CHARACTER(LEN=1), DIMENSION(1:10)                       ::  Letter_Table
-REAL(idp), DIMENSION(1:6)                               ::  Time_Values
-INTEGER, DIMENSION(1:2)                                 ::  L_Values
+CHARACTER(LEN=1),   DIMENSION(1:10)                     ::  Letter_Table
+REAL(idp),          DIMENSION(1:6)                      ::  Time_Values
+INTEGER,            DIMENSION(1:2)                      ::  L_Values
+CHARACTER(LEN=40)                                       ::  Suffix_Return
+
 
 Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
 
@@ -177,10 +174,7 @@ Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_id
 L_Values            = (/ 5, 10 /)
 
 T_Index_Min         =  1
-T_Index_Max         =  1
-
-M_Index_Min         =  3
-M_Index_Max         =  3
+T_Index_Max         =  6
 
 IFL                 =  0
 IRL                 =  0
@@ -195,11 +189,11 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
 
-Print_Results_Flag  = .TRUE.
-!Print_Results_Flag  = .FALSE.
+!Print_Results_Flag  = .TRUE.
+Print_Results_Flag  = .FALSE.
 
 !Print_Setup_Flag    = .TRUE.
 Print_Setup_Flag    = .FALSE.
@@ -261,7 +255,6 @@ CALL amrex_amrcore_init()
 CALL Init_AMReX_Parameters()
 
 
-DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
 
 #ifdef POSEIDON_MEMORY_FLAG
@@ -270,8 +263,6 @@ DO T_Index = T_Index_Min, T_Index_Max
 #endif
 
     Suffix_Tail = Letter_Table(T_Index)
-
-
 
 
     ALLOCATE( Input_R_Quad(1:NQ(1)) )
@@ -327,6 +318,7 @@ DO T_Index = T_Index_Min, T_Index_Max
             Write_Condition_Option              = .FALSE.,              &
             Write_FP_Diagnostics_Option         = .TRUE.,               &
             Suffix_Flag_Option                  = Suffix_Input,         &
+            Suffix_Param_Type_Option            = 2,                    &
             Suffix_Tail_Option                  = Suffix_Tail           )
 
 #ifdef POSEIDON_MEMORY_FLAG
@@ -407,7 +399,6 @@ DO T_Index = T_Index_Min, T_Index_Max
     CALL Output_Poseidon_Memory_Loop_Report( Loop )
 
 END DO ! T_Index
-END DO ! M_Index
 
 
 

@@ -495,11 +495,11 @@ IF ( Iter == Max_Iterations ) THEN
     Flag = .TRUE.
 END IF
 
-
+IF ( FP_Diagnostics_Flag ) THEN
 IF ( Flag ) THEN
     FP_Iteration_Log(iU) = Iter
 END IF
-
+END IF
 
 END SUBROUTINE Convergence_Check
 
