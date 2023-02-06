@@ -15,6 +15,13 @@ Poseidon_AMReX_BoxArraySize.o:                     \
   Poseidon_AMReX_BoxArraySize_fi.o                 \
   Poseidon_AMReX_BoxArraySize.F90                  \
 
+Poseidon_AMReX_BuidMask_fi.o                       \
+  Poseidon_AMReX_BuildMask_fi.cpp                  \
+
+Poseidon_AMReX_BuidMask.o                          \
+  Poseidon_AMReX_BuildMask_fi.o                    \
+  Poseidon_AMReX_BuildMask.F90                     \
+
 Poseidon_AMReX_Input_Parsing.o:                    \
   Poseidon_Kinds.o                                 \
   Poseidon_AMReX_Input_Parsing.F90                 \
