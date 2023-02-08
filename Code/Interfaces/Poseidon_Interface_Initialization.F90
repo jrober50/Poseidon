@@ -337,7 +337,7 @@ LOGICAL,                 INTENT(IN), OPTIONAL               ::  Write_FP_Diagnos
 
 CHARACTER(LEN=10),       INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Suffix_Param_Type_Option
-CHARACTER(LEN=1),        INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
+CHARACTER(LEN=4),        INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
 CHARACTER(LEN=*),        INTENT(IN), OPTIONAL               ::  Suffix_Input_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  Frame_Option
 

@@ -243,7 +243,7 @@ LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Condition_Optio
 
 LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_FP_Diagnostics_Option
 CHARACTER(LEN=10),  INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
-CHARACTER(LEN=1),   INTENT(IN), OPTIONAL            ::  Suffix_Tail_Option
+CHARACTER(LEN=4),   INTENT(IN), OPTIONAL            ::  Suffix_Tail_Option
 INTEGER,            INTENT(IN), OPTIONAL            ::  Frame_Option
 INTEGER,            INTENT(IN), OPTIONAL            ::  Suffix_Param_Type_Option
 CHARACTER(LEN=*),   INTENT(IN), OPTIONAL            ::  Suffix_Input_Option

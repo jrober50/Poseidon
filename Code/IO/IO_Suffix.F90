@@ -65,7 +65,7 @@ CHARACTER(LEN=10),  INTENT(IN),     OPTIONAL    ::  Suffix_Flag_Option
 INTEGER,            INTENT(IN),     OPTIONAL    ::  Frame_Option
 INTEGER,            INTENT(IN),     OPTIONAL    ::  Suffix_Param_Type_Option
 
-CHARACTER(LEN=1),   INTENT(IN),     OPTIONAL    ::  Suffix_Tail_Option
+CHARACTER(LEN=4),   INTENT(IN),     OPTIONAL    ::  Suffix_Tail_Option
 
 333 FORMAT('RE',I5.5,'_D',I2.2,'_L',I2.2)
 444 FORMAT('RE',I5.5,'_TE',I3.3,'_D',I2.2,'_L',I2.2)
@@ -133,7 +133,7 @@ END IF
 
 
 IF ( PRESENT(Suffix_Tail_Option) ) THEN
-    WRITE(Suffix_Return,'(A,A,A)') TRIM(Suffix_Return),"_",Suffix_Tail_Option
+    WRITE(Suffix_Return,'(A,A,A)') TRIM(Suffix_Return),"_",TRIM(Suffix_Tail_Option)
 END IF
 
 

@@ -404,7 +404,7 @@ DO lvl = nLevels-1,0,-1
 END DO ! lvl
 
 
-STOP "In Poseidon_Return_AMReX_Type_A"
+!STOP "In Poseidon_Return_AMReX_Type_A"
 
 END SUBROUTINE Poseidon_Return_AMReX_Type_A
 
