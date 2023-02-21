@@ -349,7 +349,6 @@ DO lvl = nLevels-1,0,-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
         
-!            PRINT*,lvl,re,te,pe,Ghost_PTR(re,te,pe,1)
             
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
@@ -369,7 +368,6 @@ DO lvl = nLevels-1,0,-1
                 
                 
             ELSE IF ( Ghost_PTR(re,te,pe,1) == iNotCovered) THEN
-            
                 CALL Poseidon_NotCovered_Type_A(  iE, iEL, NQ,    &
                                                   Cur_RX_Locs,    &
                                                   Cur_TX_Locs,    &
@@ -380,7 +378,6 @@ DO lvl = nLevels-1,0,-1
             
             
             ELSE IF ( Ghost_PTR(re,te,pe,1) == iOutside ) THEN
-            
                 CALL Poseidon_Outside_Type_A( iE, iEL, NQ,    &
                                               Cur_RX_Locs,    &
                                               Cur_TX_Locs,    &
@@ -390,6 +387,13 @@ DO lvl = nLevels-1,0,-1
                                               Var_Holder      )
         
             END IF !  Ghost_PTR
+            
+            
+            DO Output_Here = 1,Num_DOF
+                Here = (iU-1)*Num_DOF+Output_Here
+                Result_PTR(re,te,pe,Here) = Var_Holder(Output_Here)
+                
+            END DO ! Output_Here
             END IF !  Mask_PTR(RE,TE,PE,1) == iLeaf
 
         END DO ! pe
@@ -404,7 +408,6 @@ DO lvl = nLevels-1,0,-1
 END DO ! lvl
 
 
-!STOP "In Poseidon_Return_AMReX_Type_A"
 
 END SUBROUTINE Poseidon_Return_AMReX_Type_A
 
@@ -584,16 +587,18 @@ DO lvl = nLevels-1,0,-1
                                               Var_Holder      )
         
             END IF !  Ghost_PTR
-            END IF !  Mask_PTR(RE,TE,PE,1) == iLeaf
-
-        
+            
+            
             DO Output_Here = 1,Num_DOF
                 Here = (iU-1)*Num_DOF+Output_Here
-                Result_PTR(re,te,pe,:) = Var_Holder(:)
+                Result_PTR(re,te,pe,Here) = Var_Holder(Output_Here)
+                
+
             END DO ! Output_Here
-        
-        
-        
+            
+            END IF !  Mask_PTR(RE,TE,PE,1) == iLeaf
+
+            
         END DO ! pe
         END DO ! te
         END DO ! re
@@ -701,10 +706,13 @@ DO rd = 1,NQ(1)
 
     DO d = 0,DEGREE
         Current_Location = Map_To_FEM_Node(iRE,d)
+        
+        
         Tmp_U_Value = Tmp_U_Value                                    &
                     + SUM( cVA_Coeff_Vector(Current_Location,:,iU)   &
                             * Ylm_Elem_Values( :, tpd )            ) &
                     * LagP(d)
+
 
     END DO ! d Loop
 
@@ -713,9 +721,6 @@ DO rd = 1,NQ(1)
 END DO ! rd
 END DO ! td
 END DO ! pd
-
-
-
 
 
 
@@ -852,8 +857,10 @@ iE_Coarse = iE/2
 Coarse_xLocs = Map_From_X_Space( -1.0_idp, 0.0_idp, FEM_Node_xlocs)
 
 
-iRE = FEM_Elem_Map(iE_Coarse(1),lvl)
+
+iRE = FEM_Elem_Map(iE_Coarse(1),lvl-1)
 CALL Initialize_Ylm_Tables_on_Elem( iE(2), iE(3), iEL, lvl )
+
 
 
 DO pd = 1,NQ(3)
@@ -867,10 +874,12 @@ DO rd = 1,Degree+1
     DO d = 0,DEGREE
     
         Current_Location = Map_To_FEM_Node(iRE,d)
+
         Tmp_U_Value = Tmp_U_Value                                    &
                     + SUM( cVA_Coeff_Vector(Current_Location,:,iU)  &
                             * Ylm_Elem_Values( :, tpd )            ) &
                     * LagP(d)
+
 
     END DO ! d Loop
 
@@ -880,7 +889,6 @@ DO rd = 1,Degree+1
 END DO ! rd
 END DO ! td
 END DO ! pd
-
 
 
 DO pd = 1,NQ(3)
