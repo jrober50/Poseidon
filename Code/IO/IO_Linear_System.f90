@@ -85,7 +85,7 @@ CONTAINS
 !################################################################################!
 SUBROUTINE OUTPUT_LAPLACE_MATRIX( Matrix )
 
-COMPLEX(idp), DIMENSION(0:2*NUM_OFF_DIAGONALS, 0:SUBSHELL_PROB_DIM-1), INTENT(IN) :: Matrix
+REAL(idp), DIMENSION(0:2*NUM_OFF_DIAGONALS, 0:SUBSHELL_PROB_DIM-1), INTENT(IN) :: Matrix
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 61)                                     ::  FILE_NAMEb
@@ -133,7 +133,7 @@ END SUBROUTINE OUTPUT_LAPLACE_MATRIX
 !################################################################################!
 SUBROUTINE OUTPUT_JACOBIAN_MATRIX( Matrix )
 
-COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(IN) :: Matrix
+REAL(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(IN) :: Matrix
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 61)                                     ::  FILE_NAMEb
@@ -184,7 +184,7 @@ END SUBROUTINE OUTPUT_JACOBIAN_MATRIX
 !################################################################################!
 SUBROUTINE OUTPUT_RHS_VECTOR( Vector )
 
-COMPLEX(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
+REAL(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 40)                                     ::  fmt
@@ -226,8 +226,8 @@ END SUBROUTINE OUTPUT_RHS_VECTOR
 !################################################################################!
 SUBROUTINE OUTPUT_RHS_VECTOR_Parts(Laplace, Source)
 
-COMPLEX(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1), INTENT(IN)       :: Laplace
-COMPLEX(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1), INTENT(IN)       :: Source
+REAL(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1), INTENT(IN)       :: Laplace
+REAL(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1), INTENT(IN)       :: Source
 
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
@@ -282,7 +282,7 @@ END SUBROUTINE OUTPUT_RHS_VECTOR_Parts
 !################################################################################!
 SUBROUTINE OUTPUT_UPDATE_VECTOR( Vector )
 
-COMPLEX(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
+REAL(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 40)                                     ::  fmt
@@ -317,7 +317,7 @@ END SUBROUTINE OUTPUT_UPDATE_VECTOR
 !################################################################################!
 SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_MATLAB( Vector )
 
-COMPLEX(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
+REAL(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 40)                                     ::  fmt
@@ -352,7 +352,7 @@ END SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_MATLAB
 !################################################################################!
 SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_FORTRAN( Vector )
 
-COMPLEX(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
+REAL(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
 CHARACTER(LEN = 40)                                     ::  fmt
@@ -392,7 +392,7 @@ CHARACTER(LEN = 40)                                     ::  fmt
 
 INTEGER                                                 ::  FILE_ID
 
-COMPLEX(KIND = idp), DIMENSION(0:Block_PROB_DIM-1 )     ::  Test
+REAL(KIND = idp), DIMENSION(0:Block_PROB_DIM-1 )     ::  Test
 INTEGER                                                 ::  istat
 
 

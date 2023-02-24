@@ -40,6 +40,11 @@ INTERFACE Quad_Map
     MODULE PROCEDURE Quad_Map_Long_Array
 END INTERFACE Quad_Map
 
+INTERFACE Map_To_tpd
+    MODULE PROCEDURE Map_To_tpd_Short
+    MODULE PROCEDURE Map_To_tpd_Long
+END INTERFACE Map_To_tpd
+
 
 CONTAINS
 
@@ -123,19 +128,35 @@ END FUNCTION Quad_Map_Long_Array
 !                  FP_Vector_Map                                                  !
 !                                                                                !
 !################################################################################!
-PURE FUNCTION Map_To_tpd( td, pd )
+PURE FUNCTION Map_To_tpd_Short( td, pd )
 
-INTEGER                                     :: Map_To_tpd
+INTEGER                                     :: Map_To_tpd_Short
 
 INTEGER, INTENT(IN)                         :: td, pd
 
 
-Map_To_tpd = (td-1)*Num_P_Quad_Points + pd
+Map_To_tpd_Short = (td-1)*Num_P_Quad_Points + pd
 
 
-END FUNCTION Map_To_tpd
+END FUNCTION Map_To_tpd_Short
 
 
+!+103+###########################################################################!
+!                                                                                !
+!                  FP_Vector_Map                                                  !
+!                                                                                !
+!################################################################################!
+PURE FUNCTION Map_To_tpd_Long( td, pd, nPQ )
+
+INTEGER                                     :: Map_To_tpd_Long
+
+INTEGER, INTENT(IN)                         :: td, pd, nPQ
+
+
+Map_To_tpd_Long = (td-1)*nPQ + pd
+
+
+END FUNCTION Map_To_tpd_Long
 
 
 

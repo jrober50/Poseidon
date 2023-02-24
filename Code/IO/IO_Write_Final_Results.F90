@@ -648,7 +648,7 @@ REAL(KIND = idp), DIMENSION(:),         ALLOCATABLE         ::  P_Holder
 REAL(idp), DIMENSION(6)                                     ::  Units
 REAL(idp)                                                   ::  CF
 
-COMPLEX(idp)                                                ::  Tmp_Val
+REAL(idp)                                                   ::  Tmp_Val
 REAL(idp), DIMENSION(3)                                     ::  Tmp_Drv = 0.0_idp
 REAL(idp), DIMENSION(3)                                     ::  Gamma
 
@@ -1234,7 +1234,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                 !   Base Metric Variables
 
                 CALL Poseidon_Return_All_AMReX_Caller( MF_Results )
-                
                 
                 
                 Quad_Span = Caller_xL(2) - Caller_xL(1)

@@ -27,7 +27,8 @@ USE Poseidon_Kinds_Module, &
             ONLY : idp
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE
+            ONLY :  Degree,                     &
+                    L_Limit
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -43,19 +44,21 @@ USE Parameters_Variable_Indices, &
 
 
 USE Variables_Tables, &
-            ONLY :  Ylm_Elem_Values,            &
-                    Ylm_Elem_dt_Values,         &
-                    Ylm_Elem_dp_Values,         &
+            ONLY :  Slm_Elem_Values,            &
+                    Slm_Elem_dt_Values,         &
+                    Slm_Elem_dp_Values,         &
+                    Nlm_Values,                 &
                     Lagrange_Poly_Table,        &
                     Level_DX
 
 
 USE Variables_Derived, &
-            ONLY :  LM_LENGTH
+            ONLY :  LM_Length,                  &
+                    LM_Short_Length
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,      &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,      &
+                    dVB_Coeff_Vector
 
 USE Variables_Mesh, &
             ONLY :  rlocs,              &
@@ -70,35 +73,8 @@ USE Variables_AMReX_Source, &
 
 USE Variables_FEM_Module, &
             ONLY :  FEM_Node_xlocs
-
-USE Maps_Fixed_Point, &
-            ONLY :  FP_Array_Map_TypeB
-
-USE Maps_Quadrature, &
-            ONLY :  Map_To_tpd,             &
-                    Quad_Map
-
-USE Maps_Domain, &
-            ONLY :  Map_To_FEM_Node,        &
-                    FEM_Elem_Map
-
-USE Maps_X_Space, &
-            ONLY :  Map_To_X_Space
-
-USE Functions_Quadrature, &
-            ONLY :  Initialize_LGL_Quadrature_Locations
-
-USE Functions_Math, &
-            ONLY :  Lagrange_Poly
-
-USE Functions_Translation_Matrix_Module, &
-            ONLY :  Create_Translation_Matrix
-
-USE Initialization_Tables, &
-            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                    Initialize_Ylm_Tables_On_Elem
-
-
+            
+            
 USE Variables_Interface, &
             ONLY :  Caller_NQ,                      &
                     Caller_xL,                      &
@@ -122,6 +98,32 @@ USE Variables_Quadrature, &
                     Int_P_Weights,          &
                     Int_TP_Weights
 
+USE Maps_Fixed_Point, &
+            ONLY :  FP_Array_Map_TypeB
+
+USE Maps_Quadrature, &
+            ONLY :  Map_To_tpd,             &
+                    Quad_Map
+
+USE Maps_Domain, &
+            ONLY :  Map_To_FEM_Node,        &
+                    FEM_Elem_Map
+
+USE Maps_X_Space, &
+            ONLY :  Map_To_X_Space
+
+USE Functions_Quadrature, &
+            ONLY :  Initialize_LGL_Quadrature_Locations
+
+USE Functions_Math, &
+            ONLY :  Lagrange_Poly
+
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Am_Table,            &
+                    Initialize_Plm_Table,           &
+                    Initialize_Slm_Table_on_Elem
+
+
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -142,7 +144,8 @@ USE amrex_multifab_module,  &
                     amrex_imultifab_destroy
 
 USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Num_Levels
+            ONLY :  AMReX_Num_Levels,       &
+                    AMReX_Max_Grid_Size
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
@@ -190,17 +193,17 @@ LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_O
 
 
 INTEGER                                                     ::  Num_DOF
-INTEGER                                                     ::  Output_Here
 
 INTEGER                                                     ::  iRE
 INTEGER                                                     ::  re, te, pe
 INTEGER                                                     ::  rd, td, pd, tpd
 INTEGER                                                     ::  d, Here
+INTEGER,        DIMENSION(3)                                ::  iNE
 
-REAL(KIND = idp)                                            ::  Quad_Span
-REAL(KIND = idp), DIMENSION(0:DEGREE)                       ::  LagP
-REAL(KIND = idp), DIMENSION(1:NQ(1))                        ::  Cur_RX_Locs
-COMPLEX(KIND = idp)                                         ::  TMP_U_Value
+REAL(idp)                                                   ::  Quad_Span
+REAL(idp),      DIMENSION(0:DEGREE)                         ::  LagP
+REAL(idp),      DIMENSION(1:NQ(1))                          ::  Cur_RX_Locs
+REAL(idp)                                                   ::  TMP_U_Value
 INTEGER                                                     ::  Current_Location
 
 INTEGER,        DIMENSION(1:3)                              ::  nGhost_Vec
@@ -214,14 +217,18 @@ INTEGER                                                     ::  nComp
 
 INTEGER,    CONTIGUOUS, POINTER                             ::  Mask_PTR(:,:,:,:)
 REAL(idp),  CONTIGUOUS, POINTER                             ::  Result_PTR(:,:,:,:)
-REAL(idp),  DIMENSION(1:Local_Quad_DOF)                     ::  Var_Holder_Elem
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE                     ::  Translation_Matrix
 
 
 INTEGER, DIMENSION(3)                                       ::  iEL, iEU
 INTEGER, DIMENSION(3)                                       ::  iEL_A, iEU_A
 LOGICAL                                                     ::  FillGhostCells
 
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2)-1)           ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3)-1)           ::  plocs_subarray
+    
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_Table
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_Table
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_Table
 
 
 IF ( PRESENT(FillGhostCells_Option) ) THEN
@@ -236,21 +243,6 @@ Quad_Span = Right_Limit - Left_Limit
 Cur_RX_Locs = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
-
-Allocate( Translation_Matrix(1:Local_Quad_DOF,1:Num_DOF))
-
-Translation_Matrix = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
-                                        [xLeftLimit, xRightLimit ],            &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Local_Quad_DOF,         &
-                                        NQ,          &
-                                        [Left_Limit, Right_Limit],          &
-                                        RQ_Input,    &
-                                        TQ_Input,    &
-                                        PQ_Input,    &
-                                        Num_DOF               )
 
 
 
@@ -312,8 +304,38 @@ DO lvl = nLevels-1,0,-1
         IF ( ANY( iEU .GE. (2**lvl)*iNE_Base(1) ) ) THEN
             iEU = iEU_A
         END IF
+        
+        iNE = iEU-iEL+1
+        
+        
+        
+        
+        DO te = iEL(2),iEU(2)
+            tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
+        END DO
+        DO pe = iEL(3),iEU(3)
+            plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
+        END DO
+        
+        
+        ! Initialize Am Table
+        CALL Initialize_Am_Table(   NQ(3),                      &
+                                    PQ_Input,                   &
+                                    L_Limit,                    &
+                                    iNE(3),                     &
+                                    [iEL(3), iEU(3)],           &
+                                    plocs_subarray(0:iNE(3)-1), &
+                                    Am_Table                    )
 
-        CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
+        ! Initialize Plm Table
+        CALL Initialize_Plm_Table(  NQ(2),                      &
+                                    TQ_Input,                   &
+                                    L_Limit,                    &
+                                    LM_Short_Length,            &
+                                    iNE(2),                     &
+                                    [iEL(2), iEU(2)],           &
+                                    tlocs_subarray(0:iNE(2)-1), &
+                                    Plm_Table                   )
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
@@ -321,42 +343,38 @@ DO lvl = nLevels-1,0,-1
             
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
                 iRE = FEM_Elem_Map(re,lvl)
-                CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
+                CALL Initialize_Slm_Table_on_Elem(  te, pe,             &
+                                                    NQ(2), NQ(3),       &
+                                                    iNE,                &
+                                                    iEL,                &
+                                                    Plm_Table,          &
+                                                    Am_Table,           &
+                                                    Slm_Elem_Table      )
+  
 
-                DO pd = 1,Num_P_Quad_Points
-                DO td = 1,NUM_T_QUAD_POINTS
-                DO rd = 1,NUM_R_QUAD_POINTS
+                DO pd = 1,NQ(3)
+                DO td = 1,NQ(2)
+                DO rd = 1,NQ(1)
 
                     tpd = Map_To_tpd(td,pd)
-                    LagP = Lagrange_Poly(Int_R_Locations(rd),DEGREE,FEM_Node_xlocs)
+                    LagP = Lagrange_Poly(RQ_Input(rd),DEGREE,FEM_Node_xlocs)
                     Tmp_U_Value = 0.0_idp
 
                     
                     DO d = 0,DEGREE
                         Current_Location = Map_To_FEM_Node(iRE,d)
                         Tmp_U_Value = Tmp_U_Value                                    &
-                                    + SUM( cVA_Coeff_Vector(Current_Location,:,iU)  &
-                                            * Ylm_Elem_Values( :, tpd )            ) &
+                                    + SUM( dVA_Coeff_Vector(Current_Location,:,iU)  &
+                                            * Slm_Elem_Values( :, tpd )            ) &
                                     * LagP(d)
 
                     END DO ! d Loop
 
                     Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
-                    Var_Holder_Elem(Here) = Tmp_U_Value
+                    Result_PTR(re,te,pe,Here) = Tmp_U_Value
                 END DO ! rd
                 END DO ! td
                 END DO ! pd
-
-
-
-                DO Output_Here = 1,Num_DOF
-
-                    Here = (iU-1)*Num_DOF+Output_Here
-
-                    Result_PTR(re,te,pe,Here) = DOT_PRODUCT( Translation_Matrix(:,Output_Here), &
-                                                             Var_Holder_Elem(:)         )
-
-                END DO ! Output_Here
 
             END IF !  Mask_PTR(RE,TE,PE,1) == iLeaf
 
@@ -394,48 +412,56 @@ SUBROUTINE Poseidon_Return_AMReX_Type_B(iU,                     &
                                         FillGhostCells_Option   )
 
 
-INTEGER,                                    INTENT(IN)  ::  iU
-INTEGER,                                    INTENT(IN)  ::  iVB
-INTEGER,    DIMENSION(3),                   INTENT(IN)  ::  NQ
-REAL(idp),  DIMENSION(NQ(1)),               INTENT(IN)  ::  RQ_Input
-REAL(idp),  DIMENSION(NQ(2)),               INTENT(IN)  ::  TQ_Input
-REAL(idp),  DIMENSION(NQ(3)),               INTENT(IN)  ::  PQ_Input
-REAL(idp),                                  INTENT(IN)  ::  Left_Limit
-REAL(idp),                                  INTENT(IN)  ::  Right_Limit
+INTEGER,                                    INTENT(IN)      ::  iU
+INTEGER,                                    INTENT(IN)      ::  iVB
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  NQ
+REAL(idp),  DIMENSION(NQ(1)),               INTENT(IN)      ::  RQ_Input
+REAL(idp),  DIMENSION(NQ(2)),               INTENT(IN)      ::  TQ_Input
+REAL(idp),  DIMENSION(NQ(3)),               INTENT(IN)      ::  PQ_Input
+REAL(idp),                                  INTENT(IN)      ::  Left_Limit
+REAL(idp),                                  INTENT(IN)      ::  Right_Limit
 
-INTEGER,                                    INTENT(IN)  ::  nLevels
-TYPE(amrex_multifab),                       INTENT(INOUT)  ::  MF_Results(0:nLevels-1)
+INTEGER,                                    INTENT(IN)      ::  nLevels
+TYPE(amrex_multifab),                       INTENT(INOUT)   ::  MF_Results(0:nLevels-1)
 
 LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_Option
 
 
 INTEGER                                                 ::  Num_DOF
-INTEGER                                                 ::  Output_Here
 INTEGER                                                 ::  iRE
 INTEGER                                                 ::  re, te, pe
 INTEGER                                                 ::  rd, td, pd, tpd
 INTEGER                                                 ::  d
 INTEGER                                                 ::  lvl
+INTEGER,    DIMENSION(3)                                ::  iNE
 
-REAL(KIND = idp)                                        ::  Quad_Span
-REAL(KIND = idp), DIMENSION(0:DEGREE)                   ::  LagP
-REAL(KIND = idp), DIMENSION(1:NQ(1))                    ::  Cur_RX_Locs
-COMPLEX(KIND = idp)                                     ::  TMP_U_Value
+REAL(idp)                                               ::  Quad_Span
+REAL(idp),  DIMENSION(0:DEGREE)                         ::  LagP
+REAL(idp),  DIMENSION(1:NQ(1))                          ::  Cur_RX_Locs
+REAL(idp)                                               ::  TMP_U_Value
 INTEGER                                                 ::  Here, There
 
 TYPE(amrex_mfiter)                                      ::  mfi
 TYPE(amrex_box)                                         ::  Box
 TYPE(amrex_imultifab)                                   ::  Level_Mask
-INTEGER, DIMENSION(3)                                   ::  iEL, iEU
+INTEGER,    DIMENSION(3)                                ::  iEL, iEU
 INTEGER                                                 ::  nComp
 
 INTEGER,    CONTIGUOUS, POINTER                         ::  Mask_PTR(:,:,:,:)
 REAL(idp),  CONTIGUOUS, POINTER                         ::  Result_PTR(:,:,:,:)
-REAL(idp),  DIMENSION(1:Local_Quad_DOF)         ::  Var_Holder_Elem
-REAL(idp),  DIMENSION(:,:), ALLOCATABLE         ::  Translation_Matrix
 
-LOGICAL                                                     ::  FillGhostCells
-INTEGER,        DIMENSION(1:3)                              ::  nGhost_Vec
+LOGICAL                                                 ::  FillGhostCells
+INTEGER,    DIMENSION(1:3)                              ::  nGhost_Vec
+
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2)-1)       ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3)-1)       ::  plocs_subarray
+
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_Table
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_Table
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_Table
+
+tlocs_subarray = 0.0_idp
+plocs_subarray = 0.0_idp
 
 Quad_Span = Right_Limit - Left_Limit
 
@@ -443,30 +469,12 @@ Cur_RX_Locs = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
-Allocate( Translation_Matrix(1:Local_Quad_DOF,1:Num_DOF))
-
-
 
 IF ( PRESENT(FillGhostCells_Option) ) THEN
     FillGhostCells = FillGhostCells_Option
 ELSE
     FillGhostCells = .FALSE.
 END IF
-
-
-
-Translation_Matrix = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
-                                        [xLeftLimit, xRightLimit ],            &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Local_Quad_DOF,         &
-                                        NQ,          &
-                                        [Left_Limit, Right_Limit],          &
-                                        RQ_Input,    &
-                                        TQ_Input,    &
-                                        PQ_Input,    &
-                                        Num_DOF               )
 
 
 
@@ -500,7 +508,6 @@ DO lvl = nLevels-1,0,-1
         CALL Level_Mask%SetVal(iLeaf)
     END IF
 
-    CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
 
     CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
 
@@ -514,6 +521,35 @@ DO lvl = nLevels-1,0,-1
 
         iEL = Box%lo
         iEU = Box%hi
+        
+        iNE = iEU-iEL+1
+        
+        DO te = iEL(2),iEU(2)
+            tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
+        END DO
+        DO pe = iEL(3),iEU(3)
+            plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
+        END DO
+        
+        
+        ! Initialize Am Table
+        CALL Initialize_Am_Table(   NQ(3),                      &
+                                    PQ_Input,                   &
+                                    L_Limit,                    &
+                                    iNE(3),                     &
+                                    [iEL(3), iEU(3)],           &
+                                    plocs_subarray(0:iNE(3)-1), &
+                                    Am_Table                    )
+
+        ! Initialize Plm Table
+        CALL Initialize_Plm_Table(  NQ(2),                      &
+                                    TQ_Input,                   &
+                                    L_Limit,                    &
+                                    LM_Short_Length,            &
+                                    iNE(2),                     &
+                                    [iEL(2), iEU(2)],           &
+                                    tlocs_subarray(0:iNE(2)-1), &
+                                    Plm_Table                   )
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
@@ -526,7 +562,13 @@ DO lvl = nLevels-1,0,-1
 
                 iRE = FEM_Elem_Map(re,lvl)
 
-                CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
+                CALL Initialize_Slm_Table_on_Elem(  te, pe,             &
+                                                    NQ(2), NQ(3),       &
+                                                    iNE,                &
+                                                    iEL,                &
+                                                    Plm_Table,          &
+                                                    Am_Table,           &
+                                                    Slm_Elem_Table      )
                 DO pd = 1,NQ(3)
                 DO td = 1,NQ(2)
                 DO rd = 1,NQ(1)
@@ -541,30 +583,19 @@ DO lvl = nLevels-1,0,-1
                         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
                         
                         Tmp_U_Value = Tmp_U_Value                                   &
-                                    + SUM( cVB_Coeff_Vector(Here:There,iVB)        &
-                                            * Ylm_Elem_Values( :, tpd ) )   &
+                                    + SUM( dVB_Coeff_Vector(Here:There,iVB)        &
+                                            * Slm_Elem_Table( :, tpd ) )   &
                                     * LagP(d)
                                     
 
                     END DO ! d Loop
 
                     Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
-                    Var_Holder_Elem(Here) = Tmp_U_Value
+                    Result_PTR(re,te,pe,Here) = Tmp_U_Value
 
                 END DO ! rd
                 END DO ! td
                 END DO ! pd
-
-
-
-                DO Output_Here = 1,Num_DOF
-
-                    Here = (iU-1)*Num_DOF+Output_Here
-
-                    Result_PTR(re,te,pe,Here) = DOT_PRODUCT( Translation_Matrix(:,Output_Here), &
-                                                             Var_Holder_Elem(:)         )
-
-                END DO
 
             END IF
 

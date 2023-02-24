@@ -241,13 +241,16 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     DO d = 0,DEGREE
 
 
-#if POSEIDON_AMREX_FLAG
+#ifdef POSEIDON_AMREX_FLAG
+
+!        PRINT*,"Slm_Elem_Values in calc"
+!        PRINT*,Slm_Elem_Values
 
         TMP_Val = TMP_Val                               &
             + SUM( dVA_Coeff_Vector( Here(d), :, iU )  &
-                   * Ylm_Elem_Values( :, tpd )   )      &
+                   * Slm_Elem_Values( :, tpd )   )      &
             * Lagrange_Poly_Table( d, rd, 0)
-
+            
 #else
 
 
@@ -322,54 +325,16 @@ DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
 
    
-   TMP_Drv = 0.0_idp
-   DO d = 0,DEGREE
-       Here = Map_To_FEM_Node(iRE,d)
-
-#if POSEIDON_AMREX_FLAG
-
-        TMP_Drv(1) = TMP_Drv(1)                                 &
-                   + SUM( dVA_Coeff_Vector( Here, :, iU )      &
-                         * Ylm_Elem_Values( :, tpd ) )          &
-                   * Lagrange_Poly_Table( d, rd, 1)   &
-                   / DROT
-
-
-        TMP_Drv(2) = TMP_Drv(2)                                 &
-                   + SUM( dVA_Coeff_Vector( Here, :, iU )      &
-                         * Ylm_Elem_dt_Values( :, tpd )     )   &
-                   * Lagrange_Poly_Table( d, rd, 0)
-
-        TMP_Drv(3) = TMP_Drv(3)                                 &
-                   + SUM( dVA_Coeff_Vector( Here, :, iU )      &
-                         * Ylm_Elem_dp_Values( :, tpd )     )   &
-                   * Lagrange_Poly_Table( d, rd, 0)
-
-#else
-
-!       TMP_Drv(1) = TMP_Drv(1)                                      &
-!                  + SUM( dVA_Coeff_Vector( Here, :, iU )           &
-!                        * Ylm_Values( :, tpd, iE(2), iE(3)))        &
-!                  * Lagrange_Poly_Table( d, rd, 1 )                 &
-!                  / DROT
-!
-!
-!       TMP_Drv(2) = TMP_Drv(2)                                      &
-!                  + SUM( dVA_Coeff_Vector( Here, :, iU )           &
-!                        * Slm_Elem_dt_Values( :, tpd )   )  &
-!                  * Lagrange_Poly_Table( d, rd, 0)
-!
-!       TMP_Drv(3) = TMP_Drv(3)                                      &
-!                  + SUM( dVA_Coeff_Vector( Here, :, iU )           &
-!                        * Slm_Elem_dp_Values( :, tpd )   )  &
-!                  * Lagrange_Poly_Table( d, rd, 0)
-
+    TMP_Drv = 0.0_idp
+    DO d = 0,DEGREE
+        Here = Map_To_FEM_Node(iRE,d)
 
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
                    + SUM( dVA_Coeff_Vector(Here,:,iU)           &
                         * Slm_Elem_Values(:,tpd)      )         &
-                   * Lagrange_Poly_Table(d,rd,1)
+                   * Lagrange_Poly_Table(d,rd,1)                &
+                   / DROT
 
         TMP_Drv(2) = TMP_Drv(2)                                 &
                    + SUM( dVA_Coeff_Vector(Here,:,iU)           &
@@ -381,8 +346,6 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                         * Slm_Elem_dp_Values(:,tpd)   )         &
                    * Lagrange_Poly_Table(d,rd,0)
 
-
-#endif
 
 
    END DO  ! d
@@ -448,57 +411,7 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
    DO d = 0,DEGREE
        Here = Map_To_FEM_Node(iRE,d)
 
-
-#ifdef POSEIDON_AMREX_FLAG
-        TMP_Val = TMP_Val                                       &
-            + SUM( dVA_Coeff_Vector( Here, :, iU )             &
-                   * Ylm_Elem_Values( :, tpd )   )              &
-            * Lagrange_Poly_Table( d, rd, 0)
-
-
-        TMP_Drv(1) = TMP_Drv(1)                                 &
-                   + SUM( dVA_Coeff_Vector( Here, :, iU )      &
-                         * Ylm_Elem_Values( :, tpd ) )          &
-                   * Lagrange_Poly_Table( d, rd, 1)   &
-                   / DROT
-
-
-        TMP_Drv(2) = TMP_Drv(2)                                 &
-                   + SUM( dVA_Coeff_Vector( Here, :, iU )      &
-                         * Ylm_Elem_dt_Values( :, tpd )     )   &
-                   * Lagrange_Poly_Table( d, rd, 0)
-
-        TMP_Drv(3) = TMP_Drv(3)                                 &
-                   + SUM( dVA_Coeff_Vector( Here, :, iU )      &
-                         * Ylm_Elem_dp_Values( :, tpd )     )   &
-                   * Lagrange_Poly_Table( d, rd, 0)
-
-#else
-
-!       TMP_Val = TMP_Val                                        &
-!               + SUM( dVA_Coeff_Vector( Here, :, iU )          &
-!                       * Slm_Elem_Values( :, tpd )   ) &
-!               * Lagrange_Poly_Table( d, rd, 0 )
-!
-!
-!       TMP_Drv(1) = TMP_Drv(1)                                  &
-!                  + SUM( dVA_Coeff_Vector( Here, :, iU )       &
-!                        * Slm_Elem_Values( :, tpd )  ) &
-!                  * Lagrange_Poly_Table( d, rd, 1 )             &
-!                  / DROT
-!
-!
-!       TMP_Drv(2) = TMP_Drv(2)                                  &
-!                  + SUM( dVA_Coeff_Vector( Here, :, iU )       &
-!                        * Slm_Elem_dt_Values( :, tpd )   )    &
-!                  * Lagrange_Poly_Table( d, rd, 0)
-!
-!       TMP_Drv(3) = TMP_Drv(3)                                  &
-!                  + SUM( dVA_Coeff_Vector( Here, :, iU )       &
-!                        * Slm_Elem_dp_Values( :, tpd )   )    &
-!                  * Lagrange_Poly_Table( d, rd, 0)
-                  
-                  
+           
         TMP_Val = TMP_Val                                       &
                 + SUM( dVA_Coeff_Vector(Here,:,iU)              &
                         * Slm_Elem_Values(:,tpd)      )         &
@@ -520,9 +433,6 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                         * Slm_Elem_dp_Values(:,tpd)   )         &
                    * Lagrange_Poly_Table(d,rd,0)
                   
-    
-
-#endif
 
 
 
@@ -600,26 +510,10 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
 
 
-#ifdef POSEIDON_AMREX_FLAG
-
-
-        TMP_Val = TMP_Val                                   &
-               + SUM( dVB_Coeff_Vector( Here:There, iVB )  &
-                       * Ylm_Elem_Values( :, tpd )      )   &
-               * Lagrange_Poly_Table( d, rd, 0 )
-
-#else
-
-!        TMP_Val = TMP_Val                                   &
-!               + SUM( dVB_Coeff_Vector( Here:There, iVB )  &
-!                       * Slm_Elem_Values( :, tpd )   )   &
-!               * Lagrange_Poly_Table( d, rd, 0 )
-               
         TMP_Val = TMP_Val                                   &
                 + SUM( dVB_Coeff_Vector(Here:There, iVB)    &
                         * Slm_Elem_Values(:,tpd)      )     &
                 * Lagrange_Poly_Table(d,rd,0)
-#endif
 
 
     END DO  ! d
@@ -681,50 +575,13 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
         Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
 
-#ifdef POSEIDON_AMREX_FLAG
 
         TMP_Drv(1) = TMP_Drv(1)                                 &
-                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                        * Ylm_Elem_Values( :, tpd )         )   &
-                  * Lagrange_Poly_Table( d, rd, 1 )             &
-                  / DROT
-
-
-        TMP_Drv(2) = TMP_Drv(2)                                 &
-                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                        * Ylm_Elem_dt_Values( :, tpd )      )   &
-                  * Lagrange_Poly_Table( d, rd, 0)
-
-        TMP_Drv(3) = TMP_Drv(3)                                 &
-                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                        * Ylm_Elem_dp_Values( :, tpd )      )   &
-                  * Lagrange_Poly_Table( d, rd, 0)
-
-#else
-
-!        TMP_Drv(1) = TMP_Drv(1)                                 &
-!                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-!                        * Slm_Elem_Values( :, tpd )     )    &
-!                  * Lagrange_Poly_Table( d, rd, 1 )             &
-!                  / DROT
-!
-!
-!        TMP_Drv(2) = TMP_Drv(2)                                 &
-!                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-!                        * Slm_Elem_dt_Values( :, tpd )   )    &
-!                  * Lagrange_Poly_Table( d, rd, 0)
-!
-!        TMP_Drv(3) = TMP_Drv(3)                                 &
-!                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-!                        * Slm_Elem_dp_Values( :, tpd )   )    &
-!                  * Lagrange_Poly_Table( d, rd, 0)
-
-
-        TMP_Drv(1) = TMP_Drv(1)                                &
-                   + SUM( dVB_Coeff_Vector(Here:There, iVB)    &
-                        * Slm_Elem_Values(:,tpd)      )        &
-                   * Lagrange_Poly_Table(d,rd,1)
-
+                   + SUM( dVB_Coeff_Vector(Here:There, iVB)     &
+                        * Slm_Elem_Values(:,tpd)      )         &
+                   * Lagrange_Poly_Table(d,rd,1)                &
+                   / DROT
+                    
         TMP_Drv(2) = TMP_Drv(2)                                &
                    + SUM( dVB_Coeff_Vector(Here:There, iVB)    &
                         * Slm_Elem_dt_Values(:,tpd)   )        &
@@ -734,8 +591,6 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                    + SUM( dVB_Coeff_Vector(Here:There, iVB)    &
                         * Slm_Elem_dp_Values(:,tpd)   )        &
                    * Lagrange_Poly_Table(d,rd,0)
-
-#endif
 
 
     END DO  ! d
@@ -801,33 +656,6 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     DO d = 0,DEGREE
         Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
-        
-#ifdef POSEIDON_AMREX_FLAG
-        TMP_Val = TMP_Val                                       &
-               + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
-                       * Ylm_Elem_Values( :, tpd )          )   &
-               * Lagrange_Poly_Table( d, rd, 0)
-
-
-        TMP_Drv(1) = TMP_Drv(1)                                 &
-                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                        * Ylm_Elem_Values( :, tpd )         )   &
-                  * Lagrange_Poly_Table( d, rd, 1)             &
-                  / DROT
-
-
-        TMP_Drv(2) = TMP_Drv(2)                                 &
-                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                        * Ylm_Elem_dt_Values( :, tpd )      )   &
-                  * Lagrange_Poly_Table( d, rd, 0)
-
-
-        TMP_Drv(3) = TMP_Drv(3)                                 &
-                  + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                        * Ylm_Elem_dp_Values( :, tpd )      )   &
-                  * Lagrange_Poly_Table( d, rd, 0)
-
-#else
 
         TMP_Val = TMP_Val                                       &
                + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
@@ -853,28 +681,6 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
                   + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
                         * Slm_Elem_dp_Values( :, tpd )   )    &
                   * Lagrange_Poly_Table( d, rd, 0)
-
-!        TMP_Val = TMP_Val                                      &
-!                + SUM( dVB_Coeff_Vector(Here:There, iVB)       &
-!                        * Slm_Elem_Values(:,tpd)      )        &
-!                * Lagrange_Poly_Table(d,rd,0)
-!
-!        TMP_Drv(1) = TMP_Drv(1)                                &
-!                   + SUM( dVB_Coeff_Vector(Here:There, iVB)    &
-!                        * Slm_Elem_Values(:,tpd)      )        &
-!                   * Lagrange_Poly_Table(d,rd,1)
-!
-!        TMP_Drv(2) = TMP_Drv(2)                                &
-!                   + SUM( dVB_Coeff_Vector(Here:There, iVB)    &
-!                        * Slm_Elem_dt_Values(:,tpd)   )        &
-!                   * Lagrange_Poly_Table(d,rd,0)
-!
-!        TMP_Drv(3) = TMP_Drv(3)                                &
-!                   + SUM( dVB_Coeff_Vector(Here:There, iVB)    &
-!                        * Slm_Elem_dp_Values(:,tpd)   )        &
-!                   * Lagrange_Poly_Table(d,rd,0)
-
-#endif
 
 
    END DO  ! d

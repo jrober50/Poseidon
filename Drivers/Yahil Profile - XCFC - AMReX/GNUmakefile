@@ -1,6 +1,5 @@
 HDF5_DIR       = /usr/local/hdf5
 
-#AMREX_HOME    ?= /Users/nickroberts/amrex
 AMREX_HOME    ?= $(AMREX_DIR)
 HDF5_HOME     ?= $(myHDF5_DIR)
 LAPACK_HOME   ?= $(myLAPACK_DIR)
@@ -24,7 +23,7 @@ USE_OMP   = FALSE
 #MEM_PROFILE  = FALSE
 #TINY_PROFILE = FALSE
 
-DIM       = 1
+DIM       = 3
 
 EBASE     = Yahil_Profile_XCFC
 
@@ -58,8 +57,8 @@ include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 
 
 # Include directories and source files needed from Poseidon
-POSEIDON_MACHINE_NAME ?= Summit
-include $(POSEIDON_DIR)/Build/Make.Poseidon
+POSEIDON_MACHINE_NAME ?= jrober50
+include /Users/nickroberts/ssp4/Poseidon/Build/Make.Poseidon
 
 
 

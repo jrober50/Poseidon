@@ -113,7 +113,7 @@ REAL(idp), INTENT(INOUT)                                ::  Return_Psi,         
 
 
 
-COMPLEX(idp), DIMENSION(1:5)                            ::  Tmp_U_Value
+REAL(idp), DIMENSION(1:5)                            ::  Tmp_U_Value
 
 
 REAL(idp)                                                ::  r_tmp
@@ -217,7 +217,7 @@ INTEGER                                                     ::  re, x, u, d
 REAL(idp)                                                   ::  Quad_Span
 REAL(idp), DIMENSION(0:DEGREE)                              ::  LagP
 REAL(idp), DIMENSION(1:Num_RQ_Input)                        ::  CUR_X_LOCS
-COMPLEX(idp), DIMENSION(1:3)                                ::  TMP_U_Value
+REAL(idp), DIMENSION(1:3)                                ::  TMP_U_Value
 INTEGER                                                     ::  Current_Location
 
 Quad_Span = Right_Limit - Left_Limit
@@ -282,7 +282,7 @@ INTEGER,    INTENT(IN)                              ::  iU
 
 
 
-COMPLEX(idp)                                        ::  Tmp_U_Value
+REAL(idp)                                        ::  Tmp_U_Value
 
 
 REAL(idp)                                           ::  r_tmp
@@ -359,7 +359,7 @@ INTEGER,    INTENT(IN)                              ::  iU, iVB
 
 
 
-COMPLEX(idp)                                        ::  Tmp_U_Value
+REAL(idp)                                        ::  Tmp_U_Value
 
 
 REAL(idp)                                           ::  r_tmp
@@ -434,7 +434,7 @@ SUBROUTINE Calc_Values_Here_All( re, theta, phi, LagP, Tmp_U_Value )
 INTEGER,                        INTENT(IN)                      ::  re
 REAL(idp),                      INTENT(IN)                      ::  theta, phi
 REAL(idp), DIMENSION(0:DEGREE), INTENT(INOUT)                   ::  LagP
-COMPLEX(idp), DIMENSION(1:5),   INTENT(INOUT)                   ::  Tmp_U_Value
+REAL(idp), DIMENSION(1:5),   INTENT(INOUT)                   ::  Tmp_U_Value
 
 
 INTEGER                                                         ::  l, m, d, u
@@ -510,7 +510,7 @@ REAL(idp), DIMENSION(0:DEGREE), INTENT(IN)              ::  LagP
 INTEGER,                        INTENT(IN)              ::  iU
 
 
-COMPLEX(idp)                                            ::  Tmp_U_Value
+REAL(idp)                                            ::  Tmp_U_Value
 
 
 INTEGER                                                 ::  l, m, d
@@ -558,7 +558,7 @@ INTEGER,                        INTENT(IN)                      ::  iU
 INTEGER,                        INTENT(IN)                      ::  iVB
 
 
-COMPLEX(idp)                                                    ::  Tmp_U_Value
+REAL(idp)                                                    ::  Tmp_U_Value
 INTEGER                                                         ::  l, m, d
 INTEGER                                                         ::  Loc_RED
 

@@ -61,8 +61,8 @@ CONTAINS
 !################################################################################!
 SUBROUTINE Jacobi_Type_A_PC( A_Mat, b_Vec)
 
-COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(INOUT) :: A_Mat
-COMPLEX(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(INOUT)     ::  b_Vec
+REAL(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(INOUT) :: A_Mat
+REAL(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(INOUT)     ::  b_Vec
 
 INTEGER                                                     ::  re, d, F, lm_loc
 REAL(KIND = idp), DIMENSION(0:Block_PROB_DIM-1)             ::  Modifier
@@ -136,11 +136,11 @@ END SUBROUTINE Jacobi_Type_A_PC
 !################################################################################!
 SUBROUTINE Jacobi_Type_B_PC( A_Mat, b_Vec )
 
-COMPLEX(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(INOUT) :: A_Mat
-COMPLEX(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(INOUT)     ::  b_Vec
+REAL(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(INOUT) :: A_Mat
+REAL(idp), DIMENSION(0:Block_PROB_DIM-1), INTENT(INOUT)     ::  b_Vec
 
 INTEGER                                                     ::  re, d, i, F, lm_loc
-COMPLEX(KIND = idp), DIMENSION(0:Block_PROB_DIM-1)             ::  Modifier
+REAL(KIND = idp), DIMENSION(0:Block_PROB_DIM-1)             ::  Modifier
 
 INTEGER                                                     ::  Start, Finish, Here
 

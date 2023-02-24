@@ -24,26 +24,27 @@ MODULE Poseidon_Return_Routines_Kij                                           !#
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-           ONLY : idp
+            ONLY :  idp
 
 USE Poseidon_Parameters, &
-           ONLY :  DEGREE
+            ONLY :  Degree,                      &
+                    L_Limit
 
 USE Parameters_Variable_Indices, &
-           ONLY :  iVB_X,                      &
-                   iVB_S,                      &
-                   iU_CF,                      &
-                   iU_LF,                      &
-                   iU_S1,                      &
-                   iU_S2,                      &
-                   iU_S3,                      &
-                   iU_X1,                      &
-                   iU_X2,                      &
-                   iU_X3
+            ONLY :  iVB_X,                      &
+                    iVB_S,                      &
+                    iU_CF,                      &
+                    iU_LF,                      &
+                    iU_S1,                      &
+                    iU_S2,                      &
+                    iU_S3,                      &
+                    iU_X1,                      &
+                    iU_X2,                      &
+                    iU_X3
 
 
 USE Variables_Tables, &
-           ONLY :   Slm_Elem_Values,        &
+            ONLY :  Slm_Elem_Values,        &
                     Slm_Elem_dt_Values,     &
                     Slm_Elem_dp_Values,              &
                     Lagrange_Poly_Table,        &
@@ -55,7 +56,8 @@ USE Variables_Mesh, &
                    Num_P_Elements
 
 USE Variables_Derived, &
-           ONLY :  LM_LENGTH
+            ONLY :  LM_Length,              &
+                    LM_Short_Length
 
 USE Variables_Vectors, &
             ONLY :  dVB_Coeff_Vector
@@ -90,9 +92,10 @@ USE Functions_Math, &
             ONLY :  Lagrange_Poly,                   &
                     Lagrange_Poly_Deriv
 
-USE Initialization_Tables, &
-            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                    Initialize_Ylm_Tables_On_Elem
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Am_Tables,            &
+                    Initialize_Plm_Tables,           &
+                    Initialize_Slm_Tables_on_Elem
 
 
 USE Variables_Interface, &
@@ -123,10 +126,11 @@ USE amrex_multifab_module,  &
                    amrex_imultifab_destroy
 
 USE Variables_AMReX_Core, &
-           ONLY :  AMReX_Num_Levels
+            ONLY :  AMReX_Num_Levels,        &
+                    AMReX_Max_Grid_Size
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
-           ONLY :  AMReX_MakeFineMask
+            ONLY :  AMReX_MakeFineMask
 
 #endif
 
@@ -183,7 +187,7 @@ INTEGER                                                         ::  re, te, pe
 INTEGER                                                         ::  rd, td, pd, tpd
 INTEGER                                                         ::  d
 INTEGER                                                         ::  Here, There
-INTEGER                                                         ::  i, j
+INTEGER                                                         ::  i, j, l, m
 
 REAL(idp)                                                       ::  Quad_Span
 REAL(idp), DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
@@ -199,28 +203,35 @@ REAL(idp)                                                       ::  DPOT
 
 REAL(idp), DIMENSION(3)                                         ::  gamma
 REAL(idp), DIMENSION(3,3,3)                                     ::  Christoffel
-COMPLEX(idp), DIMENSION(3)                                      ::  TMP_Val
-COMPLEX(idp), DIMENSION(3,3)                                    ::  TMP_Drv
+REAL(idp), DIMENSION(3)                                      ::  TMP_Val
+REAL(idp), DIMENSION(3,3)                                    ::  TMP_Drv
 
-COMPLEX(idp), DIMENSION(4)                                      ::  Reusable_Vals
-COMPLEX(idp), DIMENSION(6)                                      ::  Tmp_A
+REAL(idp), DIMENSION(4)                                      ::  Reusable_Vals
+REAL(idp), DIMENSION(6)                                      ::  Tmp_A
 
 
-COMPLEX(idp)                                                    ::  Trace(2)
+REAL(idp)                                                    ::  Trace(2)
 
 INTEGER                                                         ::  iVB
 INTEGER, DIMENSION(3)                                           ::  iU
 
 
+
+INTEGER                                                         ::  Long_LM
+INTEGER                                                         ::  Short_LM
+
 REAL(idp), DIMENSION(:,:,:), ALLOCATABLE                        ::  Caller_LPT
 
-REAL(idp), DIMENSION(1:LM_Short_Length)                         ::  Nlm_Table
 
 REAL(idp), DIMENSION(1:NQ(3),-L_Limit:L_Limit,0:NE(3)-1)        ::  Am_Table
 REAL(idp), DIMENSION(1:NQ(3),-L_Limit:L_Limit,0:NE(3)-1)        ::  Am_dp_Table
 
 REAL(idp), DIMENSION(1:NQ(2),0:L_Limit,0:NE(2)-1)               ::  Plm_Table
 REAL(idp), DIMENSION(1:NQ(2),0:L_Limit,0:NE(2)-1)               ::  Plm_dt_Table
+
+REAL(idp), DIMENSION( 1:LM_Length, 1:NQ(2)*NQ(3))               ::  Slm_Elem_Table
+REAL(idp), DIMENSION( 1:LM_Length, 1:NQ(2)*NQ(3))               ::  Slm_Elem_dt_Table
+REAL(idp), DIMENSION( 1:LM_Length, 1:NQ(2)*NQ(3))               ::  Slm_Elem_dp_Table
 
 ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
 
@@ -240,29 +251,6 @@ Gamma(1) = 1.0_idp
 Christoffel = 0.0_idp
 
 
-DO pe = 1,NE(3)
-DO te = 1,NE(2)
-DO re = 1,NE(1)
-
-DROT = 0.5_idp * (rlocs(re) - rlocs(re-1))
-DTOT = 0.5_idp * (tlocs(te) - tlocs(te-1))
-DPOT = 0.5_idp * (plocs(pe) - plocs(pe-1))
-
-Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp) + rlocs(re)
-Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp) + tlocs(te)
-Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp) + plocs(pe)
-
-
-DO rd = 1,NQ(1)
-    Caller_LPT(0,:,rd)=Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
-    Caller_LPT(1,:,rd)=Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
-END DO
-
-
-CALL Initialize_Nlm_Table(  L_Limit,                &
-                            LM_Short_Length,        &
-                            Nlm_Table               )
-
 CALL Initialize_Am_Tables(  NQ(3),                  &
                             CUR_PX_LOCS,            &
                             L_Limit,                &
@@ -281,33 +269,42 @@ CALL Initialize_Plm_Tables( NQ(2),                  &
                             tlocs,                  &
                             Plm_Table,              &
                             Plm_dt_Table            )
+
+DO pe = 1,NE(3)
+DO te = 1,NE(2)
+
+CALL Initialize_Slm_Tables_on_Elem( te, pe,             &
+                                   NQ(2), NQ(3),        &
+                                   NE,                  &
+                                   [1,1,1],             &
+                                   Plm_Table,            &
+                                   Plm_dt_Table,         &
+                                   Am_Table,             &
+                                   Am_dp_Table,          &
+                                   Slm_Elem_Table,       &
+                                   Slm_Elem_dt_Table,    &
+                                   Slm_Elem_dp_Table     )
+
+DO re = 1,NE(1)
+
+DROT = 0.5_idp * (rlocs(re) - rlocs(re-1))
+DTOT = 0.5_idp * (tlocs(te) - tlocs(te-1))
+DPOT = 0.5_idp * (plocs(pe) - plocs(pe-1))
+
+Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp) + rlocs(re)
+Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp) + tlocs(te)
+Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp) + plocs(pe)
+
+
+DO rd = 1,NQ(1)
+    Caller_LPT(0,:,rd)=Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+    Caller_LPT(1,:,rd)=Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
+END DO
+
+
+
                             
                             
-DO l = 0,L_Limit
-DO m = -l,l
-DO td = 1,Int_T_Deg
-DO pd = 1,Int_P_Deg
-
-    tpd = (td-1)*Int_P_Deg + pd
-    Short_LM = Map_To_Short_lm(l,abs(m))
-    Long_LM  = Map_to_LM(l,m)
-    
-    Slm_Table(tpd,Long_LM) = Nlm_Table(Short_LM)                &
-                             * Am_Table(pd,m,1)                 &
-                             * Plm_Table(td,Short_LM,1)
-                     
-    Slm_dt_Table(tpd,Long_LM) = Nlm_Table(Short_LM)             &
-                                * Am_Table(pd,m,1)              &
-                                * Plm_dt_Table(td,Short_LM,1)
-                    
-    Slm_dp_Table(tpd,Long_LM) = Nlm_Table(Short_LM)             &
-                                * Am_dp_Table(pd,m,1)           &
-                                * Plm_Table(td,Short_LM,1)
-
-END DO
-END DO
-END DO
-END DO
 
 
 
@@ -582,11 +579,11 @@ LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_O
 
  REAL(idp), DIMENSION(3)                                         ::  gamma
  REAL(idp), DIMENSION(3,3,3)                                     ::  Christoffel
- COMPLEX(idp), DIMENSION(3)                                      ::  TMP_Val
- COMPLEX(idp), DIMENSION(3,3)                                    ::  TMP_Drv
+ REAL(idp), DIMENSION(3)                                      ::  TMP_Val
+ REAL(idp), DIMENSION(3,3)                                    ::  TMP_Drv
 
- COMPLEX(idp), DIMENSION(4)                                      ::  Reusable_Vals
- COMPLEX(idp), DIMENSION(6)                                      ::  Tmp_A
+ REAL(idp), DIMENSION(4)                                      ::  Reusable_Vals
+ REAL(idp), DIMENSION(6)                                      ::  Tmp_A
 
  INTEGER                                                         ::  iVB
  INTEGER, DIMENSION(3)                                           ::  iU
@@ -598,6 +595,21 @@ LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_O
 INTEGER, DIMENSION(3)                                       ::  iEL_A, iEU_A
 LOGICAL                                                     ::  FillGhostCells
 INTEGER,        DIMENSION(1:3)                              ::  nGhost_Vec
+
+
+INTEGER,    DIMENSION(3)                                    ::  iNE
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2)-1)           ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3)-1)           ::  plocs_subarray
+
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_Table
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_dt_Table
+
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_Table
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_dp_Table
+
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_Table
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_dt_Table
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_dp_Table
 
 
 IF ( PRESENT(FillGhostCells_Option) ) THEN
@@ -658,7 +670,6 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
          CALL Level_Mask%SetVal(iLeaf)
      END IF
 
-     CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
 
      CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
 
@@ -684,6 +695,38 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
         IF ( ANY( iEU .GE. (2**lvl)*iNE_Base(1) ) ) THEN
             iEU = iEU_A
         END IF
+        
+        iNE = iEU-iEL+1
+        
+        
+        DO te = iEL(2),iEU(2)
+            tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
+        END DO
+        DO pe = iEL(3),iEU(3)
+            plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
+        END DO
+        
+        
+        ! Initialize Am Table
+        CALL Initialize_Am_Tables(  NQ(3),                      &
+                                    PQ_Input,                   &
+                                    L_Limit,                    &
+                                    iNE(3),                     &
+                                    [iEL(3), iEU(3)],           &
+                                    plocs_subarray(0:iNE(3)-1), &
+                                    Am_Table,                   &
+                                    Am_dp_Table                 )
+
+        ! Initialize Plm Table
+        CALL Initialize_Plm_Tables( NQ(2),                      &
+                                    TQ_Input,                   &
+                                    L_Limit,                    &
+                                    LM_Short_Length,            &
+                                    iNE(2),                     &
+                                    [iEL(2), iEU(2)],           &
+                                    tlocs_subarray(0:iNE(2)-1), &
+                                    Plm_Table,                  &
+                                    Plm_dt_Table                )
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
@@ -693,7 +736,17 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
         IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
              iRE = FEM_Elem_Map(re,lvl)
 
-            CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
+             CALL Initialize_Slm_Tables_on_Elem( te, pe,             &
+                                                NQ(2), NQ(3),           &
+                                                iNE,                &
+                                                iEL,                &
+                                                Plm_Table,          &
+                                                Plm_dt_Table,       &
+                                                Am_Table,           &
+                                                Am_dp_Table,        &
+                                                Slm_Elem_Table,     &
+                                                Slm_Elem_dt_Table,  &
+                                                Slm_Elem_dp_Table   )
      
             Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
             Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
@@ -722,25 +775,25 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
 
                      TMP_Val(i) = TMP_Val(i)                                  &
                              + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
-                                     * Ylm_Elem_Values( :, tpd )   )       &
+                                     * Slm_Elem_Table( :, tpd )   )       &
                              * Caller_LPT(0,d,rd)
 
 
                      TMP_Drv(1,i) = TMP_Drv(1,i)                              &
                                 + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                                      * Ylm_Elem_Values( :, tpd  )     )    &
+                                      * Slm_Elem_Table( :, tpd  )     )    &
                                 * Caller_LPT(1,d,rd)             &
                                 / DROT
 
 
                      TMP_Drv(2,i) = TMP_Drv(2,i)                              &
                                 + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                                      * Ylm_Elem_dt_Values( :, tpd )   )    &
+                                      * Slm_Elem_dt_Table( :, tpd )   )    &
                                 * Caller_LPT(0,d,rd)
 
                      TMP_Drv(3,i) = TMP_Drv(3,i)                              &
                                 + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                                      * Ylm_Elem_dp_Values( :, tpd)   )    &
+                                      * Slm_Elem_dp_Table( :, tpd)   )    &
                                 * Caller_LPT(0,d,rd)
 
                  END DO ! d Loop

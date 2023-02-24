@@ -67,7 +67,7 @@ USE Variables_Quadrature, &
                     INT_TP_WEIGHTS
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Load_Vector
+            ONLY :  dVA_Load_Vector
 
 USE Variables_Source, &
             ONLY :  Source_Rho
@@ -122,7 +122,7 @@ CONTAINS
  !#########################################################################!
 SUBROUTINE Calculate_Newtonian_Load_Vector()
 
-COMPLEX(idp)                                        ::  Tmp_Val
+REAL(idp)                                        ::  Tmp_Val
 
 
 INTEGER                                             ::  lm,l,m, re, rd, te, td, pe, pd, d
@@ -144,7 +144,7 @@ INTEGER                                             ::  There, Here
 
 REAL(idp),           DIMENSION(:,:,:), ALLOCATABLE  ::  R_Pre
 REAL(idp),           DIMENSION(:,:,:), ALLOCATABLE  ::  T_Pre
-COMPLEX(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  ::  P_Pre
+REAL(KIND = idp), DIMENSION(:,:,:), ALLOCATABLE  ::  P_Pre
 
 ALLOCATE(R_locs(1:Num_R_Quad_Points ) )
 ALLOCATE(T_locs(1:Num_T_Quad_Points ) )
@@ -256,7 +256,7 @@ CALL TimerStart( Timer_Poisson_SourceVector_Main )
 
 
 
-cVA_Load_Vector = 0.0_idp
+dVA_Load_Vector = 0.0_idp
 Tmp_Val = 0.0_idp
 
 #if defined(POSEIDON_OPENMP_OL_FLAG)
@@ -306,7 +306,7 @@ DO d = 0,DEGREE
     END DO  ! te Loop
     END DO  ! pe Loop
     
-    cVA_Load_Vector(There,lm,1) = cVA_Load_Vector(There,lm,1) + Tmp_Val
+    dVA_Load_Vector(There,lm,1) = dVA_Load_Vector(There,lm,1) + Tmp_Val
 
     TMP_Val = 0.0_idp
 

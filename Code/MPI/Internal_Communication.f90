@@ -881,7 +881,7 @@ END SUBROUTINE Poseidon_CFA_Block_Share
 SUBROUTINE Poseidon_Distribute_Solution( CoeffVec )
 
 
-COMPLEX(idp), DIMENSION(0:Prob_Dim-1), INTENT(INOUT)    ::  CoeffVec
+REAL(idp), DIMENSION(0:Prob_Dim-1), INTENT(INOUT)    ::  CoeffVec
 
 INTEGER                                                 ::  i
 INTEGER                                                 ::  ierr
@@ -892,11 +892,11 @@ INTEGER                                                 ::  Length_A,       &
 INTEGER                                                 ::  Start_Here,     &
                                                             End_Here
 
-COMPLEX(kind = idp), DIMENSION(:), ALLOCATABLE          ::  Buffer_A,       &
+REAL(kind = idp), DIMENSION(:), ALLOCATABLE          ::  Buffer_A,       &
                                                             Buffer_B,       &
                                                             Buffer_C
 
-COMPLEX(kind = idp),DIMENSION(:), ALLOCATABLE           ::  Buffer_2
+REAL(kind = idp),DIMENSION(:), ALLOCATABLE           ::  Buffer_2
 
 INTEGER, DIMENSION(0:NUM_SHELLS-1)                      ::  ID_Array
 
@@ -937,10 +937,10 @@ IF ( SOL_DIST_SCHEME == 1 ) THEN
 
         IF ( myID_PETSC == i ) THEN
             Buffer_A = CoeffVec(Start_Here:End_Here-1)
-            CALL MPI_BCAST( Buffer_A, Length_A, MPI_DOUBLE_COMPLEX, ID_Array(i), MPI_COMM_WORLD, ierr )
+            CALL MPI_BCAST( Buffer_A, Length_A, MPI_DOUBLE, ID_Array(i), MPI_COMM_WORLD, ierr )
 
         ELSE
-            CALL MPI_BCAST( Buffer_A, Length_A, MPI_DOUBLE_COMPLEX, ID_Array(i), MPI_COMM_WORLD, ierr )
+            CALL MPI_BCAST( Buffer_A, Length_A, MPI_DOUBLE, ID_Array(i), MPI_COMM_WORLD, ierr )
             CoeffVec(Start_Here:End_Here-1) = Buffer_A
 
         END IF
@@ -959,11 +959,11 @@ IF ( SOL_DIST_SCHEME == 1 ) THEN
 
         Buffer_B = CoeffVec(Start_Here:End_Here-1)
 
-        CALL MPI_BCAST( Buffer_B, Length_B, MPI_DOUBLE_COMPLEX, ID_Array(i), MPI_COMM_WORLD, ierr )
+        CALL MPI_BCAST( Buffer_B, Length_B, MPI_DOUBLE, ID_Array(i), MPI_COMM_WORLD, ierr )
 
     ELSE
 
-        CALL MPI_BCAST( Buffer_B, Length_B, MPI_DOUBLE_COMPLEX, ID_Array(i), MPI_COMM_WORLD, ierr )
+        CALL MPI_BCAST( Buffer_B, Length_B, MPI_DOUBLE, ID_Array(i), MPI_COMM_WORLD, ierr )
         CoeffVec(Start_Here:End_Here-1) = Buffer_B
 
     END IF
@@ -984,11 +984,11 @@ ELSE IF ( SOL_DIST_SCHEME == 2 ) THEN
     IF ( myID_DIST == 0 ) THEN
 
         Buffer_2 = CoeffVec
-        CALL MPI_BCAST( Buffer_2, PROB_DIM, MPI_DOUBLE_COMPLEX, 0, POSEIDON_COMM_DIST, ierr )
+        CALL MPI_BCAST( Buffer_2, PROB_DIM, MPI_DOUBLE, 0, POSEIDON_COMM_DIST, ierr )
 
     ELSE
 
-        CALL MPI_BCAST( Buffer_2, PROB_DIM, MPI_DOUBLE_COMPLEX, 0, POSEIDON_COMM_DIST, ierr )
+        CALL MPI_BCAST( Buffer_2, PROB_DIM, MPI_DOUBLE, 0, POSEIDON_COMM_DIST, ierr )
         CoeffVec = Buffer_2
 
     END IF
@@ -1015,11 +1015,11 @@ ELSE IF ( SOL_DIST_SCHEME == 3 ) THEN
         IF ( myID_SHELL == 0 ) THEN
 
             Buffer_C = CoeffVec(Start_Here:End_Here-1)
-            CALL MPI_BCAST( Buffer_C, LOCAL_LENGTH, MPI_DOUBLE_COMPLEX, 0, POSEIDON_COMM_SHELL, ierr )
+            CALL MPI_BCAST( Buffer_C, LOCAL_LENGTH, MPI_DOUBLE, 0, POSEIDON_COMM_SHELL, ierr )
 
         ELSE
 
-            CALL MPI_BCAST( Buffer_C, LOCAL_LENGTH, MPI_DOUBLE_COMPLEX, 0, POSEIDON_COMM_SHELL, ierr )
+            CALL MPI_BCAST( Buffer_C, LOCAL_LENGTH, MPI_DOUBLE, 0, POSEIDON_COMM_SHELL, ierr )
             CoeffVec(Start_Here:End_Here-1) = Buffer_C
 
         END IF

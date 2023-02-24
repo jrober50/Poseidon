@@ -45,11 +45,11 @@ INTEGER, INTENT(IN)                                         :: N, NNZ
 INTEGER, DIMENSION(0:N), INTENT(IN)                         :: COL_PTR
 INTEGER, DIMENSION(0:NNZ - 1),INTENT(IN)                    :: ROW_IND
 
-COMPLEX(KIND = idp), DIMENSION(0:NNZ - 1), INTENT(IN)       :: ELEM_VAL
-COMPLEX(KIND = idp), DIMENSION(0:N-1), INTENT(IN)           :: VECT
+REAL(KIND = idp), DIMENSION(0:NNZ - 1), INTENT(IN)       :: ELEM_VAL
+REAL(KIND = idp), DIMENSION(0:N-1), INTENT(IN)           :: VECT
 
 
-COMPLEX(KIND = idp), DIMENSION(0:N-1)                          :: MVMULT_CCS
+REAL(KIND = idp), DIMENSION(0:N-1)                          :: MVMULT_CCS
 
 INTEGER                                                     :: i, j
 
@@ -83,14 +83,14 @@ PURE FUNCTION MVMULT_FULL(A, V, N, M)
 
 
 INTEGER, INTENT(IN)                                         :: N, M
-COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:M)             :: V
-COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:N,1:M)         :: A
+REAL(KIND = idp), INTENT(IN), DIMENSION(1:M)             :: V
+REAL(KIND = idp), INTENT(IN), DIMENSION(1:N,1:M)         :: A
 
 
-COMPLEX(KIND = idp), DIMENSION(1:N)                            :: MVMULT_FULL
+REAL(KIND = idp), DIMENSION(1:N)                            :: MVMULT_FULL
 
 
-COMPLEX(KIND = idp), DIMENSION(1:N)                            :: Sol
+REAL(KIND = idp), DIMENSION(1:N)                            :: Sol
 
 INTEGER                                                     :: i,j
 
@@ -124,11 +124,11 @@ SUBROUTINE MVMULT_FULL_SUB(A, V, N, M)
 
 
 INTEGER, INTENT(IN)                                         :: N, M
-COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:M)             :: V
-COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:N,1:M)         :: A
+REAL(KIND = idp), INTENT(IN), DIMENSION(1:M)             :: V
+REAL(KIND = idp), INTENT(IN), DIMENSION(1:N,1:M)         :: A
 
 
-COMPLEX(KIND = idp), DIMENSION(1:N)                            :: Sol
+REAL(KIND = idp), DIMENSION(1:N)                            :: Sol
 
 INTEGER                                                     :: i,j
 

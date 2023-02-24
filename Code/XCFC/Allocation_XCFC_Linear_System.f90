@@ -48,11 +48,7 @@ USE Variables_FP,  &
                     FP_Laplace_Vector_X
 
 USE Variables_Vectors,  &
-            ONLY :  cVA_Load_Vector,         &
-                    cVB_Load_Vector,         &
-                    cVA_Coeff_Vector,          &
-                    cVB_Coeff_Vector,       &
-                    dVA_Load_Vector,         &
+            ONLY :  dVA_Load_Vector,         &
                     dVB_Load_Vector,         &
                     dVA_Coeff_Vector,          &
                     dVB_Coeff_Vector
@@ -124,14 +120,6 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
 
 END IF
 
-
-ALLOCATE( cVA_Load_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
-ALLOCATE( cVB_Load_Vector(1:iVB_Prob_Dim,1:2) )
-
-ALLOCATE( cVA_Coeff_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2) )
-ALLOCATE( cVB_Coeff_Vector(1:iVB_Prob_Dim,1:2) )
-
-
 ALLOCATE( dVA_Load_Vector(1:NUM_R_NODES,1:LM_LENGTH,1:2)   )
 ALLOCATE( dVB_Load_Vector(1:iVB_Prob_Dim,1:2) )
 
@@ -185,11 +173,11 @@ ELSEIF ( MATRIX_FORMAT == 'CCS' ) THEN
     
 END IF
 
-DEALLOCATE( cVA_Load_Vector )
-DEALLOCATE( cVB_Load_Vector )
+DEALLOCATE( dVA_Load_Vector )
+DEALLOCATE( dVB_Load_Vector )
 
-DEALLOCATE( cVA_Coeff_Vector )
-DEALLOCATE( cVB_Coeff_Vector )
+DEALLOCATE( dVA_Coeff_Vector )
+DEALLOCATE( dVB_Coeff_Vector )
 
 DEALLOCATE( FP_Update_Vector )
 

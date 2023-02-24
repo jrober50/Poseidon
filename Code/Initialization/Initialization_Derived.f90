@@ -152,7 +152,7 @@ IF ( DOMAIN_DIM == 1 ) THEN
 ELSE IF ( DOMAIN_DIM == 2 ) THEN
 
     LM_Length = L_Limit + 1
-    LM_Length = L_Limit + 1
+    LM_Short_Length = L_Limit + 1
 
 ELSE IF ( DOMAIN_DIM == 3 ) THEN
 
@@ -163,7 +163,7 @@ END IF
 
 
 !LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
-
+!LM_Short_Length = (L_Limit+1)*(L_Limit+2)/2
 
 !
 !   VAR_DIM - Length of vector required to hold coefficients for 1 variable.

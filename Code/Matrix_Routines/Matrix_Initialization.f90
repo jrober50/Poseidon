@@ -28,6 +28,9 @@ MODULE Matrix_Initialization_Module                                             
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Bailout_Module, &
+            ONLY :  Poseidon_Bailout
+            
 USE Poseidon_Numbers_Module, &
             ONLY : pi, TwoPi
 
@@ -96,9 +99,10 @@ USE Functions_Quadrature, &
                     Initialize_Trapezoid_Quadrature
 
 USE Initialization_Tables_Slm, &
-            ONLY :  Initialize_Nlm_Table,   &
-                    Initialize_Am_Tables,   &
-                    Initialize_Plm_Tables
+            ONLY :  Initialize_Nlm_Table,           &
+                    Initialize_Am_Tables,           &
+                    Initialize_Plm_Tables,          &
+                    Initialize_Slm_Tables_on_Elem
 
 
 USE Flags_Initialization_Module, &
@@ -125,36 +129,36 @@ USE MPI
 IMPLICIT NONE
 
 
-INTEGER,                                        PRIVATE ::  Int_R_Deg
-INTEGER,                                        PRIVATE ::  Int_T_Deg
-INTEGER,                                        PRIVATE ::  Int_P_Deg
-INTEGER,                                        PRIVATE ::  Int_TP_Deg
+INTEGER,                                            PRIVATE     ::  Int_R_Deg
+INTEGER,                                            PRIVATE     ::  Int_T_Deg
+INTEGER,                                            PRIVATE     ::  Int_P_Deg
+INTEGER,                                            PRIVATE     ::  Int_TP_Deg
 
 
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Cur_T_Locs
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Cur_P_Locs
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Cur_T_Locs
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Cur_P_Locs
 
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_R_Locs, Int_R_Weights
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_T_Locs, Int_T_Weights
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_P_Locs, Int_P_Weights
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Int_R_Locs, Int_R_Weights
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Int_T_Locs, Int_T_Weights
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Int_P_Locs, Int_P_Weights
 
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,:,:,: ),   PRIVATE  ::  LP_LP_Table
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: ),   PRIVATE      ::  TP_TP_Integrals
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,:,:,: ), PRIVATE     ::  LP_LP_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  TP_TP_Integrals
 
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: ),   PRIVATE      ::  RR_Factor
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: ),   PRIVATE      ::  DRR_Factor
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: ),   PRIVATE      ::  RDR_Factor
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: ),   PRIVATE      ::  DRDR_Factor
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  RR_Factor
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  DRR_Factor
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  RDR_Factor
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  DRDR_Factor
 
-REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),   PRIVATE                      ::  Slm_Table
-REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),   PRIVATE                      ::  Slm_dp_Table
-REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),   PRIVATE                      ::  Slm_dt_Table
-REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),   PRIVATE                    ::  Plm_Table
-REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),   PRIVATE                    ::  Plm_dt_Table
-REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),   PRIVATE                    ::  Am_Table
-REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),   PRIVATE                    ::  Am_dp_Table
-REAL(idp),  ALLOCATABLE,    DIMENSION(:),   PRIVATE                        ::  Nlm_Table
-REAL(idp),  ALLOCATABLE,    DIMENSION(:),   PRIVATE                        ::  TP_Int_Weights
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),         PRIVATE     ::  Slm_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),         PRIVATE     ::  Slm_dp_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),         PRIVATE     ::  Slm_dt_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),       PRIVATE     ::  Plm_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),       PRIVATE     ::  Plm_dt_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),       PRIVATE     ::  Am_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),       PRIVATE     ::  Am_dp_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Nlm_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  TP_Int_Weights
 
 CONTAINS
 
@@ -192,6 +196,7 @@ CALL Allocate_Matrix_Init_Variables()
 
 CALL Initialize_LG_Quadrature(Int_R_Deg, Int_R_Locs, Int_R_Weights)
 CALL Initialize_LG_Quadrature(Int_T_Deg, Int_T_Locs, Int_T_Weights)
+!CALL Initialize_LG_Quadrature(Int_P_Deg, Int_P_Locs, Int_P_Weights)
 CALL Initialize_Trapezoid_Quadrature(Int_P_Deg, 1, Int_P_Locs, Int_P_Weights)
 
 
@@ -205,16 +210,15 @@ Cur_P_Locs = Int_P_Locs
 CALL Calculate_Radial_Terms()
 CALL Calculate_Angular_Terms()
 
-
 CALL Calculate_Laplace_Matrix()
 CALL Calculate_MVL_Banded()
-
 
 Call Deallocate_Matrix_Init_Variables()
 
 
-
 CALL TimerStop( Timer_Matrix_Init )
+
+
 
 
 END SUBROUTINE Initialize_XCFC_Matrices
@@ -438,11 +442,10 @@ DO pd = 1,Int_P_Deg
 END DO ! pd
 END DO ! td
 
-
-
 CALL Initialize_Nlm_Table(  L_Limit,                &
                             LM_Short_Length,        &
                             Nlm_Table               )
+
 
 CALL Initialize_Am_Tables(  Int_P_Deg,              &
                             Int_P_Locs,             &
@@ -453,6 +456,7 @@ CALL Initialize_Am_Tables(  Int_P_Deg,              &
                             Am_Table,               &
                             Am_dp_Table             )
 
+
 CALL Initialize_Plm_Tables( Int_T_Deg,              &
                             Int_T_Locs,             &
                             L_Limit,                &
@@ -462,33 +466,31 @@ CALL Initialize_Plm_Tables( Int_T_Deg,              &
                             [0.0_idp, Pi],          &
                             Plm_Table,              &
                             Plm_dt_Table            )
-                            
-                            
-DO l = 0,L_Limit
-DO m = -l,l
-DO td = 1,Int_T_Deg
-DO pd = 1,Int_P_Deg
 
-    tpd = (td-1)*Int_P_Deg + pd
-    Short_LM = Map_To_Short_lm(l,abs(m))
-    Long_LM  = Map_to_LM(l,m)
-    
-    Slm_Table(tpd,Long_LM) = Nlm_Table(Short_LM)                &
-                             * Am_Table(pd,m,1)                 &
-                             * Plm_Table(td,Short_LM,1)
-                     
-    Slm_dt_Table(tpd,Long_LM) = Nlm_Table(Short_LM)             &
-                                * Am_Table(pd,m,1)              &
-                                * Plm_dt_Table(td,Short_LM,1)
-                    
-    Slm_dp_Table(tpd,Long_LM) = Nlm_Table(Short_LM)             &
-                                * Am_dp_Table(pd,m,1)           &
-                                * Plm_Table(td,Short_LM,1)
 
-END DO
-END DO
-END DO
-END DO
+CALL Initialize_Slm_Tables_on_Elem( 0, 0,                   &
+                                    Int_T_Deg,              &
+                                    Int_P_Deg,              &
+                                    [1, 1, 1],              &
+                                    [0, 0, 0],              &
+                                    Plm_Table,              &
+                                    Plm_dt_Table,           &
+                                    Am_Table,               &
+                                    Am_dp_Table,            &
+                                    Slm_Table,              &
+                                    Slm_dt_Table,           &
+                                    Slm_dp_Table            )
+
+
+
+!PRINT*,"Slm_Table"
+!PRINT*,Slm_Table
+!PRINT*,"Slm_dt_Table"
+!PRINT*,Slm_dt_Table
+!PRINT*,"Slm_dp_Table"
+!PRINT*,Slm_dp_Table
+
+
 
 DO lpmp_loc = 1,LM_Length
 DO lm_loc = 1,LM_Length
@@ -591,10 +593,15 @@ DO lm_loc = 1,LM_Length
                                                  * Cotan_Val(:)             )
 
 
+!    PRINT*,TP_TP_Integrals(lm_loc, lpmp_loc,:)
+
 END DO
 END DO
 
 
+
+
+!CALL Poseidon_Bailout("End of Calculate_Angular_Terms")
 
 CALL TimerStop(Timer_Matrix_Angular_Terms)
 
@@ -774,13 +781,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
 END IF
 
 
-
-!PRINT*,"Row"
-!PRINT*,-Laplace_Matrix_VAL
-!PRINT*,"col"
-!PRINT*,Laplace_Matrix_ROW
-!PRiNT*,"Val"
-!PRINT*,Laplace_Matrix_COL
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .FALSE.
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A) = .TRUE.
 
@@ -1093,21 +1093,6 @@ DO d = 0,Degree
                                                         / CUR_R_LOCS(:)         )   &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
 
-!        PRINT*,Row-iMB_Bandwidth,Col,dMB_Matrix_Banded(Row-Col, Col),        &
-!            - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
-!              * TP_TP_Integrals( lm_loc, lpmp_loc, 2 )    &
-!            - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
-!              * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )    &
-!            - 2.0_idp * SUM( RR_Factor(:, d, dp)          &
-!                              / CUR_R_LOCS(:)         )   &
-!              * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )    &
-!            - 2.0_idp * SUM( RR_Factor(:, d, dp)          &
-!                              / CUR_R_LOCS(:)         )   &
-!              * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
-
-
-!        PRINT*,Row-iMB_Bandwidth,Col,                          &
-!                TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
 
 
     END DO ! lpmp_loc Loop

@@ -52,9 +52,7 @@ USE Variables_Derived, &
                     LM_Length
 
 USE Variables_Vectors,  &
-            ONLY :  cVB_Coeff_Vector,           &
-                    cVB_Load_Vector,            &
-                    dVB_Coeff_Vector,           &
+            ONLY :  dVB_Coeff_Vector,           &
                     dVB_Load_Vector
                     
 USE Variables_Matrices,  &
@@ -164,6 +162,7 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
 !    PRINT*,Work_Vec
 
+!    PRINT*,dMB_Matrix_Banded
 
     CALL DGBTRS( 'N',                   &
                  iVB_Prob_Dim,          &

@@ -78,13 +78,17 @@ USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,          &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,          &
+                    dVB_Coeff_Vector
 
 USE Variables_Tables, &
-            ONLY :  Ylm_Values,                 &
-                    Ylm_dt_Values,              &
-                    Ylm_dp_Values
+            ONLY :  Plm_Values,                 &
+                    Plm_dt_Values,              &
+                    Am_Values,                  &
+                    Am_dp_Values,               &
+                    Slm_Elem_Values,            &
+                    Slm_Elem_dt_Values,         &
+                    Slm_Elem_dp_Values
 
 USE Functions_Math, &
             ONLY :  Lagrange_Poly_Deriv
@@ -121,8 +125,8 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
    
     Here = Map_To_FEM_Node(Num_R_Elements-1,Degree)
     
-    TMP_Val = SUM( cVA_Coeff_Vector( Here, :, iU )     &
-                  * Ylm_Values( :, tpd, te, pe )        )
+    TMP_Val = SUM( dVA_Coeff_Vector( Here, :, iU )     &
+                  * Slm_Elem_Values(:,tpd)        )
 
 
     Val(tpd)       = REAL(TMP_Val, KIND = idp)
@@ -167,21 +171,21 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     Lagrange_DRV_Values = Lagrange_Poly_Deriv(1.0_idp, Degree, Local_Locs)
 
 
-    TMP_Val = SUM( cVA_Coeff_Vector( Here, :, iU )     &
-                    * Ylm_Values( :, tpd, te, pe )        )
+    TMP_Val = SUM( dVA_Coeff_Vector( Here, :, iU )     &
+                    * Slm_Elem_Values(:,tpd)        )
 
 
-    TMP_Drv(1) = SUM( cVA_Coeff_Vector( Here, :, iU )      &
-                    * Ylm_Values( :, tpd, te, pe )     )    &
+    TMP_Drv(1) = SUM( dVA_Coeff_Vector( Here, :, iU )      &
+                    * Slm_Elem_Values(:,tpd)     )    &
                 * Lagrange_DRV_Values ( Degree )            &
                 / DROT
 
 
-    TMP_Drv(2) = SUM( cVA_Coeff_Vector( Here, :, iU )      &
-                    * Ylm_dt_Values( :, tpd, te, pe)   )
+    TMP_Drv(2) = SUM( dVA_Coeff_Vector( Here, :, iU )      &
+                    * Slm_Elem_dt_Values(:,tpd)   )
 
-    TMP_Drv(3) = SUM( cVA_Coeff_Vector( Here, :, iU )      &
-                    * Ylm_dp_Values( :, tpd, te, pe)   )
+    TMP_Drv(3) = SUM( dVA_Coeff_Vector( Here, :, iU )      &
+                    * Slm_Elem_dp_Values(:,tpd)   )
 
 
     Val(tpd)         = REAL(TMP_Val,    KIND = idp)
@@ -226,8 +230,8 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     Here  = FP_Array_Map_TypeB(iU,iVB,Num_R_Elements-1,Degree,1)
     There = FP_Array_Map_TypeB(iU,iVB,Num_R_Elements-1,Degree,LM_Length)
 
-    TMP_Val = SUM( cVB_Coeff_Vector( Here:There, iVB )     &
-                   * Ylm_Values( :, tpd, te, pe )           )
+    TMP_Val = SUM( dVB_Coeff_Vector( Here:There, iVB )     &
+                   * Slm_Elem_Values(:,tpd)           )
 
 
 
@@ -275,21 +279,21 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
     Here  = FP_Array_Map_TypeB(iU,iVB,Num_R_Elements-1,Degree,1)
     There = FP_Array_Map_TypeB(iU,iVB,Num_R_Elements-1,Degree,LM_Length)
 
-    TMP_Val = SUM( cVB_Coeff_Vector( Here:There, iVB )      &
-                   * Ylm_Values( :, tpd, te, pe )   )
+    TMP_Val = SUM( dVB_Coeff_Vector( Here:There, iVB )      &
+                   * Slm_Elem_Values(:,tpd)   )
 
 
-    TMP_Drv(1) = SUM( cVB_Coeff_Vector( Here:There, iVB )  &
-                    * Ylm_Values( :, tpd, te, pe )     )    &
+    TMP_Drv(1) = SUM( dVB_Coeff_Vector( Here:There, iVB )  &
+                    * Slm_Elem_Values(:,tpd)     )    &
                 * Lagrange_DRV_Values ( Degree )            &
                 / DROT
 
 
-    TMP_Drv(2) = SUM( cVB_Coeff_Vector( Here:There, iVB )   &
-                    * Ylm_dt_Values( :, tpd, te, pe)   )
+    TMP_Drv(2) = SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                    * Slm_Elem_dt_Values(:,tpd)   )
 
-    TMP_Drv(3) = SUM( cVB_Coeff_Vector( Here:There, iVB )   &
-                    * Ylm_dp_Values( :, tpd, te, pe)   )
+    TMP_Drv(3) = SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                    * Slm_Elem_dp_Values(:,tpd)   )
 
 
     Val(tpd)         = REAL(TMP_Val,    KIND = idp)

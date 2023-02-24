@@ -33,6 +33,9 @@ USE Poseidon_Parameters, &
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Run_Message
+            
+USE Poseidon_Bailout_Module, &
+            ONLY :  Poseidon_Bailout
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -154,11 +157,12 @@ CALL TimerStop(  Timer_X_LinearSolve )
 
 CALL TimerStop( Timer_X )
 
+
+
+
 !CALL Print_Single_Var_Results( iU_X1, iVB_X )
 
-
-
-IF ( .FALSE. ) STOP "at the end of XCFC_x_Solve"
+!IF ( .TRUE. ) CALL Poseidon_Bailout("at the end of XCFC_x_Solve")
 
 
 

@@ -51,13 +51,7 @@ USE Variables_Quadrature, &
                     Num_TP_Quad_Points
 
 USE Variables_Tables, &
-            ONLY :  Ylm_Values,                 &
-                    Ylm_dt_Values,              &
-                    Ylm_dp_Values,              &
-                    Ylm_CC_Values,              &
-                    Ylm_CC_dt_Values,           &
-                    Ylm_CC_dp_Values,           &
-                    Slm_Elem_Values,            &
+            ONLY :  Slm_Elem_Values,            &
                     Slm_Elem_dt_Values,         &
                     Slm_Elem_dp_Values,         &
                     Plm_Values,                 &
@@ -68,15 +62,6 @@ USE Variables_Tables, &
                     Lagrange_Poly_Table,        &
                     LPT_LPT,                    &
                     M_Values,                   &
-                    Ylm_Norm_Table,             &
-                    Ylm_Sqrt_Table,             &
-                    rBT_NormedLegendre,         &
-!                    rBT_NormedLegendre_dt,  &
-!                    rBT_NormedLegendre_CC,  &
-                    Ylm_Elem_Values,            &
-                    Ylm_Elem_dt_Values,         &
-                    Ylm_Elem_dp_Values,         &
-                    Ylm_Elem_CC_Values,         &
                     Level_dx,                   &
                     Level_Ratios
 
@@ -113,36 +98,6 @@ IF ( Verbose_Flag ) CALL Init_Message('Allocating Table Variables.')
 
 #ifdef POSEIDON_AMREX_FLAG
 
-ALLOCATE( Ylm_Norm_Table( -L_Limit:L_Limit, 0:L_Limit ) )
-ALLOCATE( Ylm_Sqrt_Table( -L_Limit:L_Limit, 0:L_Limit ) )
-
-
-ALLOCATE( rBT_NormedLegendre(   -L_Limit:L_Limit,           &
-                                -1:L_Limit,                 &
-                                1:Num_T_Quad_Points,        &
-                                0:AMReX_Max_Grid_Size(2)-1 )   )
-
-!ALLOCATE( rBT_NormedLegendre_dt(-L_Limit:L_Limit,           &
-!                                -1:L_Limit,                 &
-!                                1:Num_T_Quad_Points,        &
-!                                0:MaxGridSizeX2-1       )   )
-!
-!ALLOCATE( rBT_NormedLegendre_CC(-L_Limit:L_Limit,           &
-!                                -1:L_Limit,                 &
-!                                1:Num_T_Quad_Points,        &
-!                                0:MaxGridSizeX2-1       )   )
-
-
-ALLOCATE( Ylm_Elem_Values(      1:LM_Length,                &
-                                1:Num_TP_Quad_Points    )   )
-ALLOCATE( Ylm_Elem_dt_Values(   1:LM_Length,                &
-                                1:Num_TP_Quad_Points    )   )
-ALLOCATE( Ylm_Elem_dp_Values(   1:LM_Length,                &
-                                1:Num_TP_Quad_Points    )   )
-ALLOCATE( Ylm_Elem_CC_Values(   1:Num_TP_Quad_Points,       &
-                                1:LM_Length            )   )
-
-
 ALLOCATE( Level_dx( 0:AMReX_Num_Levels-1, 3 ) )
 ALLOCATE( Level_Ratios(0:AMReX_Num_Levels) )
 
@@ -158,11 +113,11 @@ ALLOCATE( Plm_dt_Values(    1:Num_T_Quad_Points,        &
 ALLOCATE( Nlm_Values(       1:LM_Short_Length)          )
 
 ALLOCATE( Am_Values(        1:Num_P_Quad_Points,        &
-                            1:LM_Length,                &
+                            -L_Limit:L_Limit,           &
                             0:AMReX_Max_Grid_Size(3)-1) )
 
 ALLOCATE( Am_dp_Values(     1:Num_P_Quad_Points,        &
-                            1:LM_Length,                &
+                            -L_Limit:L_Limit,           &
                             0:AMReX_Max_Grid_Size(3)-1) )
 
 ALLOCATE( Slm_Elem_Values(      1:LM_Length,                &
@@ -239,23 +194,6 @@ END SUBROUTINE Allocate_Tables
 !###############################################################################!
 SUBROUTINE Deallocate_Tables()
 
-#ifdef POSEIDON_AMREX_FLAG
-
-DEALLOCATE( Ylm_Norm_Table )
-DEALLOCATE( Ylm_Sqrt_Table )
-DEALLOCATE( rBT_NormedLegendre )
-
-DEALLOCATE( Ylm_Elem_Values )
-DEALLOCATE( Ylm_Elem_dt_Values )
-DEALLOCATE( Ylm_Elem_dp_Values )
-DEALLOCATE( Ylm_Elem_CC_Values )
-
-
-DEALLOCATE( Level_dx )
-DEALLOCATE( Level_Ratios )
-
-#else
-
 DEALLOCATE( Slm_Elem_Values )
 DEALLOCATE( Slm_Elem_dt_Values )
 DEALLOCATE( Slm_Elem_dp_Values )
@@ -268,7 +206,10 @@ DEALLOCATE( Am_dp_Values )
 DEALLOCATE( Plm_Values )
 DEALLOCATE( Plm_dt_Values )
 
-#endif
+
+DEALLOCATE( Level_dx )
+DEALLOCATE( Level_Ratios )
+
 
 DEALLOCATE( M_Values )
 

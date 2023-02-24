@@ -78,12 +78,11 @@ IMPLICIT NONE
 
 CONTAINS
 
-!+101+#######################################################################################!
-!                                                                                           !
-!       Poseidon_Run - Calculates Source Vector and Solves for solution coefficients        !
-!                                                                                           !
-!                                                                                           !
-!###########################################################################################!
+ !+101+################################################################################!
+!                                                                                       !
+!       Poseidon_Run - Calculates Source Vector and Solves for solution coefficients    !
+!                                                                                       !
+ !#####################################################################################!
 SUBROUTINE Poseidon_Run()
 
 LOGICAL                                             ::  Readiness_Flag
@@ -133,7 +132,6 @@ END IF
 Poseidon_Frame = Poseidon_Frame + 1
 
 
-
 IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
     Call Print_Results()
 END IF
@@ -141,7 +139,6 @@ END IF
 IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
     Call Write_Final_Results_AMReX()
 END IF
-
 
 
 END SUBROUTINE Poseidon_Run

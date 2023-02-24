@@ -66,9 +66,7 @@ USE Variables_Interface, &
                     Translation_Matrix
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,       &
-                    cVB_Coeff_Vector,       &
-                    dVA_Coeff_Vector,       &
+            ONLY :  dVA_Coeff_Vector,       &
                     dVB_Coeff_Vector
 
 USE Functions_Quadrature, &
@@ -149,8 +147,8 @@ Num_Input_DOF = Input_RQ*Input_TQ*Input_PQ
 
 Mapped_R_Quad = Map_To_X_Space( Left_Limit, Right_Limit, Input_R_Quad )
 
-cVA_Coeff_Vector = 0.0_idp
-cVB_Coeff_Vector = 0.0_idp
+dVA_Coeff_Vector = 0.0_idp
+dVB_Coeff_Vector = 0.0_idp
 
 DO re = 1,Input_RE
     DO rqb = 0,Degree
@@ -174,11 +172,11 @@ DO re = 1,Input_RE
 
         Here = (re-1)*Degree + rqb + 1
 
-        cVA_Coeff_Vector(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
+        dVA_Coeff_Vector(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
         dVA_Coeff_Vector(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
 
         Here = FP_Array_Map_TypeB(iU_S1,iVB_S,re-1,rqb,1)
-        cVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
+        dVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
         dVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
 
 
@@ -309,7 +307,7 @@ Num_Input_DOF = Input_RQ*Input_TQ*Input_PQ
 
 Mapped_R_Quad = Map_To_X_Space( Left_Limit, Right_Limit, Input_R_Quad )
 
-cVA_Coeff_Vector = 0.0_idp
+dVA_Coeff_Vector = 0.0_idp
 
 DO re = 1,Input_RE
     DO rqb = 0,Degree
@@ -328,7 +326,7 @@ DO re = 1,Input_RE
 
         Here = (re-1)*Degree + rqb + 1
 
-        cVA_Coeff_Vector(Here,1,1) = 2.0_idp*Sqrt(pi)*Tmp_Value
+        dVA_Coeff_Vector(Here,1,1) = 2.0_idp*Sqrt(pi)*Tmp_Value
 
 
     END DO ! rqb

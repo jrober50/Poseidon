@@ -33,23 +33,8 @@ USE Poseidon_Units_Module, &
                     Centimeter,         &
                     Shift_Units
 
-USE Poseidon_Parameters, &
-            ONLY :  DEGREE,             &
-                    L_Limit
-
 USE Poseidon_IO_Parameters, &
             ONLY :  CFA_Var_Names
-
-USE Variables_Mesh, &
-            ONLY :  Num_R_Elements,     &
-                    rlocs
-
-USE Variables_Derived, &
-            ONLY :  Num_R_Nodes
-
-USE Variables_MPI, &
-            ONLY :  myID_Poseidon,      &
-                    MasterID_Poseidon
 
 USE Variables_Functions, &
             ONLY :  Calc_3D_Values_At_Location
@@ -61,25 +46,9 @@ USE Variables_Mesh, &
             ONLY :  R_Inner,        &
                     R_Outer
 
-USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector
-
 USE Functions_Mesh, &
             ONLY :  Create_Logarithmic_1D_Mesh,     &
                     Create_Uniform_1D_Mesh
-
-USE Functions_Math, &
-            ONLY :  Lagrange_Poly,      &
-                    Spherical_Harmonic
-
-USE Maps_X_Space, &
-            ONLY :  Map_To_X_Space
-
-USE Maps_Domain, &
-            ONLY :  Map_To_LM
-
-USE Functions_Quadrature, &
-            ONLY : Initialize_LGL_Quadrature
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,     &

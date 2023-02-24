@@ -194,15 +194,15 @@ Gamma               = 1.30_idp
 
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 1                        ! Number of Theta Quadrature Points
-NQ(3)               = 1                        ! Number of Phi Quadrature Points
+NQ(2)               = 5                        ! Number of Theta Quadrature Points
+NQ(3)               = 5                        ! Number of Phi Quadrature Points
 
 
 !Verbose             = .TRUE.
 Verbose             = .FALSE.
 
-Print_Results_Flag  = .TRUE.
-!Print_Results_Flag  = .FALSE.
+!Print_Results_Flag  = .TRUE.
+Print_Results_Flag  = .FALSE.
 
 !Print_Setup_Flag    = .TRUE.
 Print_Setup_Flag    = .FALSE.
@@ -385,7 +385,7 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                       Output Results                     #!
     !#                                                          #!
     !############################################################!
-    CALL Return_Test(nLevels, NQ, MF_Source)
+!    CALL Return_Test(nLevels, NQ, MF_Source)
 
 !    CALL Calc_ADM_Mass(ADM_Mass)
 !    PRINT*,"ADM Mass",ADM_Mass
@@ -415,7 +415,6 @@ DO T_Index = T_Index_Min, T_Index_Max
     CALL Poseidon_Mark_Memory(Memory_Loop_End,Memory_HWM)
     PRINT*,"After Deallocation, Loop End : ",Memory_Loop_End
 #endif
-
     CALL Output_Poseidon_Memory_Loop_Report( Loop )
 
 END DO ! T_Index
@@ -444,6 +443,7 @@ CALL MPI_Finalize(ierr)
 #endif
 
 CALL Output_Poseidon_Memory_Total_Report()
+
 
 END PROGRAM AMReX_Mapping
 

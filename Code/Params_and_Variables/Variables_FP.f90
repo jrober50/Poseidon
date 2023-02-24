@@ -26,15 +26,15 @@ USE Poseidon_Kinds_Module, &
 IMPLICIT NONE
 
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector
+REAL(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
+REAL(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
+REAL(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_Beta
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_Beta
+REAL(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_Beta
+REAL(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_Beta
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_X
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_X
+REAL(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_X
+REAL(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_X
 
 
 

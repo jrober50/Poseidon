@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Variables_Vectors                                               	     !##!
+MODULE Poseidon_Bailout_Module                                               !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -23,17 +23,45 @@ MODULE Variables_Vectors                                               	     !##
 !           Dependencies            !
 !                                   !
 !===================================!
-USE Poseidon_Kinds_Module, &
-            ONLY :  idp
+
+USE MPI
 
 IMPLICIT NONE
 
-REAL(idp),   ALLOCATABLE,    DIMENSION(:,:,:)           ::  dVA_Load_Vector
-REAL(idp),   ALLOCATABLE,    DIMENSION(:,:)             ::  dVB_Load_Vector
-
-REAL(idp),   ALLOCATABLE,    DIMENSION(:,:,:)           ::  dVA_Coeff_Vector
-REAL(idp),   ALLOCATABLE,    DIMENSION(:,:)             ::  dVB_Coeff_Vector
 
 CONTAINS
 
-END MODULE Variables_Vectors
+ !+101+####################################################!
+!                                                           !
+!       Poseidon_Bailout   	                                !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Poseidon_Bailout( Message )
+
+CHARACTER(LEN = *),     INTENT(IN),     OPTIONAL    ::  Message
+
+LOGICAL                                             ::  MPI_Flag
+INTEGER                                             ::  iErr
+
+
+CALL MPI_Initialized(MPI_Flag,iErr)
+IF (MPI_Flag) CALL MPI_Finalize(iErr)
+
+
+
+STOP Message
+
+
+END SUBROUTINE Poseidon_Bailout
+
+
+
+
+
+
+
+
+
+
+
+END MODULE Poseidon_Bailout_Module

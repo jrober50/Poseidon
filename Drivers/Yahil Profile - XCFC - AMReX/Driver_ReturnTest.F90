@@ -136,10 +136,7 @@ USE Maps_Domain, &
                     FEM_Elem_Map
 
 USE Variables_Tables, &
-            ONLY :  Ylm_CC_Values,              &
-                    Ylm_Elem_CC_Values,         &
-                    Lagrange_Poly_Table,        &
-                    Level_dx
+            ONLY :  Level_dx
 
 
 USE Poseidon_File_Routines_Module, &

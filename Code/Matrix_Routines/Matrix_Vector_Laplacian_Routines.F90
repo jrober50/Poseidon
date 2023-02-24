@@ -186,7 +186,7 @@ END IF
 
 CALL TimerStop( Timer_Banded_Factorization )
 
-CALL IO_Output_Condition_Number()
+!CALL IO_Output_Condition_Number()
 
 
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_B_LU) = .TRUE.
@@ -226,7 +226,8 @@ IF ( Verbose_Flag ) CALL Init_Message('Preconditioning the Modified Vector Lapla
 ! Store inverse diagonal
 DO i = 1,iVB_Prob_Dim
 
-    Row = iMB_Bandwidth + i
+!    Row = iMB_Bandwidth + i
+!    PRINT*,iMB_Bandwidth,i,dMB_Matrix_Banded(iMB_Bandwidth,i)
     dMB_Matrix_Diagonal(i) = 1.0_idp/dMB_Matrix_Banded(iMB_Bandwidth,i)
 
 END DO
