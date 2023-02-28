@@ -970,7 +970,7 @@ iE_Coarse = iE/2
 Coarse_xLocs = Map_From_X_Space( -1.0_idp, 0.0_idp, FEM_Node_xlocs)
 
 
-iRE = FEM_Elem_Map(iE_Coarse(1),lvl)
+iRE = FEM_Elem_Map(iE_Coarse(1),lvl-1)
 CALL Initialize_Ylm_Tables_on_Elem( iE(2), iE(3), iEL, lvl )
 
 

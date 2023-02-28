@@ -855,9 +855,9 @@ END SUBROUTINE Calculate_Yahil_Density
 !################################################################################!
 SUBROUTINE CREATE_SELFSIM_NEWT_SOL( Line_Count, R_Values, Enclosed_Mass )
 
-INTEGER, INTENT(IN)                                             :: Line_Count
-REAL(idp), DIMENSION(1:Line_Count), INTENT(IN)           :: R_Values
-REAL(idp), DIMENSION(1:Line_Count), INTENT(IN)           :: Enclosed_Mass
+INTEGER,                                INTENT(IN)      :: Line_Count
+REAL(idp),  DIMENSION(1:Line_Count),    INTENT(IN)      :: R_Values
+REAL(idp),  DIMENSION(1:Line_Count),    INTENT(IN)      :: Enclosed_Mass
 
 INTEGER     :: i
 
