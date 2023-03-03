@@ -86,8 +86,8 @@ USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
 
 USE Functions_Math, &
-            ONLY :   Lagrange_Poly,       &
-                        Lagrange_Poly_Deriv
+            ONLY :  Lagrange_Poly,       &
+                    Lagrange_Poly_Deriv
 
 USE Initialization_Tables, &
             ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &

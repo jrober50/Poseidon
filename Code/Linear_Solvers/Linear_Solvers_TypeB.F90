@@ -107,17 +107,19 @@ CONTAINS
 SUBROUTINE Solve_Linear_System_TypeB(iU, iVB)
 
 
-INTEGER, DIMENSION(3), INTENT(IN)                                   :: iU
-INTEGER,               INTENT(IN)                                   :: iVB
+INTEGER,        DIMENSION(3),   INTENT(IN)              :: iU
+INTEGER,                        INTENT(IN)              :: iVB
 
-INTEGER                                                             ::  INFO
-COMPLEX(KIND = idp), ALLOCATABLE, DIMENSION(:)                      ::  WORK_VEC
+INTEGER                                                 ::  INFO
+COMPLEX(idp),   DIMENSION(:),               ALLOCATABLE ::  WORK_VEC
 
-INTEGER                                                             ::  Lower_Limit
-INTEGER                                                             ::  Upper_Limit
-INTEGER                                                             ::  ierr
+INTEGER                                                 ::  Lower_Limit
+INTEGER                                                 ::  Upper_Limit
+INTEGER                                                 ::  ierr
 
-CHARACTER(LEN = 300)                    ::  Message
+INTEGER                                                 ::  i
+
+CHARACTER(LEN = 300)                                    ::  Message
 
 
 IF ( Verbose_Flag ) THEN
@@ -154,6 +156,10 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     ALLOCATE( WORK_VEC( 1:iVB_Prob_Dim ) )
     Work_Vec = cVB_Load_Vector(:,iVB)
 
+!    PRINT*,"Work_Vec"
+!    DO i = 1,iVB_Prob_Dim
+!        PRINT*,i,Work_Vec(i)
+!    END DO
 
 
     CALL DIRICHLET_BC_Beta_Banded(iVB_Prob_Dim, Work_Vec )

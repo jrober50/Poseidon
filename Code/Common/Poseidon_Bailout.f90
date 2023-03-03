@@ -1,9 +1,9 @@
-    !##########################################################################!
+   !##########################################################################!
  !/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\!
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE Poseidon_Interface_Initial_Guess                                      !##!
+MODULE Poseidon_Bailout_Module                                               !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -24,42 +24,42 @@ MODULE Poseidon_Interface_Initial_Guess                                      !##
 !                                   !
 !===================================!
 
-USE IG_Input_Native_Module, &
-            ONLY :  IG_Input_XCFC_Native,           &
-                    IG_Input_XCFC_Native_Caller,    &
-                    IG_Input_Poisson_Native,        &
-                    IG_Input_Poisson_Native_Caller
-                    
-USE IG_Input_AMReX_Module, &
-            ONLY :  IG_Input_XCFC_AMReX,            &
-                    IG_Input_XCFC_AMReX_Caller
-
-USE IG_Flat_Guess_Module, &
-            ONLY :  IG_Init_Flat_Guess
-
 
 IMPLICIT NONE
 
 
-
-
-INTERFACE Poseidon_Input_Initial_Guess
-    MODULE PROCEDURE IG_Input_XCFC_Native
-    MODULE PROCEDURE IG_Input_XCFC_Native_Caller
-    MODULE PROCEDURE IG_Input_Poisson_Native
-    MODULE PROCEDURE IG_Input_Poisson_Native_Caller
-    MODULE PROCEDURE IG_Input_XCFC_AMReX
-    MODULE PROCEDURE IG_Input_XCFC_AMReX_Caller
-END INTERFACE Poseidon_Input_Initial_Guess
-
-
-INTERFACE Poseidon_Initialize_Flat_Guess
-    MODULE PROCEDURE IG_Init_Flat_Guess
-END INTERFACE Poseidon_Initialize_Flat_Guess
-
-
 CONTAINS
 
+ !+101+####################################################!
+!                                                           !
+!       Poseidon_Bailout   	                                !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Poseidon_Bailout( Message )
+
+CHARACTER(LEN = *),     INTENT(IN),     OPTIONAL    ::  Message
+
+LOGICAL                                             ::  MPI_Flag
+INTEGER                                             ::  iErr
+
+IF ( MPI_Initialize(MPI_Flag,iErr)) THEN
+    CALL MPI_Finalize(iErr)
+END IF
 
 
-END MODULE Poseidon_Interface_Initial_Guess
+STOP Message
+
+
+END SUBROUTINE Poseidon_Bailout
+
+
+
+
+
+
+
+
+
+
+
+END MODULE Poseidon_Bailout_Module

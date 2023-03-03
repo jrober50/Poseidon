@@ -97,7 +97,7 @@ SUBROUTINE Poseidon_Run()
 LOGICAL                                             ::  Readiness_Flag
 
 
-IF (( .NOT. lPF_IG_Flags(iPF_IG_Set)) .AND. lPF_IG_Flags(iPF_IG_Flat_Guess) ) THEN
+IF ( .NOT. lPF_IG_Flags(iPF_IG_Set) ) THEN
     CALL Poseidon_Initialize_Flat_Guess
 END IF
 

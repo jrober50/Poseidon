@@ -96,9 +96,6 @@ USE Functions_Quadrature, &
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
-USE Functions_Translation_Matrix_Module, &
-            ONLY :  Create_Translation_Matrix
-
 USE Initialization_Tables, &
             ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
                     Initialize_Ylm_Tables_On_Elem
@@ -233,7 +230,6 @@ TYPE(amrex_imultifab)                                       ::  Ghost_Mask
 
 REAL(idp),  CONTIGUOUS, POINTER                             ::  Result_PTR(:,:,:,:)
 REAL(idp),      DIMENSION(1:Local_Quad_DOF)                 ::  Var_Holder
-REAL(idp),      DIMENSION(:,:), ALLOCATABLE                 ::  Translation_Matrix
 
 INTEGER,        DIMENSION(1:3)                              ::  iE
 INTEGER,        DIMENSION(1:3)                              ::  iEL, iEU
@@ -258,20 +254,6 @@ Cur_PX_Locs = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
-Allocate( Translation_Matrix(1:Local_Quad_DOF,1:Num_DOF))
-
-Translation_Matrix = Create_Translation_Matrix( [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
-                                        [xLeftLimit, xRightLimit ],            &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Local_Quad_DOF,         &
-                                        NQ,          &
-                                        [Left_Limit, Right_Limit],          &
-                                        RQ_Input,    &
-                                        TQ_Input,    &
-                                        PQ_Input,    &
-                                        Num_DOF               )
 
 
 

@@ -57,6 +57,10 @@ USE Flags_Core_Module, &
             ONLY :  iPF_Core_Flags,             &
                     iPF_Core_Method_Mode,       &
                     iPF_Core_Method_Newtonian
+                    
+USE Flags_Initial_Guess_Module, &
+            ONLY :  lPF_IG_Flags,           &
+                    iPF_IG_Set
 
 IMPLICIT NONE
 
@@ -74,6 +78,8 @@ IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 ELSE
     CALL IG_Init_Flat_Guess_XCFC()
 END IF
+
+lPF_IG_Flags(iPF_IG_Set) = .TRUE.
 
 END SUBROUTINE IG_Init_Flat_Guess
 
