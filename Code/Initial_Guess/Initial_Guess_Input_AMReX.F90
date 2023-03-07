@@ -39,6 +39,7 @@ USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,          &
                     iU_LF,          &
                     iVB_S,          &
+                    iVB_X,          &
                     iU_S1,          &
                     iU_S2,          &
                     iU_S3
@@ -225,7 +226,7 @@ DO lvl = nLevels-1,0,-1
 END DO ! lvl
 
 
-
+cVB_Coeff_Vector(:,iVB_X) = -1.0E-7_idp
 
 END SUBROUTINE IG_Input_XCFC_AMReX
 
@@ -296,7 +297,7 @@ lm = 1
 sqrtfourpi = sqrt(4.0_idp*pi)
 
 ! 1-D implementation
-IF ((iE(2) == 0) .AND. (iE(3) == 0)) THEN
+IF ((iE(2) == 1) .AND. (iE(3) == 1)) THEN
 
 
 iRE = FEM_Elem_Map(iE(1),lvl)
@@ -308,8 +309,9 @@ IF ( iRE == 0 ) THEN
         Here  = (iU-1)*nQuad + 1
         There = (iU-1)*nQuad + NQ(1)
         Somewhere = Map_To_FEM_Node(iRE,d)
-!        PRINT*,Guess_PTR(iE(1),iE(2),iE(3),Here:There)
+!        PRINT*,Guess_PTR(iE(1),iE(2),iE(3),Here:There),cVA_Coeff_Vector(Somewhere,lm,iU)
         cVA_Coeff_Vector(Somewhere,lm,iU) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
+!        PRINT*,Guess_PTR(iE(1),iE(2),iE(3),Here:There),cVA_Coeff_Vector(Somewhere,lm,iU)
     END DO ! iU
     
     iVB = iVB_S
@@ -321,6 +323,10 @@ IF ( iRE == 0 ) THEN
         cVB_Coeff_Vector(Somewhere,iVB) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
     END DO ! iU
 END IF
+
+
+
+
 
 ! Use Guess Values to Interpolate to FEM Nodes
 
