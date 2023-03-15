@@ -61,11 +61,10 @@ USE Poseidon_Parameters, &
             ONLY :  Degree,                 &
                     L_Limit,                &
                     Eq_Flags
-                    
-
-
+                
 USE Variables_MPI, &
             ONLY :  myID_Poseidon,          &
+                    MasterID_Poseidon,      &
                     nProcs_Poseidon,        &
                     Poseidon_Comm_World
 
@@ -92,9 +91,6 @@ USE Variables_IO, &
                     Total_Run_Iters,        &
                     Iter_Report_Num_Samples,&
                     Iter_Time_Table,        &
-                    Frame_Residual_Table,   &
-                    Frame_Update_Table,     &
-                    Iteration_Histogram,    &
                     File_Suffix,            &
                     iWF_Source,             &
                     iWF_Results,            &
@@ -254,6 +250,7 @@ INTEGER                                                     ::  Output_Locations
 
 IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
+IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
     IF ( PRESENT(U_Flag_Option) ) THEN
         IF( U_Flag_Option ) THEN
@@ -359,7 +356,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
     END IF
 END IF
-
+END IF
 
 END SUBROUTINE Write_Final_Results
 
@@ -497,16 +494,16 @@ CALL Create_Final_Results_Filenames( uNum_Files, uFilenames,     &
 
 
 DO i = 1,4
-!    CALL OPEN_NEW_FILE( mFilenames(i), mFile_IDs(i),200)
-    CALL Open_Existing_File_Append(mFilenames(i), mFile_IDs(i),200)
+    CALL OPEN_NEW_FILE( mFilenames(i), mFile_IDs(i),200)
+!    CALL Open_Existing_File_Append(mFilenames(i), mFile_IDs(i),200)
 END DO
 
 !   Base Metric Variables
 DO i = 1,5
     IF ( U_Flag(i) == 1 ) THEN
 
-!        CALL OPEN_NEW_FILE( uFilenames(i), uFile_IDs(i),205)
-        CALL Open_Existing_File_Append(uFilenames(i), uFile_IDs(i),205)
+        CALL OPEN_NEW_FILE( uFilenames(i), uFile_IDs(i),205)
+!        CALL Open_Existing_File_Append(uFilenames(i), uFile_IDs(i),205)
     END IF
 
 END DO
@@ -516,8 +513,8 @@ END DO
 IF ( xNum_Files .GE. 1 ) THEN
 
     DO i = 1,xNum_Files
-!        CALL OPEN_NEW_FILE( xFilenames(i), xFile_IDs(i), 210 )
-        CALL Open_Existing_File_Append(xFilenames(i), xFile_IDs(i), 210 )
+        CALL OPEN_NEW_FILE( xFilenames(i), xFile_IDs(i), 210 )
+!        CALL Open_Existing_File_Append(xFilenames(i), xFile_IDs(i), 210 )
     END DO
 
 END IF
@@ -526,8 +523,8 @@ END IF
 IF ( kNum_Files .GE. 1 ) THEN
 
     DO i = 1,kNum_Files
-!        CALL OPEN_NEW_FILE( kFilenames(i), kFile_IDs(i), 220 )
-        CALL Open_Existing_File_Append(kFilenames(i), kFile_IDs(i), 220 )
+        CALL OPEN_NEW_FILE( kFilenames(i), kFile_IDs(i), 220 )
+!        CALL Open_Existing_File_Append(kFilenames(i), kFile_IDs(i), 220 )
     END DO
 
 END IF
@@ -1110,7 +1107,6 @@ INTEGER                                                     ::  MF_Results_nGhos
 INTEGER, DIMENSION(1:3)                                     ::  nGhost_Vec
 
 
-
 IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
 
@@ -1205,7 +1201,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
 
 
-        
         DO CurID = 0,nProcs_Poseidon
             IF ( CurID == myID_Poseidon ) THEN
 
@@ -1232,9 +1227,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                 !   Write Results
                 !
                 !   Base Metric Variables
-
                 CALL Poseidon_Return_All_AMReX_Caller( MF_Results )
-                
                 
                 Quad_Span = Caller_xL(2) - Caller_xL(1)
 

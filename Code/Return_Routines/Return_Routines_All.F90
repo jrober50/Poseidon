@@ -256,7 +256,6 @@ INTEGER, DIMENSION(3)                                                   ::  NE
 
 NE = [ Num_R_Elements, Num_T_Elements, Num_P_Elements ]
 
-
 iU = iU_CF
 CALL Poseidon_Return_Native_Type_A( iU,                     &
                                     NE,                     &
@@ -278,6 +277,7 @@ CALL Poseidon_Return_Native_Type_A( iU,                     &
                                     Caller_xL(1),           &
                                     Caller_xL(2),           &
                                     Return_All(:,:,:,:,2)   )
+
 
 
 iVB = iVB_S
@@ -413,6 +413,10 @@ REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  
 REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_dp_Table
 
 
+
+
+
+
 Slm_Elem_Table = 0.0_idp
 
 IF ( PRESENT(FillGhostCells_Option) ) THEN
@@ -513,7 +517,7 @@ DO lvl = 0,nLevels-1
             plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
         END DO
         
-        
+
         ! Initialize Am Table
         CALL Initialize_Am_Tables(  NQ(3),                      &
                                     PQ_Input,                   &
@@ -523,7 +527,6 @@ DO lvl = 0,nLevels-1
                                     plocs_subarray,             &
                                     Am_Table,                   &
                                     Am_dp_Table                 )
-
         ! Initialize Plm Table
         CALL Initialize_Plm_Tables( NQ(2),                      &
                                     TQ_Input,                   &
@@ -538,6 +541,7 @@ DO lvl = 0,nLevels-1
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
+
 
         IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
             iRE = FEM_Elem_Map(re,lvl)
@@ -609,14 +613,12 @@ DO lvl = 0,nLevels-1
                 END DO ! iU Loop
                 
 
-                
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_CF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_CF),KIND = idp)
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_LF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_LF),KIND= idp)      &
                                                                                / REAL(Tmp_Val_A(iU_CF),KIND = idp)
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S1, rd, td, pd, NQ )) = REAL(Tmp_Val_B(1,iVB_S),KIND = idp)
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S2, rd, td, pd, NQ )) = REAL(Tmp_Val_B(2,iVB_S),KIND = idp)
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S3, rd, td, pd, NQ )) = REAL(Tmp_Val_B(3,iVB_S),KIND = idp)
-
 
 
                 ! Calculate the X Vector, and its derivatives
@@ -655,7 +657,6 @@ DO lvl = 0,nLevels-1
 
                 END DO ! d Loop
                 END DO ! iU Loop
-
 
                 Gamma(2) = 1.0_idp/(Cur_R_Locs(rd)*Cur_R_Locs(rd))
                 Gamma(3) = Gamma(2) * 1.0_idp/( DSIN(Cur_T_Locs(td))*DSIN(Cur_T_Locs(td)) )
@@ -785,7 +786,6 @@ DO lvl = 0,nLevels-1
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ ))                         &
                         = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
 
-                
 
             END DO ! rd Loop
             END DO ! td Loop

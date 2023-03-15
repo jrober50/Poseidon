@@ -49,24 +49,25 @@ USE Poseidon_Parameters, &
                     Max_Iterations_Default
 
 USE Variables_Mesh, &
-                ONLY :  Num_R_Elements,         &
-                        Num_T_Elements,         &
-                        Num_P_Elements,         &
-                        R_Inner,                &
-                        R_Outer,                &
-                        rlocs,                  &
-                        tlocs,                  &
-                        plocs,                  &
-                        drlocs,                 &
-                        dtlocs,                 &
-                        dplocs
+            ONLY :  Num_R_Elements,         &
+                    Num_T_Elements,         &
+                    Num_P_Elements,         &
+                    R_Inner,                &
+                    R_Outer,                &
+                    rlocs,                  &
+                    tlocs,                  &
+                    plocs,                  &
+                    drlocs,                 &
+                    dtlocs,                 &
+                    dplocs
 
 USE Variables_IO, &
             ONLY :  File_Suffix
 
 USE Variables_FP, &
             ONLY :  FP_Anderson_M,          &
-                    FP_Anderson_M_Default
+                    FP_Anderson_M_Default,  &
+                    FP_Diagnostics_Flag
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,    &
@@ -124,7 +125,8 @@ USE Flags_IO_Module, &
                     iPF_IO_Write_Timetable,     &
                     iPF_IO_Write_Sources,       &
                     iPF_IO_Print_Cond,          &
-                    iPF_IO_Write_Cond
+                    iPF_IO_Write_Cond,          &
+                    iPF_IO_Write_FP_Diagnostics
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,             &
@@ -154,6 +156,9 @@ USE Functions_Math, &
 
 USE Functions_Translation_Matrix_Module, &
             ONLY :  Create_Translation_Matrix
+
+USE IO_Suffix_Module, &
+            ONLY :  Create_Suffix
 
 USE Maps_X_Space, &
             ONLY :  Map_To_X_Space
@@ -216,8 +221,11 @@ SUBROUTINE Init_IO_Params(  WriteAll_Option,            &
                             Write_Sources_Option,       &
                             Print_Condition_Option,     &
                             Write_Condition_Option,     &
+                            Write_FP_Diagnostics_Option,&
                             Suffix_Flag_Option,         &
+                            Suffix_Param_Type_Option,   &
                             Suffix_Tail_Option,         &
+                            Suffix_Input_Option,        &
                             Frame_Option                )
 
 
@@ -232,9 +240,14 @@ LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Sources_Option
 LOGICAL,            INTENT(IN), OPTIONAL               ::  Print_Condition_Option
 LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_Condition_Option
 
+LOGICAL,            INTENT(IN), OPTIONAL               ::  Write_FP_Diagnostics_Option
 CHARACTER(LEN=10),  INTENT(IN), OPTIONAL               ::  Suffix_Flag_Option
-CHARACTER(LEN=1),   INTENT(IN), OPTIONAL               ::  Suffix_Tail_Option
-INTEGER,            INTENT(IN), OPTIONAL               ::  Frame_Option
+CHARACTER(LEN=4),   INTENT(IN), OPTIONAL            ::  Suffix_Tail_Option
+INTEGER,            INTENT(IN), OPTIONAL            ::  Frame_Option
+INTEGER,            INTENT(IN), OPTIONAL            ::  Suffix_Param_Type_Option
+CHARACTER(LEN=*),   INTENT(IN), OPTIONAL            ::  Suffix_Input_Option
+
+CHARACTER(LEN=40)                                   ::  Suffix_Return
 
 
 IF ( Verbose_Flag ) CALL Init_Message('Setting IO Parameters.')
@@ -360,38 +373,37 @@ END IF
 
 
 
+!
+!   Fixed Point Diagnostics
+!
+IF ( PRESENT(Write_FP_Diagnostics_Option ) ) THEN
+    IF ( Write_FP_Diagnostics_Option ) THEN
+        lPF_IO_Flags(iPF_IO_Write_FP_Diagnostics) = .TRUE.
+        FP_Diagnostics_Flag = .TRUE.
+    ELSE
+        lPF_IO_Flags(iPF_IO_Write_FP_Diagnostics) = .FALSE.
+    END IF
+END IF
+
 
 
 !
 !   Suffix
 !
-IF ( PRESENT(Suffix_Flag_Option) ) THEN
+IF ( PRESENT(Suffix_Input_Option) ) THEN
 
+    WRITE(File_Suffix,'(A)') TRIM(Suffix_Input_Option )
 
-    IF ( Suffix_Flag_Option == "Params") THEN
-
-        WRITE(File_Suffix,'(A,I5.5,A,I3.3,A,I2.2,A,I2.2)')             &
-            "RE",Num_R_Elements,"_TE",Num_T_Elements,"_D",Degree,"_L",L_Limit
-
-    ELSEIF ( SUffix_Flag_Option == "Frame") THEN
-        
-        IF ( PRESENT(Frame_Option) ) THEN
-            WRITE(File_Suffix,'(I5.5)') Frame_Option
-        ELSE
-            WRITE(File_Suffix,'(I5.5)') 1
-        END IF
-    END IF
 ELSE
-    WRITE(File_Suffix,'(I5.5)') 2
+    CALL Create_Suffix( Suffix_Return,              &
+                        Suffix_Flag_Option,         &
+                        Frame_Option,               &
+                        Suffix_Param_Type_Option,   &
+                        Suffix_Tail_Option          )
+                    
+    WRITE(File_Suffix,'(A)') TRIM(Suffix_Return)
+
 END IF
-
-
-IF ( PRESENT(Suffix_Tail_Option) ) THEN
-    WRITE(File_Suffix,'(A,A,A)') TRIM(File_Suffix),"_",Suffix_Tail_Option
-
-END IF
-
-
 
 lPF_Init_Flags(iPF_Init_IO_Params) = .TRUE.
 
@@ -405,11 +417,11 @@ END SUBROUTINE Init_IO_Params
 
 
 
- !+102+############################################################################!
-!                                                                                   !
-!       Init_Fixed_Point_Params                                                     !
-!                                                                                   !
- !#################################################################################!
+ !+102+################################################!
+!                                                       !
+!          Init_Fixed_Point_Params                      !
+!                                                       !
+ !#####################################################!
 SUBROUTINE Init_Fixed_Point_Params( Max_Iterations_Option,          &
                                     Convergence_Criteria_Option,    &
                                     Anderson_M_Option               )

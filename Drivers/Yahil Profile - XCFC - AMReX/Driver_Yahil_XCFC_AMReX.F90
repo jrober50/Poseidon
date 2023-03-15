@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-PROGRAM Yahil_Memory_Mapping                                                        !##!
+PROGRAM AMReX_Mapping                                                               !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
@@ -50,11 +50,7 @@ USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
 USE Driver_SetSource_Module, &
-            ONLY :  Driver_CreateSource,            &
-                    Driver_SetSource
-            
-USE Poseidon_Interface_Source_Input, &
-            ONLY :  Poseidon_Input_Sources
+            ONLY :  Driver_SetSource
 
 USE Driver_SetBC_Module, &
             ONLY :  Driver_SetBC
@@ -76,8 +72,7 @@ USE Variables_MPI, &
 
 USE Variables_Driver_AMReX, &
             ONLY :  nLevels,            &
-                    MF_Driver_Source,   &
-                    MF_Src_nComps
+                    MF_Driver_Source
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source
@@ -87,7 +82,8 @@ USE ADM_Mass_Module, &
             
 USE Poseidon_Memory_Routines, &
             ONLY :  Poseidon_Mark_Memory
- 
+            
+            
 #ifdef POSEIDON_MEMORY_FLAG
 USE Memory_Variables_Module, &
             ONLY :  Memory_Start,               &
@@ -96,22 +92,20 @@ USE Memory_Variables_Module, &
                     Memory_After_AMReX_Finalize,&
                     Memory_End,                 &
                     Memory_Loop_Start,          &
-                    Memory_Before_Init,         &
-                    Memory_After_Init,          &
+                    Memory_Loop_Before_Init,    &
+                    Memory_Loop_After_Init,     &
                     Memory_Loop_Before_Run,     &
                     Memory_Loop_After_Run,      &
-                    Memory_Loop_After_Source,   &
-                    Memory_Loop_After_SetBC,    &
-                    Memory_Before_Close,        &
-                    Memory_After_Close,         &
+                    Memory_Loop_Before_Close,   &
                     Memory_Loop_End,            &
                     Memory_HWM
-  
+                    
 #endif
-
+                    
 USE Memory_IO_Module, &
             ONLY :  Output_Poseidon_Memory_Loop_Report, &
                     Output_Poseidon_Memory_Total_Report
+
 
 USE MPI
 
@@ -200,12 +194,12 @@ Gamma               = 1.30_idp
 
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 1                        ! Number of Theta Quadrature Points
-NQ(3)               = 1                        ! Number of Phi Quadrature Points
+NQ(2)               = 5                        ! Number of Theta Quadrature Points
+NQ(3)               = 5                        ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 
 !Print_Results_Flag  = .TRUE.
 Print_Results_Flag  = .FALSE.
@@ -232,7 +226,7 @@ Write_Results_T_Samps = 1
 
 #ifdef POSEIDON_MEMORY_FLAG
         CALL Poseidon_Mark_Memory(Memory_Start,Memory_HWM)
-        PRINT*,"Beginning                           : ",Memory_Start
+        PRINT*,"Beginning                    : ",Memory_Start
 #endif
 
 
@@ -248,7 +242,7 @@ CALL MPI_COMM_SIZE(MPI_COMM_WORLD, nPROCS,ierr)
 
 #ifdef POSEIDON_MEMORY_FLAG
         CALL Poseidon_Mark_Memory(Memory_After_MPI_Init,Memory_HWM)
-        PRINT*,"After MPI Init                      : ",Memory_After_MPI_Init
+        PRINT*,"After MPI Init               : ",Memory_After_MPI_Init
 #endif
 
 
@@ -257,7 +251,7 @@ CALL amrex_amrcore_init()
 
 #ifdef POSEIDON_MEMORY_FLAG
         CALL Poseidon_Mark_Memory(Memory_After_AMReX_Init,Memory_HWM)
-        PRINT*,"After AMReX Init                    : ",Memory_After_AMReX_Init
+        PRINT*,"After AMReX Init             : ",Memory_After_AMReX_Init
 #endif
 
 
@@ -270,25 +264,33 @@ CALL amrex_amrcore_init()
 CALL Init_AMReX_Parameters()
 
 
-Suffix_Tail = Letter_Table(nLevels)
+DO M_Index = M_Index_Min, M_Index_Max
+DO T_Index = T_Index_Min, T_Index_Max
+
+#ifdef POSEIDON_MEMORY_FLAG
+        CALL Poseidon_Mark_Memory(Memory_Loop_Start,Memory_HWM)
+        PRINT*,"Beginning of Loop            : ",Memory_Loop_Start
+#endif
+
+    Suffix_Tail = Letter_Table(T_Index)
 
 
 
 
-ALLOCATE( Input_R_Quad(1:NQ(1)) )
-ALLOCATE( Input_T_Quad(1:NQ(2)) )
-ALLOCATE( Input_P_Quad(1:NQ(3)) )
+    ALLOCATE( Input_R_Quad(1:NQ(1)) )
+    ALLOCATE( Input_T_Quad(1:NQ(2)) )
+    ALLOCATE( Input_P_Quad(1:NQ(3)) )
 
-Input_R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
-Input_T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
-Input_P_Quad = Initialize_LG_Quadrature_Locations(NQ(3))
+    Input_R_Quad = Initialize_LG_Quadrature_Locations(NQ(1))
+    Input_T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
+    Input_P_Quad = Initialize_LG_Quadrature_Locations(NQ(3))
 
-Left_Limit  = -0.50_idp
-Right_Limit = +0.50_idp
+    Left_Limit  = -0.50_idp
+    Right_Limit = +0.50_idp
 
-Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
-Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
-Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
+    Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
+    Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
+    Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
 
 
@@ -299,77 +301,51 @@ Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
     !#                                                          #!
     !############################################################!
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_Before_Init,Memory_HWM)
-    PRINT*,"Before Init                         : ",Memory_Before_Init
+    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Init,Memory_HWM)
+    PRINT*,"Before Init                  : ",Memory_Loop_Before_Init
 #endif
-CALL Initialize_Poseidon &
-   (    Source_NQ                           = NQ,                   &
-        Source_xL                           = [Left_Limit, Right_Limit],    &
-        Source_RQ_xlocs                     = Input_R_Quad,         &
-        Source_TQ_xlocs                     = Input_T_Quad,         &
-        Source_PQ_xlocs                     = Input_P_Quad,         &
-        Source_Units                        = Units_Input,          &
-        Source_Radial_Boundary_Units        = "cm",                 &
-        Integration_NQ_Option               = NQ,                   &
-        Eq_Flags_Option                     = CFA_Eqs,              &
-        AMReX_FEM_Refinement_Option         = IFL,                  &
-        AMReX_Integral_Refinement_Option    = IRL,                  &
-        Verbose_Option                      = Verbose,              &
-        WriteAll_Option                     = .FALSE.,              &
-        Print_Setup_Option                  = Print_Setup_Flag,     &
-        Write_Setup_Option                  = .FALSE.,              &
-        Print_Results_Option                = Print_Results_Flag,   &
-        Write_Results_Option                = .FALSE.,               &
-        Print_Timetable_Option              = Print_Time_Flag,      &
-        Write_Timetable_Option              = .TRUE.,               &
-        Write_Sources_Option                = .FALSE.,              &
-        Print_Condition_Option              = Print_Cond_Flag,      &
-        Write_Condition_Option              = .TRUE.,               &
-        Suffix_Flag_Option                  = Suffix_Input,         &
-        Suffix_Tail_Option                  = Suffix_Tail           )
-
-
-
-
-
+    CALL Initialize_Poseidon &
+       (    Source_NQ                           = NQ,                   &
+            Source_xL                           = [Left_Limit, Right_Limit],    &
+            Source_RQ_xlocs                     = Input_R_Quad,         &
+            Source_TQ_xlocs                     = Input_T_Quad,         &
+            Source_PQ_xlocs                     = Input_P_Quad,         &
+            Source_Units                        = Units_Input,          &
+            Source_Radial_Boundary_Units        = "cm",                 &
+            Integration_NQ_Option               = NQ,                   &
+            Eq_Flags_Option                     = CFA_Eqs,              &
+            AMReX_FEM_Refinement_Option         = IFL,                  &
+            AMReX_Integral_Refinement_Option    = IRL,                  &
+            Fixed_Point_Diagnostics_Option      = .TRUE.,               &
+            Verbose_Option                      = Verbose,              &
+            WriteAll_Option                     = .FALSE.,              &
+            Print_Setup_Option                  = Print_Setup_Flag,     &
+            Write_Setup_Option                  = .FALSE.,              &
+            Print_Results_Option                = Print_Results_Flag,   &
+            Write_Results_Option                = .TRUE.,               &
+            Print_Timetable_Option              = Print_Time_Flag,      &
+            Write_Timetable_Option              = .TRUE.,               &
+            Write_Sources_Option                = .FALSE.,              &
+            Print_Condition_Option              = Print_Cond_Flag,      &
+            Write_Condition_Option              = .FALSE.,              &
+            Write_FP_Diagnostics_Option         = .TRUE.,               &
+            Suffix_Flag_Option                  = Suffix_Input,         &
+            Suffix_Tail_Option                  = Suffix_Tail           )
 
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_After_Init,Memory_HWM)
-    PRINT*,"After Init                          : ",Memory_After_Init
+    CALL Poseidon_Mark_Memory(Memory_Loop_After_Init,Memory_HWM)
+    PRINT*,"After Init                   : ",Memory_Loop_After_Init
 #endif
-
-
-
-Yahil_Params = [Time_Values(T_Index_Min), Kappa, Gamma]
-CALL Driver_CreateSource(  Yahil_Params, nLevels )
-
-
-
-Loop_Min = 1
-Loop_Max = 50
-
-DO Loop = Loop_Min, Loop_Max
-!    PRINT*,"Loop : ",Loop
-#ifdef POSEIDON_MEMORY_FLAG
-        CALL Poseidon_Mark_Memory(Memory_Loop_Start,Memory_HWM)
-        PRINT*,"Beginning of Loop                   : ",Memory_Loop_Start,Loop
-#endif
-
 
     !############################################################!
     !#                                                          #!
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
-    CALL Poseidon_Input_Sources(MF_Driver_Source,    &   ! Source Multifab
-                                MF_Src_nComps        )   ! AMReX Levels
+    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
+    CALL Driver_SetSource(  Yahil_Params, nLevels )
 
 
-
-#ifdef POSEIDON_MEMORY_FLAG
-        CALL Poseidon_Mark_Memory(Memory_Loop_After_Source,Memory_HWM)
-        PRINT*,"After Input Sources                 : ",Memory_Loop_After_Source
-#endif
     !############################################################!
     !#                                                          #!
     !#          Calculate and Set Boundary Conditions           #!
@@ -379,10 +355,7 @@ DO Loop = Loop_Min, Loop_Max
     CALL Driver_SetBC( )
 
 
-#ifdef POSEIDON_MEMORY_FLAG
-        CALL Poseidon_Mark_Memory(Memory_Loop_After_SetBC,Memory_HWM)
-        PRINT*,"After SetBC                         : ",Memory_Loop_After_SetBC
-#endif
+
     !############################################################!
     !#                                                          #!
     !#              Calculate and Set Initial Guess             #!
@@ -399,13 +372,13 @@ DO Loop = Loop_Min, Loop_Max
     !############################################################!
 #ifdef POSEIDON_MEMORY_FLAG
     CALL Poseidon_Mark_Memory(Memory_Loop_Before_Run,Memory_HWM)
-    PRINT*,"Before Poseidon_Run                 : ",Memory_Loop_Before_Run
+    PRINT*,"Before Poseidon_Run          : ",Memory_Loop_Before_Run
 #endif
     
     CALL Poseidon_Run()
 #ifdef POSEIDON_MEMORY_FLAG
     CALL Poseidon_Mark_Memory(Memory_Loop_After_Run,Memory_HWM)
-    PRINT*,"After Poseidon_Run                  : ",Memory_Loop_After_Run
+    PRINT*,"After Poseidon_Run           : ",Memory_Loop_After_Run
 #endif
 
 
@@ -419,12 +392,7 @@ DO Loop = Loop_Min, Loop_Max
 !    CALL Calc_ADM_Mass(ADM_Mass)
 !    PRINT*,"ADM Mass",ADM_Mass
 
-#ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_Loop_End,Memory_HWM)
-    PRINT*,"Loop End                            : ",Memory_Loop_End
-#endif
-    CALL Output_Poseidon_Memory_Loop_Report( Loop )
-END DO ! Loop Loop
+
 
     !############################################################!
     !#                                                          #!
@@ -432,27 +400,27 @@ END DO ! Loop Loop
     !#                                                          #!
     !############################################################!
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_Before_Close,Memory_HWM)
-    PRINT*,"Before Close                        : ",Memory_Before_Close
+    CALL Poseidon_Mark_Memory(Memory_Loop_Before_Close,Memory_HWM)
+    PRINT*,"Before Close                 : ",Memory_Loop_Before_Close
 #endif
     
-CALL Poseidon_Close()
-CALL Deallocate_Yahil_Profile()
-
-DEALLOCATE( MF_Driver_Source )
-DEALLOCATE( Input_R_Quad )
-DEALLOCATE( Input_T_Quad )
-DEALLOCATE( Input_P_Quad )
+    CALL Poseidon_Close()
+    CALL Deallocate_Yahil_Profile()
+    
+    DEALLOCATE( MF_Driver_Source )
+    DEALLOCATE( Input_R_Quad )
+    DEALLOCATE( Input_T_Quad )
+    DEALLOCATE( Input_P_Quad )
 
 
 #ifdef POSEIDON_MEMORY_FLAG
-    CALL Poseidon_Mark_Memory(Memory_After_Close,Memory_HWM)
-    PRINT*,"After Deallocation, Loop End        : ",Memory_After_Close
+    CALL Poseidon_Mark_Memory(Memory_Loop_End,Memory_HWM)
+    PRINT*,"After Deallocation, Loop End : ",Memory_Loop_End
 #endif
+    CALL Output_Poseidon_Memory_Loop_Report( Loop )
 
-    
-
-
+END DO ! T_Index
+END DO ! M_Index
 
 
 
@@ -464,7 +432,7 @@ DEALLOCATE( Input_P_Quad )
 call amrex_finalize()
 #ifdef POSEIDON_MEMORY_FLAG
     CALL Poseidon_Mark_Memory(Memory_After_AMReX_Finalize,Memory_HWM)
-    PRINT*," After AMReX_Finalize               : ",Memory_After_AMReX_Finalize
+    PRINT*," After AMReX_Finalize        : ",Memory_After_AMReX_Finalize
 #endif
 
 CALL MPI_Finalize(ierr)
@@ -473,13 +441,12 @@ CALL MPI_Finalize(ierr)
 
 #ifdef POSEIDON_MEMORY_FLAG
     CALL Poseidon_Mark_Memory(Memory_End,Memory_HWM)
-    PRINT*," Fin                                : ",Memory_End,Memory_HWM
+    PRINT*," Fin                         : ",Memory_End,Memory_HWM
 #endif
 
 CALL Output_Poseidon_Memory_Total_Report()
 
-END PROGRAM Yahil_Memory_Mapping
 
-
+END PROGRAM AMReX_Mapping
 
 

@@ -25,23 +25,19 @@ USE Poseidon_Kinds_Module, &
 
 IMPLICIT NONE
 
+LOGICAL                                                 ::  FP_Diagnostics_Flag = .FALSE.
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector
 
-REAL(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
-REAL(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
-REAL(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector
+INTEGER,        ALLOCATABLE,    DIMENSION(:)            ::  FP_Iteration_Log
 
-REAL(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_Beta
-REAL(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_Beta
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Iter_Matrix_Storage
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Iter_Load_Storage
 
-REAL(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Laplace_Vector_X
-REAL(idp),   ALLOCATABLE,    DIMENSION(:)            ::  FP_Residual_Vector_X
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:,:)      ::  Resid_Norms
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  Update_Norms
 
-
-
-
-
-
-! Cholesky Factorizatio Flag
 INTEGER, PUBLIC                                         ::  FP_Anderson_M = 3
 INTEGER, PUBLIC, PARAMETER                              ::  FP_Anderson_M_Default = 3
 
@@ -68,5 +64,6 @@ CHARACTER(LEN=31), DIMENSION(N_FPTT):: FPTT_Names = [   'Initalize Fixed Point M
 
 
 
-END MODULE Variables_FP 
+END MODULE Variables_FP
+
 

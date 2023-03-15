@@ -86,9 +86,6 @@ USE Variables_IO, &
                     Total_Run_Iters,        &
                     Iter_Report_Num_Samples,&
                     Iter_Time_Table,        &
-                    Frame_Residual_Table,   &
-                    Frame_Update_Table,     &
-                    Iteration_Histogram,    &
                     File_Suffix,            &
                     iWF_Source,             &
                     iWF_Results,            &

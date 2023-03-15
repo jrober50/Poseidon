@@ -14,8 +14,8 @@ LAPACK_LIB     = $(LAPACK_HOME)/lib
 
 USE_F_INTERFACES = TRUE
 
-DEBUG     = FALSE
-#DEBUG     = TRUE
+!DEBUG     = FALSE
+DEBUG     = TRUE
 
 USE_MPI   = TRUE
 USE_OMP   = FALSE
@@ -23,9 +23,9 @@ USE_OMP   = FALSE
 #MEM_PROFILE  = FALSE
 #TINY_PROFILE = FALSE
 
-DIM       = 3
+DIM       = 1
 
-EBASE     = Yahil_Profile_XCFC
+EBASE     = Yahil_XCFC_AMReX
 
 
 
@@ -85,15 +85,15 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.rules
 
 .PHONY : clean_output
 clean_output :
-	rm -f $(OUT)/*.out
-	rm -f $(OUT)/Results/*.out
-	rm -f $(OUT)/Reports/*.out
-	rm -f $(OUT)/Reports/Iteration_Reports/*.out
-	rm -f $(OUT)/Objects/*.out
-	rm -f $(OUT)/Objects/Sources/*.out
-	rm -f $(OUT)/Objects/Linear_System/*.out
-	rm -f $(OUT)/Objects/Residual/*.out
-	rm -f $(OUT)/Objects/Mesh/*.out
-	rm -f $(OUT)/Objects/Coefficients/*.out
+	rm -f Poseidon_Output/*.out
+	rm -f Poseidon_Output/Results/*.out
+	rm -f Poseidon_Output/Reports/*.out
+	rm -f Poseidon_Output/Reports/Iteration_Reports/*.out
+	rm -f Poseidon_Output/Objects/*.out
+	rm -f Poseidon_Output/Objects/Sources/*.out
+	rm -f Poseidon_Output/Objects/Linear_System/*.out
+	rm -f Poseidon_Output/Objects/Residual/*.out
+	rm -f Poseidon_Output/Objects/Mesh/*.out
+	rm -f Poseidon_Output/Objects/Coefficients/*.out
 
 

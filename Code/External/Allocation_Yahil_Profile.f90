@@ -34,6 +34,9 @@ USE Variables_External, &
                     Selfsim_Pot_Vals,   &
                     Selfsim_Shift_Vals, &
                     SelfSim_Allocated
+                    
+USE Poseidon_Parameters, &
+            ONLY :  Verbose_Flag
 
 
 
@@ -56,7 +59,9 @@ INTEGER, INTENT(IN)                             ::  Num_Entries
 
 
 IF ( SelfSim_Allocated ) THEN
-    WRITE(*,'(A)')'Warning attempting to reallocate Selfsim Variables.'
+    IF ( Verbose_Flag ) THEN
+        WRITE(*,'(A)')'Warning attempting to reallocate Selfsim Variables.'
+    END IF
 ELSE
     ALLOCATE( SELFSIM_R_VALS(0:NUM_ENTRIES) )
     ALLOCATE( SELFSIM_POT_VALS(0:NUM_ENTRIES) )

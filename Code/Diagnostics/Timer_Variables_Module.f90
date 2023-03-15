@@ -110,6 +110,11 @@ REAL(idp), PUBLIC   ::  Timer_Driver_Run
 REAL(idp), PUBLIC   ::  Timer_Driver_Extra
 
 
+REAL(idp), PUBLIC   ::  Timer_Am_Init
+REAL(idp), PUBLIC   ::  Timer_Plm_Init
+REAL(idp), PUBLIC   ::  Timer_Slm_Init
+
+
 CONTAINS
 
 

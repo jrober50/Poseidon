@@ -358,8 +358,6 @@ REAL(idp)                                                       ::  sqrt_two
 
 
 
-
-
 ! Initialize temporary trig tables
 CALL Initialize_Trig_Tables(QP_Num,     &
                             QP_xLocs,   &
@@ -370,10 +368,6 @@ CALL Initialize_Trig_Tables(QP_Num,     &
                             Cosm,       &
                             Sinm        )
 
-!PRINT*,"cos"
-!PRINT*,Cosm
-!PRINT*,"Sinm"
-!print*,sinm
 
 
 
@@ -554,13 +548,6 @@ CALL Initialize_Trig_Tables(QP_Num,     &
                             E_Locs,     &
                             Cosm,       &
                             Sinm        )
-
-
-!PRINT*,"Cos"
-!PRINT*,cosm(:,1,:)
-!
-!PRINT*,"Sin"
-!PRINT*,sinm(:,1,:)
 
 Plm_Table(:,:,:) = 0.0_idp
 Plm_Table(:,1,:) = 1.0_idp
@@ -850,11 +837,13 @@ REAL(idp), DIMENSION(1:QP_Num)                                  ::  Cur_Locs
 Cosm(:,0,:) = 1.0_idp
 Sinm(:,0,:) = 0.0_idp
 
+
 IF (L_Max > 0 ) THEN
     DO Elem = E_LoHi(1),E_LoHi(2)
     
         Here = Elem-E_LoHi(1)
         Cur_Locs = Map_From_X_Space(E_Locs(Here), E_Locs(Here + 1), QP_xLocs)
+        
         DO Quad = 1,QP_Num
 
             Cosm(Quad,1,Here) = DCOS(Cur_Locs(Quad))

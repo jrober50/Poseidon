@@ -31,7 +31,8 @@ USE Poseidon_Message_Routines_Module, &
                     Warning_Message
 
 USE Poseidon_Parameters, &
-            ONLY :  Verbose_Flag
+            ONLY :  Verbose_Flag,           &
+                    Degree
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -45,6 +46,9 @@ USE Parameters_Variable_Indices, &
 
 USE Poseidon_IO_Parameters, &
             ONLY :  CFA_VecVar_Names
+
+USE Variables_Mesh, &
+            ONLY :  Num_R_Elements
 
 USE Variables_Derived, &
             ONLY :  iVB_Prob_Dim,               &
@@ -89,6 +93,9 @@ USE MPI_Communication_TypeB_Module,             &
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Matrices_Flags,    &
                     iPF_Init_Matrices_Type_B_LU
+                
+USE Maps_Fixed_Point, &
+            ONLY :  FP_Array_Map_TypeB
 
 IMPLICIT NONE
 
@@ -107,17 +114,20 @@ CONTAINS
 SUBROUTINE Solve_Linear_System_TypeB(iU, iVB)
 
 
-INTEGER, DIMENSION(3), INTENT(IN)                                   :: iU
-INTEGER,               INTENT(IN)                                   :: iVB
+INTEGER,    DIMENSION(3),   INTENT(IN)                  :: iU
+INTEGER,                    INTENT(IN)                  :: iVB
 
-INTEGER                                                             ::  INFO
-REAL(idp), ALLOCATABLE, DIMENSION(:)                                ::  WORK_VEC
+INTEGER                                                 ::  INFO
+REAL(idp),  DIMENSION(:),               ALLOCATABLE     ::  WORK_VEC
 
-INTEGER                                                             ::  Lower_Limit
-INTEGER                                                             ::  Upper_Limit
-INTEGER                                                             ::  ierr
+INTEGER                                                 ::  Lower_Limit
+INTEGER                                                 ::  Upper_Limit
+INTEGER                                                 ::  ierr
 
-CHARACTER(LEN = 300)                    ::  Message
+INTEGER                                                 ::  i, iW
+INTEGER                                                 ::  re, d, lm
+
+CHARACTER(LEN = 300)                                    ::  Message
 
 
 IF ( Verbose_Flag ) THEN
@@ -155,12 +165,38 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     Work_Vec = dVB_Load_Vector(:,iVB)
 
 !    PRINT*,"Work_Vec"
-!    PRINT*,Work_Vec
+!    IF ( iVB == iVB_X ) THEN
+!    DO re = 0,Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO iW = iU_X1,iU_X3
+!    DO LM = 1,LM_Length
+!        i = FP_Array_Map_TypeB(iW,iVB_X,re,d,lm)
+!        PRINT*,re,d,iW,lm,Work_Vec(i)
+!
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END IF
 
     CALL DIRICHLET_BC_Beta_Banded(iVB_Prob_Dim, Work_Vec )
     CALL Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
-!    PRINT*,Work_Vec
+!    PRINT*,"Work_Vec"
+!    IF ( iVB == iVB_X ) THEN
+!    DO re = 0,Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO iW = iU_X1,iU_X3
+!    DO LM = 1,LM_Length
+!        i = FP_Array_Map_TypeB(iW,iVB_X,re,d,lm)
+!        PRINT*,re,d,iW,lm,Work_Vec(i)
+!
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END IF
+
 
 !    PRINT*,dMB_Matrix_Banded
 
@@ -182,7 +218,19 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     END IF
 
 !    PRINT*,"Coeff_Vec"
-!    PRINT*,Work_Vec
+!    IF ( iVB == iVB_X ) THEN
+!    DO re = 0,Num_R_Elements-1
+!    DO d = 0,Degree
+!    DO iW = iU_X1,iU_X3
+!    DO LM = 1,LM_Length
+!        i = FP_Array_Map_TypeB(iW,iVB_X,re,d,lm)
+!        PRINT*,re,d,iW,lm,Work_Vec(i)
+!        
+!    END DO
+!    END DO
+!    END DO
+!    END DO
+!    END IF
 
     dVB_Coeff_Vector(:,iVB) = Work_Vec(:)
 

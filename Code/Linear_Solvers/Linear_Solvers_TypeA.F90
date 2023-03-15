@@ -34,6 +34,10 @@ USE Poseidon_Parameters, &
                     L_LIMIT,                    &
                     Verbose_Flag
 
+USE Variables_Mesh, &
+            ONLY :  Num_R_Elements
+
+
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,                      &
                     iU_LF
@@ -62,7 +66,10 @@ USE Variables_Matrices,  &
                     Laplace_Factored_Row
 
 USE Variables_FP,  &
-            ONLY :  FP_Update_Vector
+            ONLY :  FP_Update_Vector,               &
+                    FP_Iter_Matrix_Storage,         &
+                    FP_Iter_Load_Storage,           &
+                    FP_Diagnostics_Flag
 
 USE Matrix_Cholesky_Factorization_Module,   &
             ONLY :  CCS_Back_Substitution,          &
@@ -76,6 +83,9 @@ USE Matrix_Boundary_Condition_Routines,  &
 
 USE Maps_Domain, &
             ONLY :  Map_To_lm
+            
+USE Maps_Fixed_Point, &
+            ONLY :  FP_Array_Map
 
 USE MPI_Communication_TypeA_Module,             &
             ONLY :  MPI_RTM_Source_TypeA,           &
@@ -119,6 +129,8 @@ INTEGER                                                 ::  Lower_Limit
 INTEGER                                                 ::  Upper_Limit
 
 CHARACTER(LEN = 300)                                    ::  Message
+
+INTEGER                                                 ::  re, d, i, lm
 
 IF ( Verbose_Flag ) THEN
     WRITE(Message,'(A,A,A)')'Beginning ',TRIM(CFA_Var_Names(iU)),' Linear Solve.'
@@ -181,14 +193,20 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
         WORK_VEC = -dVA_Load_Vector(:,lm_loc,iU)
         WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l)
 
-!        PRINT*,WORK_ELEM_VAL(:)
 
+!        PRINT*,"Work_Vec"
+!        IF ( iU == iU_CF ) THEN
+!        DO re = 0,Num_R_Elements-1
+!        DO d = 0,Degree
+!        DO LM = 1,LM_Length
+!            i = FP_Array_Map(re,d,iU_CF,lm)
+!            PRINT*,re,d,lm,Work_Vec(i)
+!    
+!        END DO
+!        END DO
+!        END DO
+!        END IF
 
-!        PRINT*,"Work_Vec, Type A l = ",l," m = ",m
-!        PRINT*,Work_Vec
-!        PRINT*,"+++++++++++++++++++++++++++++++++++"
-
-!        STOP
         CALL DIRICHLET_BC_CHOL( NUM_R_NODES,                &
                                 Factored_NNZ,               &
                                 l,                          &
@@ -207,8 +225,12 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                                 WORK_ELEM_VAL,              &
                                 Laplace_Factored_COL(:,l),  &
                                 Laplace_Factored_ROW(:,l),  &
-                                WORK_VEC                    )
+                                Work_Vec                    )
 
+        IF ( FP_Diagnostics_Flag ) THEN
+            FP_Iter_Matrix_Storage(:,l) = Work_Elem_Val
+            FP_Iter_Load_Storage(:,lm_loc) = Work_Vec
+        END IF
 
 
         CALL CCS_Forward_Substitution(  NUM_R_NODES,                    &
@@ -227,11 +249,12 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                                         WORK_VEC                        )
 
 
-!        PRINT*,"After"
-!        PRINT*,Work_Vec(:)
 
-        FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-dVA_Coeff_Vector(:,lm_loc,iU)
+        IF ( FP_Diagnostics_Flag ) THEN
+            FP_Update_Vector(:,lm_loc,iU) = WORK_VEC(:)-dVA_Coeff_Vector(:,lm_loc,iU)
+        END IF
         dVA_Coeff_Vector( :,lm_loc,iU) = WORK_VEC(:)
+
 
 
 

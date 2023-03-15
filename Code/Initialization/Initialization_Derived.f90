@@ -144,26 +144,26 @@ SUBROUTINE Initialize_Derived_AMReX_Part1
 
 IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables, AMReX - Part 1.')
 
-IF ( DOMAIN_DIM == 1 ) THEN
+!IF ( DOMAIN_DIM == 1 ) THEN
+!
+!    LM_Length = 1
+!    LM_Short_Length = 1
+!
+!ELSE IF ( DOMAIN_DIM == 2 ) THEN
+!
+!    LM_Length = L_Limit + 1
+!    LM_Short_Length = L_Limit + 1
+!
+!ELSE IF ( DOMAIN_DIM == 3 ) THEN
+!
+!    LM_Length = (L_Limit + 1)*(L_Limit + 1)
+!    LM_Short_Length = (L_Limit+1)*(L_Limit+2)/2
+!
+!END IF
 
-    LM_Length = 1
-    LM_Short_Length = 1
-    
-ELSE IF ( DOMAIN_DIM == 2 ) THEN
 
-    LM_Length = L_Limit + 1
-    LM_Short_Length = L_Limit + 1
-
-ELSE IF ( DOMAIN_DIM == 3 ) THEN
-
-    LM_Length = (L_Limit + 1)*(L_Limit + 1)
-    LM_Short_Length = (L_Limit+1)*(L_Limit+2)/2
-    
-END IF
-
-
-!LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
-!LM_Short_Length = (L_Limit+1)*(L_Limit+2)/2
+LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
+LM_Short_Length = (L_Limit+1)*(L_Limit+2)/2
 
 !
 !   VAR_DIM - Length of vector required to hold coefficients for 1 variable.

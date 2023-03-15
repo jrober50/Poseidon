@@ -298,9 +298,9 @@ ALLOCATE( Int_P_Locs(1:Int_P_Deg), Int_P_Weights(1:Int_P_Deg) )
 ALLOCATE( LP_LP_Table( 1:Int_R_Deg, 0:Degree, 0:Degree, 0:1, 0:1) )
 ALLOCATE( TP_TP_Integrals( 1:LM_Length, 1:LM_Length, 1:16) )
 
-ALLOCATE( Slm_Table(1:Int_TP_Deg, 1:LM_Length)      )
-ALLOCATE( Slm_dt_Table(1:Int_TP_Deg, 1:LM_Length)   )
-ALLOCATE( Slm_dp_Table(1:Int_TP_Deg, 1:LM_Length)   )
+ALLOCATE( Slm_Table(1:LM_Length, 1:Int_TP_Deg)      )
+ALLOCATE( Slm_dt_Table(1:LM_Length, 1:Int_TP_Deg)   )
+ALLOCATE( Slm_dp_Table(1:LM_Length, 1:Int_TP_Deg)   )
 
 ALLOCATE( Plm_Table(1:Int_T_Deg, 1:LM_Short_Length,1)      )
 ALLOCATE( Plm_dt_Table(1:Int_T_Deg, 1:LM_Short_Length,1)   )
@@ -505,94 +505,94 @@ DO lm_loc = 1,LM_Length
 
 
     ! SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 2 ) = SUM( Slm_Table( :, lm_loc )          &
-                                                * Slm_dt_Table( :, lpmp_loc)   &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 2 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_dt_Table( lpmp_loc, :)   &
                                                 * TP_Int_Weights(:)         )
 
 
-
     ! Slm * S^lpmp * Cotan
-    TP_TP_Integrals( lm_loc, lpmp_loc, 3 ) = SUM( Slm_Table( :, lm_loc )          &
-                                                * Slm_Table( :, lpmp_loc )     &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 3 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         &
                                                 * Cotan_Val(:)              )
 
     ! d Slm/dt * S^lpmp     SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc))
-    TP_TP_Integrals( lm_loc, lpmp_loc, 4 ) = SUM( Slm_dt_Table(:, lm_loc )        &
-                                                * Slm_Table( :, lpmp_loc )     &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 4 ) = SUM( Slm_dt_Table(lm_loc, : )        &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         )
 
     ! Slm * d S^lpmp/dp
-    TP_TP_Integrals( lm_loc, lpmp_loc, 5 ) = SUM( Slm_Table( :, lm_loc )          &
-                                                * Slm_dp_Table( :, lpmp_loc )  &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 5 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_dp_Table( lpmp_loc, : )  &
                                                 * TP_Int_Weights(:)         )
 
     ! d Slm/dp * S^lpmp
-    TP_TP_Integrals( lm_loc, lpmp_loc, 6 ) = SUM( Slm_dp_Table( :, lpmp_loc )     &
-                                                * Slm_Table( :, lpmp_loc )     &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 6 ) = SUM( Slm_dp_Table( lm_loc, : )     &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         )
 
     ! SUM( dTP_dTP_Factor(:,lm_loc,lpmp_loc) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 7 ) = SUM( Slm_dt_Table(:, lm_loc )        &
-                                                * Slm_dt_Table( :, lpmp_loc )  &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 7 ) = SUM( Slm_dt_Table(lm_loc, : )        &
+                                                * Slm_dt_Table( lpmp_loc, : )  &
                                                 * TP_Int_Weights(:)         )
 
 
     ! SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 8 ) = SUM( Slm_Table( :, lm_loc )          &
-                                                * Slm_Table( :, lpmp_loc )     &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 8 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         &
                                                 / Sin_Square(:)             )
 
     ! SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * (1-Cotan_Val(:)**2) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 9 ) = SUM( Slm_Table( :, lm_loc )          &
-                                                * Slm_Table( :, lpmp_loc )     &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 9 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         &
                                                 * (1-Cotan_Val(:)**2)       )
 
     ! SUM( dTP_TdP_Factor(:,lm_loc,lpmp_loc) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 10 ) = SUM( Slm_dt_Table(:, lm_loc )       &
-                                                 * Slm_dp_Table( :, lpmp_loc ) &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 10 ) = SUM( Slm_dt_Table(lm_loc, : )       &
+                                                 * Slm_dp_Table( lpmp_loc, : ) &
                                                  * TP_Int_Weights(:)        )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)   )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 11 ) = SUM( Slm_dp_Table( :, lpmp_loc )    &
-                                                 * Slm_Table( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 11 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_Table( lpmp_loc, : )    &
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:)     )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 12 ) = SUM( Slm_dp_Table( :, lpmp_loc )    &
-                                                 * Slm_Table( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 12 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_Table( lpmp_loc, : )    &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_dTP_Factor(:,lm_loc,lpmp_loc)/ Sin_Square(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 13 ) = SUM( Slm_dp_Table( :, lpmp_loc )    &
-                                                 * Slm_dt_Table( :, lpmp_loc ) &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 13 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_dt_Table( lpmp_loc, : ) &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) / Sin_Square(:)     )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 14 ) = SUM( Slm_dp_Table( :, lpmp_loc )    &
-                                                 * Slm_Table( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 14 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_Table( lpmp_loc, : )    &
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_TdP_Factor(:,lm_loc,lpmp_loc)/Sin_Square(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 15 ) = SUM( Slm_dp_Table( :, lpmp_loc )    &
-                                                 * Slm_dp_Table( :, lpmp_loc ) &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 15 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_dp_Table( lpmp_loc, : ) &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
 
     ! SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 16 ) = SUM( Slm_dt_Table(:, lm_loc )       &
-                                                 * Slm_Table( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 16 ) = SUM( Slm_dt_Table(lm_loc, : )       &
+                                                 * Slm_Table( lpmp_loc, : )    &
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             )
 
-
+!    PRINT*," "
+!    PRINT*,lm_loc,lpmp_loc
 !    PRINT*,TP_TP_Integrals(lm_loc, lpmp_loc,:)
 
 END DO

@@ -300,7 +300,7 @@ ELSE
     iNE = [Num_R_Elements, Num_T_Elements, Num_P_Elements]
 END IF
 
-IF (Present(iNE_Opt) ) THEN
+IF (Present(ELo_Opt) ) THEN
     ELo = ELo_Opt
 ELSE
     ELo = [1, 1, 1]

@@ -205,6 +205,8 @@ USE Memory_Variables_Module
 
 
 
+
+
 IMPLICIT NONE
 
 CONTAINS
@@ -238,6 +240,8 @@ CHARACTER(LEN = 300)                    ::  Message
     INTEGER, DIMENSION(3)           ::  iE
     INTEGER                         ::  re, te, pe
 
+
+    
 
     IF ( Verbose_Flag ) THEN
         WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_VecVar_Names(iVB)),' Load Vector.'
@@ -300,7 +304,7 @@ ELSE
     iNE = [Num_R_Elements, Num_T_Elements, Num_P_Elements]
 END IF
 
-IF (Present(iNE_Opt) ) THEN
+IF (Present(ELo_Opt) ) THEN
     ELo = ELo_Opt
 ELSE
     ELo = [1, 1, 1]
@@ -345,7 +349,6 @@ CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
 !PRINT*,"iE",iE
 !PRINT*,"Cur_R_Locs",Cur_R_Locs
 
-
 CALL Initialize_Slm_Tables_on_Elem( iE(2), iE(3),       &
                                     Num_T_Quad_Points,  &
                                     Num_P_Quad_Points,  &
@@ -358,7 +361,6 @@ CALL Initialize_Slm_Tables_on_Elem( iE(2), iE(3),       &
                                     Slm_Elem_Values,    &
                                     Slm_Elem_dt_Values, &
                                     Slm_Elem_dp_Values  )
-
 
 
 R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
@@ -416,20 +418,23 @@ INTEGER                                             ::  ui, rd, d, lm_loc
 INTEGER                                             ::  Current_i_Location
 
 REAL(idp)                                           ::  RHS_TMP
-INTEGER                                             ::  iCT
-
-
-! replace level with (level - iIRL)?
-!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
-iCT = 0
 
 
 DO ui = iU(1),iU(3)
 DO lm_loc = 1,LM_LENGTH
+
+
+!IF ( ui == iU(1) ) THEN
+!    PRINT*,iE(2),iE(3),lm_loc,Slm_Elem_Values( lm_loc, : )
+!END IF
+
 DO d = 0,DEGREE
 
 
     RHS_TMP = 0.0_idp
+    
+    
+    
 
     DO rd = 1,NUM_R_QUAD_POINTS
 
@@ -441,7 +446,17 @@ DO d = 0,DEGREE
                 * Lagrange_Poly_Table(d, rd, 0)                     &
                 * R_Int_Weights(rd)
 
-
+!        IF ( LM_Loc == 3 ) THEN
+!        IF ( ui == iU(1) ) THEN
+!            PRINT*,iE,                                              &
+!                SUM( SourceTerm( :, rd, ui )                        &
+!                       * Slm_Elem_Values( lm_loc, : )               &
+!                       * TP_Int_Weights(:)                     ),   &
+!                Lagrange_Poly_Table( d, rd, 0),                     &
+!                R_Int_Weights(rd)
+!          
+!        END IF
+!        END IF
 !        IF ( ui == iU(1) ) THEN
 !            PRINT*,level,iE,lm_loc,d,rd
 !
@@ -467,6 +482,9 @@ DO d = 0,DEGREE
     dVB_Load_Vector(Current_i_Location,iVB)          &
         = dVB_Load_Vector(Current_i_Location,iVB)    &
         + RHS_TMP
+        
+!    PRINT*,ui, FEM_Elem, d, lm_loc, Current_i_Location,dVB_Load_Vector(Current_i_Location,iVB)
+
 
 END DO  ! d Loop
 END DO  ! lm_loc Loop
@@ -820,7 +838,6 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         
         
         
-        
         ! Initialize Am Table
         CALL Initialize_Am_Tables(  Num_P_Quad_Points,          &
                                     Int_P_Locations,            &
@@ -832,7 +849,6 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                                     Am_dp_Values                )
 
         ! Initialize Plm Table
-        
         CALL Initialize_Plm_Tables( Num_T_Quad_Points,          &
                                     Int_T_Locations,            &
                                     L_Limit,                    &
@@ -842,7 +858,6 @@ DO lvl = AMReX_Num_Levels-1,0,-1
                                     tlocs_subarray(0:iNE(2)),   &
                                     Plm_Values,                 &
                                     Plm_dt_Values               )
-                                    
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)

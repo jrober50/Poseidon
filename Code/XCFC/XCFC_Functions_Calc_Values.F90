@@ -212,7 +212,7 @@ INTEGER,    INTENT(IN)                      :: Level
 REAL(idp)                                   :: TMP_Val
 INTEGER                                     :: rd, tpd, d
 INTEGER,        DIMENSION(0:DEGREE)         :: Here
-INTEGER                                     :: iRE, iCT
+INTEGER                                     :: iRE
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -231,9 +231,6 @@ END DO ! d
 
 
 
-
-iCT = 0
-
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
     
@@ -242,9 +239,6 @@ DO tpd = 1,NUM_TP_QUAD_POINTS
 
 
 #ifdef POSEIDON_AMREX_FLAG
-
-!        PRINT*,"Slm_Elem_Values in calc"
-!        PRINT*,Slm_Elem_Values
 
         TMP_Val = TMP_Val                               &
             + SUM( dVA_Coeff_Vector( Here(d), :, iU )  &
@@ -303,7 +297,7 @@ INTEGER,    INTENT(IN)                      ::  Level
 REAL(idp), DIMENSION(3)                     ::  TMP_Drv
 INTEGER                                     ::  rd, tpd, d
 INTEGER                                     ::  Here
-INTEGER                                     ::  iRE, iCT
+INTEGER                                     ::  iRE
 
 
 
@@ -314,11 +308,6 @@ INTEGER                                     ::  iRE, iCT
 #endif
 
 
-
-
-
-!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
-iCT = 0
 
 
 DO rd = 1,NUM_R_QUAD_POINTS
@@ -388,7 +377,7 @@ REAL(idp), DIMENSION(3)                     ::  TMP_Drv
 
 INTEGER                                     ::  rd, tpd, d
 INTEGER                                     ::  Here
-INTEGER                                     ::  iRE, iCT
+INTEGER                                     ::  iRE
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -397,11 +386,6 @@ INTEGER                                     ::  iRE, iCT
     iRE = iE(1)
 #endif
 
-
-
-
-!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
-iCT = 0
 
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
@@ -483,7 +467,7 @@ INTEGER,    INTENT(IN)                      ::  Level
 REAL(idp)                                   ::  TMP_Val
 INTEGER                                     ::  rd, tpd, d
 INTEGER                                     ::  Here, There
-INTEGER                                     ::  iRE, iCT
+INTEGER                                     ::  iRE
 
 
 
@@ -495,9 +479,6 @@ INTEGER                                     ::  iRE, iCT
 
 
 
-
-!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
-iCT = 0
 
 DO rd = 1,NUM_R_QUAD_POINTS
 DO tpd = 1,NUM_TP_QUAD_POINTS
@@ -550,7 +531,7 @@ INTEGER,    INTENT(IN)                      :: Level
 REAL(idp), DIMENSION(3)                     ::  TMP_Drv
 INTEGER                                     ::  rd, tpd, d
 INTEGER                                     ::  Here, There
-INTEGER                                     ::  iRE, iCT
+INTEGER                                     ::  iRE
 
 
 
@@ -561,9 +542,6 @@ INTEGER                                     ::  iRE, iCT
 #endif
 
 
-
-!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
-iCT = 0
 
 
 DO rd = 1,NUM_R_QUAD_POINTS
@@ -617,21 +595,21 @@ END SUBROUTINE Calc_Drv_On_Elem_TypeB
 SUBROUTINE Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT, Val, Drv, iU, iVB, Level )
 
 INTEGER,    INTENT(IN), DIMENSION(3)        ::  iE
-REAL(idp), INTENT(IN)                       :: DROT
+REAL(idp), INTENT(IN)                       ::  DROT
 
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points),    INTENT(OUT)  :: Val
 REAL(idp), DIMENSION(Num_TP_Quad_Points, Num_R_Quad_Points,3),  INTENT(OUT)  :: Drv
-INTEGER,   INTENT(IN)                       :: iU, iVB
-INTEGER,    INTENT(IN)                      :: Level
+INTEGER,   INTENT(IN)                       ::  iU, iVB
+INTEGER,    INTENT(IN)                      ::  Level
 
 
 
-REAL(idp)                                   :: TMP_Val
-REAL(idp), DIMENSION(3)                     :: TMP_Drv
+REAL(idp)                                   ::  TMP_Val
+REAL(idp), DIMENSION(3)                     ::  TMP_Drv
 
 INTEGER                                     ::  rd, tpd, d
 INTEGER                                     ::  Here, There
-INTEGER                                     ::  iRE, iCT
+INTEGER                                     ::  iRE
 
 
 
@@ -640,10 +618,6 @@ INTEGER                                     ::  iRE, iCT
 #else
     iRE = iE(1)
 #endif
-
-
-!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
-iCT = 0
 
 
 

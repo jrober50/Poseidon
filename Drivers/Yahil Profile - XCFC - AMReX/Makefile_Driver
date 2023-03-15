@@ -6,8 +6,7 @@ DRIVER_f90 = \
 DRIVER_F90 = \
   Driver_SetSource.F90      \
   Driver_ReturnTest.F90     \
-  AMReX_Mapping.F90
-#  Yahil_Memory_Mapping.F90
+  Driver_Yahil_XCFC_AMReX.F90
 
 
 
