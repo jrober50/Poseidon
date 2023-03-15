@@ -115,40 +115,97 @@ END FUNCTION MVMULT_FULL
 
 
 
-!+402+############################################################!
-!
-!     MVMULT_FULL: Multiply a vector by a matrix in CCS format
-!
-!#################################################################!
-SUBROUTINE MVMULT_FULL_SUB(A, V, N, M)
 
 
-INTEGER, INTENT(IN)                                         :: N, M
-COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:M)             :: V
-COMPLEX(KIND = idp), INTENT(IN), DIMENSION(1:N,1:M)         :: A
+ !+101+################################################!
+!                                                       !
+!          Matrix_CCS_MVMult                            !
+!                                                       !
+ !#####################################################!
+SUBROUTINE Matrix_CCS_MVMult( nCol,     &
+                              nNZ,      &
+                              Row_Ind,  &
+                              Col_Ptr,  &
+                              Val_Ary,  &
+                              x_vec,    &
+                              b_vec     )
+
+INTEGER,                                INTENT(IN)  ::  nCol
+INTEGER,                                INTENT(IN)  ::  nNZ
+INTEGER,        DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Row_Ind
+INTEGER,        DIMENSION(0:nCol),      INTENT(IN)  ::  Col_Ptr
+COMPLEX(idp),   DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Val_Ary
+
+COMPLEX(idp),   DIMENSION(0:nCol-1),    INTENT(IN)  ::  x_Vec
+COMPLEX(idp),   DIMENSION(0:nCol-1),    INTENT(OUT) ::  b_Vec
+
+INTEGER                                             ::  i
+INTEGER                                             ::  j
+INTEGER                                             ::  index
+INTEGER                                             ::  nE_in_Col
 
 
-COMPLEX(KIND = idp), DIMENSION(1:N)                            :: Sol
+b_Vec = 0.0_idp
 
-INTEGER                                                     :: i,j
+DO j = 0,nCol-1
+nE_in_Col = Col_Ptr(j+1)-Col_Ptr(j)
+DO i = 0,nE_in_Col-1
+
+    index = Col_Ptr(j)+i
+
+    b_Vec(row_ind(index)) = b_Vec(row_ind(index))       &
+                          + Val_Ary(index)*x_Vec(j)
+
+END DO ! j Loop
+END DO ! i Loop
+
+END SUBROUTINE Matrix_CCS_MVMult
 
 
 
-Do i = 1,N
+ !+101+################################################!
+!                                                       !
+!          Matrix_CCS_MVMult                            !
+!                                                       !
+ !#####################################################!
+SUBROUTINE Matrix_CCS_MtransVMult(  nCol,     &
+                                    nNZ,      &
+                                    Row_Ind,  &
+                                    Col_Ptr,  &
+                                    Val_Ary,  &
+                                    x_vec,    &
+                                    b_vec     )
 
-    Sol(i) = 0.D0
+INTEGER,                                INTENT(IN)  ::  nCol
+INTEGER,                                INTENT(IN)  ::  nNZ
+INTEGER,        DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Row_Ind
+INTEGER,        DIMENSION(0:nCol),      INTENT(IN)  ::  Col_Ptr
+COMPLEX(idp),   DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Val_Ary
 
-    Do j = 1,M
-        PRINT*,i,j,REAL(A(i,j),idp),REAL(V(j),idp),REAL(A(i,j)*V(j),idp),REAL(Sol(i) + A(i,j)*V(j),idp)
-        Sol(i) = Sol(i) + A(i,j)*V(j)
+COMPLEX(idp),   DIMENSION(0:nCol-1),    INTENT(IN)  ::  x_Vec
+COMPLEX(idp),   DIMENSION(0:nCol-1),    INTENT(OUT) ::  b_Vec
+
+INTEGER                                             ::  i
+INTEGER                                             ::  j
+INTEGER                                             ::  index
+INTEGER                                             ::  nE_in_Col
+
+
+b_Vec = 0.0_idp
+
+DO j = 0,nCol-1
+nE_in_Col = Col_Ptr(j+1)-Col_Ptr(j)
+DO i = 0,nE_in_Col-1
+
+    index = Col_Ptr(j)+i
     
-    END DO
+    b_Vec(j) = b_Vec(j) + Val_Ary(index)*x_Vec(row_ind(index))
 
-END DO
+END DO ! j Loop
+END DO ! i Loop
 
 
-END SUBROUTINE MVMULT_FULL_SUB
-
+END SUBROUTINE Matrix_CCS_MtransVMult
 
 
 

@@ -47,7 +47,7 @@ USE Variables_Vectors,  &
 USE Maps_Domain, &
             ONLY :  Map_To_lm
             
-USE Matrix_CCS_Operations_Module, &
+USE Functions_Matrix, &
             ONLY :  Matrix_CCS_MVMult,          &
                     Matrix_CCS_MtransVMult
 

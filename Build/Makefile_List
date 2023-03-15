@@ -2,12 +2,12 @@ POSEIDON = \
   $(POSEIDON_COMMON)          \
   $(POSEIDON_VARIABLES)       \
   $(POSEIDON_FLAGS)           \
-  $(POSEIDON_DIAGNOSTICS)     \
   $(POSEIDON_AMREX_UTILITIES) \
   $(POSEIDON_MAPS)            \
   $(POSEIDON_MESH)            \
   $(POSEIDON_QUAD)            \
   $(POSEIDON_FUNCTIONS)       \
+  $(POSEIDON_DIAGNOSTICS)     \
   $(POSEIDON_FEM)             \
   $(POSEIDON_INITIAL_GUESS)   \
   $(POSEIDON_MPI)             \

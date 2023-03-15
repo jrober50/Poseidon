@@ -217,6 +217,8 @@ IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
     CALL Output_Remesh_Time_Report()
 
     CALL Output_Footer()
+    
+!    CALL Output_Ylm_Time_Report()
 
 END IF
 
@@ -359,6 +361,27 @@ END SUBROUTINE Output_Remesh_Time_Report
 
 
 
+
+
+ !+202+########################################################!
+!                                                               !
+!          Output_Remesh_Time_Report                            !
+!                                                               !
+ !#############################################################!
+SUBROUTINE Output_Ylm_Time_Report()
+
+
+
+101 FORMAT (7X,A,5X,ES12.6E2,A)
+
+
+WRITE(*,101) '- Plm Init Time                    :', Timer_Plm_Init, ' s'
+WRITE(*,101) '- Ylm Init Time                    :', Timer_Ylm_Init, ' s'
+WRITE(*,*)
+
+
+
+END SUBROUTINE Output_Ylm_Time_Report
 
 
  !+202+########################################################!

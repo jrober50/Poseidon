@@ -109,6 +109,9 @@ REAL(idp), PUBLIC   ::  Timer_Driver_SetGuess
 REAL(idp), PUBLIC   ::  Timer_Driver_Run
 REAL(idp), PUBLIC   ::  Timer_Driver_Extra
 
+REAL(idp), PUBLIC   ::  Timer_Plm_Init
+REAL(idp), PUBLIC   ::  Timer_Ylm_Init
+
 
 CONTAINS
 

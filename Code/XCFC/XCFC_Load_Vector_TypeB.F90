@@ -197,7 +197,6 @@ USE Memory_Variables_Module
 
 IMPLICIT NONE
 
-REAL(idp)           :: E_Mass
 
 CONTAINS
 !+101+###########################################################################!
@@ -248,11 +247,6 @@ CHARACTER(LEN = 300)                    ::  Message
 
 #endif
 
-!IF ( iVB == iVB_X ) THEN
-!    PRINT*,"*********************"
-!    PRINT*,"E_Mass ",E_Mass
-!    PRINT*,"*********************"
-!END IF
 
 
 END SUBROUTINE XCFC_Calc_Load_Vector_TypeB
@@ -312,14 +306,11 @@ DO i = 1,3
 END DO
 
 FEM_Elem = FEM_Elem_Map(iE(1),Level)
-
 DROT = drlocs(FEM_Elem)/2.0_idp
 DTOT = Level_dx(Level,2)/2.0_idp
 
 CUR_R_LOCS(:) = DROT * (Int_R_Locations(:) + 1.0_idp) + rlocs(FEM_Elem)
 CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
-
-
 
 #else
 
@@ -330,7 +321,6 @@ DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
 
 CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
 CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
-
 
 #endif
 
@@ -393,18 +383,19 @@ INTEGER                                             ::  ui, rd, d, lm_loc
 INTEGER                                             ::  Current_i_Location
 
 COMPLEX(KIND = idp)                                 ::  RHS_TMP
-INTEGER                                             ::  iCT
 
 REAL(idp)                                           ::  mass_tmp
 
 
-! replace level with (level - iIRL)?
-!iCT = 2**(level+1) - mod(iE(1),2**level) - 2
-iCT = 0
 
 
 DO ui = iU(1),iU(3)
 DO lm_loc = 1,LM_LENGTH
+!
+!IF (ui == iU(1)) THEN
+!    PRINT*,iE(2),iE(3),lm_loc,Ylm_Elem_CC_Values( :, lm_loc )
+!END IF
+
 DO d = 0,DEGREE
 
 
@@ -424,11 +415,17 @@ DO d = 0,DEGREE
                 * R_Int_Weights(rd)
 
 
-        MASS_TMP = MASS_TMP                                     &
-                + SUM( SourceTerm( :, rd, ui )                  &
-                    * Ylm_Elem_CC_Values( :, lm_loc )           &
-                    * TP_Int_Weights(:)                     )   &
-                * R_Int_Weights(rd)
+!        IF ( LM_Loc == 3 ) THEN
+!        IF ( ui == iU(1) ) THEN
+!            PRINT*,iE,                                          &
+!                SUM( SourceTerm( :, rd, ui )                    &
+!                    * Ylm_Elem_CC_Values( :, lm_loc )           &
+!                    * TP_Int_Weights(:)                     ),  &
+!                Lagrange_Poly_Table( d, rd, 0),                 &
+!                R_Int_Weights(rd)
+!
+!        END IF
+!        END IF
 
 
 !        IF ( ui == iU(1) ) THEN
@@ -440,7 +437,7 @@ DO d = 0,DEGREE
 !            PRINT*,"======================"
 !            PRINT*,TP_Int_Weights(:)
 !            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
-
+!
 !        END IF
 
 #else
@@ -497,9 +494,8 @@ DO d = 0,DEGREE
         + RHS_TMP
 
 
-    E_Mass = E_Mass + Mass_TMP
 
-!    PRINT*,Current_i_Location,cVB_Load_Vector(Current_i_Location,iVB)
+!    PRINT*,ui, FEM_Elem, d, lm_loc, Current_i_Location,cVB_Load_Vector(Current_i_Location,iVB)
 END DO  ! d Loop
 END DO  ! lm_loc Loop
 END DO  ! ui Loop
@@ -706,8 +702,6 @@ INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
 nGhost_Vec = 0
 
 
-E_Mass = 0.0_idp
-
 cVB_Load_Vector(:,iVB) = 0.0_idp
 DO lvl = AMReX_Num_Levels-1,0,-1
 
@@ -828,13 +822,14 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
 
+
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
                 !
                 ! Initalize Ylm Table on Elem
                 !
                 CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
-
+    
                 iE = [re,te,pe]
                 CALL XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, lvl )
             END IF

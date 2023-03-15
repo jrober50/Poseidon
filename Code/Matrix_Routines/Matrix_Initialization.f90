@@ -521,14 +521,14 @@ DO m = -M_VALUES(l),M_VALUES(l)
 
 
     Ylm(:, lm_loc )    = Ylm_Table(:,m,l)
-    Ylm_dt(:, lm_loc ) = REAL_L * Cotan_Val(:) * Ylm_Table(:,m,l)                     &
+    Ylm_dt(:, lm_loc ) = REAL_L * Cotan_Val(:) * Ylm_Table(:,m,l)               &
                         - SQRT_TERM(lm_loc) * CSC_VAL(:) * Ylm_Table(:,m,l-1)
     Ylm_dp(:, lm_loc ) = CMPLX(0,m,idp) * Ylm_Table(:,m,l)
 
 
     Ylm_CC( :, lm_loc )    = M_POWER_TABLE(m) * Ylm_Table(:,-m,l)
-    Ylm_CC_dt( :, lm_loc ) = REAL_L*Cotan_Val(:) * Ylm_CC( :, lm_loc)          &
-                             - SQRT_TERM(lm_loc) * CSC_VAL(:)                       &
+    Ylm_CC_dt( :, lm_loc ) = REAL_L*Cotan_Val(:) * Ylm_CC( :, lm_loc)           &
+                             - SQRT_TERM(lm_loc) * CSC_VAL(:)                   &
                                 * M_POWER_TABLE(m) * Ylm_Table(:,-m, l-1)
     Ylm_CC_dp( :, lm_loc ) = CMPLX(0,-m,idp) * Ylm_CC(:, lm_loc)
 
@@ -540,7 +540,7 @@ END DO ! l Loop
 
 
 
-
+TP_TP_Integrals = 0.0_idp
 
 DO lpmp_loc = 1,LM_Length
 DO lm_loc = 1,LM_Length
@@ -559,7 +559,7 @@ DO lm_loc = 1,LM_Length
                                                 * Ylm_CC_dt( :, lpmp_loc)   &
                                                 * TP_Int_Weights(:)         )
 
-
+!    PRINT*,lm_loc,lpmp_loc,TP_TP_Integrals( lm_loc, lpmp_loc, 2 )
 
     ! Ylm * Y^lpmp * Cotan
     TP_TP_Integrals( lm_loc, lpmp_loc, 3 ) = SUM( Ylm( :, lm_loc )          &
@@ -578,9 +578,11 @@ DO lm_loc = 1,LM_Length
                                                 * TP_Int_Weights(:)         )
 
     ! d Ylm/dp * Y^lpmp
-    TP_TP_Integrals( lm_loc, lpmp_loc, 6 ) = SUM( Ylm_dp( :, lpmp_loc )     &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 6 ) = SUM( Ylm_dp( :, lm_loc )     &
                                                 * Ylm_CC( :, lpmp_loc )     &
                                                 * TP_Int_Weights(:)         )
+                                                
+!    PRINT*,lm_loc,lpmp_loc,TP_TP_Integrals( lm_loc, lpmp_loc, 6 )
 
     ! SUM( dTP_dTP_Factor(:,lm_loc,lpmp_loc) )
     TP_TP_Integrals( lm_loc, lpmp_loc, 7 ) = SUM( Ylm_dt(:, lm_loc )        &
@@ -611,32 +613,32 @@ DO lm_loc = 1,LM_Length
                                                  * TP_Int_Weights(:)        )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)   )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 11 ) = SUM( Ylm_dp( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 11 ) = SUM( Ylm_dp( :, lm_loc )    &
                                                  * Ylm_CC( :, lpmp_loc )    &
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:)     )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 12 ) = SUM( Ylm_dp( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 12 ) = SUM( Ylm_dp( :, lm_loc )    &
                                                  * Ylm_CC( :, lpmp_loc )    &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_dTP_Factor(:,lm_loc,lpmp_loc)/ Sin_Square(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 13 ) = SUM( Ylm_dp( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 13 ) = SUM( Ylm_dp( :, lm_loc )    &
                                                  * Ylm_CC_dt( :, lpmp_loc ) &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) / Sin_Square(:)     )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 14 ) = SUM( Ylm_dp( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 14 ) = SUM( Ylm_dp( :, lm_loc )    &
                                                  * Ylm_CC( :, lpmp_loc )    &
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_TdP_Factor(:,lm_loc,lpmp_loc)/Sin_Square(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 15 ) = SUM( Ylm_dp( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 15 ) = SUM( Ylm_dp( :, lm_loc )    &
                                                  * Ylm_CC_dp( :, lpmp_loc ) &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
@@ -873,7 +875,9 @@ INTEGER                                                 ::  l, m
 
 INTEGER                                                 ::  re,rd
 INTEGER                                                 ::  d, dp
-INTEGER                                                 ::  i, j, ui
+INTEGER                                                 ::  ui
+
+INTEGER                                                 ::  Row, Col
 
 REAL(idp)                                               ::  L_Lp1
 
@@ -923,7 +927,7 @@ DO l = 0,L_LIMIT
     DO dp = 0,DEGREE
         DO rd = 1,Int_R_Deg
 
-            Reusable_Values(dp) = Reusable_Values(dp) &
+            Reusable_Values(dp) = Reusable_Values(dp)                       &
                                 - R_SQUARE(rd) * LP_LP_Table(rd,d,dp,1,1)   &
                                     * TODR * Int_R_Weights(rd)              &
                                 - L_Lp1 * LP_LP_Table(rd,d,dp,0,0) / TODR   &
@@ -934,14 +938,14 @@ DO l = 0,L_LIMIT
 
 
     DO m = -l,l
-        j = FP_Beta_Array_Map(re,d,ui,l,m)
+        Col = FP_Beta_Array_Map(re,d,ui,l,m)
 
         DO dp = 0,Degree
-            i = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,l,m)
+            Row = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,l,m)
 
             
-            zMB_Matrix_Banded(i-j,j)                   &
-                        = zMB_Matrix_Banded(i-j,j)     &
+            zMB_Matrix_Banded(Row-Col,Col)                   &
+                        = zMB_Matrix_Banded(Row-Col,Col)     &
                           + Reusable_Values(dp)
 
         END DO ! dp Loop
@@ -989,12 +993,10 @@ DO re = 0,Num_R_Elements-1
                                 Cur_R_Locs, R_Square                                )
 
 
-
         CALL Calc_Beta3_Terms( re, d, l, m,                                         &
                                 RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,     &
                                 TP_TP_Integrals,                                    &
                                 Cur_R_Locs, R_Square                                )
-
 
 
     END DO  ! mp Loop
@@ -1128,6 +1130,7 @@ DO d = 0,Degree
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 1)
 
         
+        
     END DO ! lpmp_loc Loop
 
 
@@ -1150,23 +1153,6 @@ DO d = 0,Degree
                                       - 2.0_idp * SUM( RR_Factor(:, d, dp)          &
                                                         / CUR_R_LOCS(:)         )   &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
-
-!        PRINT*,Row-iMB_Bandwidth,Col,zMB_Matrix_Banded(Row-Col, Col),        &
-!            - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
-!              * TP_TP_Integrals( lm_loc, lpmp_loc, 2 )    &
-!            - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
-!              * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )    &
-!            - 2.0_idp * SUM( RR_Factor(:, d, dp)          &
-!                              / CUR_R_LOCS(:)         )   &
-!              * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )    &
-!            - 2.0_idp * SUM( RR_Factor(:, d, dp)          &
-!                              / CUR_R_LOCS(:)         )   &
-!              * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
-
-
-!        PRINT*,Row-iMB_Bandwidth,Col,                          &
-!                TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
-
 
     END DO ! lpmp_loc Loop
     
@@ -1375,7 +1361,7 @@ uj = 2
 
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
-    
+
 
 
 
@@ -1386,6 +1372,7 @@ DO lm_loc = 1,LM_Length
                                   + SUM( 8.0_idp * RR_Factor(:, d, dp)          &   ! Term 2
                                          / ( 3.0_idp * R_Square(:) ) )          &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 14 )
+
 
 END DO ! lpmp_loc Loop
 
@@ -1405,6 +1392,8 @@ DO lm_loc = 1,LM_Length
                                   + SUM ( 2.0_idp * RR_Factor(:, d, dp)         &   ! Term 3
                                             / R_Square(:)                   )   &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 16 )
+
+    
 
 END DO ! lpmp_loc Loop
 

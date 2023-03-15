@@ -79,9 +79,9 @@ USE Timer_Variables_Module, &
                     Timer_ConFactor
 
 USE IO_Print_Results, &
-            ONLY :  Print_Single_Var_Results
-            
-            
+            ONLY :  Print_Single_Var_Results,       &
+                    Print_Vector_Var_Results
+
 #ifdef POSEIDON_MEMORY_FLAG
 USE Poseidon_Memory_Routines, &
             ONLY :  Poseidon_Mark_Memory
@@ -155,10 +155,8 @@ CALL TimerStop(  Timer_X_LinearSolve )
 CALL TimerStop( Timer_X )
 
 !CALL Print_Single_Var_Results( iU_X1, iVB_X )
-
-
-
-IF ( .FALSE. ) STOP "at the end of XCFC_x_Solve"
+!CALL Print_Vector_Var_Results( iVB_X )
+!IF ( .TRUE. ) STOP "at the end of XCFC_x_Solve"
 
 
 
@@ -190,10 +188,7 @@ CALL TimerStop( Timer_ConFactor )
 
 
 !CALL Print_Single_Var_Results( iU_CF )
-
-IF ( .FALSE. ) THEN
-    STOP "Stopping at the end of XCFC_ConFactor_Solve"
-END IF
+!IF ( .TRUE. ) STOP "at the end of XCFC_ConFactor_Solve"
 
 
 END SUBROUTINE XCFC_ConFactor_Solve
@@ -224,9 +219,7 @@ CALL XCFC_Fixed_Point(iU_LF)
 CALL TimerStop( Timer_Lapse )
 
 
-IF ( .FALSE. ) THEN
-    STOP "Stopping at the end of XCFC_Lapse_Solve"
-END IF
+!IF ( .TRUE. ) STOP "at the end of XCFC_Lapse_Solve"
 
 END SUBROUTINE XCFC_Lapse_Solve
 
@@ -274,10 +267,7 @@ CALL TimerStop(  Timer_Shift_LinearSolve )
 CALL TimerStop( Timer_Shift )
 
 !CALL Print_Single_Var_Results( iU_S1, iVB_S )
-
-IF ( .FALSE. ) THEN
-    STOP "Stopping at the end of XCFC_Shift_Solve"
-END IF
+!IF ( .TRUE. ) STOP "at the end of XCFC_Shift_Solve"
 
 END SUBROUTINE XCFC_Shift_Solve
 

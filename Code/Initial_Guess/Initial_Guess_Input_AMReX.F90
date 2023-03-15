@@ -97,6 +97,8 @@ USE Poseidon_AMReX_MakeFineMask_Module, &
 
 CONTAINS
 
+
+#ifdef POSEIDON_AMREX_FLAG
  !+101+########################################################!
 !                                                               !
 !       IG_Input_XCFC_AMReX                                     !
@@ -358,8 +360,22 @@ END IF
 END SUBROUTINE SetGuess_From_Elem
 
 
+#else
 
 
+SUBROUTINE IG_Input_XCFC_AMReX()
+
+END SUBROUTINE IG_Input_XCFC_AMReX
+
+
+
+SUBROUTINE IG_Input_XCFC_AMReX_Caller( difference )
+
+INTEGER,    INTENT(IN)          :: difference
+
+END SUBROUTINE IG_Input_XCFC_AMReX_Caller
+
+#endif
 
 
 

@@ -29,10 +29,6 @@ USE Poseidon_Kinds_Module, &
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
 
-USE Timer_Routines_Module, &
-            ONLY :  TimerStart,             &
-                    TimerStop
-
 USE Variables_AMReX_Source, &
             ONLY :  iTrunk,                 &
                     iLeaf
