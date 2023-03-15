@@ -1,6 +1,6 @@
 HDF5_DIR       = /usr/local/hdf5
 
-AMREX_HOME    ?= /Users/nickroberts/amrex
+AMREX_HOME    ?= /Users/nickroberts/amrex_sam/amrex
 HDF5_HOME     ?= $(HDF5_DIR)
 LAPACK_HOME   ?= $(LAPACK_DIR)
 
@@ -13,8 +13,8 @@ HDF5_LIB       = $(HDF5_HOME)/lib
 
 USE_F_INTERFACES = TRUE
 
-#DEBUG     = FALSE
-DEBUG     = TRUE
+DEBUG     = FALSE
+#DEBUG     = TRUE
 
 USE_MPI   = TRUE
 USE_OMP   = FALSE
@@ -33,6 +33,12 @@ AMREX_MODE = ON
 #INCLUDE_LOCATIONS += $(LAPACK_INC)
 #LIBRARY_LOCATIONS += $(LAPACK_LIB)
 LIBRARIES += -framework Accelerate
+
+ifneq ("$(wildcard $(AMREX_HOME)/Src/DG/Make.package)","")
+  # Requires amrex fork from github.com:dunhamsj/amrex
+  # Branch: MeshRefinement_DG
+  include $(AMREX_HOME)/Src/DG/Make.package
+endif
 
 
 # Set pre-processor directives

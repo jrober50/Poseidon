@@ -13,8 +13,8 @@ HDF5_LIB       = $(HDF5_HOME)/lib
 
 USE_F_INTERFACES = TRUE
 
-#DEBUG     = FALSE
-DEBUG     = TRUE
+DEBUG     = FALSE
+#DEBUG     = TRUE
 
 USE_MPI   = TRUE
 USE_OMP   = FALSE
@@ -22,7 +22,7 @@ USE_OMP   = FALSE
 #MEM_PROFILE  = FALSE
 #TINY_PROFILE = FALSE
 
-DIM       = 1
+DIM       = 3
 
 EBASE     = Driver_Main
 

@@ -86,6 +86,9 @@ USE Variables_AMReX_Source, &
 USE Poseidon_Interface_Return_Routines, &
             ONLY :  Poseidon_Return_Conformal_Factor,    &
                     Poseidon_Return_All
+                    
+USE Poseidon_Interface_Initial_Guess, &
+            ONLY :  Poseidon_Input_Initial_Guess
 
 USE Variables_Quadrature, &
             ONLY :  NUM_R_QUAD_POINTS,          &
@@ -95,6 +98,10 @@ USE Variables_Quadrature, &
                     INT_R_LOCATIONS,            &
                     INT_T_LOCATIONS,            &
                     INT_P_LOCATIONS
+                    
+USE Variables_Vectors, &
+            ONLY :  cVA_Coeff_Vector,      &
+                    cVB_Coeff_Vector
 
 USE Variables_IO, &
             ONLY :  Write_Flags,            &
@@ -230,21 +237,21 @@ P_Quad = Initialize_Trapezoid_Quadrature_Locations(NQ(3))
 !                                      nLevels,              &
 !                                      MF_Results            )
 
-CALL Poseidon_Return_Conformal_Factor( MF_Results, FillGhostCells_Option=.TRUE. )
+!CALL Poseidon_Return_Conformal_Factor( MF_Results, FillGhostCells_Option=.TRUE. )
 
 
 
 !CALL Output_Variable( nLevels, NQ, MF_Results, iU_CF )
 
 
-!CALL Poseidon_Return_ALL(   NQ,                   &
-!                            R_Quad,               &
-!                            T_Quad,               &
-!                            P_Quad,               &
-!                            xL(1),                &
-!                            xL(2),                &
-!                            nLevels,              &
-!                            MF_Results            )
+CALL Poseidon_Return_ALL(   NQ,                   &
+                            R_Quad,               &
+                            T_Quad,               &
+                            P_Quad,               &
+                            xL(1),                &
+                            xL(2),                &
+                            nLevels,              &
+                            MF_Results            )
 
 
 
@@ -256,6 +263,15 @@ CALL Poseidon_Return_Conformal_Factor( MF_Results, FillGhostCells_Option=.TRUE. 
 
 !CALL Write_Final_Results_Kij( nLevels, NQ, MF_Results )
 
+
+PRINT*,"Before"
+PRINT*,cVA_Coeff_Vector
+
+
+CALL Poseidon_Input_Initial_Guess( MF_Results )
+
+PRINT*,"After"
+pRINT*,cVA_Coeff_Vector
 
 END SUBROUTINE Return_Test
 

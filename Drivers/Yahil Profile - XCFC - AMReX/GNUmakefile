@@ -1,6 +1,6 @@
 HDF5_DIR       = /usr/local/hdf5
 
-#AMREX_HOME    ?= /Users/nickroberts/amrex
+AMREX_HOME    ?= /Users/nickroberts/amrex_sam/amrex
 AMREX_HOME    ?= $(AMREX_DIR)
 HDF5_HOME     ?= $(myHDF5_DIR)
 LAPACK_HOME   ?= $(myLAPACK_DIR)
@@ -16,7 +16,7 @@ LAPACK_LIB     = $(LAPACK_HOME)/lib
 USE_F_INTERFACES = TRUE
 
 DEBUG     = FALSE
-!DEBUG     = TRUE
+#DEBUG     = TRUE
 
 USE_MPI   = TRUE
 USE_OMP   = FALSE
@@ -24,7 +24,7 @@ USE_OMP   = FALSE
 #MEM_PROFILE  = FALSE
 #TINY_PROFILE = FALSE
 
-DIM       = 1
+DIM       = 3
 
 EBASE     = Yahil_XCFC_AMReX
 

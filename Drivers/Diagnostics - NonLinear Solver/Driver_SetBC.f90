@@ -198,7 +198,6 @@ AlphaPsi_BC = 1.0_idp    &
 Shift_Vector_BC = 0.0_idp
 
 
-
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)
 OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 

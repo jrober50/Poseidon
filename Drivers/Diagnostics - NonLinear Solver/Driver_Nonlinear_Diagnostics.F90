@@ -122,7 +122,7 @@ LOGICAL                                                 ::  Print_Time_Flag
 LOGICAL                                                 ::  Print_Cond_Flag
 
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 INTEGER,            DIMENSION(3)                        ::  NQ
 REAL(idp),          DIMENSION(:),   ALLOCATABLE         ::  Input_R_Quad
@@ -189,8 +189,8 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 
 !Print_Results_Flag  = .TRUE.
 Print_Results_Flag  = .FALSE.
@@ -262,7 +262,7 @@ DO T_Index = T_Index_Min, T_Index_Max
         PRINT*,"Beginning of Loop            : ",Memory_Loop_Start
 #endif
 
-    Suffix_Tail = Letter_Table(T_Index)
+    WRITE(Suffix_Tail,'(A)') Letter_Table(T_Index)
 
 
     ALLOCATE( Input_R_Quad(1:NQ(1)) )

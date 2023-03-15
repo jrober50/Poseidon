@@ -293,7 +293,7 @@ DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
 DO re = BLo(1),BHi(1)
     
-    E_Element_Max = MAXVAL( Src(re,te,pe,0:Num_DOF-1))
+    E_Element_Max = MAXVAL( Src(re,te,pe,1:Num_DOF))
     
 !    PRINT*,"E_Max ",E_Element_Max," Threshold ",E_Level_Threshold
     IF ( E_Element_Max > E_Level_Threshold ) THEN

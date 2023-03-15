@@ -187,26 +187,6 @@ END SUBROUTINE Driver_SetSource
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 !+201+##########################################################################!
 !                                                                               !
 !     SetSource_Parallel                                                            !
@@ -224,6 +204,9 @@ INTEGER                                         ::  re, te, pe
 INTEGER, DIMENSION(3)                           ::  iEL, iEU
 INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl
+INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
+
+nGhost_Vec = 0
 
 
 DO lvl = 0,AMReX_Num_Levels-1
@@ -232,6 +215,7 @@ DO lvl = 0,AMReX_Num_Levels-1
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Source(lvl)%ba,        &
                                   MF_Source(lvl)%dm,        &
+                                  nGhost_Vec,               &
                                   MF_Source(lvl+1)%ba,      &
                                   iLeaf, iTrunk   )
     ELSE

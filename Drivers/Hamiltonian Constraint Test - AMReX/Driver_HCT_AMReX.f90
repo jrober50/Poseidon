@@ -20,6 +20,9 @@ USE amrex_amrcore_module, &
 
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
+            
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF
 
 USE Poseidon_Interface_Initialization, &
             ONLY :  Initialize_Poseidon
@@ -57,6 +60,12 @@ USE Poseidon_AMReX_Input_Parsing_Module, &
 
 USE Variables_Driver_AMReX, &
             ONLY :  nLevels
+            
+USE IO_Print_Results, &
+            ONLY :  Print_Single_Var_Results
+            
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 
 USE MPI
@@ -76,8 +85,13 @@ CHARACTER(LEN = 1)                                      ::  Units_Input
 INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
 LOGICAL                                                 ::  Verbose
+LOGICAL                                                 ::  Print_Results_Flag
+LOGICAL                                                 ::  Print_Setup_Flag
+LOGICAL                                                 ::  Print_Time_Flag
+LOGICAL                                                 ::  Print_Cond_Flag
+
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 INTEGER, DIMENSION(3)                                   ::  NQ
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
@@ -127,8 +141,22 @@ NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
+
+Print_Results_Flag  = .TRUE.
+!Print_Results_Flag  = .FALSE.
+
+Print_Setup_Flag    = .TRUE.
+!Print_Setup_Flag    = .FALSE.
+
+!Print_Time_Flag     = .TRUE.
+Print_Time_Flag     = .FALSE.
+
+!Print_Cond_Flag     = .TRUE.
+Print_Cond_Flag     = .FALSE.
+
+
 Suffix_Input        = "Params"
 
 Write_Results_R_Samps = 256
@@ -159,8 +187,7 @@ DO M_Index = M_Index_Min, M_Index_Max
 
 
 
-    Suffix_Tail = Letter_Table(nLevels)
-
+    WRITE(Suffix_Tail,'(A)')Letter_Table(nLevels)
 
 
 
@@ -197,21 +224,20 @@ DO M_Index = M_Index_Min, M_Index_Max
             Source_Units                        = Units_Input,          &
             Source_Radial_Boundary_Units        = "cm",                 &
             Integration_NQ_Option               = NQ,                   &
-            CFA_Eq_Flags_Option                 = CFA_Eqs,              &
+            Eq_Flags_Option                     = CFA_Eqs,              &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
-            Poisson_Mode_Option                 = .FALSE.,              &
             Verbose_Option                      = Verbose,              &
             WriteAll_Option                     = .FALSE.,              &
-            Print_Setup_Option                  = .TRUE.,               &
+            Print_Setup_Option                  = Print_Setup_Flag,     &
             Write_Setup_Option                  = .FALSE.,              &
-            Print_Results_Option                = .TRUE.,               &
-            Write_Results_Option                = .TRUE.,               &
-            Print_Timetable_Option              = .TRUE.,               &
-            Write_Timetable_Option              = .TRUE.,               &
+            Print_Results_Option                = Print_Results_Flag,   &
+            Write_Results_Option                = .FALSE.,               &
+            Print_Timetable_Option              = Print_Time_Flag,      &
+            Write_Timetable_Option              = .FALSE.,               &
             Write_Sources_Option                = .FALSE.,              &
-            Print_Condition_Option              = .TRUE.,               &
-            Write_Condition_Option              = .TRUE.,               &
+            Print_Condition_Option              = Print_Cond_Flag,      &
+            Write_Condition_Option              = .FALSE.,              &
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
 
@@ -248,7 +274,9 @@ DO M_Index = M_Index_Min, M_Index_Max
     !############################################################!
     Call Driver_Run( )
 
-
+    
+    CALL Print_Single_Var_Results( iU_CF )
+    CALL Write_Final_Results(u_Overide = (/ 1, 1, 0, 0, 0 /))
     !############################################################!
     !#                                                          #!
     !#                      Close Poseidon                      #!

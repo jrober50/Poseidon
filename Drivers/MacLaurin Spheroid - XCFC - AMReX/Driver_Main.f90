@@ -89,11 +89,7 @@ USE Variables_Driver_AMReX, &
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
                     AMReX_Num_Levels
-
-USE Variables_FP, &
-            ONLY :  FP_Coeff_Vector_A,      &
-                    FP_Coeff_Vector_B
-
+                    
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
                     Num_T_Elements,         &
@@ -115,7 +111,7 @@ INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
 LOGICAL                                                 ::  Verbose
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 INTEGER, DIMENSION(3)                                   ::  NQ
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
@@ -200,8 +196,8 @@ CALL Init_AMReX_Parameters()
 !############################################################!
 DO M_Index = M_Index_Min, M_Index_Max
 
-    Suffix_Tail = Letter_Table_Upper(nLevels)
 
+    WRITE(Suffix_Tail,'(A)')Letter_Table_Upper(nLevels)
 
 
 
@@ -237,10 +233,9 @@ DO M_Index = M_Index_Min, M_Index_Max
             Source_Units                        = Units_Input,          &
             Source_Radial_Boundary_Units        = "cm",                 &
             Integration_NQ_Option               = NQ,                   &
-            CFA_Eq_Flags_Option                 = CFA_Eqs,              &
+            Eq_Flags_Option                     = CFA_Eqs,              &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
-            Poisson_Mode_Option                 = .FALSE.,              &
             Verbose_Option                      = Verbose,              &
             WriteAll_Option                     = .FALSE.,              &
             Print_Setup_Option                  = .TRUE.,               &

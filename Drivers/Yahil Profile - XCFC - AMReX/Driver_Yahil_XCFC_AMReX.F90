@@ -126,7 +126,7 @@ LOGICAL                                                 ::  Print_Time_Flag
 LOGICAL                                                 ::  Print_Cond_Flag
 
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 INTEGER, DIMENSION(3)                                   ::  NQ
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
@@ -194,21 +194,21 @@ Gamma               = 1.30_idp
 
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 1                        ! Number of Theta Quadrature Points
-NQ(3)               = 1                        ! Number of Phi Quadrature Points
+NQ(2)               = 5                        ! Number of Theta Quadrature Points
+NQ(3)               = 5                        ! Number of Phi Quadrature Points
 
 
-Verbose             = .TRUE.
-!Verbose             = .FALSE.
+!Verbose             = .TRUE.
+Verbose             = .FALSE.
 
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
 
-!Print_Setup_Flag    = .TRUE.
-Print_Setup_Flag    = .FALSE.
+Print_Setup_Flag    = .TRUE.
+!Print_Setup_Flag    = .FALSE.
 
-!Print_Time_Flag     = .TRUE.
-Print_Time_Flag     = .FALSE.
+Print_Time_Flag     = .TRUE.
+!Print_Time_Flag     = .FALSE.
 
 !Print_Cond_Flag     = .TRUE.
 Print_Cond_Flag     = .FALSE.
@@ -272,9 +272,10 @@ DO T_Index = T_Index_Min, T_Index_Max
         PRINT*,"Beginning of Loop            : ",Memory_Loop_Start
 #endif
 
-    Suffix_Tail = Letter_Table(T_Index)
+!    Suffix_Tail = Letter_Table(T_Index)
 
 
+    WRITE(Suffix_Tail,'(A)') TRIM(Letter_Table(T_Index))
 
 
     ALLOCATE( Input_R_Quad(1:NQ(1)) )
@@ -322,9 +323,9 @@ DO T_Index = T_Index_Min, T_Index_Max
             Print_Setup_Option                  = Print_Setup_Flag,     &
             Write_Setup_Option                  = .FALSE.,              &
             Print_Results_Option                = Print_Results_Flag,   &
-            Write_Results_Option                = .TRUE.,               &
+            Write_Results_Option                = .FALSE.,              &
             Print_Timetable_Option              = Print_Time_Flag,      &
-            Write_Timetable_Option              = .TRUE.,               &
+            Write_Timetable_Option              = .FALSE.,               &
             Write_Sources_Option                = .FALSE.,              &
             Print_Condition_Option              = Print_Cond_Flag,      &
             Write_Condition_Option              = .FALSE.,              &
@@ -387,7 +388,7 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                       Output Results                     #!
     !#                                                          #!
     !############################################################!
-    CALL Return_Test(nLevels, NQ, MF_Source)
+!    CALL Return_Test(nLevels, NQ, MF_Source)
 
 !    CALL Calc_ADM_Mass(ADM_Mass)
 !    PRINT*,"ADM Mass",ADM_Mass
