@@ -50,7 +50,7 @@ include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 
 # Include directories and source files needed from Poseidon
 
-include /Users/nickroberts/Poseidon/Build/Make.Poseidon
+include /Users/nickroberts/ssp4/Poseidon/Build/Make.Poseidon
 
 include Makefile_Driver
 include Makefile_Path

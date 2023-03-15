@@ -111,12 +111,16 @@ INTEGER, DIMENSION(3)                                   ::  NQ
 
 
 LOGICAL                                                 ::  Verbose
+LOGICAL                                                 ::  Print_Results_Flag
+LOGICAL                                                 ::  Print_Setup_Flag
+LOGICAL                                                 ::  Print_Time_Flag
+LOGICAL                                                 ::  Print_Cond_Flag
 
 INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
 
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_T_Quad
@@ -164,13 +168,27 @@ Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Edu
 
 Dimension_Input     = 3
 
-NQ(1)               = 10                        ! Number of Radial Quadrature Points
-NQ(2)               = 1                        ! Number of Theta Quadrature Points
-NQ(3)               = 1                        ! Number of Phi Quadrature Points
+NQ(1)               = 5            ! Number of Radial Quadrature Points
+NQ(2)               = 5             ! Number of Theta Quadrature Points
+NQ(3)               = 5             ! Number of Phi Quadrature Points
 
 
 Verbose             = .TRUE.
 !Verbose             = .FALSE.
+
+Print_Results_Flag  = .TRUE.
+!Print_Results_Flag  = .FALSE.
+
+Print_Setup_Flag    = .TRUE.
+!Print_Setup_Flag    = .FALSE.
+
+!Print_Time_Flag     = .TRUE.
+Print_Time_Flag     = .FALSE.
+
+!Print_Cond_Flag     = .TRUE.
+Print_Cond_Flag     = .FALSE.
+
+
 Suffix_Input        = "Params"
 
 
@@ -209,9 +227,7 @@ CALL Init_AMReX_Parameters()
 DO M_Index = M_Index_Min, M_Index_Max
 
 
-
-    Suffix_Tail = Letter_Table(nLevels)
-
+    WRITE(Suffix_Tail,'(A)') Letter_Table(nLevels)
 
 
 
@@ -250,21 +266,20 @@ DO M_Index = M_Index_Min, M_Index_Max
             Source_Units                        = Units_Input,          &
             Source_Radial_Boundary_Units        = "cm",                 &
             Integration_NQ_Option               = NQ,                   &
-            CFA_Eq_Flags_Option                 = CFA_Eqs,              &
+            Eq_Flags_Option                     = CFA_Eqs,              &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
-            Poisson_Mode_Option                 = .FALSE.,              &
             Verbose_Option                      = Verbose,              &
             WriteAll_Option                     = .FALSE.,              &
-            Print_Setup_Option                  = .TRUE.,               &
+            Print_Setup_Option                  = Print_Setup_Flag,     &
             Write_Setup_Option                  = .FALSE.,              &
-            Print_Results_Option                = .TRUE.,               &
-            Write_Results_Option                = .TRUE.,               &
-            Print_Timetable_Option              = .TRUE.,               &
-            Write_Timetable_Option              = .TRUE.,               &
+            Print_Results_Option                = Print_Results_Flag,   &
+            Write_Results_Option                = .FALSE.,               &
+            Print_Timetable_Option              = Print_Time_Flag,      &
+            Write_Timetable_Option              = .FALSE.,               &
             Write_Sources_Option                = .FALSE.,              &
-            Print_Condition_Option              = .TRUE.,               &
-            Write_Condition_Option              = .TRUE.,               &
+            Print_Condition_Option              = Print_Cond_Flag,      &
+            Write_Condition_Option              = .FALSE.,              &
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
 
@@ -310,15 +325,11 @@ DO M_Index = M_Index_Min, M_Index_Max
     !#                       Output Results                     #!
     !#                                                          #!
     !############################################################!
-    IF (Verbose .EQV. .TRUE. ) THEN
+    IF ( Print_Results_Flag ) THEN
         WRITE(*,'(A)')" Final Results "
-
-
         CALL Print_Single_Var_Results( iU_X1, iVB_X )
-
-
-        CALL Write_Final_Results(CFA_Eq_Overide = (/ 1, 1, 1, 1, 1 /))
     END IF
+    CALL Write_Final_Results(u_Overide = (/ 1, 1, 1, 1, 1 /))
 
 
     !############################################################!
