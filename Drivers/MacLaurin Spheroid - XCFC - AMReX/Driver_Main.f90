@@ -53,7 +53,8 @@ USE Maps_X_Space, &
 
 
 USE IO_Write_Final_Results, &
-            ONLY :  Write_Final_Results
+            ONLY :  Write_Final_Results,        &
+                    Output_2D_Results
 
 USE Poseidon_Interface_Close, &
             ONLY :  Poseidon_Close
@@ -155,7 +156,7 @@ IRL                 =  0
 
 NQ(1)               =  5                        ! Number of Radial Quadrature Points
 NQ(2)               =  5                        ! Number of Theta Quadrature Points
-NQ(3)               =  1                        ! Number of Phi Quadrature Points
+NQ(3)               =  3                        ! Number of Phi Quadrature Points
 
 
 Verbose             = .TRUE.
@@ -241,12 +242,12 @@ DO M_Index = M_Index_Min, M_Index_Max
             Print_Setup_Option                  = .TRUE.,               &
             Write_Setup_Option                  = .FALSE.,              &
             Print_Results_Option                = .TRUE.,               &
-            Write_Results_Option                = .TRUE.,               &
+            Write_Results_Option                = .FALSE.,               &
             Print_Timetable_Option              = .TRUE.,               &
             Write_Timetable_Option              = .TRUE.,               &
             Write_Sources_Option                = .FALSE.,              &
             Print_Condition_Option              = .TRUE.,               &
-            Write_Condition_Option              = .TRUE.,               &
+            Write_Condition_Option              = .FALSE.,               &
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
 
@@ -284,6 +285,7 @@ DO M_Index = M_Index_Min, M_Index_Max
     Call Driver_Run()
 
 
+    CALL Output_2D_Results()
     !############################################################!
     !#                                                          #!
     !#                      Close Poseidon                      #!
