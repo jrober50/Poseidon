@@ -1,7 +1,10 @@
 # For use with GNUmake for AMREX compilation.
-POSEIDON_ACTIVE_DIR = /Users/nickroberts/ssp4/Poseidon
+ifndef POSEIDON_ACTIVE_DIR
+  $(error WARNING: POSEIDON_ACTIVE_DIR is not defined)
+endif
 
-POSEIDON_AMREX_MODE   =ON
+
+POSEIDON_AMREX_MODE  =ON
 POSEIDON_TIMER_MODE  ?=OFF
 POSEIDON_MEMORY_MODE ?=OFF
 POSEIDON_DEBUG_MODE  ?=OFF
@@ -18,3 +21,4 @@ CEXE_sources     += $(filter %.cpp,$(POSEIDON))
 
 
 DEFINES += $(POSEIDON_DEFS)
+
