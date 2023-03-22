@@ -42,10 +42,10 @@ INTEGER,                                INTENT(IN)  ::  nCol
 INTEGER,                                INTENT(IN)  ::  nNZ
 INTEGER,        DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Row_Ind
 INTEGER,        DIMENSION(0:nCol),      INTENT(IN)  ::  Col_Ptr
-COMPLEX(idp),   DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Val_Ary
+REAL(idp),      DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Val_Ary
 
-COMPLEX(idp),   DIMENSION(0:nCol-1),    INTENT(IN)  ::  x_Vec
-COMPLEX(idp),   DIMENSION(0:nCol-1),    INTENT(OUT) ::  b_Vec
+REAL(idp),      DIMENSION(0:nCol-1),    INTENT(IN)  ::  x_Vec
+REAL(idp),      DIMENSION(0:nCol-1),    INTENT(OUT) ::  b_Vec
 
 INTEGER                                             ::  i
 INTEGER                                             ::  j
@@ -88,10 +88,10 @@ INTEGER,                                INTENT(IN)  ::  nCol
 INTEGER,                                INTENT(IN)  ::  nNZ
 INTEGER,        DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Row_Ind
 INTEGER,        DIMENSION(0:nCol),      INTENT(IN)  ::  Col_Ptr
-COMPLEX(idp),   DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Val_Ary
+REAL(idp),      DIMENSION(0:nNZ-1),     INTENT(IN)  ::  Val_Ary
 
-COMPLEX(idp),   DIMENSION(0:nCol-1),    INTENT(IN)  ::  x_Vec
-COMPLEX(idp),   DIMENSION(0:nCol-1),    INTENT(OUT) ::  b_Vec
+REAL(idp),      DIMENSION(0:nCol-1),    INTENT(IN)  ::  x_Vec
+REAL(idp),      DIMENSION(0:nCol-1),    INTENT(OUT) ::  b_Vec
 
 INTEGER                                             ::  i
 INTEGER                                             ::  j

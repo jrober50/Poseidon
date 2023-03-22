@@ -32,6 +32,9 @@ USE Poseidon_Units_Module, &
                     Set_Units,       &
                     Centimeter,      &
                     Gram
+                    
+USE Variables_Tables,   &
+            ONLY :  Level_dx
 
 IMPLICIT NONE
 
@@ -1060,6 +1063,51 @@ END DO
 
 
 END SUBROUTINE Create_AMReX_Mimic_Mesh
+
+
+
+
+
+
+
+
+
+
+
+ !+701+################################################################!
+!                                                                       !
+!          Fetch_Mesh_Subarray                                          !
+!                                                                       !
+ !#####################################################################!
+SUBROUTINE Fetch_Mesh_Subarray(iEU,iEL,Dim,SubArray,lvl_opt)
+
+INTEGER,                            INTENT(IN)              :: iEU
+INTEGER,                            INTENT(IN)              :: iEL
+INTEGER,                            INTENT(IN)              :: Dim
+
+REAL(idp),  DIMENSION(0:iEU-iEL),   INTENT(OUT)             :: SubArray
+INTEGER,                            INTENT(IN), OPTIONAL    :: lvl_opt
+
+INTEGER                                                     :: iE
+INTEGER                                                     :: lvl
+
+IF ( PRESENT(lvl_opt) ) THEN
+    lvl = lvl_opt
+ELSE
+    lvl = 1
+END IF
+
+
+DO iE = iEL,iEU
+    SubArray(iE-iEL) = Level_dx(lvl,Dim)*iE
+END DO
+
+
+END SUBROUTINE Fetch_Mesh_Subarray
+
+
+
+
 
 
 

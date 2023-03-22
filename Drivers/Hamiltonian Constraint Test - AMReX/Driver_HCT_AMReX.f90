@@ -24,6 +24,9 @@ USE Poseidon_Kinds_Module, &
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF
 
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF
+
 USE Poseidon_Interface_Initialization, &
             ONLY :  Initialize_Poseidon
 
@@ -67,6 +70,11 @@ USE IO_Print_Results, &
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
 
+USE IO_Print_Results, &
+            ONLY :  Print_Single_Var_Results
+            
+USE IO_Write_Final_Results, &
+            ONLY :  Write_Final_Results
 
 USE MPI
 
@@ -186,9 +194,7 @@ CALL Init_AMReX_Parameters()
 DO M_Index = M_Index_Min, M_Index_Max
 
 
-
-    WRITE(Suffix_Tail,'(A)')Letter_Table(nLevels)
-
+    WRITE(Suffix_Tail,'(A)') Letter_Table(nLevels)
 
 
     ALLOCATE( Input_R_Quad(1:NQ(1)) )

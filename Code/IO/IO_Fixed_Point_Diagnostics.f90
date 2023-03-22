@@ -72,8 +72,8 @@ CONTAINS
 SUBROUTINE Output_FP_Diagnostics()
 
 CHARACTER(LEN = 100)                                        ::  Iter_Name
-CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Resid_Name
-CHARACTER(LEN = 100), DIMENSION(:), ALLOCATABLE             ::  Update_Name
+CHARACTER(LEN = 200), DIMENSION(:), ALLOCATABLE             ::  Resid_Name
+CHARACTER(LEN = 200), DIMENSION(:), ALLOCATABLE             ::  Update_Name
 
 INTEGER                                                     ::  Iter_ID
 INTEGER, DIMENSION(:), ALLOCATABLE                          ::  Resid_IDs
@@ -107,6 +107,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_FP_Diagnostics) ) THEN
 !    WRITE(Update_Name(3),116) Poseidon_Reports_Dir,"Update_Beta1_",TRIM(File_Suffix),".out"
 !    WRITE(Update_Name(4),116) Poseidon_Reports_Dir,"Update_Beta2_",TRIM(File_Suffix),".out"
 !    WRITE(Update_Name(5),116) Poseidon_Reports_Dir,"Update_Beta3_",TRIM(File_Suffix),".out"
+
 
     Iter_ID = 920
     Resid_IDs = [(900 + i, i=1,Num_Files)]

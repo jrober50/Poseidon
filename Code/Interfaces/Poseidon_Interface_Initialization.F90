@@ -393,9 +393,12 @@ CALL Set_Caller_Data(   Source_NQ,                      &
 
 
 #ifdef POSEIDON_AMREX_FLAG
+
     DOMAIN_DIM = amrex_spacedim
     iPF_Core_Flags(iPF_Core_AMReX_Mode) = iPF_Core_AMReX_On
     CALL Init_Parameters_From_AMReX_Input_File()
+    
+    
 #else
     iPF_Core_Flags(iPF_Core_AMReX_Mode) = iPF_Core_AMReX_Off
 

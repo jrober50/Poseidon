@@ -33,6 +33,9 @@ USE Poseidon_Parameters, &
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Run_Message
+            
+USE Poseidon_Bailout_Module, &
+            ONLY :  Poseidon_Bailout
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -154,10 +157,10 @@ CALL TimerStop(  Timer_X_LinearSolve )
 
 CALL TimerStop( Timer_X )
 
+
 !CALL Print_Single_Var_Results( iU_X1, iVB_X )
 !CALL Print_Vector_Var_Results( iVB_X )
-!IF ( .TRUE. ) STOP "at the end of XCFC_x_Solve"
-
+!IF ( .TRUE. ) CALL Poseidon_Bailout("at the end of XCFC_x_Solve")
 
 
 END SUBROUTINE XCFC_X_Solve
@@ -188,7 +191,7 @@ CALL TimerStop( Timer_ConFactor )
 
 
 !CALL Print_Single_Var_Results( iU_CF )
-!IF ( .TRUE. ) STOP "at the end of XCFC_ConFactor_Solve"
+!IF ( .TRUE. ) CALL Poseidon_Bailout("Stopping at the end of XCFC_ConFactor_Solve")
 
 
 END SUBROUTINE XCFC_ConFactor_Solve
@@ -219,7 +222,8 @@ CALL XCFC_Fixed_Point(iU_LF)
 CALL TimerStop( Timer_Lapse )
 
 
-!IF ( .TRUE. ) STOP "at the end of XCFC_Lapse_Solve"
+!CALL Print_Single_Var_Results( iU_LF )
+!IF ( .TRUE. ) CALL Poseidon_Bailout("Stopping at the end of XCFC_Lapse_Solve")
 
 END SUBROUTINE XCFC_Lapse_Solve
 

@@ -49,8 +49,8 @@ USE Maps_Domain, &
                     FEM_Elem_Map
                     
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,      &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,      &
+                    dVB_Coeff_Vector
 
 USE Variables_AMReX_Source, &
             ONLY :  iLeaf,                &
@@ -228,7 +228,7 @@ DO lvl = nLevels-1,0,-1
 END DO ! lvl
 
 
-cVB_Coeff_Vector(:,iVB_X) = -1.0E-7_idp
+dVB_Coeff_Vector(:,iVB_X) = 0.0_idp
 
 END SUBROUTINE IG_Input_XCFC_AMReX
 
@@ -311,9 +311,9 @@ IF ( iRE == 0 ) THEN
         Here  = (iU-1)*nQuad + 1
         There = (iU-1)*nQuad + NQ(1)
         Somewhere = Map_To_FEM_Node(iRE,d)
-!        PRINT*,Guess_PTR(iE(1),iE(2),iE(3),Here:There),cVA_Coeff_Vector(Somewhere,lm,iU)
-        cVA_Coeff_Vector(Somewhere,lm,iU) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
-!        PRINT*,Guess_PTR(iE(1),iE(2),iE(3),Here:There),cVA_Coeff_Vector(Somewhere,lm,iU)
+!        PRINT*,Guess_PTR(iE(1),iE(2),iE(3),Here:There),dVA_Coeff_Vector(Somewhere,lm,iU)
+        dVA_Coeff_Vector(Somewhere,lm,iU) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
+!        PRINT*,Guess_PTR(iE(1),iE(2),iE(3),Here:There),dVA_Coeff_Vector(Somewhere,lm,iU)
     END DO ! iU
     
     iVB = iVB_S
@@ -322,7 +322,7 @@ IF ( iRE == 0 ) THEN
         Here  = (iU-1)*nQuad + 1
         There = (iU-1)*nQuad + NQ(1)
         Somewhere = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
-        cVB_Coeff_Vector(Somewhere,iVB) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
+        dVB_Coeff_Vector(Somewhere,iVB) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
     END DO ! iU
 END IF
 
@@ -339,7 +339,7 @@ DO d = 1,Degree
         Here  = (iU-1)*nQuad + 1
         There = (iU-1)*nQuad + NQ(1)
         Somewhere = Map_To_FEM_Node(iRE,d)
-        cVA_Coeff_Vector(Somewhere,lm,iU) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
+        dVA_Coeff_Vector(Somewhere,lm,iU) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
     END DO ! iU
     
     iVB = iVB_S
@@ -348,7 +348,7 @@ DO d = 1,Degree
         Here  = (iU-1)*nQuad + 1
         There = (iU-1)*nQuad + NQ(1)
         Somewhere = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
-        cVB_Coeff_Vector(Somewhere,iVB) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
+        dVB_Coeff_Vector(Somewhere,iVB) = sqrtfourpi*SUM( LagP(:)*Guess_PTR(iE(1),iE(2),iE(3),Here:There) )
     END DO ! iU
     
 END DO

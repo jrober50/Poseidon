@@ -168,13 +168,13 @@ Guess_Type          =  1            !  1 = Flat, 2 = Educated, 3 = Perturbed Edu
 
 Dimension_Input     = 3
 
-NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 5                        ! Number of Theta Quadrature Points
-NQ(3)               = 5                        ! Number of Phi Quadrature Points
+NQ(1)               = 5            ! Number of Radial Quadrature Points
+NQ(2)               = 5             ! Number of Theta Quadrature Points
+NQ(3)               = 5             ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
@@ -227,10 +227,7 @@ CALL Init_AMReX_Parameters()
 DO M_Index = M_Index_Min, M_Index_Max
 
 
-
     WRITE(Suffix_Tail,'(A)') Letter_Table(nLevels)
-
-
 
 
     ALLOCATE( Input_R_Quad(1:NQ(1)) )

@@ -39,6 +39,7 @@ INTEGER, PUBLIC                             ::  BLOCK_PROB_DIM
 INTEGER, PUBLIC                             ::  SUBSHELL_PROB_DIM
 
 INTEGER, PUBLIC                             ::  LM_Length
+INTEGER, PUBLIC                             ::  LM_Short_Length
 INTEGER, PUBLIC                             ::  ULM_Length
 
 INTEGER, PUBLIC                             ::  NUM_OFF_DIAGONALS

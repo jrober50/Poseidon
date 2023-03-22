@@ -40,6 +40,7 @@ USE Variables_Derived, &
                     Elem_Var_Dim,           &
                     Block_Var_Dim,          &
                     LM_Length,              &
+                    LM_Short_Length,        &
                     ULM_Length,             &
                     Prob_Dim,               &
                     Elem_Prob_Dim,          &
@@ -77,16 +78,19 @@ IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables, Native.')
 
 IF ( DOMAIN_DIM == 1 ) THEN
 
-    LM_LENGTH = 1
-
+    LM_Length = 1
+    LM_Short_Length = 1
+    
 ELSE IF ( DOMAIN_DIM == 2 ) THEN
 
-    LM_LENGTH = L_LIMIT + 1
+    LM_Length = L_Limit + 1
+    LM_Short_Length = L_Limit + 1
 
 ELSE IF ( DOMAIN_DIM == 3 ) THEN
 
-    LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
-
+    LM_Length = (L_Limit + 1)*(L_Limit + 1)
+    LM_Short_Length = (L_Limit+1)*(L_Limit+2)/2
+    
 END IF
 
 
@@ -142,21 +146,24 @@ IF ( Verbose_Flag ) CALL Init_Message('Calculating Derived Variables, AMReX - Pa
 
 !IF ( DOMAIN_DIM == 1 ) THEN
 !
-!    LM_LENGTH = 1
+!    LM_Length = 1
+!    LM_Short_Length = 1
 !
 !ELSE IF ( DOMAIN_DIM == 2 ) THEN
 !
-!    LM_LENGTH = L_LIMIT + 1
+!    LM_Length = L_Limit + 1
+!    LM_Short_Length = L_Limit + 1
 !
 !ELSE IF ( DOMAIN_DIM == 3 ) THEN
 !
-!    LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
+!    LM_Length = (L_Limit + 1)*(L_Limit + 1)
+!    LM_Short_Length = (L_Limit+1)*(L_Limit+2)/2
 !
 !END IF
 
 
 LM_LENGTH = (L_LIMIT + 1)*(L_LIMIT + 1)
-
+LM_Short_Length = (L_Limit+1)*(L_Limit+2)/2
 
 !
 !   VAR_DIM - Length of vector required to hold coefficients for 1 variable.

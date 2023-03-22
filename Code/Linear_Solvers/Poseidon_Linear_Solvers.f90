@@ -65,18 +65,18 @@ CONTAINS
  !#############################################################!
 SUBROUTINE Jacobi_Conditioning(A,b)
 
-COMPLEX(idp),   DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1),    INTENT(INOUT)   :: A
-COMPLEX(idp),   DIMENSION(0:NUM_R_NODES -1),                    INTENT(INOUT)   :: b
+REAL(idp),   DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1),    INTENT(INOUT)   :: A
+REAL(idp),   DIMENSION(0:NUM_R_NODES -1),                    INTENT(INOUT)   :: b
 
 
 
 INTEGER                                                                         :: i
 
-COMPLEX(idp),   DIMENSION(0:NUM_R_NODES -1)                                     :: TMP_VEC
-COMPLEX(idp),   DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                     :: CONDITIONER
-COMPLEX(idp),   DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                     :: Tmp_Mat
-COMPLEX(idp)                                                                    :: One
-COMPLEX(idp)                                                                    :: Zero
+REAL(idp),   DIMENSION(0:NUM_R_NODES -1)                                     :: TMP_VEC
+REAL(idp),   DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                     :: CONDITIONER
+REAL(idp),   DIMENSION(0:NUM_R_NODES-1, 0:NUM_R_NODES-1)                     :: Tmp_Mat
+REAL(idp)                                                                    :: One
+REAL(idp)                                                                    :: Zero
 
 CONDITIONER = 0.0_idp
 One = 1.0_idp
@@ -111,17 +111,17 @@ END SUBROUTINE Jacobi_Conditioning
  !#############################################################!
 SUBROUTINE Jacobi_Conditioning_Beta(A,b, rows, cols )
 
-COMPLEX(idp), DIMENSION(1:Rows, 1:Cols),    INTENT(INOUT)       :: A
-COMPLEX(idp), DIMENSION(1:Rows),            INTENT(INOUT)       :: b
+REAL(idp), DIMENSION(1:Rows, 1:Cols),    INTENT(INOUT)       :: A
+REAL(idp), DIMENSION(1:Rows),            INTENT(INOUT)       :: b
 
 INTEGER,                                    INTENT(IN)          :: rows
 INTEGER,                                    INTENT(IN)          :: cols
 
 INTEGER                                                         :: i
 
-COMPLEX(idp), DIMENSION(1:cols)                                 :: TMP_VEC
-COMPLEX(idp), DIMENSION(1:cols, 1:rows)                         :: CONDITIONER, TMP_MAT
-COMPLEX(idp)                                                    :: One, Zero
+REAL(idp), DIMENSION(1:cols)                                 :: TMP_VEC
+REAL(idp), DIMENSION(1:cols, 1:rows)                         :: CONDITIONER, TMP_MAT
+REAL(idp)                                                    :: One, Zero
 
 CONDITIONER = 0.0_idp
 One = 1.0_idp

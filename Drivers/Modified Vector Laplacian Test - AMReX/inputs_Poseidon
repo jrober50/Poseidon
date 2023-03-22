@@ -16,7 +16,7 @@ amr.n_error_buf       = 0
 
 
 poseidon.fem_degree   = 1
-poseidon.l_limit      = 0
+poseidon.l_limit      = 8
 
 poseidon.max_fp_iters      = 10
 poseidon.anderson_m        = 3

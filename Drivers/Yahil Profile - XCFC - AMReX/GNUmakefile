@@ -14,8 +14,8 @@ LAPACK_LIB     = $(LAPACK_HOME)/lib
 
 USE_F_INTERFACES = TRUE
 
-DEBUG     = FALSE
-#DEBUG     = TRUE
+#DEBUG     = FALSE
+DEBUG     = TRUE
 
 USE_MPI   = TRUE
 USE_OMP   = FALSE
@@ -59,8 +59,6 @@ include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 # Include directories and source files needed from Poseidon
 POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
 include $(POSEIDON_ACTIVE_DIR)/Build/Make.Poseidon
-
-
 
 
 # Include dicrectories and source files needed for the Driver

@@ -50,13 +50,13 @@ INTEGER,            INTENT(INOUT)                       ::  File_Number
 INTEGER, OPTIONAL,  INTENT(IN)                          ::  Suggested_Number
 
 INTEGER                                                 ::  Temp_Number
-INTEGER                                                 ::  istat = 0
+INTEGER                                                 ::  istat
 LOGICAL                                                 ::  FLAG, OP
-LOGICAL                                                 ::  UNIT_FLAG, NAME_FLAG
+LOGICAL                                                 ::  UNIT_FLAG
 
-
+istat     = 0
 UNIT_FLAG = .FALSE.
-NAME_FLAG = .FALSE.
+
 
 
 !  Assigned an unused number, and assign it to new file
@@ -82,18 +82,16 @@ END DO
 
 
 
-
 ! Open New File
 IF ( UNIT_FLAG  ) THEN
 
-    OPEN( Unit = File_Number, File = File_Name, IOSTAT = istat )
+    OPEN( Unit = File_Number, File = TRIM(File_Name), IOSTAT = istat )
     IF ( istat .NE. 0 ) THEN
 
         PRINT*,"WARNING: Could not open file at ", File_Name, istat
 
     END IF
 END IF
-
 
 END SUBROUTINE OPEN_NEW_FILE
 
@@ -116,11 +114,11 @@ INTEGER, OPTIONAL,  INTENT(IN)                          ::  Suggested_Number
 INTEGER                                                 ::  Temp_Number
 INTEGER                                                 ::  istat = 0
 LOGICAL                                                 ::  FLAG, OP
-LOGICAL                                                 ::  UNIT_FLAG, NAME_FLAG
+LOGICAL                                                 ::  UNIT_FLAG
 
 
 UNIT_FLAG = .FALSE.
-NAME_FLAG = .FALSE.
+
 
 
 !  Assigned an unused number, and assign it to new file

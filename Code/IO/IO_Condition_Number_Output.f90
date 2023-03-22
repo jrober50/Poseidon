@@ -40,7 +40,7 @@ USE Variables_Derived, &
 USE Variables_Matrices, &
             ONLY :  iMB_Diagonals,             &
                     iMB_IPIV,                  &
-                    zMB_Matrix_Banded
+                    dMB_Matrix_Banded
 
 
 USE Variables_IO, &
@@ -76,7 +76,7 @@ SUBROUTINE IO_Output_Condition_Number( )
 
 INTEGER                                         ::  i
 INTEGER                                         ::  Info
-COMPLEX(idp),   DIMENSION(2*iVB_Prob_Dim)       ::  Work
+REAL(idp),      DIMENSION(2*iVB_Prob_Dim)       ::  Work
 REAL(idp),      DIMENSION(iVB_Prob_Dim)         ::  RWork
 REAL(idp)                                       ::  RCond_One
 REAL(idp)                                       ::  Norm
@@ -88,15 +88,16 @@ IF ( lPF_IO_Flags(iPF_IO_Print_Cond) .OR. lPF_IO_Flags(iPF_IO_Write_Cond) ) THEN
     NORM = 0.0_idp
     DO i = 1,iVB_Prob_Dim
 
-        NORM = MAX( NORM, ABS(SUM(zMB_Matrix_Banded(:,i) ) ) )
+        NORM = MAX( NORM, ABS(SUM(dMB_Matrix_Banded(:,i) ) ) )
 
     END DO
 
-    CALL ZGBCON( '1',                   &
+    PRINT*,"Before DGBCON"
+    CALL DGBCON( '1',                   &
                  iVB_Prob_Dim,          &
                  iMB_Diagonals,         &
                  iMB_Diagonals,         &
-                 zMB_Matrix_Banded,     &
+                 dMB_Matrix_Banded,     &
                  3*iMB_Diagonals+1,     &
                  iMB_IPIV,              &
                  Norm,                  &
@@ -105,15 +106,17 @@ IF ( lPF_IO_Flags(iPF_IO_Print_Cond) .OR. lPF_IO_Flags(iPF_IO_Write_Cond) ) THEN
                  RWork,                 &
                  Info                   )
 
-
+    PRINT*,"After DGBCON"
     IF (Info .NE. 0) THEN
         WRITE(Message,'(A,I1.1)')"ZGBCON has failed with INFO = ",Info
         CALL Warning_Message(TRIM(Message))
     ELSE
 
+        PRINT*,"Here"
         CALL IO_Print_Condition_Number( RCond_One )
+        PRINT*,"There"
         CALL IO_Write_Condition_Number( RCond_One )
-
+        PRINT*,"Everywhere"
     END IF
 
     
@@ -160,12 +163,11 @@ SUBROUTINE IO_Write_Condition_Number( rcond )
 
 REAL(idp), INTENT(IN)               ::  rcond
 
-CHARACTER(LEN = 100)                ::  Report_Name
+CHARACTER(LEN = 200)                ::  Report_Name
 INTEGER                             ::  Report_ID
-INTEGER                             ::  Suggested_Number = 400
+INTEGER                             ::  Suggested_Number
 
-
-
+Suggested_Number = 500
 
 IF (myID_Poseidon == MasterID_Poseidon ) THEN
 IF ( lPF_IO_Flags(iPF_IO_Write_Cond) ) THEN

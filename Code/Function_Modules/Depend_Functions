@@ -16,9 +16,6 @@ Functions_Additional.o:     \
 Functions_Matrix.o:         \
   Functions_Matrix.f90      \
 
-Functions_Ylm_Relays.o:     \
-  Functions_Ylm_Relays.F90  \
-
 Functions_TransMat.o:       \
   Functions_TransMat.f90    \
 

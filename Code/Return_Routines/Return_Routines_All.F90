@@ -27,7 +27,8 @@ USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE
+            ONLY :  Degree,                     &
+                    L_Limit
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -43,11 +44,7 @@ USE Parameters_Variable_Indices, &
 
 
 USE Variables_Tables, &
-            ONLY :  Ylm_Elem_Values,        &
-                    Ylm_Elem_dt_Values,     &
-                    Ylm_Elem_dp_Values,              &
-                    Lagrange_Poly_Table,        &
-                    Level_DX
+            ONLY :  Level_DX
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
@@ -59,11 +56,12 @@ USE Variables_Mesh, &
                     plocs
 
 USE Variables_Derived, &
-            ONLY :  LM_LENGTH
+            ONLY :  LM_Length,              &
+                    LM_Short_Length
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,      &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,      &
+                    dVB_Coeff_Vector
 
 USE Variables_AMReX_Source, &
             ONLY :  iLeaf,                &
@@ -89,9 +87,10 @@ USE Functions_Math, &
             ONLY :  Lagrange_Poly,       &
                     Lagrange_Poly_Deriv
 
-USE Initialization_Tables, &
-            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                    Initialize_Ylm_Tables_On_Elem
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Am_Tables,            &
+                    Initialize_Plm_Tables,           &
+                    Initialize_Slm_Tables_on_Elem
 
 
 USE Variables_Interface, &
@@ -122,10 +121,11 @@ USE amrex_multifab_module,  &
                     amrex_imultifab_destroy
 
 USE Variables_AMReX_Core, &
-           ONLY :  AMReX_Num_Levels
+            ONLY :  AMReX_Num_Levels,                &
+                    AMReX_MAx_Grid_Size
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
-           ONLY :  AMReX_MakeFineMask
+            ONLY :  AMReX_MakeFineMask
 
 #endif
 
@@ -256,7 +256,6 @@ INTEGER, DIMENSION(3)                                                   ::  NE
 
 NE = [ Num_R_Elements, Num_T_Elements, Num_P_Elements ]
 
-
 iU = iU_CF
 CALL Poseidon_Return_Native_Type_A( iU,                     &
                                     NE,                     &
@@ -278,6 +277,7 @@ CALL Poseidon_Return_Native_Type_A( iU,                     &
                                     Caller_xL(1),           &
                                     Caller_xL(2),           &
                                     Return_All(:,:,:,:,2)   )
+
 
 
 iVB = iVB_S
@@ -382,12 +382,12 @@ REAL(idp)                                                   ::  DPOT
 REAL(idp),      DIMENSION(3)                                ::  gamma
 REAL(idp),      DIMENSION(3,3,3)                            ::  Christoffel
 
-COMPLEX(idp),   DIMENSION(1:2)                              ::  TMP_Val_A
-COMPLEX(idp),   DIMENSION(1:3,1:2)                          ::  TMP_Val_B
-COMPLEX(idp),   DIMENSION(1:3,1:3)                          ::  TMP_Drv_B
+REAL(idp),   DIMENSION(1:2)                              ::  TMP_Val_A
+REAL(idp),   DIMENSION(1:3,1:2)                          ::  TMP_Val_B
+REAL(idp),   DIMENSION(1:3,1:3)                          ::  TMP_Drv_B
 
-COMPLEX(idp),   DIMENSION(1:4)                              ::  Reusable_Vals
-COMPLEX(idp),   DIMENSION(1:6)                              ::  Tmp_A
+REAL(idp),   DIMENSION(1:4)                              ::  Reusable_Vals
+REAL(idp),   DIMENSION(1:6)                              ::  Tmp_A
 
 INTEGER                                                     ::  Current_Location
 INTEGER                                                     ::  Num_DOF
@@ -398,6 +398,26 @@ INTEGER,        DIMENSION(1:3)                              ::  nGhost_Vec
 REAL(idp), DIMENSION(:,:,:), ALLOCATABLE                    ::  Caller_LPT
 
 
+INTEGER,    DIMENSION(3)                                    ::  iNE
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2)-1)           ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3)-1)           ::  plocs_subarray
+
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_Table
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_dt_Table
+
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_Table
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_dp_Table
+
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_Table
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_dt_Table
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  Slm_Elem_dp_Table
+
+
+
+
+
+
+Slm_Elem_Table = 0.0_idp
 
 IF ( PRESENT(FillGhostCells_Option) ) THEN
     FillGhostCells = FillGhostCells_Option
@@ -487,15 +507,56 @@ DO lvl = 0,nLevels-1
             iEU = iEU_A
         END IF
 
-        CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
+        iNE = iEU-iEL+1
+        
+        
+        DO te = iEL(2),iEU(2)
+            tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
+        END DO
+        DO pe = iEL(3),iEU(3)
+            plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
+        END DO
+        
+
+        ! Initialize Am Table
+        CALL Initialize_Am_Tables(  NQ(3),                      &
+                                    PQ_Input,                   &
+                                    L_Limit,                    &
+                                    iNE(3),                     &
+                                    [iEL(3), iEU(3)],           &
+                                    plocs_subarray,             &
+                                    Am_Table,                   &
+                                    Am_dp_Table                 )
+        ! Initialize Plm Table
+        CALL Initialize_Plm_Tables( NQ(2),                      &
+                                    TQ_Input,                   &
+                                    L_Limit,                    &
+                                    LM_Short_Length,            &
+                                    iNE(2),                     &
+                                    [iEL(2), iEU(2)],           &
+                                    tlocs_subarray,             &
+                                    Plm_Table,                  &
+                                    Plm_dt_Table                )
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
 
+
         IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
             iRE = FEM_Elem_Map(re,lvl)
-            CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
+            
+            CALL Initialize_Slm_Tables_on_Elem( te, pe,             &
+                                                NQ(2), NQ(3),       &
+                                                iNE,                &
+                                                iEL,                &
+                                                Plm_Table,          &
+                                                Plm_dt_Table,       &
+                                                Am_Table,           &
+                                                Am_dp_Table,        &
+                                                Slm_Elem_Table,     &
+                                                Slm_Elem_dt_Table,  &
+                                                Slm_Elem_dp_Table   )
     
             Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
             Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
@@ -513,15 +574,17 @@ DO lvl = 0,nLevels-1
                 Tmp_Val_B = 0.0_idp
                 Tmp_Drv_B = 0.0_idp
     
+    
                 ! Calculate all the A Type Variables
                 DO iU = iU_CF,iU_LF
                 DO lm = 1,LM_Length
                 DO d  = 0,DEGREE
-
                     Current_Location = Map_To_FEM_Node(iRE,d)
+                
+                    
                     TMP_Val_A(iU) = TMP_Val_A(iU)                               &
-                                + cVA_Coeff_Vector(Current_Location,lm,iU)     &
-                                * Caller_LPT(0,d,rd) * Ylm_Elem_Values( lm, tpd )
+                                + dVA_Coeff_Vector(Current_Location,lm,iU)     &
+                                * Caller_LPT(0,d,rd) * Slm_Elem_Table( lm, tpd )
 
 
 
@@ -542,22 +605,20 @@ DO lvl = 0,nLevels-1
 
 
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
-                            + SUM( cVB_Coeff_Vector( Here:There, iVB )     &
-                                    * Ylm_Elem_Values( :, tpd )   )         &
+                            + SUM( dVB_Coeff_Vector( Here:There, iVB )     &
+                                    * Slm_Elem_Table( :, tpd )   )         &
                             * Caller_LPT(0,d,rd)
 
                 END DO ! d Loop
                 END DO ! iU Loop
                 
 
-                
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_CF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_CF),KIND = idp)
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_LF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_LF),KIND= idp)      &
                                                                                / REAL(Tmp_Val_A(iU_CF),KIND = idp)
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S1, rd, td, pd, NQ )) = REAL(Tmp_Val_B(1,iVB_S),KIND = idp)
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S2, rd, td, pd, NQ )) = REAL(Tmp_Val_B(2,iVB_S),KIND = idp)
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S3, rd, td, pd, NQ )) = REAL(Tmp_Val_B(3,iVB_S),KIND = idp)
-
 
 
                 ! Calculate the X Vector, and its derivatives
@@ -571,33 +632,31 @@ DO lvl = 0,nLevels-1
                     iU_Offset = iU-3*iVB+1
                     
                     TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
-                            + SUM( cVB_Coeff_Vector( Here:There, iVB )      &
-                                    * Ylm_Elem_Values( :, tpd )   )         &
+                            + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
+                                    * Slm_Elem_Table( :, tpd )   )         &
                             * Caller_LPT(0,d,rd)
 
                     TMP_Drv_B(1,iU_Offset) = TMP_Drv_B(1,iU_Offset)         &
-                               + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
-                                     * Ylm_Elem_Values( :, tpd  )     )     &
+                               + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                                     * Slm_Elem_Table( :, tpd  )     )     &
                                * Caller_LPT(1,d,rd)            &
                                / DROT
 
 
 
                     TMP_Drv_B(2,iU_Offset) = TMP_Drv_B(2,iU_Offset)         &
-                               + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
-                                     * Ylm_Elem_dt_Values( :, tpd )   )     &
+                               + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                                     * Slm_Elem_dt_Table( :, tpd )   )     &
                                * Caller_LPT(0,d,rd)
 
 
                     TMP_Drv_B(3,iU_Offset) = TMP_Drv_B(3,iU_Offset)         &
-                               + SUM( cVB_Coeff_Vector( Here:There, iVB )   &
-                                     * Ylm_Elem_dp_Values( :, tpd)   )      &
+                               + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                                     * Slm_Elem_dp_Table( :, tpd)   )      &
                                * Caller_LPT(0,d,rd)
 
                 END DO ! d Loop
                 END DO ! iU Loop
-
-
 
                 Gamma(2) = 1.0_idp/(Cur_R_Locs(rd)*Cur_R_Locs(rd))
                 Gamma(3) = Gamma(2) * 1.0_idp/( DSIN(Cur_T_Locs(td))*DSIN(Cur_T_Locs(td)) )
@@ -697,7 +756,6 @@ DO lvl = 0,nLevels-1
                            +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
 
 
-
                 ! Tmp_A values are A^ij.
                 ! Return Results are A_ij so we multiply by Gamma_ij
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))                         &
@@ -728,12 +786,10 @@ DO lvl = 0,nLevels-1
                 Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ ))                         &
                         = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
 
-                
 
             END DO ! rd Loop
             END DO ! td Loop
             END DO ! pd Loop
-
 
 
         END IF

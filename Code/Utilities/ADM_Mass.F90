@@ -41,6 +41,10 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Numbers_Module, &
             ONLY :  Pi
 
+USE Poseidon_Parameters, &
+            ONLY :  Degree,                     &
+                    L_Limit
+
 USE Poseidon_Units_Module, &
             ONLY :  GR_Source_Scalar,           &
                     C_Square
@@ -53,7 +57,7 @@ USE Parameters_Variable_Indices, &
                     iVB_X
 
 USE Variables_Vectors, &
-            ONLY :  cVB_Coeff_Vector
+            ONLY :  dVB_Coeff_Vector
 
 USE Variables_Quadrature, &
             ONLY :  NUM_R_QUAD_POINTS,          &
@@ -79,6 +83,10 @@ USE Variables_Mesh, &
 USE Variables_Source, &
             ONLY :  Block_Source_E,             &
                     Source_Rho
+                    
+USE Variables_Derived, &
+            ONLY :  LM_Length,                  &
+                    LM_Short_Length
 
 USE Maps_Quadrature, &
             ONLY :  Map_To_tpd,                 &
@@ -96,7 +104,14 @@ USE Functions_Jacobian, &
 
 
 USE Variables_Tables, &
-            ONLY :  Level_dx
+            ONLY :  Plm_Values,                 &
+                    Plm_dt_Values,              &
+                    Am_Values,                  &
+                    Am_dp_Values,               &
+                    Slm_Elem_Values,            &
+                    Slm_Elem_dt_Values,         &
+                    Slm_Elem_dp_Values,         &
+                    Level_dx
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -115,7 +130,8 @@ USE amrex_multifab_module,  &
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
-                    AMReX_Num_Levels
+                    AMReX_Num_Levels,   &
+                    AMReX_Max_Grid_Size
 
 
 USE Variables_AMReX_Source, &
@@ -138,9 +154,11 @@ USE Variables_MPI, &
                     myID_Poseidon,              &
                     iErr
 
-USE Initialization_Tables, &
-            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                    Initialize_Ylm_Tables_On_Elem
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Am_Tables,            &
+                    Initialize_Plm_Tables,           &
+                    Initialize_Slm_Tables_on_Elem
+
 
 USE XCFC_Functions_Physical_Source_Module, &
             ONLY : Get_Physical_Source
@@ -265,6 +283,12 @@ REAL(idp)                                       ::  Int_Val
 
 INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
 
+INTEGER,    DIMENSION(3)                                ::  iNE
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2)-1)       ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3)-1)       ::  plocs_subarray
+
+
+
 nGhost_Vec = 0
 
 ADM_Mass = 0.0_idp
@@ -305,15 +329,57 @@ DO lvl = AMReX_Num_Levels-1,0,-1
 
         iEL = Box%lo
         iEU = Box%hi
+        
+        iNE = iEU-iEL+1
+        
+        
+        DO te = iEL(2),iEU(2)
+            tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
+        END DO
+        DO pe = iEL(3),iEU(3)
+            plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
+        END DO
+        
+        
+        ! Initialize Am Table
+        CALL Initialize_Am_Tables(  Num_P_Quad_Points,          &
+                                    Int_P_Locations,            &
+                                    L_Limit,                    &
+                                    iNE(3),                     &
+                                    [iEL(3), iEU(3)],           &
+                                    plocs_subarray(0:iNE(3)-1), &
+                                    Am_Values,                  &
+                                    Am_dp_Values                )
 
-        CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
+        ! Initialize Plm Table
+        CALL Initialize_Plm_Tables( Num_T_Quad_Points,          &
+                                    Int_T_Locations,            &
+                                    L_Limit,                    &
+                                    LM_Short_Length,            &
+                                    iNE(2),                     &
+                                    [iEL(2), iEU(2)],           &
+                                    tlocs_subarray(0:iNE(2)-1), &
+                                    Plm_Values,                 &
+                                    Plm_dt_Values               )
+
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
             
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
-                CALL Initialize_Ylm_Tables_On_Elem( te, pe, iEL, lvl )
+                CALL Initialize_Slm_Tables_on_Elem( te, pe,             &
+                                                    Num_T_Quad_Points,  &
+                                                    Num_P_Quad_Points,  &
+                                                    iNE,                &
+                                                    iEL,                &
+                                                    Plm_Values,         &
+                                                    Plm_dt_Values,      &
+                                                    Am_Values,          &
+                                                    Am_dp_Values,       &
+                                                    Slm_Elem_Values,    &
+                                                    Slm_Elem_dt_Values, &
+                                                    Slm_Elem_dp_Values  )
                 iE = [re,te,pe]
                 CALL Calc_ADM_Mass_On_Element( iE, Int_Val, lvl )
 
@@ -608,7 +674,7 @@ INTEGER                                                         ::  i, j, HEre
 
 CALL Calc_Val_On_Elem_TypeA( iE, Cur_Val_Psi, iU_CF, Level )
 
-IF ( ALLOCATED(cVB_Coeff_Vector) ) THEN
+IF ( ALLOCATED(dVB_Coeff_Vector) ) THEN
     CALL Calc_Val_And_Drv_On_Elem_TypeB( iE, DROT,      &
                                          CUR_Val_X(:,:,1),      &
                                          CUR_DRV_X(:,:,:,1),    &
@@ -765,7 +831,7 @@ REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points, &
 REAL(idp), INTENT(OUT)                                  ::  Int_Val
 
 INTEGER                                                 ::  rd
-COMPLEX(idp)                                            ::  Tmp_Val
+REAL(idp)                                               ::  Tmp_Val
 
 
 

@@ -76,8 +76,8 @@ USE Variables_FEM_Module, &
             ONLY :  FEM_Node_xlocs
             
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,   &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,   &
+                    dVB_Coeff_Vector
                     
 USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node
@@ -132,8 +132,8 @@ INTEGER                                 ::  Cur_Loc
 
 PRINT*,"In SetGuess_Yahil_Newtonian"
 
-cVA_Coeff_Vector = 0.0_idp
-cVB_Coeff_Vector = 0.0_idp
+dVA_Coeff_Vector = 0.0_idp
+dVB_Coeff_Vector = 0.0_idp
 
 DO RE = 0,Num_R_Elements-1
 
@@ -150,8 +150,8 @@ DO RE = 0,Num_R_Elements-1
 !        PRINT*,re,d,Cur_R_Locs(d),Potential,CF_Val,LF_Val
         Cur_Loc = Map_To_FEM_Node(re,d)
 
-        cVA_Coeff_Vector(Cur_Loc,1,iU_CF) = SQRT(4.0*pi)*CF_Val
-        cVA_Coeff_Vector(Cur_Loc,1,iU_LF) = SQRT(4.0*pi)*LF_Val
+        dVA_Coeff_Vector(Cur_Loc,1,iU_CF) = SQRT(4.0*pi)*CF_Val
+        dVA_Coeff_Vector(Cur_Loc,1,iU_LF) = SQRT(4.0*pi)*LF_Val
 
     END DO
 

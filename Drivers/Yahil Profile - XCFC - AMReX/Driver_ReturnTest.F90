@@ -100,8 +100,8 @@ USE Variables_Quadrature, &
                     INT_P_LOCATIONS
                     
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,      &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,      &
+                    dVB_Coeff_Vector
 
 USE Variables_IO, &
             ONLY :  Write_Flags,            &
@@ -143,10 +143,7 @@ USE Maps_Domain, &
                     FEM_Elem_Map
 
 USE Variables_Tables, &
-            ONLY :  Ylm_CC_Values,              &
-                    Ylm_Elem_CC_Values,         &
-                    Lagrange_Poly_Table,        &
-                    Level_dx
+            ONLY :  Level_dx
 
 
 USE Poseidon_File_Routines_Module, &
@@ -265,13 +262,13 @@ CALL Poseidon_Return_ALL(   NQ,                   &
 
 
 PRINT*,"Before"
-PRINT*,cVA_Coeff_Vector
+PRINT*,dVA_Coeff_Vector
 
 
 CALL Poseidon_Input_Initial_Guess( MF_Results )
 
 PRINT*,"After"
-pRINT*,cVA_Coeff_Vector
+pRINT*,dVA_Coeff_Vector
 
 END SUBROUTINE Return_Test
 

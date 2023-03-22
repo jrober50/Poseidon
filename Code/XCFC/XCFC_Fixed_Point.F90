@@ -63,10 +63,6 @@ USE Variables_FP, &
                     FP_Diagnostics_Flag,        &
                     FP_Iteration_Log,           &
                     Update_Norms
-            
-USE Variables_Vectors,  &
-            ONLY :  cVA_Load_Vector,            &
-                    cVA_Coeff_Vector
 
 USE XCFC_Load_Vector_TypeA_Module, &
             ONLY :  XCFC_Calc_Load_Vector_TypeA
@@ -149,19 +145,19 @@ INTEGER                                                 ::  INFO
 
 !REAL(KIND = idp), DIMENSION(1:4)                        :: timer
 
-COMPLEX(idp),DIMENSION(Var_Dim)                         :: BVector
-COMPLEX(idp),DIMENSION(Var_Dim)                         :: UVector
-COMPLEX(idp),DIMENSION(Var_Dim)                         :: GVectorM
-COMPLEX(idp),DIMENSION(Var_Dim)                         :: FVectorM
+REAL(idp),  DIMENSION(Var_Dim)                          :: BVector
+REAL(idp),  DIMENSION(Var_Dim)                          :: UVector
+REAL(idp),  DIMENSION(Var_Dim)                          :: GVectorM
+REAL(idp),  DIMENSION(Var_Dim)                          :: FVectorM
 
 
-COMPLEX(idp),DIMENSION(Var_Dim,FP_Anderson_M)           :: FVector
-COMPLEX(idp),DIMENSION(Var_Dim,FP_Anderson_M)           :: GVector
-COMPLEX(idp),DIMENSION(Var_Dim,FP_Anderson_M)           :: AMatrix
+REAL(idp),  DIMENSION(Var_Dim,FP_Anderson_M)            :: FVector
+REAL(idp),  DIMENSION(Var_Dim,FP_Anderson_M)            :: GVector
+REAL(idp),  DIMENSION(Var_Dim,FP_Anderson_M)            :: AMatrix
 
-COMPLEX(idp),DIMENSION(FP_Anderson_M)                   :: Alpha
+REAL(idp),  DIMENSION(FP_Anderson_M)                    :: Alpha
 
-COMPLEX(idp),DIMENSION(:),   ALLOCATABLE                :: Work
+REAL(idp),  DIMENSION(:),   ALLOCATABLE                 :: Work
 
 INTEGER                                                 ::  Cur_Iteration
 LOGICAL                                                 ::  CONVERGED
@@ -307,21 +303,10 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
         BVector = -FVector(:,mk)
         AMatrix(:,1:mk-1) = FVector(:,1:mk-1) - SPREAD( FVector(:,mk), DIM=2, NCOPIES = mk-1)
 
-
-
-!        PRINT*,"Before ZGELS"
-        CALL ZGELS( 'N',                &
-                    Var_Dim,mk-1,       &
-                    1,                  &
-                    AMatrix(:,1:mk-1),  &
-                    Var_Dim,            &
-                    BVector,            &
-                    Var_Dim,            &
-                    WORK,               &
-                    LWORK,              &
-                    INFO                )
-!        PRINT*,"After ZGELS"
-!        STOP
+        CALL DGELS('N',Var_Dim,mk-1,1,              &
+                    AMatrix(:,1:mk-1), Var_Dim,     &
+                    BVector, Var_Dim,               &
+                    WORK, LWORK, INFO )
 
         IF ( INFO .NE. 0 ) THEN
             WRITE(Message,'(A,I1.1,A,I1.1)')'In XCFC_Fixed_Point, iU = ',iU,' : ZGELS failed with INFO = ',INFO
@@ -455,10 +440,10 @@ END SUBROUTINE XCFC_Fixed_Point
 SUBROUTINE Convergence_Check( Update, Iter, iU, Flag )
 
 
-COMPLEX(idp),DIMENSION(Var_Dim), INTENT(IN)         :: Update
-INTEGER,                         INTENT(IN)         :: Iter
-INTEGER,                         INTENT(IN)         :: iU
-LOGICAL,                         INTENT(INOUT)      :: Flag
+REAL(idp),DIMENSION(Var_Dim),   INTENT(IN)          :: Update
+INTEGER,                        INTENT(IN)          :: Iter
+INTEGER,                        INTENT(IN)          :: iU
+LOGICAL,                        INTENT(INOUT)       :: Flag
 
 CHARACTER(LEN = 300)                                ::  Message
 

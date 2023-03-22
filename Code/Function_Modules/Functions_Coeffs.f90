@@ -41,8 +41,8 @@ USE Variables_Derived, &
                     Num_R_Nodes
 
 USE Variables_Vectors,  &
-            ONLY :  cVA_Coeff_Vector,  &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,  &
+                    dVB_Coeff_Vector
 
 
 IMPLICIT NONE
@@ -56,9 +56,9 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE Coeff_To_Vector( Vector )
 
-COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(INOUT) :: Vector
+REAL(idp),  DIMENSION(Prob_Dim),    INTENT(INOUT)   :: Vector
 
-INTEGER                                         :: ui
+INTEGER                                             :: ui
 
 DO ui = iU_CF,iU_LF
 
@@ -84,9 +84,9 @@ END SUBROUTINE Coeff_To_Vector
 !###############################################################################!
 SUBROUTINE Vector_To_Coeff( Vector )
 
-COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(INOUT) :: Vector
+REAL(idp),  DIMENSION(Prob_Dim),    INTENT(INOUT)   :: Vector
 
-INTEGER                                         :: ui
+INTEGER                                             :: ui
 
 DO ui = iU_CF,iU_LF
 
@@ -112,16 +112,16 @@ END SUBROUTINE Vector_To_Coeff
  !#########################################################!
 SUBROUTINE Coeff_To_Vector_TypeA( Vector, iU )
 
-COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(INOUT) :: Vector
-INTEGER                         , INTENT(IN)    :: iU
+REAL(idp),  DIMENSION(Prob_Dim),    INTENT(INOUT)   :: Vector
+INTEGER,                            INTENT(IN)      :: iU
 
-INTEGER                                         :: LM_loc, Here, There
+INTEGER                                             :: LM_loc, Here, There
 
 
 DO LM_loc = 1,LM_Length
     here = (iU-1)*Var_Dim + (lm_loc-1)*Num_R_Nodes + 1
     there = (iU-1)*Var_Dim + lm_loc*Num_R_Nodes
-    Vector(here:there) = cVA_Coeff_Vector(:,lm_loc,iU)
+    Vector(here:there) = dVA_Coeff_Vector(:,lm_loc,iU)
 END DO
 
 
@@ -135,13 +135,13 @@ END SUBROUTINE Coeff_To_Vector_TypeA
  !#########################################################!
 SUBROUTINE Coeff_To_Vector_TypeB( Vector, iU, iVB )
 
-COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(INOUT) :: Vector
-INTEGER                          , INTENT(IN)    :: iU, iVB
+REAL(idp),  DIMENSION(Prob_Dim),    INTENT(INOUT)   :: Vector
+INTEGER,                            INTENT(IN)      :: iU, iVB
 
-INTEGER                                         :: HereA, ThereA
-INTEGER                                         :: HereB, ThereB
+INTEGER                                             :: HereA, ThereA
+INTEGER                                             :: HereB, ThereB
 
-INTEGER                                     ::  Offset
+INTEGER                                             ::  Offset
 
 Offset = 3*iVB
 
@@ -152,7 +152,7 @@ HereB  = (iU-Offset)*Var_Dim + 1
 ThereB = (iU-Offset + 1)*Var_Dim
 
 
-Vector(HereA:ThereA) = cVB_Coeff_Vector(HereB:ThereB,iVB)
+Vector(HereA:ThereA) = dVB_Coeff_Vector(HereB:ThereB,iVB)
 
 
 END SUBROUTINE Coeff_To_Vector_TypeB
@@ -167,15 +167,15 @@ END SUBROUTINE Coeff_To_Vector_TypeB
  !#########################################################!
 SUBROUTINE Vector_To_Coeff_TypeA( Vector, iU )
 
-COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(IN)        :: Vector
-INTEGER                         , INTENT(IN)        :: iU
+REAL(idp),  DIMENSION(Prob_Dim),    INTENT(IN)      :: Vector
+INTEGER,                            INTENT(IN)      :: iU
 
 INTEGER                                             :: LM_loc, Here, There
 
 DO LM_loc = 1,LM_Length
     here = (iU-1)*Var_Dim + (lm_loc-1)*Num_R_Nodes + 1
     there = (iU-1)*Var_Dim + lm_loc*Num_R_Nodes
-    cVA_Coeff_Vector(:,lm_loc,iU) = Vector(here:There)
+    dVA_Coeff_Vector(:,lm_loc,iU) = Vector(here:There)
 END DO
 
 
@@ -189,8 +189,8 @@ END SUBROUTINE Vector_To_Coeff_TypeA
  !#########################################################!
 SUBROUTINE Vector_To_Coeff_TypeB( Vector, iU, iVB )
 
-COMPLEX(idp), DIMENSION(Prob_Dim), INTENT(IN)    :: Vector
-INTEGER                         , INTENT(IN)    :: iU, iVB
+REAL(idp),  DIMENSION(Prob_Dim),    INTENT(IN)  :: Vector
+INTEGER,                            INTENT(IN)  :: iU, iVB
 
 INTEGER                                         :: HereA, ThereA
 INTEGER                                         :: HereB, ThereB
@@ -205,7 +205,7 @@ ThereA = iU * Var_Dim
 HereB  = (iU-Offset)*Var_Dim + 1
 ThereB = (iU-Offset + 1)*Var_Dim
 
-cVB_Coeff_Vector(HereB:ThereB,iVB) = Vector(HereA:ThereA)
+dVB_Coeff_Vector(HereB:ThereB,iVB) = Vector(HereA:ThereA)
 
 
 END SUBROUTINE Vector_To_Coeff_TypeB
@@ -223,16 +223,16 @@ END SUBROUTINE Vector_To_Coeff_TypeB
 !###############################################################################!
 SUBROUTINE Coeff_To_Vector_TypeA_SV( Vector, iU )
 
-COMPLEX(idp), DIMENSION(Var_Dim), INTENT(INOUT) :: Vector
-INTEGER                         , INTENT(IN)    :: iU
+REAL(idp),  DIMENSION(Var_Dim),     INTENT(INOUT)   :: Vector
+INTEGER,                            INTENT(IN)      :: iU
 
-INTEGER                                         :: LM_loc, Here, There
+INTEGER                                             :: LM_loc, Here, There
 
 DO LM_loc = 1,LM_Length
     Here  = (lm_loc-1)*Num_R_Nodes + 1
     There = lm_loc*Num_R_Nodes
 
-    Vector(here:there) = cVA_Coeff_Vector(:,lm_loc,iU)
+    Vector(here:there) = dVA_Coeff_Vector(:,lm_loc,iU)
 END DO
 
 
@@ -248,15 +248,15 @@ END SUBROUTINE Coeff_To_Vector_TypeA_SV
 !###############################################################################!
 SUBROUTINE Vector_To_Coeff_TypeA_SV( Vector, iU )
 
-COMPLEX(idp), DIMENSION(Var_Dim), INTENT(IN)        :: Vector
-INTEGER                         , INTENT(IN)        :: iU
+REAL(idp),  DIMENSION(Var_Dim),     INTENT(IN)      :: Vector
+INTEGER,                            INTENT(IN)      :: iU
 
 INTEGER                                             :: LM_loc, Here, There
 
 DO LM_loc = 1,LM_Length
     Here = (lm_loc-1)*Num_R_Nodes + 1
     There = lm_loc*Num_R_Nodes
-    cVA_Coeff_Vector(:,lm_loc,iU) = Vector(here:There)
+    dVA_Coeff_Vector(:,lm_loc,iU) = Vector(here:There)
 END DO
 
 

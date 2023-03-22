@@ -1,6 +1,5 @@
 HDF5_DIR       = /usr/local/hdf5
 
-#AMREX_HOME    ?= /Users/nickroberts/amrex
 AMREX_HOME    ?= $(AMREX_DIR)
 HDF5_HOME     ?= $(myHDF5_DIR)
 LAPACK_HOME   ?= $(myLAPACK_DIR)
@@ -58,10 +57,9 @@ include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 
 
 # Include directories and source files needed from Poseidon
-POSEIDON_MACHINE_NAME ?= Summit
 POSEIDON_MEMORY_MODE = ON
-include $(POSEIDON_DIR)/Build/Make.Poseidon
-
+POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
+include $(POSEIDON_ACTIVE_DIR)/Build/Make.Poseidon
 
 
 

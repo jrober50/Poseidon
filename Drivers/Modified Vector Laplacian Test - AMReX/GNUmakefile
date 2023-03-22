@@ -1,6 +1,6 @@
 HDF5_DIR       = /usr/local/hdf5
 
-AMREX_HOME    ?= /Users/nickroberts/amrex_sam/amrex
+AMREX_HOME    ?= $(AMREX_DIR)
 HDF5_HOME     ?= $(HDF5_DIR)
 LAPACK_HOME   ?= $(LAPACK_DIR)
 
@@ -22,7 +22,7 @@ USE_OMP   = FALSE
 #MEM_PROFILE  = FALSE
 #TINY_PROFILE = FALSE
 
-DIM       = 3 
+DIM       = 3
 
 EBASE     = Driver_Main
 
@@ -40,6 +40,7 @@ ifneq ("$(wildcard $(AMREX_HOME)/Src/DG/Make.package)","")
   include $(AMREX_HOME)/Src/DG/Make.package
 endif
 
+
 # Set pre-processor directives
 # This is also where, e.g., USE_HDF5 and USE_PETSC are used
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
@@ -54,8 +55,8 @@ include $(AMREX_HOME)/Src/F_Interfaces/Base/Make.package
 include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 
 # Include directories and source files needed from Poseidon
-
-include /Users/nickroberts/Poseidon/Build/Make.Poseidon
+POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
+include $(POSEIDON_ACTIVE_DIR)/Build/Make.Poseidon
 
 include Makefile_Driver
 include Makefile_Path
@@ -67,7 +68,6 @@ F90EXE_sources += $(DRIVER_AMREX_ROUTINES)
 F90EXE_sources += $(DRIVER_F90)
 
 
-DEFINES += $(POSEIDON_DEFS)
 
 # Include rules for compilation
 include $(AMREX_HOME)/Tools/GNUMake/Make.rules

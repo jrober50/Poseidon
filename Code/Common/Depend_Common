@@ -18,3 +18,6 @@ Poseidon_File_Routines.o:     \
 Poseidon_Message_Routines.o:  \
   Poseidon_Message_Routines.f90  
 
+Poseidon_Bailout.o:           \
+  Poseidon_Bailout.f90
+

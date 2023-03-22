@@ -339,7 +339,7 @@ REAL(idp),  INTENT(IN), DIMENSION(1:Num_TP_Quad_Points, &
 REAL(idp),    DIMENSION(3), INTENT(OUT)                 ::  Int_Val
 
 INTEGER                                                 ::  rd
-COMPLEX(idp), DIMENSION(3)                              ::  Tmp_Val
+REAL(idp), DIMENSION(3)                                 ::  Tmp_Val
 
 
 

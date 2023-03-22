@@ -49,8 +49,8 @@ USE Poseidon_Message_Routines_Module, &
             ONLY :  Run_Message
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,        &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,        &
+                    dVB_Coeff_Vector
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
@@ -106,8 +106,8 @@ INTEGER,        DIMENSION(3)                    ::  NE_Old
 
 REAL(idp),      DIMENSION(:),       ALLOCATABLE ::  rlocs_Old
 
-COMPLEX(idp),   DIMENSION(:,:,:),   ALLOCATABLE ::  cVA_Coeff_Old
-COMPLEX(idp),   DIMENSION(:,:),     ALLOCATABLE ::  cVB_Coeff_Old
+REAL(idp),   DIMENSION(:,:,:),   ALLOCATABLE ::  dVA_Coeff_Old
+REAL(idp),   DIMENSION(:,:),     ALLOCATABLE ::  dVB_Coeff_Old
 
 
 REAL(idp),      DIMENSION(:,:),     ALLOCATABLE ::  lm_at_rn
@@ -198,7 +198,7 @@ DO New_Node = 1,Num_R_Nodes
     Here_Old  = Map_To_FEM_Node(rn_in_re(New_Node),0)
     There_Old = Map_To_FEM_Node(rn_in_re(New_Node),Degree)
 
-    cVA_Coeff_Vector(New_Node,lm,iU) = SUM( cVA_Coeff_Old(Here_Old:There_Old,lm,iU)     &
+    dVA_Coeff_Vector(New_Node,lm,iU) = SUM( dVA_Coeff_Old(Here_Old:There_Old,lm,iU)     &
                                             * lm_at_rn(:,New_Node)                      )
 
 
@@ -213,7 +213,7 @@ CALL TimerStart(Timer_Remesh_FillX)
 
 ! Work through Type B Coeffs
 
-cVB_Coeff_Vector = 0.0_idp
+dVB_Coeff_Vector = 0.0_idp
 
 iVB = iVB_X
 DO re = 0,Num_R_Elements-1
@@ -231,13 +231,13 @@ DO lm = 1,LM_Length
         Here_Old = FP_Array_Map_TypeB(iU,iVB,re_old,d_old,lm)
 
         TMP = TMP                            &
-            + cVB_Coeff_Old(Here_Old,iVB)    &
+            + dVB_Coeff_Old(Here_Old,iVB)    &
             * lm_at_rn(d_old,FEM_Node)
 
 
     END DO ! d_Old
 
-    cVB_Coeff_Vector(Here_New,iVB) = TMP
+    dVB_Coeff_Vector(Here_New,iVB) = TMP
 
 END DO  ! lm
 END DO  ! iU
@@ -265,13 +265,13 @@ DO lm = 1,LM_Length
         Here_Old = FP_Array_Map_TypeB(iU,iVB,re_old,d_old,lm)
 
         TMP = TMP                            &
-            + cVB_Coeff_Old(Here_Old,iVB)    &
+            + dVB_Coeff_Old(Here_Old,iVB)    &
             * lm_at_rn(d_old,FEM_Node)
 
 
     END DO ! d_Old
 
-    cVB_Coeff_Vector(Here_New,iVB) = TMP
+    dVB_Coeff_Vector(Here_New,iVB) = TMP
 
 END DO  ! lm
 END DO  ! iU
@@ -314,13 +314,13 @@ NE_Old(2)         = Num_T_Elements
 NE_Old(3)         = Num_P_Elements
 
 ALLOCATE( rlocs_old(0:Num_R_Elements) )
-ALLOCATE( cVA_Coeff_Old(1:Num_R_Nodes_Old,1:LM_Length,1:2) )
-ALLOCATE( cVB_Coeff_Old(1:iVB_Prob_Dim_Old,1:2) )
+ALLOCATE( dVA_Coeff_Old(1:Num_R_Nodes_Old,1:LM_Length,1:2) )
+ALLOCATE( dVB_Coeff_Old(1:iVB_Prob_Dim_Old,1:2) )
 
 
 rlocs_Old = rlocs
-cVA_Coeff_Old = cVA_Coeff_Vector
-cVB_Coeff_Old = cVB_Coeff_Vector
+dVA_Coeff_Old = dVA_Coeff_Vector
+dVB_Coeff_Old = dVB_Coeff_Vector
 
 CALL TimerStop(Timer_Remesh_MakeCopies)
 
@@ -339,8 +339,8 @@ IF ( Verbose_Flag ) CALL Run_Message('Destroying Remesh Variables.')
 CALL TimerStart(Timer_Remesh_DestroyCopies)
 
 DEALLOCATE( rlocs_old )
-DEALLOCATE( cVA_Coeff_Old )
-DEALLOCATE( cVB_Coeff_Old )
+DEALLOCATE( dVA_Coeff_Old )
+DEALLOCATE( dVB_Coeff_Old )
 
 CALL TimerStop(Timer_Remesh_DestroyCopies)
 

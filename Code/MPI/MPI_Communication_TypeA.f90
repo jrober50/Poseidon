@@ -29,8 +29,8 @@ USE Variables_Derived, &
                     LM_Length
 
 USE Variables_Vectors,  &
-            ONLY :  cVA_Coeff_Vector,            &
-                    cVA_Load_Vector
+            ONLY :  dVA_Coeff_Vector,            &
+                    dVA_Load_Vector
 
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
@@ -67,9 +67,9 @@ DO lm_loc = 1,LM_Length
 
 
         CALL MPI_Reduce(MPI_IN_PLACE,                   &
-                        cVA_Load_Vector(LLim:ULim,lm_loc,iU),&
+                        dVA_Load_Vector(LLim:ULim,lm_loc,iU),&
                         Send_Size,                      &
-                        MPI_Double_Complex,             &
+                        MPI_Double,             &
                         MPI_SUM,                        &
                         MasterID,                       &
                         COMM,                           &
@@ -79,10 +79,10 @@ DO lm_loc = 1,LM_Length
     ELSE
 
 
-        CALL MPI_Reduce(cVA_Load_Vector(LLim:ULim,lm_loc,iU),&
-                        cVA_Load_Vector(LLim:ULim,lm_loc,iU),&
+        CALL MPI_Reduce(dVA_Load_Vector(LLim:ULim,lm_loc,iU),&
+                        dVA_Load_Vector(LLim:ULim,lm_loc,iU),&
                         Send_Size,                              &
-                        MPI_Double_Complex,                     &
+                        MPI_Double,                     &
                         MPI_SUM,                                &
                         MasterID,                               &
                         COMM,                                   &
@@ -122,9 +122,9 @@ Send_Size = ULim - LLim + 1
 
 
 DO lm_loc = 1,LM_Length
-    CALL MPI_Bcast( cVA_Coeff_Vector( LLim:ULim,lm_loc,iU),&
+    CALL MPI_Bcast( dVA_Coeff_Vector( LLim:ULim,lm_loc,iU),&
                     Send_Size,                              &
-                    MPI_Double_Complex,                     &
+                    MPI_Double,                     &
                     MasterID,                               &
                     Comm,                                   &
                     ierr                                    )

@@ -1,6 +1,6 @@
 HDF5_DIR       = /usr/local/hdf5
 
-AMREX_HOME    ?= /Users/nickroberts/amrex
+AMREX_HOME    ?= $(AMREX_DIR)
 HDF5_HOME     ?= $(HDF5_DIR)
 LAPACK_HOME   ?= $(LAPACK_DIR)
 
@@ -34,6 +34,12 @@ AMREX_MODE = ON
 #LIBRARY_LOCATIONS += $(LAPACK_LIB)
 LIBRARIES += -framework Accelerate
 
+ifneq ("$(wildcard $(AMREX_HOME)/Src/DG/Make.package)","")
+  # Requires amrex fork from github.com:dunhamsj/amrex
+  # Branch: MeshRefinement_DG
+  include $(AMREX_HOME)/Src/DG/Make.package
+endif
+
 
 # Set pre-processor directives
 # This is also where, e.g., USE_HDF5 and USE_PETSC are used
@@ -49,8 +55,8 @@ include $(AMREX_HOME)/Src/F_Interfaces/Base/Make.package
 include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 
 # Include directories and source files needed from Poseidon
-
-include /Users/nickroberts/Poseidon/Build/Make.Poseidon
+POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
+include $(POSEIDON_ACTIVE_DIR)/Build/Make.Poseidon
 
 include Makefile_Driver
 include Makefile_Path
@@ -62,8 +68,6 @@ F90EXE_sources += $(DRIVER_AMREX_ROUTINES)
 F90EXE_sources += $(DRIVER_F90)
 
 
-DEFINES += $(POSEIDON_DEFS)
-
 # Include rules for compilation
 include $(AMREX_HOME)/Tools/GNUMake/Make.rules
 
@@ -73,15 +77,15 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.rules
 
 .PHONY : clean_output
 clean_output :
-	rm -f $(OUT)/*.out
-	rm -f $(OUT)/Results/*.out
-	rm -f $(OUT)/Reports/*.out
-	rm -f $(OUT)/Reports/Iteration_Reports/*.out
-	rm -f $(OUT)/Objects/*.out
-	rm -f $(OUT)/Objects/Sources/*.out
-	rm -f $(OUT)/Objects/Linear_System/*.out
-	rm -f $(OUT)/Objects/Residual/*.out
-	rm -f $(OUT)/Objects/Mesh/*.out
-	rm -f $(OUT)/Objects/Coefficients/*.out
+	rm -f Poseidon_Output/*.out
+	rm -f Poseidon_Output/Results/*.out
+	rm -f Poseidon_Output/Reports/*.out
+	rm -f Poseidon_Output/Reports/Iteration_Reports/*.out
+	rm -f Poseidon_Output/Objects/*.out
+	rm -f Poseidon_Output/Objects/Sources/*.out
+	rm -f Poseidon_Output/Objects/Linear_System/*.out
+	rm -f Poseidon_Output/Objects/Residual/*.out
+	rm -f Poseidon_Output/Objects/Mesh/*.out
+	rm -f Poseidon_Output/Objects/Coefficients/*.out
 
 

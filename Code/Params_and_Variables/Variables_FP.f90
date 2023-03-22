@@ -26,14 +26,14 @@ USE Poseidon_Kinds_Module, &
 IMPLICIT NONE
 
 LOGICAL                                                 ::  FP_Diagnostics_Flag = .FALSE.
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Update_Vector
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Laplace_Vector
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  FP_Residual_Vector
 
 INTEGER,        ALLOCATABLE,    DIMENSION(:)            ::  FP_Iteration_Log
 
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Iter_Matrix_Storage
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Iter_Load_Storage
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Iter_Matrix_Storage
+REAL(idp),      ALLOCATABLE,    DIMENSION(:,:)          ::  FP_Iter_Load_Storage
 
 REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:,:)      ::  Resid_Norms
 REAL(idp),      ALLOCATABLE,    DIMENSION(:,:,:)        ::  Update_Norms
@@ -64,5 +64,6 @@ CHARACTER(LEN=31), DIMENSION(N_FPTT):: FPTT_Names = [   'Initalize Fixed Point M
 
 
 
-END MODULE Variables_FP 
+END MODULE Variables_FP
+
 

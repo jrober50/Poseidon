@@ -80,10 +80,10 @@ USE Variables_Matrices, &
                     iMB_Diagonals,              &
                     iMB_Bandwidth,              &
                     iMB_IPIV,                   &
-                    zMB_Matrix_Banded,          &
-                    zMB_Matrix_Diagonal,        &
-                    zMB_First_Col_Storage,      &
-                    zMB_Last_Col_Storage
+                    dMB_Matrix_Banded,          &
+                    dMB_Matrix_Diagonal,        &
+                    dMB_First_Col_Storage,      &
+                    dMB_Last_Col_Storage
 
 USE IO_Condition_Number_Output_Module, &
             ONLY :  IO_Output_Condition_Number
@@ -166,11 +166,13 @@ CALL Dirichlet_BC_Beta_Banded_Mat()
 CALL Jacobi_PC_MVL_Banded()
 
 
-CALL ZGBTRF( iVB_Prob_Dim,              &
+
+
+CALL DGBTRF( iVB_Prob_Dim,              &
              iVB_Prob_Dim,              &
              iMB_Diagonals,             &
              iMB_Diagonals,             &
-             zMB_Matrix_Banded,           &
+             dMB_Matrix_Banded,           &
              3*iMB_Diagonals+1,         &
              iMB_IPIV,                  &
              INFO                       )
@@ -183,11 +185,7 @@ END IF
 
 
 
-
 CALL TimerStop( Timer_Banded_Factorization )
-
-
-
 
 !CALL IO_Output_Condition_Number()
 
@@ -229,8 +227,9 @@ IF ( Verbose_Flag ) CALL Init_Message('Preconditioning the Modified Vector Lapla
 ! Store inverse diagonal
 DO i = 1,iVB_Prob_Dim
 
-    Row = iMB_Bandwidth + i
-    zMB_Matrix_Diagonal(i) = 1.0_idp/zMB_Matrix_Banded(iMB_Bandwidth,i)
+!    Row = iMB_Bandwidth + i
+!    PRINT*,iMB_Bandwidth,i,dMB_Matrix_Banded(iMB_Bandwidth,i)
+    dMB_Matrix_Diagonal(i) = 1.0_idp/dMB_Matrix_Banded(iMB_Bandwidth,i)
 
 END DO
 
@@ -252,9 +251,9 @@ DO l  = 1,LM_Length
     
         Col = FP_Beta_Array_Map(0,0,uj,lp)
 
-        zMB_Matrix_Banded(Row-Col,Col) = zMB_Matrix_Banded(Row-Col,Col)*zMB_Matrix_Diagonal(Row-iMB_Bandwidth)
+        dMB_Matrix_Banded(Row-Col,Col) = dMB_Matrix_Banded(Row-Col,Col)*dMB_Matrix_Diagonal(Row-iMB_Bandwidth)
 
-!        PRINT*,Row-iMB_Bandwidth,Col,zMB_Matrix_Banded(Row-Col,Col)
+!        PRINT*,Row-iMB_Bandwidth,Col,dMB_Matrix_Banded(Row-Col,Col)
 
     END DO  ! lp
     END DO  ! uj
@@ -285,8 +284,8 @@ DO RE = 0,Num_R_Elements-1
 
             Col = FP_Beta_Array_Map(RE,dp,uj,lp)
 
-            zMB_Matrix_Banded(Row-Col,Col) = zMB_Matrix_Banded(Row-Col,Col)*zMB_Matrix_Diagonal(Row-iMB_Bandwidth)
-!            PRINT*,Row-iMB_Bandwidth,Col,zMB_Matrix_Banded(Row-Col,Col)
+            dMB_Matrix_Banded(Row-Col,Col) = dMB_Matrix_Banded(Row-Col,Col)*dMB_Matrix_Diagonal(Row-iMB_Bandwidth)
+!            PRINT*,Row-iMB_Bandwidth,Col,dMB_Matrix_Banded(Row-Col,Col)
 
         END DO  ! lp
         END DO  ! uj
@@ -312,8 +311,8 @@ DO RE = 0,Num_R_Elements-1
 
             Col = FP_Beta_Array_Map(RE,0,uj,lp)
 
-            zMB_Matrix_Banded(Row-Col,Col) = zMB_Matrix_Banded(Row-Col,Col)*zMB_Matrix_Diagonal(Row-iMB_Bandwidth)
-!            PRINT*,Row-iMB_Bandwidth,Col,zMB_Matrix_Banded(Row-Col,Col)
+            dMB_Matrix_Banded(Row-Col,Col) = dMB_Matrix_Banded(Row-Col,Col)*dMB_Matrix_Diagonal(Row-iMB_Bandwidth)
+!            PRINT*,Row-iMB_Bandwidth,Col,dMB_Matrix_Banded(Row-Col,Col)
 
 
         END DO  ! lp
@@ -330,8 +329,8 @@ DO RE = 0,Num_R_Elements-1
 
             Col = FP_Beta_Array_Map(RE,dp,uj,lp)
 
-            zMB_Matrix_Banded(Row-Col,Col) = zMB_Matrix_Banded(Row-Col,Col)*zMB_Matrix_Diagonal(Row-iMB_Bandwidth)
-!            PRINT*,Row-iMB_Bandwidth,Col,zMB_Matrix_Banded(Row-Col,Col)
+            dMB_Matrix_Banded(Row-Col,Col) = dMB_Matrix_Banded(Row-Col,Col)*dMB_Matrix_Diagonal(Row-iMB_Bandwidth)
+!            PRINT*,Row-iMB_Bandwidth,Col,dMB_Matrix_Banded(Row-Col,Col)
 
 
         END DO  ! lp
@@ -368,13 +367,13 @@ END SUBROUTINE Jacobi_PC_MVL_Banded
 !################################################################################!
 SUBROUTINE Jacobi_PC_MVL_Banded_Vector( Work_Vec )
 
-COMPLEX(idp),   DIMENSION(1:iVB_Prob_Dim),     INTENT(INOUT)       ::  Work_Vec
+REAL(idp),   DIMENSION(1:iVB_Prob_Dim),     INTENT(INOUT)       ::  Work_Vec
 
 IF ( Verbose_Flag ) CALL Init_Message('Preconditioning the RHS vector using Jacobi preconditioner.')
 
 ! Multiply diagonal and work vec
 
-Work_Vec(:)  = Work_Vec(:)*zMB_Matrix_Diagonal(:)
+Work_Vec(:)  = Work_Vec(:)*dMB_Matrix_Diagonal(:)
 
 
 END SUBROUTINE Jacobi_PC_MVL_Banded_Vector
@@ -418,7 +417,7 @@ DO ui = 1,3
             Row = iMB_Bandwidth                    &
                 + FP_Beta_Array_Map(0,d,ui,lm)
 
-            zMB_First_Col_Storage(lm,d,ui) = zMB_Matrix_Banded(Row-Col,Col)
+            dMB_First_Col_Storage(lm,d,ui) = dMB_Matrix_Banded(Row-Col,Col)
    
         END DO ! l Loop
         END DO ! d Loop
@@ -432,7 +431,7 @@ DO ui = 1,3
                + FP_Beta_Array_Map(0,d,ui,lm)
 
 
-           zMB_Matrix_Banded(Row-Col,Col) = 0.0_idp
+           dMB_Matrix_Banded(Row-Col,Col) = 0.0_idp
 
        END DO ! l Loop
        END DO ! d Loop
@@ -446,7 +445,7 @@ DO ui = 1,3
            Row = iMB_Bandwidth + FP_Beta_Array_Map(0,0,ui,0)
            Col = FP_Beta_Array_Map(0,d,ui,lm)
 
-           zMB_Matrix_Banded(Row-Col,Col) = 0.0_idp
+           dMB_Matrix_Banded(Row-Col,Col) = 0.0_idp
 
        END DO ! l Loop
        END DO ! d Loop
@@ -458,7 +457,7 @@ DO ui = 1,3
            Row = FP_Beta_Array_Map(0,0,ui,lm)
            Col = FP_Beta_Array_Map(0,0,ui,lm)
  
-           zMB_Matrix_Banded(Row-Col,Col) = 1.0_idp
+           dMB_Matrix_Banded(Row-Col,Col) = 1.0_idp
 
        END DO ! l Loop
         
@@ -487,7 +486,7 @@ DO ui = 1,3
 
             Row = FP_Beta_Array_Map(Num_R_Elements-1,d,ui,lm)+iMB_Bandwidth
             
-            zMB_Last_Col_Storage(lm,d,ui) = zMB_Matrix_Banded(Row-Col,Col)
+            dMB_Last_Col_Storage(lm,d,ui) = dMB_Matrix_Banded(Row-Col,Col)
     
         END DO ! l Loop
         END DO ! d Loop
@@ -505,7 +504,7 @@ DO ui = 1,3
 
                 Col = FP_Beta_Array_Map(Num_R_Elements-1,dp,uj,lp)
 
-                zMB_Matrix_Banded(Row-Col,Col) = 0.0_idp
+                dMB_Matrix_Banded(Row-Col,Col) = 0.0_idp
             
 
             END DO ! lp
@@ -522,7 +521,7 @@ DO ui = 1,3
 
             Col = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,lm)
 
-            zMB_Matrix_Banded(:,Col) = 0.0_idp
+            dMB_Matrix_Banded(:,Col) = 0.0_idp
 
         END DO ! l Loop
 
@@ -535,7 +534,7 @@ DO ui = 1,3
             Row = iMB_Bandwidth + FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,lm)
             Col = FP_Beta_Array_Map(Num_R_Elements-1,Degree,ui,lm)
 
-            zMB_Matrix_Banded(Row-Col,Col) = 1.0_idp
+            dMB_Matrix_Banded(Row-Col,Col) = 1.0_idp
 
         END DO ! lm Loop
 

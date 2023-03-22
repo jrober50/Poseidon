@@ -272,10 +272,9 @@ DO T_Index = T_Index_Min, T_Index_Max
         PRINT*,"Beginning of Loop            : ",Memory_Loop_Start
 #endif
 
-!    Suffix_Tail = Letter_Table(T_Index)
-
-
     WRITE(Suffix_Tail,'(A)') TRIM(Letter_Table(T_Index))
+
+
 
 
     ALLOCATE( Input_R_Quad(1:NQ(1)) )
@@ -317,7 +316,7 @@ DO T_Index = T_Index_Min, T_Index_Max
             Eq_Flags_Option                     = CFA_Eqs,              &
             AMReX_FEM_Refinement_Option         = IFL,                  &
             AMReX_Integral_Refinement_Option    = IRL,                  &
-            Fixed_Point_Diagnostics_Option      = .FALSE.,              &
+            Fixed_Point_Diagnostics_Option      = .FALSE.,               &
             Verbose_Option                      = Verbose,              &
             WriteAll_Option                     = .FALSE.,              &
             Print_Setup_Option                  = Print_Setup_Flag,     &
@@ -329,7 +328,7 @@ DO T_Index = T_Index_Min, T_Index_Max
             Write_Sources_Option                = .FALSE.,              &
             Print_Condition_Option              = Print_Cond_Flag,      &
             Write_Condition_Option              = .FALSE.,              &
-            Write_FP_Diagnostics_Option         = .TRUE.,               &
+            Write_FP_Diagnostics_Option         = .FALSE.,               &
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
 
@@ -418,7 +417,6 @@ DO T_Index = T_Index_Min, T_Index_Max
     CALL Poseidon_Mark_Memory(Memory_Loop_End,Memory_HWM)
     PRINT*,"After Deallocation, Loop End : ",Memory_Loop_End
 #endif
-
     CALL Output_Poseidon_Memory_Loop_Report( Loop )
 
 END DO ! T_Index
@@ -448,6 +446,8 @@ CALL MPI_Finalize(ierr)
 
 CALL Output_Poseidon_Memory_Total_Report()
 
+
 END PROGRAM AMReX_Mapping
+
 
 

@@ -233,14 +233,14 @@ PURE FUNCTION Legendre_Poly(l,m,num_points,theta)
 !  Returns array that conatins the values P^m_n(cos(theta)) for n = 0:l
 !  If m > n then returns 0 as the poly doesn't exist there.
 
-INTEGER, INTENT(IN)                                     :: l,m, num_points
-REAL(idp),  INTENT(IN), DIMENSION(1:num_points)  :: theta
-REAL(idp), DIMENSION(1:num_points)               :: Legendre_Poly
+INTEGER, INTENT(IN)                                 :: l,m, num_points
+REAL(idp),  INTENT(IN), DIMENSION(1:num_points)     :: theta
+REAL(idp), DIMENSION(1:num_points)                  :: Legendre_Poly
 
-INTEGER                                         :: i, n
-REAL(idp)                                :: factor, normfactor
-REAL(idp), DIMENSION(1:num_points)       :: costheta, sqrfactor
-REAL(idp), DIMENSION(0:l,1:num_points)   :: Plm
+INTEGER                                             :: i, n
+REAL(idp)                                           :: factor, normfactor
+REAL(idp), DIMENSION(1:num_points)                  :: costheta, sqrfactor
+REAL(idp), DIMENSION(0:l,1:num_points)              :: Plm
 
 
 n = abs(m)
@@ -459,6 +459,10 @@ END FUNCTION Factorial
 
 
 
+
+
+
+
  !+301+################################################################!
 !                                                                       !
 !   Spherical_Harmonic - Calculates the value of the spherical harmonic,!
@@ -467,107 +471,133 @@ END FUNCTION Factorial
 !           Output - 2L Value array - (Real, Imaginary)                 !
 !                                                                       !
  !#####################################################################!
-PURE FUNCTION Spherical_Harmonic(l,m,theta,phi)
+PURE FUNCTION Real_Spherical_Harmonic(l,m,theta,phi)
 
 
 
 
 INTEGER, INTENT(IN)                         :: l,m
-REAL(idp), INTENT(IN)                :: theta, phi
+REAL(idp), INTENT(IN)                       :: theta, phi
 
-REAL(idp), DIMENSION(0:0)            :: Plm
-COMPLEX(idp)                         :: Spherical_Harmonic
-
-
-Plm = Legendre_Poly(l,m,1,[theta])
-Spherical_Harmonic = Norm_Factor(l,m)*Plm(0)*EXP(CMPLX(0,m*phi, KIND = idp))
+REAL(idp), DIMENSION(0:0)                   ::  Plm
+REAL(idp)                                   ::  Nlm
+REAL(idp)                                   ::  Am
+REAL(idp)                                   :: Real_Spherical_Harmonic
 
 
-END FUNCTION Spherical_Harmonic
+Nlm = Norm_Factor(l,m)
+Plm = Legendre_Poly(l,abs(m),1,[theta])
+
+IF ( m < 0 ) THEN
+    Am = sqrt(2.0_idp)*DSIN(abs(m)*phi)
+ELSE IF ( m == 0 ) THEN
+    Am = 1.0_idp
+ELSE
+    Am = sqrt(2.0_idp)*DCOS(m*phi)
+END IF
+
+Real_Spherical_Harmonic = Nlm*Plm(0)*Am
 
 
-!+301+################################################################!
+END FUNCTION Real_Spherical_Harmonic
+
+
+
+ !+301+################################################################!
 !                                                                       !
 !   Spherical_Harmonic - Calculates the value of the spherical harmonic,!
 !                       Y^M_L(Theta, Phi). Uses Legendre_Poly           !
 !                                                                       !
 !           Output - 2L Value array - (Real, Imaginary)                 !
 !                                                                       !
-!#####################################################################!
-PURE FUNCTION Spherical_Harmonic_dt(l,m,theta,phi)
+ !#####################################################################!
+PURE FUNCTION Real_Spherical_Harmonic_dt(l,m,theta,phi)
 
 
-COMPLEX(idp)                        ::  Spherical_Harmonic_dt
-
-INTEGER, INTENT(IN)                 ::  l,m
-REAL(idp), INTENT(IN)               ::  theta, phi
-
-REAL(idp), DIMENSION(0:0)           ::  Plml
-REAL(idp), DIMENSION(0:0)           ::  Plmlm1
-COMPLEX(idp)                        ::  Spherical_Harmonicl
-COMPLEX(idp)                        ::  Spherical_Harmoniclm1
-
-REAL(idp)                           ::  Real_L
-REAL(idp)                           ::  Cot_Val
-REAL(idp)                           ::  Csc_Val
-COMPLEX(idp)                        ::  Sqrt_Term
-
-Plml   = Legendre_Poly(l,m,1,[theta])
-Spherical_Harmonicl   = Norm_Factor(l,m)*Plml(0)*EXP(CMPLX(0,m*phi, KIND = idp))
 
 
-IF ( l .NE. 0 ) THEN
-    Plmlm1 = Legendre_Poly(l-1,m,1,[theta])
-    Spherical_Harmoniclm1 = Norm_Factor(l-1,m)*Plmlm1(0)*EXP(CMPLX(0,m*phi, KIND = idp))
+INTEGER, INTENT(IN)                         :: l,m
+REAL(idp), INTENT(IN)                       :: theta, phi
+
+REAL(idp), DIMENSION(0:0)                   ::  Plm
+REAL(idp), DIMENSION(0:0)                   ::  Plm1
+REAL(idp)                                   ::  Nlm
+REAL(idp)                                   ::  Am
+REAL(idp)                                   ::  Real_Spherical_Harmonic_dt
+
+REAL(idp)                                   ::  Cotan
+REAL(idp)                                   ::  Cosec
+
+Nlm = Norm_Factor(l,m)
+Plm = Legendre_Poly(l,abs(m),1,[theta])
+IF ( abs(m) > l-1 ) THEN
+    Plm1 = 0.0_idp
 ELSE
-    Plmlm1 = 0.0_idp
-    Spherical_Harmoniclm1 = 0.0_idp
+    Plm1 = Legendre_Poly(l-1,abs(m),1,[theta])
+END IF
+
+Cotan = DCOS(theta)/DSIN(Theta)
+Cosec = 1.0_idp/DSIN(theta)
+
+
+IF ( m < 0 ) THEN
+    Am = sqrt(2.0_idp)*DSIN(abs(m)*phi)
+ELSE IF ( m == 0 ) THEN
+    Am = 1.0_idp
+ELSE
+    Am = sqrt(2.0_idp)*DCOS(m*phi)
 END IF
 
 
-Real_L = REAL(l, idp)
-
-Cot_Val = 1.0_idp/DTAN(theta)
-Csc_Val = 1.0_idp/DSIN(theta)
-
-Sqrt_Term = sqrt( CMPLX( (2.0_idp * Real_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp,idp ) )    &
-          * sqrt( CMPLX( (l-m)*(l+m),0.0_idp, idp ) )
-
-Spherical_Harmonic_dt = Real_L * Cot_Val * Spherical_Harmonicl                     &
-                      - Sqrt_Term * Csc_Val * Spherical_Harmoniclm1
+Real_Spherical_Harmonic_dt = Nlm                   &
+                           * ( REAL(l,kind=idp)*Cotan*Plm(0) - REAL(l+m,Kind=idp)*Cosec*Plm1(0) )  &
+                           * Am
 
 
-END FUNCTION Spherical_Harmonic_dt
+END FUNCTION Real_Spherical_Harmonic_dt
 
 
 
-!+301+################################################################!
+
+
+ !+301+################################################################!
 !                                                                       !
 !   Spherical_Harmonic - Calculates the value of the spherical harmonic,!
 !                       Y^M_L(Theta, Phi). Uses Legendre_Poly           !
 !                                                                       !
 !           Output - 2L Value array - (Real, Imaginary)                 !
 !                                                                       !
-!#####################################################################!
-PURE FUNCTION Spherical_Harmonic_dp(l,m,theta,phi)
+ !#####################################################################!
+PURE FUNCTION Real_Spherical_Harmonic_dp(l,m,theta,phi)
 
 
-COMPLEX(idp)                        ::  Spherical_Harmonic_dp
-
-INTEGER, INTENT(IN)                 ::  l,m
-REAL(idp), INTENT(IN)               ::  theta, phi
-
-REAL(idp), DIMENSION(0:0)           ::  Plm
-COMPLEX(idp)                        ::  Spherical_Harmonic
-
-Plm = Legendre_Poly(l,m,1,[theta])
-Spherical_Harmonic = Norm_Factor(l,m)*Plm(0)*EXP(CMPLX(0,m*phi, KIND = idp))
 
 
-Spherical_Harmonic_dp = CMPLX(0,m,idp) * Spherical_Harmonic
+INTEGER, INTENT(IN)                         :: l,m
+REAL(idp), INTENT(IN)                       :: theta, phi
+
+REAL(idp), DIMENSION(0:0)                   ::  Plm
+REAL(idp)                                   ::  Nlm
+REAL(idp)                                   ::  Am
+REAL(idp)                                   ::  Real_Spherical_Harmonic_dp
 
 
-END FUNCTION Spherical_Harmonic_dp
+Nlm = Norm_Factor(l,m)
+Plm = Legendre_Poly(l,abs(m),1,[theta])
+
+IF ( m < 0 ) THEN
+    Am = -sqrt(2.0_idp)*abs(m)*DCOS(abs(m)*phi)
+ELSE IF ( m == 0 ) THEN
+    Am = 0.0_idp
+ELSE
+    Am = sqrt(2.0_idp)*m*DSIN(m*phi)
+END IF
+
+
+Real_Spherical_Harmonic_dp = Nlm*Plm(0)*Am
+
+
+END FUNCTION Real_Spherical_Harmonic_dp
 
 
 END MODULE Functions_Math

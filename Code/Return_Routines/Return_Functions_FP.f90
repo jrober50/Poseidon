@@ -53,8 +53,8 @@ USE Variables_Derived, &
                     ULM_Length
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,      &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,      &
+                    dVB_Coeff_Vector
 
 USE Variables_FEM_Module, &
             ONLY :  FEM_Node_xlocs
@@ -66,9 +66,9 @@ USE Functions_Quadrature, &
 USE Functions_Math, &
             ONLY :  Lagrange_Poly,          &
                     Lagrange_Poly_Deriv,    &
-                    Spherical_Harmonic,     &
-                    Spherical_Harmonic_dt,  &
-                    Spherical_Harmonic_dp
+                    Real_Spherical_Harmonic,     &
+                    Real_Spherical_Harmonic_dt,  &
+                    Real_Spherical_Harmonic_dp
 
 USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB, &
@@ -113,7 +113,7 @@ REAL(idp), INTENT(INOUT)                                ::  Return_Psi,         
 
 
 
-COMPLEX(idp), DIMENSION(1:5)                            ::  Tmp_U_Value
+REAL(idp), DIMENSION(1:5)                            ::  Tmp_U_Value
 
 
 REAL(idp)                                                ::  r_tmp
@@ -217,7 +217,7 @@ INTEGER                                                     ::  re, x, u, d
 REAL(idp)                                                   ::  Quad_Span
 REAL(idp), DIMENSION(0:DEGREE)                              ::  LagP
 REAL(idp), DIMENSION(1:Num_RQ_Input)                        ::  CUR_X_LOCS
-COMPLEX(idp), DIMENSION(1:3)                                ::  TMP_U_Value
+REAL(idp), DIMENSION(1:3)                                ::  TMP_U_Value
 INTEGER                                                     ::  Current_Location
 
 Quad_Span = Right_Limit - Left_Limit
@@ -235,16 +235,16 @@ DO re = 0,NUM_R_ELEMENTS-1
             DO d = 0,DEGREE
 
                 Current_Location = Map_To_FEM_Node(re,d)
-                Tmp_U_Value(u) = Tmp_U_Value(u) + cVA_Coeff_Vector(Current_Location,1,u)  &
-                                                * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
+                Tmp_U_Value(u) = Tmp_U_Value(u) + dVA_Coeff_Vector(Current_Location,1,u)  &
+                                                * LagP(d) * Real_Spherical_Harmonic(0,0,pi,pi/2.0_idp)
             END DO ! d Loop
         END DO ! u Loop
 
         DO d = 0,DEGREE
 
             Current_Location = FP_Array_Map_TypeB(iU_S1,iVB_S,re,d,0)
-            Tmp_U_Value(u) = Tmp_U_Value(u) + cVB_Coeff_Vector(Current_Location,iVB_S)  &
-                                            * LagP(d) * Spherical_Harmonic(0,0,pi,pi/2.0_idp)
+            Tmp_U_Value(u) = Tmp_U_Value(u) + dVB_Coeff_Vector(Current_Location,iVB_S)  &
+                                            * LagP(d) * Real_Spherical_Harmonic(0,0,pi,pi/2.0_idp)
         END DO ! d Loop
 
 
@@ -282,7 +282,7 @@ INTEGER,    INTENT(IN)                              ::  iU
 
 
 
-COMPLEX(idp)                                        ::  Tmp_U_Value
+REAL(idp)                                        ::  Tmp_U_Value
 
 
 REAL(idp)                                           ::  r_tmp
@@ -359,7 +359,7 @@ INTEGER,    INTENT(IN)                              ::  iU, iVB
 
 
 
-COMPLEX(idp)                                        ::  Tmp_U_Value
+REAL(idp)                                        ::  Tmp_U_Value
 
 
 REAL(idp)                                           ::  r_tmp
@@ -434,7 +434,7 @@ SUBROUTINE Calc_Values_Here_All( re, theta, phi, LagP, Tmp_U_Value )
 INTEGER,                        INTENT(IN)                      ::  re
 REAL(idp),                      INTENT(IN)                      ::  theta, phi
 REAL(idp), DIMENSION(0:DEGREE), INTENT(INOUT)                   ::  LagP
-COMPLEX(idp), DIMENSION(1:5),   INTENT(INOUT)                   ::  Tmp_U_Value
+REAL(idp), DIMENSION(1:5),   INTENT(INOUT)                   ::  Tmp_U_Value
 
 
 INTEGER                                                         ::  l, m, d, u
@@ -452,15 +452,15 @@ DO d = 0,DEGREE
 
 
     Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                    + cVA_Coeff_Vector(Loc_RED,Loc_LM,u)   &
-                    * Spherical_Harmonic(l,m,theta,phi)     &
+                    + dVA_Coeff_Vector(Loc_RED,Loc_LM,u)   &
+                    * Real_Spherical_Harmonic(l,m,theta,phi)     &
                     * LagP(d)
 
 
 !    IF ( u == iU_CF) THEN
 !        PRINT*,"A",Loc_RED,Loc_LM,re,d
-!        PRINT*,cVA_Coeff_Vector(Loc_RED,Loc_LM,u),  &
-!                Spherical_Harmonic(l,m,theta,phi),     &
+!        PRINT*,dVA_Coeff_Vector(Loc_RED,Loc_LM,u),  &
+!                Real_Spherical_Harmonic(l,m,theta,phi),     &
 !                LagP(d)
 !    END IF
 
@@ -478,8 +478,8 @@ DO d = 0,DEGREE
 
     Loc_RED = FP_Array_Map_TypeB(u,iVB_S,re,d,l,m)
     Tmp_U_Value(u) = Tmp_U_Value(u)                         &
-                    + cVB_Coeff_Vector(Loc_RED,iVB_S)     &
-                    * Spherical_Harmonic(l,m,theta,phi)     &
+                    + dVB_Coeff_Vector(Loc_RED,iVB_S)     &
+                    * Real_Spherical_Harmonic(l,m,theta,phi)     &
                     * LagP(d)
 
 
@@ -510,7 +510,7 @@ REAL(idp), DIMENSION(0:DEGREE), INTENT(IN)              ::  LagP
 INTEGER,                        INTENT(IN)              ::  iU
 
 
-COMPLEX(idp)                                            ::  Tmp_U_Value
+REAL(idp)                                            ::  Tmp_U_Value
 
 
 INTEGER                                                 ::  l, m, d
@@ -526,15 +526,10 @@ DO d = 0,DEGREE
     Loc_LM  = Map_to_lm(l,m)
 
     Tmp_U_Value = Tmp_U_Value                           &
-                + cVA_Coeff_Vector(Loc_RED,Loc_LM,iU)  &
-                * Spherical_Harmonic(l,m,theta,phi)     &
+                + dVA_Coeff_Vector(Loc_RED,Loc_LM,iU)  &
+                * Real_Spherical_Harmonic(l,m,theta,phi)     &
                 * LagP(d)
-!    IF ( iU == iU_CF) THEN
-!        PRINT*,"B",Loc_RED,Loc_LM,re,d
-!        PRINT*,cVA_Coeff_Vector(Loc_RED,Loc_LM,iU),  &
-!                Spherical_Harmonic(l,m,theta,phi),     &
-!                LagP(d)
-!    END IF
+
 END DO  !   d Loop
 END DO  !   m Loop
 END DO  !   l Loop
@@ -563,7 +558,7 @@ INTEGER,                        INTENT(IN)                      ::  iU
 INTEGER,                        INTENT(IN)                      ::  iVB
 
 
-COMPLEX(idp)                                                    ::  Tmp_U_Value
+REAL(idp)                                                    ::  Tmp_U_Value
 INTEGER                                                         ::  l, m, d
 INTEGER                                                         ::  Loc_RED
 
@@ -575,10 +570,12 @@ DO d = 0,DEGREE
 
     Loc_RED = FP_Array_Map_TypeB(iU,iVB,re,d,l,m)
     Tmp_U_Value = Tmp_U_Value                           &
-                + cVB_Coeff_Vector(Loc_RED,iVB)        &
-                * Spherical_Harmonic(l,m,theta,phi)     &
+                + dVB_Coeff_Vector(Loc_RED,iVB)        &
+                * Real_Spherical_Harmonic(l,m,theta,phi)     &
                 * LagP(d)
 
+!    PRINT*,"A",dVB_Coeff_Vector(Loc_RED,iVB),        &
+!            "B",Real_Spherical_Harmonic(l,m,theta,phi)
 
 END DO  !   d Loop
 END DO  !   m Loop
@@ -700,16 +697,16 @@ DO d = 0,DEGREE
     Loc_RED = FP_Array_Map_TypeB(iU,iVB,re,d,l,m)
 
     Derivs(1) = Derivs(1)                               &
-                + REAL(cVB_Coeff_Vector(Loc_RED,iVB)         &
-                * Spherical_Harmonic(l,m,theta,phi)     &
+                + REAL(dVB_Coeff_Vector(Loc_RED,iVB)         &
+                * Real_Spherical_Harmonic(l,m,theta,phi)     &
                 * dLagP(d), idp )
     Derivs(2) = Derivs(2)                               &
-              + REAL( cVB_Coeff_Vector(Loc_Red, iVB)          &
-              * Spherical_Harmonic_dt(l,m,theta,phi)    &
+              + REAL( dVB_Coeff_Vector(Loc_Red, iVB)          &
+              * Real_Spherical_Harmonic_dt(l,m,theta,phi)    &
               * LagP(d), idp )
     Derivs(3) = Derivs(3)                               &
-              + REAL(cVB_Coeff_Vector(Loc_Red, iVB)          &
-              * Spherical_Harmonic_dp(l,m,theta,phi)    &
+              + REAL(dVB_Coeff_Vector(Loc_Red, iVB)          &
+              * Real_Spherical_Harmonic_dp(l,m,theta,phi)    &
               * LagP(d), idp )
 
 END DO  !   d Loop

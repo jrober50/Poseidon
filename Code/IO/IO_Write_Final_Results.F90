@@ -33,16 +33,7 @@ USE Poseidon_Numbers_Module, &
             ONLY : pi
 
 USE Poseidon_Units_Module, &
-            ONLY :  C_Square,       &
-                    Gram,           &
-                    Centimeter,     &
-                    Kilometer,      &
-                    Erg,            &
-                    Second,         &
-                    GravPot_Units,  &
-                    E_Units,        &
-                    S_Units,        &
-                    Si_Units,       &
+            ONLY :  Centimeter,     &
                     Shift_Units
 
 USE Parameters_Variable_Indices, &
@@ -645,7 +636,7 @@ REAL(KIND = idp), DIMENSION(:),         ALLOCATABLE         ::  P_Holder
 REAL(idp), DIMENSION(6)                                     ::  Units
 REAL(idp)                                                   ::  CF
 
-COMPLEX(idp)                                                ::  Tmp_Val
+REAL(idp)                                                   ::  Tmp_Val
 REAL(idp), DIMENSION(3)                                     ::  Tmp_Drv = 0.0_idp
 REAL(idp), DIMENSION(3)                                     ::  Gamma
 
@@ -1107,7 +1098,6 @@ INTEGER                                                     ::  MF_Results_nGhos
 INTEGER, DIMENSION(1:3)                                     ::  nGhost_Vec
 
 
-
 IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
 
@@ -1202,7 +1192,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
 
 
-        
         DO CurID = 0,nProcs_Poseidon
             IF ( CurID == myID_Poseidon ) THEN
 
@@ -1218,7 +1207,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                 ! Write Output Location Files
 !                R_Dim = Num_R_Elements*Degree + 1
                 R_Dim = Num_R_Elements
-!                P_Dim = Num_P_Elements
                 T_Dim = Num_T_Elements
                 P_Dim = Num_P_Elements
                 
@@ -1230,10 +1218,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                 !   Write Results
                 !
                 !   Base Metric Variables
-
                 CALL Poseidon_Return_All_AMReX_Caller( MF_Results )
-                
-                
                 
                 Quad_Span = Caller_xL(2) - Caller_xL(1)
 
@@ -1288,8 +1273,8 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                         DO te = iEL(2),iEU(2)
                         DO pe = iEL(3),iEU(3)
 
-!                            IF ( (te == 1) .AND. (pe == 1) ) THEN
 
+!                            IF ( (te == 1) .AND. (pe == 1) ) THEN
                             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
 
@@ -1317,7 +1302,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                             DO rd = 1,Caller_NQ(1)
 
 !                                IF ( (td == 1 ) .AND. (pd == 1) ) THEN
-
                     
                                 DO i = 1,3
                                     Here = AMReX_nCOMP_Map( i, rd, td, pd, Caller_NQ )
@@ -1440,6 +1424,7 @@ END FUNCTION AMReX_nCOMP_Map
 
 
 
+
  !+401+############################################################################!
 !                                                                                   !
 !                           Output_2D_Results                                       !
@@ -1520,7 +1505,6 @@ REAL(KIND = idp), DIMENSION(:), ALLOCATABLE                 ::  R_Holder,       
 117 FORMAT (A,A)
 
 
-PRINT*,"In Output_2D_Results", Write_Flags(5)
 
 IF ( .TRUE. ) THEN
     NUM_SAMPLES = 1000
@@ -1604,8 +1588,6 @@ IF ( .TRUE. ) THEN
                                          Return_Psi, Return_AlphaPsi,                &
                                          Return_Beta1, Return_Beta2, Return_Beta3    )
 
-!        PRINT*,k,j,i,Return_Psi
-
         IF ( Return_Psi == 0.0_idp ) THEN
             Lapse_Holder(k,j,i) = 0.0_idp
         ELSE
@@ -1664,3 +1646,4 @@ END SUBROUTINE Output_2D_Results
 
 
 END MODULE IO_Write_Final_Results
+

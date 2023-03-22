@@ -27,7 +27,8 @@ USE Poseidon_Kinds_Module, &
             ONLY : idp
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE
+            ONLY :  Degree,                     &
+                    L_Limit
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -43,17 +44,17 @@ USE Parameters_Variable_Indices, &
 
 
 USE Variables_Tables, &
-            ONLY :  Ylm_Values,                 &
-                    Ylm_dt_Values,              &
-                    Ylm_dp_Values,              &
-                    Lagrange_Poly_Table
+            ONLY :  Lagrange_Poly_Table,        &
+                    Slm_Elem_Values,            &
+                    Nlm_Values
 
 USE Variables_Derived, &
-            ONLY :  LM_LENGTH
+            ONLY :  LM_Length,                  &
+                    LM_Short_Length
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,      &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,      &
+                    dVB_Coeff_Vector
 
 USE Variables_Mesh, &
             ONLY :  rlocs,              &
@@ -83,18 +84,12 @@ USE Functions_Quadrature, &
 
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
+            
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Am_Table,            &
+                    Initialize_Plm_Table,           &
+                    Initialize_Slm_Table_on_Elem
 
-USE Initialization_Tables, &
-            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                    Initialize_Ylm_Tables_On_Elem
-
-
-USE Variables_Interface, &
-            ONLY :  Caller_NQ,                      &
-                    Caller_xL,                      &
-                    Caller_RQ_xlocs,                &
-                    Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs
 
 
 IMPLICIT NONE
@@ -138,17 +133,49 @@ INTEGER                                                         ::  d, lm, Here
 REAL(KIND = idp)                                                ::  Quad_Span
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
 REAL(KIND = idp), DIMENSION(1:NQ(1))                            ::  CUR_X_LOCS
-COMPLEX(KIND = idp)                                             ::  Tmp_U_Value
+REAL(KIND = idp)                                                ::  Tmp_U_Value
 INTEGER                                                         ::  Current_Location
+
+
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:NE(2)-1)      ::  Plm_Table
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:NE(3)-1)            ::  Am_Table
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )              ::  Slm_Elem_Table
 
 Quad_Span = Right_Limit - Left_Limit
 
 CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
+! Initialize Am Table
+CALL Initialize_Am_Table(   NQ(3),                      &
+                            PQ_Input,                   &
+                            L_Limit,                    &
+                            NE(3),                      &
+                            [0, NE(3)-1],               &
+                            plocs,                      &
+                            Am_Table                    )
 
+! Initialize Plm Table
+CALL Initialize_Plm_Table(  NQ(2),                      &
+                            TQ_Input,                   &
+                            L_Limit,                    &
+                            LM_Short_Length,            &
+                            NE(2),                      &
+                            [0, nE(2)-1],               &
+                            tlocs,                      &
+                            Plm_Table                   )
+                            
+                            
 DO pe = 1,NE(3)
 DO te = 1,NE(2)
 DO re = 1,NE(1)
+
+CALL Initialize_Slm_Table_on_Elem(  te, pe,             &
+                                    NQ(2), NQ(3),       &
+                                    NE,                 &
+                                    [1,1,1],            &
+                                    Plm_Table,          &
+                                    Am_Table,           &
+                                    Slm_Elem_Table      )
 
 DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
@@ -162,8 +189,8 @@ DO rd = 1,NQ(1)
     DO d = 0,DEGREE
 
         Current_Location = Map_To_FEM_Node(re-1,d)
-        Tmp_U_Value = Tmp_U_Value + cVA_Coeff_Vector(Current_Location,lm,iU)  &
-                               * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
+        Tmp_U_Value = Tmp_U_Value + dVA_Coeff_Vector(Current_Location,lm,iU)  &
+                               * LagP(d) * Slm_Elem_Values( lm, tpd )
 
     END DO ! d Loop
     END DO ! lm Loop
@@ -222,17 +249,47 @@ INTEGER                                                         ::  d, lm, Here
 REAL(KIND = idp)                                                ::  Quad_Span
 REAL(KIND = idp), DIMENSION(0:DEGREE)                           ::  LagP
 REAL(KIND = idp), DIMENSION(1:NQ(1))                            ::  CUR_X_LOCS
-COMPLEX(KIND = idp)                                             ::  TMP_U_Value
+REAL(KIND = idp)                                                ::  TMP_U_Value
 INTEGER                                                         ::  Current_Location
+
+
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:NE(2)-1)      ::  Plm_Table
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:NE(3)-1)            ::  Am_Table
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )              ::  Slm_Elem_Table
 
 Quad_Span = Right_Limit - Left_Limit
 
 CUR_X_LOCS = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
+! Initialize Am Table
+CALL Initialize_Am_Table(   NQ(3),                      &
+                            PQ_Input,                   &
+                            L_Limit,                    &
+                            NE(3),                      &
+                            [0, NE(3)-1],               &
+                            plocs,                      &
+                            Am_Table                    )
 
+! Initialize Plm Table
+CALL Initialize_Plm_Table(  NQ(2),                      &
+                            TQ_Input,                   &
+                            L_Limit,                    &
+                            LM_Short_Length,            &
+                            NE(2),                      &
+                            [0, nE(2)-1],               &
+                            tlocs,                      &
+                            Plm_Table                   )
 DO pe = 1,NE(3)
 DO te = 1,NE(2)
 DO re = 1,NE(1)
+
+CALL Initialize_Slm_Table_on_Elem(  te, pe,             &
+                                    NQ(2), NQ(3),       &
+                                    NE,                 &
+                                    [1,1,1],            &
+                                    Plm_Table,          &
+                                    Am_Table,           &
+                                    Slm_Elem_Table      )
 DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
@@ -246,8 +303,8 @@ DO rd = 1,NQ(1)
 
         Current_Location = FP_Array_Map_TypeB(iU,iVB,re-1,d,lm)
         Tmp_U_Value = Tmp_U_Value                                       &
-                    + cVB_Coeff_Vector(Current_Location,iVB_S)         &
-                    * LagP(d) * Ylm_Values( lm, tpd, te-1, pe-1 )
+                    + dVB_Coeff_Vector(Current_Location,iVB_S)         &
+                    * LagP(d) * Slm_Elem_Values( lm, tpd )
 
 
     END DO ! d Loop

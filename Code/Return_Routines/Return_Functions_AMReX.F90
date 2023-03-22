@@ -24,10 +24,11 @@ MODULE Return_Functions_AMReX                                                !##
 !                                   !
 !===================================!
 USE Poseidon_Kinds_Module, &
-            ONLY : idp
+            ONLY :  idp
 
 USE Poseidon_Parameters, &
-            ONLY :  DEGREE
+            ONLY :  Degree,                     &
+                    L_Limit
 
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
@@ -43,19 +44,16 @@ USE Parameters_Variable_Indices, &
 
 
 USE Variables_Tables, &
-            ONLY :  Ylm_Elem_Values,            &
-                    Ylm_Elem_dt_Values,         &
-                    Ylm_Elem_dp_Values,         &
-                    Lagrange_Poly_Table,        &
-                    Level_DX
-
+            ONLY :  Level_DX
 
 USE Variables_Derived, &
-            ONLY :  LM_LENGTH
+            ONLY :  LM_Length,                  &
+                    LM_Short_Length
 
 USE Variables_Vectors, &
-            ONLY :  cVA_Coeff_Vector,       &
-                    cVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,      &
+                    dVB_Coeff_Vector
+
 
 USE Variables_Mesh, &
             ONLY :  rlocs,                  &
@@ -78,28 +76,12 @@ USE Variables_FEM_Module, &
 USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map_TypeB
 
-USE Maps_Quadrature, &
-            ONLY :  Map_To_tpd,             &
-                    Quad_Map
-
 USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node,        &
                     FEM_Elem_Map
 
 USE Maps_X_Space, &
-            ONLY :  Map_To_X_Space,         &
-                    Map_From_X_Space
-
-USE Functions_Quadrature, &
-            ONLY :  Initialize_LGL_Quadrature_Locations
-
-USE Functions_Math, &
-            ONLY :  Lagrange_Poly
-
-USE Initialization_Tables, &
-            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                    Initialize_Ylm_Tables_On_Elem
-
+            ONLY :  Map_From_X_Space
 
 USE Variables_Interface, &
             ONLY :  Caller_NQ,                      &
@@ -124,6 +106,19 @@ USE Variables_Quadrature, &
                     Int_P_Weights,          &
                     Int_TP_Weights
 
+USE Maps_Quadrature, &
+            ONLY :  Map_To_tpd,             &
+                    Quad_Map
+
+USE Functions_Math, &
+            ONLY :  Lagrange_Poly
+
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Am_Table,            &
+                    Initialize_Plm_Table,           &
+                    Initialize_Slm_Table_on_Elem
+
+
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -147,7 +142,8 @@ USE amrex_multifab_module,  &
                     amrex_imultifab_destroy
 
 USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Num_Levels
+            ONLY :  AMReX_Num_Levels,       &
+                    AMReX_Max_Grid_Size
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
@@ -203,22 +199,24 @@ LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_O
 
 
 INTEGER                                                     ::  Num_DOF
-INTEGER                                                     ::  Output_Here
 
 INTEGER                                                     ::  iRE
 INTEGER                                                     ::  re, te, pe
 INTEGER                                                     ::  rd, td, pd, tpd
 INTEGER                                                     ::  d, Here
+INTEGER,        DIMENSION(3)                                ::  iNE
 
 REAL(idp)                                                   ::  Quad_Span
 REAL(idp),      DIMENSION(0:DEGREE)                         ::  LagP
 REAL(idp),      DIMENSION(1:NQ(1))                          ::  Cur_RX_Locs
 REAL(idp),      DIMENSION(1:NQ(2))                          ::  Cur_TX_Locs
 REAL(idp),      DIMENSION(1:NQ(3))                          ::  Cur_PX_Locs
+
 INTEGER                                                     ::  Current_Location
 
 INTEGER,        DIMENSION(1:3)                              ::  nGhost_Vec
 
+INTEGER                                                     ::  Output_Here
 
 INTEGER                                                     ::  lvl
 TYPE(amrex_mfiter)                                          ::  mfi
@@ -226,15 +224,23 @@ TYPE(amrex_box)                                             ::  Box
 TYPE(amrex_imultifab)                                       ::  Level_Mask
 INTEGER                                                     ::  nComp
 
+
+INTEGER,    CONTIGUOUS, POINTER                             ::  Mask_PTR(:,:,:,:)
+REAL(idp),  CONTIGUOUS, POINTER                             ::  Result_PTR(:,:,:,:)
 TYPE(amrex_imultifab)                                       ::  Ghost_Mask
 
-REAL(idp),  CONTIGUOUS, POINTER                             ::  Result_PTR(:,:,:,:)
 REAL(idp),      DIMENSION(1:Local_Quad_DOF)                 ::  Var_Holder
 
 INTEGER,        DIMENSION(1:3)                              ::  iE
 INTEGER,        DIMENSION(1:3)                              ::  iEL, iEU
 INTEGER,        DIMENSION(1:3)                              ::  iEL_A, iEU_A
 LOGICAL                                                     ::  FillGhostCells
+
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2)-1)           ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3)-1)           ::  plocs_subarray
+    
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_Table
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_Table
 
 
 
@@ -253,7 +259,6 @@ Cur_PX_Locs = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
-
 
 
 
@@ -324,7 +329,47 @@ DO lvl = nLevels-1,0,-1
         iEU = iEU_A+nGhost_Vec
 
 
-        CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
+        IF ( ANY( iEL < 0 ) ) THEN
+            ! Reflecting Conditions
+            iEL = iEL_A
+        END IF
+
+        IF ( ANY( iEU .GE. (2**lvl)*iNE_Base(1) ) ) THEN
+            iEU = iEU_A
+        END IF
+        
+        iNE = iEU-iEL+1
+        
+        
+        
+        
+        DO te = iEL(2),iEU(2)
+            tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
+        END DO
+        DO pe = iEL(3),iEU(3)
+            plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
+        END DO
+        
+        
+        ! Initialize Am Table
+        CALL Initialize_Am_Table(   NQ(3),                      &
+                                    PQ_Input,                   &
+                                    L_Limit,                    &
+                                    iNE(3),                     &
+                                    [iEL(3), iEU(3)],           &
+                                    plocs_subarray(0:iNE(3)-1), &
+                                    Am_Table                    )
+
+        ! Initialize Plm Table
+        CALL Initialize_Plm_Table(  NQ(2),                      &
+                                    TQ_Input,                   &
+                                    L_Limit,                    &
+                                    LM_Short_Length,            &
+                                    iNE(2),                     &
+                                    [iEL(2), iEU(2)],           &
+                                    tlocs_subarray(0:iNE(2)-1), &
+                                    Plm_Table                   )
+
 
         ! Fill Leaf Elements
         DO re = iEL(1),iEU(1)
@@ -339,33 +384,39 @@ DO lvl = nLevels-1,0,-1
             IF (     ( Ghost_PTR(re,te,pe,1) == iInterior )     &
                 .OR. ( Ghost_PTR(re,te,pe,1) == iCovered  )     ) THEN
                 
-                CALL Poseidon_Valid_Type_A( iE, iEL, NQ,    &
+                CALL Poseidon_Valid_Type_A( iE, iEL, iNE, NQ,    &
                                             Cur_RX_Locs,    &
                                             Cur_TX_Locs,    &
                                             Cur_PX_Locs,    &
                                             lvl,            &
                                             iU,             &
+                                            Am_Table,       &
+                                            Plm_Table,      &
                                             Var_Holder      )
                                             
                 
                 
             ELSE IF ( Ghost_PTR(re,te,pe,1) == iNotCovered) THEN
-                CALL Poseidon_NotCovered_Type_A(  iE, iEL, NQ,    &
+                CALL Poseidon_NotCovered_Type_A(  iE, iEL, iNE, NQ,    &
                                                   Cur_RX_Locs,    &
                                                   Cur_TX_Locs,    &
                                                   Cur_PX_Locs,    &
                                                   lvl,            &
                                                   iU,             &
+                                                  Am_Table,       &
+                                                  Plm_Table,      &
                                                   Var_Holder      )
             
             
             ELSE IF ( Ghost_PTR(re,te,pe,1) == iOutside ) THEN
-                CALL Poseidon_Outside_Type_A( iE, iEL, NQ,    &
+                CALL Poseidon_Outside_Type_A( iE, iEL, iNE, NQ,    &
                                               Cur_RX_Locs,    &
                                               Cur_TX_Locs,    &
                                               Cur_PX_Locs,    &
                                               lvl,            &
                                               iU,             &
+                                              Am_Table,       &
+                                              Plm_Table,      &
                                               Var_Holder      )
         
             END IF !  Ghost_PTR
@@ -376,6 +427,7 @@ DO lvl = nLevels-1,0,-1
                 Result_PTR(re,te,pe,Here) = Var_Holder(Output_Here)
                 
             END DO ! Output_Here
+
             END IF !  Mask_PTR(RE,TE,PE,1) == iLeaf
 
         END DO ! pe
@@ -414,52 +466,64 @@ SUBROUTINE Poseidon_Return_AMReX_Type_B(iU,                     &
                                         FillGhostCells_Option   )
 
 
-INTEGER,                                    INTENT(IN)  ::  iU
-INTEGER,                                    INTENT(IN)  ::  iVB
-INTEGER,    DIMENSION(3),                   INTENT(IN)  ::  NQ
-REAL(idp),  DIMENSION(NQ(1)),               INTENT(IN)  ::  RQ_Input
-REAL(idp),  DIMENSION(NQ(2)),               INTENT(IN)  ::  TQ_Input
-REAL(idp),  DIMENSION(NQ(3)),               INTENT(IN)  ::  PQ_Input
-REAL(idp),                                  INTENT(IN)  ::  Left_Limit
-REAL(idp),                                  INTENT(IN)  ::  Right_Limit
+INTEGER,                                    INTENT(IN)      ::  iU
+INTEGER,                                    INTENT(IN)      ::  iVB
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  NQ
+REAL(idp),  DIMENSION(NQ(1)),               INTENT(IN)      ::  RQ_Input
+REAL(idp),  DIMENSION(NQ(2)),               INTENT(IN)      ::  TQ_Input
+REAL(idp),  DIMENSION(NQ(3)),               INTENT(IN)      ::  PQ_Input
+REAL(idp),                                  INTENT(IN)      ::  Left_Limit
+REAL(idp),                                  INTENT(IN)      ::  Right_Limit
 
-INTEGER,                                    INTENT(IN)  ::  nLevels
-TYPE(amrex_multifab),                       INTENT(INOUT)  ::  MF_Results(0:nLevels-1)
+INTEGER,                                    INTENT(IN)      ::  nLevels
+TYPE(amrex_multifab),                       INTENT(INOUT)   ::  MF_Results(0:nLevels-1)
 
 LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_Option
 
 
 INTEGER                                                 ::  Num_DOF
-INTEGER                                                 ::  Output_Here
 INTEGER                                                 ::  iRE
 INTEGER                                                 ::  re, te, pe
 INTEGER                                                 ::  rd, td, pd, tpd
 INTEGER                                                 ::  d
 INTEGER                                                 ::  lvl
-INTEGER                                                 ::  Here
+INTEGER,    DIMENSION(3)                                ::  iNE
+INTEGER,    DIMENSION(3)                                ::  iE
+
+INTEGER                                                 ::  Output_Here
+REAL(idp),      DIMENSION(1:Local_Quad_DOF)             ::  Var_Holder
+
 
 REAL(idp)                                               ::  Quad_Span
-REAL(idp),      DIMENSION(0:DEGREE)                     ::  LagP
-REAL(idp),      DIMENSION(1:NQ(1))                      ::  Cur_RX_Locs
-REAL(idp),      DIMENSION(1:NQ(2))                      ::  Cur_TX_Locs
-REAL(idp),      DIMENSION(1:NQ(3))                      ::  Cur_PX_Locs
-
+REAL(idp),  DIMENSION(0:DEGREE)                         ::  LagP
+REAL(idp),  DIMENSION(1:NQ(1))                          ::  Cur_RX_Locs
+REAL(idp),  DIMENSION(1:NQ(2))                          ::  Cur_TX_Locs
+REAL(idp),  DIMENSION(1:NQ(3))                          ::  Cur_PX_Locs
+REAL(idp)                                               ::  TMP_U_Value
+INTEGER                                                 ::  Here, There
 
 TYPE(amrex_mfiter)                                      ::  mfi
 TYPE(amrex_box)                                         ::  Box
 TYPE(amrex_imultifab)                                   ::  Level_Mask
-INTEGER,        DIMENSION(1:3)                          ::  iEL, iEU, iE
+
+INTEGER,    DIMENSION(3)                                ::  iEL, iEU
 INTEGER                                                 ::  nComp
 
 INTEGER,    CONTIGUOUS, POINTER                         ::  Mask_PTR(:,:,:,:)
 REAL(idp),  CONTIGUOUS, POINTER                         ::  Result_PTR(:,:,:,:)
-REAL(idp),      DIMENSION(1:Local_Quad_DOF)             ::  Var_Holder
-
-
-COMPLEX(idp)                                            ::  TMP_U_Value
 
 LOGICAL                                                 ::  FillGhostCells
-INTEGER,        DIMENSION(1:3)                          ::  nGhost_Vec
+INTEGER,    DIMENSION(1:3)                              ::  nGhost_Vec
+
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2)-1)       ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3)-1)       ::  plocs_subarray
+
+REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_Table
+REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_Table
+
+tlocs_subarray = 0.0_idp
+plocs_subarray = 0.0_idp
+
 
 Quad_Span = Right_Limit - Left_Limit
 
@@ -468,9 +532,6 @@ Cur_TX_Locs = 2.0_idp * ( TQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 Cur_PX_Locs = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
-
-
-
 
 IF ( PRESENT(FillGhostCells_Option) ) THEN
     FillGhostCells = FillGhostCells_Option
@@ -510,7 +571,6 @@ DO lvl = nLevels-1,0,-1
         CALL Level_Mask%SetVal(iLeaf)
     END IF
 
-    CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
 
     CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
 
@@ -524,6 +584,35 @@ DO lvl = nLevels-1,0,-1
 
         iEL = Box%lo
         iEU = Box%hi
+        
+        iNE = iEU-iEL+1
+        
+        DO te = iEL(2),iEU(2)
+            tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
+        END DO
+        DO pe = iEL(3),iEU(3)
+            plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
+        END DO
+        
+        
+        ! Initialize Am Table
+        CALL Initialize_Am_Table(   NQ(3),                      &
+                                    Cur_PX_Locs,                &
+                                    L_Limit,                    &
+                                    iNE(3),                     &
+                                    [iEL(3), iEU(3)],           &
+                                    plocs_subarray(0:iNE(3)-1), &
+                                    Am_Table                    )
+
+        ! Initialize Plm Table
+        CALL Initialize_Plm_Table(  NQ(2),                      &
+                                    Cur_TX_Locs,                &
+                                    L_Limit,                    &
+                                    LM_Short_Length,            &
+                                    iNE(2),                     &
+                                    [iEL(2), iEU(2)],           &
+                                    tlocs_subarray(0:iNE(2)-1), &
+                                    Plm_Table                   )
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
@@ -538,34 +627,40 @@ DO lvl = nLevels-1,0,-1
             IF (     ( Ghost_PTR(re,te,pe,1) == iInterior )     &
                 .OR. ( Ghost_PTR(re,te,pe,1) == iCovered  )     ) THEN
                 
-                CALL Poseidon_Valid_Type_B( iE, iEL, NQ,    &
+                CALL Poseidon_Valid_Type_B( iE, iEL, iNE, NQ,    &
                                             Cur_RX_Locs,    &
                                             Cur_TX_Locs,    &
                                             Cur_PX_Locs,    &
                                             lvl,            &
                                             iU, iVB,        &
+                                            Am_Table,       &
+                                            Plm_Table,      &
                                             Var_Holder      )
                 
                 
             ELSE IF ( Ghost_PTR(re,te,pe,1) == iNotCovered) THEN
             
-                CALL Poseidon_NotCovered_Type_B( iE, iEL, NQ,    &
+                CALL Poseidon_NotCovered_Type_B( iE, iEL, iNE, NQ,    &
                                                  Cur_RX_Locs,    &
                                                  Cur_TX_Locs,    &
                                                  Cur_PX_Locs,    &
                                                  lvl,            &
                                                  iU, iVB,        &
+                                                Am_Table,       &
+                                                Plm_Table,      &
                                                  Var_Holder      )
             
             
             ELSE IF ( Ghost_PTR(re,te,pe,1) == iOutside ) THEN
             
-                CALL Poseidon_Outside_Type_B( iE, iEL, NQ,    &
+                CALL Poseidon_Outside_Type_B( iE, iEL, iNE, NQ,    &
                                               Cur_RX_Locs,    &
                                               Cur_TX_Locs,    &
                                               Cur_PX_Locs,    &
                                               lvl,            &
                                               iU, iVB,        &
+                                              Am_Table,       &
+                                              Plm_Table,      &
                                               Var_Holder      )
         
             END IF !  Ghost_PTR
@@ -580,7 +675,6 @@ DO lvl = nLevels-1,0,-1
             
             END IF !  Mask_PTR(RE,TE,PE,1) == iLeaf
 
-            
         END DO ! pe
         END DO ! te
         END DO ! re
@@ -644,23 +738,38 @@ END SUBROUTINE Poseidon_Return_AMReX_Type_B
 !          Poseidon_Valid_Type_A                                !
 !                                                               !
  !#############################################################!
-SUBROUTINE Poseidon_Valid_Type_A( iE, iEL, NQ,  &
+SUBROUTINE Poseidon_Valid_Type_A( iE, iEL, iNE, NQ,  &
                                   Cur_RX_Locs,  &
                                   Cur_TX_Locs,  &
                                   Cur_PX_Locs,  &
                                   lvl,          &
                                   iU,           &
+                                  Am_Table,       &
+                                  Plm_Table,      &
                                   Var_Holder    )
 
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iE
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  NQ
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iEL
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  iNE
 REAL(idp),  DIMENSION(1:NQ(1)),             INTENT(IN)      ::  Cur_RX_Locs
 REAL(idp),  DIMENSION(1:NQ(2)),             INTENT(IN)      ::  Cur_TX_Locs
 REAL(idp),  DIMENSION(1:NQ(3)),             INTENT(IN)      ::  Cur_PX_Locs
 INTEGER,                                    INTENT(IN)      ::  lvl
 INTEGER,                                    INTENT(IN)      ::  iU
+
+REAL(idp),  DIMENSION(1:NQ(2),                              &
+                      1:LM_Short_Length,                    &
+                      0:AMReX_Max_Grid_Size(2)-1),          &
+                                            INTENT(IN)      ::  Plm_Table
+                                            
+REAL(idp),  DIMENSION(1:NQ(3),                              &
+                      1:LM_Length,                          &
+                      0:AMReX_Max_Grid_Size(3)-1)           ::  Am_Table
+                      
 REAL(idp),  DIMENSION(1:NQ(1)*NQ(2)*NQ(3)), INTENT(OUT)     ::  Var_Holder
+
+
 
 INTEGER                                                     ::  iRE
 INTEGER                                                     ::  pd, td, rd
@@ -673,9 +782,17 @@ INTEGER                                                     ::  Output_Here
 REAL(idp)                                                   ::  Tmp_U_Value
 
 REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )          ::  Slm_Elem_Table
 
 iRE = FEM_Elem_Map(iE(1),lvl)
-CALL Initialize_Ylm_Tables_on_Elem( iE(2), iE(3), iEL, lvl )
+CALL Initialize_Slm_Table_on_Elem(  iE(2), iE(3),       &
+                                    NQ(2), NQ(3),       &
+                                    iNE,                &
+                                    iEL,                &
+                                    Plm_Table,          &
+                                    Am_Table,           &
+                                    Slm_Elem_Table      )
+
 
 DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
@@ -685,16 +802,13 @@ DO rd = 1,NQ(1)
     LagP = Lagrange_Poly(Cur_RX_Locs(rd),DEGREE,FEM_Node_xlocs)
     Tmp_U_Value = 0.0_idp
 
-
+    
     DO d = 0,DEGREE
         Current_Location = Map_To_FEM_Node(iRE,d)
-        
-        
         Tmp_U_Value = Tmp_U_Value                                    &
-                    + SUM( cVA_Coeff_Vector(Current_Location,:,iU)   &
-                            * Ylm_Elem_Values( :, tpd )            ) &
+                    + SUM( dVA_Coeff_Vector(Current_Location,:,iU)  &
+                            * Slm_Elem_Table( :, tpd )            ) &
                     * LagP(d)
-
 
     END DO ! d Loop
 
@@ -703,7 +817,6 @@ DO rd = 1,NQ(1)
 END DO ! rd
 END DO ! td
 END DO ! pd
-
 
 
 
@@ -717,22 +830,33 @@ END SUBROUTINE Poseidon_Valid_Type_A
 !          Poseidon_Valid_Type_B                                !
 !                                                               !
  !#############################################################!
-SUBROUTINE Poseidon_Valid_Type_B( iE, iEL, NQ,    &
+SUBROUTINE Poseidon_Valid_Type_B( iE, iEL, iNE, NQ,    &
                                   Cur_RX_Locs,    &
                                   Cur_TX_Locs,  &
                                   Cur_PX_Locs,  &
                                   lvl,            &
                                   iU, iVB,        &
+                                  Am_Table,       &
+                                  Plm_Table,      &
                                   Var_Holder      )
 
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iE
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  NQ
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iEL
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  iNE
 REAL(idp),  DIMENSION(1:NQ(1)),             INTENT(IN)      ::  Cur_RX_Locs
 REAL(idp),  DIMENSION(1:NQ(2)),             INTENT(IN)      ::  Cur_TX_Locs
 REAL(idp),  DIMENSION(1:NQ(3)),             INTENT(IN)      ::  Cur_PX_Locs
 INTEGER,                                    INTENT(IN)      ::  lvl
 INTEGER,                                    INTENT(IN)      ::  iU, iVB
+REAL(idp),  DIMENSION(1:NQ(2),                              &
+                      1:LM_Short_Length,                    &
+                      0:AMReX_Max_Grid_Size(2)-1),          &
+                                            INTENT(IN)      ::  Plm_Table
+                                            
+REAL(idp),  DIMENSION(1:NQ(3),                              &
+                      1:LM_Length,                          &
+                      0:AMReX_Max_Grid_Size(3)-1)           ::  Am_Table
 REAL(idp),  DIMENSION(1:NQ(1)*NQ(2)*NQ(3)), INTENT(OUT)     ::  Var_Holder
 
 INTEGER                                                     ::  iRE
@@ -745,11 +869,17 @@ INTEGER                                                     ::  Here, There
 REAL(idp)                                                   ::  Tmp_U_Value
 
 REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )          ::  Slm_Elem_Table
 
 iRE = FEM_Elem_Map(iE(1),lvl)
-CALL Initialize_Ylm_Tables_on_Elem( iE(2), iE(3), iEL, lvl )
 
-
+CALL Initialize_Slm_Table_on_Elem(  iE(2), iE(3),       &
+                                    NQ(2), NQ(3),       &
+                                    iNE,                &
+                                    iEL,                &
+                                    Plm_Table,          &
+                                    Am_Table,           &
+                                    Slm_Elem_Table      )
 DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
@@ -763,21 +893,20 @@ DO rd = 1,NQ(1)
         Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
         
-        Tmp_U_Value = Tmp_U_Value                                   &
-                    + SUM( cVB_Coeff_Vector(Here:There,iVB)        &
-                            * Ylm_Elem_Values( :, tpd ) )   &
+        Tmp_U_Value = Tmp_U_Value                               &
+                    + SUM( dVB_Coeff_Vector(Here:There,iVB)     &
+                            * Slm_Elem_Table( :, tpd ) )        &
                     * LagP(d)
                     
 
     END DO ! d Loop
 
-    Here = Quad_Map(rd, td, pd, NQ(1), NQ(2),NQ(3))
+    Here = Quad_Map(rd, td, pd, NQ(1), NQ(2), NQ(3))
     Var_Holder(Here) = Tmp_U_Value
 
 END DO ! rd
 END DO ! td
 END DO ! pd
-
 
 
 END SUBROUTINE Poseidon_Valid_Type_B
@@ -793,22 +922,33 @@ END SUBROUTINE Poseidon_Valid_Type_B
 !          Poseidon_NotCovered_Type_A                           !
 !                                                               !
  !#############################################################!
-SUBROUTINE Poseidon_NotCovered_Type_A( iE, iEL, NQ,     &
+SUBROUTINE Poseidon_NotCovered_Type_A( iE, iEL, iNE, NQ,     &
                                        Cur_RX_Locs,     &
                                        Cur_TX_Locs,     &
                                        Cur_PX_Locs,     &
                                        lvl,             &
                                        iU,              &
+                                       Am_Table,        &
+                                       Plm_Table,       &
                                        Var_Holder       )
 
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iE
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  NQ
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iEL
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  iNE
 REAL(idp),  DIMENSION(1:NQ(1)),             INTENT(IN)      ::  Cur_RX_Locs
 REAL(idp),  DIMENSION(1:NQ(2)),             INTENT(IN)      ::  Cur_TX_Locs
 REAL(idp),  DIMENSION(1:NQ(3)),             INTENT(IN)      ::  Cur_PX_Locs
 INTEGER,                                    INTENT(IN)      ::  lvl
 INTEGER,                                    INTENT(IN)      ::  iU
+REAL(idp),  DIMENSION(1:NQ(2),                              &
+                      1:LM_Short_Length,                    &
+                      0:AMReX_Max_Grid_Size(2)-1),          &
+                                            INTENT(IN)      ::  Plm_Table
+                                            
+REAL(idp),  DIMENSION(1:NQ(3),                              &
+                      1:LM_Length,                          &
+                      0:AMReX_Max_Grid_Size(3)-1)           ::  Am_Table
 REAL(idp),  DIMENSION(1:NQ(1)*NQ(2)*NQ(3)), INTENT(OUT)     ::  Var_Holder
 
 
@@ -828,7 +968,8 @@ REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP_x
 !REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP_y
 !REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP_z
 
-COMPLEX(idp)                                                ::  TMP_U_Value
+REAL(idp)                                                   ::  TMP_U_Value
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )          ::  Slm_Elem_Table
 
 
 Num_Coarse_Locs = (Degree+1)*NQ(2)*NQ(3)
@@ -841,8 +982,13 @@ Coarse_xLocs = Map_From_X_Space( -1.0_idp, 0.0_idp, FEM_Node_xlocs)
 
 
 iRE = FEM_Elem_Map(iE_Coarse(1),lvl-1)
-CALL Initialize_Ylm_Tables_on_Elem( iE(2), iE(3), iEL, lvl )
-
+CALL Initialize_Slm_Table_on_Elem(  iE(2), iE(3),       &
+                                    NQ(2), NQ(3),       &
+                                    iNE,                &
+                                    iEL,                &
+                                    Plm_Table,          &
+                                    Am_Table,           &
+                                    Slm_Elem_Table      )
 
 
 DO pd = 1,NQ(3)
@@ -858,8 +1004,8 @@ DO rd = 1,Degree+1
         Current_Location = Map_To_FEM_Node(iRE,d)
 
         Tmp_U_Value = Tmp_U_Value                                    &
-                    + SUM( cVA_Coeff_Vector(Current_Location,:,iU)  &
-                            * Ylm_Elem_Values( :, tpd )            ) &
+                    + SUM( dVA_Coeff_Vector(Current_Location,:,iU)  &
+                            * Slm_Elem_Table( :, tpd )            ) &
                     * LagP(d)
 
 
@@ -911,22 +1057,33 @@ END SUBROUTINE Poseidon_NotCovered_Type_A
 !          Poseidon_NotCovered_Type_B                           !
 !                                                               !
  !#############################################################!
-SUBROUTINE Poseidon_NotCovered_Type_B( iE, iEL, NQ,     &
+SUBROUTINE Poseidon_NotCovered_Type_B( iE, iEL, iNE, NQ,     &
                                        Cur_RX_Locs,     &
                                        Cur_TX_Locs,     &
                                        Cur_PX_Locs,     &
                                        lvl,             &
                                        iU, iVB,         &
+                                       Am_Table,        &
+                                       Plm_Table,       &
                                        Var_Holder       )
 
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iE
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  NQ
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iEL
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  iNE
 REAL(idp),  DIMENSION(1:NQ(1)),             INTENT(IN)      ::  Cur_RX_Locs
 REAL(idp),  DIMENSION(1:NQ(2)),             INTENT(IN)      ::  Cur_TX_Locs
 REAL(idp),  DIMENSION(1:NQ(3)),             INTENT(IN)      ::  Cur_PX_Locs
 INTEGER,                                    INTENT(IN)      ::  lvl
 INTEGER,                                    INTENT(IN)      ::  iU, iVB
+REAL(idp),  DIMENSION(1:NQ(2),                              &
+                      1:LM_Short_Length,                    &
+                      0:AMReX_Max_Grid_Size(2)-1),          &
+                                            INTENT(IN)      ::  Plm_Table
+                                            
+REAL(idp),  DIMENSION(1:NQ(3),                              &
+                      1:LM_Length,                          &
+                      0:AMReX_Max_Grid_Size(3)-1)           ::  Am_Table
 REAL(idp),  DIMENSION(1:NQ(1)*NQ(2)*NQ(3)), INTENT(OUT)     ::  Var_Holder
 
 INTEGER,    DIMENSION(1:3)                                  ::  iE_Coarse
@@ -942,7 +1099,8 @@ INTEGER                                                     ::  Here, There
 REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP
 REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP_x
 
-COMPLEX(idp)                                                ::  TMP_U_Value
+REAL(idp)                                                   ::  TMP_U_Value
+REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )          ::  Slm_Elem_Table
 
 Num_Coarse_Locs = (Degree+1)*NQ(2)*NQ(3)
 ALLOCATE( Coarse_Holder(1:Num_Coarse_Locs) )
@@ -953,8 +1111,14 @@ Coarse_xLocs = Map_From_X_Space( -1.0_idp, 0.0_idp, FEM_Node_xlocs)
 
 
 iRE = FEM_Elem_Map(iE_Coarse(1),lvl-1)
-CALL Initialize_Ylm_Tables_on_Elem( iE(2), iE(3), iEL, lvl )
 
+CALL Initialize_Slm_Table_on_Elem(  iE(2), iE(3),       &
+                                    NQ(2), NQ(3),       &
+                                    iNE,                &
+                                    iEL,                &
+                                    Plm_Table,          &
+                                    Am_Table,           &
+                                    Slm_Elem_Table      )
 
 DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
@@ -970,8 +1134,8 @@ DO rd = 1,Degree+1
         There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
         
         Tmp_U_Value = Tmp_U_Value                                   &
-                    + SUM( cVB_Coeff_Vector(Here:There,iVB)        &
-                            * Ylm_Elem_Values( :, tpd ) )   &
+                    + SUM( dVB_Coeff_Vector(Here:There,iVB)        &
+                            * Slm_Elem_Table( :, tpd ) )   &
                     * LagP(d)
 
     END DO ! d Loop
@@ -1033,22 +1197,33 @@ END SUBROUTINE Poseidon_NotCovered_Type_B
 !          Poseidon_Outside_Type_A                              !
 !                                                               !
  !#############################################################!
-SUBROUTINE Poseidon_Outside_Type_A( iE, iEL, NQ,    &
+SUBROUTINE Poseidon_Outside_Type_A( iE, iEL, iNE, NQ,    &
                                     Cur_RX_Locs,    &
                                     Cur_TX_Locs,    &
                                     Cur_PX_Locs,    &
                                     lvl,            &
                                     iU,             &
+                                    Am_Table,       &
+                                    Plm_Table,      &
                                     Var_Holder      )
 
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iE
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  NQ
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iEL
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  iNE
 REAL(idp),  DIMENSION(1:NQ(1)),             INTENT(IN)      ::  Cur_RX_Locs
 REAL(idp),  DIMENSION(1:NQ(2)),             INTENT(IN)      ::  Cur_TX_Locs
 REAL(idp),  DIMENSION(1:NQ(3)),             INTENT(IN)      ::  Cur_PX_Locs
 INTEGER,                                    INTENT(IN)      ::  lvl
 INTEGER,                                    INTENT(IN)      ::  iU
+REAL(idp),  DIMENSION(1:NQ(2),                              &
+                      1:LM_Short_Length,                    &
+                      0:AMReX_Max_Grid_Size(2)-1),          &
+                                            INTENT(IN)      ::  Plm_Table
+                                            
+REAL(idp),  DIMENSION(1:NQ(3),                              &
+                      1:LM_Length,                          &
+                      0:AMReX_Max_Grid_Size(3)-1)           ::  Am_Table
 REAL(idp),  DIMENSION(1:NQ(1)*NQ(2)*NQ(3)), INTENT(OUT)     ::  Var_Holder
 
 Var_Holder = 0.0_idp
@@ -1062,22 +1237,33 @@ END SUBROUTINE Poseidon_Outside_Type_A
 !          Poseidon_Outside_Type_B                              !
 !                                                               !
  !#############################################################!
-SUBROUTINE Poseidon_Outside_Type_B( iE, iEL, NQ,    &
+SUBROUTINE Poseidon_Outside_Type_B( iE, iEL, iNE, NQ,    &
                                     Cur_RX_Locs,    &
                                     Cur_TX_Locs,    &
                                     Cur_PX_Locs,    &
                                     lvl,            &
                                     iU, iVB,        &
+                                    Am_Table,       &
+                                    Plm_Table,      &
                                     Var_Holder      )
 
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iE
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  NQ
 INTEGER,    DIMENSION(1:3),                 INTENT(IN)      ::  iEL
+INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  iNE
 REAL(idp),  DIMENSION(1:NQ(1)),             INTENT(IN)      ::  Cur_RX_Locs
 REAL(idp),  DIMENSION(1:NQ(2)),             INTENT(IN)      ::  Cur_TX_Locs
 REAL(idp),  DIMENSION(1:NQ(3)),             INTENT(IN)      ::  Cur_PX_Locs
 INTEGER,                                    INTENT(IN)      ::  lvl
 INTEGER,                                    INTENT(IN)      ::  iU, iVB
+REAL(idp),  DIMENSION(1:NQ(2),                              &
+                      1:LM_Short_Length,                    &
+                      0:AMReX_Max_Grid_Size(2)-1),          &
+                                            INTENT(IN)      ::  Plm_Table
+                                            
+REAL(idp),  DIMENSION(1:NQ(3),                              &
+                      1:LM_Length,                          &
+                      0:AMReX_Max_Grid_Size(3)-1)           ::  Am_Table
 REAL(idp),  DIMENSION(1:NQ(1)*NQ(2)*NQ(3)), INTENT(OUT)     ::  Var_Holder
 
 Var_Holder = 0.0_idp

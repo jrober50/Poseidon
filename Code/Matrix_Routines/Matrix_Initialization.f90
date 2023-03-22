@@ -28,8 +28,11 @@ MODULE Matrix_Initialization_Module                                             
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
+USE Poseidon_Bailout_Module, &
+            ONLY :  Poseidon_Bailout
+            
 USE Poseidon_Numbers_Module, &
-            ONLY : pi
+            ONLY : pi, TwoPi
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Init_Message
@@ -51,6 +54,7 @@ USE Variables_Derived, &
             ONLY :  Num_R_Nodes,                &
                     ULM_Length,                 &
                     LM_Length,                  &
+                    LM_Short_Length,            &
                     Var_Dim
 
 
@@ -63,7 +67,7 @@ USE Variables_Matrices, &
                     Laplace_Factored_VAL,       &
                     Laplace_Factored_ROW,       &
                     Laplace_Factored_COL,       &
-                    zMB_Matrix_Banded,            &
+                    dMB_Matrix_Banded,            &
                     iMB_Bandwidth
 
 USE Variables_FEM_Module, &
@@ -77,7 +81,8 @@ USE Maps_Fixed_Point, &
 
 USE Maps_Domain, &
             ONLY :  Map_To_FEM_Node,            &
-                    Map_To_lm
+                    Map_To_LM,                  &
+                    Map_To_Short_LM
 
 USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
@@ -92,6 +97,13 @@ USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations,    &
                     Initialize_LG_Quadrature,               &
                     Initialize_Trapezoid_Quadrature
+
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Nlm_Table,           &
+                    Initialize_Am_Tables,           &
+                    Initialize_Plm_Tables,          &
+                    Initialize_Slm_Tables_on_Elem
+
 
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Matrices_Flags,            &
@@ -117,36 +129,36 @@ USE MPI
 IMPLICIT NONE
 
 
-INTEGER,                                        PRIVATE ::  Int_R_Deg
-INTEGER,                                        PRIVATE ::  Int_T_Deg
-INTEGER,                                        PRIVATE ::  Int_P_Deg
-INTEGER,                                        PRIVATE ::  Int_TP_Deg
+INTEGER,                                            PRIVATE     ::  Int_R_Deg
+INTEGER,                                            PRIVATE     ::  Int_T_Deg
+INTEGER,                                            PRIVATE     ::  Int_P_Deg
+INTEGER,                                            PRIVATE     ::  Int_TP_Deg
 
 
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Cur_T_Locs
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Cur_P_Locs
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Cur_T_Locs
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Cur_P_Locs
 
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_R_Locs, Int_R_Weights
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_T_Locs, Int_T_Weights
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_P_Locs, Int_P_Weights
-REAL(idp),      ALLOCATABLE,    DIMENSION(:),   PRIVATE ::  Int_TP_Weights
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Int_R_Locs, Int_R_Weights
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Int_T_Locs, Int_T_Weights
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Int_P_Locs, Int_P_Weights
 
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,:,:,: )  ::  LP_LP_Table
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION( :,:,: )      ::  TP_TP_Integrals
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,:,:,: ), PRIVATE     ::  LP_LP_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  TP_TP_Integrals
 
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: )      ::  RR_Factor
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: )      ::  DRR_Factor
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: )      ::  RDR_Factor
-REAL(idp),      ALLOCATABLE,    DIMENSION( :,:,: )      ::  DRDR_Factor
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  RR_Factor
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  DRR_Factor
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  RDR_Factor
+REAL(idp),  ALLOCATABLE,    DIMENSION( :,:,: ),     PRIVATE     ::  DRDR_Factor
 
-
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION( :,: )        ::  Ylm
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION( :,: )        ::  Ylm_dt
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION( :,: )        ::  Ylm_dp
-
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION( :,: )        ::  Ylm_CC
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION( :,: )        ::  Ylm_CC_dt
-COMPLEX(idp),   ALLOCATABLE,    DIMENSION( :,: )        ::  Ylm_CC_dp
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),         PRIVATE     ::  Slm_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),         PRIVATE     ::  Slm_dp_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:),         PRIVATE     ::  Slm_dt_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),       PRIVATE     ::  Plm_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),       PRIVATE     ::  Plm_dt_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),       PRIVATE     ::  Am_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:,:,:),       PRIVATE     ::  Am_dp_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  Nlm_Table
+REAL(idp),  ALLOCATABLE,    DIMENSION(:),           PRIVATE     ::  TP_Int_Weights
 
 CONTAINS
 
@@ -184,6 +196,7 @@ CALL Allocate_Matrix_Init_Variables()
 
 CALL Initialize_LG_Quadrature(Int_R_Deg, Int_R_Locs, Int_R_Weights)
 CALL Initialize_LG_Quadrature(Int_T_Deg, Int_T_Locs, Int_T_Weights)
+!CALL Initialize_LG_Quadrature(Int_P_Deg, Int_P_Locs, Int_P_Weights)
 CALL Initialize_Trapezoid_Quadrature(Int_P_Deg, 1, Int_P_Locs, Int_P_Weights)
 
 
@@ -197,16 +210,15 @@ Cur_P_Locs = Int_P_Locs
 CALL Calculate_Radial_Terms()
 CALL Calculate_Angular_Terms()
 
-
 CALL Calculate_Laplace_Matrix()
 CALL Calculate_MVL_Banded()
-
 
 Call Deallocate_Matrix_Init_Variables()
 
 
-
 CALL TimerStop( Timer_Matrix_Init )
+
+
 
 
 END SUBROUTINE Initialize_XCFC_Matrices
@@ -282,19 +294,24 @@ ALLOCATE( Cur_P_Locs(1:Int_P_Deg) )
 ALLOCATE( Int_R_Locs(1:Int_R_Deg), Int_R_Weights(1:Int_R_Deg) )
 ALLOCATE( Int_T_Locs(1:Int_T_Deg), Int_T_Weights(1:Int_T_Deg) )
 ALLOCATE( Int_P_Locs(1:Int_P_Deg), Int_P_Weights(1:Int_P_Deg) )
-ALLOCATE( Int_TP_Weights(1:Int_TP_Deg) )
 
 ALLOCATE( LP_LP_Table( 1:Int_R_Deg, 0:Degree, 0:Degree, 0:1, 0:1) )
 ALLOCATE( TP_TP_Integrals( 1:LM_Length, 1:LM_Length, 1:16) )
 
+ALLOCATE( Slm_Table(1:LM_Length, 1:Int_TP_Deg)      )
+ALLOCATE( Slm_dt_Table(1:LM_Length, 1:Int_TP_Deg)   )
+ALLOCATE( Slm_dp_Table(1:LM_Length, 1:Int_TP_Deg)   )
 
-ALLOCATE( Ylm(1:Int_TP_Deg,1:LM_Length) )
-ALLOCATE( Ylm_dt(1:Int_TP_Deg,1:LM_Length) )
-ALLOCATE( Ylm_dp(1:Int_TP_Deg,1:LM_Length) )
+ALLOCATE( Plm_Table(1:Int_T_Deg, 1:LM_Short_Length,1)      )
+ALLOCATE( Plm_dt_Table(1:Int_T_Deg, 1:LM_Short_Length,1)   )
 
-ALLOCATE( Ylm_CC(1:Int_TP_Deg,1:LM_Length) )
-ALLOCATE( Ylm_CC_dt(1:Int_TP_Deg,1:LM_Length) )
-ALLOCATE( Ylm_CC_dp(1:Int_TP_Deg,1:LM_Length) )
+ALLOCATE( Am_Table(1:Int_P_Deg, -L_Limit:L_Limit,1)      )
+ALLOCATE( Am_dp_Table(1:Int_P_Deg, -L_Limit:L_Limit,1)   )
+
+ALLOCATE( Nlm_Table(1:LM_Short_Length) )
+
+ALLOCATE( TP_Int_Weights(1:Int_TP_Deg)     )
+
 
 END SUBROUTINE Allocate_Matrix_Init_Variables
 
@@ -313,19 +330,20 @@ DEALLOCATE( Cur_P_Locs )
 DEALLOCATE( Int_R_Locs, Int_R_Weights )
 DEALLOCATE( Int_T_Locs, Int_T_Weights )
 DEALLOCATE( Int_P_Locs, Int_P_Weights )
-DEALLOCATE( Int_TP_Weights )
 
 DEALLOCATE( LP_LP_Table )
 DEALLOCATE( TP_TP_Integrals )
 
+DEALLOCATE( Slm_Table      )
+DEALLOCATE( Slm_dt_Table   )
+DEALLOCATE( Slm_dp_Table   )
+DEALLOCATE( Plm_Table      )
+DEALLOCATE( Plm_dt_Table   )
+DEALLOCATE( Am_Table       )
+DEALLOCATE( Am_dp_Table    )
+DEALLOCATE( Nlm_Table      )
+DEALLOCATE( TP_Int_Weights )
 
-DEALLOCATE( Ylm    )
-DEALLOCATE( Ylm_dt )
-DEALLOCATE( Ylm_dp )
-
-DEALLOCATE( Ylm_CC )
-DEALLOCATE( Ylm_CC_dt )
-DEALLOCATE( Ylm_CC_dp )
 
 
 END SUBROUTINE Deallocate_Matrix_Init_Variables
@@ -396,77 +414,16 @@ SUBROUTINE Calculate_Angular_Terms()
 
 INTEGER                                                         ::  l, m
 INTEGER                                                         ::  td, pd, tpd
-
-
-REAL(idp), DIMENSION(1:1)                                       ::  Legendre_Poly_Value
-
-
-REAL(idp)                                                       ::  Norm_Storage
-REAL(idp)                                                       ::  REAL_L
-
-
-REAL(idp), DIMENSION(-L_LIMIT:L_LIMIT)                          ::  M_POWER_TABLE
-
 INTEGER                                                         ::  lm_loc, lpmp_loc
+INTEGER                                                         ::  Long_LM, Short_LM
 
-COMPLEX(idp), ALLOCATABLE, DIMENSION(:,:,:)                     ::  Ylm_Table
-
-COMPLEX(idp),    DIMENSION(1:LM_LENGTH)                         ::  Sqrt_Term
-REAL(idp),       DIMENSION(1:Int_TP_Deg)                        ::  CSC_Val
-REAL(idp),       DIMENSION(1:Int_TP_Deg)                        ::  Cotan_Val
-REAL(idp),       DIMENSION(1:Int_Tp_Deg)                        ::  Sin_Square
+REAL(idp),                  DIMENSION(1:Int_TP_Deg)             ::  Cotan_Val
+REAL(idp),                  DIMENSION(1:Int_Tp_Deg)             ::  Sin_Square
 
 
-COMPLEX(idp)                                                    ::  Tmp_Value_A
-COMPLEX(idp)                                                    ::  Tmp_Value_B
-
-REAL(idp), ALLOCATABLE, DIMENSION(:)                            ::  TP_Int_Weights
-
-INTEGER,        ALLOCATABLE, DIMENSION(:)                       ::  M_Values
 
 
 CALL TimerStart(Timer_Matrix_Angular_Terms)
-
-ALLOCATE( Ylm_Table(1:Int_TP_Deg, -L_LIMIT:L_LIMIT, -1:L_LIMIT )    )
-ALLOCATE( TP_Int_Weights( 1:Int_TP_Deg)     )
-ALLOCATE( M_VALUES(0:L_LIMIT) )
-
-M_POWER_TABLE(0) = 1.0_idp
-IF ( L_LIMIT > 0 ) THEN
-    DO m = 1, L_LIMIT
-
-        M_POWER_TABLE(m) = -1.0_idp*M_POWER_TABLE(m-1)
-        M_POWER_TABLE(-m) = -1.0_idp*M_POWER_TABLE(m-1)
-    END DO
-END IF
-
-
-IF ( DOMAIN_DIM == 1 ) THEN
-     M_VALUES = 0
-ELSE IF ( DOMAIN_DIM == 2 ) THEN
-     M_VALUES = 0
-ELSE IF ( DOMAIN_DIM == 3 ) THEN
-     M_VALUES = (/(l,l=0,L_LIMIT,1)/)
-END IF
-
-
-Sqrt_Term(1) = 0.0_idp
-DO l = 1,L_LIMIT
-
-    REAL_L = REAL(l, idp)
-
-    DO m = -M_VALUES(l),M_VALUES(l)
-
-        Tmp_Value_A = CMPLX( (2.0_idp * REAL_L + 1.0_idp)/(2.0_idp*Real_L - 1.0_idp),0.0_idp,idp )
-        Tmp_Value_B = CMPLX( (l-m)*(l+m),0.0_idp,idp )
-
-        Sqrt_Term(Map_To_lm(l,m)) = sqrt( Tmp_Value_A)*sqrt(Tmp_Value_B)
-
-    END DO ! m Loop
-END DO ! l Loop
-
-
-
 
 
 
@@ -477,7 +434,6 @@ DO pd = 1,Int_P_Deg
     tpd = (td-1)*Int_P_Deg + pd
 
     Sin_Square(tpd)     = DSIN( Cur_T_Locs(td) )*DSIN( Cur_T_Locs(td) )
-    CSC_VAL(tpd)        = 1.0_idp/DSIN(Cur_T_Locs(td))
     Cotan_Val(tpd)      = 1.0_idp/DTAN( Cur_T_Locs(td) )
     TP_Int_Weights(tpd) = DSIN( Cur_T_Locs(td) )                        &
                         * pi / 2.0_idp * Int_T_Weights(td)              &
@@ -486,67 +442,61 @@ DO pd = 1,Int_P_Deg
 END DO ! pd
 END DO ! td
 
-
-        
-Ylm_Table = 0.0_idp
-DO l = 0,L_LIMIT
-DO m = -M_VALUES(l),M_VALUES(l)
-DO td = 1,Int_T_Deg
-DO pd = 1,Int_P_Deg
-
-    tpd = (td-1)*Int_P_Deg + pd
-    Legendre_Poly_Value = Legendre_Poly(l, m, 1, Cur_T_Locs(td))
-
-    Ylm_Table(tpd, m, l ) = Norm_Factor(l,m)                            &   ! Normalization Factor
-                          * Legendre_Poly_Value(1)                      &   ! Legendre Polynomial
-                          * CDEXP(CMPLX(0.0_idp,m*Cur_P_Locs(pd),idp))      ! exp(im phi)
-
-END DO ! pd Loop
-END DO ! td Loop
-END DO ! m Loop
-END DO ! l Loop
+CALL Initialize_Nlm_Table(  L_Limit,                &
+                            LM_Short_Length,        &
+                            Nlm_Table               )
 
 
+CALL Initialize_Am_Tables(  Int_P_Deg,              &
+                            Int_P_Locs,             &
+                            L_Limit,                &
+                            1,                      &
+                            [0, 0],                 &
+                            [0.0_idp, TwoPi],       &
+                            Am_Table,               &
+                            Am_dp_Table             )
 
 
-
-DO l = 0,L_LIMIT
-DO m = -M_VALUES(l),M_VALUES(l)
-
-
-    REAL_L = REAL(l, idp)
-
-    lm_loc  = Map_To_lm(l,m)
-    Norm_Storage = Norm_Factor(l,m)
-
-
-    Ylm(:, lm_loc )    = Ylm_Table(:,m,l)
-    Ylm_dt(:, lm_loc ) = REAL_L * Cotan_Val(:) * Ylm_Table(:,m,l)               &
-                        - SQRT_TERM(lm_loc) * CSC_VAL(:) * Ylm_Table(:,m,l-1)
-    Ylm_dp(:, lm_loc ) = CMPLX(0,m,idp) * Ylm_Table(:,m,l)
+CALL Initialize_Plm_Tables( Int_T_Deg,              &
+                            Int_T_Locs,             &
+                            L_Limit,                &
+                            LM_Short_Length,        &
+                            1,                      &
+                            [0, 0],                 &
+                            [0.0_idp, Pi],          &
+                            Plm_Table,              &
+                            Plm_dt_Table            )
 
 
-    Ylm_CC( :, lm_loc )    = M_POWER_TABLE(m) * Ylm_Table(:,-m,l)
-    Ylm_CC_dt( :, lm_loc ) = REAL_L*Cotan_Val(:) * Ylm_CC( :, lm_loc)           &
-                             - SQRT_TERM(lm_loc) * CSC_VAL(:)                   &
-                                * M_POWER_TABLE(m) * Ylm_Table(:,-m, l-1)
-    Ylm_CC_dp( :, lm_loc ) = CMPLX(0,-m,idp) * Ylm_CC(:, lm_loc)
-
-
-END DO ! m Loop
-END DO ! l Loop
+CALL Initialize_Slm_Tables_on_Elem( 0, 0,                   &
+                                    Int_T_Deg,              &
+                                    Int_P_Deg,              &
+                                    [1, 1, 1],              &
+                                    [0, 0, 0],              &
+                                    Plm_Table,              &
+                                    Plm_dt_Table,           &
+                                    Am_Table,               &
+                                    Am_dp_Table,            &
+                                    Slm_Table,              &
+                                    Slm_dt_Table,           &
+                                    Slm_dp_Table            )
 
 
 
+!PRINT*,"Slm_Table"
+!PRINT*,Slm_Table
+!PRINT*,"Slm_dt_Table"
+!PRINT*,Slm_dt_Table
+!PRINT*,"Slm_dp_Table"
+!PRINT*,Slm_dp_Table
 
 
-TP_TP_Integrals = 0.0_idp
 
 DO lpmp_loc = 1,LM_Length
 DO lm_loc = 1,LM_Length
 
 !
-    ! Ylm * Y^lpmp
+    ! S^lm * S^lpmp
     IF ( lm_loc == lpmp_loc ) THEN
         TP_TP_Integrals( lm_loc, lpmp_loc, 1)=1.0_idp
     ELSE
@@ -555,109 +505,106 @@ DO lm_loc = 1,LM_Length
 
 
     ! SUM( TP_dTP_Factor(:,lm_loc,lpmp_loc)  )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 2 ) = SUM( Ylm( :, lm_loc )          &
-                                                * Ylm_CC_dt( :, lpmp_loc)   &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 2 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_dt_Table( lpmp_loc, :)   &
                                                 * TP_Int_Weights(:)         )
 
-!    PRINT*,lm_loc,lpmp_loc,TP_TP_Integrals( lm_loc, lpmp_loc, 2 )
 
-    ! Ylm * Y^lpmp * Cotan
-    TP_TP_Integrals( lm_loc, lpmp_loc, 3 ) = SUM( Ylm( :, lm_loc )          &
-                                                * Ylm_CC( :, lpmp_loc )     &
+    ! Slm * S^lpmp * Cotan
+    TP_TP_Integrals( lm_loc, lpmp_loc, 3 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         &
                                                 * Cotan_Val(:)              )
 
-    ! d Ylm/dt * Y^lpmp     SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc))
-    TP_TP_Integrals( lm_loc, lpmp_loc, 4 ) = SUM( Ylm_dt(:, lm_loc )        &
-                                                * Ylm_CC( :, lpmp_loc )     &
+    ! d Slm/dt * S^lpmp     SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc))
+    TP_TP_Integrals( lm_loc, lpmp_loc, 4 ) = SUM( Slm_dt_Table(lm_loc, : )        &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         )
 
-    ! Ylm * d Y^lpmp/dp
-    TP_TP_Integrals( lm_loc, lpmp_loc, 5 ) = SUM( Ylm( :, lm_loc )          &
-                                                * Ylm_CC_dp( :, lpmp_loc )  &
+    ! Slm * d S^lpmp/dp
+    TP_TP_Integrals( lm_loc, lpmp_loc, 5 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_dp_Table( lpmp_loc, : )  &
                                                 * TP_Int_Weights(:)         )
 
-    ! d Ylm/dp * Y^lpmp
-    TP_TP_Integrals( lm_loc, lpmp_loc, 6 ) = SUM( Ylm_dp( :, lm_loc )     &
-                                                * Ylm_CC( :, lpmp_loc )     &
+    ! d Slm/dp * S^lpmp
+    TP_TP_Integrals( lm_loc, lpmp_loc, 6 ) = SUM( Slm_dp_Table( lm_loc, : )     &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         )
-                                                
-!    PRINT*,lm_loc,lpmp_loc,TP_TP_Integrals( lm_loc, lpmp_loc, 6 )
 
     ! SUM( dTP_dTP_Factor(:,lm_loc,lpmp_loc) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 7 ) = SUM( Ylm_dt(:, lm_loc )        &
-                                                * Ylm_CC_dt( :, lpmp_loc )  &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 7 ) = SUM( Slm_dt_Table(lm_loc, : )        &
+                                                * Slm_dt_Table( lpmp_loc, : )  &
                                                 * TP_Int_Weights(:)         )
 
-!    ! SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )
-!    TP_TP_Integrals( lm_loc, lpmp_loc, 8 ) = SUM( Ylm_dt(:, lm_loc )        &
-!                                                * Ylm_CC( :, lpmp_loc )     &
-!                                                * TP_Int_Weights(:)         &
-!                                                * Cotan_Val(:)              )
 
     ! SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 8 ) = SUM( Ylm( :, lm_loc )          &
-                                                * Ylm_CC( :, lpmp_loc )     &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 8 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         &
                                                 / Sin_Square(:)             )
 
     ! SUM( TP_TP_Factor(:,lm_loc,lpmp_loc) * (1-Cotan_Val(:)**2) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 9 ) = SUM( Ylm( :, lm_loc )          &
-                                                * Ylm_CC( :, lpmp_loc )     &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 9 ) = SUM( Slm_Table( lm_loc, : )          &
+                                                * Slm_Table( lpmp_loc, : )     &
                                                 * TP_Int_Weights(:)         &
                                                 * (1-Cotan_Val(:)**2)       )
 
     ! SUM( dTP_TdP_Factor(:,lm_loc,lpmp_loc) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 10 ) = SUM( Ylm_dt(:, lm_loc )       &
-                                                 * Ylm_CC_dp( :, lpmp_loc ) &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 10 ) = SUM( Slm_dt_Table(lm_loc, : )       &
+                                                 * Slm_dp_Table( lpmp_loc, : ) &
                                                  * TP_Int_Weights(:)        )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:)   )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 11 ) = SUM( Ylm_dp( :, lm_loc )    &
-                                                 * Ylm_CC( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 11 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_Table( lpmp_loc, : )    &
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) / Sin_Square(:)     )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 12 ) = SUM( Ylm_dp( :, lm_loc )    &
-                                                 * Ylm_CC( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 12 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_Table( lpmp_loc, : )    &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_dTP_Factor(:,lm_loc,lpmp_loc)/ Sin_Square(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 13 ) = SUM( Ylm_dp( :, lm_loc )    &
-                                                 * Ylm_CC_dt( :, lpmp_loc ) &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 13 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_dt_Table( lpmp_loc, : ) &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) / Sin_Square(:)     )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 14 ) = SUM( Ylm_dp( :, lm_loc )    &
-                                                 * Ylm_CC( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 14 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_Table( lpmp_loc, : )    &
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             &
                                                  / Sin_Square(:)            )
 
     ! SUM( TdP_TdP_Factor(:,lm_loc,lpmp_loc)/Sin_Square(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 15 ) = SUM( Ylm_dp( :, lm_loc )    &
-                                                 * Ylm_CC_dp( :, lpmp_loc ) &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 15 ) = SUM( Slm_dp_Table( lm_loc, : )    &
+                                                 * Slm_dp_Table( lpmp_loc, : ) &
                                                  * TP_Int_Weights(:)        &
                                                  / Sin_Square(:)            )
 
     ! SUM( dTP_TP_Factor(:,lm_loc,lpmp_loc) * Cotan_Val(:) )
-    TP_TP_Integrals( lm_loc, lpmp_loc, 16 ) = SUM( Ylm_dt(:, lm_loc )       &
-                                                 * Ylm_CC( :, lpmp_loc )    &
+    TP_TP_Integrals( lm_loc, lpmp_loc, 16 ) = SUM( Slm_dt_Table(lm_loc, : )       &
+                                                 * Slm_Table( lpmp_loc, : )    &
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             )
 
+!    PRINT*," "
+!    PRINT*,lm_loc,lpmp_loc
+!    PRINT*,TP_TP_Integrals(lm_loc, lpmp_loc,:)
 
 END DO
 END DO
 
 
-DEALLOCATE( Ylm_Table)
 
+
+!CALL Poseidon_Bailout("End of Calculate_Angular_Terms")
 
 CALL TimerStop(Timer_Matrix_Angular_Terms)
+
 
 END SUBROUTINE Calculate_Angular_Terms
 
@@ -834,13 +781,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
 END IF
 
 
-
-!PRINT*,"Row"
-!PRINT*,-Laplace_Matrix_VAL
-!PRINT*,"col"
-!PRINT*,Laplace_Matrix_ROW
-!PRiNT*,"Val"
-!PRINT*,Laplace_Matrix_COL
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A_Cholesky) = .FALSE.
 lPF_Init_Matrices_Flags(iPF_Init_Matrices_Type_A) = .TRUE.
 
@@ -875,16 +815,14 @@ INTEGER                                                 ::  l, m
 
 INTEGER                                                 ::  re,rd
 INTEGER                                                 ::  d, dp
-INTEGER                                                 ::  ui
-
-INTEGER                                                 ::  Row, Col
+INTEGER                                                 ::  i, j, ui
 
 REAL(idp)                                               ::  L_Lp1
 
 REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  Cur_R_Locs
 REAL(idp), ALLOCATABLE, DIMENSION(:)                    ::  R_Square
 
-COMPLEX(idp), DIMENSION(0:DEGREE)                       ::  Reusable_Values
+REAL(idp),              DIMENSION(0:DEGREE)             ::  Reusable_Values
 
 
 REAL(idp)                                               ::  DR, TODR
@@ -896,7 +834,7 @@ CALL TimerStart(Timer_Matrix_MVL_Init)
 
 
 
-zMB_Matrix_Banded = 0.0_idp
+dMB_Matrix_Banded = 0.0_idp
 
 
 
@@ -927,7 +865,7 @@ DO l = 0,L_LIMIT
     DO dp = 0,DEGREE
         DO rd = 1,Int_R_Deg
 
-            Reusable_Values(dp) = Reusable_Values(dp)                       &
+            Reusable_Values(dp) = Reusable_Values(dp) &
                                 - R_SQUARE(rd) * LP_LP_Table(rd,d,dp,1,1)   &
                                     * TODR * Int_R_Weights(rd)              &
                                 - L_Lp1 * LP_LP_Table(rd,d,dp,0,0) / TODR   &
@@ -938,14 +876,14 @@ DO l = 0,L_LIMIT
 
 
     DO m = -l,l
-        Col = FP_Beta_Array_Map(re,d,ui,l,m)
+        j = FP_Beta_Array_Map(re,d,ui,l,m)
 
         DO dp = 0,Degree
-            Row = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,l,m)
+            i = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,l,m)
 
             
-            zMB_Matrix_Banded(Row-Col,Col)                   &
-                        = zMB_Matrix_Banded(Row-Col,Col)     &
+            dMB_Matrix_Banded(i-j,j)                   &
+                        = dMB_Matrix_Banded(i-j,j)     &
                           + Reusable_Values(dp)
 
         END DO ! dp Loop
@@ -993,10 +931,12 @@ DO re = 0,Num_R_Elements-1
                                 Cur_R_Locs, R_Square                                )
 
 
+
         CALL Calc_Beta3_Terms( re, d, l, m,                                         &
                                 RR_Factor, dRR_Factor, dRdR_Factor, RdR_Factor,     &
                                 TP_TP_Integrals,                                    &
                                 Cur_R_Locs, R_Square                                )
+
 
 
     END DO  ! mp Loop
@@ -1080,7 +1020,7 @@ END SUBROUTINE CALC_RR_Values
 
 !+403+###########################################################################!
 !                                                                                !
-!                   Calc_Beta1_Terms                                       !
+!                                                          !
 !                                                                                !
 !################################################################################!
 SUBROUTINE Calc_Beta1_Terms( re, dp, lp, mp,                                    &
@@ -1094,7 +1034,7 @@ REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RR_Factor
 REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRR_Factor
 REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRDR_Factor
 
-COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)  :: TP_TP_Integrals
+REAL(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),  INTENT(IN)  :: TP_TP_Integrals
 
 
 REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: Cur_R_Locs
@@ -1122,14 +1062,13 @@ DO d = 0,Degree
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
 
-        zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
+        dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)               &
                                       - SUM( dRdR_Factor(:, d, dp) )/3.0_idp        &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 1)     &
                                       - 8.0_idp/3.0_idp * SUM( RR_Factor(:, d, dp)  &
                                                                / R_Square(:)    )   &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 1)
 
-        
         
     END DO ! lpmp_loc Loop
 
@@ -1142,7 +1081,7 @@ DO d = 0,Degree
     DO lm_loc = 1,LM_Length
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-        zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
+        dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)               &
                                       - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 2 )    &
                                       - SUM( dRR_Factor(:, d, dp) )/3.0_idp         &
@@ -1153,6 +1092,8 @@ DO d = 0,Degree
                                       - 2.0_idp * SUM( RR_Factor(:, d, dp)          &
                                                         / CUR_R_LOCS(:)         )   &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 3 )
+
+
 
     END DO ! lpmp_loc Loop
     
@@ -1165,7 +1106,7 @@ DO d = 0,Degree
         Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
 
-        zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
+        dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)               &
                                       - SUM( dRR_Factor(:, d, dp)  )/3.0_idp        &
                                         * TP_TP_Integrals( lm_loc, lpmp_loc, 5 )    &
                                       - 2.0_idp * SUM( RR_Factor(:, d, dp)         &
@@ -1202,7 +1143,7 @@ REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRR_Facto
 REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: RdR_Factor
 REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)  :: DRDR_Factor
 
-COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)  :: TP_TP_Integrals
+REAL(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),  INTENT(IN)  :: TP_TP_Integrals
 
 
 REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)  :: Cur_R_Locs
@@ -1227,7 +1168,7 @@ DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
     
 
-    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
+    dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)               &
                                   + SUM( RdR_Factor(:, d, dp)                   &
                                          /(3.0_idp*R_Square(:) )       )        &   ! Term 1
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 4 )    &
@@ -1244,7 +1185,7 @@ uj = 2
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
+    dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)               &
                                   - SUM( RR_Factor(:, d, dp)                    &
                                          /(3.0_idp*R_Square(:) )       )        &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 7 )    &
@@ -1273,7 +1214,7 @@ uj = 3 ! beta^phi
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)           &
+    dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)           &
                                   - SUM( RR_Factor(:, d, dp)                    &
                                          / (3.0_idp*R_Square(:) )           )   &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 10 )   &
@@ -1318,7 +1259,7 @@ REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: DRR_Fac
 REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: RDR_Factor
 REAL(idp), DIMENSION(1:Int_R_Deg, 0:DEGREE, 0:DEGREE ), INTENT(IN)    :: DRDR_Factor
 
-COMPLEX(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),       INTENT(IN)    :: TP_TP_Integrals
+REAL(idp), DIMENSION( 1:LM_Length, 1:LM_Length, 1:16),  INTENT(IN)    :: TP_TP_Integrals
 
 REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)    :: Cur_R_Locs
 REAL(idp),    DIMENSION( 1:Int_R_Deg ),                 INTENT(IN)    :: R_Square
@@ -1345,7 +1286,7 @@ DO lm_loc = 1,LM_Length
 
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)                   &
+    dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)                   &
                                   - SUM( RdR_Factor(:, d, dp)                       &   ! Term 1
                                         /(3.0_idp * R_Square(:) )    )              &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 6 )        &
@@ -1361,18 +1302,17 @@ uj = 2
 
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
+    
 
 
 
-
-    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)               &
+    dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)               &
                                   - SUM( RR_Factor(:, d, dp)                    &   ! Term 1
                                          /( 3.0_idp * R_Square(:) )   )         &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 13 )   &
                                   + SUM( 8.0_idp * RR_Factor(:, d, dp)          &   ! Term 2
                                          / ( 3.0_idp * R_Square(:) ) )          &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 14 )
-
 
 END DO ! lpmp_loc Loop
 
@@ -1382,7 +1322,7 @@ uj = 3 ! beta^phi
 DO lm_loc = 1,LM_Length
     Col = FP_Beta_Array_Map(re,d,uj,lm_loc)
 
-    zMB_Matrix_Banded(Row-Col, Col) = zMB_Matrix_Banded(Row-Col, Col)           &
+    dMB_Matrix_Banded(Row-Col, Col) = dMB_Matrix_Banded(Row-Col, Col)           &
                                   - SUM( RR_Factor(:, d, dp )                   &   ! Term 1
                                          /(3.0_idp * R_Square(:) )    )         &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 15 )   &
@@ -1392,8 +1332,6 @@ DO lm_loc = 1,LM_Length
                                   + SUM ( 2.0_idp * RR_Factor(:, d, dp)         &   ! Term 3
                                             / R_Square(:)                   )   &
                                     * TP_TP_Integrals( lm_loc, lpmp_loc, 16 )
-
-    
 
 END DO ! lpmp_loc Loop
 

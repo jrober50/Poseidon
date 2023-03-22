@@ -25,6 +25,8 @@ MODULE Poseidon_Bailout_Module                                               !##
 !===================================!
 
 
+USE MPI
+
 IMPLICIT NONE
 
 
@@ -42,10 +44,9 @@ CHARACTER(LEN = *),     INTENT(IN),     OPTIONAL    ::  Message
 LOGICAL                                             ::  MPI_Flag
 INTEGER                                             ::  iErr
 
-IF ( MPI_Initialize(MPI_Flag,iErr)) THEN
-    CALL MPI_Finalize(iErr)
-END IF
 
+CALL MPI_Initialized(MPI_Flag,iErr)
+IF (MPI_Flag) CALL MPI_Finalize(iErr)
 
 STOP Message
 

@@ -42,12 +42,12 @@ USE Variables_FP,  &
                     Update_Norms
                     
 USE Variables_Vectors,  &
-            ONLY :  cVA_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector
             
 USE Maps_Domain, &
             ONLY :  Map_To_lm
             
-USE Functions_Matrix, &
+USE Matrix_CCS_Operations_Module, &
             ONLY :  Matrix_CCS_MVMult,          &
                     Matrix_CCS_MtransVMult
 
@@ -80,7 +80,7 @@ REAL(idp),      DIMENSION(1:3,1:LM_LENGTH,1:2)  ::  LOne_Norm
 REAL(idp),      DIMENSION(1:3,1:LM_LENGTH,1:2)  ::  LTwo_Norm
 REAL(idp),      DIMENSION(1:3,1:LM_LENGTH,1:2)  ::  LInf_Norm
 
-COMPLEX(idp),   DIMENSION(1:NUM_R_NODES)        ::  Work_Vec
+REAL(idp),      DIMENSION(1:NUM_R_NODES)        ::  Work_Vec
 
 LOne_Norm = 0.0_idp
 LTwo_Norm = 0.0_idp
@@ -98,7 +98,7 @@ DO m = -l,l
                                 Laplace_Factored_Row(:,l),      &
                                 Laplace_Factored_COL(:,l),      &
                                 FP_Iter_Matrix_Storage(:,l),    &
-                                cVA_Coeff_Vector(:,lm_loc,iU),  &
+                                dVA_Coeff_Vector(:,lm_loc,iU),  &
                                 Work_Vec                        )
            
 !    PRINT*,"Work_Vec"

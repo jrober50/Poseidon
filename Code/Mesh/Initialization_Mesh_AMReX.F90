@@ -81,6 +81,7 @@ INTEGER                                         ::  elem
 
 IF ( Verbose_Flag ) CALL Init_Message('Initializing Mesh Variables.')
 
+
 DO lvl = 0,AMReX_Num_Levels-1
     Here  = Table_Offsets(lvl)
     There = Table_Offsets(lvl+1)-1
@@ -95,9 +96,6 @@ DO re = 1,Num_R_Elements
     rlocs(re) = rlocs(re-1)+drlocs(re-1)
 !    rlocs(re) = R_Inner + sum(drlocs(0:re-1)
 END DO
-
-
-
 
 
 

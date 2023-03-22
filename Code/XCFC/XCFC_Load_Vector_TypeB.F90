@@ -67,7 +67,9 @@ USE Variables_Quadrature, &
                     INT_P_LOCATIONS
 
 USE Variables_Mesh, &
-            ONLY :  Num_P_Elements,             &
+            ONLY :  Num_R_Elements,             &
+                    Num_T_Elements,             &
+                    Num_P_Elements,             &
                     rlocs,                      &
                     drlocs,                     &
                     tlocs,                      &
@@ -75,17 +77,23 @@ USE Variables_Mesh, &
                 
 
 USE Variables_Tables, &
-            ONLY :  Ylm_CC_Values,              &
-                    Ylm_Elem_CC_Values,         &
-                    Lagrange_Poly_Table,        &
+            ONLY :  Plm_Values,                 &
+                    Plm_dt_Values,              &
+                    Am_Values,                  &
+                    Am_dp_Values,               &
+                    Slm_Elem_Values,            &
+                    Slm_Elem_dt_Values,         &
+                    Slm_Elem_dp_Values,         &
                     Level_dx,                   &
-                    Level_Ratios
+                    Level_Ratios,               &
+                    Lagrange_Poly_Table
 
 USE Variables_Derived, &
-            ONLY :  LM_LENGTH
+            ONLY :  LM_Length,                  &
+                    LM_Short_Length
 
 USE Variables_Vectors, &
-            ONLY :  cVB_Load_Vector
+            ONLY :  dVB_Load_Vector
 
 USE Functions_Jacobian, &
             ONLY :  Calc_Ahat
@@ -139,10 +147,11 @@ USE Poseidon_MPI_Utilities_Module, &
             ONLY :  STOP_MPI,               &
                     MPI_Master_Print,       &
                     MPI_All_Print
-
-USE Initialization_Tables, &
-            ONLY :  Initialize_Normed_Legendre_Tables_On_Level,     &
-                    Initialize_Ylm_Tables_On_Elem
+                    
+USE Initialization_Tables_Slm, &
+            ONLY :  Initialize_Am_Tables,            &
+                    Initialize_Plm_Tables,           &
+                    Initialize_Slm_Tables_on_Elem
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -165,7 +174,8 @@ USE amrex_multifab_module,  &
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,              &
-                    AMReX_Num_Levels
+                    AMReX_Num_Levels,       &
+                    AMReX_Max_Grid_Size
 
 USE Variables_AMReX_Source, &
             ONLY :  Source_PTR,             &
@@ -197,7 +207,6 @@ USE Memory_Variables_Module
 
 IMPLICIT NONE
 
-
 CONTAINS
 !+101+###########################################################################!
 !                                                                                !
@@ -217,7 +226,7 @@ CHARACTER(LEN = 300)                    ::  Message
 #ifdef POSEIDON_AMREX_FLAG
 
     IF ( Verbose_Flag ) THEN
-        WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_VecVar_Names(iVB)),' Source Vector.'
+        WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_VecVar_Names(iVB)),' Load Vector.'
         CALL Run_Message(TRIM(Message))
     END IF
 
@@ -230,12 +239,14 @@ CHARACTER(LEN = 300)                    ::  Message
     INTEGER                         ::  re, te, pe
 
 
+    
+
     IF ( Verbose_Flag ) THEN
-        WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_VecVar_Names(iVB)),' Source Vector.'
+        WRITE(Message,'(A,A,A)')'Calculating ',TRIM(CFA_VecVar_Names(iVB)),' Load Vector.'
         CALL Run_Message(TRIM(Message))
     END IF
 
-    cVB_Load_Vector(:,iVB) = 0.0_idp
+    dVB_Load_Vector(:,iVB) = 0.0_idp
     DO re = iEL(1),iEU(1)
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
@@ -258,12 +269,14 @@ END SUBROUTINE XCFC_Calc_Load_Vector_TypeB
 !           XCFC_Calc_Load_Vector_TypeB                                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, Level_Option )
+SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, Level_Option, iNE_Opt, ELo_Opt )
 
 INTEGER, INTENT(IN), DIMENSION(3)               ::  iU
 INTEGER, INTENT(IN)                             ::  iVB
 INTEGER, INTENT(IN), DIMENSION(3)               ::  iE
 INTEGER, INTENT(IN), OPTIONAL                   ::  Level_Option
+INTEGER, INTENT(IN), DIMENSION(3),      OPTIONAL    ::  iNE_Opt
+INTEGER, INTENT(IN), DIMENSION(3),      OPTIONAL    ::  ELo_Opt
 
 INTEGER                                         ::  rd, tpd, td, pd, i
 
@@ -275,16 +288,25 @@ INTEGER                                         ::  Level
 INTEGER                                         ::  iCE(3)
 INTEGER                                         ::  iRE(3)
 INTEGER                                         ::  iEOff(3)
-
-
-
-
-
+INTEGER                                             ::  iNE(3)
+INTEGER                                             ::  ELo(3)
 
 IF (Present(Level_Option)) THEN
     Level = Level_Option
 ELSE
     Level = 0
+END IF
+
+IF (Present(iNE_Opt) ) THEN
+    iNE = iNE_Opt
+ELSE
+    iNE = [Num_R_Elements, Num_T_Elements, Num_P_Elements]
+END IF
+
+IF (Present(ELo_Opt) ) THEN
+    ELo = ELo_Opt
+ELSE
+    ELo = [1, 1, 1]
 END IF
 
 
@@ -318,14 +340,26 @@ FEM_Elem = iE(1)
 DROT = 0.5_idp * (rlocs(iE(1)+1) - rlocs(iE(1)))
 DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
 
-
 CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
 CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
 
 #endif
 
+!PRINT*,"iE",iE
+!PRINT*,"Cur_R_Locs",Cur_R_Locs
 
-
+CALL Initialize_Slm_Tables_on_Elem( iE(2), iE(3),       &
+                                    Num_T_Quad_Points,  &
+                                    Num_P_Quad_Points,  &
+                                    iNE,                &
+                                    ELo,                &
+                                    Plm_Values,         &
+                                    Plm_dt_Values,      &
+                                    Am_Values,          &
+                                    Am_dp_Values,       &
+                                    Slm_Elem_Values,    &
+                                    Slm_Elem_dt_Values, &
+                                    Slm_Elem_dp_Values  )
 
 
 R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
@@ -382,102 +416,51 @@ INTEGER, INTENT(IN)                                 ::  FEM_Elem
 INTEGER                                             ::  ui, rd, d, lm_loc
 INTEGER                                             ::  Current_i_Location
 
-COMPLEX(KIND = idp)                                 ::  RHS_TMP
-
-REAL(idp)                                           ::  mass_tmp
-
-
+REAL(idp)                                           ::  RHS_TMP
 
 
 DO ui = iU(1),iU(3)
 DO lm_loc = 1,LM_LENGTH
-!
-!IF (ui == iU(1)) THEN
-!    PRINT*,iE(2),iE(3),lm_loc,Ylm_Elem_CC_Values( :, lm_loc )
-!END IF
-
 DO d = 0,DEGREE
 
 
     RHS_TMP = 0.0_idp
-    Mass_TMP = 0.0_idp
+    
+    
+    
 
     DO rd = 1,NUM_R_QUAD_POINTS
 
-
-#ifdef POSEIDON_AMREX_FLAG
-
-        RHS_TMP = RHS_TMP                                       &
-                + SUM( SourceTerm( :, rd, ui )                  &
-                    * Ylm_Elem_CC_Values( :, lm_loc )           &
-                    * TP_Int_Weights(:)                     )   &
-                * Lagrange_Poly_Table( d, rd, 0)     &
+        RHS_TMP =  RHS_TMP                                          &
+                + SUM( SourceTerm( :, rd, ui )                      &
+                       * Slm_Elem_Values( lm_loc, : )               &
+                       * TP_Int_Weights(:)                     )    &
+                * Lagrange_Poly_Table(d, rd, 0)                     &
                 * R_Int_Weights(rd)
-
 
 !        IF ( LM_Loc == 3 ) THEN
 !        IF ( ui == iU(1) ) THEN
-!            PRINT*,iE,                                          &
-!                SUM( SourceTerm( :, rd, ui )                    &
-!                    * Ylm_Elem_CC_Values( :, lm_loc )           &
-!                    * TP_Int_Weights(:)                     ),  &
-!                Lagrange_Poly_Table( d, rd, 0),                 &
+!            PRINT*,iE,                                              &
+!                SUM( SourceTerm( :, rd, ui )                        &
+!                       * Slm_Elem_Values( lm_loc, : )               &
+!                       * TP_Int_Weights(:)                     ),   &
+!                Lagrange_Poly_Table( d, rd, 0),                     &
 !                R_Int_Weights(rd)
-!
+!          
 !        END IF
 !        END IF
-
-
 !        IF ( ui == iU(1) ) THEN
 !            PRINT*,level,iE,lm_loc,d,rd
 !
 !            PRINT*,SourceTerm( :, rd, ui )
 !            PRINT*,"++++++++++++++++++++++"
-!            PRINT*,Ylm_Elem_CC_Values( :, lm_loc )
+!            PRINT*,Slm_Elem_Values( lm_loc, : )
 !            PRINT*,"======================"
 !            PRINT*,TP_Int_Weights(:)
 !            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
 !
 !        END IF
 
-#else
-
-
-        RHS_TMP =  RHS_TMP                                          &
-                + SUM( SourceTerm( :, rd, ui )                      &
-                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
-                       * TP_Int_Weights(:)                     )    &
-                * Lagrange_Poly_Table(d, rd, 0)                     &
-                * R_Int_Weights(rd)
-
-
-        MASS_TMP = MASS_TMP                                         &
-                + SUM( SourceTerm( :, rd, ui )                      &
-                       * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))    &
-                       * TP_Int_Weights(:)                     )    &
-                * R_Int_Weights(rd)
-
-!        IF ( ui == iU(1) ) THEN
-!            PRINT*,Level,iE,lm_loc,d,rd
-!
-!            PRINT*,SourceTerm( :, rd, ui )
-!            PRINT*,"++++++++++++++++++++++"
-!            PRINT*,Ylm_CC_Values( :, lm_loc, iE(2), iE(3))
-!            PRINT*,"======================"
-!            PRINT*,TP_Int_Weights(:)
-!            PRINT*,"~~~~~~~~~~~~~~~~~~~~~~"
-
-
-!            PRINT*,SUM( SourceTerm( :, rd, ui )             &
-!            * Ylm_CC_Values( :, lm_loc, iE(2), iE(3))       &
-!            * TP_Int_Weights(:)                     ),      &
-!            Lagrange_Poly_Table(d, rd, 0),                      &
-!            R_Int_Weights(rd)
-!        END IF
-
-
-
-#endif
 
 
     END DO  ! rd Loop
@@ -488,14 +471,13 @@ DO d = 0,DEGREE
                                             FEM_Elem,   &
                                             d, lm_loc   )
 
-
-    cVB_Load_Vector(Current_i_Location,iVB)          &
-        = cVB_Load_Vector(Current_i_Location,iVB)    &
+    dVB_Load_Vector(Current_i_Location,iVB)          &
+        = dVB_Load_Vector(Current_i_Location,iVB)    &
         + RHS_TMP
+        
+!    PRINT*,ui, FEM_Elem, d, lm_loc, Current_i_Location,dVB_Load_Vector(Current_i_Location,iVB)
 
 
-
-!    PRINT*,ui, FEM_Elem, d, lm_loc, Current_i_Location,cVB_Load_Vector(Current_i_Location,iVB)
 END DO  ! d Loop
 END DO  ! lm_loc Loop
 END DO  ! ui Loop
@@ -693,16 +675,24 @@ TYPE(amrex_imultifab)                           ::  Level_Mask
 
 INTEGER                                         ::  re, te, pe
 INTEGER, DIMENSION(3)                           ::  iE
-INTEGER, DIMENSION(3)                           ::  iEL, iEU
+INTEGER, DIMENSION(3)                           ::  iEL
+INTEGER, DIMENSION(3)                           ::  iEU
+INTEGER, DIMENSION(3)                           ::  iEL_Off
+INTEGER, DIMENSION(3)                           ::  iEU_Off
 INTEGER                                         ::  nComp
 INTEGER                                         ::  lvl
 
 INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
 
+INTEGER,    DIMENSION(3)                                ::  iNE
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2))         ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3))         ::  plocs_subarray
+
 nGhost_Vec = 0
 
+dVB_Load_Vector(:,iVB) = 0.0_idp
 
-cVB_Load_Vector(:,iVB) = 0.0_idp
+
 DO lvl = AMReX_Num_Levels-1,0,-1
 
 #ifdef POSEIDON_MEMORY_FLAG
@@ -813,26 +803,64 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         iEL = Box%lo
         iEU = Box%hi
 
-        !
-        !   Initialize Legendre Polynomials on Box
-        !
-        CALL Initialize_Normed_Legendre_Tables_on_Level( iEU, iEL, lvl )
+        iNE = iEU-iEL+1
+        
+        
+        IF ( amrex_spacedim == 1 ) THEN
+            iEL_off(2:3) = 0
+            iEU_off(2:3) = 0
+        ELSEIF ( amrex_spacedim == 2) THEN
+            iEL_off(2)   = iEL(2)
+            iEL_off(3)   = 0
+            iEU_off(2)   = iEU(2)
+            iEU_off(3)   = 0
+        ELSEIF ( amrex_spacedim == 3 ) THEN
+            iEL_off(2:3) = iEL(2:3)
+            iEU_off(2:3) = iEU(2:3)
+        END IF
+
+ 
+ 
+ 
+        DO te = iEL_Off(2),iEU_Off(2)+1
+            tlocs_subarray(te-iEL_Off(2)) = Level_dx(lvl,2)*te
+        END DO
+        DO pe = iEL_Off(3),iEU_Off(3)+1
+            plocs_subarray(pe-iEL_Off(3)) = Level_dx(lvl,3)*pe
+        END DO
+        
+        
+        
+        ! Initialize Am Table
+        CALL Initialize_Am_Tables(  Num_P_Quad_Points,          &
+                                    Int_P_Locations,            &
+                                    L_Limit,                    &
+                                    iNE(3),                     &
+                                    [iEL_Off(3), iEU_Off(3)],   &
+                                    plocs_subarray(0:iNE(3)),   &
+                                    Am_Values,                  &
+                                    Am_dp_Values                )
+
+        ! Initialize Plm Table
+        CALL Initialize_Plm_Tables( Num_T_Quad_Points,          &
+                                    Int_T_Locations,            &
+                                    L_Limit,                    &
+                                    LM_Short_Length,            &
+                                    iNE(2),                     &
+                                    [iEL_Off(2), iEU_Off(2)],   &
+                                    tlocs_subarray(0:iNE(2)),   &
+                                    Plm_Values,                 &
+                                    Plm_dt_Values               )
 
         DO re = iEL(1),iEU(1)
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
 
-
-            IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
-
-                !
-                ! Initalize Ylm Table on Elem
-                !
-                CALL Initialize_Ylm_Tables_on_Elem( te, pe, iEL, lvl )
-    
-                iE = [re,te,pe]
-                CALL XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, lvl )
-            END IF
+        IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
+            iE = [re,te,pe]
+            CALL XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, lvl, iNE, iEL )
+        END IF
+            
         END DO ! pe
         END DO ! te
         END DO ! re
