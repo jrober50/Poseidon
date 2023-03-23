@@ -1,4 +1,4 @@
-POSEIDON_ACTIVE_DIR = /Users/nickroberts/ssp4/Poseidon/
+POSEIDON_ACTIVE_DIR ?= $(POSEIDON_DIR)
 
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Path
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Rules

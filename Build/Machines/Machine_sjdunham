@@ -1,4 +1,4 @@
-# Machine : Nick's Laptop 
+# Machine : Sam's Machine 
 
 myFORT       = $(MPICH_DIR)/bin/mpif90
 myCC         = 

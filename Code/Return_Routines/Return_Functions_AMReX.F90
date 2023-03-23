@@ -696,41 +696,6 @@ END SUBROUTINE Poseidon_Return_AMReX_Type_B
 
 
 
-#else
-
-
-
- !+201+########################################################!
-!                                                               !
-!       Poseidon_Return_AMReX_Type_A                            !
-!                                                               !
- !#############################################################!
-SUBROUTINE Poseidon_Return_AMReX_Type_A(  )
-
-END SUBROUTINE Poseidon_Return_AMReX_Type_A
-
-
- !+202+########################################################!
-!                                                               !
-!       Poseidon_Return_AMReX_Type_B                            !
-!                                                               !
- !#############################################################!
-SUBROUTINE Poseidon_Return_AMReX_Type_B()
-
-END SUBROUTINE Poseidon_Return_AMReX_Type_B
-
-
-
-#endif
-
-
-
-
-
-
-
-
-
 
 
  !+201+########################################################!
@@ -1271,5 +1236,38 @@ Var_Holder = 0.0_idp
 END SUBROUTINE Poseidon_Outside_Type_B
 
 
+#else
+
+
+
+ !+201+########################################################!
+!                                                               !
+!       Poseidon_Return_AMReX_Type_A                            !
+!                                                               !
+ !#############################################################!
+SUBROUTINE Poseidon_Return_AMReX_Type_A(  )
+
+END SUBROUTINE Poseidon_Return_AMReX_Type_A
+
+
+ !+202+########################################################!
+!                                                               !
+!       Poseidon_Return_AMReX_Type_B                            !
+!                                                               !
+ !#############################################################!
+SUBROUTINE Poseidon_Return_AMReX_Type_B()
+
+END SUBROUTINE Poseidon_Return_AMReX_Type_B
+
+
+
+
+
+
+
+
+
+
+#endif
 
 END MODULE Return_Functions_AMReX

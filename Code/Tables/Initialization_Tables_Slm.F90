@@ -276,7 +276,7 @@ REAL(idp),  DIMENSION( 1:nTQ,                   &
                       
                       
 REAL(idp),  DIMENSION( 1:nPQ,                   &
-                       1:LM_Length,             &
+                       -L_Limit:L_Limit,        &
                        0:E_Num(3)-1             ),  INTENT(IN)      ::  Am_Table
 
 REAL(idp),  DIMENSION( 1:LM_Length,             &

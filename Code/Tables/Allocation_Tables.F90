@@ -193,10 +193,10 @@ DEALLOCATE( Am_dp_Values )
 DEALLOCATE( Plm_Values )
 DEALLOCATE( Plm_dt_Values )
 
-
+#ifdef POSEIDON_AMREX_FLAG
 DEALLOCATE( Level_dx )
 DEALLOCATE( Level_Ratios )
-
+#endif
 
 DEALLOCATE( M_Values )
 
