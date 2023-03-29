@@ -1,8 +1,13 @@
 # For use with GNUmake for AMREX compilation.
 ifndef POSEIDON_ACTIVE_DIR
-  $(error WARNING: POSEIDON_ACTIVE_DIR is not defined)
+  ifndef POSEIDON_DIR
+    $(error ERROR: Neither POSEIDON_DIR nor POSEIDON_ACTIVE_DIR is defined)
+  else 
+    $(warning  WARNING: POSEIDON_ACTIVE_DIR is not defined. Using $(POSEIDON_DIR))
+    POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
+  endif 
 endif
-
+#POSEIDON_ACTIVE_DIR ?= $(POSEIDON_DIR)
 
 POSEIDON_AMREX_MODE  =ON
 POSEIDON_TIMER_MODE  ?=OFF
