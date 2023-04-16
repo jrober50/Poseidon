@@ -35,7 +35,8 @@ USE IG_Input_Native_Module, &
                     IG_Input_Poisson_Native
 
 USE Poseidon_Message_Routines_Module, &
-            ONLY :  Driver_Init_Message
+            ONLY :  Driver_Init_Message, &
+                    Init_Message
 
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS,             &
@@ -103,7 +104,7 @@ REAL(idp), DIMENSION(:,:,:,:), ALLOCATABLE              ::  AlphaPsi_Guess
 REAL(idp), DIMENSION(:,:,:,:,:), ALLOCATABLE            ::  Beta_Guess
 
 
-IF ( Verbose_Flag ) CALL Driver_Init_Message('Initializing flat space guess.')
+IF ( Verbose_Flag ) CALL Init_Message('Initializing flat space guess.')
 
 
 ALLOCATE( Psi_Guess(    1:Local_Quad_DOF,       &

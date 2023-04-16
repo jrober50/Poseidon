@@ -173,10 +173,8 @@ DO re = 1,Input_RE
         Here = (re-1)*Degree + rqb + 1
 
         dVA_Coeff_Vector(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
-        dVA_Coeff_Vector(Here,1,1:2) = 2.0_idp*Sqrt(pi)*Tmp_Value(1:2)
 
         Here = FP_Array_Map_TypeB(iU_S1,iVB_S,re-1,rqb,1)
-        dVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
         dVB_Coeff_Vector(Here,iVB_S) = 2.0_idp*Sqrt(pi)*Tmp_Value(3)
 
 

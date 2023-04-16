@@ -151,7 +151,8 @@ USE Poseidon_MPI_Utilities_Module, &
 USE Initialization_Tables_Slm, &
             ONLY :  Initialize_Am_Tables,            &
                     Initialize_Plm_Tables,           &
-                    Initialize_Slm_Tables_on_Elem
+                    Initialize_Slm_Tables_on_Elem,   &
+                    Initialize_Slm_Tables
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -247,11 +248,14 @@ CHARACTER(LEN = 300)                    ::  Message
     END IF
 
     dVB_Load_Vector(:,iVB) = 0.0_idp
+    
+    CALL Initialize_Slm_Tables()
+    
     DO re = iEL(1),iEU(1)
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
         iE = [re,te,pe]
-        CALL XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE )
+        CALL XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, ELo_Opt = [0,0,0] )
     END DO ! pe
     END DO ! te
     END DO ! re

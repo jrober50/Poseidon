@@ -137,7 +137,8 @@ USE XCFC_Functions_Calc_Values_Module, &
 USE Initialization_Tables_Slm, &
             ONLY :  Initialize_Am_Tables,            &
                     Initialize_Plm_Tables,           &
-                    Initialize_Slm_Tables_on_Elem
+                    Initialize_Slm_Tables_on_Elem,  &
+                    Initialize_Slm_Tables
                     
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -237,11 +238,14 @@ END IF
 #else
     
     dVA_Load_Vector(:,:,iU) = 0.0_idp
+    
+    CALL Initialize_Slm_Tables()
+
     DO re = iEL(1),iEU(1)
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
         iE = [re,te,pe]
-        CALL XCFC_Calc_Load_Vector_On_Element_TypeA( iU, iE )
+        CALL XCFC_Calc_Load_Vector_On_Element_TypeA( iU, iE, ELo_Opt = [0,0,0])
     END DO ! pe
     END DO ! te
     END DO ! re
@@ -307,7 +311,6 @@ ELSE
 END IF
 
 
-
 #ifdef POSEIDON_AMREX_FLAG
 IF ( amrex_spacedim == 1 ) THEN
     iEoff(2:3) = 0
@@ -361,7 +364,6 @@ CALL Initialize_Slm_Tables_on_Elem( iE(2), iE(3),       &
                                     Slm_Elem_dp_Values  )
 
 
-
 R_SQUARE(:) = CUR_R_LOCS(:)*CUR_R_LOCS(:)
 DO td = 1,NUM_T_QUAD_POINTS
 DO pd = 1,NUM_P_QUAD_POINTS
@@ -379,11 +381,9 @@ DO rd = 1,NUM_R_QUAD_POINTS
 END DO
 
 
-
 CALL Calc_Int_Weights( DROT, DTOT,                  &
                        R_Square, TP_Sin_Val,        &
                        R_Int_Weights, TP_Int_Weights )
-
 
 CALL Calc_XCFC_CurVals_TypeA( iE,       &
                               iU,       &
@@ -391,9 +391,7 @@ CALL Calc_XCFC_CurVals_TypeA( iE,       &
                               DTOT,     &
                               Level     )
 
-
 CALL Create_XCFC_Vector_TypeA( iE, iU, Level, FEM_Elem )
-
 
 
 END SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeA

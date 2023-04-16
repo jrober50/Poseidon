@@ -1,7 +1,7 @@
 # Machine : Nick's Laptop 
 
-myFORT       = $(MPI_DIR)/bin/mpif90 -cpp
-myCC         = $(MPI_DIR)/bin/mpic++
+myFORT       = $(MPI_DIR)/bin/mpif90 
+myCC         = $(MPI_DIR)/bin/mpicc
 
 myDEBUG      = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
 myOPTIMIZE   = -O2

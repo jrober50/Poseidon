@@ -229,7 +229,7 @@ INTEGER,    CONTIGUOUS, POINTER                             ::  Mask_PTR(:,:,:,:
 REAL(idp),  CONTIGUOUS, POINTER                             ::  Result_PTR(:,:,:,:)
 TYPE(amrex_imultifab)                                       ::  Ghost_Mask
 
-REAL(idp),      DIMENSION(1:Local_Quad_DOF)                 ::  Var_Holder
+REAL(idp),      DIMENSION(:),   ALLOCATABLE                 ::  Var_Holder
 
 INTEGER,        DIMENSION(1:3)                              ::  iE
 INTEGER,        DIMENSION(1:3)                              ::  iEL, iEU
@@ -250,7 +250,6 @@ ELSE
     FillGhostCells = .FALSE.
 END IF
 
-
 Quad_Span = Right_Limit - Left_Limit
 
 Cur_RX_Locs = 2.0_idp * ( RQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
@@ -259,7 +258,7 @@ Cur_PX_Locs = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
-
+ALLOCATE( Var_Holder(Num_DOF) )
 
 
 DO lvl = nLevels-1,0,-1
@@ -270,7 +269,6 @@ DO lvl = nLevels-1,0,-1
     ELSE
         nGhost_Vec = 0
     END IF
-    
     
     !
     !   MakeFineMask
@@ -328,7 +326,6 @@ DO lvl = nLevels-1,0,-1
         iEL = iEL_A-nGhost_Vec
         iEU = iEU_A+nGhost_Vec
 
-
         IF ( ANY( iEL < 0 ) ) THEN
             ! Reflecting Conditions
             iEL = iEL_A
@@ -376,7 +373,6 @@ DO lvl = nLevels-1,0,-1
         DO te = iEL(2),iEU(2)
         DO pe = iEL(3),iEU(3)
         
-            
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
             iE = [re, te, pe]
@@ -393,9 +389,7 @@ DO lvl = nLevels-1,0,-1
                                             Am_Table,       &
                                             Plm_Table,      &
                                             Var_Holder      )
-                                            
-                
-                
+                                        
             ELSE IF ( Ghost_PTR(re,te,pe,1) == iNotCovered) THEN
                 CALL Poseidon_NotCovered_Type_A(  iE, iEL, iNE, NQ,    &
                                                   Cur_RX_Locs,    &
@@ -441,7 +435,7 @@ DO lvl = nLevels-1,0,-1
 
 END DO ! lvl
 
-
+DEALLOCATE( Var_Holder )
 
 END SUBROUTINE Poseidon_Return_AMReX_Type_A
 
@@ -491,7 +485,7 @@ INTEGER,    DIMENSION(3)                                ::  iNE
 INTEGER,    DIMENSION(3)                                ::  iE
 
 INTEGER                                                 ::  Output_Here
-REAL(idp),      DIMENSION(1:Local_Quad_DOF)             ::  Var_Holder
+REAL(idp),      DIMENSION(:), ALLOCATABLE               ::  Var_Holder
 
 
 REAL(idp)                                               ::  Quad_Span
@@ -532,6 +526,8 @@ Cur_TX_Locs = 2.0_idp * ( TQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 Cur_PX_Locs = 2.0_idp * ( PQ_Input(:) - Left_Limit )/Quad_Span - 1.0_idp
 
 Num_DOF = NQ(1)*NQ(2)*NQ(3)
+
+ALLOCATE( Var_Holder(1:Num_DOF) )
 
 IF ( PRESENT(FillGhostCells_Option) ) THEN
     FillGhostCells = FillGhostCells_Option
@@ -627,6 +623,7 @@ DO lvl = nLevels-1,0,-1
             IF (     ( Ghost_PTR(re,te,pe,1) == iInterior )     &
                 .OR. ( Ghost_PTR(re,te,pe,1) == iCovered  )     ) THEN
                 
+                
                 CALL Poseidon_Valid_Type_B( iE, iEL, iNE, NQ,    &
                                             Cur_RX_Locs,    &
                                             Cur_TX_Locs,    &
@@ -688,6 +685,7 @@ END DO ! lvl
 
 
 
+DEALLOCATE(Var_Holder)
 
 END SUBROUTINE Poseidon_Return_AMReX_Type_B
 
@@ -749,6 +747,8 @@ REAL(idp)                                                   ::  Tmp_U_Value
 REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP
 REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )          ::  Slm_Elem_Table
 
+
+
 iRE = FEM_Elem_Map(iE(1),lvl)
 CALL Initialize_Slm_Table_on_Elem(  iE(2), iE(3),       &
                                     NQ(2), NQ(3),       &
@@ -758,7 +758,7 @@ CALL Initialize_Slm_Table_on_Elem(  iE(2), iE(3),       &
                                     Am_Table,           &
                                     Slm_Elem_Table      )
 
-
+Var_Holder = 0.0_idp
 DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
@@ -782,7 +782,6 @@ DO rd = 1,NQ(1)
 END DO ! rd
 END DO ! td
 END DO ! pd
-
 
 
 END SUBROUTINE Poseidon_Valid_Type_A

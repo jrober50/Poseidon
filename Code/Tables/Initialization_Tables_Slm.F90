@@ -114,8 +114,6 @@ CALL Initialize_Nlm_Table(  L_Limit,                &
                             LM_Short_Length,        &
                             Nlm_Values              )
 
-
-#ifndef POSEIDON_AMREX_FLAG
 ! Initialize Am Table
 CALL Initialize_Am_Tables(  Num_P_Quad_Points,      &
                             Int_P_Locations,        &
@@ -136,7 +134,6 @@ CALL Initialize_Plm_Tables( Num_T_Quad_Points,      &
                             tlocs,                  &
                             Plm_Values,             &
                             Plm_dt_Values           )
-#endif
 
 
 END SUBROUTINE Initialize_Slm_Tables
@@ -204,7 +201,6 @@ te_Offset = te-E_Lo(2)
 pe_Offset = pe-E_Lo(3)
 
 
-
 DO l = 0,L_Limit
 DO m = -l,l
 DO td = 1,nTQ
@@ -213,7 +209,6 @@ DO pd = 1,nPQ
     tpd = Map_To_tpd(td,pd,nPQ)
     lm = Map_To_lm(l,m)
     short_lm = Map_To_Short_LM(l,abs(m))
-
     Slm_Elem_Table(lm,tpd) = Nlm_Values(short_lm)                      &
                             * Plm_Table(td,short_lm,te_Offset)         &
                             * Am_Table(pd,m,pe_Offset)
@@ -367,8 +362,6 @@ CALL Initialize_Trig_Tables(QP_Num,     &
                             E_Locs,     &
                             Cosm,       &
                             Sinm        )
-
-
 
 
 sqrt_two = SQRT(2.0_idp)

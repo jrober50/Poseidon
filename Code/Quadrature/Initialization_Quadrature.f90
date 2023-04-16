@@ -79,9 +79,9 @@ IF ( Verbose_Flag ) CALL Init_Message('Initializing Quadrature Arrays.')
 
 CALL Initialize_LG_Quadrature(NUM_R_QUAD_POINTS, INT_R_LOCATIONS, INT_R_WEIGHTS)
 CALL Initialize_LG_Quadrature(NUM_T_QUAD_POINTS, INT_T_LOCATIONS, INT_T_WEIGHTS)
-!CALL Initialize_LG_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
-CALL Initialize_Trapezoid_Quadrature(NUM_P_QUAD_POINTS, Num_P_Elements,     &
-                                     INT_P_LOCATIONS, INT_P_WEIGHTS)
+CALL Initialize_LG_Quadrature(NUM_P_QUAD_POINTS, INT_P_LOCATIONS, INT_P_WEIGHTS)
+!CALL Initialize_Trapezoid_Quadrature(NUM_P_QUAD_POINTS, Num_P_Elements,     &
+ !                                    INT_P_LOCATIONS, INT_P_WEIGHTS)
 
 
 
