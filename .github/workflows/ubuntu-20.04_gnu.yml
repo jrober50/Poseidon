@@ -38,11 +38,11 @@ jobs:
           echo "LAPACK_LIB=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
       - name: Compile Drivers/Yahil Profile - XCFC - Native
         run: |
-          cd ${POSEIDON_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ Native/
+          cd ${POSEIDON_ACTIVE_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ Native/
           make
           make clean
       - name: Compile Drivers/Yahil Profile - XCFC - AMReX
         run: |
-          cd ${POSEIDON_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ AMReX/
+          cd ${POSEIDON_ACTIVE_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ AMReX/
           make
           make clean
