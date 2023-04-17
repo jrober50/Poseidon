@@ -292,7 +292,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
     NQ(3) = 2*L_Limit_Input + 1
 
-    WRITE(Suffix_Tail,'(A)')TRIM(Letter_Table(T_Index))
+    WRITE(Suffix_Tail,'(A)')TRIM(Letter_Table_Upper(T_Index))
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
 
