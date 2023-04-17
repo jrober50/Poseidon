@@ -117,7 +117,7 @@ INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
 
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Cur_R_Locs
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
@@ -292,8 +292,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     END IF
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table_Upper(T_Index)
-
+    WRITE(Suffix_Tail,'(A)')TRIM(Letter_Table(T_Index))
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
 

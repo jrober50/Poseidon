@@ -7,7 +7,8 @@ NPROCS=1
 
 ## Select Machine
 
-MACHINE_NAME    =ISAAC
+#MACHINE_NAME    =ISAAC
+POSEIDON_MACHINE_NAME = jrober
 #MACHINE_NAME    =NicksMacBook
 #MACHINE_NAME = sjdunham
 #MACHINE_NAME   =MacBook
@@ -17,8 +18,8 @@ MACHINE_NAME    =ISAAC
 
 ## Select Mode
 
-#CMODE   =DEBUG
-CMODE  =OPTIMIZE
+CMODE   =DEBUG
+#CMODE  =OPTIMIZE
 
 
 ## Compile with Openmp
@@ -26,6 +27,7 @@ CMODE  =OPTIMIZE
 #OPENMP_MODE    =ON
 OPENMP_MODE     =OFF
 
+LAPACK_MODE     =ON
 
 
 ## Compile with PETSc
