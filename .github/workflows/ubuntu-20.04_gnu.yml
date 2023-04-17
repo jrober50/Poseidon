@@ -7,7 +7,7 @@ jobs:
     name: Compile Poseidon on Ubuntu 20.04 with gnu compilers
     runs-on: ubuntu-20.04
     env:
-      POSEIDON_MACHINE: github_ubuntu-20.04_gnu
+      POSEIDON_MACHINE_NAME: github_ubuntu-20.04_gnu
     steps:
       - name: Checkout Poseiodn
         uses: actions/checkout@v3
