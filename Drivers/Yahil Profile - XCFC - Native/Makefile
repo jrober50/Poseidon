@@ -56,7 +56,7 @@ include Makefile_Driver
 
 main : $(POSEIDON_o) $(DRIVER_o) Yahil_Profile_XCFC_Native.o
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) $(OBJ)/*.o -o $(BIN)/Yahil_Profile_XCFC_Native.x
+	$(FORT) $(OBJ)/*.o -o $(BIN)/Yahil_Profile_XCFC_Native.x $(LIB_LINKER)
 	echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 

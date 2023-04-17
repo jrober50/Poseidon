@@ -1,8 +1,8 @@
 %.o: %.F90
-	$(FORT) -c $(OUTPUT_LINKER) $(INCLUDE_LINKER) $< -o $(OBJ)/$@
+	$(FORT) -c $< -o $(OBJ)/$@ $(LIB_LINKER) $(OUTPUT_LINKER) $(INCLUDE_LINKER)
 
 %.o: %.f90
-	$(FORT) -c $(OUTPUT_LINKER) $(INCLUDE_LINKER) $< -o $(OBJ)/$@
+	$(FORT) -c $< -o $(OBJ)/$@ $(LIB_LINKER) $(OUTPUT_LINKER) $(INCLUDE_LINKER)
 
 %.o: %.cpp
 	$(CC) -c $(FLAGS)  $< -o $(OBJ)/$@
