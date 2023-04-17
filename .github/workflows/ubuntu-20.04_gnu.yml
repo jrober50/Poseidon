@@ -26,7 +26,7 @@ jobs:
           sudo apt-get -y update
       - name: Set Environment Variables
         run: |
-          echo "POSEIDON_ACTIVE_DIR=${GITHUB_WORKSPACE}                 >> ${GITHUB_ENV}
+          echo "POSEIDON_ACTIVE_DIR=${GITHUB_WORKSPACE}"                >> ${GITHUB_ENV}
           echo "AMREX_DIR=${GITHUB_WORKSPACE}/amrex"                    >> ${GITHUB_ENV}
           echo "HDF5_ROOT=/usr/lib/x86_64-linux-gnu/hdf5/serial"        >> ${GITHUB_ENV}
           echo "LAPACK_ROOT=/usr/lib/x86_64-linux-gnu/lapack"           >> ${GITHUB_ENV}
