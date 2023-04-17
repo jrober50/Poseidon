@@ -1,0 +1,48 @@
+name: Compile Poseidon on Ubuntu 20.04 with gnu compilers
+
+on: [ push, pull_request ]
+
+jobs:
+  compile-with-amrex_gnu:
+    name: Compile Poseidon on Ubuntu 20.04 with gnu compilers
+    runs-on: ubuntu-20.04
+    env:
+      POSEIDON_MACHINE: github_ubuntu-20.04_gnu
+    steps:
+      - name: Checkout Poseiodn
+        uses: actions/checkout@v3
+
+      - name: Checkout amrex
+        uses: actions/checkout@v3
+        with:
+          repository: dunhamsj/amrex
+          path: amrex
+          ref: MeshRefinement_DG
+
+      - name: Update Ubuntu
+        run: |
+          sudo apt-get -y install libhdf5-dev
+          sudo apt-get -y install mpich
+          sudo apt-get -y update
+      - name: Set Environment Variables
+        run: |
+          echo "POSEIDON_ACTIVE_DIR=${GITHUB_WORKSPACE}                 >> $(GITHUB_ENV}
+          echo "AMREX_DIR=${GITHUB_WORKSPACE}/amrex"                    >> ${GITHUB_ENV}
+          echo "HDF5_ROOT=/usr/lib/x86_64-linux-gnu/hdf5/serial"        >> ${GITHUB_ENV}
+          echo "LAPACK_ROOT=/usr/lib/x86_64-linux-gnu/lapack"           >> ${GITHUB_ENV}
+          echo "BLAS_ROOT=/usr/lib/x86_64-linux-gnu/blas"               >> ${GITHUB_ENV}
+          echo "HDF5_DIR=/usr/lib/x86_64-linux-gnu/hdf5/serial"         >> ${GITHUB_ENV}
+          echo "HDF5_INC=/usr/lib/x86_64-linux-gnu/hdf5/serial/include" >> ${GITHUB_ENV}
+          echo "HDF5_LIB=/usr/lib/x86_64-linux-gnu/hdf5/serial/lib"     >> ${GITHUB_ENV}
+          echo "LAPACK_DIR=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
+          echo "LAPACK_LIB=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
+      - name: Compile Drivers/Yahil Profile - XCFC - Native
+        run: |
+          cd ${POSEIDON_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ Native/
+          make
+          make clean
+      - name: Compile Drivers/Yahil Profile - XCFC - AMReX
+        run: |
+          cd ${POSEIDON_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ AMReX/
+          make
+          make clean
