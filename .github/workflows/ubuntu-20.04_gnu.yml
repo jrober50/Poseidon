@@ -8,8 +8,9 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       POSEIDON_MACHINE_NAME: github_ubuntu-20.04_gnu
+      POSEIDON_ACTIVE_DIR: ${GITHUB_WORKSPACE}
     steps:
-      - name: Checkout Poseiodn
+      - name: Checkout Poseidon
         uses: actions/checkout@v3
 
       - name: Checkout amrex
