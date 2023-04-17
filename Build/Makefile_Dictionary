@@ -62,10 +62,6 @@ myLAPACK_LIB_LINK = $(myLAPACK_LIB_$(LAPACK_MODE))
 
 myLAPACK_LINK    = $(myLAPACK_INC_LINK) $(myLAPACK_LIB_LINK)
 
-$(info $$myLAPACK_LIB is [${myLAPACK_LIB}])
-$(info $$LAPACK_MODE is [${LAPACK_MODE}])
-$(info $$myLAPACK_LINK is [${myLAPACK_LINK}])
-
 
 #---------------------#
 #  Final Definitions  #
@@ -76,8 +72,6 @@ CC              = $(myCC)
 
 LIB_LINKER      = $(myOPENMP_LINK) $(myMPI_LINK) $(myLAPACK_LINK)
 
-$(info $$my$(CMODE) is [${my$(CMODE)}])
-$(info $$FORT is [${FORT}])
 
 OUTPUT_LINKER   =$(OUTPUT_LINKER_FLAG)$(OBJ)
 INCLUDE_LINKER  =$(INCLUDE_LINKER_FLAG)$(OBJ)
