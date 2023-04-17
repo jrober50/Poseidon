@@ -62,6 +62,8 @@ myLAPACK_LIB_LINK = $(myLAPACK_LIB_$(LAPACK_MODE))
 
 myLAPACK_LINK    = $(myLAPACK_INC_LINK) $(myLAPACK_LIB_LINK)
 
+$(info $$myLAPACK_LIB is [${myLAPACK_LIB}])
+$(info $$LAPACK_MODE is [${LAPACK_MODE}])
 $(info $$myLAPACK_LINK is [${myLAPACK_LINK}])
 
 
