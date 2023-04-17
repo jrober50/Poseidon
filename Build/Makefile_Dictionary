@@ -12,7 +12,8 @@ OUT     = ./Poseidon_Output
 DRV     = ./Code/Drivers
 
 
-include $(POSEIDON_DIR)/Build/Machines/Machine_$(POSEIDON_MACHINE_NAME)
+$(info $$POSEIDON_ACTIVE_DIR is [${POSEIDON_ACTIVE_DIR}])
+include $(POSEIDON_ACTIVE_DIR)/Build/Machines/Machine_$(POSEIDON_MACHINE_NAME)
 
 
 OUTPUT_LINKER_FLAG  ?= -J
