@@ -4,7 +4,7 @@ include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Path
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Rules
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Include
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Preprocess
-include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_DictionaryB
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Dictionary
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_List
 include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Depend
 
