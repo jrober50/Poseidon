@@ -60,7 +60,6 @@ include $(AMREX_HOME)/Src/F_Interfaces/AmrCore/Make.package
 POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
 include $(POSEIDON_ACTIVE_DIR)/Build/Make.Poseidon
 
-
 # Include dicrectories and source files needed for the Driver
 include Makefile_Driver
 include Makefile_Path
