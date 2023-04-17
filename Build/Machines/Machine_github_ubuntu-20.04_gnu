@@ -1,0 +1,15 @@
+# Machine : github_ubuntu-20.04_gnu (Github workflow runner)
+
+myFORT       = mpif90 -cpp
+myCC         = mpicc
+
+myDEBUG      = -g -O0 -fbacktrace -ffpe-trap=invalid,zero -ffpe-summary=invalid,zero -fbounds-check -fcheck=all -Wmaybe-uninitialized
+myOPTIMIZE   = -g -O2
+
+myOPENMP     = -fopenmp
+
+myMPI_INC    = -I$(MPI_DIR)/include
+myMPI_LIB    = -L$(MPI_DIR)/lib
+
+myLAPACK_LIB = -L$(LAPACK_ROOT) -llapack -L$(BLAS_ROOT) -lblas
+
