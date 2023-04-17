@@ -12,7 +12,6 @@ OUT     = ./Poseidon_Output
 DRV     = ./Code/Drivers
 
 
-$(info $$POSEIDON_ACTIVE_DIR is [${POSEIDON_ACTIVE_DIR}])
 include $(POSEIDON_ACTIVE_DIR)/Build/Machines/Machine_$(POSEIDON_MACHINE_NAME)
 
 
@@ -38,7 +37,7 @@ myOPENMP_LINK   = $(myOPENMP_$(OPENMP_MODE))
 
 myMPI_INC_ON    = $(myMPI_INC) 
 myMPI_INC_OFF   =
-myMPI_INC_LINK  = myMPI_INC_$(MPI_MODE)       
+myMPI_INC_LINK  = $(myMPI_INC_$(MPI_MODE))      
 
 myMPI_LIB_ON    = $(myMPI_LIB)
 myMPI_LIB_OFF   = 
@@ -63,14 +62,18 @@ myLAPACK_LIB_LINK = $(myLAPACK_LIB_$(LAPACK_MODE))
 
 myLAPACK_LINK    = $(myLAPACK_INC_LINK) $(myLAPACK_LIB_LINK)
 
+$(info $$myLAPACK_LINK is [${myLAPACK_LINK}])
 
 
 #---------------------#
 #  Final Definitions  #
 #---------------------# 
 
-FORT		=$(myFORT) $(my$(CMODE) $(myOPENMP_LINK) $(myMPI_LINK) $(myLAPACK_LINK)
-CC              =$(myCC)
+FORT            = $(myFORT) $(my$(CMODE)) $(myOPENMP_LINK) $(myMPI_LINK) $(myLAPACK_LINK)
+CC              = $(myCC)
+
+$(info $$my$(CMODE) is [${my$(CMODE)}])
+$(info $$FORT is [${FORT}])
 
 OUTPUT_LINKER   =$(OUTPUT_LINKER_FLAG)$(OBJ)
 INCLUDE_LINKER  =$(INCLUDE_LINKER_FLAG)$(OBJ)

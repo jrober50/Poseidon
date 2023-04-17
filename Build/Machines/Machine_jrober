@@ -11,8 +11,8 @@ myOPENMP     = -fopenmp
 myMPI_INC    = -I$(MPI_DIR)/include
 myMPI_LIB    = -L$(MPI_DIR)/lib
 
+myLAPACK_INC = 
 myLAPACK_LIB = -framework Accelerate 
-#myLAPACK_LIB = $(LAPACK_LIB) -llapack -lblas 
 
 
 
