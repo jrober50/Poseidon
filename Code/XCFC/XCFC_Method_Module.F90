@@ -113,7 +113,15 @@ SUBROUTINE XCFC_Method()
 
 LOGICAL                     :: PR = .FALSE.
 
+INTEGER, DIMENSION(3)       :: Thing
+INTEGER                     :: Number
+INTEGER                     :: Larger_Number = 4
 
+
+PRINT*,"Fail"
+DO Number = 1,Larger_Number
+    Thing(Number) = 1
+END DO
 
 IF ( Verbose_Flag ) CALL Run_Message('Beginning XCFC System Solve.')
 

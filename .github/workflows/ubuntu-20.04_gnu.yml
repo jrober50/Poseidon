@@ -6,7 +6,7 @@ jobs:
   compile-with-amrex_gnu:
     name: Compile Poseidon on Ubuntu 20.04 with gnu compilers
     runs-on: ubuntu-20.04
-    timeout-minutes: 30
+    timeout-minutes: 10
     env:
       POSEIDON_MACHINE_NAME: github_ubuntu-20.04_gnu
     steps:
@@ -38,7 +38,7 @@ jobs:
           echo "LAPACK_DIR=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
           echo "LAPACK_LIB=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
       - name: Compile Drivers/Yahil Profile - XCFC - Native
-        timeout-minutes: 2
+        timeout-minutes: 1
         run: |
           cd ${POSEIDON_ACTIVE_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ Native/
           make main
@@ -46,7 +46,6 @@ jobs:
           make clean
       - name: Compile Drivers/Yahil Profile - XCFC - AMReX
         timeout-minutes: 5
-        continue-on-error: true
         run: |
           cd ${POSEIDON_ACTIVE_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ AMReX/
           make
