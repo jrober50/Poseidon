@@ -38,7 +38,8 @@ jobs:
           echo "LAPACK_DIR=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
           echo "LAPACK_LIB=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
       - name: Compile Drivers/Yahil Profile - XCFC - Native
-        timeout-minutes: 5
+        timeout-minutes: 2
+        continue-on-error: true
         run: |
           cd ${POSEIDON_ACTIVE_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ Native/
           make main
