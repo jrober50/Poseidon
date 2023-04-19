@@ -46,7 +46,7 @@ jobs:
           make clean
       - name: Compile Drivers/Yahil Profile - XCFC - AMReX
         timeout-minutes: 5
-        if: !cancelled()
+        if: ${{ !cancelled() }}
         run: |
           cd ${POSEIDON_ACTIVE_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ AMReX/
           make
