@@ -50,5 +50,6 @@ jobs:
         run: |
           cd ${POSEIDON_ACTIVE_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ AMReX/
           make
+          ls
           mpirun -n 1 Yahil_XCFC_AMReX1d.gnu.DEBUG.MPI.ex inputs_Poseidon_CI
           make clean
