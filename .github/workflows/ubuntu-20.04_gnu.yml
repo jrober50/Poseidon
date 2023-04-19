@@ -40,6 +40,7 @@ jobs:
         run: |
           cd ${POSEIDON_ACTIVE_DIR}/Drivers/Yahil\ Profile\ -\ XCFC\ -\ Native/
           make main
+          make run
           make clean
       - name: Compile Drivers/Yahil Profile - XCFC - AMReX
         run: |
