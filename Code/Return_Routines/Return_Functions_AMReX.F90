@@ -939,7 +939,6 @@ REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )          ::  Slm_Elem_Table
 Num_Coarse_Locs = (Degree+1)*NQ(2)*NQ(3)
 ALLOCATE( Coarse_Holder(1:Num_Coarse_Locs) )
 
-
 iE_Coarse = iE/2
 Coarse_xLocs = Map_From_X_Space( -1.0_idp, 0.0_idp, FEM_Node_xlocs)
 
@@ -972,7 +971,6 @@ DO rd = 1,Degree+1
                             * Slm_Elem_Table( :, tpd )            ) &
                     * LagP(d)
 
-
     END DO ! d Loop
 
     Here = Quad_Map(rd, td, pd, Degree+1, NQ(2),NQ(3))
@@ -995,8 +993,7 @@ DO rd = 1,NQ(1)
 
     DO d = 0,DEGREE
     
-        Here = Quad_Map(rd, td, pd, Degree+1, NQ(2),NQ(3))
-        
+        Here = Quad_Map(d+1, td, pd, Degree+1, NQ(2),NQ(3))
         Tmp_U_Value = Tmp_U_Value           &
                     + Coarse_Holder(Here)   &
                     * LagP_x(d)
@@ -1009,7 +1006,6 @@ DO rd = 1,NQ(1)
 END DO ! rd
 END DO ! td
 END DO ! pd
-
 
 
 END SUBROUTINE Poseidon_NotCovered_Type_A
