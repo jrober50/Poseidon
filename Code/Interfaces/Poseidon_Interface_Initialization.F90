@@ -120,13 +120,6 @@ USE Timer_Variables_Module, &
             ONLY :  Timer_Poisson_Matrix_Init,      &
                     Timer_Initialization_Core
 
-
-USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR,             &
-                    Mask_PTR,               &
-                    iTrunk,                 &
-                    iLeaf
-
 USE Variables_FP, &
             ONLY :  FP_Diagnostics_Flag
 

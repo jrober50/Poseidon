@@ -70,8 +70,13 @@ USE Poseidon_Units_Module, &
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
-                    AMReX_Num_Levels
+                    AMReX_Num_Levels,   &
+                    Source_PTR,         &
+                    Mask_PTR
 
+USE Parameters_AMReX, &
+            ONLY :  iLeaf,            &
+                    iTrunk
 
 USE Variables_Driver_AMReX, &
             ONLY :  MF_Driver_Source,   &
@@ -81,11 +86,7 @@ USE Variables_Driver_AMReX, &
                     StepNo,             &
                     nLevels
 
-USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR,         &
-                    Mask_PTR,           &
-                    iLeaf,            &
-                    iTrunk
+
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
@@ -210,7 +211,6 @@ CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
 CALL Poseidon_Input_Sources(MF_Driver_Source,    &   ! Source Multifab
                             MF_Src_nComps        )   ! AMReX Levels
-
 
 
 

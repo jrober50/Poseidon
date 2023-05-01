@@ -79,7 +79,7 @@ USE Functions_Quadrature, &
             ONLY :  Initialize_LG_Quadrature_Locations, &
                     Initialize_Trapezoid_Quadrature_Locations
 
-USE Variables_AMReX_Source, &
+USE Parameters_AMReX, &
             ONLY :  iLeaf,                &
                     iTrunk
 
@@ -99,9 +99,6 @@ USE Variables_Quadrature, &
                     INT_T_LOCATIONS,            &
                     INT_P_LOCATIONS
                     
-USE Variables_Vectors, &
-            ONLY :  dVA_Coeff_Vector,      &
-                    dVB_Coeff_Vector
 
 USE Variables_IO, &
             ONLY :  Write_Flags,            &
@@ -261,14 +258,14 @@ CALL Poseidon_Return_ALL(   NQ,                   &
 !CALL Write_Final_Results_Kij( nLevels, NQ, MF_Results )
 
 
-PRINT*,"Before"
-PRINT*,dVA_Coeff_Vector
-
-
-CALL Poseidon_Input_Initial_Guess( MF_Results )
-
-PRINT*,"After"
-pRINT*,dVA_Coeff_Vector
+!PRINT*,"Before"
+!PRINT*,dVA_Coeff_Vector
+!
+!
+!CALL Poseidon_Input_Initial_Guess( MF_Results )
+!
+!PRINT*,"After"
+!pRINT*,dVA_Coeff_Vector
 
 END SUBROUTINE Return_Test
 

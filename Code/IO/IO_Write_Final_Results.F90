@@ -107,12 +107,7 @@ USE Variables_Interface, &
                     Caller_RQ_xlocs,                &
                     Caller_TQ_xlocs,                &
                     Caller_PQ_xlocs
-                   
-USE Variables_AMReX_Source, &
-            ONLY :  iLeaf,                &
-                    iTrunk
-                   
-                   
+                
 USE Variables_Tables, &
             ONLY :  Level_dx,                   &
                     Level_Ratios
@@ -180,12 +175,12 @@ USE amrex_multifab_module,  &
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,              &
-                    AMReX_Num_Levels
-
-USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR,             &
-                    Mask_PTR,               &
-                    iLeaf,                &
+                    AMReX_Num_Levels,       &
+                    Source_PTR,             &
+                    Mask_PTR
+                    
+USE Parameters_AMReX, &
+            ONLY :  iLeaf,                &
                     iTrunk
 
 USE Poseidon_AMReX_MakeFineMask_Module, &

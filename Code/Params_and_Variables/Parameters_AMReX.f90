@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Variables_AMReX_Source                                                       !##!
+MODULE Parameters_AMReX                                                             !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -29,12 +29,9 @@ INTEGER(c_int), PARAMETER                               ::  iOutside    = 4
 INTEGER(c_int), PARAMETER                               ::  iInterior   = 5
 
 
-REAL(idp), CONTIGUOUS, POINTER                          :: Source_PTR(:,:,:,:)
-INTEGER,   CONTIGUOUS, POINTER                          :: Mask_PTR(:,:,:,:)
-INTEGER,   CONTIGUOUS, POINTER                          :: Ghost_PTR(:,:,:,:)
 
 
-END MODULE Variables_AMReX_Source
+END MODULE Parameters_AMReX 
 
 
 

@@ -68,7 +68,7 @@ USE Variables_Mesh, &
                    plocs,              &
                    iNE_Base
 
-USE Variables_AMReX_Source, &
+USE Parameters_AMReX, &
            ONLY :  iLeaf,                &
                    iTrunk
 

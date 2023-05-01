@@ -67,12 +67,6 @@ USE Poseidon_Units_Module, &
                     Gram,               &
                     E_Units
 
-
-USE Variables_AMReX_Core, &
-            ONLY :  MF_Source,          &
-                    AMReX_Num_Levels
-
-
 USE Variables_Driver_AMReX, &
             ONLY :  MF_Driver_Source,   &
                     MF_Src_nComps,      &
@@ -81,10 +75,14 @@ USE Variables_Driver_AMReX, &
                     StepNo,             &
                     nLevels
 
-USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR,         &
-                    Mask_PTR,           &
-                    iLeaf,            &
+USE Variables_AMReX_Core, &
+            ONLY :  MF_Source,          &
+                    AMReX_Num_Levels,   &
+                    Source_PTR,         &
+                    Mask_PTR
+                    
+USE Parameters_AMReX, &
+            ONLY :  iLeaf,            &
                     iTrunk
 
 USE Poseidon_AMReX_MakeFineMask_Module, &

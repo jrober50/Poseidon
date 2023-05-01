@@ -129,15 +129,14 @@ USE amrex_multifab_module,  &
                     amrex_imultifab_build
 
 USE Variables_AMReX_Core, &
-            ONLY :  MF_Source,          &
-                    AMReX_Num_Levels,   &
-                    AMReX_Max_Grid_Size
-
-
-USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR,         &
-                    Mask_PTR,           &
-                    iTrunk,             &
+            ONLY :  MF_Source,              &
+                    AMReX_Num_Levels,       &
+                    AMReX_Max_Grid_Size,    &
+                    Source_PTR,             &
+                    Mask_PTR
+                    
+USE Parameters_AMReX, &
+            ONLY :  iTrunk,                 &
                     iLeaf
 
 USE Poseidon_AMReX_MakeFineMask_Module, &

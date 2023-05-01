@@ -67,6 +67,12 @@ INTEGER, PUBLIC, DIMENSION(:), ALLOCATABLE      ::  Table_Offsets
 
 INTEGER, PUBLIC                                 ::  MF_Source_nComps
 
+
+REAL(idp), CONTIGUOUS, POINTER                  :: Source_PTR(:,:,:,:)
+INTEGER,   CONTIGUOUS, POINTER                  :: Mask_PTR(:,:,:,:)
+INTEGER,   CONTIGUOUS, POINTER                  :: Ghost_PTR(:,:,:,:)
+
+
 #ifdef POSEIDON_AMREX_FLAG
 
 TYPE(amrex_multifab),  PUBLIC,  ALLOCATABLE     ::  MF_Source(:)

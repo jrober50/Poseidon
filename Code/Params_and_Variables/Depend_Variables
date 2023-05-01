@@ -55,8 +55,8 @@ Variables_Driver_AMReX.o:       \
 Variables_AMReX_Core.o:         \
   Variables_AMReX_Core.F90      \
 
-Variables_AMReX_Source.o:      \
-  Variables_AMReX_Source.f90   \
+Parameters_AMReX.o:      \
+  Parameters_AMReX.f90   \
 
 
 

@@ -52,7 +52,7 @@ USE Variables_Vectors, &
             ONLY :  dVA_Coeff_Vector,      &
                     dVB_Coeff_Vector
 
-USE Variables_AMReX_Source, &
+USE Parameters_AMReX, &
             ONLY :  iLeaf,                &
                     iTrunk
 

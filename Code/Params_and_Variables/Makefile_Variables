@@ -19,5 +19,5 @@ POSEIDON_VARIABLES = \
   Variables_External.f90     \
   Variables_Driver_AMReX.F90 \
   Variables_AMReX_Core.F90   \
-  Variables_AMReX_Source.f90
+  Parameters_AMReX.f90
 

@@ -61,10 +61,6 @@ USE Variables_Mesh, &
                     tlocs,              &
                     plocs
 
-USE Variables_AMReX_Source, &
-            ONLY :  iLeaf,                &
-                    iTrunk
-
 USE Variables_FEM_Module, &
             ONLY :  FEM_Node_xlocs
 

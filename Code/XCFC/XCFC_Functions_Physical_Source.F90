@@ -61,22 +61,22 @@ USE Maps_Quadrature, &
             ONLY :  Quad_Map,                   &
                     Map_To_tpd
 
-USE Variables_AMReX_Source, &
+USE Variables_AMReX_Core, &
             ONLY :  Source_PTR
 
 USE Variables_MPI, &
-                ONLY :  myID_Poseidon,      &
-                        nPROCS_Poseidon,    &
-                        Poseidon_Comm_World
+            ONLY :  myID_Poseidon,      &
+                    nPROCS_Poseidon,    &
+                    Poseidon_Comm_World
 
 USE Poseidon_MPI_Utilities_Module, &
-                ONLY :  STOP_MPI,               &
-                        MPI_Master_Print,       &
-                        MPI_All_Print
+            ONLY :  STOP_MPI,               &
+                    MPI_Master_Print,       &
+                    MPI_All_Print
 
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_fort_module, &
-                ONLY :  amrex_spacedim
+            ONLY :  amrex_spacedim
 #endif
 
 IMPLICIT NONE

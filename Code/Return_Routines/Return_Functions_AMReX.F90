@@ -61,15 +61,6 @@ USE Variables_Mesh, &
                     plocs,                  &
                     iNE_Base
 
-
-USE Variables_AMReX_Source, &
-            ONLY :  iLeaf,                  &
-                    iTrunk,                 &
-                    iCovered,               &
-                    iNotCovered,            &
-                    iOutside,               &
-                    iInterior
-
 USE Variables_FEM_Module, &
             ONLY :  FEM_Node_xlocs
 
@@ -143,18 +134,25 @@ USE amrex_multifab_module,  &
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Num_Levels,       &
-                    AMReX_Max_Grid_Size
+                    AMReX_Max_Grid_Size,    &
+                    Source_PTR,             &
+                    Mask_PTR,               &
+                    Ghost_PTR
+
+USE Parameters_AMReX, &
+            ONLY :  iLeaf,                  &
+                    iTrunk,                 &
+                    iCovered,               &
+                    iNotCovered,            &
+                    iOutside,               &
+                    iInterior
 
 USE Poseidon_AMReX_MakeFineMask_Module, &
             ONLY :  AMReX_MakeFineMask
             
 USE Poseidon_AMReX_BuildMask_Module, &
             ONLY :  AMReX_BuildMask
-            
-USE Variables_AMReX_Source, &
-            ONLY :  Source_PTR,         &
-                    Mask_PTR,           &
-                    Ghost_PTR
+
 
 #endif
 

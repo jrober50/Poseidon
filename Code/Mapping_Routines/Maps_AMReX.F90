@@ -29,7 +29,7 @@ USE Poseidon_Kinds_Module, &
 USE Variables_MPI, &
             ONLY :  myID_Poseidon
 
-USE Variables_AMReX_Source, &
+USE Parameters_AMReX, &
             ONLY :  iTrunk,                 &
                     iLeaf
 
@@ -198,8 +198,6 @@ TYPE(amrex_mfiter)                              ::  mfi
 TYPE(amrex_box)                                 ::  Box
 
 INTEGER, DIMENSION(3)                           ::  ELo, EHi
-INTEGER                                         ::  iLeaf  = 1
-INTEGER                                         ::  iTrunk = 0
 
 INTEGER, DIMENSION(3)                           ::  EOff
 INTEGER, DIMENSION(1:3)                         ::  nGhost_Vec
