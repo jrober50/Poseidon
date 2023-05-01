@@ -5,5 +5,6 @@
   Poseidon_Units.f90             \
   Poseidon_File_Routines.f90     \
   Poseidon_Message_Routines.f90  \
+  Poseidon_Git_IO.F90            \
   Poseidon_Bailout.f90           \
 

@@ -223,6 +223,11 @@ USE Flags_IO_Module, &
             ONLY :  lPF_IO_Flags,               &
                     iPF_IO_Write_Setup
 
+                    
+USE Poseidon_Git_IO_Module, &
+            ONLY :  Poseidon_Git_Output_Info
+
+
 
 IMPLICIT NONE
 
@@ -357,6 +362,9 @@ ELSE
     Verbose_Flag = .FALSE.
 END IF
 IF ( Verbose_Flag ) CALL Init_Message('Beginning Poseidon Core Initialization.')
+
+
+CALL Poseidon_Git_Output_Info()
 
 
 IF ( Source_Units == "C" ) THEN

@@ -18,6 +18,9 @@ Poseidon_File_Routines.o:     \
 Poseidon_Message_Routines.o:  \
   Poseidon_Message_Routines.f90  
 
+Poseidon_Git_IO.o:            \
+  Poseidon_Git_IO.F90
+
 Poseidon_Bailout.o:           \
   Poseidon_Bailout.f90
 

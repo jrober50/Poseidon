@@ -8,7 +8,7 @@ NPROCS=1
 
 ## Select Machine
 
-MACHINE_NAME    =NicksMacBook
+POSEIDON_MACHINE_NAME    =jrober
 #MACHINE_NAME = sjdunham
 #MACHINE_NAME	=MacBook
 #MACHINE_NAME	=Rhea

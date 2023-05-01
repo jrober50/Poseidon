@@ -1,0 +1,31 @@
+# from https://gist.github.com/pch-envision/9dbbc4f9313ec468859631a049188bc4
+# Modified based on Sam's work in thornado
+
+POSEIDON_GIT_HASH \
+  := $(shell \
+     cd $(POSEIDON_DIR) \
+     && git --no-pager describe --tags --always --dirty \
+     && cd - > /dev/null)
+POSEIDON_DEFS += -DPOSEIDON_GIT_HASH=\"$(POSEIDON_GIT_HASH)\"
+
+POSEIDON_GIT_DATE \
+  := $(firstword \
+     $(shell \
+     cd $(POSEIDON_DIR) \
+     && git --no-pager show --date=short --format="%ad" --name-only \
+     && cd - >/dev/null))
+POSEIDON_DEFS += -DPOSEIDON_GIT_DATE=\"$(POSEIDON_GIT_DATE)\"
+
+POSEIDON_GIT_BRANCH \
+  := $(shell \
+     cd $(POSEIDON_DIR) \
+     && git rev-parse --abbrev-ref HEAD \
+     && cd - > /dev/null)
+POSEIDON_DEFS += -DPOSEIDON_GIT_BRANCH=\"$(POSEIDON_GIT_BRANCH)\"
+
+POSEIDON_GIT_URL \
+  := $(shell \
+     cd $(POSEIDON_DIR) \
+     && git config --get remote.origin.url \
+     && cd - > /dev/null)
+POSEIDON_DEFS += -DPOSEIDON_GIT_URL=\"$(POSEIDON_GIT_URL)\"
