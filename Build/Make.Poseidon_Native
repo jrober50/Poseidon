@@ -1,0 +1,27 @@
+# For use with GNUmake for AMREX compilation.
+ifndef POSEIDON_ACTIVE_DIR
+  ifndef POSEIDON_DIR
+    $(error ERROR: Neither POSEIDON_DIR nor POSEIDON_ACTIVE_DIR is defined)
+  else 
+    $(warning  WARNING: POSEIDON_ACTIVE_DIR is not defined. Using $(POSEIDON_DIR))
+    POSEIDON_ACTIVE_DIR = $(POSEIDON_DIR)
+  endif 
+endif
+
+POSEIDON_AMREX_MODE  =OFF
+POSEIDON_TIMER_MODE  ?=OFF
+POSEIDON_MEMORY_MODE ?=OFF
+POSEIDON_DEBUG_MODE  ?=OFF
+
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Preprocess
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Include
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_Path
+include $(POSEIDON_ACTIVE_DIR)/Build/Makefile_List
+
+
+f90EXE_sources   += $(filter %.f90,$(POSEIDON))
+F90EXE_sources   += $(filter %.F90,$(POSEIDON))
+CEXE_sources     += $(filter %.cpp,$(POSEIDON))
+
+DEFINES += $(POSEIDON_DEFS)
+
