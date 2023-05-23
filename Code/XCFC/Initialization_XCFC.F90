@@ -43,11 +43,6 @@ USE Variables_Derived, &
 
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
-
-USE Variables_Functions, &
-            ONLY :  Calc_3D_Values_At_Location,    &
-                    Calc_1D_CFA_Values
-
 USE Variables_Matrices, &
             ONLY :  Laplace_NNZ,                &
                     iMB_Diagonals,             &
@@ -55,10 +50,6 @@ USE Variables_Matrices, &
 
 USE Allocation_XCFC_Linear_Systems, &
             ONLY :  Allocate_XCFC_Linear_Systems
-
-USE Return_Functions_FP,   &
-            ONLY :  Calc_FP_Values_At_Location,  &
-                    Calc_1D_CFA_Values_FP
 
 USE Matrix_Initialization_Module, &
             ONLY :  Initialize_XCFC_Matrices
@@ -126,13 +117,6 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
 
     ! Construct Matrices
     CALL Initialize_XCFC_Matrices()
-
-
-
-    Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
-    Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
-
-
 
     !lPF_Init_Flag(iPF_Init_XCFC) = .TRUE.
     CALL TimerStop( Timer_Initialization )

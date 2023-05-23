@@ -506,7 +506,7 @@ END SUBROUTINE Initialize_Am_Table
 SUBROUTINE Initialize_Plm_Tables(   QP_Num,         &
                                     QP_xLocs,       &
                                     L_Max,          &
-                                    LM_Length,      &
+                                    LMLength,      &
                                     E_Num,          &
                                     E_LoHi,         &
                                     E_Locs,         &
@@ -516,13 +516,13 @@ SUBROUTINE Initialize_Plm_Tables(   QP_Num,         &
 INTEGER,                                                INTENT(IN)  ::  QP_Num
 REAL(idp),  DIMENSION(1:QP_Num),                        INTENT(IN)  ::  QP_xLocs
 INTEGER,                                                INTENT(IN)  ::  L_Max
-INTEGER,                                                INTENT(IN)  ::  LM_Length
+INTEGER,                                                INTENT(IN)  ::  LMLength
 INTEGER,                                                INTENT(IN)  ::  E_Num
 INTEGER,    DIMENSION(1:2),                             INTENT(IN)  ::  E_LoHi
 REAL(idp),  DIMENSION(0:E_Num),                         INTENT(IN)  ::  E_Locs
 
-REAL(idp),  DIMENSION(1:QP_Num,1:LM_Length,0:E_Num-1),  INTENT(OUT) ::  Plm_Table
-REAL(idp),  DIMENSION(1:QP_Num,1:LM_Length,0:E_Num-1),  INTENT(OUT) ::  Plm_dt_Table
+REAL(idp),  DIMENSION(1:QP_Num,1:LMLength,0:E_Num-1),  INTENT(OUT) ::  Plm_Table
+REAL(idp),  DIMENSION(1:QP_Num,1:LMLength,0:E_Num-1),  INTENT(OUT) ::  Plm_dt_Table
 
 REAL(idp),  DIMENSION(1:QP_Num,0:L_Max,0:E_Num-1)                   ::  cosm
 REAL(idp),  DIMENSION(1:QP_Num,0:L_Max,0:E_Num-1)                   ::  sinm
@@ -667,7 +667,7 @@ END SUBROUTINE Initialize_Plm_Tables
 SUBROUTINE Initialize_Plm_Table(    QP_Num,         &
                                     QP_xLocs,       &
                                     L_Max,          &
-                                    LM_Length,      &
+                                    LMLength,      &
                                     E_Num,          &
                                     E_LoHi,         &
                                     E_Locs,         &
@@ -676,12 +676,12 @@ SUBROUTINE Initialize_Plm_Table(    QP_Num,         &
 INTEGER,                                                INTENT(IN)  ::  QP_Num
 REAL(idp),  DIMENSION(1:QP_Num),                        INTENT(IN)  ::  QP_xLocs
 INTEGER,                                                INTENT(IN)  ::  L_Max
-INTEGER,                                                INTENT(IN)  ::  LM_Length
+INTEGER,                                                INTENT(IN)  ::  LMLength
 INTEGER,                                                INTENT(IN)  ::  E_Num
 INTEGER,    DIMENSION(1:2),                             INTENT(IN)  ::  E_LoHi
 REAL(idp),  DIMENSION(0:E_Num),                         INTENT(IN)  ::  E_Locs
 
-REAL(idp),  DIMENSION(1:QP_Num,1:LM_Length,0:E_Num-1),  INTENT(OUT) ::  Plm_Table
+REAL(idp),  DIMENSION(1:QP_Num,1:LMLength,0:E_Num-1),  INTENT(OUT) ::  Plm_Table
 
 REAL(idp),  DIMENSION(1:QP_Num,0:L_Max,0:E_Num-1)                   ::  cosm
 REAL(idp),  DIMENSION(1:QP_Num,0:L_Max,0:E_Num-1)                   ::  sinm
@@ -768,12 +768,12 @@ END SUBROUTINE Initialize_Plm_Table
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Initialize_Nlm_Table( L_Max,     &
-                                 LM_Length, &
+                                 LMLength, &
                                  Nlm_Table  )
 
 INTEGER,                                    INTENT(IN)  ::  L_Max
-INTEGER,                                    INTENT(IN)  ::  LM_Length
-REAL(idp),  DIMENSION(1:LM_Length),         INTENT(OUT) ::  Nlm_Table
+INTEGER,                                    INTENT(IN)  ::  LMLength
+REAL(idp),  DIMENSION(1:LMLength),         INTENT(OUT) ::  Nlm_Table
 
 INTEGER                 :: l, m
 INTEGER                 :: Short_lm

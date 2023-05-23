@@ -234,8 +234,8 @@ INTEGER,        DIMENSION(1:3)                              ::  iEL, iEU
 INTEGER,        DIMENSION(1:3)                              ::  iEL_A, iEU_A
 LOGICAL                                                     ::  FillGhostCells
 
-REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2)-1)           ::  tlocs_subarray
-REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3)-1)           ::  plocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(2))             ::  tlocs_subarray
+REAL(idp),  DIMENSION(0:AMReX_Max_Grid_Size(3))             ::  plocs_subarray
     
 REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  Plm_Table
 REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_Table
@@ -336,12 +336,12 @@ DO lvl = nLevels-1,0,-1
         iNE = iEU-iEL+1
         
         
-        
-        
-        DO te = iEL(2),iEU(2)
+        tlocs_subarray = 0.0_idp
+        plocs_subarray = 0.0_idp
+        DO te = iEL(2),iEU(2)+1
             tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
         END DO
-        DO pe = iEL(3),iEU(3)
+        DO pe = iEL(3),iEU(3)+1
             plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
         END DO
         
@@ -362,7 +362,7 @@ DO lvl = nLevels-1,0,-1
                                     LM_Short_Length,            &
                                     iNE(2),                     &
                                     [iEL(2), iEU(2)],           &
-                                    tlocs_subarray(0:iNE(2)-1), &
+                                    tlocs_subarray(0:iNE(2)),   &
                                     Plm_Table                   )
 
 
@@ -927,8 +927,6 @@ INTEGER                                                     ::  Current_Location
 
 REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP
 REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP_x
-!REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP_y
-!REAL(idp),  DIMENSION(0:DEGREE)                             ::  LagP_z
 
 REAL(idp)                                                   ::  TMP_U_Value
 REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )          ::  Slm_Elem_Table

@@ -143,7 +143,6 @@ ELSE
     DO re = 0,NUM_R_ELEMENTS-1
     IF ( r > rlocs(re) .AND. r <= rlocs(re+1) ) THEN
 
-
         r_tmp = Map_To_X_Space(rlocs(re),rlocs(re+1),r)
         LagP = Lagrange_Poly(r_tmp,DEGREE,xlocP)
 
@@ -189,7 +188,7 @@ END SUBROUTINE Calc_FP_Values_At_Location
 
 !+102+###########################################################################!
 !                                                                                !
-!                  Calc_1D_CFA_Values_FP          !
+!          Calc_1D_CFA_Values_FP          !
 !                                                                                !
 !################################################################################!
 SUBROUTINE Calc_1D_CFA_Values_FP(   Num_RE_Input, Num_RQ_Input, RQ_Input,   &
@@ -426,7 +425,7 @@ END FUNCTION Calc_Var_At_Location_Type_B
 
 !+102+###########################################################################!
 !                                                                                !
-!                  Calc_1D_CFA_Values_FP          !
+!                  Calc_Values_Here_All          !
 !                                                                                !
 !################################################################################!
 SUBROUTINE Calc_Values_Here_All( re, theta, phi, LagP, Tmp_U_Value )
@@ -498,7 +497,7 @@ END SUBROUTINE Calc_Values_Here_All
 
 !+102+###########################################################################!
 !                                                                                !
-!                  Calc_1D_CFA_Values_FP          !
+!                  Calc_Values_Here_Type_A          !
 !                                                                                !
 !################################################################################!
 FUNCTION Calc_Values_Here_Type_A( re, theta, phi, LagP, iU )
@@ -544,7 +543,7 @@ END FUNCTION Calc_Values_Here_Type_A
 
 !+603+###########################################################################!
 !                                                                                !
-!                  Calc_1D_CFA_Values_FP          !
+!        Calc_Values_Here_Type_B          !
 !                                                                                !
 !################################################################################!
 FUNCTION Calc_Values_Here_Type_B( re, theta, phi, LagP, iU, iVB )
@@ -599,7 +598,7 @@ END FUNCTION Calc_Values_Here_Type_B
 
 !+502+########################################################!
 !                                                               !
-!          Calc_Var_At_Location_Type_B                          !
+!          Calc_Drv_At_Location_Type_B                          !
 !                                                               !
 !#############################################################!
 SUBROUTINE Calc_Drv_At_Location_Type_B( r, theta, phi, iU, iVB, Derivs )
@@ -669,7 +668,7 @@ END SUBROUTINE Calc_Drv_At_Location_Type_B
 
 !+603+###########################################################################!
 !                                                                                !
-!                  Calc_1D_CFA_Values_FP          !
+!          Calc_Derivs_Here_Type_B          !
 !                                                                                !
 !################################################################################!
 SUBROUTINE Calc_Derivs_Here_Type_B( re, theta, phi, LagP, dLagP, iU, iVB, Derivs )

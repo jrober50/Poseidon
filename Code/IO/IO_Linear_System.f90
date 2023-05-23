@@ -57,7 +57,8 @@ USE Variables_Derived, &
             ONLY :  Block_Prob_Dim,         &
                     SubShell_Prob_Dim,      &
                     Elem_Prob_Dim_Sqr,      &
-                    Num_Off_Diagonals
+                    Num_Off_Diagonals,      &
+                    LM_Length
 
 USE Variables_FEM_Module, &
             ONLY :  FEM_Node_xlocs
@@ -69,6 +70,15 @@ USE Poseidon_File_Routines_Module, &
 USE Functions_Quadrature, &
             ONLY :  Initialize_LGL_Quadrature_Locations
 
+USE Maps_Fixed_Point, &
+            ONLY :  FP_Beta_Array_Map
+            
+USE Variables_Matrices, &
+            ONLY :  dMB_Matrix_Banded,      &
+                    iMB_Bandwidth
+                    
+USE Variables_IO, &
+            ONLY :  File_Suffix
 
 IMPLICIT NONE
 
@@ -78,12 +88,12 @@ CHARACTER(LEN = 20), PARAMETER    :: Filename_Format_B = "(A,A,I2.2,A,I2.2,A)"
 
 CONTAINS
 
-!+403+###########################################################################!
-!                                                                                !
-!                   OUTPUT_JACOBIAN_MATRIX                                       !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_LAPLACE_MATRIX( Matrix )
+ !+101+############################################################!
+!                                                                   !
+!          Output_Laplace_Matrix                                    !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_Laplace_Matrix( Matrix )
 
 REAL(idp), DIMENSION(0:2*NUM_OFF_DIAGONALS, 0:SUBSHELL_PROB_DIM-1), INTENT(IN) :: Matrix
 
@@ -123,15 +133,15 @@ END DO
 
 CLOSE( FILE_ID )
 
-END SUBROUTINE OUTPUT_LAPLACE_MATRIX
+END SUBROUTINE Output_Laplace_Matrix
 
 
-!+403+###########################################################################!
-!                                                                                !
-!                   OUTPUT_JACOBIAN_MATRIX                                       !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_JACOBIAN_MATRIX( Matrix )
+ !+102+############################################################!
+!                                                                   !
+!          Output_Jacobian_Matrix                                   !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_Jacobian_Matrix( Matrix )
 
 REAL(idp), DIMENSION(0:ELEM_PROB_DIM_SQR-1 ,0:Num_R_Elements-1), INTENT(IN) :: Matrix
 
@@ -172,17 +182,17 @@ END DO
 
 CLOSE(FILE_ID)
 
-END SUBROUTINE OUTPUT_JACOBIAN_MATRIX
+END SUBROUTINE Output_Jacobian_Matrix
 
 
 
 
-!+404+###########################################################################!
-!                                                                                !
-!                   OUTPUT_RHS_VECTOR                                       !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_RHS_VECTOR( Vector )
+ !+201+############################################################!
+!                                                                   !
+!          Output_RHS_Vector                                        !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_RHS_Vector( Vector )
 
 REAL(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
 
@@ -212,19 +222,19 @@ END DO
 CLOSE(FILE_ID)
 
 
-END SUBROUTINE OUTPUT_RHS_VECTOR
+END SUBROUTINE Output_RHS_Vector
 
 
 
 
 
 
-!+404+###########################################################################!
-!                                                                                !
-!                   OUTPUT_RHS_VECTOR_Parts                                      !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_RHS_VECTOR_Parts(Laplace, Source)
+ !+202+############################################################!
+!                                                                   !
+!          Output_RHS_Vector_Parts                                  !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_RHS_Vector_Parts(Laplace, Source)
 
 REAL(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1), INTENT(IN)       :: Laplace
 REAL(KIND = idp), DIMENSION(0:SUBSHELL_PROB_DIM-1), INTENT(IN)       :: Source
@@ -268,19 +278,19 @@ CLOSE(FILE_ID)
 
 
 
-END SUBROUTINE OUTPUT_RHS_VECTOR_Parts
+END SUBROUTINE Output_RHS_Vector_Parts
 
 
 
 
 
 
-!+404+###########################################################################!
-!                                                                                !
-!                   OUTPUT_UPDATE_VECTOR                                         !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_UPDATE_VECTOR( Vector )
+ !+203+############################################################!
+!                                                                   !
+!          Output_Update_Vector                                     !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_Update_Vector( Vector )
 
 REAL(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
 
@@ -307,15 +317,15 @@ END DO
 
 CLOSE(FILE_ID)
 
-END SUBROUTINE OUTPUT_UPDATE_VECTOR
+END SUBROUTINE Output_Update_Vector
 
 
-!+404+###########################################################################!
-!                                                                                !
-!                   OUTPUT_COEFFICIENT_VECTOR_MATLAB                             !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_MATLAB( Vector )
+ !+204+############################################################!
+!                                                                   !
+!          Output_Coefficient_Vector_Matlab                         !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_Coefficient_Vector_Matlab( Vector )
 
 REAL(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
 
@@ -343,14 +353,16 @@ END DO
 CLOSE(FILE_ID)
 
 
-END SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_MATLAB
+END SUBROUTINE Output_Coefficient_Vector_Matlab
 
-!+404+###########################################################################!
-!                                                                                !
-!                   OUTPUT_COEFFICIENT_VECTOR_FORTRAN                            !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_FORTRAN( Vector )
+
+
+ !+205+############################################################!
+!                                                                   !
+!          Output_Coefficient_Vector_Fortran                        !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_Coefficient_Vector_Fortran( Vector )
 
 REAL(idp), DIMENSION(0:Block_Prob_Dim-1), INTENT(IN) ::  Vector
 
@@ -374,16 +386,16 @@ IF ( .FALSE. ) THEN
 
 END IF
 
-END SUBROUTINE OUTPUT_COEFFICIENT_VECTOR_FORTRAN
+END SUBROUTINE Output_Coefficient_Vector_Fortran
 
 
 
-!+404+###########################################################################!
-!                                                                                !
-!                   READ_COEFFICIENT_VECTOR                                      !
-!                                                                                !
-!################################################################################!
-SUBROUTINE READ_COEFFICIENT_VECTOR(Frame_Num, Iter_Num)
+ !+301+############################################################!
+!                                                                   !
+!          Read_Coefficient_Vector                                  !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Read_Coefficient_Vector(Frame_Num, Iter_Num)
 
 INTEGER, INTENT(IN)                                     ::  Frame_Num, Iter_Num
 
@@ -407,22 +419,17 @@ READ(FILE_ID,*)Test
 
 CLOSE(FILE_ID)
 
-END SUBROUTINE READ_COEFFICIENT_VECTOR
+END SUBROUTINE Read_Coefficient_Vector
 
 
 
 
-
-
-
-
-
-!+404+###########################################################################!
-!                                                                                !
-!                   OUTPUT_NODE_MESH                                             !
-!                                                                                !
-!################################################################################!
-SUBROUTINE OUTPUT_NODE_MESH()
+ !+401+############################################################!
+!                                                                   !
+!          Output_Node_Mesh                                         !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_Node_Mesh()
 
 CHARACTER(LEN = 57)                                     ::  FILE_NAME
 
@@ -460,7 +467,7 @@ END DO
 
 CLOSE(FILE_ID)
 
-END SUBROUTINE OUTPUT_NODE_MESH
+END SUBROUTINE Output_Node_Mesh
 
 
 
@@ -469,6 +476,72 @@ END SUBROUTINE OUTPUT_NODE_MESH
 
 
 
+
+
+
+
+
+ !+501+############################################################!
+!                                                                   !
+!          Output_Matrix_TypeA                                      !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_Matrix_TypeA()
+
+END SUBROUTINE Output_Matrix_TypeA
+
+
+
+
+ !+502+############################################################!
+!                                                                   !
+!          Output_Matrix_TypeB                                      !
+!                                                                   !
+ !#################################################################!
+SUBROUTINE Output_Matrix_TypeB()
+
+
+CHARACTER(LEN = 500),   DIMENSION(2)    ::  Filenames
+INTEGER,                DIMENSION(2)    ::  FileIDs
+
+INTEGER                                 ::  re
+INTEGER                                 ::  d,  ui, lm
+INTEGER                                 ::  dp, uj, lpmp
+INTEGER                                 ::  row, col
+INTEGER                                 ::  row_bnd
+REAL(idp)                               ::  val
+
+!   Dimension and Location Files
+WRITE(Filenames(1),'(A,A,A,A)') Poseidon_LinSys_Dir,"Matrix_TypeB_Dims_",TRIM(File_Suffix),".out"
+WRITE(Filenames(2),'(A,A,A,A)') Poseidon_LinSys_Dir,"Matrix_TypeB_",TRIM(File_Suffix),".out"
+
+DO ui = 1,2
+    CALL OPEN_NEW_FILE( Filenames(ui), FileIDs(ui),250)
+END DO
+
+WRITE(FileIDs(1),'(I4.4,1X,I1.1,1XI3.3)')Num_R_Elements, Degree, LM_Length
+
+DO re = 0,Num_R_Elements-1
+DO d  = 0,Degree
+DO ui = 1,3
+DO lm = 1,LM_Length
+DO dp = 0,Degree
+DO uj = 1,3
+DO lpmp = 1,LM_Length
+    row_bnd = iMB_Bandwidth + FP_Beta_Array_Map(re,dp,ui,lpmp)
+    row = FP_Beta_Array_Map(re,dp,ui,lpmp)
+    col = FP_Beta_Array_Map(re,d,uj,lm)
+    val = dMB_Matrix_Banded(Row_bnd-Col, Col)
+    WRITE(FileIDs(2),'(I5.5,1X,I5.5,1X,ES22.15)') row, col, val
+END DO ! lpmp
+END DO ! uj
+END DO ! dp
+END DO ! lm
+END DO ! ui
+END DO ! d
+END DO ! re
+
+END SUBROUTINE Output_Matrix_TypeB
 
 
 

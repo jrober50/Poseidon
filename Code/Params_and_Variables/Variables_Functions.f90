@@ -37,55 +37,6 @@ PROCEDURE(Matrix_Location_Pointer), POINTER                 ::   Matrix_Location
 
 
 
-
-
-
-ABSTRACT INTERFACE
-    SUBROUTINE Calc_At_Location_Pointer(r, theta, phi,                          &
-                                        Return_Psi, Return_AlphaPsi,            &
-                                        Return_Beta1, Return_Beta2, Return_Beta3 )
-        REAL(KIND = KIND(1.D0)), INTENT(IN)            ::  r
-        REAL(KIND = KIND(1.D0)), INTENT(IN)            ::  theta
-        REAL(KIND = KIND(1.D0)), INTENT(IN)            ::  phi
-        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_Psi
-        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_AlphaPsi
-        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_Beta1
-        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_Beta2
-        REAL(KIND = KIND(1.D0)), INTENT(INOUT)         ::  Return_Beta3
-
-    END SUBROUTINE Calc_At_Location_Pointer
-END INTERFACE
-
-PROCEDURE(Calc_At_Location_Pointer), POINTER    ::   Calc_3D_Values_At_Location => NULL()
-
-
-
-
-ABSTRACT INTERFACE
-    SUBROUTINE Calc_1D_Array_Pointer(   Num_RE_Input, Num_RQ_Input, RQ_Input,   &
-                                        Left_Limit, Right_Limit,                &
-                                        CFA_Lapse, CFA_ConFactor, CFA_Shift     )
-
-        INTEGER, INTENT(IN)                                         ::  Num_RE_Input,   &
-                                                                        Num_RQ_Input
-
-        REAL(KIND = KIND(1.D0)), DIMENSION(1:Num_RQ_Input), INTENT(IN)     ::  RQ_Input
-        REAL(KIND = KIND(1.D0)), INTENT(IN)                                ::  Left_Limit,     &
-                                                                               Right_Limit
-
-
-        REAL(KIND = KIND(1.D0)), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Lapse
-        REAL(KIND = KIND(1.D0)), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_ConFactor
-        REAL(KIND = KIND(1.D0)), DIMENSION(1:NUM_RQ_Input,1:NUM_RE_Input, 1, 1), INTENT(OUT) ::  CFA_Shift
-    END SUBROUTINE Calc_1D_Array_Pointer
-END INTERFACE
-
-PROCEDURE(Calc_1D_Array_Pointer), POINTER    ::   Calc_1D_CFA_Values => NULL()
-
-
-
-
-
 ABSTRACT INTERFACE
     FUNCTION Source_Function_Pointer(r, theta, phi)
         REAL(KIND = KIND(1.D0))                         ::  Source_Function_Pointer
@@ -128,35 +79,6 @@ END INTERFACE
 PROCEDURE(Shift_Function_Pointer), POINTER              ::   Shift_Solution => NULL()
 
 
-
-
-
-
-
-
-
-
-!ABSTRACT INTERFACE
-!    FUNCTION Calc_Var_At_Location_A_Pointer(r, theta, phi, iU )
-!        REAL(KIND = KIND(1.D0))                             ::  Calc_Var_At_Location_A_Pointer
-!        REAL(KIND = KIND(1.D0)),  INTENT(IN)                ::  r, theta, phi
-!        INTEGER,    INTENT(IN)                              ::  iU
-!
-!    END FUNCTION Calc_Var_At_Location_A_Pointer
-!END INTERFACE
-!
-!ABSTRACT INTERFACE
-!    FUNCTION Calc_Var_At_Location_B_Pointer(r, theta, phi, iU, iVB )
-!        REAL(KIND = KIND(1.D0))                             ::  Calc_Var_At_Location_B_Pointer
-!        REAL(KIND = KIND(1.D0)),  INTENT(IN)                ::  r, theta, phi
-!        INTEGER,    INTENT(IN)                              ::  iU, iVB
-!
-!    END FUNCTION Calc_Var_At_Location_B_Pointer
-!END INTERFACE
-!
-!
-!PROCEDURE(Calc_Var_At_Location_A_Pointer), POINTER      ::  Calc_Var_At_Loc_A => NULL()
-!PROCEDURE(Calc_Var_At_Location_B_Pointer), POINTER      ::  Calc_Var_At_Loc_B => NULL()
 
 
 

@@ -53,8 +53,8 @@ USE Variables_MPI, &
                     MasterID_Poseidon,  &
                     nPROCS_Poseidon
 
-USE Variables_Functions, &
-            ONLY :  Calc_3D_Values_At_Location
+USE Return_Functions_FP,   &
+            ONLY :  Calc_FP_Values_At_Location
 
 USE Poseidon_Return_Routines_Module, &
             ONLY :  Calc_Var_At_Location
@@ -163,7 +163,7 @@ ELSE
 
 
 
-        CALL Calc_3D_Values_At_Location( r, theta, phi,                              &
+        CALL Calc_FP_Values_At_Location( r, theta, phi,                              &
                                         Return_Psi, Return_AlphaPsi,                &
                                         Return_Beta1, Return_Beta2, Return_Beta3    )
 

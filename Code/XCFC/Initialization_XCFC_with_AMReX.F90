@@ -52,10 +52,6 @@ USE Poseidon_Kinds_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
-USE Variables_Functions, &
-            ONLY :  Calc_3D_Values_At_Location,     &
-                    Calc_1D_CFA_Values
-
 USE Allocation_XCFC_Linear_Systems, &
             ONLY :  Allocate_XCFC_Linear_Systems,   &
                     Reallocate_XCFC_Linear_Systems
@@ -81,10 +77,6 @@ USE Poseidon_Remesh_Module, &
 USE Maps_AMReX, &
             ONLY :  Initialize_AMReX_Maps,  &
                     Reinitialize_AMReX_Maps
-
-USE Return_Functions_FP,   &
-            ONLY :  Calc_FP_Values_At_Location, &
-                    Calc_1D_CFA_Values_FP
 
 USE IO_Setup_Report_Module, &
             ONLY :  PRINT_AMReX_Setup
@@ -144,10 +136,6 @@ IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     CALL TimerStop( Timer_Matrix_Init )
 
 
-    Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
-    Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
-
-
     CALL TimerStop(Timer_Initialization_XCFC)
 
     lPF_Init_Flags(iPF_Init_Method_Vars) = .TRUE.
@@ -201,10 +189,6 @@ IF ( lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     CALL TimerStart( Timer_Matrix_Init )
     CALL Initialize_XCFC_Matrices()
     CALL TimerStop( Timer_Matrix_Init )
-
-
-    Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
-    Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
 
 
     CALL TimerStop(Timer_Initialization_XCFC)

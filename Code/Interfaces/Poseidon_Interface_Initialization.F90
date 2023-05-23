@@ -357,7 +357,7 @@ END IF
 IF ( Verbose_Flag ) CALL Init_Message('Beginning Poseidon Core Initialization.')
 
 
-CALL Poseidon_Git_Output_Info()
+
 
 
 IF ( Source_Units == "C" ) THEN
@@ -380,6 +380,8 @@ CALL Set_Method_Flags(  Newtonian_Mode_Option,      &
 
 
 CALL Init_MPI_Params()
+
+CALL Poseidon_Git_Output_Info()
 
 CALL Set_Caller_Data(   Source_NQ,                      &
                         Source_xL,                      &

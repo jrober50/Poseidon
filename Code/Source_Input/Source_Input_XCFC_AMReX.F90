@@ -80,13 +80,9 @@ USE Timer_Routines_Module, &
 USE Timer_Variables_Module, &
             ONLY :  Timer_GR_SourceInput
 
-
 USE Variables_Interface, &
             ONLY :  Caller_Quad_DOF,            &
                     Translation_Matrix
-
-USE Maps_X_Space, &
-            ONLY :  Map_To_X_Space
 
 USE Flags_Source_Input_Module, &
             ONLY :  lPF_SI_Flags,       &

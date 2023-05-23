@@ -43,8 +43,7 @@ USE Variables_Interface, &
                     Caller_xL,                      &
                     Caller_RQ_xlocs,                &
                     Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs,                &
-                    Translation_Matrix
+                    Caller_PQ_xlocs
 
 USE Variables_Source, &
             ONLY :  Source_Rho
@@ -64,8 +63,6 @@ USE Variables_Quadrature, &
                     xRightLimit,            &
                     Int_R_Locations
 
-USE Functions_Translation_Matrix_Module, &
-            ONLY :  Create_Translation_Matrix
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                         &
@@ -114,7 +111,6 @@ REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  Input_xL
 INTEGER                                             ::  Local_Here
 
 
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
 INTEGER                                             ::  Their_DOF
 
 INTEGER                                             ::  re, te, pe
@@ -129,42 +125,29 @@ CALL TimerStart(Timer_Poisson_SourceInput)
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
-ALLOCATE(TransMat(1:Their_DOF, 1:Local_Quad_DOF))
-
-TransMat =  Create_Translation_Matrix(  Input_NQ,          &
-                                        Input_xL,          &
-                                        Input_R_Quad,    &
-                                        Input_T_Quad,    &
-                                        Input_P_Quad,    &
-                                        Their_DOF,         &
-                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
-                                        [xLeftLimit, xRightLimit ],            &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Local_Quad_DOF            )
-
-
-DO pe = 0,Input_NE(3)-1
-DO te = 0,Input_NE(2)-1
-DO re = 0,Input_NE(1)-1
-
-DO Local_Here = 1,Local_Quad_DOF
 
 
 
-    Source_Rho(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &
-                                                       Input_Rho(:,re,te,pe)          )
-
-
-END DO  ! Local_Here
-
-END DO ! re Loop
-END DO ! te Loop
-END DO ! pe Loop
-
-
-CALL TimerStop(Timer_Poisson_SourceInput)
+!DO pe = 0,Input_NE(3)-1
+!DO te = 0,Input_NE(2)-1
+!DO re = 0,Input_NE(1)-1
+!
+!DO Local_Here = 1,Local_Quad_DOF
+!
+!
+!
+!    Source_Rho(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &
+!                                                       Input_Rho(:,re,te,pe)          )
+!
+!
+!END DO  ! Local_Here
+!
+!END DO ! re Loop
+!END DO ! te Loop
+!END DO ! pe Loop
+!
+!
+!CALL TimerStop(Timer_Poisson_SourceInput)
 
 
 
@@ -198,23 +181,23 @@ IF ( Verbose_Flag ) CALL Run_Message('Receiving Newtonian Sources. Container : F
 CALL TimerStart(Timer_Poisson_SourceInput)
 
 
-DO pe = 0,Num_P_Elements-1
-DO te = 0,Num_T_Elements-1
-DO re = 0,Num_R_Elements-1
-
-DO Local_Here = 1,Local_Quad_DOF
-
-
-
-    Source_Rho(Local_Here,re,te,pe) = DOT_PRODUCT( Translation_Matrix(:,Local_Here),    &
-                                                    Input_Rho(:,re,te,pe)               )
-
-
-END DO  ! Local_Here
-
-END DO ! re Loop
-END DO ! te Loop
-END DO ! pe Loop
+!DO pe = 0,Num_P_Elements-1
+!DO te = 0,Num_T_Elements-1
+!DO re = 0,Num_R_Elements-1
+!
+!DO Local_Here = 1,Local_Quad_DOF
+!
+!
+!
+!    Source_Rho(Local_Here,re,te,pe) = DOT_PRODUCT( Translation_Matrix(:,Local_Here),    &
+!                                                    Input_Rho(:,re,te,pe)               )
+!
+!
+!END DO  ! Local_Here
+!
+!END DO ! re Loop
+!END DO ! te Loop
+!END DO ! pe Loop
 
 
 CALL TimerStop(Timer_Poisson_SourceInput)

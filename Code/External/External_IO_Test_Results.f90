@@ -43,9 +43,6 @@ USE Variables_Mesh, &
             ONLY :  R_Inner,        &
                     R_Outer
 
-USE Variables_Functions, &
-            ONLY :  Calc_3D_Values_At_Location
-
 USE External_HCT_Solution_Module, &
             ONLY :  HCT_Solution
 

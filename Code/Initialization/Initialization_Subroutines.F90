@@ -149,19 +149,8 @@ USE Variables_MPI, &
                     Poseidon_Comm_World,    &
                     ierr
 
-
-USE Functions_Math, &
-            ONLY :  Lagrange_Poly
-
-
-USE Functions_Translation_Matrix_Module, &
-            ONLY :  Create_Translation_Matrix
-
 USE IO_Suffix_Module, &
             ONLY :  Create_Suffix
-
-USE Maps_X_Space, &
-            ONLY :  Map_To_X_Space
 
 USE Allocation_Mesh, &
             ONLY :  Allocate_Mesh

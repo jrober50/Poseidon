@@ -47,10 +47,6 @@ USE Variables_Derived, &
 USE Variables_Mesh, &
             ONLY :  Num_R_Elements
 
-USE Variables_Functions, &
-            ONLY :  Calc_3D_Values_At_Location,    &
-                    Calc_1D_CFA_Values
-
 USE Variables_Matrices, &
             ONLY :  Laplace_NNZ,                &
                     iMB_Diagonals,             &
@@ -58,11 +54,6 @@ USE Variables_Matrices, &
 
 USE Allocation_CFA_Linear_Systems, &
             ONLY :  Allocate_CFA_Linear_Systems
-
-
-USE Return_Functions_FP,   &
-            ONLY :  Calc_FP_Values_At_Location,  &
-                    Calc_1D_CFA_Values_FP
 
 USE Matrix_Initialization_Module, &
             ONLY :  Initialize_XCFC_Matrices
@@ -130,13 +121,6 @@ CALL Allocate_CFA_Linear_Systems()
 CALL TimerStart( Timer_Matrix_Init )
 CALL Initialize_XCFC_Matrices()
 CALL TimerStop( Timer_Matrix_Init )
-
-
-Calc_3D_Values_At_Location  => Calc_FP_Values_At_Location
-Calc_1D_CFA_Values          => Calc_1D_CFA_Values_FP
-
-
-
 
 CALL TimerStop( Timer_Initialization )
 

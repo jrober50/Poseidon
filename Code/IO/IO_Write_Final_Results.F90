@@ -94,11 +94,8 @@ USE Variables_IO, &
 USE Variables_External, &
             ONLY :  SelfSim_T
 
-USE Variables_Functions, &
-            ONLY :  Potential_Solution,         &
-                    Shift_Solution,             &
-                    Calc_3D_Values_at_Location, &
-                    Calc_1D_CFA_Values
+USE Return_Functions_FP,   &
+            ONLY :  Calc_FP_Values_At_Location
                     
 USE Variables_Interface, &
             ONLY :  Caller_NQ,                      &
@@ -1579,7 +1576,7 @@ IF ( .TRUE. ) THEN
         PHI_VAL = k*DELTA_PHI
         THETA_VAL = (j-1)*DELTA_THETA
 
-        CALL Calc_3D_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,                   &
+        CALL Calc_FP_Values_At_Location( output_rc(i), THETA_VAL, PHI_VAL,                   &
                                          Return_Psi, Return_AlphaPsi,                &
                                          Return_Beta1, Return_Beta2, Return_Beta3    )
 

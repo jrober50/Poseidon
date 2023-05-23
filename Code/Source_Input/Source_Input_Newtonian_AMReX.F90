@@ -43,8 +43,7 @@ USE Variables_Interface, &
                     Caller_xL,                      &
                     Caller_RQ_xlocs,                &
                     Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs,                &
-                    Translation_Matrix
+                    Caller_PQ_xlocs
 
 USE Variables_Source, &
             ONLY :  Source_Rho
@@ -63,9 +62,6 @@ USE Variables_Quadrature, &
                     xLeftLimit,             &
                     xRightLimit,            &
                     Int_R_Locations
-
-USE Functions_Translation_Matrix_Module, &
-            ONLY :  Create_Translation_Matrix
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                         &
@@ -149,7 +145,6 @@ REAL(idp), CONTIGUOUS, POINTER                      ::  Their_PTR(:,:,:,:)
 TYPE(amrex_mfiter)                                  ::  mfi
 TYPE(amrex_box)                                     ::  Box
 
-REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
 INTEGER                                             ::  Their_DOF
 
 
@@ -163,76 +158,7 @@ CALL TimerStart(Timer_Poisson_SourceInput)
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
-ALLOCATE(TransMat(1:Their_DOF, 1:Local_Quad_DOF))
 
-TransMat =  Create_Translation_Matrix(  Input_NQ,          &
-                                        Input_xL,          &
-                                        Input_R_Quad,    &
-                                        Input_T_Quad,    &
-                                        Input_P_Quad,    &
-                                        Their_DOF,         &
-                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
-                                        [xLeftLimit, xRightLimit ],            &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Int_R_Locations,      &
-                                        Local_Quad_DOF            )
-
-
-
-!
-!   If the mesh is being defined or being redefined, MF_Source will need to be
-!   built/rebuilt.
-!
-!IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
-!    DO level = 0,AMReX_Num_Levels-1
-!
-!        CALL amrex_multifab_build(  MF_Source(level),           &
-!                                    MF_Src_Input(Level)%BA,     &
-!                                    MF_Src_Input(Level)%DM,     &
-!                                    MF_Source_nComps, 1         )
-!
-!        lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
-!    END DO
-!END IF
-!
-!
-!
-!DO level = 0,AMReX_Num_Levels-1
-!    CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
-!
-!    DO WHILE(mfi%next())
-!        Their_PTR => MF_Src_Input(level)%dataPtr(mfi)
-!        My_PTR    => MF_Source(level)%dataPtr(mfi)
-!
-!        My_PTR = 0.0_idp
-!
-!        Box = mfi%tilebox()
-!
-!        iEL = Box%lo
-!        iEU = Box%hi
-!
-!
-!        DO re = iEL(1),iEU(1)
-!        DO te = iEL(2),iEU(2)
-!        DO pe = iEL(3),iEU(3)
-!        DO Local_Here = 1,Local_Quad_DOF
-!
-!            My_PTR(re,te,pe,Local_Here) = DOT_PRODUCT( TransMat(:,Local_Here),          &
-!                                                       Their_PTR(re,te,pe,1:Their_DOF)  )
-!
-!        END DO  ! Local_Here
-!        END DO  ! pe
-!        END DO  ! te
-!        END DO  ! re
-!
-!    END DO      ! mfi
-!END DO          ! level
-!
-!
-!
-!CALL TimerStop(Timer_Poisson_SourceInput)
-!
 
 
 END SUBROUTINE Poseidon_Input_Sources_Newtonian_AMReX
@@ -272,58 +198,6 @@ INTEGER                                             ::  Local_Here
 
 
 
-!
-!IF ( Verbose_Flag ) CALL Run_Message('Receiving Newtonian Sources. Container : AMReX Multifab.')
-!CALL TimerStart(Timer_GR_SourceInput)
-!
-!IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
-!    DO level = 0,AMReX_Num_Levels-1
-!
-!        CALL amrex_multifab_build(  MF_Source(level),           &
-!                                    MF_Src_Input(Level)%BA,     &
-!                                    MF_Src_Input(Level)%DM,     &
-!                                    MF_Source_nComps, 1         )
-!
-!        lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
-!    END DO
-!END IF
-!
-!
-!
-!DO level = 0,AMReX_Num_Levels-1
-!    CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
-!
-!    DO WHILE(mfi%next())
-!        Their_PTR => MF_Src_Input(level)%dataPtr(mfi)
-!        My_PTR    => MF_Source(level)%dataPtr(mfi)
-!
-!        My_PTR = 0.0_idp
-!
-!        Box = mfi%tilebox()
-!
-!        iEL = Box%lo
-!        iEU = Box%hi
-!
-!
-!        DO re = iEL(1),iEU(1)
-!        DO te = iEL(2),iEU(2)
-!        DO pe = iEL(3),iEU(3)
-!        DO Local_Here = 1,Local_Quad_DOF
-!
-!            My_PTR(re,te,pe,Local_Here) = DOT_PRODUCT( Translation_Matrix(:,Local_Here),    &
-!                                                       Their_PTR(re,te,pe,1:Their_DOF)      )
-!
-!        END DO  ! Local_Here
-!        END DO  ! pe
-!        END DO  ! te
-!        END DO  ! re
-!
-!    END DO      ! mfi
-!END DO          ! level
-!
-!
-!
-!CALL TimerStop(Timer_Poisson_SourceInput)
 
 
 

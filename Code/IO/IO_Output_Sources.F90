@@ -98,17 +98,6 @@ USE Variables_IO, &
 USE Variables_External, &
             ONLY :  SelfSim_T
 
-USE Variables_Functions, &
-            ONLY :  Potential_Solution,         &
-                    Shift_Solution,             &
-                    Calc_3D_Values_at_Location, &
-                    Calc_1D_CFA_Values
-
-USE Functions_Quadrature, &
-            ONLY :  Initialize_LG_Quadrature_Locations,     &
-                    Initialize_LGL_Quadrature_Locations
-
-
 USE Functions_Mesh, &
             ONLY :  Create_Logarithmic_1D_Mesh,             &
                     Create_Uniform_1D_Mesh

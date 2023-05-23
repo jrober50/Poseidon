@@ -70,6 +70,9 @@ USE IO_Output_Sources_Module, &
 
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
+            
+USE Maps_X_Space, &
+            ONLY :  Map_To_X_Space
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -612,7 +615,7 @@ DO te = 0,NUM_T_ELEM-1
             line = Find_Line(xloc, Input_X, NUM_LINES)
 
 
-            x = MAP_TO_X_SPACE(Input_X(Line),Input_X(Line+1),xloc)
+            x = Map_To_X_Space(Input_X(Line),Input_X(Line+1),xloc)
             IF ( x > 1 ) THEN
                 x = 1
             END IF
@@ -785,7 +788,7 @@ DO re = 0,NUM_R_ELEM-1
     !            CALL Find_Line_SUB(xloc, Input_X, NUM_LINES)
         line = Find_Line(xloc, Input_X, NUM_LINES)
 
-        x = MAP_TO_X_SPACE(Input_X(Line),Input_X(Line+1),xloc)
+        x = Map_To_X_Space(Input_X(Line),Input_X(Line+1),xloc)
         IF ( x > 1 ) THEN
             x = 1
         END IF
@@ -1226,24 +1229,6 @@ Lagrange_Poly = tmp
 END FUNCTION Lagrange_Poly
 
 
-
-
-!+301+##########################################################!
-!                                                               !
-!      Map_To_X_Space - maps r value between ra, and rb to x    !
-!                   space such that x in [-1,1].                !
-!                                                               !
-!###############################################################!
-PURE ELEMENTAL FUNCTION Map_To_X_Space(ra, rb, r)
-
-REAL(idp)                            ::  Map_To_X_Space
-REAL(idp), intent(in)                ::  ra, rb
-REAL(idp), intent(in)                ::  r
-
-Map_To_X_Space = (2.0_idp*(r - ra))/(rb - ra) - 1.0_idp
-
-
-END FUNCTION Map_To_X_Space
 
 
 
