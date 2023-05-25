@@ -55,6 +55,7 @@ USE XCFC_Source_Routine_Variables_Module, &
 USE Variables_MPI, &
             ONLY :  nProcs_Poseidon,        &
                     myID_Poseidon,          &
+                    MasterID_Poseidon,      &
                     ierr
 
 USE Variables_Quadrature, &
@@ -381,7 +382,9 @@ CALL Set_Method_Flags(  Newtonian_Mode_Option,      &
 
 CALL Init_MPI_Params()
 
-CALL Poseidon_Git_Output_Info()
+IF ( myID_Poseidon == MasterID_Poseidon ) THEN
+    CALL Poseidon_Git_Output_Info()
+END IF
 
 CALL Set_Caller_Data(   Source_NQ,                      &
                         Source_xL,                      &

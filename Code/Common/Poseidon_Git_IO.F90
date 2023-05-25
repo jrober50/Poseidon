@@ -23,8 +23,7 @@ MODULE Poseidon_Git_IO_Module                                                !##
 !           Dependencies            !
 !                                   !
 !===================================!
-USE Variables_MPI, &
-            ONLY :  myID_Poseidon, MasterID_Poseidon
+
 
 IMPLICIT NONE
 
@@ -41,13 +40,11 @@ CONTAINS
 SUBROUTINE Poseidon_Git_Output_Info( )
 
 #if defined( POSEIDON_GIT_HASH )
-IF ( myID_Poseidon == MasterID_Poseidon ) THEN
     WRITE(*,*)
     WRITE(*,'(A,A)') 'INFO: Poseidon git hash:   ',POSEIDON_GIT_HASH
     WRITE(*,'(A,A)') 'INFO: Poseidon git date:   ',POSEIDON_GIT_DATE
     WRITE(*,'(A,A)') 'INFO: Poseidon git branch: ',POSEIDON_GIT_BRANCH
     WRITE(*,'(A,A)') 'INFO: Poseidon git URL:    ',POSEIDON_GIT_URL
-END IF
 #endif
 
 END SUBROUTINE Poseidon_Git_Output_Info
