@@ -93,6 +93,8 @@ USE Flags_Initialization_Module, &
 IMPLICIT NONE
 
 
+
+
 CONTAINS
 
 
@@ -136,6 +138,8 @@ SUBROUTINE Initialize_AMReX_Maps()
 INTEGER                         :: lvl
 
 
+PRINT*,"AMReX_Num_Levels ",AMReX_Num_Levels
+ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
 
 CALL Count_The_Leafs()
 
@@ -150,6 +154,7 @@ CALL Create_FindLoc_Table()
 
 CALL Create_FEM_Elem_Table()
 
+DEALLOCATE( iLeafElementsPerLvl )
 
 lPF_Init_AMReX_Flags(iPF_Init_AMReX_Maps) = .TRUE.
 
@@ -215,7 +220,7 @@ nGhost_Vec = 0
 
 iLeafElementsPerLvl = 0
 
-
+PRINT*,"In Count the Leafs",AMReX_Num_Levels
 DO lvl = 0,AMReX_Num_Levels-1
 
     ! Because AMReX will only store data owned by a process,
@@ -269,7 +274,6 @@ DO lvl = 0,AMReX_Num_Levels-1
     CALL amrex_distromap_destroy( DM )
     DEALLOCATE( mypmap )
 END DO
-
 
 #endif
 END SUBROUTINE Count_The_Leafs
@@ -416,7 +420,7 @@ Tmp_Array = FindLoc_Table
 FEM_Elem_Table = -1
 
 ! Modify Tmp_Arry.
-! Multiply each row by 2^(AMReX_Max_Level - Cur_Level).
+! Multiply each row by 2^(AMReX_Num_Level - Cur_Level).
 ! This maps each element to its 'left-most element' on the finest mesh.
 ! Example: Element 2 on level 0, would contain elements 4 and 5 on level 1.
 !           This mapping would return 4.

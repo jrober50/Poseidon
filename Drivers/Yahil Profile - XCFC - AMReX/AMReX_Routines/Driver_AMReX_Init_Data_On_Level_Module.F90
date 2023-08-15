@@ -69,12 +69,11 @@ USE Poseidon_Units_Module, &
                     Millisecond,         &
                     Erg,                &
                     Gram
-
-
-USE Variables_Source, &
-            ONLY :  Block_Source_E,             &
-                    Block_Source_S,             &
-                    Block_Source_Si
+                    
+USE Variables_Mesh, &
+            ONLY :  Num_R_Elements,         &
+                    R_Inner,                &
+                    R_Outer
 
 USE Variables_Quadrature, &
             ONLY :  INT_R_LOCATIONS,            &
@@ -229,7 +228,9 @@ NUM_LINES = NUM_LINES -1
 
 
 
-ALLOCATE( Input_X(1:NUM_LINES), Input_D(1:NUM_LINES), Input_V(1:NUM_LINES) )
+ALLOCATE( Input_X(1:NUM_LINES) )
+ALLOCATE( Input_D(1:NUM_LINES) )
+ALLOCATE( Input_V(1:NUM_LINES) )
 ALLOCATE( Input_R(1:NUM_LINES) )
 ALLOCATE( Input_M(1:NUM_LINES) )
 ALLOCATE( Enclosed_Mass(1:NUM_LINES)  )
@@ -332,7 +333,7 @@ xlocs(0) = -1.0_idp
 xlocs(1) = +1.0_idp
 xwidth  = Caller_xL(2)-Caller_xL(1)
 
-DROT = Level_dx(Level,1)/xwidth
+DROT = ((R_Outer-R_Inner)/Num_R_Elements)/xwidth
 
 
 DO pe = BLo(3),BHi(3)

@@ -98,7 +98,6 @@ USE Initialization_Subroutines, &
                     Init_Expansion_Params,          &
                     Init_Mesh_Params,               &
                     Initialize_Mesh,                &
-                    Init_AMReX_Params,              &
                     Set_Caller_Data,                &
                     Set_Method_Flags
 
@@ -181,14 +180,6 @@ USE Variables_Interface, &
                     Caller_R_Units,             &
                     Translation_Matrix
 
-USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Num_Levels,       &
-                    iNumLeafElements,       &
-                    iLeafElementsPerLvl,    &
-                    Findloc_Table,          &
-                    FEM_Elem_Table,         &
-                    Table_Offsets
-
 USE Flags_Core_Module, &
             ONLY :  iPF_Core_Flags,             &
                     iPF_Core_Unit_Mode,         &
@@ -233,7 +224,7 @@ CONTAINS
 
  !+101+############################################################!
 !                                                                   !
-!          Initialize_Poseidon_with_AMReX                           !
+!          Initialize_Poseidon                                      !
 !                                                                   !
  !#################################################################!
 SUBROUTINE Initialize_Poseidon( Source_NE,                          &

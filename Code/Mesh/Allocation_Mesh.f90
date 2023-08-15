@@ -66,6 +66,10 @@ SUBROUTINE Allocate_Mesh()
 
 IF ( Verbose_Flag ) CALL Init_Message('Allocating Mesh Variables.')
 
+PRINT*,Num_R_Elements
+PRINT*,Num_T_Elements
+PRint*,Num_P_Elements
+
 ALLOCATE(rlocs(0:NUM_R_ELEMENTS))
 ALLOCATE(tlocs(0:NUM_T_ELEMENTS))
 ALLOCATE(plocs(0:NUM_P_ELEMENTS))

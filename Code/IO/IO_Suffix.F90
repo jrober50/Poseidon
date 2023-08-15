@@ -42,7 +42,7 @@ USE Variables_FP, &
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,    &
-                    AMReX_Max_Level,        &
+                    AMReX_MaxLevel,        &
                     AMReX_Num_Levels
                     
                     
@@ -90,7 +90,7 @@ IF ( PRESENT(Suffix_Flag_Option) ) THEN
                                         L_Limit
             ELSEIF ( Suffix_Param_Type_Option == 2 ) THEN
                 WRITE(Suffix_Return,555)  Num_R_Elements,         &
-                                        AMReX_Max_Level,        &
+                                        AMReX_MaxLevel,        &
                                         Degree,                 &
                                         FP_Anderson_M
             ELSE

@@ -83,7 +83,7 @@ INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
 
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Cur_R_Locs
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
@@ -162,8 +162,8 @@ M_Index_Min         =  3
 M_Index_Max         =  3
 
 !Surface_RE_Index    =  1
-RE_Index_Min        =  2
-RE_Index_Max        =  2
+RE_Index_Min        =  7
+RE_Index_Max        =  7
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -216,9 +216,9 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     NE(1) = RE_Table(RE_Index)
 !    NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table_Upper(2)
+    WRITE(Suffix_Tail,'(A)')TRIM(Letter_Table_Upper(2))
     
-    Surface_RE = RE_Table(RE_Index)/16
+    Surface_RE = RE_Table(RE_Index)
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -248,7 +248,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
 
-
+    PRINT*,"HERE",NE(1)
     CALL Create_3D_Mesh( Mesh_Type,         &
                         Domain_Edge(1),    &
                         Domain_Edge(2),    &
@@ -285,7 +285,6 @@ CALL Initialize_Poseidon &
             Source_R_Option              = x_e,                          &
             Source_T_Option              = y_e,                          &
             Source_P_Option              = z_e,                          &
-            Method_Flag_Option           = Solver_Type,                  &
             Verbose_Option               = Verbose,                      &
             WriteAll_Option              = .FALSE.,                      &
             Print_Setup_Option           = .TRUE.,                       &

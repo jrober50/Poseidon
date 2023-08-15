@@ -168,20 +168,22 @@ IF ( lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     IF ( Verbose_Flag ) CALL Init_Message('Initializing XCFC system with AMReX.')
     CALL TimerStart(Timer_Initialization_XCFC)
 
-    
+    PRINT*,"A"
     CALL Make_Remesh_Copies()
-
+    PRINT*,"B"
     CALL Reinitialize_AMReX_Maps()
-
+    PRINT*,"C"
     CALL Initialize_Derived_AMReX_Part2()
-
+    PRINT*,"D"
     CALL Reallocate_Mesh()
+    PRINT*,"E"
     CALL Determine_AMReX_Mesh()
-
-
+    PRINT*,"F"
     CALL Reallocate_XCFC_Linear_Systems()
-
-
+    PRINT*,"G"
+    STOP
+    
+    
     CALL Fill_Coeff_Vector_From_Copy()
     CALL Destroy_Remesh_Copies
 

@@ -71,7 +71,7 @@ USE Poseidon_File_Routines_Module, &
 
 
 USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Max_Level,        &
+            ONLY :  AMReX_MaxLevel,        &
                     iNumLeafElements
 
 USE Flags_IO_Module, &
@@ -281,7 +281,7 @@ IF (myID_Poseidon == MasterID_Poseidon ) THEN
 
 WRITE(*,1400)
 WRITE(*,1401)
-WRITE(*,1402)AMReX_Max_Level
+WRITE(*,1402)AMReX_MaxLevel
 !WRITE(*,1403)
 WRITE(*,1404)iNumLeafElements
 WRITE(*,1400)

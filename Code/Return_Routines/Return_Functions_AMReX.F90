@@ -124,7 +124,8 @@ use amrex_fort_module, &
             ONLY :  amrex_spacedim
     
 USE amrex_amrcore_module, &
-            ONLY:   amrex_geom
+            ONLY:   amrex_geom,             &
+                    amrex_get_numlevels
 
 USE amrex_multifab_module,  &
             ONLY :  amrex_multifab,         &
@@ -241,6 +242,8 @@ REAL(idp),  DIMENSION(1:NQ(2),1:LM_Short_Length,0:AMReX_Max_Grid_Size(2)-1) ::  
 REAL(idp),  DIMENSION(1:NQ(3),1:LM_Length,0:AMReX_Max_Grid_Size(3)-1)       ::  Am_Table
 
 
+INTEGER     :: mLevels
+
 
 IF ( PRESENT(FillGhostCells_Option) ) THEN
     FillGhostCells = FillGhostCells_Option
@@ -259,8 +262,9 @@ Num_DOF = NQ(1)*NQ(2)*NQ(3)
 ALLOCATE( Var_Holder(Num_DOF) )
 
 
-DO lvl = nLevels-1,0,-1
+mLevels = amrex_get_numlevels()
 
+DO lvl = mLevels-1,0,-1
 
     IF ( FillGhostCells ) THEN
         nGhost_Vec = MF_Results(lvl)%nghostvect()
@@ -271,7 +275,7 @@ DO lvl = nLevels-1,0,-1
     !
     !   MakeFineMask
     !
-    IF ( lvl < AMReX_Num_Levels-1 ) THEN
+    IF ( lvl < mLevels-1 ) THEN
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
@@ -417,7 +421,6 @@ DO lvl = nLevels-1,0,-1
             DO Output_Here = 1,Num_DOF
                 Here = (iU-1)*Num_DOF+Output_Here
                 Result_PTR(re,te,pe,Here) = Var_Holder(Output_Here)
-                
             END DO ! Output_Here
 
             END IF !  Mask_PTR(RE,TE,PE,1) == iLeaf

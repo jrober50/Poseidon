@@ -159,7 +159,7 @@ DO re = 0,Num_R_Elements-1  ! Cycle through new elements
     DO d = 0,Degree                 ! Cycle through each node in new element.
     DO re_old = 0,NE_Old(1)-1       ! Cycle through old elements
 
-        IF ( Cur_R_Locs(d) .GE. rlocs_Old(re_old) ) THEN          ! Check if current location is
+        IF ( Cur_R_Locs(d) .GE. rlocs_Old(re_old) ) THEN       ! Check if current location is
         IF ( Cur_R_Locs(d) .LE. rlocs_Old(re_old+1) ) THEN     ! within old element, re_old.
 
             ! Map value to the old elements reference element

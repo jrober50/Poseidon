@@ -42,8 +42,9 @@ LOGICAL, PUBLIC                                 ::  AMReX_Tiling = .TRUE.
 
 LOGICAL, PUBLIC                                 ::  AMReX_Regrid_Flag = .TRUE.
 
-INTEGER, PUBLIC                                 ::  AMReX_Max_Level     = -1
+INTEGER, PUBLIC                                 ::  AMReX_MaxLevel      = -1
 INTEGER, PUBLIC                                 ::  AMReX_Num_Levels    = -1
+INTEGER, PUBLIC                                 ::  AMReX_Old_Levels    = -1
 INTEGER, PUBLIC, DIMENSION(3)                   ::  AMReX_Max_Grid_Size = -1
 
 INTEGER, PUBLIC                                 ::  AMReX_Tag_Style     = 3

@@ -28,16 +28,19 @@ USE Poseidon_Kinds_Module, &
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Init_Message
+            
+USE Flags_Initialization_Module, &
+            ONLY :  lPF_Init_AMReX_Flags,       &
+                    iPF_Init_AMReX_Params
 
 USE Initialization_Subroutines, &
             ONLY :  Init_Expansion_Params,      &
                     Init_Fixed_Point_Params,    &
-                    Init_Mesh_Params,           &
-                    Init_AMReX_Params
-
+                    Init_Mesh_Params
+                    
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,    &
-                    AMReX_Max_Level,        &
+                    AMReX_MaxLevel,        &
                     AMReX_Num_Levels,       &
                     AMReX_Tiling
 
@@ -62,10 +65,17 @@ USE Variables_Mesh, &
 
 USE Variables_Interface, &
             ONLY :  Caller_R_Units
+            
+USE Flags_Initialization_Module, &
+            ONLY :  iPF_Init_AMReX_Params
 
 
 #ifdef POSEIDON_AMREX_FLAG
 USE amrex_base_module
+
+USE amrex_amrcore_module, &
+            ONLY :  amrex_get_numlevels,    &
+                    amrex_max_level
 
 USE amrex_parmparse_module, &
             ONLY :  amrex_parmparse,            &
@@ -189,7 +199,43 @@ END SUBROUTINE Init_Parameters_From_AMReX_Input_File
 
 
 
+ !+102+####################################################################!
+!                                                                           !
+!       Init_AMReX_Params                                                   !
+!                                                                           !
+ !#########################################################################!
+SUBROUTINE Init_AMReX_Params(   nCells_Option,          &
+                                Max_Level_Option,       &
+                                Max_Grid_Size_Option    )
 
+INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL       ::  nCells_Option
+INTEGER,                 INTENT(IN), OPTIONAL       ::  Max_Level_Option
+INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL       ::  Max_Grid_Size_Option
+
+
+#ifdef POSEIDON_AMREX_FLAG
+
+IF ( Verbose_Flag ) CALL Init_Message('Setting AMReX Parameters.')
+
+IF ( PRESENT( Max_Level_Option ) ) THEN
+    AMReX_MaxLevel  = Max_Level_Option
+ELSE
+    AMReX_MaxLevel  = amrex_max_level
+END IF
+
+
+IF ( PRESENT( Max_Level_Option ) ) THEN
+    AMReX_Max_Grid_Size = Max_Grid_Size_Option
+ELSE
+    AMReX_Max_Grid_Size = 4
+END IF
+
+
+lPF_Init_AMReX_Flags(iPF_Init_AMReX_Params) = .TRUE.
+
+#endif
+
+END SUBROUTINE Init_AMReX_Params
 
 
 

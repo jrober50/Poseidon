@@ -65,9 +65,8 @@ USE Variables_AMReX_Core, &
                     BA_Source,              &
                     DM_Source,              &
                     GM_Source,              &
-                    iLeafElementsPerLvl,    &
                     AMReX_Num_Levels,       &
-                    AMReX_Max_Level
+                    AMReX_MaxLevel
 #endif
 
 IMPLICIT NONE
@@ -88,12 +87,7 @@ IF ( Verbose_Flag ) CALL Init_Message('Allocating Source Variables.')
 
 #ifdef POSEIDON_AMREX_FLAG
 
-ALLOCATE( MF_Source(0:AMReX_Max_Level))
-!ALLOCATE( BA_Source(0:AMReX_Max_Level))
-!ALLOCATE( DM_Source(0:AMReX_Max_Level))
-!ALLOCATE( GM_Source(0:AMReX_Max_Level))
-
-ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
+ALLOCATE( MF_Source(0:AMReX_MaxLevel))
 
 #else
 
@@ -156,7 +150,6 @@ DEALLOCATE( MF_Source )
 !DEALLOCATE( DM_Source )
 !DEALLOCATE( GM_Source )
 
-DEALLOCATE( iLeafElementsPerLvl )
 
 #else
 IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN

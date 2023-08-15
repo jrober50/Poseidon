@@ -78,7 +78,7 @@ INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
 
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Cur_R_Locs
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
@@ -147,7 +147,7 @@ Solver_Type         = 3
 
 RE_Table            = (/ 32, 128, 160, 240, 320, 400, 600, 256, 512 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
-Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.15_idp, 0.05_idp /)
+Time_Values         = (/ 151.0_idp, 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.15_idp /)
 L_Values            = (/ 5, 10 /)
 
 T_Index_Min         =  1
@@ -208,8 +208,8 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     NE(1) = RE_Table(RE_Index)
     NQ(3) = 2*L_Limit_Input + 1
 
-    Suffix_Tail = Letter_Table(Solver_Type)
-
+!    Suffix_Tail = Letter_Table(Solver_Type)
+    WRITE(Suffix_Tail,'(A)')TRIM(Letter_Table(Solver_Type))
 
 
     Num_DOF = NQ(1)*NQ(2)*NQ(3)
@@ -258,7 +258,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
     !#                                                          #!
     !############################################################!
 CALL Initialize_Poseidon &
-        (   Poisson_Mode_Option          = .TRUE.,                       &
+        (   Newtonian_Mode_Option        = .TRUE.,                       &
             Dimensions_Option            = Dimension_Input,              &
             FEM_Degree_Option            = Degree_Input,                 &
             L_Limit_Option               = L_Limit_Input,                &
@@ -275,8 +275,7 @@ CALL Initialize_Poseidon &
             Source_R_Option              = x_e,                          &
             Source_T_Option              = y_e,                          &
             Source_P_Option              = z_e,                          &
-            Method_Flag_Option           = Solver_Type,                  &
-            CFA_Eq_Flags_Option          = CFA_Eqs,                      &
+            Eq_Flags_Option              = CFA_Eqs,                      &
             Max_Iterations_Option        = Max_Iterations,               &
             Convergence_Criteria_Option  = CC_Option,                    &
             Anderson_M_Option            = Anderson_M_Values(M_Index),   &

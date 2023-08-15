@@ -70,12 +70,7 @@ USE Variables_FP, &
                     FP_Diagnostics_Flag
 
 USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Max_Grid_Size,    &
-                    AMReX_Max_Level,        &
-                    AMReX_Num_Levels,       &
-                    iFRL,                   &
-                    iIRL,                   &
-                    MF_Source_nComps
+            ONLY :  MF_Source_nComps
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
@@ -139,7 +134,6 @@ USE Flags_Initialization_Module, &
                     iPF_Init_Quad_Params,       &
                     iPF_Init_MPI,               &
                     iPF_Init_Expansion_Params,  &
-                    iPF_Init_AMReX_Params,      &
                     iPF_Init_Mesh_Params,       &
                     iPF_Init_Mesh_Init
 
@@ -453,62 +447,11 @@ END SUBROUTINE Init_Fixed_Point_Params
 
 
 
- !+102+####################################################################!
-!                                                                           !
-!       Init_AMReX_Params                                                   !
-!                                                                           !
- !#########################################################################!
-SUBROUTINE Init_AMReX_Params(   nCells_Option,          &
-                                Max_Level_Option,       &
-                                Max_Grid_Size_Option    )
-
-INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL       ::  nCells_Option
-INTEGER,                 INTENT(IN), OPTIONAL       ::  Max_Level_Option
-INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL       ::  Max_Grid_Size_Option
-
-
-IF ( Verbose_Flag ) CALL Init_Message('Setting AMReX Parameters.')
-
-IF ( PRESENT( Max_Level_Option ) ) THEN
-    AMReX_Max_Level  = Max_Level_Option
-ELSE
-    AMReX_Max_Level  = 0
-END IF
-AMReX_Num_Levels = AMReX_Max_Level+1
-
-
-IF ( PRESENT( Max_Level_Option ) ) THEN
-    AMReX_Max_Grid_Size = Max_Grid_Size_Option
-ELSE
-    AMReX_Max_Grid_Size = 4
-END IF
-
-
-
-!IF ( PRESENT(AMReX_FEM_Refinement_Option) ) THEN
-!    iFRL = AMReX_FEM_Refinement_Option
-!ELSE
-!    iFRL = AMReX_Max_Level
-!END IF
-!
-!IF ( PRESENT(AMReX_Integral_Refinement_Option) ) THEN
-!    iIRL = AMReX_Integral_Refinement_Option
-!ELSE
-!    iIRL = AMReX_Max_Level
-!END IF
-
-lPF_Init_AMReX_Flags(iPF_Init_AMReX_Params) = .TRUE.
-
-
-END SUBROUTINE Init_AMReX_Params
-
-
-
 
 
  !+102+####################################################################!
 !                                                                           !
-!       Init_AMReX_Params                                                   !
+!          Init_Mesh_Params                                                 !
 !                                                                           !
  !#########################################################################!
 SUBROUTINE Init_Mesh_Params(    NE_Option,          &
@@ -543,7 +486,7 @@ END IF
 IF ( PRESENT(Outer_Edge_Option) ) THEN
     R_Outer = Outer_Edge_Option(1)
 ELSE
-    R_Outer = 0.0_idp
+    R_Outer = 1.0_idp
 END IF
 
 
@@ -668,11 +611,10 @@ ELSE IF ( Source_Radial_Boundary_Units == " m" ) THEN
 ELSE IF ( Source_Radial_Boundary_Units == "km" ) THEN
     Caller_R_Units = Kilometer
 ELSE
-    
-
-
     Caller_R_Units = Centimeter
 END IF
+
+
 
 lPF_Init_Flags(iPF_Init_Caller_Vars) = .TRUE.
 

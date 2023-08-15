@@ -7,7 +7,7 @@ NPROCS=1
 
 ## Select Machine
 
-MACHINE_NAME    =NicksMacBook
+POSEIDON_MACHINE_NAME    =jrober
 #MACHINE_NAME    =sjdunham
 #MACHINE_NAME    =MacBook
 #MACHINE_NAME    =Rhea
@@ -50,14 +50,15 @@ HDF5_MODE       =ON
 MPI_MODE        =ON
 #MPI_MODE       =OFF
 
+LAPACK_MODE     =ON
+
 include ../../Build/Makefile_Core
 include Makefile_Driver
 
 
-main : $(POSEIDON_o) $(DRIVER_o)
+main : $(POSEIDON_o) $(DRIVER_o) Uniform_Sphere_Poisson_Native.o
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(TEST_NAME).$(TEST_EXT)  -o $(OBJ)/$(TEST_NAME).o
-	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/$(TEST_NAME).x
+	$(FORT) $(OBJ)/*.o -o $(BIN)/$(TEST_NAME).x $(LIB_LINKER)
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 

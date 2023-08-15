@@ -93,7 +93,7 @@ SUBROUTINE Allocate_Tables()
 IF ( Verbose_Flag ) CALL Init_Message('Allocating Table Variables.')
 
 #ifdef POSEIDON_AMREX_FLAG
-
+PRINT*,"in allocate",AMReX_Num_Levels
 ALLOCATE( Level_dx( 0:AMReX_Num_Levels-1, 3 ) )
 ALLOCATE( Level_Ratios(0:AMReX_Num_Levels) )
 

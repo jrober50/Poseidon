@@ -49,6 +49,9 @@ USE Functions_Quadrature, &
 USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
+USE Driver_InitSource_Module, &
+            ONLY :  Driver_InitSource
+
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
 
@@ -179,8 +182,8 @@ Units_Input         = "G"
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  1
-T_Index_Max         =  1
+T_Index_Min         =  4
+T_Index_Max         =  4
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -194,8 +197,8 @@ Gamma               = 1.30_idp
 
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 5                        ! Number of Theta Quadrature Points
-NQ(3)               = 5                        ! Number of Phi Quadrature Points
+NQ(2)               = 1                        ! Number of Theta Quadrature Points
+NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
 !Verbose             = .TRUE.
@@ -207,8 +210,8 @@ Print_Results_Flag  = .TRUE.
 Print_Setup_Flag    = .TRUE.
 !Print_Setup_Flag    = .FALSE.
 
-Print_Time_Flag     = .TRUE.
-!Print_Time_Flag     = .FALSE.
+!Print_Time_Flag     = .TRUE.
+Print_Time_Flag     = .FALSE.
 
 !Print_Cond_Flag     = .TRUE.
 Print_Cond_Flag     = .FALSE.
@@ -256,14 +259,21 @@ CALL amrex_amrcore_init()
 
 
 
+
+!############################################################!
+!#                                                          #!
+!#               Create & Input Source Values               #!
+!#                                                          #!
+!############################################################!
+CALL Init_AMReX_Parameters()
+CALL Set_Units( Units_Input )
+
+
 !############################################################!
 !#                                                          #!
 !#                       Start Program                      #!
 !#                                                          #!
 !############################################################!
-CALL Init_AMReX_Parameters()
-
-
 DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
 
@@ -273,6 +283,11 @@ DO T_Index = T_Index_Min, T_Index_Max
 #endif
 
     WRITE(Suffix_Tail,'(A)') TRIM(Letter_Table(T_Index))
+
+    PRINT*,"Before Yahil"
+    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
+    CALL Driver_InitSource( Yahil_Params )
+    PRINT*,"After"
 
 
 
@@ -328,7 +343,8 @@ DO T_Index = T_Index_Min, T_Index_Max
             Write_Sources_Option                = .FALSE.,              &
             Print_Condition_Option              = Print_Cond_Flag,      &
             Write_Condition_Option              = .FALSE.,              &
-            Write_FP_Diagnostics_Option         = .FALSE.,               &
+            Write_FP_Diagnostics_Option         = .FALSE.,              &
+            Suffix_Param_Type_Option            = 1,                    &
             Suffix_Flag_Option                  = Suffix_Input,         &
             Suffix_Tail_Option                  = Suffix_Tail           )
 
@@ -339,11 +355,10 @@ DO T_Index = T_Index_Min, T_Index_Max
 
     !############################################################!
     !#                                                          #!
-    !#               Create & Input Source Values               #!
+    !#               Input Source Values                        #!
     !#                                                          #!
     !############################################################!
-    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
-    CALL Driver_SetSource(  Yahil_Params, nLevels )
+    CALL Driver_SetSource( )
 
 
     !############################################################!
@@ -374,6 +389,8 @@ DO T_Index = T_Index_Min, T_Index_Max
     CALL Poseidon_Mark_Memory(Memory_Loop_Before_Run,Memory_HWM)
     PRINT*,"Before Poseidon_Run          : ",Memory_Loop_Before_Run
 #endif
+    
+    PRINT*,"Before Poseidon_Run"
     
     CALL Poseidon_Run()
 #ifdef POSEIDON_MEMORY_FLAG

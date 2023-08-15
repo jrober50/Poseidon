@@ -215,11 +215,12 @@ TYPE(amrex_multifab),               INTENT(INOUT)   ::  MF_Results(0:AMReX_Num_L
 LOGICAL,                OPTIONAL,   INTENT(IN)      ::  FillGhostCells_Option
 
 
-INTEGER                                                         ::  iU
+INTEGER                                             ::  iU
 
 
 iU = iU_CF
 
+PRINT*,"AMReX_Num_Levels outside",AMReX_Num_Levels
 CALL Poseidon_Return_AMReX_Type_A(  iU,                     &
                                     Caller_NQ,              &
                                     Caller_RQ_xlocs,        &

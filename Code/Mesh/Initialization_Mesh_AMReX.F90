@@ -81,7 +81,6 @@ INTEGER                                         ::  elem
 
 IF ( Verbose_Flag ) CALL Init_Message('Initializing Mesh Variables.')
 
-
 DO lvl = 0,AMReX_Num_Levels-1
     Here  = Table_Offsets(lvl)
     There = Table_Offsets(lvl+1)-1
