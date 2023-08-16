@@ -143,9 +143,9 @@ CALL Initialize_Lagrange_Poly_Tables( Degree, Num_R_Quad_Points )
 CALL Initialize_Slm_Tables()
     
     
-#ifdef POSEIDON_AMREX_FLAG
-    CALL Initialize_Level_Tables()
-#endif
+!#ifdef POSEIDON_AMREX_FLAG
+!    CALL Initialize_Level_Tables()
+!#endif
 
 lPF_Init_Tables_Flags(iPF_Init_Tables_Init) = .TRUE.
 

@@ -220,7 +220,6 @@ INTEGER                                             ::  iU
 
 iU = iU_CF
 
-PRINT*,"AMReX_Num_Levels outside",AMReX_Num_Levels
 CALL Poseidon_Return_AMReX_Type_A(  iU,                     &
                                     Caller_NQ,              &
                                     Caller_RQ_xlocs,        &

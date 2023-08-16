@@ -406,7 +406,7 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller( MF_Src_Input   )
 
-TYPE(amrex_multifab),               INTENT(IN)  ::  MF_Src_Input(0:AMReX_Num_Levels-1)
+TYPE(amrex_multifab),               INTENT(IN)  ::  MF_Src_Input(0:)
 
 INTEGER                                         ::  level
 LOGICAL                                         ::  All_Flag

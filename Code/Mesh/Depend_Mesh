@@ -1,5 +1,5 @@
 Allocation_Mesh.o:              \
-  Allocation_Mesh.f90           \
+  Allocation_Mesh.F90           \
 
 Functions_Mesh.o:               \
   Functions_Mesh.f90            \

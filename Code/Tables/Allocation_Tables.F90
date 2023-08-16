@@ -67,7 +67,8 @@ USE Variables_Tables, &
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,        &
-                    AMReX_Num_Levels
+                    AMReX_Num_Levels,           &
+                    AMReX_MaxLevel
 
 
 USE Flags_Initialization_Module, &
@@ -93,9 +94,8 @@ SUBROUTINE Allocate_Tables()
 IF ( Verbose_Flag ) CALL Init_Message('Allocating Table Variables.')
 
 #ifdef POSEIDON_AMREX_FLAG
-PRINT*,"in allocate",AMReX_Num_Levels
-ALLOCATE( Level_dx( 0:AMReX_Num_Levels-1, 3 ) )
-ALLOCATE( Level_Ratios(0:AMReX_Num_Levels) )
+ALLOCATE( Level_dx( 0:AMReX_MaxLevel-1, 3 ) )
+ALLOCATE( Level_Ratios(0:AMReX_MaxLevel) )
 
 
 ALLOCATE( Plm_Values(       1:Num_T_Quad_Points,        &

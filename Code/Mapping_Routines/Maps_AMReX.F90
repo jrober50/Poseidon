@@ -73,6 +73,7 @@ USE Allocation_Maps, &
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Num_Levels,       &
+                    AMReX_MaxLevel,         &
                     iNumLeafElements,       &
                     iLeafElementsPerLvl,    &
                     Findloc_Table,          &
@@ -138,8 +139,10 @@ SUBROUTINE Initialize_AMReX_Maps()
 INTEGER                         :: lvl
 
 
-PRINT*,"AMReX_Num_Levels ",AMReX_Num_Levels
-ALLOCATE( iLeafElementsPerLvl(0:AMReX_Num_Levels-1))
+ALLOCATE( iLeafElementsPerLvl(0:AMReX_MaxLevel-1))
+
+iNumLeafElements = 0
+iLeafElementsPerLvl = 0
 
 CALL Count_The_Leafs()
 
@@ -153,6 +156,7 @@ END DO
 CALL Create_FindLoc_Table()
 
 CALL Create_FEM_Elem_Table()
+
 
 DEALLOCATE( iLeafElementsPerLvl )
 
@@ -172,9 +176,6 @@ SUBROUTINE Reinitialize_AMReX_Maps()
 INTEGER                         :: lvl
 
 lPF_Init_AMReX_Flags(iPF_Init_AMReX_Maps) = .FALSE.
-
-iNumLeafElements = 0
-iLeafElementsPerLvl = 0
 
 CALL Deallocate_AMReX_Maps()
 CALL Initialize_AMReX_Maps()
@@ -220,7 +221,6 @@ nGhost_Vec = 0
 
 iLeafElementsPerLvl = 0
 
-PRINT*,"In Count the Leafs",AMReX_Num_Levels
 DO lvl = 0,AMReX_Num_Levels-1
 
     ! Because AMReX will only store data owned by a process,
@@ -321,7 +321,6 @@ ELSEIF ( amrex_spacedim == 2) THEN
 ELSEIF ( amrex_spacedim == 3 ) THEN
     Eoff(2:3) = 0
 END IF
-
 
 
 DO lvl = 0,AMReX_Num_Levels-1
