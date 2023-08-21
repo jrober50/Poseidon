@@ -198,11 +198,8 @@ MF_Src_nComps   = nVars_Source*Caller_Quad_DOF
 MF_Src_nGhost   = 0
 
 
-PRINT*,"A",amrex_max_level
 ALLOCATE( MF_Driver_Source(0:amrex_max_level) )
-PRINT*,"B"
 CALL amrex_init_from_scratch( 0.0_idp )
-PRINT*,"C"
 CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
 

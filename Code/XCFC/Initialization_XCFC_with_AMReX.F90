@@ -115,7 +115,6 @@ CONTAINS
  !#################################################################!
 SUBROUTINE  Initialization_XCFC_with_AMReX( )
 
-
 ! Determine Radial Base Variables from Multifab
 IF ( .NOT. lPF_Init_Flags(iPF_Init_Method_Vars) ) THEN
     

@@ -1,4 +1,5 @@
 DRIVER_f90 = \
+  Driver_Variables.f90 \
   Driver_SetBC.f90     \
   Driver_SetGuess.f90  
 

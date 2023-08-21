@@ -70,6 +70,11 @@ USE Poseidon_AMReX_Input_Parsing_Module, &
 USE Allocation_Yahil_Profile, &
             ONLY :  Deallocate_Yahil_Profile
 
+USE Driver_Variables, &
+            ONLY :  Driver_NQ,          &
+                    Driver_RQ_xLocs,    &
+                    Driver_xL
+
 USE Variables_MPI, &
             ONLY :  ierr
 
@@ -85,6 +90,11 @@ USE ADM_Mass_Module, &
             
 USE Poseidon_Memory_Routines, &
             ONLY :  Poseidon_Mark_Memory
+            
+USE Variables_Interface, &
+            ONLY :  Caller_xL,                  &
+                    Caller_NQ,                  &
+                    Caller_RQ_xlocs
             
             
 #ifdef POSEIDON_MEMORY_FLAG
@@ -111,6 +121,8 @@ USE Memory_IO_Module, &
 
 
 USE MPI
+
+
 
 
 IMPLICIT NONE
@@ -284,13 +296,6 @@ DO T_Index = T_Index_Min, T_Index_Max
 
     WRITE(Suffix_Tail,'(A)') TRIM(Letter_Table(T_Index))
 
-    PRINT*,"Before Yahil"
-    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
-    CALL Driver_InitSource( Yahil_Params )
-    PRINT*,"After"
-
-
-
 
     ALLOCATE( Input_R_Quad(1:NQ(1)) )
     ALLOCATE( Input_T_Quad(1:NQ(2)) )
@@ -308,7 +313,16 @@ DO T_Index = T_Index_Min, T_Index_Max
     Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
 
+    Driver_xL(1) = Left_Limit
+    Driver_xL(2) = Right_Limit
+    Driver_NQ = NQ(1)
+    ALLOCATE(Driver_RQ_xLocs(Driver_NQ))
+    Driver_RQ_xlocs = Input_R_Quad
 
+    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
+    CALL Driver_InitSource( Yahil_Params )
+    
+    
     
     !############################################################!
     !#                                                          #!
@@ -428,6 +442,7 @@ DO T_Index = T_Index_Min, T_Index_Max
     DEALLOCATE( Input_R_Quad )
     DEALLOCATE( Input_T_Quad )
     DEALLOCATE( Input_P_Quad )
+    DEALLOCATE( Driver_RQ_xLocs )
 
 
 #ifdef POSEIDON_MEMORY_FLAG

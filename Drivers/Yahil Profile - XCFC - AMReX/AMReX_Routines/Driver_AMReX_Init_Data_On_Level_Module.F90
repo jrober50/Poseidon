@@ -109,15 +109,16 @@ USE Variables_Functions, &
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
 
-
-USE Variables_Interface, &
-            ONLY :  Caller_Set,                     &
-                    Caller_NQ,                      &
-                    Caller_Quad_DOF,                &
-                    Caller_xL,                      &
-                    Caller_RQ_xlocs,                &
-                    Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs
+USE Driver_Variables, &
+            ONLY :  Driver_NQ,          &
+                    Driver_RQ_xLocs,    &
+                    Driver_xL
+                    
+USE Variables_Driver_AMReX, &
+            ONLY :  xL,                 &
+                    xR,                 &
+                    MaxLevel,           &
+                    nCells
 
 IMPLICIT NONE
 
@@ -183,7 +184,7 @@ REAL(idp)                                   ::  x
 REAL(idp)                                   ::  xwidth
 REAL(idp)                                   ::  xloc
 REAL(idp), DIMENSION(0:1)                   ::  xlocs
-REAL(idp), DIMENSION(1:Caller_NQ(1))        ::  cur_r_locs
+REAL(idp), DIMENSION(1:Driver_NQ)        ::  Cur_R_Locs
 REAL(idp)                                   ::  DROT
 REAL(idp), DIMENSION(0:1)                   ::  LagPoly_Vals
 
@@ -228,6 +229,7 @@ NUM_LINES = NUM_LINES -1
 
 
 
+
 ALLOCATE( Input_X(1:NUM_LINES) )
 ALLOCATE( Input_D(1:NUM_LINES) )
 ALLOCATE( Input_V(1:NUM_LINES) )
@@ -269,6 +271,8 @@ END IF
 
 
 
+
+
 t = SelfSim_T*Millisecond
 
 R_Factor = SQRT(Kappa_wUnits)                                &
@@ -303,7 +307,6 @@ M_Factor = kappa_WUnits**(3.0_idp/2.0_idp)                              &
          * t**(4.0_idp- 3.0_idp* SelfSim_Gamma )
 
 
-!PRINT*,D_Factor,V_Factor,X_Factor,M_Factor
 
 Enclosed_Mass = M_Factor * Input_M
 Newtonian_Potential(Num_Lines) = -GRAV_Constant_G*Enclosed_Mass(Num_Lines)/Input_R(Num_Lines)
@@ -325,15 +328,14 @@ Newtonian_Potential(0) = Newtonian_Potential(1)                 &
 Num_DOF = nComps/5
 
 
-!PRINT*,Int_R_Locations/2.0_idp
-
 
 
 xlocs(0) = -1.0_idp
 xlocs(1) = +1.0_idp
-xwidth  = Caller_xL(2)-Caller_xL(1)
+xwidth  = Driver_xL(2)-Driver_xL(1)
 
-DROT = ((R_Outer-R_Inner)/Num_R_Elements)/xwidth
+DROT = ((xR(1)-xL(1))/nCells(1))/xwidth
+
 
 
 DO pe = BLo(3),BHi(3)
@@ -342,7 +344,7 @@ DO te = BLo(2),BHi(2)
 line_min = 1
 DO re = BLo(1),BHi(1)
 
-    Cur_R_Locs(:) = DROT * (Caller_RQ_xlocs(:) - Caller_xL(1) + re*xwidth)
+    Cur_R_Locs(:) = DROT * (Driver_RQ_xlocs(:) - Driver_xL(1) + re*xwidth)
     
 
 
@@ -388,16 +390,11 @@ DO re = BLo(1),BHi(1)
         Si = Si*Psi_Holder
         
 
-
-!        PRINT*,Level,re,rd,Cur_R_Locs(rd),E,S,Si
-
         DO pd = 1,Num_P_Quad_Points
         DO td = 1,Num_T_Quad_Points
 
 
             here = Quad_Map(rd,td,pd)
-
-!            PRINT*,re,te,pe,rd,td,pd,here,2*Num_DOF+Here,Si
 
             Src(re,te,pe,(iS_E-1)*Num_DOF+Here) = E
             Src(re,te,pe,(iS_S-1)*Num_DOF+Here) = S
