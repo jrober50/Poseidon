@@ -19,7 +19,7 @@ USE Poseidon_Kinds_Module,  &
 
 IMPLICIT NONE
 
-INTEGER                                         :: Driver_NQ
+INTEGER,                    DIMENSION(3)        :: Driver_NQ
 REAL(idp),  ALLOCATABLE,    DIMENSION(:)        :: Driver_RQ_xLocs
 REAL(idp),                  DIMENSION(2)        :: Driver_xL
 

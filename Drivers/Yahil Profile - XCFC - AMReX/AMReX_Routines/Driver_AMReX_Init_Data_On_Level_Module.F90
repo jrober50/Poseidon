@@ -107,7 +107,7 @@ USE Variables_Functions, &
             ONLY :  Potential_Solution
 
 USE Maps_Quadrature, &
-            ONLY :  Quad_Map
+            ONLY :  Quad_Map_Long_Array
 
 USE Driver_Variables, &
             ONLY :  Driver_NQ,          &
@@ -184,7 +184,7 @@ REAL(idp)                                   ::  x
 REAL(idp)                                   ::  xwidth
 REAL(idp)                                   ::  xloc
 REAL(idp), DIMENSION(0:1)                   ::  xlocs
-REAL(idp), DIMENSION(1:Driver_NQ)        ::  Cur_R_Locs
+REAL(idp), DIMENSION(1:Driver_NQ(1))        ::  Cur_R_Locs
 REAL(idp)                                   ::  DROT
 REAL(idp), DIMENSION(0:1)                   ::  LagPoly_Vals
 
@@ -327,14 +327,11 @@ Newtonian_Potential(0) = Newtonian_Potential(1)                 &
 
 Num_DOF = nComps/5
 
-
-
-
 xlocs(0) = -1.0_idp
 xlocs(1) = +1.0_idp
 xwidth  = Driver_xL(2)-Driver_xL(1)
 
-DROT = ((xR(1)-xL(1))/nCells(1))/xwidth
+DROT = (((xR(1)-xL(1))*Centimeter)/nCells(1))/xwidth
 
 
 
@@ -348,7 +345,7 @@ DO re = BLo(1),BHi(1)
     
 
 
-    DO rd = 1,Num_R_Quad_Points
+    DO rd = 1,Driver_NQ(1)
 
         xloc = Cur_R_Locs(rd)*X_Factor
         cur_line = Find_Line(xloc, Input_X, NUM_LINES)
@@ -390,11 +387,11 @@ DO re = BLo(1),BHi(1)
         Si = Si*Psi_Holder
         
 
-        DO pd = 1,Num_P_Quad_Points
-        DO td = 1,Num_T_Quad_Points
+        DO pd = 1,Driver_NQ(3)
+        DO td = 1,Driver_NQ(2)
 
 
-            here = Quad_Map(rd,td,pd)
+            here = Quad_Map_Long_Array(rd,td,pd,Driver_NQ)
 
             Src(re,te,pe,(iS_E-1)*Num_DOF+Here) = E
             Src(re,te,pe,(iS_S-1)*Num_DOF+Here) = S
@@ -408,6 +405,7 @@ DO re = BLo(1),BHi(1)
         END DO ! td
         END DO ! pd
     END DO ! rd
+
 
 END DO ! re
 END DO ! te

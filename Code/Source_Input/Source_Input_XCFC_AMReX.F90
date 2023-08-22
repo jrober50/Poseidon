@@ -230,9 +230,10 @@ CALL TimerStart(Timer_GR_SourceInput)
 ! Check if MF_Source exists.
 ! If not, created it to match MF_Src_Input and copy data.
 IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
+
+
     AMReX_Num_Levels = amrex_get_numlevels()
     DO level = 0,AMReX_Num_Levels-1
-
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
@@ -240,6 +241,10 @@ IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
 
         
     END DO
+    
+        ! Transfer data from MF_Src_Input to MF_Source.
+    All_Flag = .TRUE.
+    CALL Copy_Source_Data( MF_Src_Input, All_Flag )
     
     lPF_SI_Flags(iPF_SI_MF_Ready) = .TRUE.
 
@@ -287,7 +292,7 @@ ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
           ! All that needs to be done is copy over the new data.
     
         ! Transfer data from MF_Src_Input to MF_Source.
-        All_Flag = .False.
+        All_Flag = .TRUE.
         CALL Copy_Source_Data( MF_Src_Input, All_Flag )
         
         CALL TimerStop(Timer_GR_SourceInput)
@@ -369,7 +374,6 @@ Translation_Matrix = Create_Translation_Matrix( Input_NQ,               &
 
 IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
     DO level = 0,AMReX_Num_Levels-1
-
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
@@ -536,9 +540,6 @@ INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
 
-
-
-
 DO level = 0,AMReX_Num_Levels-1
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
 
@@ -596,7 +597,7 @@ DO level = 0,AMReX_Num_Levels-1
             There = si*Caller_Quad_DOF
 
             Index = (si-1)*Local_Quad_DOF+Local_Here
-
+    
             My_PTR(re,te,pe,Index) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
                                                   Their_PTR(re,te,pe,Here:There)    )
 

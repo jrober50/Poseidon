@@ -130,8 +130,8 @@ USE Timer_Variables_Module, &
 USE External_Yahil_Profile_Module, &
             ONLY :  Calc_Yahil_Central_E
 
-USE Variables_Interface, &
-            ONLY :  Caller_Quad_DOF
+USE Driver_Variables, &
+            ONLY :  Driver_NQ
 
 USE MPI
 
@@ -194,7 +194,7 @@ CALL amrex_init_virtual_functions &
 
 
 nVars_Source    = 5
-MF_Src_nComps   = nVars_Source*Caller_Quad_DOF
+MF_Src_nComps   = nVars_Source*Driver_NQ(1)*Driver_NQ(2)*Driver_NQ(3)
 MF_Src_nGhost   = 0
 
 

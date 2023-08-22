@@ -222,7 +222,6 @@ IF ( PRESENT( Max_Level_Option ) ) THEN
 ELSE
     AMReX_MaxLevel  = amrex_max_level
 END IF
-PRINT*,"In Init_AMReX_Params ",AMReX_MaxLevel,amrex_max_level
 
 IF ( PRESENT( Max_Level_Option ) ) THEN
     AMReX_Max_Grid_Size = Max_Grid_Size_Option

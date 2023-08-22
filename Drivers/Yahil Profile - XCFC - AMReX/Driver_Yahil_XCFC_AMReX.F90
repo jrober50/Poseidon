@@ -213,8 +213,11 @@ NQ(2)               = 1                        ! Number of Theta Quadrature Poin
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Left_Limit          = -0.50_idp
+Right_Limit         = +0.50_idp
+
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
@@ -280,6 +283,10 @@ CALL amrex_amrcore_init()
 CALL Init_AMReX_Parameters()
 CALL Set_Units( Units_Input )
 
+Driver_xL(1) = Left_Limit
+Driver_xL(2) = Right_Limit
+Driver_NQ = NQ
+ALLOCATE(Driver_RQ_xLocs(Driver_NQ(1)))
 
 !############################################################!
 !#                                                          #!
@@ -305,18 +312,12 @@ DO T_Index = T_Index_Min, T_Index_Max
     Input_T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
     Input_P_Quad = Initialize_LG_Quadrature_Locations(NQ(3))
 
-    Left_Limit  = -0.50_idp
-    Right_Limit = +0.50_idp
-
     Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
     Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
     Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
 
-    Driver_xL(1) = Left_Limit
-    Driver_xL(2) = Right_Limit
-    Driver_NQ = NQ(1)
-    ALLOCATE(Driver_RQ_xLocs(Driver_NQ))
+
     Driver_RQ_xlocs = Input_R_Quad
 
     Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
