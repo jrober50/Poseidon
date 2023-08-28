@@ -140,7 +140,7 @@ LOGICAL,    DIMENSION(0:AMReX_Num_Levels-1)         ::  Remesh_Flag
 
 
 
-IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab. A')
+IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 IF ( PRESENT(Remesh_Flag_Option) ) THEN
@@ -223,7 +223,7 @@ LOGICAL                                             ::  All_Flag
 LOGICAL,  DIMENSION(0:AMReX_Num_Levels-1)           ::  Remesh_Flag
 
 
-IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab. B')
+IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 
@@ -343,7 +343,7 @@ LOGICAL,    DIMENSION(0:AMReX_Num_Levels-1)         ::  Remesh_Flag
 
 
 
-IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab. C')
+IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 
@@ -417,7 +417,7 @@ LOGICAL                                         ::  All_Flag
 LOGICAL, ALLOCATABLE, DIMENSION(:)              ::  Remesh_Flag
 INTEGER                                         ::  AMReX_New_Levels
 
-IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab. D')
+IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab.')
 CALL TimerStart(Timer_GR_SourceInput)
 
 
