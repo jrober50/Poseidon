@@ -40,7 +40,8 @@ USE Poseidon_Parameters, &
 
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,          &
-                    AMReX_Num_Levels
+                    AMReX_Num_Levels,       &
+                    AMReX_MaxLevel
 
 USE Variables_Quadrature, &
             ONLY :  Num_R_Quad_Points,      &
@@ -234,7 +235,7 @@ dt = pi/Num_T_Elements
 dp = TwoPi/Num_P_Elements
 
 
-DO lvl = 0,AMReX_Num_Levels-1
+DO lvl = 0,AMReX_MaxLevel-1
     Level_dx(lvl,1) = dr/2.0_idp**lvl
 END DO
 
@@ -243,7 +244,7 @@ END DO
 IF ( amrex_spacedim < 2 ) THEN
     Level_dx(:,2) = dt
 ELSE
-    DO lvl = 0,AMReX_Num_Levels-1
+    DO lvl = 0,AMReX_MaxLevel-1
         Level_dx(lvl,2) = dt/2.0_idp**lvl
     END DO
 END IF
