@@ -235,7 +235,7 @@ dt = pi/Num_T_Elements
 dp = TwoPi/Num_P_Elements
 
 
-DO lvl = 0,AMReX_MaxLevel-1
+DO lvl = 0,AMReX_MaxLevel
     Level_dx(lvl,1) = dr/2.0_idp**lvl
 END DO
 
@@ -244,7 +244,7 @@ END DO
 IF ( amrex_spacedim < 2 ) THEN
     Level_dx(:,2) = dt
 ELSE
-    DO lvl = 0,AMReX_MaxLevel-1
+    DO lvl = 0,AMReX_MaxLevel
         Level_dx(lvl,2) = dt/2.0_idp**lvl
     END DO
 END IF
@@ -254,14 +254,14 @@ END IF
 IF ( amrex_spacedim < 3 ) THEN
     Level_dx(:,3) = dp
 ELSE
-    DO lvl = 0,AMReX_Num_Levels-1
+    DO lvl = 0,AMReX_MaxLevel
         Level_dx(lvl,3) = dp/2.0_idp**lvl
     END DO
 END IF
 
 
 ! Level Ratios !
-DO lvl = 0,AMReX_Num_Levels-1
+DO lvl = 0,AMReX_MaxLevel
     Level_Ratios(lvl) = 2**lvl
 END DO
 
