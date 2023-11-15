@@ -60,7 +60,8 @@ USE Variables_Derived, &
                     LM_Short_Length
 
 USE Variables_Vectors, &
-            ONLY :  dVB_Coeff_Vector
+            ONLY :  dVA_Coeff_Vector,       &
+                    dVB_Coeff_Vector
 
 USE Variables_Mesh, &
            ONLY :  rlocs,              &
@@ -187,7 +188,7 @@ INTEGER                                                         ::  re, te, pe
 INTEGER                                                         ::  rd, td, pd, tpd
 INTEGER                                                         ::  d
 INTEGER                                                         ::  Here, There
-INTEGER                                                         ::  i, j, l, m
+INTEGER                                                         ::  i, j, l, m, lm
 
 REAL(idp)                                                       ::  Quad_Span
 REAL(idp), DIMENSION(1:NQ(1))                                   ::  CUR_R_LOCS
@@ -208,7 +209,7 @@ REAL(idp), DIMENSION(3,3)                                    ::  TMP_Drv
 
 REAL(idp), DIMENSION(4)                                      ::  Reusable_Vals
 REAL(idp), DIMENSION(6)                                      ::  Tmp_A
-
+REAL(idp)                                                    ::  Tmp_Val_Psi
 
 REAL(idp)                                                    ::  Trace(2)
 
@@ -317,6 +318,23 @@ DO rd = 1,NQ(1)
 
     TMP_Val = 0.0_idp
     TMP_Drv = 0.0_idp
+    
+    TMP_Val_Psi = 0.0_idp
+    DO lm = 1,LM_Length
+    DO d  = 0,DEGREE
+
+        Here  = Map_To_FEM_Node(RE,d)
+
+
+        TMP_Val_Psi = TMP_Val_Psi                           &
+                    + dVA_Coeff_Vector(Here,lm,iU_CF)       &
+                    * Caller_LPT(0,d,rd)                    &
+                    * Slm_Elem_Table( lm, tpd )
+        
+    END DO
+    END DO
+    
+    
     DO i = 1,3
     DO d  = 0,DEGREE
         Here  = FP_Array_Map_TypeB(iU(i),iVB,re-1,d,1)
@@ -381,7 +399,7 @@ DO rd = 1,NQ(1)
                +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val(2)   &
                +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val(3)   )
 
-    Return_Kij(Here,re,te,pe,1) = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)), KIND = idp)
+    Return_Kij(Here,re,te,pe,1) = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_Psi*Tmp_Val_Psi), KIND = idp)
 
 
     ! Ahat^12
@@ -398,7 +416,7 @@ DO rd = 1,NQ(1)
              +( Gamma(i)*Christoffel(j,i,3)      &
               + Gamma(j)*Christoffel(i,j,3)      &
               )*Tmp_Val(3)
-     Return_Kij(Here,re,te,pe,2) = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)), KIND = idp)
+     Return_Kij(Here,re,te,pe,2) = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)*Tmp_Val_Psi*Tmp_Val_Psi), KIND = idp)
 
     ! Ahat^13
     i=1
@@ -414,7 +432,7 @@ DO rd = 1,NQ(1)
              +( Gamma(i)*Christoffel(j,i,3)      &
               + Gamma(j)*Christoffel(i,j,3)      &
               )*Tmp_Val(3)
-     Return_Kij(Here,re,te,pe,3) = REAL(Tmp_A(3)/(Gamma(1)*Gamma(3)), KIND = idp)
+     Return_Kij(Here,re,te,pe,3) = REAL(Tmp_A(3)/(Gamma(1)*Gamma(3)*Tmp_Val_Psi*Tmp_Val_Psi), KIND = idp)
 
 
     ! Ahat^22
@@ -423,7 +441,7 @@ DO rd = 1,NQ(1)
                +(2.0_idp * Christoffel(2,2,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
                +(2.0_idp * Christoffel(2,2,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
                +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
-     Return_Kij(Here,re,te,pe,4) = REAL(Tmp_A(4)/(Gamma(2)*Gamma(2)), KIND = idp)
+     Return_Kij(Here,re,te,pe,4) = REAL(Tmp_A(4)/(Gamma(2)*Gamma(2)*Tmp_Val_Psi*Tmp_Val_Psi), KIND = idp)
 
 
     ! Ahat^23
@@ -440,7 +458,7 @@ DO rd = 1,NQ(1)
              +( Gamma(i)*Christoffel(j,i,3)      &
               + Gamma(j)*Christoffel(i,j,3)      &
               )*Tmp_Val(3)
-     Return_Kij(Here,re,te,pe,5) = REAL(Tmp_A(5)/(Gamma(2)*Gamma(3)), KIND = idp)
+     Return_Kij(Here,re,te,pe,5) = REAL(Tmp_A(5)/(Gamma(2)*Gamma(3)*Tmp_Val_Psi*Tmp_Val_Psi), KIND = idp)
 
 
     ! Ahat^33
@@ -449,7 +467,7 @@ DO rd = 1,NQ(1)
                +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val(1)     &
                +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val(2)     &
                +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val(3)     )
-     Return_Kij(Here,re,te,pe,6) = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)), KIND = idp)
+     Return_Kij(Here,re,te,pe,6) = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_Psi*Tmp_Val_Psi), KIND = idp)
 
 
 
@@ -552,7 +570,7 @@ LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_O
  INTEGER                                                 ::  re, te, pe
  INTEGER                                                 ::  rd, td, pd, tpd
  INTEGER                                                 ::  d
- INTEGER                                                 ::  i, j, lvl
+ INTEGER                                                 ::  i, j, lvl, lm
  INTEGER                                                 ::  nComp
  INTEGER                                                 ::  Here, There
 
@@ -584,6 +602,7 @@ LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_O
 
  REAL(idp), DIMENSION(4)                                      ::  Reusable_Vals
  REAL(idp), DIMENSION(6)                                      ::  Tmp_A
+  REAL(idp)                                                       ::  TMP_Val_Psi
 
  INTEGER                                                         ::  iVB
  INTEGER, DIMENSION(3)                                           ::  iU
@@ -766,6 +785,24 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
                  Tmp_Val = 0.0_idp
                  Tmp_Drv = 0.0_idp
 
+                 TMP_Val_Psi = 0.0_idp
+                 DO lm = 1,LM_Length
+                 DO d  = 0,DEGREE
+
+                     Here  = Map_To_FEM_Node(RE,d)
+
+
+                     TMP_Val_Psi = TMP_Val_Psi                      &
+                             + dVA_Coeff_Vector(Here,lm,iU_CF)      &
+                             * Caller_LPT(0,d,rd)                   &
+                             * Slm_Elem_Table( lm, tpd )
+                    
+                 END DO
+                 END DO
+
+
+
+
                  DO i  = 1,3
                  DO d  = 0,DEGREE
 
@@ -904,12 +941,12 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
 
 
                  
-                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ )) = Tmp_A(1)/(Gamma(1)*Gamma(1))
-                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ )) = Tmp_A(2)/(Gamma(1)*Gamma(2))
-                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ )) = Tmp_A(3)/(Gamma(1)*Gamma(3))
-                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K22, rd, td, pd, NQ )) = Tmp_A(4)/(Gamma(2)*Gamma(2))
-                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K23, rd, td, pd, NQ )) = Tmp_A(5)/(Gamma(2)*Gamma(3))
-                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ )) = Tmp_A(6)/(Gamma(3)*Gamma(3))
+                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ )) = Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_Psi*Tmp_Val_Psi)
+                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ )) = Tmp_A(2)/(Gamma(1)*Gamma(2)*Tmp_Val_Psi*Tmp_Val_Psi)
+                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ )) = Tmp_A(3)/(Gamma(1)*Gamma(3)*Tmp_Val_Psi*Tmp_Val_Psi)
+                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K22, rd, td, pd, NQ )) = Tmp_A(4)/(Gamma(2)*Gamma(2)*Tmp_Val_Psi*Tmp_Val_Psi)
+                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K23, rd, td, pd, NQ )) = Tmp_A(5)/(Gamma(2)*Gamma(3)*Tmp_Val_Psi*Tmp_Val_Psi)
+                 Result_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ )) = Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_Psi*Tmp_Val_Psi)
 
              END DO ! rd Loop
              END DO ! td Loop
