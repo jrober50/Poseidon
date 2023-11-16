@@ -323,7 +323,7 @@ DO rd = 1,NQ(1)
     DO lm = 1,LM_Length
     DO d  = 0,DEGREE
 
-        Here  = Map_To_FEM_Node(RE,d)
+        Here  = Map_To_FEM_Node(RE-1,d)
 
 
         TMP_Val_Psi = TMP_Val_Psi                           &
@@ -789,7 +789,7 @@ ALLOCATE( Caller_LPT(0:1,0:DEGREE,1:NQ(1)))
                  DO lm = 1,LM_Length
                  DO d  = 0,DEGREE
 
-                     Here  = Map_To_FEM_Node(RE,d)
+                     Here  = Map_To_FEM_Node(RE-1,d)
 
 
                      TMP_Val_Psi = TMP_Val_Psi                      &
