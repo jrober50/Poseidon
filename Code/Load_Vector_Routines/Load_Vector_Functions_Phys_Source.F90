@@ -3,7 +3,7 @@
 !###############################################################################!
 !##!                                                                         !##!
 !##!                                                                         !##!
-MODULE XCFC_Functions_Physical_Source_Module                                 !##!
+MODULE Load_Vector_Functions_Physical_Source_Module                          !##!
 !##!                                                                         !##!
 !##!_________________________________________________________________________!##!
 !##!                                                                         !##!
@@ -401,4 +401,4 @@ END SUBROUTINE Get_Newtonian_Source_AMReX
 
 
 
-END MODULE XCFC_Functions_Physical_Source_Module
+END MODULE Load_Vector_Functions_Physical_Source_Module

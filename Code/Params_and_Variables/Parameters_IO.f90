@@ -25,6 +25,8 @@ USE Poseidon_Kinds_Module, &
 IMPLICIT NONE
 
 
+CHARACTER(LEN = 16), PARAMETER        :: Poseidon_Output_Dir     = "Poseidon_Output/"
+
 CHARACTER(LEN = 24), PARAMETER        :: Poseidon_Reports_Dir     = "Poseidon_Output/Reports/"
 CHARACTER(LEN = 42), PARAMETER        :: Poseidon_IterReports_Dir = "Poseidon_Output/Reports/Iteration_Reports/"
 

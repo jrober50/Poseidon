@@ -46,14 +46,22 @@ REAL(KIND=idp), PUBLIC                                  ::  Central_E
 
 
 
-INTEGER                                                 ::  MacLaurin_RE
+INTEGER                                                 ::  MLS_RE
 
-REAL(idp)                                               ::  MacLaurin_SemiMinor
-REAL(idp)                                               ::  MacLaurin_SemiMajor
-REAL(idp)                                               ::  MacLaurin_Ecc
-REAL(idp)                                               ::  MacLaurin_Rho
+REAL(idp)                                               ::  MLS_SemiMinor
+REAL(idp)                                               ::  MLS_SemiMajor
+REAL(idp)                                               ::  MLS_Ecc
+REAL(idp)                                               ::  MLS_Rho
 
-CHARACTER(LEN=1)                                        ::  MacLaurin_SphereType
+INTEGER                                                 ::  MLS_SphereType
+CHARACTER(LEN=7),   DIMENSION(2),   PARAMETER           ::  MLS_SphereName = &
+                                                            ['Oblate ',  &
+                                                             'Prolate'   ]
+                                                             
+INTEGER,                            PARAMETER           ::  iMLS_Oblate  = 1
+INTEGER,                            PARAMETER           ::  iMLS_Prolate = 2
+
+
 
 
 REAL(idp)                                               ::  MVL_Boundary_Value
@@ -69,7 +77,14 @@ REAL(idp)                                               ::  HCT_C
 
 
 REAL(idp)                                               ::  UST_Rhoo
-REAL(idp)                                               ::  UST_Star_Radius
+REAL(idp)                                               ::  UST_StarRadius
+
+
+REAL(idp),  PUBLIC,     ALLOCATABLE,    DIMENSION(:)    :: CFLD_Update
+REAL(idp),  PUBLIC,     ALLOCATABLE,    DIMENSION(:)    :: CFLD_Residual
+INTEGER,    PUBLIC                                      :: CFLD_MaxIters  = 1
+INTEGER,    PUBLIC                                      :: CFLD_Iters     = 0
+REAL(idp),  PUBLIC                                      :: CFLD_Tolerance = 0.0_idp
 
 
 END MODULE Variables_External

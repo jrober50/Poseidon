@@ -139,6 +139,11 @@ USE Return_Functions_Native, &
 USE Return_Functions_AMReX, &
             ONLY :  Poseidon_Return_AMReX_Type_A,  &
                     Poseidon_Return_AMReX_Type_B
+                    
+USE Flags_Core_Module, &
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
 
 IMPLICIT NONE
 
@@ -192,22 +197,9 @@ CALL Poseidon_Return_Native_Type_A( iU,                     &
                                     Right_Limit,            &
                                     Return_All(:,:,:,:,1)   )
 
-iU = iU_LF
-CALL Poseidon_Return_Native_Type_A( iU,                     &
-                                    NE,                     &
-                                    NQ,                     &
-                                    RQ_Input,               &
-                                    TQ_Input,               &
-                                    PQ_Input,               &
-                                    Left_Limit,             &
-                                    Right_Limit,            &
-                                    Return_All(:,:,:,:,2)   )
-
-
-iVB = iVB_S
-DO iU = iU_S1, iU_S3
-
-    CALL Poseidon_Return_Native_Type_B( iU, iVB,                            &
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
+    iU = iU_LF
+    CALL Poseidon_Return_Native_Type_A( iU,                     &
                                         NE,                     &
                                         NQ,                     &
                                         RQ_Input,               &
@@ -215,19 +207,34 @@ DO iU = iU_S1, iU_S3
                                         PQ_Input,               &
                                         Left_Limit,             &
                                         Right_Limit,            &
-                                        Return_All(:,:,:,:,iU)    )
-
-END DO ! u Loop
+                                        Return_All(:,:,:,:,2)   )
 
 
-CALL Poseidon_Return_Kij_Native(NE,                     &
-                                NQ,                     &
-                                RQ_Input,               &
-                                TQ_Input,               &
-                                PQ_Input,               &
-                                Left_Limit,             &
-                                Right_Limit,            &
-                                Return_All(:,:,:,:,6:11)            )
+    iVB = iVB_S
+    DO iU = iU_S1, iU_S3
+
+        CALL Poseidon_Return_Native_Type_B( iU, iVB,                            &
+                                            NE,                     &
+                                            NQ,                     &
+                                            RQ_Input,               &
+                                            TQ_Input,               &
+                                            PQ_Input,               &
+                                            Left_Limit,             &
+                                            Right_Limit,            &
+                                            Return_All(:,:,:,:,iU)    )
+
+    END DO ! u Loop
+
+
+    CALL Poseidon_Return_Kij_Native(NE,                     &
+                                    NQ,                     &
+                                    RQ_Input,               &
+                                    TQ_Input,               &
+                                    PQ_Input,               &
+                                    Left_Limit,             &
+                                    Right_Limit,            &
+                                    Return_All(:,:,:,:,6:11)            )
+END IF
 
 END SUBROUTINE Poseidon_Return_All_Native
 
@@ -267,45 +274,46 @@ CALL Poseidon_Return_Native_Type_A( iU,                     &
                                     Caller_xL(2),           &
                                     Return_All(:,:,:,:,1)   )
 
-iU = iU_LF
-CALL Poseidon_Return_Native_Type_A( iU,                     &
-                                    NE,                     &
-                                    Caller_NQ,              &
-                                    Caller_RQ_xlocs,        &
-                                    Caller_TQ_xlocs,        &
-                                    Caller_PQ_xlocs,        &
-                                    Caller_xL(1),           &
-                                    Caller_xL(2),           &
-                                    Return_All(:,:,:,:,2)   )
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
+    iU = iU_LF
+    CALL Poseidon_Return_Native_Type_A( iU,                     &
+                                        NE,                     &
+                                        Caller_NQ,              &
+                                        Caller_RQ_xlocs,        &
+                                        Caller_TQ_xlocs,        &
+                                        Caller_PQ_xlocs,        &
+                                        Caller_xL(1),           &
+                                        Caller_xL(2),           &
+                                        Return_All(:,:,:,:,2)   )
 
 
 
-iVB = iVB_S
-DO iU = iU_S1, iU_S3
+    iVB = iVB_S
+    DO iU = iU_S1, iU_S3
 
-    CALL Poseidon_Return_Native_Type_B( iU, iVB,                            &
-                                        NE,                                 &
-                                        Caller_NQ,                          &
-                                        Caller_RQ_xlocs,                    &
-                                        Caller_TQ_xlocs,                    &
-                                        Caller_PQ_xlocs,                    &
-                                        Caller_xL(1),                       &
-                                        Caller_xL(2),                       &
-                                        Return_All(:,:,:,:,iU)    )
+        CALL Poseidon_Return_Native_Type_B( iU, iVB,                            &
+                                            NE,                                 &
+                                            Caller_NQ,                          &
+                                            Caller_RQ_xlocs,                    &
+                                            Caller_TQ_xlocs,                    &
+                                            Caller_PQ_xlocs,                    &
+                                            Caller_xL(1),                       &
+                                            Caller_xL(2),                       &
+                                            Return_All(:,:,:,:,iU)    )
 
-END DO ! u Loop
-
-
-CALL Poseidon_Return_Kij_Native(  NE,                 &
-                                Caller_NQ,            &
-                                Caller_RQ_xlocs,      &
-                                Caller_TQ_xlocs,      &
-                                Caller_PQ_xlocs,      &
-                                Caller_xL(1),         &
-                                Caller_xL(2),         &
-                                Return_All(:,:,:,:,6:11)            )
+    END DO ! u Loop
 
 
+    CALL Poseidon_Return_Kij_Native(  NE,                 &
+                                    Caller_NQ,            &
+                                    Caller_RQ_xlocs,      &
+                                    Caller_TQ_xlocs,      &
+                                    Caller_PQ_xlocs,      &
+                                    Caller_xL(1),         &
+                                    Caller_xL(2),         &
+                                    Return_All(:,:,:,:,6:11)            )
+
+END IF
 
 
 END SUBROUTINE Poseidon_Return_All_Native_Caller
@@ -452,14 +460,15 @@ DO lvl = 0,nLevels-1
     ELSE
         nGhost_Vec = 0
     END IF
-
+    
+    DROT = 0.5_idp * Level_dx(lvl,1)
+    DTOT = 0.5_idp * Level_dx(lvl,2)
+    DPOT = 0.5_idp * Level_dx(lvl,3)
 
     !
     !   MakeFineMask
     !
     IF ( lvl < AMReX_Num_Levels-1 ) THEN
-        
-    
         CALL AMReX_MakeFineMask(  Level_Mask,               &
                                   MF_Results(lvl)%ba,       &
                                   MF_Results(lvl)%dm,       &
@@ -478,9 +487,6 @@ DO lvl = 0,nLevels-1
     END IF
 
 
-    DROT = 0.5_idp * Level_dx(lvl,1)
-    DTOT = 0.5_idp * Level_dx(lvl,2)
-    DPOT = 0.5_idp * Level_dx(lvl,3)
 
 
     CALL amrex_mfiter_build(mfi, MF_Results(lvl), tiling = .true. )
@@ -495,6 +501,7 @@ DO lvl = 0,nLevels-1
 
         iEL_A = Box%lo
         iEU_A = Box%hi
+        
         iEL = iEL_A-nGhost_Vec
         iEU = iEU_A+nGhost_Vec
 
@@ -563,7 +570,6 @@ DO lvl = 0,nLevels-1
             Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
             
 
-
             DO pd = 1,NQ(3)
             DO td = 1,NQ(2)
             DO rd = 1,NQ(1)
@@ -575,8 +581,8 @@ DO lvl = 0,nLevels-1
                 Tmp_Drv_B = 0.0_idp
     
     
-                ! Calculate all the A Type Variables
-                DO iU = iU_CF,iU_LF
+                ! Calculate the Conformal Factor (XCFC) or Newtonain Potential (Newtonian)
+                iU = iU_CF
                 DO lm = 1,LM_Length
                 DO d  = 0,DEGREE
                     Current_Location = Map_To_FEM_Node(iRE,d)
@@ -591,202 +597,211 @@ DO lvl = 0,nLevels-1
 
                 END DO ! d Loop
                 END DO ! lm Loop
-                END DO ! iU Loop
-
-
-                ! Calculate the B Type Variable, The Shift Vector
-                iVB = iVB_S
-                DO iU  = iU_S1,iU_S3
-                DO d  = 0,DEGREE
-
-                    Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
-                    There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
-                    iU_Offset = iU-3*iVB+1
-
-
-                    TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
-                            + SUM( dVB_Coeff_Vector( Here:There, iVB )     &
-                                    * Slm_Elem_Table( :, tpd )   )         &
-                            * Caller_LPT(0,d,rd)
-
-                END DO ! d Loop
-                END DO ! iU Loop
                 
+                IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
 
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_CF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_CF),KIND = idp)
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_LF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_LF),KIND= idp)      &
-                                                                               / REAL(Tmp_Val_A(iU_CF),KIND = idp)
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S1, rd, td, pd, NQ )) = REAL(Tmp_Val_B(1,iVB_S),KIND = idp)
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S2, rd, td, pd, NQ )) = REAL(Tmp_Val_B(2,iVB_S),KIND = idp)
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S3, rd, td, pd, NQ )) = REAL(Tmp_Val_B(3,iVB_S),KIND = idp)
-
-
-                ! Calculate the X Vector, and its derivatives
-                iVB = iVB_X
-                DO iU = iU_X1,iU_X3
-                DO d  = 0,DEGREE
+                    ! Calculate the Conformal Factor (XCFC)
+                    iU = iU_LF
+                    DO lm = 1,LM_Length
+                    DO d  = 0,DEGREE
+                        Current_Location = Map_To_FEM_Node(iRE,d)
                     
-
-                    Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
-                    There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
-                    iU_Offset = iU-3*iVB+1
-                    
-                    TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
-                            + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
-                                    * Slm_Elem_Table( :, tpd )   )         &
-                            * Caller_LPT(0,d,rd)
-
-                    TMP_Drv_B(1,iU_Offset) = TMP_Drv_B(1,iU_Offset)         &
-                               + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                                     * Slm_Elem_Table( :, tpd  )     )     &
-                               * Caller_LPT(1,d,rd)            &
-                               / DROT
-
-
-
-                    TMP_Drv_B(2,iU_Offset) = TMP_Drv_B(2,iU_Offset)         &
-                               + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                                     * Slm_Elem_dt_Table( :, tpd )   )     &
-                               * Caller_LPT(0,d,rd)
-
-
-                    TMP_Drv_B(3,iU_Offset) = TMP_Drv_B(3,iU_Offset)         &
-                               + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
-                                     * Slm_Elem_dp_Table( :, tpd)   )      &
-                               * Caller_LPT(0,d,rd)
-
-                END DO ! d Loop
-                END DO ! iU Loop
-
-                Gamma(2) = 1.0_idp/(Cur_R_Locs(rd)*Cur_R_Locs(rd))
-                Gamma(3) = Gamma(2) * 1.0_idp/( DSIN(Cur_T_Locs(td))*DSIN(Cur_T_Locs(td)) )
-
-                Christoffel(1,2,2) = -Cur_R_Locs(rd)
-                Christoffel(1,3,3) = -Cur_R_Locs(rd)*DSIN(Cur_T_Locs(td))*DSIN(Cur_T_Locs(td))
-
-                Christoffel(2,1,2) = 1.0_idp/Cur_R_Locs(rd)
-                Christoffel(2,2,1) = 1.0_idp/Cur_R_Locs(rd)
-                Christoffel(2,3,3) = -DSIN(Cur_T_Locs(td))*DCOS(Cur_P_Locs(pd))
-
-                Christoffel(3,3,1) = 1.0_idp/Cur_R_Locs(rd)
-                Christoffel(3,1,3) = 1.0_idp/Cur_R_Locs(rd)
-                Christoffel(3,3,2) = 1.0_idp/DTAN(CUR_T_LOCS(td))
-                Christoffel(3,2,3) = 1.0_idp/DTAN(CUR_T_LOCS(td))
-
-
-                Reusable_Vals(1) = 2.0_idp/3.0_idp*(Tmp_Drv_B(1,1)+Tmp_Drv_B(2,2)+Tmp_Drv_B(3,3))
-                Reusable_Vals(2) = 2.0_idp/3.0_idp*(Christoffel(1,1,1)+Christoffel(2,2,1)+Christoffel(3,3,1))
-                Reusable_Vals(3) = 2.0_idp/3.0_idp*(Christoffel(1,1,2)+Christoffel(2,2,2)+Christoffel(3,3,2))
-                Reusable_Vals(4) = 2.0_idp/3.0_idp*(Christoffel(1,1,3)+Christoffel(2,2,3)+Christoffel(3,3,3))
-
-
-                ! Ahat^11
-                Tmp_A(1) = Gamma(1)                                                                 &
-                         * ( 2.0_idp * Tmp_Drv_B(1,1) - Reusable_Vals(1)                            &
-                           +(2.0_idp * Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val_B(1,iVB_X)   &
-                           +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val_B(2,iVB_X)   &
-                           +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val_B(3,iVB_X)   )
-        
-        
-        
-        
-                ! Ahat^12
-                i=1
-                j=2
-                Tmp_A(2) = Gamma(i)*Tmp_Drv_B(i,j)           &
-                         + Gamma(j)*Tmp_Drv_B(j,i)           &
-                         +( Gamma(i)*Christoffel(j,i,1)      &
-                          + Gamma(j)*Christoffel(i,j,1)      &
-                          )*Tmp_Val_B(1,iVB_X)               &
-                         +( Gamma(i)*Christoffel(j,i,2)      &
-                          + Gamma(j)*Christoffel(i,j,2)      &
-                          )*Tmp_Val_B(2,iVB_X)               &
-                         +( Gamma(i)*Christoffel(j,i,3)      &
-                          + Gamma(j)*Christoffel(i,j,3)      &
-                          )*Tmp_Val_B(3,iVB_X)
-
-
-                ! Ahat^13
-                i=1
-                j=3
-                Tmp_A(3) = Gamma(i)*Tmp_Drv_B(i,j)           &
-                         + Gamma(j)*Tmp_Drv_B(j,i)           &
-                         +( Gamma(i)*Christoffel(j,i,1)      &
-                          + Gamma(j)*Christoffel(i,j,1)      &
-                          )*Tmp_Val_B(1,iVB_X)               &
-                         +( Gamma(i)*Christoffel(j,i,2)      &
-                          + Gamma(j)*Christoffel(i,j,2)      &
-                          )*Tmp_Val_B(2,iVB_X)               &
-                         +( Gamma(i)*Christoffel(j,i,3)      &
-                          + Gamma(j)*Christoffel(i,j,3)      &
-                          )*Tmp_Val_B(3,iVB_X)
-
-
-
-                ! Ahat^22
-                Tmp_A(4) = Gamma(2)                                                                     &
-                         * ( 2.0_idp * Tmp_Drv_B(2,2) - Reusable_Vals(1)                                &
-                           +(2.0_idp * Christoffel(2,2,1) - Reusable_Vals(2) ) * Tmp_Val_B(1,iVB_X)     &
-                           +(2.0_idp * Christoffel(2,2,2) - Reusable_Vals(3) ) * Tmp_Val_B(2,iVB_X)     &
-                           +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
-
-
-                ! Ahat^23
-                i=2
-                j=3
-                Tmp_A(5) = Gamma(i)*Tmp_Drv_B(i,j)           &
-                         + Gamma(j)*Tmp_Drv_B(j,i)           &
-                         +( Gamma(i)*Christoffel(j,i,1)      &
-                          + Gamma(j)*Christoffel(i,j,1)      &
-                          )*Tmp_Val_B(1,iVB_X)               &
-                         +( Gamma(i)*Christoffel(j,i,2)      &
-                          + Gamma(j)*Christoffel(i,j,2)      &
-                          )*Tmp_Val_B(2,iVB_X)               &
-                         +( Gamma(i)*Christoffel(j,i,3)      &
-                          + Gamma(j)*Christoffel(i,j,3)      &
-                          )*Tmp_Val_B(3,iVB_X)
-
-
-
-                ! Ahat^33
-                Tmp_A(6) = Gamma(3)                                                                     &
-                         * ( 2.0_idp * Tmp_Drv_B(3,3) - Reusable_Vals(1)                                &
-                           +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val_B(1,iVB_X)     &
-                           +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val_B(2,iVB_X)     &
-                           +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
-
-
-                ! Tmp_A values are A^ij.
-                ! Return Results are A_ij so we multiply by Gamma_ij
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
                         
-                
-                
-!                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
-!                        = Tmp_Val_B(1,iVB_X)
-!
-!                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ ))                         &
-!                        = Tmp_Drv_B(1,1)
-
-                
-                
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
-
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(3)/(Gamma(1)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
-
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K22, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(4)/(Gamma(2)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
-
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K23, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(5)/(Gamma(2)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
-
-                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ ))                         &
-                        = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+                        TMP_Val_A(iU) = TMP_Val_A(iU)                               &
+                                    + dVA_Coeff_Vector(Current_Location,lm,iU)     &
+                                    * Caller_LPT(0,d,rd) * Slm_Elem_Table( lm, tpd )
 
 
+
+
+                    END DO ! d Loop
+                    END DO ! lm Loop
+
+
+                    ! Calculate the B Type Variable, The Shift Vector
+                    iVB = iVB_S
+                    DO iU  = iU_S1,iU_S3
+                    DO d  = 0,DEGREE
+
+                        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
+                        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
+                        iU_Offset = iU-3*iVB+1
+
+
+                        TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
+                                + SUM( dVB_Coeff_Vector( Here:There, iVB )     &
+                                        * Slm_Elem_Table( :, tpd )   )         &
+                                * Caller_LPT(0,d,rd)
+
+                    END DO ! d Loop
+                    END DO ! iU Loop
+                    
+
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_CF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_CF),KIND = idp)
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_LF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_LF),KIND= idp)      &
+                                                                                   / REAL(Tmp_Val_A(iU_CF),KIND = idp)
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S1, rd, td, pd, NQ )) = REAL(Tmp_Val_B(1,iVB_S),KIND = idp)
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S2, rd, td, pd, NQ )) = REAL(Tmp_Val_B(2,iVB_S),KIND = idp)
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S3, rd, td, pd, NQ )) = REAL(Tmp_Val_B(3,iVB_S),KIND = idp)
+
+
+                    ! Calculate the X Vector, and its derivatives
+                    iVB = iVB_X
+                    DO iU = iU_X1,iU_X3
+                    DO d  = 0,DEGREE
+                        
+
+                        Here  = FP_Array_Map_TypeB(iU,iVB,iRE,d,1)
+                        There = FP_Array_Map_TypeB(iU,iVB,iRE,d,LM_Length)
+                        iU_Offset = iU-3*iVB+1
+                        
+                        TMP_Val_B(iU_Offset,iVB) = TMP_Val_B(iU_Offset,iVB)     &
+                                + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
+                                        * Slm_Elem_Table( :, tpd )   )         &
+                                * Caller_LPT(0,d,rd)
+
+                        TMP_Drv_B(1,iU_Offset) = TMP_Drv_B(1,iU_Offset)         &
+                                   + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                                         * Slm_Elem_Table( :, tpd  )     )     &
+                                   * Caller_LPT(1,d,rd)            &
+                                   / DROT
+
+
+
+                        TMP_Drv_B(2,iU_Offset) = TMP_Drv_B(2,iU_Offset)         &
+                                   + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                                         * Slm_Elem_dt_Table( :, tpd )   )     &
+                                   * Caller_LPT(0,d,rd)
+
+
+                        TMP_Drv_B(3,iU_Offset) = TMP_Drv_B(3,iU_Offset)         &
+                                   + SUM( dVB_Coeff_Vector( Here:There, iVB )   &
+                                         * Slm_Elem_dp_Table( :, tpd)   )      &
+                                   * Caller_LPT(0,d,rd)
+
+                    END DO ! d Loop
+                    END DO ! iU Loop
+
+                    Gamma(2) = 1.0_idp/(Cur_R_Locs(rd)*Cur_R_Locs(rd))
+                    Gamma(3) = Gamma(2) * 1.0_idp/( DSIN(Cur_T_Locs(td))*DSIN(Cur_T_Locs(td)) )
+
+                    Christoffel(1,2,2) = -Cur_R_Locs(rd)
+                    Christoffel(1,3,3) = -Cur_R_Locs(rd)*DSIN(Cur_T_Locs(td))*DSIN(Cur_T_Locs(td))
+
+                    Christoffel(2,1,2) = 1.0_idp/Cur_R_Locs(rd)
+                    Christoffel(2,2,1) = 1.0_idp/Cur_R_Locs(rd)
+                    Christoffel(2,3,3) = -DSIN(Cur_T_Locs(td))*DCOS(Cur_P_Locs(pd))
+
+                    Christoffel(3,3,1) = 1.0_idp/Cur_R_Locs(rd)
+                    Christoffel(3,1,3) = 1.0_idp/Cur_R_Locs(rd)
+                    Christoffel(3,3,2) = 1.0_idp/DTAN(CUR_T_LOCS(td))
+                    Christoffel(3,2,3) = 1.0_idp/DTAN(CUR_T_LOCS(td))
+
+
+                    Reusable_Vals(1) = 2.0_idp/3.0_idp*(Tmp_Drv_B(1,1)+Tmp_Drv_B(2,2)+Tmp_Drv_B(3,3))
+                    Reusable_Vals(2) = 2.0_idp/3.0_idp*(Christoffel(1,1,1)+Christoffel(2,2,1)+Christoffel(3,3,1))
+                    Reusable_Vals(3) = 2.0_idp/3.0_idp*(Christoffel(1,1,2)+Christoffel(2,2,2)+Christoffel(3,3,2))
+                    Reusable_Vals(4) = 2.0_idp/3.0_idp*(Christoffel(1,1,3)+Christoffel(2,2,3)+Christoffel(3,3,3))
+    
+                    ! Ahat^11
+                    Tmp_A(1) = Gamma(1)                                                                 &
+                             * ( 2.0_idp * Tmp_Drv_B(1,1) - Reusable_Vals(1)                            &
+                               +(2.0_idp * Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val_B(1,iVB_X)   &
+                               +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val_B(2,iVB_X)   &
+                               +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val_B(3,iVB_X)   )
+            
+!                    print*,re,rd,Reusable_Vals(2)
+            
+            
+                    ! Ahat^12
+                    i=1
+                    j=2
+                    Tmp_A(2) = Gamma(i)*Tmp_Drv_B(i,j)           &
+                             + Gamma(j)*Tmp_Drv_B(j,i)           &
+                             +( Gamma(i)*Christoffel(j,i,1)      &
+                              + Gamma(j)*Christoffel(i,j,1)      &
+                              )*Tmp_Val_B(1,iVB_X)               &
+                             +( Gamma(i)*Christoffel(j,i,2)      &
+                              + Gamma(j)*Christoffel(i,j,2)      &
+                              )*Tmp_Val_B(2,iVB_X)               &
+                             +( Gamma(i)*Christoffel(j,i,3)      &
+                              + Gamma(j)*Christoffel(i,j,3)      &
+                              )*Tmp_Val_B(3,iVB_X)
+
+
+                    ! Ahat^13
+                    i=1
+                    j=3
+                    Tmp_A(3) = Gamma(i)*Tmp_Drv_B(i,j)           &
+                             + Gamma(j)*Tmp_Drv_B(j,i)           &
+                             +( Gamma(i)*Christoffel(j,i,1)      &
+                              + Gamma(j)*Christoffel(i,j,1)      &
+                              )*Tmp_Val_B(1,iVB_X)               &
+                             +( Gamma(i)*Christoffel(j,i,2)      &
+                              + Gamma(j)*Christoffel(i,j,2)      &
+                              )*Tmp_Val_B(2,iVB_X)               &
+                             +( Gamma(i)*Christoffel(j,i,3)      &
+                              + Gamma(j)*Christoffel(i,j,3)      &
+                              )*Tmp_Val_B(3,iVB_X)
+
+
+
+                    ! Ahat^22
+                    Tmp_A(4) = Gamma(2)                                                                     &
+                             * ( 2.0_idp * Tmp_Drv_B(2,2) - Reusable_Vals(1)                                &
+                               +(2.0_idp * Christoffel(2,2,1) - Reusable_Vals(2) ) * Tmp_Val_B(1,iVB_X)     &
+                               +(2.0_idp * Christoffel(2,2,2) - Reusable_Vals(3) ) * Tmp_Val_B(2,iVB_X)     &
+                               +(2.0_idp * Christoffel(2,2,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
+
+
+                    ! Ahat^23
+                    i=2
+                    j=3
+                    Tmp_A(5) = Gamma(i)*Tmp_Drv_B(i,j)           &
+                             + Gamma(j)*Tmp_Drv_B(j,i)           &
+                             +( Gamma(i)*Christoffel(j,i,1)      &
+                              + Gamma(j)*Christoffel(i,j,1)      &
+                              )*Tmp_Val_B(1,iVB_X)               &
+                             +( Gamma(i)*Christoffel(j,i,2)      &
+                              + Gamma(j)*Christoffel(i,j,2)      &
+                              )*Tmp_Val_B(2,iVB_X)               &
+                             +( Gamma(i)*Christoffel(j,i,3)      &
+                              + Gamma(j)*Christoffel(i,j,3)      &
+                              )*Tmp_Val_B(3,iVB_X)
+
+
+
+                    ! Ahat^33
+                    Tmp_A(6) = Gamma(3)                                                                     &
+                             * ( 2.0_idp * Tmp_Drv_B(3,3) - Reusable_Vals(1)                                &
+                               +(2.0_idp * Christoffel(3,3,1) - Reusable_Vals(2) ) * Tmp_Val_B(1,iVB_X)     &
+                               +(2.0_idp * Christoffel(3,3,2) - Reusable_Vals(3) ) * Tmp_Val_B(2,iVB_X)     &
+                               +(2.0_idp * Christoffel(3,3,3) - Reusable_Vals(4) ) * Tmp_Val_B(3,iVB_X)     )
+
+
+                    ! Tmp_A values are A^ij.
+                    ! Return Results are A_ij so we multiply by Gamma_ij
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))                         &
+                            = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+                            
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
+                            = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K13, rd, td, pd, NQ ))                         &
+                            = REAL(Tmp_A(3)/(Gamma(1)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K22, rd, td, pd, NQ ))                         &
+                            = REAL(Tmp_A(4)/(Gamma(2)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K23, rd, td, pd, NQ ))                         &
+                            = REAL(Tmp_A(5)/(Gamma(2)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ ))                         &
+                            = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+
+!                    PRINT*,re,rd,Tmp_A(1),Gamma(1),Tmp_Val_A(iU_CF)
+                END IF ! Not Newtonian Mode
             END DO ! rd Loop
             END DO ! td Loop
             END DO ! pd Loop

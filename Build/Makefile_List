@@ -15,12 +15,13 @@ POSEIDON = \
   $(POSEIDON_RETURN_ROUTINES) \
   $(POSEIDON_IO)              \
   $(POSEIDON_MATRIX)          \
+  $(POSEIDON_LOAD_VECTOR)     \
   $(POSEIDON_LINEAR_SOLVERS)  \
-  $(POSEIDON_CFA)    \
+  $(POSEIDON_INIT)            \
+  $(POSEIDON_CFA)             \
   $(POSEIDON_XCFC)            \
   $(POSEIDON_NEWTONIAN)       \
   $(POSEIDON_EXTERNAL)        \
-  $(POSEIDON_INIT)            \
   $(POSEIDON_UTILITIES)       \
   $(POSEIDON_SOURCE_INPUT)    \
   $(POSEIDON_INTERFACES)      \

@@ -28,7 +28,7 @@ USE Poseidon_Parameters, &
                     Method_Flag
 
 USE Newtonian_Main_Module, &
-            ONLY :  Newtonian_Solve
+            ONLY :  Newtonian_Method
 
 USE CFA_Method_Module, &
             ONLY :  CFA_Method
@@ -110,7 +110,7 @@ IF ( Readiness_Flag ) THEN
 
     IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
-        CALL Newtonian_Solve()
+        CALL Newtonian_Method()
     
     ELSE IF ( Method_Flag == 1 ) THEN
         WRITE(*,'(A)')"The Newton-Raphson method is not currently available in Poseidon. STOPING"

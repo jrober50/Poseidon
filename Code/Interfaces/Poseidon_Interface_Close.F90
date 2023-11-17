@@ -46,8 +46,8 @@ USE Variables_Interface, &
 USE Allocation_Sources, &
             ONLY :  Deallocate_Poseidon_Source_Variables
 
-USE XCFC_Source_Routine_Variables_Module, &
-            ONLY :  Deallocate_XCFC_Source_Routine_Variables
+USE Load_Vector_Allocation_Module, &
+            ONLY :  Deallocate_Load_Vector_Construction_Variables
 
 USE Allocation_Mesh, &
             ONLY : Deallocate_Mesh
@@ -129,7 +129,7 @@ IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian) THEN
 ELSE
     !!!!  Deallocate Data Space !!!!
     CALL Deallocate_Poseidon_Source_Variables
-    Call Deallocate_XCFC_Source_Routine_Variables
+    Call Deallocate_Load_Vector_Construction_Variables
 
     CALL Deallocate_Quadrature()
     CALL Deallocate_Tables()

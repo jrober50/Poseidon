@@ -30,14 +30,10 @@ USE Poseidon_Parameters, &
             ONLY :  Num_Vars
 
 USE Variables_BC, &
-            ONLY :  INNER_CFA_BC_VALUES,            &
-                    OUTER_CFA_BC_VALUES,            &
-                    INNER_CFA_BC_TYPE,              &
-                    OUTER_CFA_BC_TYPE,              &
-                    INNER_Poisson_BC_VALUE,         &
-                    OUTER_Poisson_BC_VALUE,         &
-                    INNER_Poisson_BC_TYPE,          &
-                    OUTER_Poisson_BC_TYPE
+            ONLY :  Inner_BC_Values,            &
+                    Outer_BC_Values,            &
+                    Inner_BC_Type,              &
+                    Outer_BC_Type
 
 IMPLICIT NONE
 
@@ -45,7 +41,7 @@ IMPLICIT NONE
 
 INTERFACE Poseidon_Set_Uniform_Boundary_Conditions
     MODULE PROCEDURE Poseidon_Set_Uniform_BC_XCFC
-    MODULE PROCEDURE Poseidon_Set_Uniform_BC_Poisson
+    MODULE PROCEDURE Poseidon_Set_Uniform_BC_Newtonian
 END INTERFACE Poseidon_Set_Uniform_Boundary_Conditions
 
 
@@ -95,13 +91,13 @@ CONTAINS
 
  IF (    BC_Location_Input == "I"    ) THEN
 
-     INNER_CFA_BC_TYPE(1:Num_Vars) = BC_Type_Input(1:Num_Vars)
-     INNER_CFA_BC_VALUES(1:Num_Vars) = BC_Value_Input(1:Num_Vars)
+     Inner_BC_Type(1:Num_Vars) = BC_Type_Input(1:Num_Vars)
+     Inner_BC_Values(1:Num_Vars) = BC_Value_Input(1:Num_Vars)
 
  ELSE IF (    BC_Location_Input == "O"    ) THEN
 
-     OUTER_CFA_BC_TYPE(1:Num_Vars) = BC_Type_Input(1:Num_Vars)
-     OUTER_CFA_BC_VALUES(1:Num_Vars) = BC_Value_Input(1:Num_Vars)
+     Outer_BC_Type(1:Num_Vars) = BC_Type_Input(1:Num_Vars)
+     Outer_BC_Values(1:Num_Vars) = BC_Value_Input(1:Num_Vars)
 
  END IF
 
@@ -118,7 +114,7 @@ CONTAINS
 
   !+105+####################################################################################!
  !                                                                                           !
- !      Poseidon_Poisson_Set_Boundary_Condtion                                               !
+ !      Poseidon_Newtonian_Set_Boundary_Condtion                                               !
  !                                                                                           !
  !-------------------------------------------------------------------------------------------!
  !                                                                                           !
@@ -142,9 +138,9 @@ CONTAINS
  !                                           boundary.                                       !
  !                                                                                           !
   !#########################################################################################!
- SUBROUTINE Poseidon_Set_Uniform_BC_Poisson( BC_Location_Input,      &
-                                             BC_Type_Input,          &
-                                             BC_Value_Input          )
+ SUBROUTINE Poseidon_Set_Uniform_BC_Newtonian( BC_Location_Input,      &
+                                               BC_Type_Input,          &
+                                               BC_Value_Input          )
 
 
 
@@ -155,18 +151,18 @@ CONTAINS
 
  IF (    BC_Location_Input == "I"    ) THEN
 
-    INNER_CFA_BC_TYPE(1)   = BC_Type_Input
-    INNER_CFA_BC_VALUES(1) = BC_Value_Input
+    Inner_BC_Type   = BC_Type_Input
+    Inner_BC_Values = BC_Value_Input
 
  ELSE IF (    BC_Location_Input == "O"    ) THEN
 
-    OUTER_CFA_BC_TYPE(1)   = BC_Type_Input
-    OUTER_CFA_BC_VALUES(1) = BC_Value_Input
+    Outer_BC_Type   = BC_Type_Input
+    Outer_BC_Values = BC_Value_Input
 
  END IF
 
 
- END SUBROUTINE Poseidon_Set_Uniform_BC_Poisson
+ END SUBROUTINE Poseidon_Set_Uniform_BC_Newtonian
 
 
 

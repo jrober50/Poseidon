@@ -1,7 +1,8 @@
 POSEIDON_EXTERNAL = \
   Allocation_Yahil_Profile.f90      \
   External_Yahil_Profile.f90        \
-  External_MacLaurin_Profile.f90    \
+  External_MLS_Profile.f90          \
+  External_MLS_Solution.f90         \
   External_HCT_Solution.f90         \
   External_MVL_Solution.f90         \
   External_UST_Solution.f90         \

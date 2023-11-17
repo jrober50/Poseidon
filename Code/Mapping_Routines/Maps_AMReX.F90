@@ -138,7 +138,6 @@ SUBROUTINE Initialize_AMReX_Maps()
 
 INTEGER                         :: lvl
 
-PRINT*,"AMReX_MaxLevel",AMReX_MaxLevel
 ALLOCATE( iLeafElementsPerLvl(0:AMReX_MaxLevel))
 
 iNumLeafElements = 0

@@ -10,6 +10,7 @@ POSEIDON_VARIABLES = \
   Variables_FEM.f90          \
   Variables_IO.f90           \
   Variables_Vectors.f90      \
+  Variables_Load_Vector.f90  \
   Variables_Matrices.f90     \
   Variables_Mesh.f90         \
   Variables_MPI.f90          \

@@ -92,7 +92,12 @@ USE Variables_IO, &
 
 
 USE Variables_External, &
-            ONLY :  SelfSim_T
+            ONLY :  SelfSim_T,              &
+                    CFLD_Update,            &
+                    CFLD_Residual,          &
+                    CFLD_Tolerance,         &
+                    CFLD_MaxIters,          &
+                    CFLD_Iters
 
 USE Return_Functions_FP,   &
             ONLY :  Calc_FP_Values_At_Location
@@ -234,6 +239,11 @@ INTEGER                                                     ::  Output_Locations
 IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+        U_Flag_Used = [1,0,0,0,0]
+    ELSE
+        U_Flag_Used = Eq_Flags
+    END IF ! Newton Mode
 
     IF ( PRESENT(U_Flag_Option) ) THEN
         IF( U_Flag_Option ) THEN
@@ -245,8 +255,8 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
                     U_Flag_Used = [1,0,0,0,0]
                 ELSE
                     U_Flag_Used = Eq_Flags
-                END IF
-            END IF
+                END IF ! Newton Mode
+            END IF ! Present(U_Override)
         ELSE
             U_Flag_Used = [1,1,1,0,0]
         END IF
@@ -477,7 +487,7 @@ CALL Create_Final_Results_Filenames( uNum_Files, uFilenames,     &
 
 
 DO i = 1,4
-    CALL OPEN_NEW_FILE( mFilenames(i), mFile_IDs(i),200)
+    CALL Open_New_File( mFilenames(i), mFile_IDs(i),200)
 !    CALL Open_Existing_File_Append(mFilenames(i), mFile_IDs(i),200)
 END DO
 
@@ -485,7 +495,7 @@ END DO
 DO i = 1,5
     IF ( U_Flag(i) == 1 ) THEN
 
-        CALL OPEN_NEW_FILE( uFilenames(i), uFile_IDs(i),205)
+        CALL Open_New_File( uFilenames(i), uFile_IDs(i),205)
 !        CALL Open_Existing_File_Append(uFilenames(i), uFile_IDs(i),205)
     END IF
 
@@ -496,7 +506,7 @@ END DO
 IF ( xNum_Files .GE. 1 ) THEN
 
     DO i = 1,xNum_Files
-        CALL OPEN_NEW_FILE( xFilenames(i), xFile_IDs(i), 210 )
+        CALL Open_New_File( xFilenames(i), xFile_IDs(i), 210 )
 !        CALL Open_Existing_File_Append(xFilenames(i), xFile_IDs(i), 210 )
     END DO
 
@@ -506,7 +516,7 @@ END IF
 IF ( kNum_Files .GE. 1 ) THEN
 
     DO i = 1,kNum_Files
-        CALL OPEN_NEW_FILE( kFilenames(i), kFile_IDs(i), 220 )
+        CALL Open_New_File( kFilenames(i), kFile_IDs(i), 220 )
 !        CALL Open_Existing_File_Append(kFilenames(i), kFile_IDs(i), 220 )
     END DO
 
@@ -1072,7 +1082,7 @@ INTEGER                                                     ::  Num_DOF
 INTEGER                                                     ::  nComp
 INTEGER                                                     ::  nLevels
 INTEGER                                                     ::  lvl
-INTEGER                                                     ::  MF_Results_nComps
+
 
 INTEGER                                                     ::  ierr, CurID
 
@@ -1085,6 +1095,7 @@ TYPE(amrex_boxarray),           ALLOCATABLE                 ::  BA_Results(:)
 TYPE(amrex_distromap),          ALLOCATABLE                 ::  DM_Results(:)
 TYPE(amrex_geometry),           ALLOCATABLE                 ::  GM_Results(:)
 
+INTEGER                                                     ::  MF_Results_nComps
 INTEGER                                                     ::  MF_Results_nVars    = 11
 INTEGER                                                     ::  MF_Results_nGhosts  = 0
 INTEGER, DIMENSION(1:3)                                     ::  nGhost_Vec
@@ -1126,7 +1137,11 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
     
 
-
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+        U_Flag_Used = [1,0,0,0,0]
+    ELSE
+        U_Flag_Used = Eq_Flags
+    END IF
     IF ( PRESENT(U_Flag_Option) ) THEN
         IF( U_Flag_Option ) THEN
 
@@ -1521,7 +1536,7 @@ IF ( .TRUE. ) THEN
 
     File_IDs = [(141 + i, i=1,Num_Files)]
     DO i = 1,Num_Files
-        CALL OPEN_NEW_FILE( Filenames(i), File_IDs(i), 200 )
+        CALL Open_New_File( Filenames(i), File_IDs(i), 200 )
     END DO
 
 
@@ -1632,6 +1647,45 @@ END IF
 
 
 END SUBROUTINE Output_2D_Results
+
+
+
+
+
+
+
+
+
+
+ !+202+########################################################!
+!                                                               !
+!          Output_ConFactorLoopData                             !
+!                                                               !
+ !#############################################################!
+SUBROUTINE Output_ConFactorLoopData()
+
+CHARACTER(LEN = 100)                            ::  Filename
+INTEGER                                         ::  File_ID
+
+
+116 FORMAT (A,A,A,A)
+WRITE(Filename,116) Poseidon_IterReports_Dir,"ConFactorLoopData_",TRIM(File_Suffix),".out"
+
+CALL Open_New_File( Filename, File_ID,230)
+
+
+WRITE(File_ID,*)CFLD_Iters, CFLD_MaxIters
+
+WRITE(File_ID,*)CFLD_Update
+
+WRITE(File_ID,*)CFLD_Residual
+
+CLOSE( File_ID )
+
+END SUBROUTINE Output_ConFactorLoopData
+
+
+
 
 
 

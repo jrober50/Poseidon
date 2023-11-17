@@ -48,6 +48,7 @@ REAL(idp)               ::  Second, Millisecond
 REAL(idp)               ::  Joule, Erg, Newton
 REAL(idp)               ::  GravPot_Units, Shift_Units
 REAL(idp)               ::  E_Units, S_Units, Si_Units
+REAL(idp)               ::  rho_Units
 
 REAL(idp)               ::  Solar_Mass
 
@@ -203,6 +204,8 @@ Shift_Units     = Centimeter/Second
 E_Units         = Erg/Centimeter**3
 S_Units         = Erg/Centimeter**3
 Si_Units        = Gram/(Second*Centimeter**2)
+
+rho_Units       = Gram/(Centimeter**3)
 
 Solar_Mass      = 1.988435E+30 * Kilogram
 

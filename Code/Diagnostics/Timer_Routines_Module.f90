@@ -69,15 +69,15 @@ Timer_Initialization_Total           = 0.0_idp
 Timer_Initialization_Core           = 0.0_idp
 Timer_Initialization_XCFC           = 0.0_idp
 
-Timer_Poisson_Matrix_Init           = 0.0_idp
-Timer_Poisson_SourceInput           = 0.0_idp
-Timer_Poisson_SourceInput_PartA     = 0.0_idp
-Timer_Poisson_SourceInput_PartB     = 0.0_idp
+Timer_Newtonian_Matrix_Init           = 0.0_idp
+Timer_Newtonian_SourceInput           = 0.0_idp
+Timer_Newtonian_SourceInput_PartA     = 0.0_idp
+Timer_Newtonian_SourceInput_PartB     = 0.0_idp
 
-Timer_Poisson_SourceVector          = 0.0_idp
-Timer_Poisson_SourceVector_SubParts = 0.0_idp
-Timer_Poisson_SourceVector_Main     = 0.0_idp
-Timer_Poisson_LinearSolve           = 0.0_idp
+Timer_Newtonian_LoadVector          = 0.0_idp
+Timer_Newtonian_LoadVector_SubParts = 0.0_idp
+Timer_Newtonian_LoadVector_Main     = 0.0_idp
+Timer_Newtonian_LinearSolve           = 0.0_idp
 
 
 

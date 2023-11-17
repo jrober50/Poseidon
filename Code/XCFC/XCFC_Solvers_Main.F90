@@ -50,22 +50,18 @@ USE Parameters_Variable_Indices, &
                     iU_X3
 
 USE Variables_Mesh, &
-            ONLY :  NUM_R_ELEMENTS,             &
-                    NUM_T_ELEMENTS,             &
-                    NUM_P_ELEMENTS
-
-
+            ONLY :  Num_R_Elements,             &
+                    Num_T_Elements,             &
+                    Num_P_Elements
 
 USE XCFC_Fixed_Point_Module, &
             ONLY :  XCFC_Fixed_Point
 
-USE XCFC_Load_Vector_TypeB_Module, &
-            ONLY :  XCFC_Calc_Load_Vector_TypeB
-
+USE Load_Vector_XCFC_TypeB_Module , &
+            ONLY :  Create_Load_Vector_XCFC_TypeB
 
 USE Linear_System_Solvers_TypeB_Module, &
             ONLY :  Solve_Linear_System_TypeB
-
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
@@ -138,7 +134,7 @@ PRINT*,"Before X Load Vector                 : ",Memory_Method_Before_X_Load
 
 
 CALL TimerStart( Timer_X_SourceVector )
-CALL XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
+CALL Create_Load_Vector_XCFC_TypeB( iU, iVB, iEU, iEL )
 CALL TimerStop(  Timer_X_SourceVector )
 
 
@@ -260,7 +256,7 @@ iEL = [0, 0, 0]
 iEU = [Num_R_Elements-1,Num_T_Elements-1,Num_P_Elements-1]
 
 CALL TimerStart( Timer_Shift_SourceVector )
-CALL XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
+CALL Create_Load_Vector_XCFC_TypeB( iU, iVB, iEU, iEL )
 CALL TimerStop(  Timer_Shift_SourceVector )
 
 CALL TimerStart( Timer_Shift_LinearSolve )

@@ -58,12 +58,11 @@ REAL(idp),  INTENT(IN)          ::  Alpha_In
 REAL(idp),  INTENT(IN)          ::  Star_Radius_In
 
 HCT_Alpha       = Alpha_In
-HCT_Star_Radius = Star_Radius_In
+HCT_Star_Radius = Star_Radius_In*Centimeter
 
 HCT_Rhoo = (3.0_idp*FofAlpha(HCT_Alpha)**2) / (2.0_idp*pi*HCT_Star_Radius*HCT_Star_Radius)
 HCT_C    = (2.0_idp/3.0_idp*pi*HCT_Rhoo)**(-1.0/4.0)
 HCT_Beta = (HCT_C*UsubAlpha(HCT_Star_Radius) - 1.0_idp) * HCT_Star_Radius
-
 
 END SUBROUTINE Set_HCT_Test_Params
 
@@ -88,10 +87,10 @@ REAL(idp)                   ::  HCT_Solution
 
 r_wUnits = r/Centimeter
 
-IF ( r_wUnits .LE. HCT_Star_Radius ) THEN
-    HCT_Solution = HCT_C * UsubAlpha(r_wUnits)
+IF ( r .LE. HCT_Star_Radius ) THEN
+    HCT_Solution = HCT_C * UsubAlpha(r)
 ELSE
-    HCT_Solution = HCT_Beta/r_wUnits + 1.0_idp
+    HCT_Solution = HCT_Beta/r + 1.0_idp
 END IF
 
 

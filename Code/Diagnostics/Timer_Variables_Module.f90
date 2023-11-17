@@ -40,14 +40,14 @@ REAL(idp), PUBLIC   ::  Timer_Initialization_Core
 REAL(idp), PUBLIC   ::  Timer_Initialization_XCFC
 REAL(idp), PUBLIC   ::  Timer_Initialization_Newtonian
 
-REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput
-REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput_PartA
-REAL(idp), PUBLIC   ::  Timer_Poisson_SourceInput_PartB
+REAL(idp), PUBLIC   ::  Timer_Newtonian_SourceInput
+REAL(idp), PUBLIC   ::  Timer_Newtonian_SourceInput_PartA
+REAL(idp), PUBLIC   ::  Timer_Newtonian_SourceInput_PartB
 
-REAL(idp), PUBLIC   ::  Timer_Poisson_SourceVector
-REAL(idp), PUBLIC   ::  Timer_Poisson_SourceVector_SubParts
-REAL(idp), PUBLIC   ::  Timer_Poisson_SourceVector_Main
-REAL(idp), PUBLIC   ::  Timer_Poisson_LinearSolve
+REAL(idp), PUBLIC   ::  Timer_Newtonian_LoadVector
+REAL(idp), PUBLIC   ::  Timer_Newtonian_LoadVector_SubParts
+REAL(idp), PUBLIC   ::  Timer_Newtonian_LoadVector_Main
+REAL(idp), PUBLIC   ::  Timer_Newtonian_LinearSolve
 
 
 REAL(idp), PUBLIC   ::  Timer_GR_SourceInput
@@ -57,8 +57,8 @@ REAL(idp), PUBLIC   ::  Timer_GR_SourceInput_PartB
 REAL(idp), PUBLIC   ::  Timer_Initialization
 
 
-REAL(idp), PUBLIC   ::  Timer_Poisson_Initialization
-REAL(idp), PUBLIC   ::  Timer_Poisson_Matrix_Init
+REAL(idp), PUBLIC   ::  Timer_Newtonian_Initialization
+REAL(idp), PUBLIC   ::  Timer_Newtonian_Matrix_Init
 
 REAL(idp), PUBLIC   ::  Timer_Matrix_Init
 REAL(idp), PUBLIC   ::  Timer_Matrix_Radial_Terms

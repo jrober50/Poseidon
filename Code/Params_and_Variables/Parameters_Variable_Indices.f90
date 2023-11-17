@@ -20,6 +20,7 @@ IMPLICIT NONE
 !
 !   Solution Variable, U, Indices
 !
+INTEGER, PUBLIC, PARAMETER          ::  iU_NP = 1 ! Newtonian Potential (Only in Newtonian Mode)
 INTEGER, PUBLIC, PARAMETER          ::  iU_CF = 1 ! Conformal Factor
 INTEGER, PUBLIC, PARAMETER          ::  iU_LF = 2 ! Lapse Function
 INTEGER, PUBLIC, PARAMETER          ::  iU_S1 = 3 ! Shift Vector, Radial Component

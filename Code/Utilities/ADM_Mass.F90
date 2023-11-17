@@ -95,7 +95,7 @@ USE Maps_Quadrature, &
 USE Maps_Domain, &
             ONLY :  FEM_Elem_Map
 
-USE XCFC_Functions_Calc_Values_Module, &
+USE Load_Vector_Functions_Calc_Values_Module, &
             ONLY :  Calc_Val_On_Elem_TypeA,         &
                     Calc_Val_And_Drv_On_Elem_TypeB
 
@@ -159,7 +159,7 @@ USE Initialization_Tables_Slm, &
                     Initialize_Slm_Tables_on_Elem
 
 
-USE XCFC_Functions_Physical_Source_Module, &
+USE Load_Vector_Functions_Physical_Source_Module, &
             ONLY : Get_Physical_Source
 
 USE Flags_Core_Module, &

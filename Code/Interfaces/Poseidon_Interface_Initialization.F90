@@ -41,16 +41,14 @@ USE Poseidon_Parameters, &
                     L_Limit,                &
                     Method_Flag,            &
                     Verbose_Flag,           &
-                    Convergence_Criteria,   &
-                    Max_Iterations,         &
                     Eq_Flags,           &
                     Num_Eqs
 
 USE Allocation_Sources, &
             ONLY :  Allocate_Poseidon_Source_Variables
 
-USE XCFC_Source_Routine_Variables_Module, &
-            ONLY :  Allocate_XCFC_Source_Routine_Variables
+USE Load_Vector_Allocation_Module, &
+            ONLY :  Allocate_Load_Vector_Construction_Variables
 
 USE Variables_MPI, &
             ONLY :  nProcs_Poseidon,        &
@@ -115,14 +113,11 @@ USE Timer_Routines_Module, &
                     TimerStart,                     &
                     TimerStop
 
-
 USE Timer_Variables_Module, &
-            ONLY :  Timer_Poisson_Matrix_Init,      &
-                    Timer_Initialization_Core
+            ONLY :  Timer_Initialization_Core
 
 USE Variables_FP, &
             ONLY :  FP_Diagnostics_Flag
-
 
 USE Variables_Interface, &
             ONLY :  Caller_R_Units
@@ -493,13 +488,19 @@ IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
     !               Initialize Poisson Solver               !
     !                                                       !
     !=======================================================!
+#ifdef POSEIDON_AMREX_FLAG
+    CALL Initialize_Derived_AMReX_Part1()
+#else
     CALL Initialize_Derived()
+#endif
 
     CALL Allocate_Poseidon_Source_Variables()
-
+    CALL Allocate_Load_Vector_Construction_Variables()
     CALL Initialize_Tables()
 
+#ifndef POSEIDON_AMREX_FLAG
     CALL Initialize_Poisson
+#endif
 
 ELSE
     !=======================================================!
@@ -526,7 +527,7 @@ ELSE
 #endif
 
     CALL Allocate_Poseidon_Source_Variables()
-    CALL Allocate_XCFC_Source_Routine_Variables()
+    CALL Allocate_Load_Vector_Construction_Variables()
     CALL Initialize_Tables()
 
 #ifndef POSEIDON_AMREX_FLAG

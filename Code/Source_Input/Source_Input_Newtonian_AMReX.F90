@@ -68,9 +68,7 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_Poisson_SourceInput,          &
-                    Timer_Poisson_SourceInput_PartA,    &
-                    Timer_Poisson_SourceInput_PartB
+            ONLY :  Timer_Newtonian_SourceInput
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -150,7 +148,7 @@ INTEGER                                             ::  Their_DOF
 
 
 IF ( Verbose_Flag ) CALL Run_Message('Receiving Newtonian Sources. Container : AMReX Multifab.')
-CALL TimerStart(Timer_Poisson_SourceInput)
+CALL TimerStart(Timer_Newtonian_SourceInput)
 
 
 

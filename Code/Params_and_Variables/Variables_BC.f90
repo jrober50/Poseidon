@@ -22,21 +22,13 @@ IMPLICIT NONE
 
 
 
-CHARACTER(LEN = 1), DIMENSION(1:5)              :: INNER_CFA_BC_TYPE
-REAL(KIND = idp), DIMENSION(1:5)                :: INNER_CFA_BC_VALUES
+CHARACTER(LEN = 1), DIMENSION(1:5)              :: Inner_BC_Type
+REAL(KIND = idp),   DIMENSION(1:5)              :: Inner_BC_Values
 
 
-CHARACTER(LEN = 1), DIMENSION(1:5)              :: OUTER_CFA_BC_TYPE
-REAL(KIND = idp), DIMENSION(1:5)                :: OUTER_CFA_BC_VALUES
+CHARACTER(LEN = 1), DIMENSION(1:5)              :: Outer_BC_Type
+REAL(KIND = idp),   DIMENSION(1:5)              :: Outer_BC_Values
 
-
-
-
-CHARACTER(LEN = 1)                              :: INNER_Poisson_BC_TYPE
-REAL(KIND = idp)                                :: INNER_Poisson_BC_VALUE
-
-CHARACTER(LEN = 1)                              :: OUTER_Poisson_BC_TYPE
-REAL(KIND = idp)                                :: OUTER_Poisson_BC_VALUE
 
 
 END MODULE Variables_BC

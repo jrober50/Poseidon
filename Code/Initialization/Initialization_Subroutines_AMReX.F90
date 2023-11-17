@@ -41,7 +41,6 @@ USE Initialization_Subroutines, &
 USE Variables_AMReX_Core, &
             ONLY :  AMReX_Max_Grid_Size,    &
                     AMReX_MaxLevel,        &
-                    AMReX_Num_Levels,       &
                     AMReX_Tiling
 
 
@@ -59,9 +58,7 @@ USE Variables_Mesh, &
             ONLY :  Num_R_Elements,         &
                     Num_T_Elements,         &
                     Num_P_Elements,         &
-                    iNE_Base,               &
-                    R_Inner,                &
-                    R_Outer
+                    iNE_Base
 
 USE Variables_Interface, &
             ONLY :  Caller_R_Units

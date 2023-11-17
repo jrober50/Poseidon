@@ -93,10 +93,10 @@ ALLOCATE( MF_Source(0:AMReX_MaxLevel))
 
 IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
-    ALLOCATE(Source_Rho(    1:Local_Quad_DOF,       &
-                            0:NUM_R_ELEMENTS-1,     &
-                            0:NUM_T_ELEMENTS-1,     &
-                            0:NUM_P_ELEMENTS-1  )   )
+    ALLOCATE(Block_Source_E(    1:Local_Quad_DOF,       &
+                                0:NUM_R_ELEMENTS-1,     &
+                                0:NUM_T_ELEMENTS-1,     &
+                                0:NUM_P_ELEMENTS-1  )   )
 
 ELSE
 
@@ -154,7 +154,7 @@ DEALLOCATE( MF_Source )
 #else
 IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
-    DEALLOCATE( Source_Rho )
+    DEALLOCATE( Block_Source_E )
 
 ELSE
 

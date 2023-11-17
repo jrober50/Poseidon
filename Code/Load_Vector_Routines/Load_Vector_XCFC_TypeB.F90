@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE XCFC_Load_Vector_TypeB_Module                                              !##!
+MODULE Load_Vector_XCFC_TypeB_Module                                                !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -109,21 +109,19 @@ USE Maps_Quadrature, &
             ONLY :  Map_To_tpd
 
 
-USE XCFC_Functions_Calc_Values_Module, &
+USE Load_Vector_Functions_Calc_Values_Module, &
             ONLY :  Calc_Int_Weights,               &
                     Calc_Val_On_Elem_TypeB,         &
                     Calc_Val_And_Drv_On_Elem_TypeA, &
                     Calc_Val_And_Drv_On_Elem_TypeB
 
-USE XCFC_Functions_Physical_Source_Module, &
+USE Load_Vector_Functions_Physical_Source_Module, &
             ONLY :  Get_Physical_Source
 
-USE XCFC_Source_Routine_Variables_Module, &
+USE Load_Vector_Variables_Module, &
             ONLY :  Cur_R_Locs,         &
                     Cur_T_Locs,         &
                     R_Square,           &
-                    Sin_Square,         &
-                    RSin_Square,        &
                     TP_Sin_Val,         &
                     TP_Sin_Square,      &
                     TP_Cotan_Val,       &
@@ -209,12 +207,12 @@ USE Memory_Variables_Module
 IMPLICIT NONE
 
 CONTAINS
-!+101+###########################################################################!
-!                                                                                !
-!           XCFC_Calc_Load_Vector_TypeB                                        !
-!                                                                                !
-!################################################################################!
-SUBROUTINE XCFC_Calc_Load_Vector_TypeB( iU, iVB, iEU, iEL )
+ !+101+####################################################!
+!                                                           !
+!           XCFC_Calc_Load_Vector_TypeB                     !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Create_Load_Vector_XCFC_TypeB( iU, iVB, iEU, iEL )
 
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iU          ! Variable Reference Numbers
 INTEGER, INTENT(IN)                     ::  iVB         ! Variable Array Reference Number
@@ -232,7 +230,7 @@ CHARACTER(LEN = 300)                    ::  Message
     END IF
 
 
-    CALL XCFC_AMReX_Calc_Load_Vector_TypeB( iU, iVB )
+    CALL Calc_Load_Vector_XCFC_TypeB_AMReX( iU, iVB )
 
 #else
 
@@ -255,7 +253,7 @@ CHARACTER(LEN = 300)                    ::  Message
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
         iE = [re,te,pe]
-        CALL XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, ELo_Opt = [0,0,0] )
+        CALL Calc_Load_Vector_On_Element_XCFC_TypeB( iU, iVB, iE, ELo_Opt = [0,0,0] )
     END DO ! pe
     END DO ! te
     END DO ! re
@@ -264,7 +262,7 @@ CHARACTER(LEN = 300)                    ::  Message
 
 
 
-END SUBROUTINE XCFC_Calc_Load_Vector_TypeB
+END SUBROUTINE Create_Load_Vector_XCFC_TypeB
 
 
 
@@ -273,7 +271,7 @@ END SUBROUTINE XCFC_Calc_Load_Vector_TypeB
 !           XCFC_Calc_Load_Vector_TypeB                                        !
 !                                                                                !
 !################################################################################!
-SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, Level_Option, iNE_Opt, ELo_Opt )
+SUBROUTINE Calc_Load_Vector_On_Element_XCFC_TypeB( iU, iVB, iE, Level_Option, iNE_Opt, ELo_Opt )
 
 INTEGER, INTENT(IN), DIMENSION(3)               ::  iU
 INTEGER, INTENT(IN)                             ::  iVB
@@ -387,7 +385,7 @@ CALL Calc_Int_Weights( DROT, DTOT,                  &
                        R_Int_Weights, TP_Int_Weights )
 
 
-CALL Calc_XCFC_CurVals_TypeB( iU, iVB,          &
+CALL Calc_CurVals_XCFC_TypeB( iU, iVB,          &
                               iE,               &
                               DROT, DTOT,       &
                               Level             )
@@ -395,10 +393,10 @@ CALL Calc_XCFC_CurVals_TypeB( iU, iVB,          &
 
 
 
-CALL Create_XCFC_Vector_TypeB( iE, iU, iVB, Level, FEM_Elem )
+CALL Create_Vector_XCFC_TypeB( iE, iU, iVB, Level, FEM_Elem )
 
 
-END SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeB
+END SUBROUTINE Calc_Load_Vector_On_Element_XCFC_TypeB
 
 
 
@@ -406,10 +404,10 @@ END SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeB
 
 !+201+##########################################################################!
 !                                                                               !
-!                  Create_XCFC_Vector_TypeB                                     !
+!                  Create_Vector_XCFC_TypeB                                     !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Create_XCFC_Vector_TypeB( iE, iU, iVB, Level, FEM_Elem )
+SUBROUTINE Create_Vector_XCFC_TypeB( iE, iU, iVB, Level, FEM_Elem )
 
 INTEGER, INTENT(IN), DIMENSION(3)                   ::  iE
 INTEGER, INTENT(IN), DIMENSION(3)                   ::  iU
@@ -490,7 +488,7 @@ END DO  ! ui Loop
 
 
 
-END SUBROUTINE Create_XCFC_Vector_TypeB
+END SUBROUTINE Create_Vector_XCFC_TypeB
 
 
 
@@ -506,7 +504,7 @@ END SUBROUTINE Create_XCFC_Vector_TypeB
 !                  Calc_Current_Values          !
 !                                                                                !
 !################################################################################!
-SUBROUTINE Calc_XCFC_CurVals_TypeB( iU, iVB, iE,            &
+SUBROUTINE Calc_CurVals_XCFC_TypeB( iU, iVB, iE,            &
                                     DROT, DTOT,             &
                                     Level                   )
 
@@ -643,7 +641,7 @@ ELSE IF ( iVB == iVB_S ) THEN
 
 ELSE
 
-    WRITE(*,'(A)')" Error in Poseidon Subroutine : Calc_XCFC_CurVals_TypeB"
+    WRITE(*,'(A)')" Error in Poseidon Subroutine : Calc_CurVals_XCFC_TypeB"
     WRITE(*,'(A)')" Invalid input. "
     WRITE(*,'(A)')" Variable : iVB "
     WRITE(*,'(A,I2.2)')" Value    : ",iVB
@@ -652,7 +650,7 @@ END IF
 
 
 
-END SUBROUTINE Calc_XCFC_CurVals_TypeB
+END SUBROUTINE Calc_CurVals_XCFC_TypeB
 
 
 
@@ -662,10 +660,10 @@ END SUBROUTINE Calc_XCFC_CurVals_TypeB
 
 !+101+##########################################################################!
 !                                                                               !
-!          XCFC_AMReX_Calc_Load_Vector_TypeB                                  !
+!          Calc_Load_Vector_XCFC_TypeB_AMReX                                  !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE XCFC_AMReX_Calc_Load_Vector_TypeB( iU, iVB )
+SUBROUTINE Calc_Load_Vector_XCFC_TypeB_AMReX( iU, iVB )
 
 INTEGER, INTENT(IN), DIMENSION(3)               ::  iU
 INTEGER, INTENT(IN)                             ::  iVB
@@ -862,7 +860,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
 
         IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
             iE = [re,te,pe]
-            CALL XCFC_Calc_Load_Vector_On_Element_TypeB( iU, iVB, iE, lvl, iNE, iEL )
+            CALL Calc_Load_Vector_On_Element_XCFC_TypeB( iU, iVB, iE, lvl, iNE, iEL )
         END IF
             
         END DO ! pe
@@ -916,10 +914,10 @@ END DO ! lvl
 #endif
 
 
-END SUBROUTINE XCFC_AMReX_Calc_Load_Vector_TypeB
+END SUBROUTINE Calc_Load_Vector_XCFC_TypeB_AMReX
 
 
 
 
 
-END MODULE XCFC_Load_Vector_TypeB_Module
+END MODULE Load_Vector_XCFC_TypeB_Module

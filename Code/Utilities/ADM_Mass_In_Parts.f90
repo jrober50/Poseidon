@@ -74,7 +74,7 @@ USE Maps_Quadrature, &
             ONLY :  Map_To_tpd,                 &
                     Quad_Map
 
-USE XCFC_Functions_Calc_Values_Module, &
+USE Load_Vector_Functions_Calc_Values_Module, &
             ONLY :  Calc_Val_On_Elem_TypeA,         &
                     Calc_Val_And_Drv_On_Elem_TypeB
 

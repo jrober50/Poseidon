@@ -1,0 +1,18 @@
+Allocation_Load_Vector_Vars.o:           \
+  Allocation_Load_Vector_Vars.F90        \
+
+Load_Vector_Functions_Calc_Values.o:     \
+  Load_Vector_Functions_Calc_Values.F90  \
+
+Load_Vector_Functions_Phys_Source.o:     \
+  Load_Vector_Functions_Phys_Source.F90  \
+
+Load_Vector_Newtonian.o:                 \
+  Load_Vector_Newtonian.F90              \
+
+Load_Vector_XCFC_TypeA.o:                \
+  Load_Vector_XCFC_TypeA.F90              \
+
+Load_Vector_XCFC_TypeB.o:                \
+  Load_Vector_XCFC_TypeB.F90             \
+ 

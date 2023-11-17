@@ -215,26 +215,22 @@ CALL Calculate_MVL_Banded()
 
 Call Deallocate_Matrix_Init_Variables()
 
-
 CALL TimerStop( Timer_Matrix_Init )
-
-
-
 
 END SUBROUTINE Initialize_XCFC_Matrices
 
 
 
-!+101+##########################################################################!
+!+102+##########################################################################!
 !                                                                               !
-!           Initialize_XCFC_Matrices                                            !
+!          Initialize_Poisson_Matrix                                            !
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Initialize_Poisson_Matrix()
 
 
 IF ( Verbose_Flag ) CALL Init_Message('Beginning Matrix Initialization.')
-
+CALL TimerStart( Timer_Matrix_Init )
 
 ! Set number of quadrature points for different dimensions
 !
@@ -276,6 +272,7 @@ CALL Calculate_Laplace_Matrix()
 
 Call Deallocate_Matrix_Init_Variables()
 
+CALL TimerStop( Timer_Matrix_Init )
 
 END SUBROUTINE Initialize_Poisson_Matrix
 
@@ -750,6 +747,7 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
 
             DR   = rlocs(re+1) - rlocs(re)
             TODR = 2.0_idp/DR
+
             CUR_R_LOCS(:) = (DR/2.0_idp) * (Int_R_Locs(:)+1.0_idp) + rlocs(re)
             R_SQUARE = CUR_R_LOCS**2
 

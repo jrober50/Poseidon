@@ -42,6 +42,10 @@ USE Variables_AMReX_Core, &
 USE Initialization_XCFC_with_AMReX_Module, &
             ONLY :  Initialization_XCFC_with_AMReX,     &
                     Reinitialization_XCFC_with_AMReX
+                    
+USE Initialization_Poisson, &
+            ONLY :  Initialization_Poisson_with_AMReX,     &
+                    Reinitialization_Poisson_with_AMReX
 
 USE Poseidon_AMReX_Utilities_Module, &
             ONLY :  Destroy_MF,         &
@@ -96,6 +100,12 @@ USE Flags_Source_Input_Module, &
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_Flags,     &
                     iPF_Init_Method_Vars
+                    
+USE Flags_Core_Module, &
+            ONLY :  iPF_Core_Flags,             &
+                    iPF_Core_Method_Mode,       &
+                    iPF_Core_Method_XCFC,       &
+                    iPF_Core_Method_Newtonian
 
 use mpi
 
@@ -202,7 +212,11 @@ CALL Copy_Source_Data( MF_Src_Input, All_Flag )
 CALL TimerStop(Timer_GR_SourceInput)
 
 
-CALL Initialization_XCFC_with_AMReX()
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_XCFC ) THEN
+    CALL Initialization_XCFC_with_AMReX()
+ELSE IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+    CALL Initialization_Poisson_with_AMReX()
+END IF
 
 
 
@@ -227,13 +241,15 @@ IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX 
 CALL TimerStart(Timer_GR_SourceInput)
 
 
+
+
 ! Check if MF_Source exists.
 ! If not, created it to match MF_Src_Input and copy data.
 IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
 
-
     AMReX_Num_Levels = amrex_get_numlevels()
     DO level = 0,AMReX_Num_Levels-1
+
         CALL amrex_multifab_build(  MF_Source(level),           &
                                     MF_Src_Input(Level)%BA,     &
                                     MF_Src_Input(Level)%DM,     &
@@ -243,6 +259,7 @@ IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
     END DO
     
         ! Transfer data from MF_Src_Input to MF_Source.
+
     All_Flag = .TRUE.
     CALL Copy_Source_Data( MF_Src_Input, All_Flag )
     
@@ -250,7 +267,12 @@ IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
 
     CALL TimerStop(Timer_GR_SourceInput)
 
-    CALL Initialization_XCFC_with_AMReX()
+
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_XCFC ) THEN
+        CALL Initialization_XCFC_with_AMReX()
+    ELSE IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+        CALL Initialization_Poisson_with_AMReX()
+    END IF
 
 
 
@@ -258,18 +280,22 @@ ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
         ! If the do not match, then Poseidon will assumed the mesh has changed,
         ! and will preform a remeshing.
     
+
     Remesh_Flag = .FALSE.
     DO level = 0,AMReX_Num_Levels-1
         Remesh_Flag(level) = Multifab_Issame( MF_Source(level),   &
                                               MF_Src_Input(level) )
     END DO
+
     IF ( .NOT. ALL(Remesh_Flag) ) THEN
+
         ! Destroy the Old
         DO level = 0,AMReX_Num_Levels-1
             CALL amrex_multifab_destroy( MF_Source(level) )
         END DO
         
         AMReX_Num_Levels = amrex_get_numlevels()
+
         ! Rebuild to match the new.
         DO level = 0,AMReX_Num_Levels-1
             CALL amrex_multifab_build(  MF_Source(level),           &
@@ -277,20 +303,25 @@ ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
                                         MF_Src_Input(Level)%DM,     &
                                         MF_Source_nComps, 0         )
         END DO
-        
+
         ! Transfer data from MF_Src_Input to MF_Source.
         All_Flag = .TRUE.
         CALL Copy_Source_Data( MF_Src_Input, All_Flag )
         
         CALL TimerStop(Timer_GR_SourceInput)
 
-        CALL Reinitialization_XCFC_with_AMReX()
+        IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_XCFC ) THEN
+            CALL Reinitialization_XCFC_with_AMReX()
+        ELSE IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+            CALL Reinitialization_Poisson_with_AMReX()
+        END IF
+
     
     
     
     ELSE  ! MF_Source exists and matches the MF_Src_Input's decomposition.
           ! All that needs to be done is copy over the new data.
-    
+
         ! Transfer data from MF_Src_Input to MF_Source.
         All_Flag = .TRUE.
         CALL Copy_Source_Data( MF_Src_Input, All_Flag )
@@ -394,8 +425,11 @@ CALL Copy_Source_Data( MF_Src_Input, All_Flag )
 
 CALL TimerStop(Timer_GR_SourceInput)
 
-
-CALL Initialization_XCFC_with_AMReX()
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_XCFC ) THEN
+    CALL Initialization_XCFC_with_AMReX()
+ELSE IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+    CALL Initialization_Poisson_with_AMReX()
+END IF
 
 END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 
@@ -444,9 +478,11 @@ IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
 
     CALL TimerStop(Timer_GR_SourceInput)
 
-    CALL Initialization_XCFC_with_AMReX()
-
-
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_XCFC ) THEN
+        CALL Initialization_XCFC_with_AMReX()
+    ELSE IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+        CALL Initialization_Poisson_with_AMReX()
+    END IF
 
 ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
         ! If the do not match, then Poseidon will assumed the mesh has changed,
@@ -539,7 +575,6 @@ INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
-
 DO level = 0,AMReX_Num_Levels-1
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
 
@@ -571,38 +606,41 @@ DO level = 0,AMReX_Num_Levels-1
 
             My_PTR(re,te,pe,Index) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
                                                   Their_PTR(re,te,pe,Here:There)    )
+                                                  
         END DO  ! Local_Here
         
+        IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
+            IF ( All_Flag ) THEN
+                si = iS_S
+                DO Local_Here = 1,Local_Quad_DOF
 
-        IF ( All_Flag ) THEN
-            si = iS_S
+                    Here  = (si-1)*Caller_Quad_DOF+1
+                    There = si*Caller_Quad_DOF
+
+                    Index = (si-1)*Local_Quad_DOF+Local_Here
+
+                    My_PTR(re,te,pe,Index) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
+                                                          Their_PTR(re,te,pe,Here:There)    )
+                END DO  ! Local_Here
+            END IF ! All_Flag
+
+
+        
+            DO si = iS_S1,iS_S1+Domain_Dim-1
             DO Local_Here = 1,Local_Quad_DOF
 
                 Here  = (si-1)*Caller_Quad_DOF+1
                 There = si*Caller_Quad_DOF
 
                 Index = (si-1)*Local_Quad_DOF+Local_Here
-
+        
                 My_PTR(re,te,pe,Index) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
                                                       Their_PTR(re,te,pe,Here:There)    )
+
             END DO  ! Local_Here
-        END IF ! All_Flag
-
-
-
-        DO si = iS_S1,iS_S1+Domain_Dim-1
-        DO Local_Here = 1,Local_Quad_DOF
-
-            Here  = (si-1)*Caller_Quad_DOF+1
-            There = si*Caller_Quad_DOF
-
-            Index = (si-1)*Local_Quad_DOF+Local_Here
-    
-            My_PTR(re,te,pe,Index) = DOT_PRODUCT( Translation_Matrix(:,Local_Here), &
-                                                  Their_PTR(re,te,pe,Here:There)    )
-
-        END DO  ! Local_Here
-        END DO  ! si
+            END DO  ! si
+        END IF ! Newtonian Mode
+        
         END DO  ! pe
         END DO  ! te
         END DO  ! re

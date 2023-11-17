@@ -55,10 +55,10 @@ USE Variables_Mesh, &
         ONLY :  Num_R_Elements
 
 USE Variables_BC, &
-        ONLY :  INNER_CFA_BC_VALUES,        &
-                OUTER_CFA_BC_VALUES,        &
-                INNER_CFA_BC_TYPE,          &
-                OUTER_CFA_BC_TYPE
+        ONLY :  Inner_BC_Values,        &
+                Outer_BC_Values,        &
+                Inner_BC_Type,          &
+                Outer_BC_Type
 
 USE Variables_FP, &
         ONLY :  FP_Diagnostics_Flag,        &
@@ -163,7 +163,7 @@ OLD_NNZ = NUM_R_ELEMENTS*(DEGREE + 1)*(DEGREE + 1) - NUM_R_ELEMENTS + 1
 !   But to apply the BCs we will need values from the original matrix,
 !   so those values are stored before we modify the matrix.
 !
-IF ( ANY(INNER_CFA_BC_TYPE == "D") ) THEN
+IF ( ANY(Inner_BC_Type == "D") ) THEN
 
 
     !
@@ -195,7 +195,7 @@ END IF
 
 
 
-IF ( ANY(OUTER_CFA_BC_TYPE == "D") ) THEN
+IF ( ANY(Outer_BC_Type == "D") ) THEN
 
 
     !

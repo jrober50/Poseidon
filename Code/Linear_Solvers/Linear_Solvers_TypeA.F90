@@ -77,17 +77,18 @@ USE Matrix_Cholesky_Factorization_Module,   &
                     Cholesky_Factorization
 
 USE Matrix_Boundary_Condition_Routines,  &
-            ONLY :  DIRICHLET_BC_Beta_Banded,       &
+            ONLY :  Dirichlet_BC_Beta_Banded,       &
                     Dirichlet_BC_CHOL,              &
                     Neumann_BC_CCS
 
 USE Maps_Domain, &
-            ONLY :  Map_To_lm
+            ONLY :  Map_To_lm,                      &
+                    Map_To_FEM_Node
             
 USE Maps_Fixed_Point, &
             ONLY :  FP_Array_Map
 
-USE MPI_Communication_TypeA_Module,             &
+USE MPI_Communication_TypeA_Module, &
             ONLY :  MPI_RTM_Source_TypeA,           &
                     MPI_BCast_Coeffs_TypeA
 
@@ -181,7 +182,6 @@ CALL MPI_RTM_Source_TypeA(  iU,                     &
 
 
 
-
 IF ( myID_Poseidon == MasterID_Poseidon ) THEN
 
     ALLOCATE( Work_Elem_Val(0:Factored_NNZ-1))
@@ -193,14 +193,15 @@ IF ( myID_Poseidon == MasterID_Poseidon ) THEN
         WORK_VEC = -dVA_Load_Vector(:,lm_loc,iU)
         WORK_ELEM_VAL(:) = Laplace_Factored_VAL(:,l)
 
+        
 
 !        PRINT*,"Work_Vec"
 !        IF ( iU == iU_CF ) THEN
 !        DO re = 0,Num_R_Elements-1
 !        DO d = 0,Degree
 !        DO LM = 1,LM_Length
-!            i = FP_Array_Map(re,d,iU_CF,lm)
-!            PRINT*,re,d,lm,Work_Vec(i)
+!            i = Map_To_FEM_Node(re,d)
+!            PRINT*,re,d,lm,Work_Vec(i),i
 !    
 !        END DO
 !        END DO

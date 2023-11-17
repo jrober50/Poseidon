@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE XCFC_Load_Vector_TypeA_Module                                              !##!
+MODULE Load_Vector_XCFC_TypeA_Module                                                !##!
 !##!                                                                                !##!
 !##!________________________________________________________________________________!##!
 !##!                                                                                !##!
@@ -107,12 +107,10 @@ USE Maps_Domain, &
 USE Maps_Quadrature, &
             ONLY :  Map_To_tpd
 
-USE XCFC_Source_Routine_Variables_Module, &
+USE Load_Vector_Variables_Module, &
             ONLY :  Cur_R_Locs,         &
                     Cur_T_Locs,         &
                     R_Square,           &
-                    Sin_Square,         &
-                    RSin_Square,        &
                     TP_Sin_Val,         &
                     TP_Sin_Square,      &
                     TP_Cotan_Val,       &
@@ -125,10 +123,10 @@ USE XCFC_Source_Routine_Variables_Module, &
                     Cur_Drv_X,          &
                     SourceTerm
                     
-USE XCFC_Functions_Physical_Source_Module, &
+USE Load_Vector_Functions_Physical_Source_Module, &
             ONLY : Get_Physical_Source
 
-USE XCFC_Functions_Calc_Values_Module, &
+USE Load_Vector_Functions_Calc_Values_Module, &
             ONLY :  Calc_Int_Weights,               &
                     Calc_Int_Weights_AMReX,         &
                     Calc_Val_On_Elem_TypeA,         &
@@ -196,10 +194,10 @@ CONTAINS
 
  !+101+############################################################!
 !                                                                   !
-!          XCFC_Calc_Load_Vector_TypeA                              !
+!          Create_Load_Vector_XCFC_TypeA                            !
 !                                                                   !
  !#################################################################!
-SUBROUTINE XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
+SUBROUTINE Create_Load_Vector_XCFC_TypeA( iU, iEU, iEL )
 
 INTEGER, INTENT(IN)                     ::  iU
 INTEGER, INTENT(IN), DIMENSION(3)       ::  iEU
@@ -231,7 +229,7 @@ END IF
 
 #ifdef POSEIDON_AMREX_FLAG
 
-    CALL XCFC_AMReX_Calc_Load_Vector_TypeA( iU )
+    CALL Calc_Load_Vector_XCFC_TypeA_AMReX( iU )
 
 #else
     
@@ -243,7 +241,7 @@ END IF
     DO te = iEL(2),iEU(2)
     DO pe = iEL(3),iEU(3)
         iE = [re,te,pe]
-        CALL XCFC_Calc_Load_Vector_On_Element_TypeA( iU, iE, ELo_Opt = [0,0,0])
+        CALL Calc_Load_Vector_On_Element_XCFC_TypeA( iU, iE, ELo_Opt = [0,0,0])
     END DO ! pe
     END DO ! te
     END DO ! re
@@ -260,15 +258,15 @@ END IF
 
 
 
-END SUBROUTINE XCFC_Calc_Load_Vector_TypeA
+END SUBROUTINE Create_Load_Vector_XCFC_TypeA
 
 
  !+102+############################################################!
 !                                                                   !
-!          XCFC_Calc_Load_Vector_On_Element_TypeA                   !
+!          Calc_Load_Vector_On_Element_XCFC_TypeA                   !
 !                                                                   !
  !#################################################################!
-SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeA( iU, iE, Level_Option, iNE_Opt, ELo_Opt )
+SUBROUTINE Calc_Load_Vector_On_Element_XCFC_TypeA( iU, iE, Level_Option, iNE_Opt, ELo_Opt )
 
 INTEGER, INTENT(IN)                                 ::  iU
 INTEGER, INTENT(IN), DIMENSION(3)                   ::  iE
@@ -382,16 +380,16 @@ CALL Calc_Int_Weights( DROT, DTOT,                  &
                        R_Square, TP_Sin_Val,        &
                        R_Int_Weights, TP_Int_Weights )
 
-CALL Calc_XCFC_CurVals_TypeA( iE,       &
+CALL Calc_CurVals_XCFC_TypeA( iE,       &
                               iU,       &
                               DROT,     &
                               DTOT,     &
                               Level     )
 
-CALL Create_XCFC_Vector_TypeA( iE, iU, Level, FEM_Elem )
+CALL Create_Vector_XCFC_TypeA( iE, iU, Level, FEM_Elem )
 
 
-END SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeA
+END SUBROUTINE Calc_Load_Vector_On_Element_XCFC_TypeA
 
 
 
@@ -404,10 +402,10 @@ END SUBROUTINE XCFC_Calc_Load_Vector_On_Element_TypeA
 
  !+201+############################################################!
 !                                                                   !
-!          Create_XCFC_Vector_TypeA                                 !
+!          Create_Vector_XCFC_TypeA                                 !
 !                                                                   !
  !#################################################################!
-SUBROUTINE Create_XCFC_Vector_TypeA( iE, iU, Level, FEM_Elem )
+SUBROUTINE Create_Vector_XCFC_TypeA( iE, iU, Level, FEM_Elem )
 
 
 INTEGER, INTENT(IN), DIMENSION(3)                           ::  iE
@@ -439,6 +437,19 @@ DO d = 0,DEGREE
                * Lagrange_Poly_Table( d, rd, 0)                     &
                * R_Int_Weights(rd)
 
+
+!        PRINT*,iE(1),rd,  &
+!                SUM( SourceTerm( :, rd, iU )                     &
+!                       * Slm_Elem_Values( lm_loc, :)                &
+!                       * TP_Int_Weights(:)                     ),    &
+!               Lagrange_Poly_Table( d, rd, 0),                     &
+!               R_Int_Weights(rd)
+
+!        PRINT*,iE(1),rd
+!        print*,SourceTerm( :, rd, iU )
+!        print*,""
+
+        
     END DO  ! rd Loop
     
 
@@ -457,7 +468,7 @@ END DO  ! lm_loc Loop
 
 
 
-END SUBROUTINE Create_XCFC_Vector_TypeA
+END SUBROUTINE Create_Vector_XCFC_TypeA
 
 
 
@@ -471,10 +482,10 @@ END SUBROUTINE Create_XCFC_Vector_TypeA
 
  !+202+############################################################!
 !                                                                   !
-!          Calc_XCFC_CurVals_TypeA                                  !
+!          Calc_CurVals_XCFC_TypeA                                  !
 !                                                                   !
  !#################################################################!
-SUBROUTINE Calc_XCFC_CurVals_TypeA( iE, iU, DROT, DTOT, Level )
+SUBROUTINE Calc_CurVals_XCFC_TypeA( iE, iU, DROT, DTOT, Level )
 
 INTEGER, INTENT(IN), DIMENSION(3)                               ::  iE
 INTEGER, INTENT(IN)                                             ::  iU
@@ -553,7 +564,7 @@ END DO ! j
 
 CALL Get_Physical_Source( PhysSrc, iU, iE )
 
-
+!PRINT*,Level, iE(1),PhysSrc
 IF ( iU == iU_CF ) THEN
 
 
@@ -563,16 +574,6 @@ IF ( iU == iU_CF ) THEN
                         * PhysSrc(:,:)                                  &
                       -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
                         * AA_Array(:,:)
-
-
-
-
-!   CFA Source
-!
-!    SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar * Cur_Val_Psi(:,:)**5   &
-!                        * PhysSrc(:,:)                                  &
-!                      -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
-!                        * AA_Array(:,:)
 
 
 ELSEIF ( iU == iU_LF ) THEN
@@ -587,7 +588,7 @@ ENDIF
 
 
 
-END SUBROUTINE Calc_XCFC_CurVals_TypeA
+END SUBROUTINE Calc_CurVals_XCFC_TypeA
 
 
 
@@ -596,10 +597,10 @@ END SUBROUTINE Calc_XCFC_CurVals_TypeA
 
  !+203+############################################################!
 !                                                                   !
-!          XCFC_AMReX_Calc_Load_Vector_TypeA                        !
+!          Calc_Load_Vector_XCFC_TypeA_AMReX                        !
 !                                                                   !
  !#################################################################!
-SUBROUTINE XCFC_AMReX_Calc_Load_Vector_TypeA( iU )
+SUBROUTINE Calc_Load_Vector_XCFC_TypeA_AMReX( iU )
 
 INTEGER, INTENT(IN)                             ::  iU
 
@@ -721,7 +722,7 @@ DO lvl = AMReX_Num_Levels-1,0,-1
             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
                 iE = [re,te,pe]
-                CALL XCFC_Calc_Load_Vector_On_Element_TypeA( iU,        &
+                CALL Calc_Load_Vector_On_Element_XCFC_TypeA( iU,        &
                                                              iE,        &
                                                              lvl,       &
                                                              iNE,       &
@@ -745,7 +746,7 @@ END DO ! lvl
 
 #endif
 
-END SUBROUTINE XCFC_AMReX_Calc_Load_Vector_TypeA
+END SUBROUTINE Calc_Load_Vector_XCFC_TypeA_AMReX
 
 
 
@@ -755,4 +756,4 @@ END SUBROUTINE XCFC_AMReX_Calc_Load_Vector_TypeA
 
 
 
-END MODULE XCFC_Load_Vector_TypeA_Module
+END MODULE Load_Vector_XCFC_TypeA_Module

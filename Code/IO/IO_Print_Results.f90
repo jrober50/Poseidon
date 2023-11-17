@@ -31,6 +31,7 @@ USE Poseidon_Numbers_Module, &
 USE Parameters_Variable_Indices, &
             ONLY :  iVB_X,                      &
                     iVB_S,                      &
+                    iU_NP,                      &
                     iU_CF,                      &
                     iU_LF,                      &
                     iU_S1,                      &
@@ -147,7 +148,7 @@ IF ( id == myID_Poseidon ) THEN
 IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
 
 
-    CALL Print_Single_Var_Results_A( 1 )
+    CALL Print_Single_Var_Results_A( iU_NP )
 
 ELSE
 

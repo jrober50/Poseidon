@@ -89,10 +89,8 @@ USE IO_Condition_Number_Output_Module, &
             ONLY :  IO_Output_Condition_Number
 
 USE Variables_BC, &
-            ONLY :  INNER_CFA_BC_VALUES,        &
-                    OUTER_CFA_BC_VALUES,        &
-                    INNER_CFA_BC_TYPE,          &
-                    OUTER_CFA_BC_TYPE
+            ONLY :  Inner_BC_Type,          &
+                    Outer_BC_Type
 
 USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map
@@ -406,7 +404,7 @@ DO ui = 1,3
     !#          Inner Boundary Condition        #!
     !#                                          #!
     !############################################!
-    IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+    IF (Inner_BC_Type(ui) == "D") THEN
 
         Col = FP_Beta_Array_Map(0,0,ui,0)
     
@@ -473,7 +471,7 @@ DO ui = 1,3
     !#          Outer Boundary Condition        #!
     !#                                          #!
     !############################################!
-    IF (OUTER_CFA_BC_TYPE(ui) == "D") THEN
+    IF (Outer_BC_Type(ui) == "D") THEN
 
         !
         ! Save the needed values first

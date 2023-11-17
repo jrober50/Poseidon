@@ -51,7 +51,7 @@ USE Poseidon_IO_Parameters, &
             ONLY :  CFA_Var_Names
 
 USE Variables_Mesh, &
-            ONLY :  NUM_R_ELEMENTS,             &
+            ONLY :  Num_R_Elements,             &
                     NUM_T_ELEMENTS,             &
                     NUM_P_ELEMENTS
 
@@ -64,8 +64,8 @@ USE Variables_FP, &
                     FP_Iteration_Log,           &
                     Update_Norms
 
-USE XCFC_Load_Vector_TypeA_Module, &
-            ONLY :  XCFC_Calc_Load_Vector_TypeA
+USE Load_Vector_XCFC_TypeA_Module, &
+            ONLY :  Create_Load_Vector_XCFC_TypeA
 
 USE Linear_System_Solvers_TypeA_Module, &
             ONLY :  Solve_Linear_System_TypeA
@@ -190,7 +190,7 @@ ELSE IF ( iU == iU_LF ) THEN
 END IF
 #endif
 
-CALL XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
+CALL Create_Load_Vector_XCFC_TypeA( iU, iEU, iEL )
 
 #ifdef POSEIDON_MEMORY_FLAG
 IF ( iU == iU_CF ) THEN
@@ -375,7 +375,7 @@ DO WHILE ( .NOT. CONVERGED  .AND. Cur_Iteration < Max_Iterations)
 
 
     !   Calculate Source Vector with updated solution
-    CALL XCFC_Calc_Load_Vector_TypeA( iU, iEU, iEL )
+    CALL Create_Load_Vector_XCFC_TypeA( iU, iEU, iEL )
     
 
 

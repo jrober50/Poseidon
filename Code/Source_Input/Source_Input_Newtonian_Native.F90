@@ -37,20 +37,22 @@ USE Poseidon_Message_Routines_Module, &
             ONLY :  Run_Message
 
 USE Variables_Interface, &
-            ONLY :  Caller_Set,                     &
-                    Caller_NQ,                      &
-                    Caller_Quad_DOF,                &
-                    Caller_xL,                      &
-                    Caller_RQ_xlocs,                &
-                    Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs
+            ONLY :  Caller_Set,             &
+                    Caller_NQ,              &
+                    Caller_Quad_DOF,        &
+                    Caller_xL,              &
+                    Caller_RQ_xlocs,        &
+                    Caller_TQ_xlocs,        &
+                    Caller_PQ_xlocs,        &
+                    Translation_Matrix
 
 USE Variables_Source, &
-            ONLY :  Source_Rho
+            ONLY :  Source_Rho,             &
+                    Block_Source_E
 
 USE Variables_Mesh, &
-            ONLY :  NUM_R_ELEMENTS,     &
-                    NUM_T_ELEMENTS,     &
+            ONLY :  NUM_R_ELEMENTS,         &
+                    NUM_T_ELEMENTS,         &
                     NUM_P_ELEMENTS
 
 USE Variables_Quadrature, &
@@ -69,10 +71,10 @@ USE Timer_Routines_Module, &
                     TimerStop
 
 USE Timer_Variables_Module, &
-            ONLY :  Timer_Poisson_SourceInput,          &
-                    Timer_Poisson_SourceInput_PartA,    &
-                    Timer_Poisson_SourceInput_PartB
+            ONLY :  Timer_Newtonian_SourceInput
 
+USE Functions_Translation_Matrix_Module, &
+            ONLY :  Create_Translation_Matrix
 
 IMPLICIT NONE
 
@@ -85,7 +87,7 @@ CONTAINS
 !                           Poseidon_Input_Sources                              !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_Newtonian_Native(   Input_Rho,        &
+SUBROUTINE Poseidon_Input_Sources_Newtonian_Native( Input_Rho,        &
                                                     Input_NE,         &
                                                     Input_NQ,         &
                                                     Input_R_Quad,     &
@@ -110,14 +112,14 @@ REAL(idp),  INTENT(IN), DIMENSION(2)                                ::  Input_xL
 
 INTEGER                                             ::  Local_Here
 
-
+REAL(idp), DIMENSION(:,:), ALLOCATABLE              ::  TransMat
 INTEGER                                             ::  Their_DOF
 
 INTEGER                                             ::  re, te, pe
 
 
 IF ( Verbose_Flag ) CALL Run_Message('Receiving Newtonian Sources. Container : Fortran Array.')
-CALL TimerStart(Timer_Poisson_SourceInput)
+CALL TimerStart(Timer_Newtonian_SourceInput)
 
 
 
@@ -125,29 +127,38 @@ CALL TimerStart(Timer_Poisson_SourceInput)
 Their_DOF = Input_NQ(1)*Input_NQ(2)*Input_NQ(3)
 
 
+ALLOCATE( TransMat(1:Their_DOF, 1:Local_Quad_DOF) )
+TransMat =  Create_Translation_Matrix(  Input_NQ,          &
+                                        Input_xL,          &
+                                        Input_R_Quad,    &
+                                        Input_T_Quad,    &
+                                        Input_P_Quad,    &
+                                        Their_DOF,         &
+                                        [Num_R_Quad_Points, Num_T_Quad_Points, Num_P_Quad_Points ],            &
+                                        [xLeftLimit, xRightLimit ],            &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Int_R_Locations,      &
+                                        Local_Quad_DOF            )
+
+DO pe = 0,Input_NE(3)-1
+DO te = 0,Input_NE(2)-1
+DO re = 0,Input_NE(1)-1
+
+DO Local_Here = 1,Local_Quad_DOF
+
+    
+    Block_Source_E(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),  &
+                                                       Input_rho(:,re,te,pe)    )
 
 
+END DO  ! Local_Here
 
-!DO pe = 0,Input_NE(3)-1
-!DO te = 0,Input_NE(2)-1
-!DO re = 0,Input_NE(1)-1
-!
-!DO Local_Here = 1,Local_Quad_DOF
-!
-!
-!
-!    Source_Rho(Local_Here,re,te,pe) = DOT_PRODUCT( TransMat(:,Local_Here),      &
-!                                                       Input_Rho(:,re,te,pe)          )
-!
-!
-!END DO  ! Local_Here
-!
-!END DO ! re Loop
-!END DO ! te Loop
-!END DO ! pe Loop
-!
-!
-!CALL TimerStop(Timer_Poisson_SourceInput)
+END DO ! re Loop
+END DO ! te Loop
+END DO ! pe Loop
+
+CALL TimerStop(Timer_Newtonian_SourceInput)
 
 
 
@@ -178,29 +189,30 @@ INTEGER                                                             ::  re, te, 
 
 
 IF ( Verbose_Flag ) CALL Run_Message('Receiving Newtonian Sources. Container : Fortran Array.')
-CALL TimerStart(Timer_Poisson_SourceInput)
+CALL TimerStart(Timer_Newtonian_SourceInput)
 
 
-!DO pe = 0,Num_P_Elements-1
-!DO te = 0,Num_T_Elements-1
-!DO re = 0,Num_R_Elements-1
-!
-!DO Local_Here = 1,Local_Quad_DOF
-!
-!
-!
-!    Source_Rho(Local_Here,re,te,pe) = DOT_PRODUCT( Translation_Matrix(:,Local_Here),    &
-!                                                    Input_Rho(:,re,te,pe)               )
-!
-!
-!END DO  ! Local_Here
-!
-!END DO ! re Loop
-!END DO ! te Loop
-!END DO ! pe Loop
+DO pe = 0,Num_P_Elements-1
+DO te = 0,Num_T_Elements-1
+DO re = 0,Num_R_Elements-1
+
+!PRINT*,Input_E(:,re,te,pe)
+!PRINT*,Input_Si(:,re,te,pe,1)
+
+DO Local_Here = 1,Local_Quad_DOF
+
+    Block_Source_E(Local_Here,re,te,pe) = DOT_PRODUCT( Translation_Matrix(:,Local_Here),    &
+                                                       Input_rho(:,re,te,pe)                  )
 
 
-CALL TimerStop(Timer_Poisson_SourceInput)
+END DO  ! Local_Here
+
+END DO ! re Loop
+END DO ! te Loop
+END DO ! pe Loop
+
+
+CALL TimerStop(Timer_Newtonian_SourceInput)
 
 
 

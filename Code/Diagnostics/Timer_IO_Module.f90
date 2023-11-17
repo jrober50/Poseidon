@@ -64,7 +64,7 @@ SUBROUTINE Output_Time_Report()
 
 
 IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
-    CALL Output_Poisson_Time_Report()
+    CALL Output_Newtonian_Time_Report()
 ELSE
     CALL Output_XCFC_Time_Report()
     CALL Write_XCFC_Time_Report()
@@ -82,10 +82,10 @@ END SUBROUTINE Output_Time_Report
 
  !+201+########################################################!
 !                                                               !
-!          Output_Poisson_Time_Report                           !
+!          Output_Newtonian_Time_Report                           !
 !                                                               !
  !#############################################################!
-SUBROUTINE Output_Poisson_Time_Report()
+SUBROUTINE Output_Newtonian_Time_Report()
 
 
 IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
@@ -96,9 +96,9 @@ IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
 
 
 
-    WRITE(*,101) '- Source Input                    :', Timer_Poisson_SourceInput, ' s'
-    WRITE(*,101) '   - Source Input Part A          :', Timer_Poisson_SourceInput_PartA, ' s'
-    WRITE(*,101) '   - Source Input Part B          :', Timer_Poisson_SourceInput_PartB, ' s'
+    WRITE(*,101) '- Source Input                    :', Timer_Newtonian_SourceInput, ' s'
+    WRITE(*,101) '   - Source Input Part A          :', Timer_Newtonian_SourceInput_PartA, ' s'
+    WRITE(*,101) '   - Source Input Part B          :', Timer_Newtonian_SourceInput_PartB, ' s'
     WRITE(*,*)
 
 
@@ -119,9 +119,9 @@ IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
     ! Source Vector Construction
     !   +SubParts
     !   +Main
-    WRITE(*,101) '- Source Vector Construction      :', Timer_Poisson_SourceVector, ' s'
-    WRITE(*,101) '   - Source Vector Subparts       :', Timer_Poisson_SourceVector_SubParts,' s'
-    WRITE(*,101) '   - Source Vector Main           :', Timer_Poisson_SourceVector_Main, ' s'
+    WRITE(*,101) '- Source Vector Construction      :', Timer_Newtonian_LoadVector, ' s'
+    WRITE(*,101) '   - Source Vector Subparts       :', Timer_Newtonian_LoadVector_SubParts,' s'
+    WRITE(*,101) '   - Source Vector Main           :', Timer_Newtonian_LoadVector_Main, ' s'
     WRITE(*,*)
 
 
@@ -130,7 +130,7 @@ IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
 
 
     ! Linear Solver
-    WRITE(*,101) '- Linear Solve                    :', Timer_Poisson_LinearSolve, ' s'
+    WRITE(*,101) '- Linear Solve                    :', Timer_Newtonian_LinearSolve, ' s'
     WRITE(*,*)
 
 
@@ -143,7 +143,7 @@ IF ( lPF_IO_Flags(iPF_IO_Print_TimeTable) )  THEN
 END IF
 
 
-END SUBROUTINE Output_Poisson_Time_Report
+END SUBROUTINE Output_Newtonian_Time_Report
 
 
 

@@ -64,10 +64,10 @@ USE Variables_Derived, &
                     LM_Length
 
 USE Variables_BC, &
-            ONLY :  INNER_CFA_BC_VALUES,        &
-                    OUTER_CFA_BC_VALUES,        &
-                    INNER_CFA_BC_TYPE,          &
-                    OUTER_CFA_BC_TYPE
+            ONLY :  Inner_BC_Values,        &
+                    Outer_BC_Values,        &
+                    Inner_BC_Type,          &
+                    Outer_BC_Type
 
 USE Maps_Fixed_Point, &
             ONLY :  FP_Beta_Array_Map
@@ -105,9 +105,9 @@ REAL(idp)                           :: BC_Value
 
 
 
-IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+IF (Inner_BC_Type(ui) == "D") THEN
 
-    BC_Value =  2.0_idp*sqrt(pi)*INNER_CFA_BC_VALUES(ui)
+    BC_Value =  2.0_idp*sqrt(pi)*Inner_BC_Values(ui)
     
     WORK_VEC(1) = BC_Value
     DO i = 2,DEGREE+1
@@ -128,10 +128,10 @@ IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
     shift = 1
 END IF
 
-IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
+IF (Outer_BC_Type(ui)  == "D") THEN
 
     IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN
-        BC_Value = 2.0_idp*sqrt(pi)*OUTER_CFA_BC_VALUES(ui)
+        BC_Value = 2.0_idp*sqrt(pi)*Outer_BC_Values(ui)
     ELSE
         BC_Value = 0.0_idp
     END IF
@@ -187,16 +187,16 @@ DO ui = 1,Num_Eqs
     IF (    L_VALUE == 0    )   THEN
 
 
-        IF (INNER_CFA_BC_TYPE(ui) == "N") THEN
+        IF (Inner_BC_Type(ui) == "N") THEN
 
-            WORK_VEC(0) = WORK_VEC(0) - sqrt(4.0_idp*pi)*INNER_CFA_BC_VALUES(ui)
+            WORK_VEC(0) = WORK_VEC(0) - sqrt(4.0_idp*pi)*Inner_BC_Values(ui)
 
         END IF
 
 
-        IF (OUTER_CFA_BC_TYPE(ui) == "N") THEN
+        IF (Outer_BC_Type(ui) == "N") THEN
 
-            WORK_VEC(NUM_R_NODES-1) = WORK_VEC(NUM_R_NODES-1) + R_OUTER*R_OUTER*OUTER_CFA_BC_VALUES(ui)
+            WORK_VEC(NUM_R_NODES-1) = WORK_VEC(NUM_R_NODES-1) + R_OUTER*R_OUTER*Outer_BC_Values(ui)
 
         END IF
 
@@ -252,11 +252,11 @@ REAL(idp)                                                           :: BC_Value
 
 
 DO ui = 1,Num_Eqs
-    IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+    IF (Inner_BC_Type(ui) == "D") THEN
 
 
 
-        BC_Value = sqrt(4.0_idp*pi)*INNER_CFA_BC_VALUES(ui)
+        BC_Value = sqrt(4.0_idp*pi)*Inner_BC_Values(ui)
 
 
 
@@ -303,11 +303,11 @@ DO ui = 1,Num_Eqs
         shift = 1
     END IF
 
-    IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
+    IF (Outer_BC_Type(ui)  == "D") THEN
 
 
 
-        BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+        BC_Value = sqrt(4.0_idp*pi)*Outer_BC_Values(ui)
 
         !!! MODIFY SRC VECTOR !!!
         WORK_VEC(NUM_R_NODES - 1) = BC_Value
@@ -397,9 +397,9 @@ REAL(KIND = idp)                                                    ::  BC_Enc_M
 DO ui = 1,Num_Eqs
 
 
-    IF (    INNER_CFA_BC_TYPE(ui) .EQ. "N"   ) THEN
+    IF (    Inner_BC_Type(ui) .EQ. "N"   ) THEN
 
-        BC_Enc_Mass = INNER_CFA_BC_VALUES(ui)
+        BC_Enc_Mass = Inner_BC_Values(ui)
 
          !                                                   !
         !!   We are asssuming a uniform value on the shell   !!
@@ -420,10 +420,10 @@ DO ui = 1,Num_Eqs
 
 
 
-    IF (    OUTER_CFA_BC_TYPE(ui) .EQ. "N"   ) THEN
+    IF (    Outer_BC_Type(ui) .EQ. "N"   ) THEN
 
 
-        BC_Enc_Mass = OUTER_CFA_BC_VALUES(ui)
+        BC_Enc_Mass = Outer_BC_Values(ui)
 
 
          !                                                   !
@@ -496,13 +496,13 @@ REAL(idp)                                                           :: BC_Value
 
 
 
-IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+IF (Inner_BC_Type(ui) == "D") THEN
 
 
 
 
 
-    BC_Value = sqrt(4.0_idp*pi)*INNER_CFA_BC_VALUES(ui)
+    BC_Value = sqrt(4.0_idp*pi)*Inner_BC_Values(ui)
 
 
 
@@ -531,11 +531,11 @@ IF (NUM_R_ELEMENTS .EQ. 1 ) THEN
     shift = 1
 END IF
 
-IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
+IF (Outer_BC_Type(ui)  == "D") THEN
 
 
     IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN        
-        BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+        BC_Value = sqrt(4.0_idp*pi)*Outer_BC_Values(ui)
     ELSE
         BC_Value = 0.0_idp
     END IF
@@ -605,9 +605,9 @@ REAL(idp)                                                               :: BC_Va
 DO ui = 3,1,-1
     uj = ui + 2
 
-    IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+    IF (Inner_BC_Type(ui) == "D") THEN
 
-        BC_Value =  2.0_idp*sqrt(pi)*INNER_CFA_BC_VALUES(uj)
+        BC_Value =  2.0_idp*sqrt(pi)*Inner_BC_Values(uj)
 
 
         WORK_VEC(1) = BC_Value
@@ -636,14 +636,14 @@ DO ui = 3,1,-1
         shift = 1
     END IF
 
-    IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
+    IF (Outer_BC_Type(ui)  == "D") THEN
 
         DO l = 0,L_LIMIT
             DO m = -l,l
 
 
                 IF ( ( L == 0 ) .AND. ( M == 0 )  ) THEN
-                    BC_Value = 2.0_idp*sqrt(pi)*OUTER_CFA_BC_VALUES(uj)
+                    BC_Value = 2.0_idp*sqrt(pi)*Outer_BC_Values(uj)
                 ELSE
                     BC_Value = 0.0_idp
                 END IF
@@ -720,9 +720,9 @@ INTEGER                                                         :: Shift
 
 DO ui = 3,5
     
-    IF (INNER_CFA_BC_TYPE(ui) == "D") THEN
+    IF (Inner_BC_Type(ui) == "D") THEN
 
-        BC_Value = sqrt(4.0_idp*pi)*Inner_CFA_BC_VALUES(ui)
+        BC_Value = sqrt(4.0_idp*pi)*Inner_BC_Values(ui)
 
         DO d =  1,DEGREE
 
@@ -750,13 +750,13 @@ DO ui = 3,5
 
     
 
-    IF (OUTER_CFA_BC_TYPE(ui)  == "D") THEN
+    IF (Outer_BC_Type(ui)  == "D") THEN
     
 
         DO lm = 1,LM_Length
 
             IF ( lm == 1 ) THEN
-                BC_Value = sqrt(4.0_idp*pi)*OUTER_CFA_BC_VALUES(ui)
+                BC_Value = sqrt(4.0_idp*pi)*Outer_BC_Values(ui)
             ELSE
                 BC_Value = 0.0_idp
             END IF

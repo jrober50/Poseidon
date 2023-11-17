@@ -92,7 +92,6 @@ DO m = -l,l
 
     lm_loc = Map_To_lm(l,m)
     
-
     CALL Matrix_CCS_MtransVMult(NUM_R_NODES,                    &
                                 Factored_NNZ,                   &
                                 Laplace_Factored_Row(:,l),      &
@@ -112,11 +111,29 @@ DO m = -l,l
                             Work_Vec,                       &
                             FP_Laplace_Vector(:,lm_loc,iU)  )
 
+!    PRINT*,"After MVMult"
+!    print*,FP_Laplace_Vector(:,lm_loc,iU)
+!    print*,"Load Storage"
+!    Print*,FP_Iter_Load_Storage(:,lm_loc)
     
-    FP_Residual_Vector(:,lm_loc,iU) = ( FP_Laplace_Vector(:,lm_loc,iU)       &
-                                    - FP_Iter_Load_Storage(:,lm_loc) )      &
-                                    / FP_Iter_Load_Storage(:,lm_loc)
-
+    IF ( ANY( abs(FP_Iter_Load_Storage(:,lm_loc)) == 0.0_idp ) ) THEN
+        DO i = 1,Num_R_Nodes
+            IF ( abs(FP_Iter_Load_Storage(i,lm_loc)) == 0.0_idp ) THEN
+                FP_Residual_Vector(i,lm_loc,iU) = ( FP_Laplace_Vector(i,lm_loc,iU)  &
+                                                - FP_Iter_Load_Storage(i,lm_loc) )
+            ELSE
+                FP_Residual_Vector(i,lm_loc,iU) = ( FP_Laplace_Vector(i,lm_loc,iU)  &
+                                                - FP_Iter_Load_Storage(i,lm_loc) )  &
+                                                / FP_Iter_Load_Storage(i,lm_loc)
+            
+            END IF
+    
+        END DO
+    ELSE
+        FP_Residual_Vector(:,lm_loc,iU) = ( FP_Laplace_Vector(:,lm_loc,iU)          &
+                                        - FP_Iter_Load_Storage(:,lm_loc) )          &
+                                        / FP_Iter_Load_Storage(:,lm_loc)
+    END IF
 
 !    PRINT*,"Residual Vector"
 !    PRINT*,FP_Residual_Vector(:,lm_loc,iU)
@@ -136,9 +153,9 @@ DO m = -l,l
 
     Resid_Norms(3,lm_loc,iter,iU) = MAXVAL( (/ Resid_Norms(3,lm_loc,iter,iU), ABS(FP_Residual_Vector(:,lm_loc,iU) ) /) )
 !
-!    PRINT*,"Residuals : ",Resid_Norms(1,lm_loc,iU), &
-!                          Resid_Norms(2,lm_loc,iU), &
-!                          Resid_Norms(3,lm_loc,iU)
+!    PRINT*,"Residuals : ",Resid_Norms(1,lm_loc,iter,iU), &
+!                          Resid_Norms(2,lm_loc,iter,iU), &
+!                          Resid_Norms(3,lm_loc,iter,iU)
 
 END DO ! m Loop
 END DO ! l Loop

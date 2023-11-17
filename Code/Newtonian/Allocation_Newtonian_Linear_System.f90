@@ -156,7 +156,17 @@ END SUBROUTINE Deallocate_Poisson_Linear_System
 
 
 
+ !+103+####################################################!
+!                                                           !
+!          Reallocate_Poisson_Linear_Systems                   !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Reallocate_Poisson_Linear_System()
 
+CALL Deallocate_Poisson_Linear_System()
+CALL Allocate_Poisson_Linear_System()
+
+END SUBROUTINE Reallocate_Poisson_Linear_System
 
 
 

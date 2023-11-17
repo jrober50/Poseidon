@@ -277,7 +277,7 @@ CALL CONVERT_SELF_SIMILAR_3D(  t, Kappa_wUnits, gamma, ecc,                   &
 
 
 
-CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
+CALL Create_Yahil_Newtonian_Solution_Coeffs( NUM_LINES, Input_R, Enclosed_Mass )
 CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, Input_Si, r_locs )
 
 Potential_Solution => SELFSIM_NEWT_SOL
@@ -465,7 +465,7 @@ CALL Calculate_Yahil_Density(   t, kappa, gamma,                        &
 
 
 
-CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
+CALL Create_Yahil_Newtonian_Solution_Coeffs( NUM_LINES, Input_R, Enclosed_Mass )
 
 Potential_Solution => SELFSIM_NEWT_SOL
 
@@ -853,10 +853,10 @@ END SUBROUTINE Calculate_Yahil_Density
 
 !+201+###########################################################################!
 !                                                                                !
-!                  CREATE_SELFSIM_NEWT_SOL                                       !
+!                  Create_Yahil_Newtonian_Solution_Coeffs                                       !
 !                                                                                !
 !################################################################################!
-SUBROUTINE CREATE_SELFSIM_NEWT_SOL( Line_Count, R_Values, Enclosed_Mass )
+SUBROUTINE Create_Yahil_Newtonian_Solution_Coeffs( Line_Count, R_Values, Enclosed_Mass )
 
 INTEGER,                                INTENT(IN)      :: Line_Count
 REAL(idp),  DIMENSION(1:Line_Count),    INTENT(IN)      :: R_Values
@@ -868,14 +868,13 @@ INTEGER     :: i
 
 SELFSIM_R_VALS(0) = 0.0_idp
 SELFSIM_R_VALS(1:NUM_ENTRIES) = R_Values(1:NUM_ENTRIES)
-
 SELFSIM_POT_VALS(NUM_ENTRIES) = -GRAV_Constant_G*Enclosed_Mass(Num_Entries)/R_Values(Num_Entries)
 
 DO i = NUM_ENTRIES-1,1,-1
 
     SELFSIM_POT_VALS(i) = SELFSIM_POT_VALS(i+1)                         &
                         - Grav_Constant_G*Enclosed_Mass(i)              &
-                        * (SELFSIM_r_Vals(i+1)-SELFSIM_R_Vals(i))       &
+                        * (SELFSIM_R_Vals(i+1)-SELFSIM_R_Vals(i))       &
                         / (SELFSIM_R_Vals(i)*SELFSIM_R_Vals(i))
 
 
@@ -887,7 +886,7 @@ SELFSIM_POT_VALS(0) = SELFSIM_POT_VALS(1)                           &
 
 
 
-END SUBROUTINE CREATE_SELFSIM_NEWT_SOL
+END SUBROUTINE Create_Yahil_Newtonian_Solution_Coeffs
 
 
 
@@ -1157,7 +1156,7 @@ END FUNCTION SELFSIM_SHIFT_SOL
 
 !+201+###########################################################################!
 !                                                                                !
-!                  CREATE_SELFSIM_NEWT_SOL                                       !
+!          SELFSIM_NEWT_SUB                                       !
 !                                                                                !
 !################################################################################!
 SUBROUTINE SELFSIM_NEWT_SUB( r )
