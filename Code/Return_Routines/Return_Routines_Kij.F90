@@ -181,7 +181,9 @@ REAL(idp),  DIMENSION(NQ(3)),                               INTENT(IN)  ::  PQ_I
 REAL(idp),                                                  INTENT(IN)  ::  Left_Limit
 REAL(idp),                                                  INTENT(IN)  ::  Right_Limit
 
-REAL(idp),  DIMENSION(NQ(1)*NQ(2)*NQ(3),NE(1),NE(2),NE(3),1:6), INTENT(OUT) ::  Return_Kij
+REAL(idp),  DIMENSION(NQ(1)*NQ(2)*NQ(3),                                &
+                      0:NE(1)-1,0:NE(2)-1,0:NE(3)-1,                    &
+                      1:6),                                 INTENT(OUT) ::  Return_Kij
 
 
 INTEGER                                                         ::  re, te, pe
@@ -271,13 +273,13 @@ CALL Initialize_Plm_Tables( NQ(2),                  &
                             Plm_Table,              &
                             Plm_dt_Table            )
 
-DO pe = 1,NE(3)
-DO te = 1,NE(2)
+DO pe = 0,NE(3)-1
+DO te = 0,NE(2)-1
 
 CALL Initialize_Slm_Tables_on_Elem( te, pe,             &
                                    NQ(2), NQ(3),        &
                                    NE,                  &
-                                   [1,1,1],             &
+                                   [0,0,0],             &
                                    Plm_Table,            &
                                    Plm_dt_Table,         &
                                    Am_Table,             &
@@ -286,11 +288,11 @@ CALL Initialize_Slm_Tables_on_Elem( te, pe,             &
                                    Slm_Elem_dt_Table,    &
                                    Slm_Elem_dp_Table     )
 
-DO re = 1,NE(1)
+DO re = 0,NE(1)-1
 
-DROT = 0.5_idp * (rlocs(re) - rlocs(re-1))
-DTOT = 0.5_idp * (tlocs(te) - tlocs(te-1))
-DPOT = 0.5_idp * (plocs(pe) - plocs(pe-1))
+DROT = 0.5_idp * (rlocs(re+1) - rlocs(re))
+DTOT = 0.5_idp * (tlocs(te+1) - tlocs(te))
+DPOT = 0.5_idp * (plocs(pe+1) - plocs(pe))
 
 Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp) + rlocs(re)
 Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp) + tlocs(te)
@@ -301,12 +303,6 @@ DO rd = 1,NQ(1)
     Caller_LPT(0,:,rd)=Lagrange_Poly(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
     Caller_LPT(1,:,rd)=Lagrange_Poly_Deriv(CUR_RX_LOCS(rd),DEGREE,FEM_Node_xlocs)
 END DO
-
-
-
-                            
-                            
-
 
 
 
@@ -323,8 +319,7 @@ DO rd = 1,NQ(1)
     DO lm = 1,LM_Length
     DO d  = 0,DEGREE
 
-        Here  = Map_To_FEM_Node(RE-1,d)
-
+        Here  = Map_To_FEM_Node(RE,d)
 
         TMP_Val_Psi = TMP_Val_Psi                           &
                     + dVA_Coeff_Vector(Here,lm,iU_CF)       &
@@ -337,8 +332,8 @@ DO rd = 1,NQ(1)
     
     DO i = 1,3
     DO d  = 0,DEGREE
-        Here  = FP_Array_Map_TypeB(iU(i),iVB,re-1,d,1)
-        There = FP_Array_Map_TypeB(iU(i),iVB,re-1,d,LM_Length)
+        Here  = FP_Array_Map_TypeB(iU(i),iVB,re,d,1)
+        There = FP_Array_Map_TypeB(iU(i),iVB,re,d,LM_Length)
 
         TMP_Val(i) = TMP_Val(i)                                  &
                 + SUM( dVB_Coeff_Vector( Here:There, iVB )      &
@@ -387,7 +382,7 @@ DO rd = 1,NQ(1)
     Reusable_Vals(2) = 2.0_idp/3.0_idp*(Christoffel(1,1,1)+Christoffel(2,2,1)+Christoffel(3,3,1))
     Reusable_Vals(3) = 2.0_idp/3.0_idp*(Christoffel(1,1,2)+Christoffel(2,2,2)+Christoffel(3,3,2))
     Reusable_Vals(4) = 2.0_idp/3.0_idp*(Christoffel(1,1,3)+Christoffel(2,2,3)+Christoffel(3,3,3))
-
+    
 
     Here = rd + (td-1)*NQ(1) + (pd-1)*NQ(1)*NQ(2)
 
@@ -400,7 +395,7 @@ DO rd = 1,NQ(1)
                +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val(3)   )
 
     Return_Kij(Here,re,te,pe,1) = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_Psi*Tmp_Val_Psi), KIND = idp)
-
+    
 
     ! Ahat^12
     i=1
@@ -491,7 +486,6 @@ END DO ! te Loop
 END DO ! pe Loop
 
 END SUBROUTINE Poseidon_Return_Kij_Native
-
 
 
 !+101+######################################################################################!
