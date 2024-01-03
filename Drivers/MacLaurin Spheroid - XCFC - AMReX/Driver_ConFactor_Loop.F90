@@ -130,7 +130,7 @@ USE External_HCT_Solution_Module, &
             ONLY :  HCT_Solution
 
 USE External_IO_Test_Results_Module, &
-            ONLY :  Print_HCT_Error
+            ONLY :  Print_MacLaurin_Error
 
 USE Flags_Source_Input_Module, &
             ONLY :  lPF_SI_Flags,       &
@@ -156,10 +156,8 @@ CONTAINS
 !          Driver_ConFactor_Loop                                    !
 !                                                                   !
  !#################################################################!
-SUBROUTINE Driver_ConFactor_Loop( Alpha, Star_Radius )
+SUBROUTINE Driver_ConFactor_Loop( )
 
-REAL(idp),  INTENT(IN)                      ::  Alpha
-REAL(idp),  INTENT(IN)                      ::  Star_Radius
 
 TYPE(amrex_multifab),   ALLOCATABLE         ::  MF_Old(:)
 TYPE(amrex_multifab),   ALLOCATABLE         ::  MF_New(:)
@@ -222,7 +220,6 @@ CALL Poseidon_Run()
 CALL Poseidon_Return_Conformal_Factor( MF_Old )
 
 
-
 Iter = 2
 Flag = .TRUE.
 DO WHILE ( Flag )
@@ -235,8 +232,9 @@ DO WHILE ( Flag )
 
     CALL Poseidon_Run()
 
+    PRINT*,"Here",Iter
     CALL Poseidon_Return_Conformal_Factor( MF_New )
-
+    PRINT*,"There",Iter
     Max_Difference = Calculate_Max_Difference( MF_New, MF_Old)
     
     Error_Norms = Calculate_Error_Norms( MF_New )
@@ -287,7 +285,7 @@ DEALLOCATE( MF_Driver_Source )
 
 
 IF ( .TRUE. ) THEN
-    CALL Print_HCT_Error()
+    CALL Print_MacLaurin_Error()
 END IF
 
 END SUBROUTINE Driver_ConFactor_Loop

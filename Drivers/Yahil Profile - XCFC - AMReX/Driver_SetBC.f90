@@ -68,7 +68,7 @@ USE Poseidon_Interface_Boundary_Conditions, &
 
 USE External_Yahil_Profile_Module, &
             ONLY :  SELFSIM_NEWT_SOL,           &
-                    CREATE_SELFSIM_NEWT_SOL
+                    Create_Yahil_Newtonian_Solution_Coeffs
 
 IMPLICIT NONE
 
@@ -185,7 +185,7 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * (t**(4.0_idp- 3.0_idp*SelfSim_Gamma))                      &
               * Input_M
 
-CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
+CALL Create_Yahil_Newtonian_Solution_Coeffs( NUM_LINES, Input_R, Enclosed_Mass )
 Potential_Solution => SELFSIM_NEWT_SOL
 
 
@@ -206,13 +206,13 @@ OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
 
-
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Setting boundary conditions.')
 
 
 
 CALL Poseidon_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
 CALL Poseidon_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
+
 
 
 END SUBROUTINE Driver_SetBC

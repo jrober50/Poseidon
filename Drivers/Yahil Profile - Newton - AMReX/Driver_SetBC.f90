@@ -35,6 +35,7 @@ USE Poseidon_Message_Routines_Module, &
 
 USE Poseidon_Units_Module, &
             ONLY :  Grav_Constant_G,    &
+                    GravPot_Units,      &
                     Speed_of_Light,     &
                     C_Square,           &
                     GR_Source_Scalar,   &
@@ -67,8 +68,8 @@ USE Poseidon_Interface_Boundary_Conditions, &
 
 
 USE External_Yahil_Profile_Module, &
-            ONLY :  SELFSIM_NEWT_SOL,           &
-                    CREATE_SELFSIM_NEWT_SOL
+            ONLY :  SELFSIM_NEWT_SOL,                       &
+                    Create_Yahil_Newtonian_Solution_Coeffs
 
 IMPLICIT NONE
 
@@ -84,36 +85,33 @@ CONTAINS
 !###############################################################################!
 SUBROUTINE Driver_SetBC( )
 
-REAL(idp)                                               ::  Psi_BC
-REAL(idp)                                               ::  AlphaPsi_BC
-REAL(idp)                                               ::  Shift_Vector_BC
 
-CHARACTER(LEN=1), DIMENSION(1:5)                        ::  INNER_BC_TYPES
-CHARACTER(LEN=1), DIMENSION(1:5)                        ::  OUTER_BC_TYPES
-REAL(idp), DIMENSION(1:5)                               ::  INNER_BC_VALUES
-REAL(idp), DIMENSION(1:5)                               ::  OUTER_BC_VALUES
+CHARACTER(LEN=1)                                    ::  Inner_BC_Types
+CHARACTER(LEN=1)                                    ::  Outer_BC_Types
+REAL(idp)                                           ::  Inner_BC_Values
+REAL(idp)                                           ::  Outer_BC_Values
 
 
-REAL(idp)                                                           ::  R_Factor
-REAL(idp)                                                           ::  Kappa_wUnits
+REAL(idp)                                           ::  R_Factor
+REAL(idp)                                           ::  Kappa_wUnits
 
 
-REAL(idp), DIMENSION(:), ALLOCATABLE                                ::  Enclosed_Mass
-REAL(idp), DIMENSION(:),ALLOCATABLE                                 ::  Input_R
-REAL(idp), DIMENSION(:),ALLOCATABLE                                 ::  Input_X,    &
-                                                                        Input_D,    &
-                                                                        Input_V,    &
-                                                                        Input_M
-REAL(idp)                                                           ::  t
+REAL(idp), DIMENSION(:), ALLOCATABLE                ::  Enclosed_Mass
+REAL(idp), DIMENSION(:),ALLOCATABLE                 ::  Input_R
+REAL(idp), DIMENSION(:),ALLOCATABLE                 ::  Input_X,    &
+                                                        Input_D,    &
+                                                        Input_V,    &
+                                                        Input_M
+REAL(idp)                                           ::  t
 
-CHARACTER(LEN=128)                          :: line
+CHARACTER(LEN=128)                                  :: line
 
-INTEGER                                     :: NUM_LINES
-INTEGER                                     :: CUR_LINE
+INTEGER                                             :: NUM_LINES
+INTEGER                                             :: CUR_LINE
 
 
-INTEGER                                     :: nread
-INTEGER                                     :: istat
+INTEGER                                             :: nread
+INTEGER                                             :: istat
 
 
 
@@ -185,34 +183,26 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * (t**(4.0_idp- 3.0_idp*SelfSim_Gamma))                      &
               * Input_M
 
-CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
+CALL Create_Yahil_Newtonian_Solution_Coeffs( NUM_LINES, Input_R, Enclosed_Mass )
 Potential_Solution => SELFSIM_NEWT_SOL
 
 
-Psi_BC = 1.0_idp    &
-       - 0.5_idp*Potential_Solution(R_Outer*Centimeter, 0.0_idp, 0.0_idp)/C_Square
-
-AlphaPsi_BC = 1.0_idp    &
-            + 0.5_idp*Potential_Solution(R_Outer*Centimeter, 0.0_idp, 0.0_idp)/C_Square
-
-Shift_Vector_BC = 0.0_idp
 
 
+Inner_BC_Types = "N"
+Outer_BC_Types = "D"
 
-INNER_BC_TYPES = (/"N", "N","N","N","N"/)
-OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 
-
-INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
-OUTER_BC_VALUES = (/Psi_BC,  AlphaPsi_BC, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
-
+Inner_BC_Values = 0.0_idp
+Outer_BC_Values = Potential_Solution(R_Outer, 0.0_idp, 0.0_idp)
 
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Setting boundary conditions.')
 
 
 
-CALL Poseidon_Set_Uniform_Boundary_Conditions("I", INNER_BC_TYPES, INNER_BC_VALUES)
-CALL Poseidon_Set_Uniform_Boundary_Conditions("O", OUTER_BC_TYPES, OUTER_BC_VALUES)
+CALL Poseidon_Set_Uniform_Boundary_Conditions("I", Inner_BC_Types, Inner_BC_Values)
+CALL Poseidon_Set_Uniform_Boundary_Conditions("O", Outer_BC_Types, Outer_BC_Values)
+
 
 
 END SUBROUTINE Driver_SetBC

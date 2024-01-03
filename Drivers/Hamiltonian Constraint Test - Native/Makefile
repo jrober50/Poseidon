@@ -7,7 +7,7 @@ NPROCS=1
 
 ## Select Machine
 
-MACHINE_NAME    =NicksMacBook
+POSEIDON_MACHINE_NAME    =jrober
 #MACHINE_NAME = sjdunham
 #MACHINE_NAME   =MacBook
 #MACHINE_NAME   =Rhea
@@ -19,6 +19,8 @@ MACHINE_NAME    =NicksMacBook
 CMODE   =DEBUG
 #CMODE  =OPTIMIZE
 
+
+LAPACK_MODE = ON
 
 ## Compile with Openmp
 
@@ -51,10 +53,9 @@ include ../../Build/Makefile_Core
 include Makefile_Driver
 
 
-Main : $(POSEIDON_o) $(DRIVER_o)
+main : $(POSEIDON_o) $(DRIVER_o) Driver_HCT_Fortran.o 
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
-	$(FORT) -c $(STD) $(OUTPUT_LINKER) $(OBJ) $(INCLUDE_LINKER) $(OBJ) $(DRIVER_NAME).f90  -o $(OBJ)/$(DRIVER_NAME).o
-	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/$(DRIVER_NAME).x
+	$(FORT) $(OBJ)/*.o -o $(BIN)/$(DRIVER_NAME).x $(LIB_LINKER)
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"
 
 

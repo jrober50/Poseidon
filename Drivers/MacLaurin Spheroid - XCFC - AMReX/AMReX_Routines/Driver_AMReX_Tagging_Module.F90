@@ -55,10 +55,10 @@ USE Variables_Mesh, &
                     NUM_P_ELEMENTS
 
 USE Variables_External, &
-            ONLY :  MacLaurin_SemiMinor,        &
-                    MacLaurin_SemiMajor,        &
-                    MacLaurin_RE,               &
-                    MacLaurin_SphereType
+            ONLY :  MLS_SemiMinor,        &
+                    MLS_SemiMajor,        &
+                    MLS_RE,               &
+                    MLS_SphereType
 
 
 USE Variables_Quadrature, &
@@ -70,14 +70,17 @@ USE Variables_Quadrature, &
                     NUM_P_QUAD_POINTS,          &
                     Local_Quad_DOF
 
-USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Max_Level
-
 USE Variables_Tables,   &
             ONLY :  Level_DX
 
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
+            
+USE External_MLS_Profile_Module, &
+            ONLY :  Calc_MLS_ABCs
+            
+USE Variables_Driver_AMReX, &
+            ONLY :  xL, xR, nCells
 
 
 IMPLICIT NONE
@@ -118,7 +121,7 @@ CHARACTER(KIND=c_char), INTENT(INOUT)   ::  Tag(TLo(1):THi(1),  &
                                                 TLo(3):THi(3),  &
                                                 TLo(4):THi(4)   )
 
-INTEGER                                 ::  Tag_Style = 2
+INTEGER                                 ::  Tag_Style = 3
 
 
 ! Be careful with Tagging. You have to tag in radial shells for now.
@@ -212,7 +215,6 @@ CHARACTER(KIND=c_char), INTENT(INOUT)   ::  Tag(TLo(1):THi(1),  &
                                                 TLo(3):THi(3),  &
                                                 TLo(4):THi(4)   )
 
-INTEGER                                 ::  Tag_Style = 2
 
 INTEGER                                 ::  re, te, pe
 
@@ -243,37 +245,15 @@ LOGICAL                                 :: Cond1
 LOGICAL                                 :: Cond2
 
 
-DROT = Level_dx(Level,1)/2.0_idp
-DTOT = Level_dx(Level,2)/2.0_idp
-DPOT = Level_dx(Level,3)/2.0_idp
+!DROT = Level_dx(Level,1)/2.0_idp
+!DTOT = Level_dx(Level,2)/2.0_idp
+!DPOT = Level_dx(Level,3)/2.0_idp
 
+DROT = ( (xR(1)-xL(1)) / (nCells(1)*2.0_idp**Level) )/2.0_idp
+DTOT = ( (xR(2)-xL(2)) / (nCells(2)*2.0_idp**Level) )/2.0_idp
+DPOT = ( (xR(3)-xL(3)) / (nCells(3)*2.0_idp**Level) )/2.0_idp
 
-SemiMajor_Axis = MacLaurin_SemiMajor
-SemiMinor_Axis = MacLaurin_SemiMinor
-
-IF ( MacLaurin_SphereType == 'P') THEN
-!    Spheroid_Type_Flag  = 2
-!    Spheroid_Name       = 'Prolate'
-
-    A = SemiMajor_Axis
-    B = SemiMinor_Axis
-    C = B
-    
-ELSE
-!    Spheroid_Type_Flag  = 1
-!    Spheroid_Name       = 'Oblate '
-
-    A = SemiMajor_Axis
-    B = A
-    C = SemiMinor_Axis
-
-END IF
-
-
-AA = A*A
-BB = B*B
-CC = C*C
-
+CALL Calc_MLS_ABCs( A, B, C, AA, BB, CC )
 
 AB = A*B
 
@@ -303,7 +283,7 @@ DO re = BLo(1),BHi(1)
     Radius_L = AB /sqrt(BB*SinSqr_L + AA*CosSqr_L)
     Radius_R = AB /sqrt(BB*SinSqr_R + AA*CosSqr_R)
 
-
+!    print*,re,te,R_Low,R_Hi,Radius_L,Radius_R
     ! Does the spheroid radius intersect the left side of the element?
     IF ( (R_Low .LE. Radius_L) .and. (Radius_L .LE. R_Hi ) ) THEN
         Cond1 = .TRUE.
@@ -379,69 +359,16 @@ CHARACTER(KIND=c_char), INTENT(INOUT)   ::  Tag(TLo(1):THi(1),  &
                                                 TLo(3):THi(3),  &
                                                 TLo(4):THi(4)   )
 
-INTEGER                                 ::  Tag_Style = 2
+
+
 
 INTEGER                                 ::  re, te, pe
-INTEGER                                 ::  rd, td, pd
-INTEGER                                 ::  Here
-
-REAL(idp)                               :: SemiMajor_Axis
-REAL(idp)                               :: SemiMinor_Axis
-
-REAL(idp)                               :: DROT, DTOT, DPOT
-
-REAL(idp)                                   ::  A,  B,  C
-REAL(idp)                                   ::  AA, BB, CC, AB
-
-REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  Cur_R_Locs
-REAL(idp), DIMENSION(1:Num_T_Quad_Points)   ::  Cur_T_Locs
-REAL(idp), DIMENSION(1:Num_P_Quad_Points)   ::  Cur_P_Locs
-
-REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  RSqr
-
-REAL(idp), DIMENSION(1:Num_T_Quad_Points)   ::  SinSqr_T
-REAL(idp), DIMENSION(1:Num_T_Quad_Points)   ::  CosSqr_T
-
-REAL(idp), DIMENSION(1:Num_P_Quad_Points)   ::  SinSqr_P
-REAL(idp), DIMENSION(1:Num_P_Quad_Points)   ::  CosSqr_P
+REAL(idp)                               ::  DROT, DTOT, DPOT
 
 
-REAL(idp)                               :: Value
 
-LOGICAL                                 :: Cond1
-LOGICAL                                 :: Cond2
-LOGICAL, DIMENSION(:,:,:), ALLOCATABLE  :: Values
-
-
-ALLOCATE( Values(1:Num_R_Quad_Points, 1:Num_T_Quad_Points, 1:Num_P_Quad_Points) )
 
 DROT = Level_dx(Level,1)/2.0_idp
-DTOT = Level_dx(Level,2)/2.0_idp
-DPOT = Level_dx(Level,3)/2.0_idp
-
-
-SemiMajor_Axis = MacLaurin_SemiMajor
-SemiMinor_Axis = MacLaurin_SemiMinor
-
-IF ( MacLaurin_SphereType == 'P') THEN
-!    Spheroid_Type_Flag  = 2
-!    Spheroid_Name       = 'Prolate'
-
-    A = SemiMajor_Axis
-    B = SemiMinor_Axis
-    C = B
-    
-ELSE
-!    Spheroid_Type_Flag  = 1
-!    Spheroid_Name       = 'Oblate '
-
-    A = SemiMajor_Axis
-    B = A
-    C = SemiMinor_Axis
-
-END IF
-
-
 
 
 DO pe = BLo(3),BHi(3)
@@ -451,7 +378,7 @@ DO re = BLo(1),BHi(1)
 
 
 
-    IF ( 2.0_idp*DROT*(RE+1) .LE. SemiMajor_Axis ) THEN
+    IF ( 2.0_idp*DROT*(RE+1) .LE. MLS_SemiMajor ) THEN
 !        PRINT*,"Refining",level,re,te
         Tag(re,te,pe,1) = SetTag
     ELSE
@@ -506,25 +433,15 @@ CHARACTER(KIND=c_char), INTENT(INOUT)   ::  Tag(TLo(1):THi(1),  &
                                                 TLo(3):THi(3),  &
                                                 TLo(4):THi(4)   )
 
-INTEGER                                 ::  Tag_Style = 2
 
 INTEGER                                 ::  re, te, pe
-INTEGER                                 ::  rd, td, pd
-INTEGER                                 ::  Here
-
-REAL(idp)                               ::  SemiMajor_Axis
-REAL(idp)                               ::  SemiMinor_Axis
 
 REAL(idp)                               ::  DROT
 
 REAL(idp)                               ::  Inner_Edge
 REAL(idp)                               ::  Outer_Edge
 
-DROT = Level_dx(Level,1)/2.0_idp
-
-SemiMajor_Axis = MacLaurin_SemiMajor
-SemiMinor_Axis = MacLaurin_SemiMinor
-
+DROT = ( (xR(1)-xL(1)) / (nCells(1)*2.0_idp**Level) )/2.0_idp
 
 DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
@@ -534,10 +451,11 @@ DO re = BLo(1),BHi(1)
     Outer_Edge = 2.0_idp*DROT*(RE+1)
 
 
-    IF (( Outer_Edge .LE. SemiMajor_Axis )          &
+    PRINT*,Inner_Edge, Outer_Edge, MLS_SemiMajor, MLS_Semiminor
+    IF (( Outer_Edge .LE. MLS_SemiMajor )          &
                     .AND.                           &
-        (Inner_Edge .GE. SemiMinor_Axis  ) )   THEN
-!        PRINT*,"Refining",level,re,te
+        (Inner_Edge .GE. MLS_SemiMinor  ) )   THEN
+        PRINT*,"Refining",level,re,te
         Tag(re,te,pe,1) = SetTag
     ELSE
         Tag(re,te,pe,1) = ClearTag
@@ -553,6 +471,10 @@ END DO ! pe
 
 
 END SUBROUTINE Tag_By_Bracket
+
+
+
+
 
 
 

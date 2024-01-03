@@ -174,6 +174,7 @@ DO pe = 1,NE(3)
         ELSE
             Local_E(Here, re-1, te-1, pe-1) = 0.0_idp
         END IF
+        print*,re,rq,Local_E(Here, re-1, te-1, pe-1)
 !            PRINT*,Cur_r_locs(rq), STar_radius,Local_E(rq, re-1, 0, 0)
 
     END DO ! rq

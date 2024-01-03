@@ -49,6 +49,9 @@ USE Functions_Quadrature, &
 USE Maps_X_Space, &
             ONLY :  Map_From_X_Space
 
+USE Driver_InitSource_Module, &
+            ONLY :  Driver_InitSource
+
 USE Driver_SetSource_Module, &
             ONLY :  Driver_SetSource
 
@@ -73,6 +76,11 @@ USE Variables_MPI, &
 USE Variables_Driver_AMReX, &
             ONLY :  nLevels,            &
                     MF_Driver_Source
+                    
+USE Driver_Variables, &
+            ONLY :  Driver_NQ,          &
+                    Driver_RQ_xLocs,    &
+                    Driver_xL
 
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source
@@ -106,6 +114,9 @@ USE Memory_IO_Module, &
             ONLY :  Output_Poseidon_Memory_Loop_Report, &
                     Output_Poseidon_Memory_Total_Report
 
+
+USE External_IO_Test_Results_Module, &
+            ONLY :  Print_Yahil_Error
 
 USE MPI
 
@@ -174,13 +185,13 @@ Letter_Table = (/ "A","B","C","D","E","F","G","H","I","J" /)
 !#                      Test Parameters                     #!
 !#                                                          #!
 !############################################################!
-Units_Input         = "G"
+Units_Input         = "S"
 
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  4
-T_Index_Max         =  4
+T_Index_Min         =  1
+T_Index_Max         =  1
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -197,9 +208,11 @@ NQ(1)               = 5                        ! Number of Radial Quadrature Poi
 NQ(2)               = 1                        ! Number of Theta Quadrature Points
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
 
+Left_Limit  = -0.50_idp
+Right_Limit = +0.50_idp
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
@@ -215,7 +228,6 @@ Print_Cond_Flag     = .FALSE.
 
 
 Suffix_Input        = "Params"
-
 
 
 CFA_Eqs = (/ 1, 1, 1, 1, 1 /)
@@ -258,12 +270,23 @@ CALL amrex_amrcore_init()
 
 !############################################################!
 !#                                                          #!
-!#                       Start Program                      #!
+!#               Create & Input Source Values               #!
 !#                                                          #!
 !############################################################!
 CALL Init_AMReX_Parameters()
+CALL Set_Units( Units_Input )
 
 
+Driver_xL(1) = Left_Limit
+Driver_xL(2) = Right_Limit
+Driver_NQ = NQ
+ALLOCATE(Driver_RQ_xLocs(Driver_NQ(1)))
+
+!############################################################!
+!#                                                          #!
+!#                       Start Program                      #!
+!#                                                          #!
+!############################################################!
 DO M_Index = M_Index_Min, M_Index_Max
 DO T_Index = T_Index_Min, T_Index_Max
 
@@ -285,15 +308,16 @@ DO T_Index = T_Index_Min, T_Index_Max
     Input_T_Quad = Initialize_LG_Quadrature_Locations(NQ(2))
     Input_P_Quad = Initialize_LG_Quadrature_Locations(NQ(3))
 
-    Left_Limit  = -0.50_idp
-    Right_Limit = +0.50_idp
-
     Input_R_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_R_Quad)
     Input_T_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_T_Quad)
     Input_P_Quad = Map_From_X_Space(Left_Limit, Right_Limit, Input_P_Quad)
 
 
+    
+    Driver_RQ_xlocs = Input_R_Quad
 
+    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
+    CALL Driver_InitSource( Yahil_Params )
     
     !############################################################!
     !#                                                          #!
@@ -314,8 +338,7 @@ DO T_Index = T_Index_Min, T_Index_Max
             Source_Radial_Boundary_Units        = "cm",                 &
             Integration_NQ_Option               = NQ,                   &
             Eq_Flags_Option                     = CFA_Eqs,              &
-            AMReX_FEM_Refinement_Option         = IFL,                  &
-            AMReX_Integral_Refinement_Option    = IRL,                  &
+            Newtonian_Mode_Option               = .TRUE.,               &            
             Fixed_Point_Diagnostics_Option      = .FALSE.,               &
             Verbose_Option                      = Verbose,              &
             WriteAll_Option                     = .FALSE.,              &
@@ -343,10 +366,8 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#               Create & Input Source Values               #!
     !#                                                          #!
     !############################################################!
-    Yahil_Params = [Time_Values(T_Index), Kappa, Gamma]
-    CALL Driver_SetSource(  Yahil_Params, nLevels )
+    CALL Driver_SetSource( )
 
-    STOP "After SetSource"
     !############################################################!
     !#                                                          #!
     !#          Calculate and Set Boundary Conditions           #!
@@ -390,10 +411,7 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                       Output Results                     #!
     !#                                                          #!
     !############################################################!
-!    CALL Return_Test(nLevels, NQ, MF_Source)
-
-!    CALL Calc_ADM_Mass(ADM_Mass)
-!    PRINT*,"ADM Mass",ADM_Mass
+    CALL Print_Yahil_Error()
 
 
 

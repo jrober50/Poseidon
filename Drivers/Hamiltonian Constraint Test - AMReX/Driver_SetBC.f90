@@ -93,13 +93,12 @@ uaR                 =  sqrt(HCT_Alpha/((1.0_idp+HCT_Alpha*HCT_Alpha)*HCT_Star_Ra
 C                   =  1.0_idp/sqrt(sqrt( (2.0_idp/3.0_idp)*pi*rho_o  ) )
 Beta                =  (C*uaR-1.0_idp)*HCT_Star_Radius
 
-Psi_BC          = 1.0250_idp
-!Psi_BC          = HCT_Solution( R_Outer, HCT_Alpha, Beta, C, HCT_Star_Radius )
+Psi_BC          = HCT_Solution( R_Outer, HCT_Alpha, Beta, C, HCT_Star_Radius )
 AlphaPsi_BC     = 1.0_idp
 Shift_Vector_BC = 0.0_idp
 
-
-
+!Psi_BC = 1.0250_idp
+!PRINT*,"Psi_BC",Psi_BC
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)
 OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 

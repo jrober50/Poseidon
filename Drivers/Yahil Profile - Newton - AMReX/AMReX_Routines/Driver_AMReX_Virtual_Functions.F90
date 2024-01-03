@@ -107,7 +107,7 @@ DM = pdm
 !t_old(lev) = time - 1.e200_amrex_real
 CALL VF_Clear_Level(lev)
 
-!PRINT*,MF_Src_nComps, MF_Src_nGhost
+PRINT*,MF_Src_nComps, MF_Src_nGhost
 
 CALL amrex_multifab_build( MF_Driver_Source(lev), BA, DM, MF_Src_nComps, MF_Src_nGhost )
 

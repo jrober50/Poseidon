@@ -90,9 +90,6 @@ USE Variables_External, &
 USE Poseidon_AMReX_Multilayer_Utilities_Module, &
             ONLY :  Find_Coarsest_Parent
 
-USE Variables_Tables, &
-            ONLY :  Level_dx
-
 USE Functions_Math, &
             ONLY :  Lagrange_Poly
 
@@ -178,7 +175,6 @@ INTEGER                                     ::  i
 
 REAL(idp)                                   ::  t
 REAL(idp)                                   ::  Kappa_WUnits
-REAL(idp)                                   ::  E_Units
 
 REAL(idp)                                   ::  x
 REAL(idp)                                   ::  xwidth
@@ -287,10 +283,6 @@ Input_R = R_Factor*Input_X
 
 
 
-E_Units = Erg/Centimeter**3
-
-
-
 
 D_Factor = 1.0_idp/(Grav_Constant_G*t*t )
 
@@ -390,7 +382,7 @@ DO re = BLo(1),BHi(1)
         DO pd = 1,Driver_NQ(3)
         DO td = 1,Driver_NQ(2)
 
-
+            
             here = Quad_Map_Long_Array(rd,td,pd,Driver_NQ)
 
             Src(re,te,pe,(iS_E-1)*Num_DOF+Here) = E

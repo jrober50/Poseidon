@@ -62,11 +62,9 @@ USE Poseidon_Units_Module, &
                     Gram
 
 USE Variables_External, &
-            ONLY :  MacLaurin_SemiMinor,    &
-                    MacLaurin_SemiMajor,    &
-                    MacLaurin_Ecc,          &
-                    MacLaurin_SphereType,   &
-                    MacLaurin_Rho
+            ONLY :  MLS_SemiMinor,    &
+                    MLS_SemiMajor,    &
+                    MLS_Rho
 
 
 
@@ -95,6 +93,10 @@ USE Variables_Functions, &
 
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
+            
+USE External_MLS_Profile_Module, &
+            ONLY :  Calc_MLS_ABCs
+
 
 IMPLICIT NONE
 
@@ -155,7 +157,6 @@ REAL(idp), DIMENSION(1:Num_T_Quad_Points)   ::  CosSqr_T
 
 REAL(idp), DIMENSION(1:Num_P_Quad_Points)   ::  SinSqr_P
 REAL(idp), DIMENSION(1:Num_P_Quad_Points)   ::  CosSqr_P
-CHARACTER(LEN=7)                            :: Spheroid_Name
 
 
 CALL TimerStart( Timer_Core_Init_Test_Problem )
@@ -163,36 +164,10 @@ CALL TimerStart( Timer_Core_Init_Test_Problem )
 Src = 0.0_idp
 
 
+CALL Calc_MLS_ABCs( A, B, C, AA, BB, CC )
 
 
-
-SemiMajor_Axis = MacLaurin_SemiMajor
-SemiMinor_Axis = MacLaurin_SemiMinor
-
-IF ( MacLaurin_SphereType == 'P') THEN
-!    Spheroid_Type_Flag  = 2
-    Spheroid_Name       = 'Prolate'
-
-    A = SemiMajor_Axis
-    B = SemiMinor_Axis
-    C = B
-    
-ELSE
-!    Spheroid_Type_Flag  = 1
-    Spheroid_Name       = 'Oblate '
-
-    A = SemiMajor_Axis
-    B = A
-    C = SemiMinor_Axis
-
-END IF
-
-
-AA = A*A
-BB = B*B
-CC = C*C
-
-Density  = MacLaurin_Rho
+Density  = MLS_Rho
 Pressure = 0.0_idp
 Energy   = 0.0_idp
 
@@ -206,12 +181,6 @@ Spec_Ent = C_Square + (Energy + Pressure)/Density
 DROT = Level_dx(Level,1)/2.0_idp
 DTOT = Level_dx(Level,2)/2.0_idp
 DPOT = Level_dx(Level,3)/2.0_idp
-
-
-
-
-
-
 
 DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
@@ -244,6 +213,8 @@ DO re = BLo(1),BHi(1)
 
         IF ( Value .LE. 1.0_idp ) THEN
             Src(re,te,pe,Here) = Density * Spec_Ent - Pressure
+        ELSE
+            Src(re,te,pe,Here) = 0.0_idp
         END IF
 
 !        PRINT*,re,te,pe,Here,Src(re,te,pe,Here)

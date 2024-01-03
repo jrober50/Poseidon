@@ -54,21 +54,21 @@ USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
 
 USE Poseidon_Units_Module, &
-            ONLY :  Grav_Constant_G,    &
-                    Speed_of_Light,     &
-                    C_Square,           &
-                    GR_Source_Scalar,   &
-                    Centimeter,         &
-                    Second,             &
-                    Millisecond,         &
-                    Erg,                &
-                    Gram
+            ONLY :  Centimeter
+            
+USE Parameters_Variable_Indices, &
+            ONLY :  iU_CF
 
-
-USE Variables_Source, &
-            ONLY :  Block_Source_E,             &
-                    Block_Source_S,             &
-                    Block_Source_Si
+USE Driver_Variables, &
+            ONLY :  Driver_NQ,          &
+                    Driver_RQ_xLocs,    &
+                    Driver_xL
+                    
+USE Variables_Driver_AMReX, &
+            ONLY :  xL,                 &
+                    xR,                 &
+                    MaxLevel,           &
+                    nCells
 
 USE Variables_Quadrature, &
             ONLY :  INT_R_LOCATIONS,            &
@@ -79,30 +79,24 @@ USE Variables_Quadrature, &
 
 
 USE Variables_External, &
-            ONLY :  HCT_Alpha,                  &
-                    HCT_Star_Radius
-
-USE Poseidon_AMReX_Multilayer_Utilities_Module, &
-            ONLY :  Find_Coarsest_Parent
-
-USE Variables_Tables, &
-            ONLY :  Level_dx
-
-USE Functions_Math, &
-            ONLY :  Lagrange_Poly
+            ONLY :  HCT_Alpha,              &
+                    HCT_Star_Radius,        &
+                    HCT_Rhoo
 
 USE Timer_Routines_Module, &
             ONLY :  TimerStart,                     &
                     TimerStop
 
-USE Timer_VAriables_Module, &
+USE Timer_Variables_Module, &
             ONLY :  Timer_Core_Init_Test_Problem
 
-USE Variables_Functions, &
-            ONLY :  Potential_Solution
+USE Flags_Initial_Guess_Module, &
+            ONLY :  lPF_IG_Flags,           &
+                    iPF_IG_Set
+                    
+USE Poseidon_Return_Routines_Module, &
+            ONLY :  Calc_Var_at_Location
 
-USE Maps_Quadrature, &
-            ONLY :  Quad_Map
 
 IMPLICIT NONE
 
@@ -139,10 +133,12 @@ INTEGER                                     ::  rd, td, pd
 INTEGER                                     ::  Num_DOF
 
 
-REAL(idp), DIMENSION(1:Num_R_Quad_Points)   ::  cur_r_locs
+REAL(idp)                                   ::  xwidth
+
+REAL(idp), DIMENSION(1:Driver_NQ(1))        ::  cur_r_locs
 REAL(idp)                                   ::  DROT
 
-REAL(idp)                                   ::  fofalpha
+REAL(idp)                                   ::  Psi
 REAL(idp)                                   ::  rho_o
 INTEGER                                     ::  Here
 
@@ -150,12 +146,13 @@ INTEGER                                     ::  Here
 
 CALL TimerStart( Timer_Core_Init_Test_Problem )
 
+rho_o    =  HCT_Rhoo
 
-fofalpha            =  HCT_Alpha**5/(1.0_idp+HCT_Alpha*HCT_Alpha)**3
-rho_o               =  (3.0_idp/(2.0_idp*pi*HCT_Star_Radius*HCT_Star_Radius) )*fofalpha*fofalpha
+xwidth   = Driver_xL(2)-Driver_xL(1)
 
-DROT = Level_dx(Level,1)/2.0_idp
-Num_DOF = nComps/5
+
+DROT     = (((xR(1)-xL(1))*Centimeter)/(nCells(1)*2.0_idp**Level ))/xwidth
+Num_DOF  = nComps/5
 
 
 Src = 0.0_idp
@@ -164,24 +161,30 @@ DO te = BLo(2),BHi(2)
 
 DO re = BLo(1),BHi(1)
 
-    Cur_r_locs(:) = DROT * (Int_R_Locations(:) + 1.0_idp + re*2.0_idp)
+    Cur_R_Locs(:) = DROT * (Driver_RQ_xlocs(:) - Driver_xL(1) + re*xwidth)
     
 
-    DO pd = 1,Num_P_Quad_Points
-    DO td = 1,Num_T_Quad_Points
-    DO rd = 1,Num_R_Quad_Points
+    DO pd = 1,Driver_NQ(3)
+    DO td = 1,Driver_NQ(2)
+    DO rd = 1,Driver_NQ(1)
 
 
         Here = (pd-1)*Num_R_Quad_Points*Num_T_Quad_Points       &
              + (td-1)*Num_R_Quad_Points                         &
              + rd
 
+        
         IF ( Cur_R_Locs(rd) .LE. HCT_Star_Radius ) THEN
-            Src(re,te,pe,Here) = rho_o
+            IF ( lPF_IG_Flags(iPF_IG_Set) ) THEN
+                Psi = Calc_Var_at_Location(Cur_R_Locs(rd),0.0_idp,0.0_idp, iU_CF)
+                Src(re,te,pe,Here) = Psi**6 * rho_o
+            ELSE
+                Src(re,te,pe,Here) = rho_o
+            END IF
         ELSE
             Src(re,te,pe,Here) = 0.0_idp
         END IF
-
+        
     END DO ! rq
     END DO ! tq
     END DO ! pq

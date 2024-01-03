@@ -67,7 +67,7 @@ IF ( Verbose_Flag ) CALL Driver_Init_Message('Calculating boundary conditions.')
 
 Psi_BC          = 1.0_idp
 AlphaPsi_BC     = 1.0_idp
-Shift_Vector_BC = -1.0E2_idp
+Shift_Vector_BC = -1.0E7_idp
 
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)

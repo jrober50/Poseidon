@@ -1,15 +1,14 @@
 HDF5_DIR       = /usr/local/hdf5
 
 AMREX_HOME    ?= $(AMREX_DIR)
-HDF5_HOME     ?= $(myHDF5_DIR)
-LAPACK_HOME   ?= $(myLAPACK_DIR)
+HDF5_HOME     ?= $(HDF5_DIR)
+LAPACK_HOME   ?= $(LAPACK_DIR)
 
 
 
 HDF5_INC       = $(HDF5_HOME)/include
 HDF5_LIB       = $(HDF5_HOME)/lib
 
-LAPACK_INC     = $(LAPACK_HOME)/include
 LAPACK_LIB     = $(LAPACK_HOME)/lib
 
 USE_F_INTERFACES = TRUE
@@ -29,9 +28,8 @@ EBASE     = Yahil_XCFC_AMReX
 
 
 
-INCLUDE_LOCATIONS += $(LAPACK_INC)
 LIBRARY_LOCATIONS += $(LAPACK_LIB)
-#LIBRARIES += -framework Accelerate
+
 LIBRARIES += -llapack -lblas
 
 ifneq ("$(wildcard $(AMREX_HOME)/Src/DG/Make.package)","")

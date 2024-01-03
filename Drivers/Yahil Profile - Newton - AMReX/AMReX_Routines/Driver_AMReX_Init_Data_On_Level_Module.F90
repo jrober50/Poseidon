@@ -70,12 +70,6 @@ USE Poseidon_Units_Module, &
                     Erg,                &
                     Gram
 
-
-USE Variables_Source, &
-            ONLY :  Block_Source_E,             &
-                    Block_Source_S,             &
-                    Block_Source_Si
-
 USE Variables_Quadrature, &
             ONLY :  INT_R_LOCATIONS,            &
                     NUM_R_QUAD_POINTS,          &
@@ -108,17 +102,18 @@ USE Variables_Functions, &
             ONLY :  Potential_Solution
 
 USE Maps_Quadrature, &
-            ONLY :  Quad_Map
+            ONLY :  Quad_Map_Long_Array
 
-
-USE Variables_Interface, &
-            ONLY :  Caller_Set,                     &
-                    Caller_NQ,                      &
-                    Caller_Quad_DOF,                &
-                    Caller_xL,                      &
-                    Caller_RQ_xlocs,                &
-                    Caller_TQ_xlocs,                &
-                    Caller_PQ_xlocs
+USE Driver_Variables, &
+            ONLY :  Driver_NQ,          &
+                    Driver_RQ_xLocs,    &
+                    Driver_xL
+                    
+USE Variables_Driver_AMReX, &
+            ONLY :  xL,                 &
+                    xR,                 &
+                    MaxLevel,           &
+                    nCells
 
 IMPLICIT NONE
 
@@ -148,16 +143,17 @@ REAL(idp),              INTENT(INOUT)       ::  Src(SLo(1):SHi(1),  &
                                                     SLo(3):SHi(3),  &
                                                     nComps          )
 
+REAL(idp)                                   ::  M_Factor
+REAL(idp)                                   ::  R_Factor
+REAL(idp)                                   ::  V_Factor
 REAL(idp)                                   ::  X_Factor
 REAL(idp)                                   ::  D_Factor
 
-
-
-REAL(idp), ALLOCATABLE, DIMENSION(:)        ::  Input_X
-REAL(idp), ALLOCATABLE, DIMENSION(:)        ::  Input_D
-REAL(idp), ALLOCATABLE, DIMENSION(:)        ::  Input_V
-REAL(idp), ALLOCATABLE, DIMENSION(:)        ::  Input_M
-
+REAL(idp), DIMENSION(:),ALLOCATABLE         ::  Input_X,    &
+                                                Input_D,    &
+                                                Input_V,    &
+                                                Input_M,    &
+                                                Input_R
 
 
 CHARACTER(LEN=128)                          :: line_chr
@@ -177,19 +173,34 @@ INTEGER                                     ::  i
 
 REAL(idp)                                   ::  t
 REAL(idp)                                   ::  Kappa_WUnits
-REAL(idp)                                   ::  D_Units
+REAL(idp)                                   ::  E_Units
 
 REAL(idp)                                   ::  x
 REAL(idp)                                   ::  xwidth
 REAL(idp)                                   ::  xloc
 REAL(idp), DIMENSION(0:1)                   ::  xlocs
-REAL(idp), DIMENSION(1:Caller_NQ(1))        ::  cur_r_locs
+REAL(idp), DIMENSION(1:Driver_NQ(1))        ::  Cur_R_Locs
 REAL(idp)                                   ::  DROT
 REAL(idp), DIMENSION(0:1)                   ::  LagPoly_Vals
 
+REAL(idp)                                   ::  velocity
+REAL(idp)                                   ::  vsqr
+REAL(idp)                                   ::  LF_Sqr
+
+REAL(idp)                                   ::  Psi_Holder
 
 REAL(idp)                                   ::  Density
+REAL(idp)                                   ::  Pressure
+REAL(idp)                                   ::  Potential
 
+REAL(idp), DIMENSION(:), ALLOCATABLE        ::  Enclosed_Mass
+REAL(idp), DIMENSION(:), ALLOCATABLE        ::  Newtonian_Potential
+REAL(idp)                                   ::  Energy
+REAL(idp)                                   ::  Specific_Enthalpy
+
+REAL(idp)                                   ::  S
+REAL(idp)                                   ::  Si
+REAL(idp)                                   ::  E
 
 101 FORMAT (a128)
 
@@ -213,10 +224,14 @@ NUM_LINES = NUM_LINES -1
 
 
 
+
 ALLOCATE( Input_X(1:NUM_LINES) )
 ALLOCATE( Input_D(1:NUM_LINES) )
 ALLOCATE( Input_V(1:NUM_LINES) )
+ALLOCATE( Input_R(1:NUM_LINES) )
 ALLOCATE( Input_M(1:NUM_LINES) )
+ALLOCATE( Enclosed_Mass(1:NUM_LINES)  )
+ALLOCATE( Newtonian_Potential(0:NUM_LINES)  )
 
 
 
@@ -251,9 +266,19 @@ END IF
 
 
 
+
+
 t = SelfSim_T*Millisecond
 
-D_Units = Gram/Centimeter**3
+R_Factor = SQRT(Kappa_wUnits)                                &
+        *(Grav_Constant_G**((1.0_idp-SelfSim_Gamma)/2.0_idp))       &
+        *((t)**(2.0_idp-SelfSim_Gamma))
+
+
+Input_R = R_Factor*Input_X
+
+!Input_V = 0.0_idp
+
 
 D_Factor = 1.0_idp/(Grav_Constant_G*t*t )
 
@@ -262,23 +287,13 @@ X_Factor = kappa_WUnits**(-0.5_idp)                                 &
         *((t)**(SelfSim_Gamma-2.0_idp))
 
 
-
-
-
-
-Num_DOF = nComps/5
-
-
-!PRINT*,Int_R_Locations/2.0_idp
-
-
+Num_DOF = nComps
 
 xlocs(0) = -1.0_idp
 xlocs(1) = +1.0_idp
-xwidth  = Caller_xL(2)-Caller_xL(1)
+xwidth  = Driver_xL(2)-Driver_xL(1)
 
-DROT = Level_dx(Level,1)/xwidth
-
+DROT = (((xR(1)-xL(1))*Centimeter)/nCells(1))/xwidth
 
 DO pe = BLo(3),BHi(3)
 DO te = BLo(2),BHi(2)
@@ -286,11 +301,11 @@ DO te = BLo(2),BHi(2)
 line_min = 1
 DO re = BLo(1),BHi(1)
 
-    Cur_R_Locs(:) = DROT * (Caller_RQ_xlocs(:) - Caller_xL(1) + re*xwidth)
+    Cur_R_Locs(:) = DROT * (Driver_RQ_xlocs(:) - Driver_xL(1) + re*xwidth)
     
 
 
-    DO rd = 1,Num_R_Quad_Points
+    DO rd = 1,Driver_NQ(1)
 
         xloc = Cur_R_Locs(rd)*X_Factor
         cur_line = Find_Line(xloc, Input_X, NUM_LINES)
@@ -306,19 +321,24 @@ DO re = BLo(1),BHi(1)
         ! Interpolate Self-Similar Values to Input locations
         Density  = (INPUT_D(Cur_Line)*LagPoly_Vals(0) + INPUT_D(Cur_Line+1)*LagPoly_Vals(1))*D_FACTOR
 
-        
 
-        DO pd = 1,Num_P_Quad_Points
-        DO td = 1,Num_T_Quad_Points
+       
+
+        DO pd = 1,Driver_NQ(3)
+        DO td = 1,Driver_NQ(2)
+
+            
+            here = Quad_Map_Long_Array(rd,td,pd,Driver_NQ)
+
+            Src(re,te,pe,(iS_E-1)*Num_DOF+Here) = Density
 
 
-            here = Quad_Map(rd,td,pd)
-            Src(re,te,pe,Here) = Density
 
 
         END DO ! td
         END DO ! pd
     END DO ! rd
+
 
 END DO ! re
 END DO ! te
@@ -409,3 +429,4 @@ END FUNCTION Map_To_X_Space
 
 
 END MODULE Driver_Init_Data_On_Level_Module
+

@@ -23,10 +23,6 @@ MODULE Driver_SetSource_Module                                              !##!
 !           Dependencies            !
 !                                   !
 !===================================!
-USE Poseidon_Kinds_Module, &
-            ONLY :  idp
-
-
 USE Variables_Driver_AMReX, &
             ONLY :  MF_Driver_Source
 
@@ -34,9 +30,6 @@ USE Variables_Driver_AMReX, &
 USE Poseidon_Interface_Source_Input, &
             ONLY :  Poseidon_Input_Sources
 
-
-
-USE MPI
 
 IMPLICIT NONE
 

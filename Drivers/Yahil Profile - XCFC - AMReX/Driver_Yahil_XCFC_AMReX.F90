@@ -194,8 +194,8 @@ Units_Input         = "G"
 Time_Values         = (/ 51.0_idp, 15.0_idp, 5.0_idp, 1.50_idp, 0.5_idp, 0.05_idp /)
 L_Values            = (/ 5, 10 /)
 
-T_Index_Min         =  4
-T_Index_Max         =  4
+T_Index_Min         =  1
+T_Index_Max         =  1
 
 M_Index_Min         =  3
 M_Index_Max         =  3
@@ -211,7 +211,6 @@ Gamma               = 1.30_idp
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
 NQ(2)               = 1                        ! Number of Theta Quadrature Points
 NQ(3)               = 1                        ! Number of Phi Quadrature Points
-
 
 Left_Limit          = -0.50_idp
 Right_Limit         = +0.50_idp
@@ -419,7 +418,7 @@ DO T_Index = T_Index_Min, T_Index_Max
     !#                       Output Results                     #!
     !#                                                          #!
     !############################################################!
-!    CALL Return_Test(nLevels, NQ, MF_Source)
+    CALL Return_Test(nLevels, NQ, MF_Source)
 
 !    CALL Calc_ADM_Mass(ADM_Mass)
 !    PRINT*,"ADM Mass",ADM_Mass

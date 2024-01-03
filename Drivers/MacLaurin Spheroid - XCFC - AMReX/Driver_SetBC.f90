@@ -28,6 +28,9 @@ USE Poseidon_Kinds_Module, &
 
 USE Poseidon_Numbers_Module, &
             ONLY :  pi
+            
+USE Poseidon_Units_Module, &
+            ONLY :  GravPot_Units
 
 USE Poseidon_Parameters, &
             ONLY :  Verbose_Flag
@@ -48,14 +51,12 @@ USE Variables_Mesh, &
             ONLY :  R_Outer
 
 USE Variables_External, &
-            ONLY :  MacLaurin_SemiMinor,    &
-                    MacLaurin_SemiMajor,    &
-                    MacLaurin_Ecc,          &
-                    MacLaurin_SphereType,   &
-                    MacLaurin_Rho
+            ONLY :  MLS_SemiMinor,    &
+                    MLS_SemiMajor,    &
+                    MLS_Rho
 
-USE MacLaurin_Module, &
-            ONLY :  MacLaurin_Potential_Sub_B
+USE External_MLS_Solution_Module, &
+            ONLY :  MacLaurin_Potential_Sub
 
 IMPLICIT NONE
 
@@ -87,20 +88,26 @@ REAL(idp)                                               ::  Potential
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Calculating boundary conditions.')
 
 
-IF ( MacLaurin_SemiMajor == MacLaurin_SemiMinor ) THEN
+IF ( MLS_SemiMajor == MLS_SemiMinor ) THEN
     
-    Potential = -((4.0_idp/3.0_idp)*pi*MacLaurin_SemiMajor**3*MacLaurin_Rho)*Grav_Constant_G/R_Outer        &
+    Potential = -((4.0_idp/3.0_idp)*pi*MLS_SemiMajor**3*MLS_Rho)*Grav_Constant_G/R_Outer        &
               * gram / centimeter
 ELSE
-    CALL MacLaurin_Potential_Sub_B(R_Outer, 0.5_idp*pi, 0.0_idp,Potential)
+    CALL MacLaurin_Potential_Sub(R_Outer, 0.5_idp*pi, 0.0_idp, Potential)
 END IF
+
+!print*,"Centimeter",Centimeter
+!print*,"R_Outer",R_Outer
+!PRINT*,"Potential",Potential,Potential/GravPot_Units
+!print*,"C_Square",C_Square
 
 Psi_BC      = 1.0_idp - 0.5_idp*Potential/C_Square
 AlphaPsi_BC = 1.0_idp + 0.5_idp*Potential/C_Square
 Shift_Vector_BC = 0.0_idp
 
+!PRINT*,"Psi_BC",Psi_BC
 
-
+!STOP
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)
 OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 

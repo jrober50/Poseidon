@@ -49,10 +49,7 @@ USE IO_Print_Results, &
 
 USE IO_Write_Final_Results, &
             ONLY :  Write_Final_Results
-
-USE IO_Convergence_Output, &
-            ONLY :  Output_Convergence_Reports
-
+            
 USE External_IO_Test_Results_Module, &
             ONLY :  Print_HCT_Error
 
@@ -129,7 +126,7 @@ CHARACTER(LEN=1), DIMENSION(1:5)                        ::  INNER_BC_TYPES, OUTE
 REAL(idp), DIMENSION(1:5)                               ::  INNER_BC_VALUES, OUTER_BC_VALUES
 
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 REAL(idp)                                               ::  Alpha
 REAL(idp)                                               ::  Star_Radius
@@ -221,8 +218,8 @@ M_Index_Max         =  3
 RE_Index_Min        =  4
 RE_Index_Max        =  4
 
-Degree_Min          =  2
-Degree_Max          =  2
+Degree_Min          =  1
+Degree_Max          =  1
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
@@ -247,17 +244,17 @@ Domain_Edge(1)      = 0.0_idp                   ! Inner Radius (cm)
 Domain_Edge(2)      = 8.0_idp * Star_Radius     ! Outer Radius (cm)
 
 
-NE(1)               = 128                       ! Number of Radial Elements
+NE(1)               = 40                       ! Number of Radial Elements
 NE(2)               = 1                         ! Number of Theta Elements
 NE(3)               = 1                         ! Number of Phi Elements
 
 NQ(1)               = 5                        ! Number of Radial Quadrature Points
-NQ(2)               = 5                         ! Number of Theta Quadrature Points
+NQ(2)               = 1                         ! Number of Theta Quadrature Points
 NQ(3)               = 1                         ! Number of Phi Quadrature Points
 
 
-!Verbose             = .TRUE.
-Verbose             = .FALSE.
+Verbose             = .TRUE.
+!Verbose             = .FALSE.
 Print_Results_Flag  = .TRUE.
 !Print_Results_Flag  = .FALSE.
 Suffix_Input        = "Params"
@@ -286,7 +283,7 @@ DO RE_Index = RE_Index_Min, RE_Index_Max
 DO Degree_Input = Degree_Min, Degree_Max
 DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
-    NE(1) = RE_Table(RE_Index)
+!    NE(1) = RE_Table(RE_Index)
     NQ(3) = 2*L_Limit_Input + 1
     Suffix_Tail = Tolerance_Letters(Tol_Index)
 
@@ -361,8 +358,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
            Source_R_Option              = x_e,                          &
            Source_T_Option              = y_e,                          &
            Source_P_Option              = z_e,                          &
-           Method_Flag_Option           = Solver_Type,                  &
-           CFA_Eq_Flags_Option          = CFA_Eqs,                      &
+           Eq_Flags_Option              = CFA_Eqs,                      &
            Max_Iterations_Option        = Max_Iterations,               &
            Convergence_Criteria_Option  = CC_Option,                    &
            Anderson_M_Option            = Anderson_M_Values(M_Index),   &
@@ -484,7 +480,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
 
     !Write_Results_Flag = 1
     IF ( Print_Results_Flag ) THEN
-!        CALL Output_Convergence_Reports()
+
 
 !        CALL Write_Final_Results( Output_Locations_Flag = 2)
 
