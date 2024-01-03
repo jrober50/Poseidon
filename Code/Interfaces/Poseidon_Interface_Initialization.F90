@@ -222,7 +222,7 @@ CONTAINS
 !          Initialize_Poseidon                                      !
 !                                                                   !
  !#################################################################!
-SUBROUTINE Initialize_Poseidon( Source_NE,                          &
+SUBROUTINE Initialize_Poseidon( Source_NE_Option,                   &
                                 Source_NQ,                          &
                                 Source_xL,                          &
                                 Source_RQ_xlocs,                    &
@@ -279,6 +279,7 @@ REAL(idp),  DIMENSION(Source_NQ(2)),    INTENT(IN)          ::  Source_TQ_xlocs
 REAL(idp),  DIMENSION(Source_NQ(3)),    INTENT(IN)          ::  Source_PQ_xlocs
 CHARACTER(LEN=1),                       INTENT(IN)          ::  Source_Units
 CHARACTER(LEN=2),                       INTENT(IN)          ::  Source_Radial_Boundary_Units
+
 REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  Source_R_Option
 REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  Source_T_Option
 REAL(idp), DIMENSION(:), INTENT(IN), OPTIONAL               ::  Source_P_Option
@@ -291,7 +292,7 @@ INTEGER,                 INTENT(IN), OPTIONAL               ::  Dimensions_Optio
 INTEGER,                 INTENT(IN), OPTIONAL               ::  FEM_Degree_Option
 INTEGER,                 INTENT(IN), OPTIONAL               ::  L_Limit_Option
 
-INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  Source_NE
+INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  Source_NE_Option
 REAL(idp), DIMENSION(2), INTENT(IN), OPTIONAL               ::  Domain_Edge_Option
 
 INTEGER,   DIMENSION(3), INTENT(IN), OPTIONAL               ::  Integration_NQ_Option
@@ -402,7 +403,7 @@ CALL Set_Caller_Data(   Source_NQ,                      &
 
     CALL Init_Expansion_Params( FEM_Degree_Option, L_Limit_Option )
 
-    CALL Initialize_Mesh(   Source_NE,                          &
+    CALL Initialize_Mesh(   Source_NE_Option,                   &
                             Domain_Edge_Option,                 &
                             Source_Radial_Boundary_Units,       &
                             Source_R_Option,                    &

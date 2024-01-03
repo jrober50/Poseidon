@@ -82,7 +82,7 @@ CONTAINS
 
 
 
- CHARACTER(LEN = 1),                                INTENT(IN)      ::  BC_Location_Input
+ CHARACTER(LEN = 1),                            INTENT(IN)      ::  BC_Location_Input
  CHARACTER(LEN = 1),    DIMENSION(1:Num_Vars),  INTENT(IN)      ::  BC_Type_Input
 
  REAL(idp),             DIMENSION(1:Num_Vars),  INTENT(IN)      ::  BC_Value_Input
