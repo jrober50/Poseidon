@@ -56,7 +56,7 @@ include ../../Build/Makefile_Core
 include Makefile_Driver
 
 
-main : $(POSEIDON_o) $(DRIVER_o) Yahil_Profile_Poisson_Native.o
+main : $(POSEIDON_o) $(DRIVER_o) Yahil_Profile_Newton_Native.o
 	@echo "         compiling with $(COMP_$(MACHINE_NAME)) :"
 	$(FORT) $(STD) $(OBJ)/*.o -o $(BIN)/$(TEST_NAME).x $(LIB_LINKER)
 	@echo ">>> compiled on `hostname -s` with $(FORT_$(MACHINE_NAME)) <<<"

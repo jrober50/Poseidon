@@ -162,11 +162,11 @@ M_Index_Min         =  3
 M_Index_Max         =  3
 
 !Surface_RE_Index    =  1
-RE_Index_Min        =  7
-RE_Index_Max        =  7
+RE_Index_Min        =  5
+RE_Index_Max        =  5
 
-Degree_Min          =  1
-Degree_Max          =  1
+Degree_Min          =  2
+Degree_Max          =  2
 
 L_Limit_Min         =  0
 L_Limit_Max         =  0
