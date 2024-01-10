@@ -3,7 +3,7 @@
 !######################################################################################!
 !##!                                                                                !##!
 !##!                                                                                !##!
-MODULE Source_Input_XCFC_AMReX_Module                                               !##!
+MODULE Source_Input_AMReX_Module                                               !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
 !##!                                                                                !##!
@@ -119,10 +119,10 @@ CONTAINS
 #ifdef POSEIDON_AMREX_FLAG
 !+101+##########################################################################!
 !                                                                               !
-!                           Poseidon_Input_Sources                              !
+!          Poseidon_Input_Sources_AMREX                                         !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX(   MF_Src_Input,          &
+SUBROUTINE Poseidon_Input_Sources_AMREX(   MF_Src_Input,          &
                                                 Num_Levels,            &
                                                 Input_NQ,              &
                                                 Input_R_Quad,          &
@@ -220,15 +220,15 @@ END IF
 
 
 
-END SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX
+END SUBROUTINE Poseidon_Input_Sources_AMREX
 
 
 !+102+##########################################################################!
 !                                                                               !
-!                           Poseidon_Input_Sources                              !
+!          Poseidon_Input_Sources_AMREX_Caller                                  !
 !                                                                               !
 !###############################################################################!
-SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller( MF_Src_Input )
+SUBROUTINE Poseidon_Input_Sources_AMREX_Caller( MF_Src_Input )
 
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:)
 
@@ -332,7 +332,7 @@ ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
 
 END IF ! Existence of MF_Source
 
-END SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller
+END SUBROUTINE Poseidon_Input_Sources_AMREX_Caller
 
 
 
@@ -344,7 +344,7 @@ END SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller
 
 !+201+##########################################################################!
 !                                                                               !
-!                           Poseidon_Input_Sources                              !
+!          Poseidon_Input_Sources_Part1_AMReX                                   !
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX(  MF_Src_Input,           &
@@ -439,7 +439,7 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 
 !+101+##########################################################################!
 !                                                                               !
-!                           Poseidon_Input_Sources                              !
+!          Poseidon_Input_Sources_Part1_AMReX_Caller                            !
 !                                                                               !
 !###############################################################################!
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller( MF_Src_Input   )
@@ -686,9 +686,9 @@ END FUNCTION Multifab_Issame
 #else
 
 
-SUBROUTINE Poseidon_Input_Sources_XCFC_AMReX( )
+SUBROUTINE Poseidon_Input_Sources_AMReX( )
 STOP "Warning: You are attempting to use an AMReX function while the pre-compiler flag, POSEIDON_AMREX_FLAG, is false."
-END SUBROUTINE Poseidon_Input_Sources_XCFC_AMReX
+END SUBROUTINE Poseidon_Input_Sources_AMReX
 
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX( )
 STOP "Warning: You are attempting to use an AMReX function while the pre-compiler flag, POSEIDON_AMREX_FLAG, is false."
@@ -696,10 +696,10 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX
 
 
 
-SUBROUTINE Poseidon_Input_Sources_XCFC_AMReX_Caller( A_Difference )
+SUBROUTINE Poseidon_Input_Sources_AMReX_Caller( A_Difference )
 INTEGER     :: A_Difference
 STOP "Warning: You are attempting to use an AMReX function while the pre-compiler flag, POSEIDON_AMREX_FLAG, is false."
-END SUBROUTINE Poseidon_Input_Sources_XCFC_AMReX_Caller
+END SUBROUTINE Poseidon_Input_Sources_AMReX_Caller
 
 SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller( A_Difference )
 INTEGER     :: A_Difference
@@ -718,4 +718,4 @@ END SUBROUTINE Poseidon_Input_Sources_Part1_AMReX_Caller
 
 
 
-END MODULE Source_Input_XCFC_AMReX_Module
+END MODULE Source_Input_AMReX_Module
