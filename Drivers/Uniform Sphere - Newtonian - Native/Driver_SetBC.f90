@@ -52,7 +52,7 @@ USE Poseidon_Interface_Boundary_Conditions, &
 
 USE Variables_External, &
             ONLY :  UST_Rhoo,          &
-                    UST_Star_Radius
+                    UST_StarRadius
 
 
 IMPLICIT NONE

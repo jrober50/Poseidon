@@ -143,7 +143,7 @@ INTEGER,   DIMENSION(5)                                 ::  CFA_EQs
 
 
 CHARACTER(LEN=10)                                       ::  Suffix_Input
-CHARACTER(LEN=1)                                        ::  Suffix_Tail
+CHARACTER(LEN=4)                                        ::  Suffix_Tail
 
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Cur_R_Locs
 REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  Input_R_Quad
@@ -221,8 +221,8 @@ RE_Table            = (/ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 /)
 Anderson_M_Values   = (/ 1, 2, 3, 4, 5, 10, 20, 50 /)
 L_Values            = (/ 5, 10 /)
 
-RE_Index_Min        =  6
-RE_Index_Max        =  6
+RE_Index_Min        =  8
+RE_Index_Max        =  8
 
 Degree_Min          =  1
 Degree_Max          =  1
@@ -248,7 +248,7 @@ CC_Option           = 1.0E-10_idp
 
 Mesh_Type           = 1                         ! 1 = Uniform, 2 = Log, 3 = Split, 4 = Zoom
 Domain_Edge(1)      = 1.0_idp                   ! Inner Radius (cm)
-Domain_Edge(2)      = 2.0_idp                   ! Outer Radius (cm)
+Domain_Edge(2)      = 1.0E+5_idp                   ! Outer Radius (cm)
 
 
 
@@ -279,8 +279,8 @@ Write_Results_T_Samps = 1
 CALL Set_Units(Units_Input)
 
 
-Domain_Edge(2) = Domain_Edge(2)/(10**i)
-Domain_Edge = Domain_Edge*Centimeter
+!Domain_Edge(2) = Domain_Edge(2)/(10**i)
+!Domain_Edge = Domain_Edge
 
 
 DO M_Index = M_Index_Min, M_Index_Max
@@ -366,8 +366,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
            Source_R_Option              = x_e,                          &
            Source_T_Option              = y_e,                          &
            Source_P_Option              = z_e,                          &
-           Method_Flag_Option           = Solver_Type,                  &
-           CFA_Eq_Flags_Option          = CFA_Eqs,                      &
+           Eq_Flags_Option              = CFA_Eqs,                      &
            Max_Iterations_Option        = Max_Iterations,               &
            Convergence_Criteria_Option  = CC_Option,                    &
            Anderson_M_Option            = Anderson_M_Values(M_Index),   &
@@ -478,7 +477,7 @@ DO L_Limit_Input = L_Limit_Min, L_Limit_Max
         
     END IF
 
-    CALL Write_Final_Results(CFA_Eq_Overide = (/ 1, 1, 1, 1, 1 /))
+    CALL Write_Final_Results(u_Overide = (/ 1, 1, 1, 1, 1 /))
 
 
     CALL TimerStop( Timer_Driver_Extra )

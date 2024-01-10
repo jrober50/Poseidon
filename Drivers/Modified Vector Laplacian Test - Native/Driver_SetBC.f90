@@ -71,14 +71,16 @@ REAL(idp), DIMENSION(1:5)                       ::  INNER_BC_VALUES, OUTER_BC_VA
 
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Calculating boundary conditions.')
 
-Shift_Vector_BC = -1.0E2_idp
-CALL Set_MVL_Test_Params(Shift_Vector_BC)
+Shift_Vector_BC = -1.0E7_idp
+
 
 INNER_BC_TYPES = (/"N", "N","N","N","N"/)
 OUTER_BC_TYPES = (/"D", "D","D","D","D"/)
 
 INNER_BC_VALUES = (/0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp, 0.0_idp /)
 OUTER_BC_VALUES = (/1.0_idp, 1.0_idp, Shift_Vector_BC, 0.0_idp, 0.0_idp /)
+
+CALL Set_MVL_Test_Params()
 
 
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Setting boundary conditions.')
