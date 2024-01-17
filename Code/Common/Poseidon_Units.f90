@@ -28,7 +28,8 @@ MODULE Poseidon_Units_Module                                                    
 USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
-
+USE Poseidon_Message_Routines_Module, &
+            ONLY :  Warning_Message
 
 
 
@@ -36,21 +37,23 @@ USE Poseidon_Kinds_Module, &
 IMPLICIT NONE
 
 REAL(idp)               ::  Speed_of_Light_MKS  = 2.99792458e8_idp
-REAL(idp)               ::  Grav_Constant_MKS   = 6.673e-11_idp
+REAL(idp)               ::  Grav_Constant_MKS   = 6.6743e-11_idp
+REAL(idp)               ::  Solar_Radius_MKS    = 6.957E+8_idp
+REAL(idp)               ::  Solar_Mass_MKS      = 1.988435E+30_idp
 
 REAL(idp)               ::  Grav_Constant_G
 REAL(idp)               ::  Speed_of_Light
 REAL(idp)               ::  C_Square
 REAL(idp)               ::  GR_Source_Scalar
 REAL(idp)               ::  Meter, Kilometer, Centimeter
-REAL(idp)               ::  Gram, Kilogram, SolarMass
+REAL(idp)               ::  Gram, Kilogram
 REAL(idp)               ::  Second, Millisecond
 REAL(idp)               ::  Joule, Erg, Newton
 REAL(idp)               ::  GravPot_Units, Shift_Units
 REAL(idp)               ::  E_Units, S_Units, Si_Units
-REAL(idp)               ::  rho_Units
+REAL(idp)               ::  Density_Units
 
-REAL(idp)               ::  Solar_Mass
+REAL(idp)               ::  Solar_Mass, Solar_Radius
 
 
 
@@ -89,7 +92,6 @@ IF ( Units_Flag == "C" ) THEN
     ! Mass
     Gram        = 1.0_idp
     Kilogram    = 1.0E+3_idp * Gram
-    SolarMass   = 1.98892E30_idp * Kilogram
 
     ! Time
     Second      = 1.0_idp
@@ -120,7 +122,6 @@ ELSE IF ( Units_Flag == "S" ) THEN
     ! Mass
     Kilogram    = 1.0_idp
     Gram        = 1.0E-3_idp * Kilogram
-    SolarMass   = 1.98892E30_idp * Kilogram
 
     ! Time
     Second      = 1.0_idp
@@ -161,7 +162,6 @@ ELSE IF ( Units_Flag == "G" ) THEN
     ! Mass
     Kilogram    = (Grav_Constant_MKS/Grav_Constant_G) * Meter**3/Second**2
     Gram        = 1.0E-3_idp * Kilogram
-    SolarMass   = 1.98892E30_idp * Kilogram
 
 ELSE IF ( Units_Flag == "U" ) THEN
     ! Unitless
@@ -184,15 +184,23 @@ ELSE IF ( Units_Flag == "U" ) THEN
     ! Mass
     Kilogram    = 1.0_idp
     Gram        = 1.0_idp
-    SolarMass   = 1.0_idp
 
+ELSE
 
-
+    Write(*,'(A,A,A)') "Poseidon Error : Unit specifier '",Units_Flag,"' is not a valid input."
+    WRITE(*,'(A)') "         Acceptable values are : "
+    WRITE(*,'(A)') "            C  - CGS Units "
+    WRITE(*,'(A)') "            S  - MKS Units "
+    WRITE(*,'(A)') "            G  - Geometrized Units "
+    WRITE(*,'(A)') "            U  - No Units "
+    WRITE(*,'(A)') "Poseidon will not exit the program."
+    CALL EXIT
+    
 END IF
 
 
 
-C_Square = Speed_of_Light*Speed_of_Light
+C_Square         = Speed_of_Light*Speed_of_Light
 GR_Source_Scalar = Grav_Constant_G/(C_SQUARE*C_SQUARE)
 
 Joule           = Kilogram * (Meter/Second)**2
@@ -205,9 +213,10 @@ E_Units         = Erg/Centimeter**3
 S_Units         = Erg/Centimeter**3
 Si_Units        = Gram/(Second*Centimeter**2)
 
-rho_Units       = Gram/(Centimeter**3)
+Density_Units   = Gram/(Centimeter**3)
 
-Solar_Mass      = 1.988435E+30 * Kilogram
+Solar_Mass      = Solar_Mass_MKS * Kilogram
+Solar_Radius    = Solar_Radius_MKS * Meter
 
 END SUBROUTINE Set_Units
 

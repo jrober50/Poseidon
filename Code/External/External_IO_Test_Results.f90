@@ -56,6 +56,9 @@ USE External_UST_Solution_Module, &
 
 USE External_MLS_Solution_Module, &
             ONLY :  MacLaurin_Potential_Sub
+            
+USE External_CCS_Solution_Module, &
+            ONLY :  CCS_Potential
 
 USE Poseidon_Return_Routines_Module, &
             ONLY :  Calc_Var_At_Location
@@ -66,6 +69,11 @@ USE Functions_Mesh, &
 
 USE Variables_Functions, &
             ONLY :  Potential_Solution
+            
+USE Flags_Core_Module, &
+            ONLY :  iPF_Core_Flags,         &
+                    iPF_Core_Method_Mode,   &
+                    iPF_Core_Method_Newtonian
             
 IMPLICIT NONE
 
@@ -465,6 +473,112 @@ END DO
 
 
 END SUBROUTINE Print_Yahil_Error
+
+
+
+
+
+
+
+
+
+ !+101+####################################################!
+!                                                           !
+!                                                            !
+!                                                           !
+ !#########################################################!
+SUBROUTINE Print_CCS_Error()
+
+
+INTEGER                                                 ::  i
+REAL(idp)                                               ::  r, theta, phi
+REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_e
+REAL(idp), DIMENSION(:), ALLOCATABLE                    ::  x_c, dx_c
+
+
+REAL(idp)                                               ::  Psi
+
+REAL(idp)                                               ::  CCS_Sol
+REAL(idp)                                               ::  CCS_Error
+
+
+INTEGER                                                 ::  Num_Samples = 20
+
+110 FORMAT (8X,A,20X,A,16X,A,9X,A)
+111 FORMAT (ES22.15,3X,ES22.15,3X,ES22.15,3X,ES22.15)
+
+
+
+ALLOCATE( x_e(0:Num_Samples) )
+ALLOCATE( x_c(1:Num_Samples) )
+ALLOCATE( dx_c(1:Num_Samples) )
+
+IF ( R_Outer - R_Inner > 1000.0_idp ) THEN
+    Call Create_Logarithmic_1D_Mesh( max(R_Inner,0.1),           &
+                                     R_Outer,           &
+                                     Num_Samples,       &
+                                     x_e, x_c, dx_c     )
+ELSE
+
+    CALL Create_Uniform_1D_Mesh( R_Inner, R_Outer, Num_Samples, x_e, x_c, dx_c )
+
+END IF
+
+
+theta = 0.5_idp * pi
+phi = 0.5_idp * pi
+
+
+
+WRITE(*,'(A,F4.2,A,F4.2,A)')"Results taken along ray, theta = ",theta/pi," Pi Radians, Phi = ",phi/pi," Pi Radians"
+
+
+WRITE(*,110)"r (cm)","Psi","Analytic Solution","Relative Error"
+
+DO i = 0,Num_Samples
+
+    r = x_e(i)
+
+
+    
+    
+    
+    
+    
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+!        Psi = Calc_Var_At_Location(r,theta,phi,iU_CF)/GravPot_Units
+!        CCS_Sol   = CCS_Potential(r)/GravPot_Units
+        
+           
+        Psi       = 1.0_idp - 0.5_idp*Calc_Var_At_Location(r,theta,phi,iU_CF)/(GravPot_Units*C_Square)
+        CCS_Sol   = 1.0_idp - 0.5_idp*CCS_Potential(r)/(C_Square*GravPot_Units)
+    ELSE
+        Psi = Calc_Var_At_Location(r,theta,phi,iU_CF)
+        CCS_Sol   =  1.0_idp - 0.5_idp*CCS_Potential(r)/(C_Square)
+        
+        
+!        Psi = 2.0_idp*C_Square*(1.0_idp - Calc_Var_At_Location(r,theta,phi,iU_CF))/GravPot_Units
+!        CCS_Sol   = CCS_Potential(r)/GravPot_Units
+
+    END IF
+    
+    
+    CCS_Error = abs(CCS_Sol - (Psi))/MAXVAL([abs(CCS_Sol),abs(Psi)])
+
+
+    WRITE(*,111) r/Centimeter,      &
+                 Psi,               &
+                 CCS_Sol,           &
+                 CCS_Error
+
+END DO
+
+
+END SUBROUTINE Print_CCS_Error
+
+
+
+
 
 
 

@@ -87,6 +87,11 @@ INTEGER,    PUBLIC                                      :: CFLD_Iters     = 0
 REAL(idp),  PUBLIC                                      :: CFLD_Tolerance = 0.0_idp
 
 
+REAL(idp)                                               ::  CCS_SurfaceRadius
+REAL(idp)                                               ::  CCS_CoreDensity
+REAL(idp)                                               ::  CCS_CoreRadius
+
+
 END MODULE Variables_External
 
 

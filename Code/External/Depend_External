@@ -64,3 +64,8 @@ External_IO_Test_Results.o:     \
   Functions_Mesh.o              \
   External_IO_Test_Results.f90  \
 
+External_CCS_Profile.o:         \
+  Poseidon_Kinds.o              \
+  Poseidon_Numbers.o            \
+  Poseidon_Units.o              \
+  Variables_External.o          \
