@@ -37,7 +37,7 @@ USE Poseidon_Message_Routines_Module, &
 IMPLICIT NONE
 
 REAL(idp)               ::  Speed_of_Light_MKS  = 2.99792458e8_idp
-REAL(idp)               ::  Grav_Constant_MKS   = 6.6743e-11_idp
+REAL(idp)               ::  Grav_Constant_MKS   = 6.673e-11_idp
 REAL(idp)               ::  Solar_Radius_MKS    = 6.957E+8_idp
 REAL(idp)               ::  Solar_Mass_MKS      = 1.988435E+30_idp
 
