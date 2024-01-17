@@ -34,16 +34,17 @@ jobs:
     
       - name: Set Environment Variables
         run: |
+          echo "THORNADO_DIR=${GITHUB_WORKSPACE}"               >> ${GITHUB_OUTPUT}
           echo "HDF5_INC=/usr/include/hdf5/serial"              >> ${GITHUB_OUTPUT}
           echo "HDF5_LIB=/usr/lib/x86_64-linux-gnu/hdf5/serial" >> ${GITHUB_OUTPUT}
           echo "LAPACK_LIB=/usr/lib/x86_64-linux-gnu"           >> ${GITHUB_OUTPUT}
           echo "BLAS_LIB=/usr/lib/x86_64-linux-gnu"             >> ${GITHUB_OUTPUT}
-          echo "THORNADO_DIR=${GITHUB_WORKSPACE}"               >> ${GITHUB_OUTPUT}
           echo "WEAKLIB_DIR=${GITHUB_WORKSPACE}/weaklib"        >> ${GITHUB_OUTPUT}
           echo "AMREX_DIR=${GITHUB_WORKSPACE}/amrex"            >> ${GITHUB_OUTPUT}
           echo "POSEIDON_DIR=${GITHUB_WORKSPACE}/poseidon"      >> ${GITHUB_OUTPUT}
-
-
+          
+          echo ${GITHUB_WORKSPACE}
+          echo ${THORNADO_DIR}
       - name: Compile SandBox/YahilCollapse_XCFC
         run: |
           cd ${THORNADO_DIR}/SandBox/YahilCollapse_XCFC/Executables
