@@ -262,7 +262,7 @@ CALL Initialize_Poseidon &
             Dimensions_Option            = Dimension_Input,              &
             FEM_Degree_Option            = Degree_Input,                 &
             L_Limit_Option               = L_Limit_Input,                &
-            Source_NE                    = NE,                           &
+            Source_NE)Option             = NE,                           &
             Domain_Edge_Option           = Domain_Edge,                  &
             Source_NQ                    = NQ,                           &
             Source_xL                    = [Left_Limit, Right_Limit],    &
