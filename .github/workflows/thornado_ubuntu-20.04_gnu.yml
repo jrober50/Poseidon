@@ -50,18 +50,18 @@ jobs:
           echo "C"
           echo ${LAPACK_LIB}
 
-      - name: Compile SandBox/YahilCollapse_XCFC
-        run: |
-          cd ${THORNADO_DIR}/SandBox/YahilCollapse_XCFC/Executables
-          make
-          make clobber
-
- 
-      - name: Compile SandBox/AdiabaticCollapse_XCFC
-        run: |
-          cd ${THORNADO_DIR}/SandBox/AdiabaticCollapse_XCFC/Executables
-          make
-          make clobber
+#      - name: Compile SandBox/YahilCollapse_XCFC
+#        run: |
+#          cd ${THORNADO_DIR}/SandBox/YahilCollapse_XCFC/Executables
+#          make
+#          make clobber
+#
+# 
+#      - name: Compile SandBox/AdiabaticCollapse_XCFC
+#        run: |
+#          cd ${THORNADO_DIR}/SandBox/AdiabaticCollapse_XCFC/Executables
+#          make
+#          make clobber
 
       - name: Compile SandBox/AMReX/Applications/YahilCollapse_XCFC
         run: |
