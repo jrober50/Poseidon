@@ -49,18 +49,18 @@ jobs:
           echo "AMREX_DIR=${GITHUB_WORKSPACE}/amrex"            >> ${GITHUB_ENV}
           echo "POSEIDON_DIR=${GITHUB_WORKSPACE}"      >> ${GITHUB_ENV}
 
-#      - name: Compile SandBox/YahilCollapse_XCFC
-#        run: |
-#          cd ${THORNADO_DIR}/SandBox/YahilCollapse_XCFC/Executables
-#          make
-#          make clobber
-#
-#
-#      - name: Compile SandBox/AdiabaticCollapse_XCFC
-#        run: |
-#          cd ${THORNADO_DIR}/SandBox/AdiabaticCollapse_XCFC/Executables
-#          make
-#          make clobber
+      - name: Compile SandBox/YahilCollapse_XCFC
+        run: |
+          cd ${THORNADO_DIR}/SandBox/YahilCollapse_XCFC/Executables
+          make
+          make clobber
+
+
+      - name: Compile SandBox/AdiabaticCollapse_XCFC
+        run: |
+          cd ${THORNADO_DIR}/SandBox/AdiabaticCollapse_XCFC/Executables
+          make
+          make clobber
 
       - name: Compile SandBox/AMReX/Applications/YahilCollapse_XCFC
         run: |
