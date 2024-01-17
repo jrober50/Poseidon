@@ -37,6 +37,13 @@ jobs:
           echo "HDF5_LIB=/usr/lib/x86_64-linux-gnu/hdf5/serial/lib"     >> ${GITHUB_ENV}
           echo "LAPACK_DIR=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
           echo "LAPACK_LIB=/usr/lib/x86_64-linux-gnu/lapack"            >> ${GITHUB_ENV}
+          
+          echo "A"
+          echo ${GITHUB_WORKSPACE}
+          echo "B"
+          echo ${POSEIDON_DIR}
+          echo "C"
+          echo ${LAPACK_LIB}
       - name: Compile Drivers/Yahil Profile - XCFC - Native
         timeout-minutes: 2
         run: |

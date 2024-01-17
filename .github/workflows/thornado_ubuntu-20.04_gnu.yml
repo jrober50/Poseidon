@@ -47,6 +47,8 @@ jobs:
           echo ${GITHUB_WORKSPACE}
           echo "B"
           echo ${THORNADO_DIR}
+          echo "C"
+          echo ${LAPACK_LIB}
       - name: Compile SandBox/YahilCollapse_XCFC
         run: |
           cd ${THORNADO_DIR}/SandBox/YahilCollapse_XCFC/Executables
