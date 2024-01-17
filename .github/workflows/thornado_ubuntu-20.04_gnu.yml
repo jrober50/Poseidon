@@ -58,6 +58,7 @@ jobs:
 
       - name: Compile SandBox/AMReX/Applications/YahilCollapse_XCFC
         run: |
+          ls
           ls ${POSEIDON_DIR}
           ls ${POSEIDON_DIR}/Build
           cd ${THORNADO_DIR}/SandBox/AMReX/Applications/YahilCollapse_XCFC
