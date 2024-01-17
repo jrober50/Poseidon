@@ -41,7 +41,7 @@ jobs:
           echo "BLAS_LIB=/usr/lib/x86_64-linux-gnu"             >> ${GITHUB_ENV}
           echo "WEAKLIB_DIR=${GITHUB_WORKSPACE}/weaklib"        >> ${GITHUB_ENV}
           echo "AMREX_DIR=${GITHUB_WORKSPACE}/amrex"            >> ${GITHUB_ENV}
-          echo "POSEIDON_DIR=${GITHUB_WORKSPACE}/poseidon"      >> ${GITHUB_ENV}
+          echo "POSEIDON_DIR=${GITHUB_WORKSPACE}/Poseidon"      >> ${GITHUB_ENV}
 
 #      - name: Compile SandBox/YahilCollapse_XCFC
 #        run: |
