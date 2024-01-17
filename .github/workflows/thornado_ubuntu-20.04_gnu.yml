@@ -3,7 +3,7 @@ name: Compile thornado on Ubuntu 20.04 with gnu compilers
 on: [ push, pull_request ]
 
 jobs:
-  compile-with-amrex_gnu:
+  thornado-compile-with-amrex_gnu:
     name: Compile thornado on Ubuntu 20.04 with gnu compilers
     runs-on: ubuntu-20.04
     env:
@@ -41,7 +41,7 @@ jobs:
           echo "BLAS_LIB=/usr/lib/x86_64-linux-gnu"             >> ${GITHUB_ENV}
           echo "WEAKLIB_DIR=${GITHUB_WORKSPACE}/weaklib"        >> ${GITHUB_ENV}
           echo "AMREX_DIR=${GITHUB_WORKSPACE}/amrex"            >> ${GITHUB_ENV}
-          echo "POSEIDON_DIR=${GITHUB_WORKSPACE}/Poseidon"      >> ${GITHUB_ENV}
+          echo "POSEIDON_DIR=${GITHUB_WORKSPACE}"      >> ${GITHUB_ENV}
 
 #      - name: Compile SandBox/YahilCollapse_XCFC
 #        run: |
