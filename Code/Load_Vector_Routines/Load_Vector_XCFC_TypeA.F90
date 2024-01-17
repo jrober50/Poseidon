@@ -277,8 +277,9 @@ INTEGER, INTENT(IN), DIMENSION(3),      OPTIONAL    ::  ELo_Opt
 INTEGER                                             ::  rd, tpd, td, pd
 
 INTEGER                                             ::  FEM_Elem
-REAL(KIND = idp)                                    ::  DROT,     &
-                                                        DTOT
+REAL(KIND = idp)                                    ::  DROT,       &
+                                                        DTOT,       &
+                                                        DPOT
 
 INTEGER                                             ::  Level, i
 INTEGER                                             ::  iCE(3)
@@ -324,6 +325,8 @@ END DO
 FEM_Elem = FEM_Elem_Map(iE(1),Level)
 DROT = Level_dx(Level,1)/2.0_idp
 DTOT = Level_dx(Level,2)/2.0_idp
+DPOT = Level_dx(Level,3)/2.0_idp
+
 
 CUR_R_LOCS(:) = DROT * (Int_R_Locations(:) + 1.0_idp + iE(1)*2.0_idp)
 CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
@@ -336,6 +339,8 @@ CUR_T_LOCS(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
 FEM_Elem = iE(1)
 DROT = 0.5_idp * (rlocs(iE(1)+1) - rlocs(iE(1)))
 DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
+DPOT = 0.5_idp * (plocs(iE(3)+1) - plocs(iE(3)))
+
 
 CUR_R_LOCS(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
 CUR_T_LOCS(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
@@ -375,15 +380,11 @@ DO rd = 1,NUM_R_QUAD_POINTS
     TP_RSIN_SQUARE(:,rd) = R_SQUARE(rd)*TP_SIN_SQUARE(:)
 END DO
 
-
-CALL Calc_Int_Weights( DROT, DTOT,                  &
-                       R_Square, TP_Sin_Val,        &
-                       R_Int_Weights, TP_Int_Weights )
-
 CALL Calc_CurVals_XCFC_TypeA( iE,       &
                               iU,       &
                               DROT,     &
                               DTOT,     &
+                              DPOT,     &
                               Level     )
 
 CALL Create_Vector_XCFC_TypeA( iE, iU, Level, FEM_Elem )
@@ -485,11 +486,11 @@ END SUBROUTINE Create_Vector_XCFC_TypeA
 !          Calc_CurVals_XCFC_TypeA                                  !
 !                                                                   !
  !#################################################################!
-SUBROUTINE Calc_CurVals_XCFC_TypeA( iE, iU, DROT, DTOT, Level )
+SUBROUTINE Calc_CurVals_XCFC_TypeA( iE, iU, DROT, DTOT, DPOT, Level )
 
 INTEGER, INTENT(IN), DIMENSION(3)                               ::  iE
 INTEGER, INTENT(IN)                                             ::  iU
-REAL(KIND = idp), INTENT(IN)                                    ::  DROT, DTOT
+REAL(KIND = idp), INTENT(IN)                                    ::  DROT, DTOT, DPOT
 INTEGER, INTENT(IN)                                             ::  Level
 
 
@@ -502,8 +503,8 @@ INTEGER                                                         ::  tpd, rd
 INTEGER                                                         ::  i, j
 
 
-CALL Calc_Int_Weights( DROT, DTOT,                      &
-                       R_Square, TP_Sin_Val,               &
+CALL Calc_Int_Weights( DROT, DTOT,  DPOT,               &
+                       R_Square, TP_Sin_Val,            &
                        R_Int_Weights, TP_Int_Weights    )
 
 CALL Calc_Val_On_Elem_TypeA( iE, Cur_Val_Psi, iU_CF, Level )
@@ -572,7 +573,7 @@ IF ( iU == iU_CF ) THEN
 !
     SourceTerm(:,:,iU) = -TwoPi * GR_Source_Scalar / Cur_Val_Psi(:,:)   &
                         * PhysSrc(:,:)                                  &
-                      -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
+                        -1.0_idp / ( 8.0_idp * Cur_Val_Psi(:,:)**7)       &
                         * AA_Array(:,:)
 
 

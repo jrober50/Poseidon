@@ -26,6 +26,12 @@ MODULE Poseidon_Message_Routines_Module                                      !##
 
 
 IMPLICIT NONE
+PRIVATE
+
+PUBLIC ::   Init_Message
+PUBLIC ::   Run_Message
+PUBLIC ::   Warning_Message
+PUBLIC ::   Driver_Init_Message
 
 
 CONTAINS

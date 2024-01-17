@@ -55,7 +55,10 @@ USE Variables_Quadrature, &
                     NUM_TP_QUAD_POINTS,         &
                     INT_R_LOCATIONS,            &
                     INT_T_LOCATIONS,            &
-                    INT_P_LOCATIONS
+                    INT_P_LOCATIONS,            &
+                    Int_R_Weights,              &
+                    Int_T_Weights,              &
+                    Int_P_Weights
 
 USE Variables_Mesh, &
             ONLY :  NUM_R_ELEMENTS,             &
@@ -425,8 +428,9 @@ INTEGER, INTENT(IN), DIMENSION(3),      OPTIONAL    ::  ELo_Opt
 INTEGER                                             ::  rd, tpd, td, pd
 
 INTEGER                                             ::  FEM_Elem
-REAL(KIND = idp)                                    ::  DROT,     &
-                                                        DTOT
+REAL(KIND = idp)                                    ::  DROT,       &
+                                                        DTOT,       &
+                                                        DPOT
 
 INTEGER                                             ::  Level, i
 INTEGER                                             ::  iCE(3)
@@ -473,6 +477,7 @@ END DO
 FEM_Elem = FEM_Elem_Map(iE(1),Level)
 DROT = Level_dx(Level,1)/2.0_idp
 DTOT = Level_dx(Level,2)/2.0_idp
+DPOT = Level_dx(Level,3)/2.0_idp
 
 Cur_R_Locs(:) = DROT * (Int_R_Locations(:) + 1.0_idp + iE(1)*2.0_idp)
 Cur_T_Locs(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
@@ -483,6 +488,7 @@ Cur_T_Locs(:) = DTOT * (Int_T_Locations(:) + 1.0_idp + iEOff(2)*2.0_idp)
 FEM_Elem = iE(1)
 DROT = 0.5_idp * (rlocs(iE(1)+1) - rlocs(iE(1)))
 DTOT = 0.5_idp * (tlocs(iE(2)+1) - tlocs(iE(2)))
+DPOT = 0.5_idp * (plocs(iE(3)+1) - plocs(iE(3)))
 
 Cur_R_Locs(:) = DROT * (INT_R_LOCATIONS(:)+1.0_idp) + rlocs(iE(1))
 Cur_T_Locs(:) = DTOT * (INT_T_LOCATIONS(:)+1.0_idp) + tlocs(iE(2))
@@ -516,10 +522,9 @@ END DO
 TP_Sin_Square(:) = TP_Sin_Val(:)*TP_Sin_Val
 
 
-CALL Calc_Int_Weights( DROT, DTOT,                  &
+CALL Calc_Int_Weights( DROT, DTOT, DPOT,            &
                        R_Square, TP_Sin_Val,        &
                        R_Int_Weights, TP_Int_Weights )
-
 
 CALL Calc_CurVals_Newtonian( iE )
 
@@ -550,6 +555,8 @@ CALL Get_Physical_Source( PhysSrc, iU_NP, iE )
 
 SourceTerm(:,:,iU_NP) = 4.0 * Pi * Grav_Constant_G * PhysSrc(:,:)
 
+PRINT*,iE(1),SourceTerm(:,:,iU_NP)
+
 END SUBROUTINE Calc_CurVals_Newtonian
 
 
@@ -576,13 +583,11 @@ INTEGER                                                     ::  Current_i_Locati
 REAL(idp)                                                   ::  RHS_TMP
 
 
-
 DO lm_loc = 1,LM_LENGTH
 DO d = 0,DEGREE
     
     RHS_TMP = 0.0_idp
     DO rd = 1,NUM_R_QUAD_POINTS
-
 
         RHS_TMP =  RHS_TMP                                          &
                  + SUM( SourceTerm( :, rd, iU_NP )                     &
@@ -592,7 +597,6 @@ DO d = 0,DEGREE
                * R_Int_Weights(rd)
 
     END DO  ! rd Loop
-    
 
 
     Current_i_Location = Map_To_FEM_Node(FEM_Elem,d)
@@ -603,10 +607,6 @@ DO d = 0,DEGREE
 
 END DO  ! d Loop
 END DO  ! lm_loc Loop
-
-
-
-
 
 
 END SUBROUTINE Create_Vector_Newtonian

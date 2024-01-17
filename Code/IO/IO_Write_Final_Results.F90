@@ -34,7 +34,8 @@ USE Poseidon_Numbers_Module, &
 
 USE Poseidon_Units_Module, &
             ONLY :  Centimeter,     &
-                    Shift_Units
+                    Shift_Units,    &
+                    GravPot_Units
 
 USE Parameters_Variable_Indices, &
             ONLY :  iU_CF,      &
@@ -1106,6 +1107,10 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 
     Units = 1.0_idp
     Units(3) = Shift_Units
+    
+    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+        Units(1) = GravPot_Units
+    END IF
 
     Num_DOF = Caller_NQ(1)*Caller_NQ(2)*Caller_NQ(3)
     MF_Results_nComps = Num_DOF*MF_Results_nVars
@@ -1136,12 +1141,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
     END IF
 
     
-
-    IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
-        U_Flag_Used = [1,0,0,0,0]
-    ELSE
-        U_Flag_Used = Eq_Flags
-    END IF
+    
     IF ( PRESENT(U_Flag_Option) ) THEN
         IF( U_Flag_Option ) THEN
 
@@ -1158,7 +1158,11 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
             U_Flag_Used = [1,1,1,0,0]
         END IF
     ELSE
-        U_Flag_Used = [1,1,1,0,0]
+        IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+            U_Flag_Used = [1,0,0,0,0]
+        ELSE
+            U_Flag_Used = [1,1,1,0,0]
+        END IF
         
     END IF
     uNum_Files  = SUM(U_Flag_Used)     ! Main metric variables
@@ -1169,8 +1173,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
     ELSE
         xNum_Files  = 2
     END IF
-
-
+    
 
     IF ( PRESENT(Kij_Flag_Option) ) THEN
         kNum_Files  = 0               ! Temporary
@@ -1186,7 +1189,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
     END IF
 
 
-
     IF ( mNum_Files .NE. 0 ) THEN
 
 
@@ -1198,7 +1200,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
         ALLOCATE( mFile_IDs(1:mNum_Files) )
 
 
-
         DO CurID = 0,nProcs_Poseidon
             IF ( CurID == myID_Poseidon ) THEN
 
@@ -1208,7 +1209,6 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                                                 kNum_Files, kFile_IDs,      &
                                                 mNum_Files, mFile_IDs,      &
                                                 U_Flag_Used                 )
-
 
 
                 ! Write Output Location Files
@@ -1285,53 +1285,51 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                             IF ( Mask_PTR(RE,TE,PE,1) == iLeaf ) THEN
 
 
-                            Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
-                            Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
-                            Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
+                                Cur_R_Locs(:) = DROT * (CUR_RX_LOCS(:)+1.0_idp + 2.0_idp*re)
+                                Cur_T_Locs(:) = DTOT * (CUR_TX_LOCS(:)+1.0_idp + 2.0_idp*te)
+                                Cur_P_Locs(:) = DPOT * (CUR_PX_LOCS(:)+1.0_idp + 2.0_idp*pe)
 
 
-                            DO rd = 1,Caller_NQ(1)
-                                
-                                WRITE(mFile_IDs(2),*)Cur_R_Locs(rd)/Centimeter
-                            END DO
-                            DO td = 1,Caller_NQ(2)
-                                WRITE(mFile_IDs(3),*)Cur_T_Locs(td)
-                            END DO
-                            DO pd = 1,Caller_NQ(3)
-                                WRITE(mFile_IDs(4),*)Cur_P_Locs(pd)
-                            END DO
-
-
-
-
-                            DO pd = 1,Caller_NQ(3)
-                            DO td = 1,Caller_NQ(2)
-                            DO rd = 1,Caller_NQ(1)
-
-!                                IF ( (td == 1 ) .AND. (pd == 1) ) THEN
-                    
-                                DO i = 1,3
-                                    Here = AMReX_nCOMP_Map( i, rd, td, pd, Caller_NQ )
-                                    WRITE(uFile_IDs(i),*) Results_PTR(re,te,pe,Here)/Units(i)
+                                DO rd = 1,Caller_NQ(1)
+                                    WRITE(mFile_IDs(2),*)Cur_R_Locs(rd)/Centimeter
+                                END DO
+                                DO td = 1,Caller_NQ(2)
+                                    WRITE(mFile_IDs(3),*)Cur_T_Locs(td)
+                                END DO
+                                DO pd = 1,Caller_NQ(3)
+                                    WRITE(mFile_IDs(4),*)Cur_P_Locs(pd)
                                 END DO
 
-                                ! K_11
-                                Here = AMReX_nCOMP_Map( iU_K11, rd, td, pd, Caller_NQ )
-                                WRITE(kFile_IDs(1),*) Results_PTR(re,te,pe,Here)
-                                
-                                ! X1 Value
-                                Here = AMReX_nCOMP_Map( iU_K12, rd, td, pd, Caller_NQ )
-                                WRITE(xFile_IDs(1),*)Results_PTR(re,te,pe,Here)/Units(1)
-                                
-                                ! X1 Deriv
-                                Here = AMReX_nCOMP_Map( iU_K13, rd, td, pd, Caller_NQ )
-                                WRITE(xFile_IDs(2),*)Results_PTR(re,te,pe,Here)
 
-!                                END IF
 
-                            END DO ! rd Loop
-                            END DO ! td Loop
-                            END DO ! pd Loop
+
+                                DO pd = 1,Caller_NQ(3)
+                                DO td = 1,Caller_NQ(2)
+                                DO rd = 1,Caller_NQ(1)
+                                    
+!                                    IF ( (td == 1 ) .AND. (pd == 1) ) THEN
+                                    DO i = 1,uNum_Files
+                                        Here = AMReX_nCOMP_Map( i, rd, td, pd, Caller_NQ )
+                                        WRITE(uFile_IDs(i),*) Results_PTR(re,te,pe,Here)/Units(i)
+                                    END DO
+
+                                    ! K_11
+                                    Here = AMReX_nCOMP_Map( iU_K11, rd, td, pd, Caller_NQ )
+                                    WRITE(kFile_IDs(1),*) Results_PTR(re,te,pe,Here)
+
+                                    ! X1 Value
+                                    Here = AMReX_nCOMP_Map( iU_K12, rd, td, pd, Caller_NQ )
+                                    WRITE(xFile_IDs(1),*)Results_PTR(re,te,pe,Here)/Units(1)
+
+                                    ! X1 Deriv
+                                    Here = AMReX_nCOMP_Map( iU_K13, rd, td, pd, Caller_NQ )
+                                    WRITE(xFile_IDs(2),*)Results_PTR(re,te,pe,Here)
+
+    !                                END IF
+
+                                END DO ! rd Loop
+                                END DO ! td Loop
+                                END DO ! pd Loop
 
                             END IF ! ( Mask_PTR(RE,TE,PE,1) == iLeaf )
 !                            END IF
@@ -1340,7 +1338,7 @@ IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
                         END DO ! te
                         END DO ! re
 
-                    END DO
+                    END DO ! mfi%next()
 
                     CALL amrex_mfiter_destroy(mfi)
                     CALL amrex_imultifab_destroy( Level_Mask )

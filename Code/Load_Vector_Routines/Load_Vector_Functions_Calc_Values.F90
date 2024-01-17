@@ -95,12 +95,12 @@ CONTAINS
 !                  Calc_Int_Weights                         !
 !                                                           !
  !#########################################################!
-SUBROUTINE Calc_Int_Weights( DROT, DTOT,            &
+SUBROUTINE Calc_Int_Weights( DROT, DTOT, DPOT,      &
                              R_Square, Sin_Val,     &
                              rWeights, tpWeights    )
 
 
-REAL(idp), INTENT(IN)                                       ::  DROT, DTOT
+REAL(idp), INTENT(IN)                                       ::  DROT, DTOT, DPOT
 REAL(idp), INTENT(IN),    DIMENSION(1:Num_R_Quad_Points)    ::  R_Square
 REAL(idp), INTENT(IN),    DIMENSION(1:Num_TP_Quad_Points)   ::  Sin_Val
 REAL(idp), INTENT(INOUT), DIMENSION(1:Num_R_Quad_Points)    ::  rWeights
@@ -124,14 +124,13 @@ DO pd = 1,NUM_P_QUAD_POINTS
    tpd = Map_To_tpd(td,pd)
    tpWeights( tpd ) = SIN_VAL(tpd)                   &
                     * DTOT * INT_T_WEIGHTS(td)      &
-                    * INT_P_WEIGHTS(pd)
+                    * DPOT * INT_P_WEIGHTS(pd)
 
 
 
 END DO
-
-
 END DO
+
 
 END SUBROUTINE Calc_Int_Weights
 

@@ -597,6 +597,7 @@ DO lvl = 0,nLevels-1
 
                 END DO ! d Loop
                 END DO ! lm Loop
+                Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_CF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_CF),KIND = idp)
                 
                 IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
 
@@ -636,8 +637,7 @@ DO lvl = 0,nLevels-1
                     END DO ! d Loop
                     END DO ! iU Loop
                     
-
-                    Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_CF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_CF),KIND = idp)
+                    
                     Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_LF, rd, td, pd, NQ )) = REAL(Tmp_Val_A(iU_LF),KIND= idp)      &
                                                                                    / REAL(Tmp_Val_A(iU_CF),KIND = idp)
                     Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_S1, rd, td, pd, NQ )) = REAL(Tmp_Val_B(1,iVB_S),KIND = idp)
@@ -709,9 +709,7 @@ DO lvl = 0,nLevels-1
                                +(2.0_idp * Christoffel(1,1,1) - Reusable_Vals(2) )*Tmp_Val_B(1,iVB_X)   &
                                +(2.0_idp * Christoffel(1,1,2) - Reusable_Vals(3) )*Tmp_Val_B(2,iVB_X)   &
                                +(2.0_idp * Christoffel(1,1,3) - Reusable_Vals(4) )*Tmp_Val_B(3,iVB_X)   )
-            
-!                    print*,re,rd,Reusable_Vals(2)
-            
+                        
             
                     ! Ahat^12
                     i=1
@@ -784,6 +782,8 @@ DO lvl = 0,nLevels-1
                     Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K11, rd, td, pd, NQ ))                         &
                             = REAL(Tmp_A(1)/(Gamma(1)*Gamma(1)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
                             
+                   
+                            
                     Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K12, rd, td, pd, NQ ))                         &
                             = REAL(Tmp_A(2)/(Gamma(1)*Gamma(2)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
 
@@ -800,7 +800,6 @@ DO lvl = 0,nLevels-1
                             = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
 
 
-!                    PRINT*,re,rd,Tmp_A(1),Gamma(1),Tmp_Val_A(iU_CF)
                 END IF ! Not Newtonian Mode
             END DO ! rd Loop
             END DO ! td Loop
