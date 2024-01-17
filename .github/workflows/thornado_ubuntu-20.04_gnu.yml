@@ -25,6 +25,12 @@ jobs:
           repository: endeve/thornado
           path: thornado
           ref:  InterfaceWithPoseidon
+          
+      - name: Checkout weaklib
+        uses: actions/checkout@v3
+        with:
+          repository: starkiller-astro/weaklib
+          path: weaklib
     
       - name: Update Ubuntu
         run: |
