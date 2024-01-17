@@ -43,7 +43,9 @@ jobs:
           echo "AMREX_DIR=${GITHUB_WORKSPACE}/amrex"            >> ${GITHUB_OUTPUT}
           echo "POSEIDON_DIR=${GITHUB_WORKSPACE}/poseidon"      >> ${GITHUB_OUTPUT}
           
+          echo "A"
           echo ${GITHUB_WORKSPACE}
+          echo "B"
           echo ${THORNADO_DIR}
       - name: Compile SandBox/YahilCollapse_XCFC
         run: |
