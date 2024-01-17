@@ -34,7 +34,7 @@ jobs:
     
       - name: Set Environment Variables
         run: |
-          echo "THORNADO_DIR=${GITHUB_WORKSPACE}"               >> ${GITHUB_ENV}
+          echo "THORNADO_DIR=${GITHUB_WORKSPACE}/thornado"      >> ${GITHUB_ENV}
           echo "HDF5_INC=/usr/include/hdf5/serial"              >> ${GITHUB_ENV}
           echo "HDF5_LIB=/usr/lib/x86_64-linux-gnu/hdf5/serial" >> ${GITHUB_ENV}
           echo "LAPACK_LIB=/usr/lib/x86_64-linux-gnu"           >> ${GITHUB_ENV}
