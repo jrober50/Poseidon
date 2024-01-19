@@ -546,12 +546,12 @@ DO i = 0,Num_Samples
     
     
     IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
-!        Psi = Calc_Var_At_Location(r,theta,phi,iU_CF)/GravPot_Units
-!        CCS_Sol   = CCS_Potential(r)/GravPot_Units
+        Psi = Calc_Var_At_Location(r,theta,phi,iU_CF)/GravPot_Units
+        CCS_Sol   = CCS_Potential(r)/GravPot_Units
         
            
-        Psi       = 1.0_idp - 0.5_idp*Calc_Var_At_Location(r,theta,phi,iU_CF)/(GravPot_Units*C_Square)
-        CCS_Sol   = 1.0_idp - 0.5_idp*CCS_Potential(r)/(C_Square*GravPot_Units)
+!        Psi       = 1.0_idp - 0.5_idp*Calc_Var_At_Location(r,theta,phi,iU_CF)/(GravPot_Units*C_Square)
+!        CCS_Sol   = 1.0_idp - 0.5_idp*CCS_Potential(r)/(C_Square*GravPot_Units)
     ELSE
         Psi = Calc_Var_At_Location(r,theta,phi,iU_CF)
         CCS_Sol   =  1.0_idp - 0.5_idp*CCS_Potential(r)/(C_Square)
@@ -561,7 +561,6 @@ DO i = 0,Num_Samples
 !        CCS_Sol   = CCS_Potential(r)/GravPot_Units
 
     END IF
-    
     
     CCS_Error = abs(CCS_Sol - (Psi))/MAXVAL([abs(CCS_Sol),abs(Psi)])
 
