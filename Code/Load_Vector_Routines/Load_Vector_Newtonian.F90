@@ -555,8 +555,6 @@ CALL Get_Physical_Source( PhysSrc, iU_NP, iE )
 
 SourceTerm(:,:,iU_NP) = 4.0 * Pi * Grav_Constant_G * PhysSrc(:,:)
 
-PRINT*,iE(1),SourceTerm(:,:,iU_NP)
-
 END SUBROUTINE Calc_CurVals_Newtonian
 
 

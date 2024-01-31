@@ -97,4 +97,10 @@ Mesh_Names = [  'Uniform                            ',      &
                 'MacLaurin Shell                    '       ]
 
 
+INTEGER, PARAMETER                                      ::  N_Modes = 2
+CHARACTER(LEN = 6),DIMENSION(N_Modes), PARAMETER        ::  &
+Mode_Names = ['Newton',                                     &
+              'XCFC  '                                      ]
+
+
 END MODULE Poseidon_IO_Parameters

@@ -56,6 +56,9 @@ USE Poseidon_AMReX_Utilities_Module, &
 USE Poseidon_Parameters, &
             ONLY :  Domain_Dim,         &
                     Verbose_Flag
+                    
+USE Poseidon_IO_Parameters , &
+            ONLY :  Mode_Names
 
 USE Poseidon_Message_Routines_Module, &
             ONLY :  Run_Message
@@ -146,11 +149,14 @@ INTEGER                                             ::  level
 LOGICAL                                             ::  All_Flag
 LOGICAL,    DIMENSION(0:AMReX_Num_Levels-1)         ::  Remesh_Flag
 
+CHARACTER(LEN=300)                                  ::  MessageBox
 
+IF ( Verbose_Flag ) THEN
+    WRITE(MessageBox,'(A,A,A)')'Receiving ',trim(Mode_Names(iPF_Core_Flags(iPF_Core_Method_Mode))),' Sources. Container : AMReX Multifab.'
+    CALL Run_Message(TRIM(MessageBox))
+END IF
 
-
-
-IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab. A')
+        
 CALL TimerStart(Timer_GR_SourceInput)
 
 IF ( PRESENT(Remesh_Flag_Option) ) THEN
@@ -235,9 +241,14 @@ TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:)
 INTEGER                                             ::  level
 LOGICAL                                             ::  All_Flag
 LOGICAL,  DIMENSION(0:AMReX_Num_Levels-1)           ::  Remesh_Flag
+CHARACTER(LEN=300)                                  ::  MessageBox
+
+IF ( Verbose_Flag ) THEN
+    WRITE(MessageBox,'(A,A,A)')'Receiving ',trim(Mode_Names(iPF_Core_Flags(iPF_Core_Method_Mode))),' Sources. Container : AMReX Multifab.'
+    CALL Run_Message(TRIM(MessageBox))
+END IF
 
 
-IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab. B')
 CALL TimerStart(Timer_GR_SourceInput)
 
 
@@ -371,10 +382,13 @@ LOGICAL,                    OPTIONAL,   INTENT(IN)  ::  Remesh_Flag_Option
 INTEGER                                             ::  level
 LOGICAL                                             ::  All_Flag
 LOGICAL,    DIMENSION(0:AMReX_Num_Levels-1)         ::  Remesh_Flag
+CHARACTER(LEN=300)                                  ::  MessageBox
 
+IF ( Verbose_Flag ) THEN
+    WRITE(MessageBox,'(A,A,A)')'Receiving ',trim(Mode_Names(iPF_Core_Flags(iPF_Core_Method_Mode))),' Part 1 Sources. Container : AMReX Multifab.'
+    CALL Run_Message(TRIM(MessageBox))
+END IF
 
-
-IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab. C')
 CALL TimerStart(Timer_GR_SourceInput)
 
 
@@ -450,8 +464,12 @@ INTEGER                                         ::  level
 LOGICAL                                         ::  All_Flag
 LOGICAL, ALLOCATABLE, DIMENSION(:)              ::  Remesh_Flag
 INTEGER                                         ::  AMReX_New_Levels
+CHARACTER(LEN=300)                              ::  MessageBox
 
-IF ( Verbose_Flag ) CALL Run_Message('Receiving Part 1 XCFC Sources. Container : AMReX Multifab. D')
+IF ( Verbose_Flag ) THEN
+    WRITE(MessageBox,'(A,A,A)')'Receiving ',trim(Mode_Names(iPF_Core_Flags(iPF_Core_Method_Mode))),' Part 1 Sources. Container : AMReX Multifab.'
+    CALL Run_Message(TRIM(MessageBox))
+END IF
 CALL TimerStart(Timer_GR_SourceInput)
 
 
