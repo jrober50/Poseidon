@@ -127,6 +127,7 @@ INTEGER                                     ::  FP_Anderson_M_In
 INTEGER                                     ::  Max_Iterations_In
 REAL(idp)                                   ::  Convergence_Criteria_In
 
+LOGICAL                                     ::  Overwrite_Flag
 
 ALLOCATE( xL_In(3) )
 ALLOCATE( xR_In(3) )
@@ -176,34 +177,35 @@ CALL amrex_parmparse_destroy( PP )
 
 
 Overwrite_Flag = .FALSE.
-IF PRESENT( FEM_Degree_Option ) THEN
+IF (PRESENT( FEM_Degree_Option )) THEN
     Degree_In = FEM_Degree_Option
     Overwrite_Flag = .TRUE.
 END IF
 
-IF PRESENT( L_Limit_Option ) THEN
+IF (PRESENT( L_Limit_Option )) THEN
     L_Limit_In = L_Limit_Option
     Overwrite_Flag = .TRUE.
 END IF
 
-IF PRESENT( Max_Iterations_Option ) THEN
+IF (PRESENT( Max_Iterations_Option )) THEN
     Max_Iterations_In = Max_Iterations_Option
     Overwrite_Flag = .TRUE.
 END IF
 
-IF PRESENT( Anderson_M_Option ) THEN
+IF (PRESENT( Anderson_M_Option )) THEN
     FP_Anderson_M_In = Anderson_M_Option
     Overwrite_Flag = .TRUE.
 END IF
 
-IF PRESENT( Convergence_Criteria_Option ) THEN
+IF (PRESENT( Convergence_Criteria_Option )) THEN
     Convergence_Criteria_In = Convergence_Criteria_Option
     Overwrite_Flag = .TRUE.
 END IF
 
 
-If Overwrite_Flag: CALL  Warning_Message('Poseidon parameters from inputs file are being overwritten by input through Initialize_Poseidon().')
-
+If (Overwrite_Flag) THEN
+    CALL  Warning_Message('Poseidon parameters from inputs file are being overwritten by input through Initialize_Poseidon().')
+END IF
 
 
 CALL Init_Expansion_Params( Degree_In, L_Limit_In )
