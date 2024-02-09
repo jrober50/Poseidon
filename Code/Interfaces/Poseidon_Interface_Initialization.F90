@@ -389,7 +389,11 @@ CALL Set_Caller_Data(   Source_NQ,                      &
 
     DOMAIN_DIM = amrex_spacedim
     iPF_Core_Flags(iPF_Core_AMReX_Mode) = iPF_Core_AMReX_On
-    CALL Init_Parameters_From_AMReX_Input_File()
+    CALL Init_Parameters_From_AMReX_Input_File( FEM_Degree_Option,          &
+                                                L_Limit_Option,             &
+                                                Max_Iterations_Option,      &
+                                                Anderson_M_Option,          &
+                                                Convergence_Criteria_Option )
     
     
 #else

@@ -27,7 +27,8 @@ USE Poseidon_Kinds_Module, &
             ONLY :  idp
 
 USE Poseidon_Message_Routines_Module, &
-            ONLY :  Init_Message
+            ONLY :  Init_Message,               &
+                    Warning_Message
             
 USE Flags_Initialization_Module, &
             ONLY :  lPF_Init_AMReX_Flags,       &
@@ -87,12 +88,25 @@ CONTAINS
 
 
 
-!+301+###########################################################################!
-!                                                                                !
-!                  Init_AMReX_Parameters                                             !
-!                                                                                !
-!################################################################################!
-SUBROUTINE Init_Parameters_From_AMReX_Input_File()
+ !+301+######################################################################!
+!                                                                             !
+!          Init_Parameters_From_AMReX_Input_File                              !
+!                                                                             !
+ !###########################################################################!
+SUBROUTINE Init_Parameters_From_AMReX_Input_File(FEM_Degree_Option,         &
+                                                 L_Limit_Option,            &
+                                                 Max_Iterations_Option,     &
+                                                 Anderson_M_Option,         &
+                                                 Convergence_Criteria_Option)
+                                             
+                                             
+INTEGER,    INTENT(IN), OPTIONAL            ::  FEM_Degree_Option
+INTEGER,    INTENT(IN), OPTIONAL            ::  L_Limit_Option
+
+INTEGER,    INTENT(IN), OPTIONAL            ::  Max_Iterations_Option
+REAL(idp),  INTENT(IN), OPTIONAL            ::  Convergence_Criteria_Option
+INTEGER,    INTENT(IN), OPTIONAL            ::  Anderson_M_Option
+                                                
 
 
 #ifdef POSEIDON_AMREX_FLAG
@@ -161,7 +175,34 @@ CALL amrex_parmparse_build( PP, 'poseidon' )
 CALL amrex_parmparse_destroy( PP )
 
 
+Overwrite_Flag = .FALSE.
+IF PRESENT( FEM_Degree_Option ) THEN
+    Degree_In = FEM_Degree_Option
+    Overwrite_Flag = .TRUE.
+END IF
 
+IF PRESENT( L_Limit_Option ) THEN
+    L_Limit_In = L_Limit_Option
+    Overwrite_Flag = .TRUE.
+END IF
+
+IF PRESENT( Max_Iterations_Option ) THEN
+    Max_Iterations_In = Max_Iterations_Option
+    Overwrite_Flag = .TRUE.
+END IF
+
+IF PRESENT( Anderson_M_Option ) THEN
+    FP_Anderson_M_In = Anderson_M_Option
+    Overwrite_Flag = .TRUE.
+END IF
+
+IF PRESENT( Convergence_Criteria_Option ) THEN
+    Convergence_Criteria_In = Convergence_Criteria_Option
+    Overwrite_Flag = .TRUE.
+END IF
+
+
+If Overwrite_Flag: CALL  Warning_Message('Poseidon parameters from inputs file are being overwritten by input through Initialize_Poseidon().')
 
 
 
