@@ -79,6 +79,7 @@ USE amrex_parmparse_module, &
             ONLY :  amrex_parmparse,            &
                     amrex_parmparse_build,      &
                     amrex_parmparse_destroy
+
 #endif
 
 IMPLICIT NONE
@@ -146,9 +147,9 @@ CALL amrex_parmparse_build( PP, 'geometry' )
 CALL amrex_parmparse_destroy( PP )
 
 
-nCells_In               = 1
-Max_Grid_Size_In        = 1
-Max_Level_In            = 1
+nCells_In               = 0
+Max_Grid_Size_In        = 0
+Max_Level_In            = 0
 Tiling_In               = .FALSE.
 CALL amrex_parmparse_build( PP, 'amr' )
     CALL PP % getarr( 'n_cell'           , nCells_In            )
@@ -159,7 +160,6 @@ CALL amrex_parmparse_build( PP, 'amr' )
     CALL PP % query ( 'UseTiling'        , Tiling_In            )
 CALL amrex_parmparse_destroy( PP )
 iNE_Base = nCells_In
-
 
 Degree_In = Degree_Default
 L_Limit_In = L_Limit_Default
@@ -263,12 +263,15 @@ ELSE
     AMReX_MaxLevel  = amrex_max_level
 END IF
 
-IF ( PRESENT( Max_Level_Option ) ) THEN
-    AMReX_Max_Grid_Size = Max_Grid_Size_Option
+IF ( PRESENT( Max_Grid_Size_Option ) ) THEN
+    IF (ALL(Max_Grid_Size_Option .NE. 0) ) THEN
+        AMReX_Max_Grid_Size = Max_Grid_Size_Option
+    ELSE
+        AMReX_Max_Grid_Size = 128
+    END IF
 ELSE
-    AMReX_Max_Grid_Size = 4
+    AMReX_Max_Grid_Size = 128
 END IF
-
 
 lPF_Init_AMReX_Flags(iPF_Init_AMReX_Params) = .TRUE.
 

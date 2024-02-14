@@ -156,13 +156,12 @@ DO Source_P = 1,Source_NQ(3)
 DO Source_T = 1,Source_NQ(2)
 DO Source_R = 1,Source_NQ(1)
 
-    Dest_Here = Quad_Map(Dest_R,Dest_T,Dest_P)
-    Here = Quad_Map(Source_R,Source_T,Source_P)
-
+    Dest_Here = Quad_Map(Dest_R,Dest_T,Dest_P,Dest_NQ)
+    Here = Quad_Map(Source_R,Source_T,Source_P,Source_NQ)
 
     TransMat(Here, Dest_Here)  =                    &
-                R_Lag_Poly_Values(Source_R,Dest_R)    &
-              * T_Lag_Poly_Values(Source_T,Dest_T)        &
+                R_Lag_Poly_Values(Source_R,Dest_R)  &
+              * T_Lag_Poly_Values(Source_T,Dest_T)  &
               * P_Lag_Poly_Values(Source_P,Dest_P)
 
 END DO  !   Source_R Loop
