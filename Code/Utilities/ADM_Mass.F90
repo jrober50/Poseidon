@@ -331,7 +331,8 @@ DO lvl = AMReX_Num_Levels-1,0,-1
         
         iNE = iEU-iEL+1
         
-        
+        tlocs_subarray = 0.0_idp
+        plocs_subarray = 0.0_idp
         DO te = iEL(2),iEU(2)
             tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
         END DO
@@ -712,7 +713,7 @@ CALL Calc_Ahat( Ahat_Array,                             &
 
 
 DO rd = 1,NUM_R_QUAD_POINTS
-DO tpd = 1,NUM_T_QUAD_POINTS
+DO tpd = 1,NUM_TP_QUAD_POINTS
 
     ! Calc Flat Metric Terms
     f(tpd,rd,1) = 1.0_idp
@@ -726,6 +727,7 @@ END DO ! rd
 AA_Array = 0.0_idp
 DO i = 1,3
 DO j = 1,3
+
     AA_Array(:,:) = AA_Array(:,:)           &
         + f(:,:,i)*f(:,:,j) * (Ahat_Array(:,:,i,j))**2
 

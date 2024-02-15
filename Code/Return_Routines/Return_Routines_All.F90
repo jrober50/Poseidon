@@ -516,10 +516,11 @@ DO lvl = 0,nLevels-1
 
         iNE = iEU-iEL+1
         
-        
+        tlocs_subarray = 0.0_idp
         DO te = iEL(2),iEU(2)
             tlocs_subarray(te-iEL(2)) = Level_dx(lvl,2)*te
         END DO
+        plocs_subarray = 0.0_idp
         DO pe = iEL(3),iEU(3)
             plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
         END DO
@@ -574,7 +575,7 @@ DO lvl = 0,nLevels-1
             DO td = 1,NQ(2)
             DO rd = 1,NQ(1)
 
-                tpd = Map_To_tpd(td,pd)
+                tpd = Map_To_tpd(td,pd,NQ(3))
 
                 Tmp_Val_A = 0.0_idp
                 Tmp_Val_B = 0.0_idp

@@ -480,13 +480,6 @@ CALL Initialize_Slm_Tables_on_Elem( 0, 0,                   &
 
 
 
-!PRINT*,"Slm_Table"
-!PRINT*,Slm_Table
-!PRINT*,"Slm_dt_Table"
-!PRINT*,Slm_dt_Table
-!PRINT*,"Slm_dp_Table"
-!PRINT*,Slm_dp_Table
-
 
 
 DO lpmp_loc = 1,LM_Length
@@ -588,9 +581,6 @@ DO lm_loc = 1,LM_Length
                                                  * TP_Int_Weights(:)        &
                                                  * Cotan_Val(:)             )
 
-!    PRINT*," "
-!    PRINT*,lm_loc,lpmp_loc
-!    PRINT*,TP_TP_Integrals(lm_loc, lpmp_loc,:)
 
 END DO
 END DO
@@ -685,7 +675,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
 
     IF ( Verbose_Flag ) CALL Init_Message('Initializing Laplace Matrix.  Format: CCS.')
 
-
     Laplace_Matrix_COL(0,:) = 0
     Laplace_Matrix_COL(1,:) = Laplace_Matrix_COL(0,:) + (DEGREE+1)
     HERE = 2
@@ -709,7 +698,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
         Here = Here + 1
 
     END DO
-
 
 
       !                             !
@@ -737,7 +725,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
     END DO ! re Loop
     Laplace_Matrix_ROW(Here,:) = DEGREE * NUM_R_ELEMENTS
 
-
     Laplace_Matrix_VAL = 0.0_idp
 
     DO l = 0,L_LIMIT
@@ -754,7 +741,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
             DO dp = 0,DEGREE
                 DO d = 0,DEGREE
 
-
                     Laplace_Matrix_VAL(Here,l) = Laplace_Matrix_VAL(Here,l)     &
                                     + SUM( R_SQUARE(:) * LP_LP_Table(:,d,dp,1,1)    &
                                             * TODR * Int_R_Weights(:)               &
@@ -769,7 +755,6 @@ ELSEIF ( Matrix_Format == 'CCS') THEN
                             !!! in next element with last in current element
         END DO  ! re Loop
     END DO  ! l Loop
-
 
     Laplace_Factored_VAL = Laplace_Matrix_VAL
     Laplace_Factored_ROW = Laplace_Matrix_ROW

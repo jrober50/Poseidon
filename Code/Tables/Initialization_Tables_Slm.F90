@@ -293,11 +293,10 @@ DO m = -l,l
 DO td = 1,nTQ
 DO pd = 1,nPQ
 
-    tpd = Map_To_tpd(td,pd)
+    tpd = Map_To_tpd(td,pd,nPQ)
     lm = Map_To_lm(l,m)
     short_lm = Map_To_Short_LM(l,abs(m))
-                            
-                            
+
     Slm_Elem_Table(lm,tpd) = Nlm_Values(short_lm)               &
                            * Plm_Table(td,short_lm,te_Offset)   &
                            * Am_Table(pd,m,pe_Offset)
@@ -354,7 +353,12 @@ INTEGER                                                         ::  m
 REAL(idp)                                                       ::  sqrt_two
 
 
-
+!print*,"QP_Num",QP_Num
+!print*,"QP_xlocs",QP_xlocs
+!Print*,"L_Max", L_Max
+!Print*,"E_Num",E_Num
+!Print*,"E_LoHi",E_LoHi
+!Print*,"E_Locs",E_Locs
 ! Initialize temporary trig tables
 CALL Initialize_Trig_Tables(QP_Num,     &
                             QP_xLocs,   &
@@ -380,8 +384,6 @@ IF ( L_Max > 0 ) THEN
             Am_Table(Quad,m,Elem) = sqrt_two*sinm(Quad,-m,Elem)
         END DO ! pd Loop
         END DO ! m  Loop
-
-
 
         DO m  = 1,L_Max
         DO Quad = 1,QP_Num
@@ -440,8 +442,8 @@ REAL(idp),  DIMENSION(1:QP_Num,-L_Max:L_Max,0:E_Num-1), INTENT(OUT) ::  Am_Table
 
 
 
-REAL(idp),  DIMENSION(1:QP_Num,0:L_Max,0:E_Num)                   ::  cosm
-REAL(idp),  DIMENSION(1:QP_Num,0:L_Max,0:E_Num)                   ::  sinm
+REAL(idp),  DIMENSION(1:QP_Num,0:L_Max,0:E_Num-1)                   ::  cosm
+REAL(idp),  DIMENSION(1:QP_Num,0:L_Max,0:E_Num-1)                   ::  sinm
 
 
 INTEGER                                                         ::  Elem, Quad
@@ -470,9 +472,9 @@ Am_Table(:,0,:) = 1.0_idp
 
 IF ( L_Max > 0 ) THEN
 
-    DO Elem = 0,E_Num
+    DO Elem = 0,E_Num-1
     
-        DO m  = -L_Max,-1,-1
+        DO m  = -L_Max,-1
         DO Quad = 1,QP_Num
             Am_Table(Quad,m,Elem) = sqrt_two*sinm(Quad,-m,Elem)
         END DO ! pd Loop
@@ -489,6 +491,7 @@ IF ( L_Max > 0 ) THEN
     END DO ! Elem Loop
 
 END IF
+
 
 END SUBROUTINE Initialize_Am_Table
 
@@ -557,7 +560,7 @@ IF ( L_Max > 0 ) THEN
         Short_lma = Map_To_Short_lm(l,l)
         Short_lmb = Map_To_Short_lm(l-1,l-1)
         
-        Plm_Table(:,Short_lma,Elem) = (1.0_idp - 2.0_idp*l)*sinm(:,1,Elem)*Plm_Table(:,short_lmb,Elem)
+        Plm_Table(:,Short_lma,Elem) = (2.0_idp*l-1.0_idp)*sinm(:,1,Elem)*Plm_Table(:,short_lmb,Elem)
     END DO  ! l Loop
     END DO  ! Elem Loop
 
@@ -582,11 +585,11 @@ IF ( L_Max > 0 ) THEN
         Short_lmc = Map_To_Short_lm(l-2,m)
         
         IF ( m <= l-2 ) THEN
-            Plm_Table(:,Short_lma,Elem) = REAL(2.0*l - 1.0_idp, KIND = idp)     &
+            Plm_Table(:,Short_lma,Elem) = REAL(2*l - 1, KIND = idp)     &
                                         / REAL(l-m, KIND = idp)                 &
                                         * Cosm(:,1,Elem)                        &
                                         * Plm_Table(:,Short_lmb,Elem)           &
-                                        - REAL( l + m - 1.0_idp, Kind = idp)    &
+                                        - REAL( l + m - 1, Kind = idp)    &
                                         / REAL(l-m, KIND = idp)                 &
                                         * Plm_Table(:,Short_lmc,Elem)
         END IF
@@ -695,7 +698,7 @@ INTEGER                 ::  short_lmc
 
 CALL Initialize_Trig_Tables(QP_Num,     &
                             QP_xLocs,   &
-                            1,          &
+                            L_Max,      &
                             E_Num,      &
                             E_LoHi,     &
                             E_Locs,     &
@@ -703,7 +706,7 @@ CALL Initialize_Trig_Tables(QP_Num,     &
                             Sinm        )
 
 
-
+Plm_Table(:,:,:) = 0.0_idp
 Plm_Table(:,1,:) = 1.0_idp
 
 
@@ -713,8 +716,8 @@ IF ( L_Max > 0 ) THEN
     DO l = 1,L_Max
         Short_lma = Map_To_Short_lm(l,l)
         Short_lmb = Map_To_Short_lm(l-1,l-1)
-        
         Plm_Table(:,Short_lma,Elem) = (2.0_idp*l - 1.0_idp)*sinm(:,1,Elem)*Plm_Table(:,short_lmb,Elem)
+
     END DO  ! l Loop
     END DO  ! Elem Loop
 
@@ -724,10 +727,11 @@ IF ( L_Max > 0 ) THEN
     DO l = 1,L_Max-1
         Short_lma = Map_To_Short_lm(l+1,l)
         Short_lmb = Map_To_Short_lm(l,l)
-        
-        Plm_Table(:,Short_lma,Elem) = (2.0_idp*l - 1.0_idp)*cosm(:,1,Elem)*Plm_Table(:,short_lmb,Elem)
+        Plm_Table(:,Short_lma,Elem) = (2.0_idp*l + 1.0_idp)*cosm(:,1,Elem)*Plm_Table(:,short_lmb,Elem)
     END DO  ! l Loop
     END DO  ! Elem Loop
+
+
 
 
     DO Elem = 0,E_Num-1
@@ -737,13 +741,12 @@ IF ( L_Max > 0 ) THEN
         Short_lma = Map_To_Short_lm(l,m)
         Short_lmb = Map_To_Short_lm(l-1,m)
         Short_lmc = Map_To_Short_lm(l-2,m)
-    
         
-        Plm_Table(:,Short_lma,Elem) = REAL(2.0*l - 1.0_idp, KIND = idp)     &
+        Plm_Table(:,Short_lma,Elem) = REAL(2*l - 1, KIND = idp)     &
                                     / REAL(l-m, KIND = idp)                 &
                                     * Cosm(:,1,Elem)                        &
                                     * Plm_Table(:,Short_lmb,Elem)           &
-                                    - REAL( l + m - 1.0_idp, Kind = idp)    &
+                                    - REAL( l + m - 1, Kind = idp)    &
                                     / REAL(l-m, KIND = idp)                 &
                                     * Plm_Table(:,Short_lmc,Elem)
         

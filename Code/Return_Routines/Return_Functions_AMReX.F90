@@ -349,7 +349,6 @@ DO lvl = mLevels-1,0,-1
             plocs_subarray(pe-iEL(3)) = Level_dx(lvl,3)*pe
         END DO
         
-        
         ! Initialize Am Table
         CALL Initialize_Am_Table(   NQ(3),                      &
                                     PQ_Input,                   &
@@ -359,7 +358,9 @@ DO lvl = mLevels-1,0,-1
                                     plocs_subarray(0:iNE(3)-1), &
                                     Am_Table                    )
 
+
         ! Initialize Plm Table
+!        Plm_Table(:,1,:) = 1.0_idp
         CALL Initialize_Plm_Table(  NQ(2),                      &
                                     TQ_Input,                   &
                                     L_Limit,                    &
@@ -764,7 +765,7 @@ DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
 
-    tpd = Map_To_tpd(td,pd)
+    tpd = Map_To_tpd(td,pd,NQ(3))
     LagP = Lagrange_Poly(Cur_RX_Locs(rd),DEGREE,FEM_Node_xlocs)
     Tmp_U_Value = 0.0_idp
 
@@ -849,7 +850,7 @@ DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
 
-    tpd = Map_To_tpd(td,pd)
+    tpd = Map_To_tpd(td,pd,NQ(3))
     LagP = Lagrange_Poly(Cur_RX_Locs(rd),DEGREE,FEM_Node_xlocs)
     Tmp_U_Value = 0.0_idp
 
@@ -957,7 +958,7 @@ DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,Degree+1
 
-    tpd = Map_To_tpd(td,pd)
+    tpd = Map_To_tpd(td,pd,NQ(3))
     LagP = Lagrange_Poly(Coarse_xLocs(rd-1),DEGREE,FEM_Node_xlocs)
     Tmp_U_Value = 0.0_idp
 
@@ -984,7 +985,7 @@ DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
 
-    tpd = Map_To_tpd(td,pd)
+    tpd = Map_To_tpd(td,pd,NQ(3))
     LagP_x = Lagrange_Poly(Cur_RX_Locs(rd),DEGREE,FEM_Node_xlocs)
 !    LagP_y = Lagrange_Poly(Cur_TX_Locs(td),DEGREE,FEM_Node_xlocs)
 !    LagP_z = Lagrange_Poly(Cur_PX_Locs(pd),DEGREE,FEM_Node_xlocs)
@@ -1083,7 +1084,7 @@ DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,Degree+1
 
-    tpd = Map_To_tpd(td,pd)
+    tpd = Map_To_tpd(td,pd,NQ(3))
     LagP = Lagrange_Poly(Coarse_xLocs(rd-1),DEGREE,FEM_Node_xlocs)
     Tmp_U_Value = 0.0_idp
     
@@ -1112,7 +1113,7 @@ DO pd = 1,NQ(3)
 DO td = 1,NQ(2)
 DO rd = 1,NQ(1)
 
-    tpd = Map_To_tpd(td,pd)
+    tpd = Map_To_tpd(td,pd,NQ(3))
     LagP_x = Lagrange_Poly(Cur_RX_Locs(rd),DEGREE,FEM_Node_xlocs)
 !    LagP_y = Lagrange_Poly(Cur_TX_Locs(td),DEGREE,FEM_Node_xlocs)
 !    LagP_z = Lagrange_Poly(Cur_PX_Locs(pd),DEGREE,FEM_Node_xlocs)
