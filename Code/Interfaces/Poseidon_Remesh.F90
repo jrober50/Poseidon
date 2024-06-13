@@ -208,76 +208,79 @@ END DO  ! iU
 
 
 CALL TimerStop(Timer_Remesh_FillTypeA)
-CALL TimerStart(Timer_Remesh_FillX)
 
 
-! Work through Type B Coeffs
-
-dVB_Coeff_Vector = 0.0_idp
-
-iVB = iVB_X
-DO re = 0,Num_R_Elements-1
-DO d = 0,Degree
-DO iU = iU_X1,iU_X3
-DO lm = 1,LM_Length
-
-    Here_New = FP_Array_Map_TypeB(iU,iVB,re,d,lm)
-    FEM_Node = Map_To_FEM_Node(re,d)
-    re_old   = rn_in_re(FEM_Node)
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
+    CALL TimerStart(Timer_Remesh_FillX)
 
 
-    TMP = 0.0_idp
-    DO d_old = 0,DEGREE
-        Here_Old = FP_Array_Map_TypeB(iU,iVB,re_old,d_old,lm)
+    ! Work through Type B Coeffs
 
-        TMP = TMP                            &
-            + dVB_Coeff_Old(Here_Old,iVB)    &
-            * lm_at_rn(d_old,FEM_Node)
+    dVB_Coeff_Vector = 0.0_idp
 
+    iVB = iVB_X
+    DO re = 0,Num_R_Elements-1
+    DO d = 0,Degree
+    DO iU = iU_X1,iU_X3
+    DO lm = 1,LM_Length
 
-    END DO ! d_Old
-
-    dVB_Coeff_Vector(Here_New,iVB) = TMP
-
-END DO  ! lm
-END DO  ! iU
-END DO  ! d
-END DO  ! re
+        Here_New = FP_Array_Map_TypeB(iU,iVB,re,d,lm)
+        FEM_Node = Map_To_FEM_Node(re,d)
+        re_old   = rn_in_re(FEM_Node)
 
 
+        TMP = 0.0_idp
+        DO d_old = 0,DEGREE
+            Here_Old = FP_Array_Map_TypeB(iU,iVB,re_old,d_old,lm)
 
-CALL TimerStop(Timer_Remesh_FillX)
-CALL TimerStart(Timer_Remesh_FillS)
-
-iVB = iVB_S
-DO re = 0,Num_R_Elements-1
-DO d = 0,Degree
-DO iU = iU_S1,iU_S3
-DO lm = 1,LM_Length
-
-    Here_New = FP_Array_Map_TypeB(iU,iVB,re,d,lm)
-    FEM_Node = Map_To_FEM_Node(re,d)
-    re_old   = rn_in_re(FEM_Node)
+            TMP = TMP                            &
+                + dVB_Coeff_Old(Here_Old,iVB)    &
+                * lm_at_rn(d_old,FEM_Node)
 
 
-    TMP = 0.0_idp
-    DO d_old = 0,DEGREE
-        Here_Old = FP_Array_Map_TypeB(iU,iVB,re_old,d_old,lm)
+        END DO ! d_Old
 
-        TMP = TMP                            &
-            + dVB_Coeff_Old(Here_Old,iVB)    &
-            * lm_at_rn(d_old,FEM_Node)
+        dVB_Coeff_Vector(Here_New,iVB) = TMP
+
+    END DO  ! lm
+    END DO  ! iU
+    END DO  ! d
+    END DO  ! re
 
 
-    END DO ! d_Old
 
-    dVB_Coeff_Vector(Here_New,iVB) = TMP
+    CALL TimerStop(Timer_Remesh_FillX)
+    CALL TimerStart(Timer_Remesh_FillS)
 
-END DO  ! lm
-END DO  ! iU
-END DO  ! d
-END DO  ! re
+    iVB = iVB_S
+    DO re = 0,Num_R_Elements-1
+    DO d = 0,Degree
+    DO iU = iU_S1,iU_S3
+    DO lm = 1,LM_Length
 
+        Here_New = FP_Array_Map_TypeB(iU,iVB,re,d,lm)
+        FEM_Node = Map_To_FEM_Node(re,d)
+        re_old   = rn_in_re(FEM_Node)
+
+
+        TMP = 0.0_idp
+        DO d_old = 0,DEGREE
+            Here_Old = FP_Array_Map_TypeB(iU,iVB,re_old,d_old,lm)
+
+            TMP = TMP                            &
+                + dVB_Coeff_Old(Here_Old,iVB)    &
+                * lm_at_rn(d_old,FEM_Node)
+
+
+        END DO ! d_Old
+
+        dVB_Coeff_Vector(Here_New,iVB) = TMP
+
+    END DO  ! lm
+    END DO  ! iU
+    END DO  ! d
+    END DO  ! re
+END IF
 
 CALL TimerStop(Timer_Remesh_FillS)
 
@@ -315,12 +318,17 @@ NE_Old(3)         = Num_P_Elements
 
 ALLOCATE( rlocs_old(0:Num_R_Elements) )
 ALLOCATE( dVA_Coeff_Old(1:Num_R_Nodes_Old,1:LM_Length,1:2) )
-ALLOCATE( dVB_Coeff_Old(1:iVB_Prob_Dim_Old,1:2) )
-
 
 rlocs_Old = rlocs
 dVA_Coeff_Old = dVA_Coeff_Vector
-dVB_Coeff_Old = dVB_Coeff_Vector
+
+
+
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
+    ALLOCATE( dVB_Coeff_Old(1:iVB_Prob_Dim_Old,1:2) )
+    dVB_Coeff_Old = dVB_Coeff_Vector
+END IF
+
 
 CALL TimerStop(Timer_Remesh_MakeCopies)
 
@@ -340,7 +348,10 @@ CALL TimerStart(Timer_Remesh_DestroyCopies)
 
 DEALLOCATE( rlocs_old )
 DEALLOCATE( dVA_Coeff_Old )
-DEALLOCATE( dVB_Coeff_Old )
+
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
+    DEALLOCATE( dVB_Coeff_Old )
+END IF
 
 CALL TimerStop(Timer_Remesh_DestroyCopies)
 
