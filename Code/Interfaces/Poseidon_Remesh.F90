@@ -96,6 +96,11 @@ USE Timer_Variables_Module, &
                     Timer_Remesh_FillS,             &
                     Timer_Remesh_DestroyCopies
 
+USE Flags_Core_Module, &
+            ONLY :  iPF_Core_Flags,             &
+                    iPF_Core_Method_Mode,       &
+                    iPF_Core_Method_Newtonian
+
 IMPLICIT NONE
 
 
