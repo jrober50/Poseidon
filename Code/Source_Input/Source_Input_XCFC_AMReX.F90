@@ -233,8 +233,9 @@ SUBROUTINE Poseidon_Input_Sources_XCFC_AMREX_Caller( MF_Src_Input )
 TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:)
 
 INTEGER                                             ::  level
+INTEGER                                             ::  NumLevelsOld
 LOGICAL                                             ::  All_Flag
-LOGICAL,  DIMENSION(0:AMReX_Num_Levels-1)           ::  Remesh_Flag
+LOGICAL,  ALLOCATABLE,  DIMENSION(:)                ::  Remesh_Flag
 
 
 IF ( Verbose_Flag ) CALL Run_Message('Receiving XCFC Sources. Container : AMReX Multifab. B')
@@ -248,6 +249,7 @@ CALL TimerStart(Timer_GR_SourceInput)
 IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
 
     AMReX_Num_Levels = amrex_get_numlevels()
+
     DO level = 0,AMReX_Num_Levels-1
 
         CALL amrex_multifab_build(  MF_Source(level),           &
@@ -279,14 +281,22 @@ IF ( .NOT. lPF_SI_Flags(iPF_SI_MF_Ready) ) THEN
 ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
         ! If the do not match, then Poseidon will assumed the mesh has changed,
         ! and will preform a remeshing.
+    NumLevelsOld = AMReX_Num_Levels
+    AMReX_Num_Levels = amrex_get_numlevels()
     
-
-    Remesh_Flag = .FALSE.
-    DO level = 0,AMReX_Num_Levels-1
-        Remesh_Flag(level) = Multifab_Issame( MF_Source(level),   &
-                                              MF_Src_Input(level) )
-    END DO
-
+    IF ( NumLevelsOld .NE. AMReX_Num_Levels ) THEN
+        ALLOCATE(Remesh_Flag(1))
+        Remesh_Flag = .FALSE.
+    ELSE
+        ALLOCATE(Remesh_Flag(0:AMReX_Num_Levels-1))
+        Remesh_Flag = .FALSE.
+        DO level = 0,AMReX_Num_Levels-1
+            Remesh_Flag(level) = Multifab_Issame( MF_Source(level),   &
+                                                  MF_Src_Input(level) )
+        END DO
+    END IF
+    
+    
     IF ( .NOT. ALL(Remesh_Flag) ) THEN
 
         ! Destroy the Old
@@ -317,7 +327,7 @@ ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
         END IF
 
     
-    
+        DEALLOCATE(Remesh_Flag)
     
     ELSE  ! MF_Source exists and matches the MF_Src_Input's decomposition.
           ! All that needs to be done is copy over the new data.
@@ -496,6 +506,7 @@ ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
                                               MF_Src_Input(level) )
     END DO
 
+    
 
     IF ( .NOT. ALL(Remesh_Flag) ) THEN
         ! Destroy the Old
@@ -574,6 +585,9 @@ INTEGER                                             ::  Index
 INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
+
+
+
 
 DO level = 0,AMReX_Num_Levels-1
     CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
