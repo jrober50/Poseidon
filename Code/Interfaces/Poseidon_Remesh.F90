@@ -135,6 +135,7 @@ INTEGER                                     ::  New_Node
 INTEGER                                     ::  FEM_Node
 INTEGER                                     ::  re_Old
 
+INTEGER                                     ::  iUA_Max,iUA_Min
 INTEGER                                     ::  Here_New
 INTEGER                                     ::  Here_Old, There_Old
 
@@ -175,7 +176,6 @@ DO re = 0,Num_R_Elements-1  ! Cycle through new elements
             ! Evaluate and Store the Lagrange Polynomials defined by the
             ! FEM nodes on refence element, at the location of the new node, FEM_Node,
             ! within the element; Lambda_m at location r_n.
-            
             lm_at_rn(:,FEM_Node) = Lagrange_Poly(x,Degree,FEM_Node_xlocs)
 
 
@@ -194,9 +194,15 @@ END DO ! re
 CALL TimerStop(Timer_Remesh_MakeLambdaArray)
 CALL TimerStart(Timer_Remesh_FillTypeA)
 
+iUA_Min = 1
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
+    iUA_Max = 2
+ELSE
+    iUA_Max = 1
+END IF 
 
 ! Work through Type A Coeffs
-DO iU = 1,2
+DO iU = iUA_Min,iUA_Max
 DO lm = 1,LM_Length
 DO New_Node = 1,Num_R_Nodes
 
