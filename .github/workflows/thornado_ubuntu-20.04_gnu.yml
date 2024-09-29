@@ -17,27 +17,27 @@ jobs:
         with:
           repository: dunhamsj/amrex
           path: amrex
-          ref: MeshRefinement_DG
-          
+          ref: development
+
       - name: Checkout thornado
         uses: actions/checkout@v3
         with:
           repository: endeve/thornado
           path: thornado
           ref:  InterfaceWithPoseidon
-          
+
       - name: Checkout weaklib
         uses: actions/checkout@v3
         with:
           repository: starkiller-astro/weaklib
           path: weaklib
-    
+
       - name: Update Ubuntu
         run: |
           sudo apt-get -y install libhdf5-dev
           sudo apt-get -y install mpich
           sudo apt-get -y update
-    
+
       - name: Set Environment Variables
         run: |
           echo "THORNADO_DIR=${GITHUB_WORKSPACE}/thornado"      >> ${GITHUB_ENV}
