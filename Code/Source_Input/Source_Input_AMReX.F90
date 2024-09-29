@@ -19,11 +19,6 @@ USE Poseidon_Kinds_Module, &
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
 
-USE thornado_amrex_boxarray_module, &
-            ONLY : amrex_boxarray_issame
-USE thornado_amrex_boxarray_module, &
-            ONLY : amrex_distromap_issame
-
 USE amrex_amrcore_module, &
             ONLY :  amrex_get_numlevels
 
