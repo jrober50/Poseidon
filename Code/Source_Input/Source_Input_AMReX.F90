@@ -685,8 +685,8 @@ LOGICAL                                 ::  Flag
 
 Flag = .FALSE.
 IF (MFA%owner .AND. MFB%owner) THEN
-    IF (amrex_boxarray_issame(MFA%BA,MFB%BA) .AND.      &
-        amrex_distromap_issame(MFA%DM,MFB%DM) ) THEN
+    IF ((MFA%BA.EQ.MFB%BA) .AND.      &
+        (MFA%DM.EQ.MFB%DM) ) THEN
         Flag = .TRUE.
     END IF
 END IF
