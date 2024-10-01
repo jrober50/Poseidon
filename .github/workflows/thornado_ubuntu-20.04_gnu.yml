@@ -1,13 +1,13 @@
-name: Compile thornado on Ubuntu 20.04 with gnu compilers
+name: Compile thornado on Ubuntu (latest) with gnu compilers
 
 on: [ push, pull_request ]
 
 jobs:
   thornado-compile-with-amrex_gnu:
-    name: Compile thornado on Ubuntu 20.04 with gnu compilers
-    runs-on: ubuntu-20.04
+    name: Compile thornado on Ubuntu (latest) with gnu compilers
+    runs-on: ubuntu-latest
     env:
-      THORNADO_MACHINE: gh-runner_ubuntu-20.04_gnu
+      THORNADO_MACHINE: gh-runner_ubuntu-latest_gnu
     steps:
       - name: Checkout Poseidon
         uses: actions/checkout@v3
