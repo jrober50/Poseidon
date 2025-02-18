@@ -149,6 +149,8 @@ REAL(idp),  DIMENSION(0:Degree)             ::  Cur_R_Locs
 INTEGER,    DIMENSION(:),   ALLOCATABLE     ::  rn_in_re
 REAL(idp),  DIMENSION(:,:), ALLOCATABLE     ::  lm_at_rn
 
+INTEGER                                     ::  iU_Upper
+
 
 IF ( Verbose_Flag ) CALL Run_Message('Beginning Remeshing of Coefficient Vector')
 CALL TimerStart(Timer_Remesh_FillTotal)
@@ -195,9 +197,15 @@ END DO ! re
 CALL TimerStop(Timer_Remesh_MakeLambdaArray)
 CALL TimerStart(Timer_Remesh_FillTypeA)
 
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) .NE. iPF_Core_Method_Newtonian ) THEN
+    iU_Upper = 2        ! If not running in Newtonian mode, there are two variables, CF and LF
+ELSE
+    iU_Upper = 1        ! In Newtonian mode, there is only one variable, the potential.
+END IF
+
 
 ! Work through Type A Coeffs
-DO iU = 1,2
+DO iU = 1,iU_Upper
 DO lm = 1,LM_Length
 DO New_Node = 1,Num_R_Nodes
 
