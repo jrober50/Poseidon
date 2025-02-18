@@ -8,6 +8,7 @@ DRIVER_F90 = \
   Driver_InitSource.F90     \
   Driver_SetSource.F90      \
   Driver_ReturnTest.F90     \
+  Driver_ConFactor_Loop.F90 \
   Driver_Yahil_XCFC_AMReX.F90
 
 

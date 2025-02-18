@@ -281,6 +281,8 @@ IF ( iU == 1 ) THEN
         tpd = Map_To_tpd(td,pd)
         Here = (iS_E-1)*Local_Quad_DOF + Quad_Map(rd,td,pd)
         Source(tpd,rd) = Source_PTR(iE(1),iEOff(2),iEOff(3),Here)
+        
+!        print*,iE,rd,tpd,Source(tpd,rd)
 
     END DO ! pd
     END DO ! td

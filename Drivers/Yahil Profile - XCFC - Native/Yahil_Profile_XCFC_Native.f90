@@ -80,6 +80,9 @@ USE Timer_Variables_Module, &
 USE ADM_Mass_Module, &
             ONLY :  Calc_ADM_Mass
 
+USE External_IO_Test_Results_Module, &
+            ONLY :  Print_Yahil_Error
+
 USE MPI
 
 
@@ -479,11 +482,11 @@ CALL Initialize_Poseidon &
     IF ((Print_Results_Flag .EQV. .TRUE.) .OR. (Verbose .EQV. .TRUE. )) THEN
         WRITE(*,'(A)')" Final Results "
         
-        CALL Print_Results()
+!        CALL Print_Results()
         CALL Write_Final_Results()
-
-        CALL Calc_ADM_Mass(ADM_Mass)
-        PRINT*,"ADM Mass",ADM_Mass
+        CALL Print_Yahil_Error
+!        CALL Calc_ADM_Mass(ADM_Mass)
+!        PRINT*,"ADM Mass",ADM_Mass
     END IF
 
 
@@ -492,13 +495,13 @@ CALL Initialize_Poseidon &
     CALL TimerStop( Timer_Driver_Extra )
 
 
-    CALL Poseidon_Return_Extrinsic_Curvature( NE, NQ,                &
-                                              Input_R_Quad,          &
-                                              Input_T_Quad,          &
-                                              Input_P_Quad,          &
-                                              Left_Limit,            &
-                                              Right_Limit,           &
-                                              Output_Kij             )
+!    CALL Poseidon_Return_Extrinsic_Curvature( NE, NQ,                &
+!                                              Input_R_Quad,          &
+!                                              Input_T_Quad,          &
+!                                              Input_P_Quad,          &
+!                                              Left_Limit,            &
+!                                              Right_Limit,           &
+!                                              Output_Kij             )
 
 
 

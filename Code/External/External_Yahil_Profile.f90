@@ -280,7 +280,7 @@ CALL CONVERT_SELF_SIMILAR_3D(  t, Kappa_wUnits, gamma, ecc,                   &
 CALL Create_Yahil_Newtonian_Solution_Coeffs( NUM_LINES, Input_R, Enclosed_Mass )
 CALL CREATE_SELFSIM_SHIFT_SOL( Num_Nodes, NUM_R_ELEM, NUM_T_ELEM, NUM_P_ELEM, Input_Si, r_locs )
 
-Potential_Solution => SELFSIM_NEWT_SOL
+Potential_Solution => Yahil_Potential_Solution
 Shift_Solution => SELFSIM_SHIFT_SOL
 
 
@@ -467,7 +467,7 @@ CALL Calculate_Yahil_Density(   t, kappa, gamma,                        &
 
 CALL Create_Yahil_Newtonian_Solution_Coeffs( NUM_LINES, Input_R, Enclosed_Mass )
 
-Potential_Solution => SELFSIM_NEWT_SOL
+Potential_Solution => Yahil_Potential_Solution
 
 
 CALL TimerStop( Timer_Core_Init_Test_Problem )
@@ -594,6 +594,7 @@ V_FACTOR = SQRT(kappa)                          &
 X_Factor = kappa**(-0.5_idp)                               &
         *(Grav_Constant_G**((gamma-1.0_idp)/2.0_idp))       &
         *((t)**(gamma-2.0_idp))
+
 
 M_FACTOR = kappa**(3.0_idp/2.0_idp)                             &
          * Grav_Constant_G**((1.0_idp-3.0_idp*gamma)/2.0_idp)   &
@@ -868,7 +869,14 @@ INTEGER     :: i
 
 SELFSIM_R_VALS(0) = 0.0_idp
 SELFSIM_R_VALS(1:NUM_ENTRIES) = R_Values(1:NUM_ENTRIES)
-SELFSIM_POT_VALS(NUM_ENTRIES) = -GRAV_Constant_G*Enclosed_Mass(Num_Entries)/R_Values(Num_Entries)
+SELFSIM_POT_VALS(NUM_ENTRIES) = -Grav_Constant_G*Enclosed_Mass(Num_Entries)/R_Values(Num_Entries)
+
+PRINT*,"G :",Grav_Constant_G
+PRINT*,"M :",Enclosed_Mass(Num_Entries)
+PRINT*,"R :",R_Values(Num_Entries)
+
+i = Num_Entries-1
+print*,i,SELFSIM_POT_VALS(i), SELFSIM_POT_VALS(i+1),Grav_Constant_G*Enclosed_Mass(i),SELFSIM_R_Vals(i+1),SELFSIM_R_Vals(i)
 
 DO i = NUM_ENTRIES-1,1,-1
 
@@ -877,6 +885,7 @@ DO i = NUM_ENTRIES-1,1,-1
                         * (SELFSIM_R_Vals(i+1)-SELFSIM_R_Vals(i))       &
                         / (SELFSIM_R_Vals(i)*SELFSIM_R_Vals(i))
 
+!    print*,i,SELFSIM_POT_VALS(i), SELFSIM_POT_VALS(i+1),Grav_Constant_G*Enclosed_Mass(i),SELFSIM_R_Vals(i+1),SELFSIM_R_Vals(i)
 
 END DO
 
@@ -884,6 +893,10 @@ SELFSIM_POT_VALS(0) = SELFSIM_POT_VALS(1)                           &
                     - 3*Grav_Constant_G*Enclosed_Mass(1)            &
                     /(2*SELFSIM_R_VALS(1))
 
+
+!DO i = 1,Num_Entries-1
+!    PRINT*,SelfSim_R_Vals(i),SelfSim_Pot_Vals(i),Enclosed_Mass(i)
+!END DO
 
 
 END SUBROUTINE Create_Yahil_Newtonian_Solution_Coeffs
@@ -897,19 +910,20 @@ END SUBROUTINE Create_Yahil_Newtonian_Solution_Coeffs
 
 !+201+###########################################################################!
 !                                                                                !
-!                         SELFSIM_NEWT_SOL                                       !
+!                         Yahil_Potential_Solution                                       !
 !                                                                                !
 !################################################################################!
-FUNCTION SELFSIM_NEWT_SOL( r, theta, phi )
+FUNCTION Yahil_Potential_Solution( r, theta, phi )
 
 REAL(idp), INTENT(IN)     :: r, theta, phi
-REAL(idp)                 :: SELFSIM_NEWT_SOL
+REAL(idp)                 :: Yahil_Potential_Solution
 
 INTEGER                          :: cur_entry
 INTEGER                          :: i
 
 REAL(idp)                 :: deltar
 
+cur_entry = 0
 DO i = 0,NUM_ENTRIES-1
 
     IF ( r == 0 ) THEN
@@ -927,16 +941,54 @@ END DO
 
 deltar = SELFSIM_R_VALS(cur_entry+1) - SELFSIM_R_VALS(cur_entry)
 
-SELFSIM_NEWT_SOL = (1.0_idp/deltar)    &
+Yahil_Potential_Solution = (1.0_idp/deltar)    &
                  *( SELFSIM_POT_VALS(cur_entry)*(SELFSIM_R_VALS(cur_entry+1) - r)         &
                    +SELFSIM_POT_VALS(cur_entry+1)*(r - SELFSIM_R_VALS(cur_entry))         )
 
 
-END FUNCTION SELFSIM_NEWT_SOL
+END FUNCTION Yahil_Potential_Solution
 
 
 
+!+201+###########################################################################!
+!                                                                                !
+!                         Yahil_Potential_Solution                                       !
+!                                                                                !
+!################################################################################!
+SUBROUTINE Yahil_Potential_Solution_Sub( r, theta, phi )
 
+REAL(idp), INTENT(IN)     :: r, theta, phi
+REAL(idp)                 :: Yahil_Potential_Solution
+
+INTEGER                          :: cur_entry
+INTEGER                          :: i
+
+REAL(idp)                 :: deltar
+
+cur_entry = 0
+DO i = 0,NUM_ENTRIES-1
+
+    IF ( r == 0 ) THEN
+        cur_entry = 0
+
+    ELSE IF (( r > SELFSIM_R_VALS(i) ) .AND. ( r <= SELFSIM_R_VALS(i+1) ) ) THEN
+        cur_entry = i
+
+    ELSE IF ( r > SELFSIM_R_VALS(Num_Entries) ) THEN
+        cur_entry = i
+
+    END IF
+
+END DO
+
+deltar = SELFSIM_R_VALS(cur_entry+1) - SELFSIM_R_VALS(cur_entry)
+
+Yahil_Potential_Solution = (1.0_idp/deltar)    &
+                 *( SELFSIM_POT_VALS(cur_entry)*(SELFSIM_R_VALS(cur_entry+1) - r)         &
+                   +SELFSIM_POT_VALS(cur_entry+1)*(r - SELFSIM_R_VALS(cur_entry))         )
+
+
+END SUBROUTINE Yahil_Potential_Solution_Sub
 
 
 
@@ -1006,7 +1058,7 @@ DO re = 0,NUM_R_ELEM-1
 
    ! Calculate the Alpha Psi values at each of the Outer Integral's Quadrature Points !
    DO i = 1,Ord
-      AlphaPsi(i) =  1.0_idp+ 0.5_idp*SELFSIM_NEWT_SOL(ri_locs(i),0.0_idp,0.0_idp)/C_Square
+      AlphaPsi(i) =  1.0_idp+ 0.5_idp*Yahil_Potential_Solution(ri_locs(i),0.0_idp,0.0_idp)/C_Square
    END DO
 
 
@@ -1019,7 +1071,7 @@ DO re = 0,NUM_R_ELEM-1
       ! Calculate Psi^10 values at each of the Inner Quadrature Points
       DO j = 1,Ord
 
-           Psi = 1.0_idp- 0.5_idp*SELFSIM_NEWT_SOL(rij_locs(j,i),0.0_idp,0.0_idp)/C_Square
+           Psi = 1.0_idp- 0.5_idp*Yahil_Potential_Solution(rij_locs(j,i),0.0_idp,0.0_idp)/C_Square
            Psi_10(j,i) = Psi**10
 
       END DO
@@ -1162,7 +1214,7 @@ END FUNCTION SELFSIM_SHIFT_SOL
 SUBROUTINE SELFSIM_NEWT_SUB( r )
 
 REAL(idp), INTENT(IN)     :: r
-REAL(idp)                 :: SELFSIM_NEWT_SOL
+REAL(idp)                 :: Yahil_Potential_Solution
 
 INTEGER                          :: cur_entry
 INTEGER                          :: i
@@ -1179,9 +1231,9 @@ DO i = 1,NUM_ENTRIES-1
 END DO
 
 
-SELFSIM_NEWT_SOL = (1.0_idp/(SELFSIM_R_VALS(cur_entry+1) - SELFSIM_R_VALS(cur_entry)))    &
-                 *( SELFSIM_POT_VALS(cur_entry)*(SELFSIM_R_VALS(cur_entry+1) - r)         &
-                   +SELFSIM_POT_VALS(cur_entry+1)*(r - SELFSIM_R_VALS(cur_entry))         )
+Yahil_Potential_Solution = (1.0_idp/(SELFSIM_R_VALS(cur_entry+1) - SELFSIM_R_VALS(cur_entry)))    &
+                         *( SELFSIM_POT_VALS(cur_entry)*(SELFSIM_R_VALS(cur_entry+1) - r)         &
+                         + SELFSIM_POT_VALS(cur_entry+1)*(r - SELFSIM_R_VALS(cur_entry) )         )
 
 
 END SUBROUTINE SELFSIM_NEWT_SUB

@@ -67,7 +67,7 @@ USE Poseidon_Interface_Boundary_Conditions, &
 
 
 USE External_Yahil_Profile_Module, &
-            ONLY :  SELFSIM_NEWT_SOL,           &
+            ONLY :  Yahil_Potential_Solution,           &
                     Create_Yahil_Newtonian_Solution_Coeffs
 
 IMPLICIT NONE
@@ -94,11 +94,12 @@ REAL(idp), DIMENSION(1:5)                               ::  INNER_BC_VALUES
 REAL(idp), DIMENSION(1:5)                               ::  OUTER_BC_VALUES
 
 
-REAL(idp)                                                           ::  R_Factor
+
 REAL(idp)                                                           ::  Kappa_wUnits
-
-
+REAL(idp)                                                           ::  R_Factor
+REAL(idp)                                                           ::  M_Factor
 REAL(idp), DIMENSION(:), ALLOCATABLE                                ::  Enclosed_Mass
+
 REAL(idp), DIMENSION(:),ALLOCATABLE                                 ::  Input_R
 REAL(idp), DIMENSION(:),ALLOCATABLE                                 ::  Input_X,    &
                                                                         Input_D,    &
@@ -173,6 +174,9 @@ CLOSE(UNIT=nread,STATUS='keep',IOSTAT=istat)
 Kappa_wUnits = SelfSim_Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**SelfSim_Gamma)
 t = SelfSim_T*Millisecond
 
+
+!Print*,"R_Factor Parts: ", Kappa_wUnits, SelfSim_Gamma, t, SelfSim_T
+
 R_Factor = SQRT(Kappa_wUnits)                                &
             *(Grav_Constant_G**((1.0_idp-SelfSim_Gamma)/2.0_idp))       &
             *((t)**(2.0_idp-SelfSim_Gamma))
@@ -180,14 +184,16 @@ R_Factor = SQRT(Kappa_wUnits)                                &
 Input_R = R_Factor*Input_X
 
 
-Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
+M_Factor = Kappa_wUnits**(1.50_idp)                                   &
               * Grav_Constant_G**((1.0_idp-3.0_idp*SelfSim_Gamma)/2.0_idp)  &
-              * (t**(4.0_idp- 3.0_idp*SelfSim_Gamma))                      &
-              * Input_M
+              * (t**(4.0_idp- 3.0_idp*SelfSim_Gamma))
+
+Enclosed_Mass = M_Factor * Input_M
+
+!PRINT*,"R_Factor,M_Factor: ",R_Factor,M_Factor
 
 CALL Create_Yahil_Newtonian_Solution_Coeffs( NUM_LINES, Input_R, Enclosed_Mass )
-Potential_Solution => SELFSIM_NEWT_SOL
-
+Potential_Solution => Yahil_Potential_Solution
 
 Psi_BC = 1.0_idp    &
        - 0.5_idp*Potential_Solution(R_Outer*Centimeter, 0.0_idp, 0.0_idp)/C_Square

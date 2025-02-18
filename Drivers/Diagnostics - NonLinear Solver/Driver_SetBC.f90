@@ -68,7 +68,7 @@ USE Poseidon_Interface_Boundary_Conditions, &
 
 USE External_Yahil_Profile_Module, &
             ONLY :  SELFSIM_NEWT_SOL,           &
-                    CREATE_SELFSIM_NEWT_SOL
+                    Create_Yahil_Newtonian_Solution_Coeffs
 
 IMPLICIT NONE
 
@@ -185,7 +185,7 @@ Enclosed_Mass = Kappa_wUnits**(1.50_idp)                                   &
               * (t**(4.0_idp- 3.0_idp*SelfSim_Gamma))                      &
               * Input_M
 
-CALL CREATE_SELFSIM_NEWT_SOL( NUM_LINES, Input_R, Enclosed_Mass )
+CALL Create_Yahil_Newtonian_Solution_Coeffs( NUM_LINES, Input_R, Enclosed_Mass )
 Potential_Solution => SELFSIM_NEWT_SOL
 
 

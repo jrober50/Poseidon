@@ -179,7 +179,7 @@ INTEGER                                     ::  lvl
 
 IF ( Verbose_Flag ) CALL Driver_Init_Message('Begining the conformal factor loop.')
 
-CFLD_MaxIters   = 500
+CFLD_MaxIters   = 1
 CFLD_Tolerance  = 6E-15
 
 MF_nComps       = MF_Src_nComps
@@ -283,12 +283,19 @@ CFLD_Iters = Iter
 CALL Output_ConFactorLoopData()
 
 DEALLOCATE( MF_Driver_Source )
+DEALLOCATE( CFLD_Residual )
+DEALLOCATE( CFLD_Update )
 
+DEALLOCATE( MF_Old )
+DEALLOCATE( MF_New )
 
 
 IF ( .TRUE. ) THEN
     CALL Print_HCT_Error()
 END IF
+
+
+
 
 END SUBROUTINE Driver_ConFactor_Loop
 

@@ -59,7 +59,7 @@ USE Variables_External, &
 
 
 USE Variables_AMReX_Core, &
-            ONLY :  AMReX_Max_Level
+            ONLY :  AMReX_MaxLevel
 
 
 IMPLICIT NONE
@@ -296,7 +296,7 @@ Half_Decade_Table = [ 1,5,10,50,100,500,1000,5000,10000,50000,100000 ]
 
 Num_DOF = nComps/5
 
-E_Level_Threshold = Central_E/10**(AMReX_Max_Level-Level)
+E_Level_Threshold = Central_E/10**(AMReX_MaxLevel-Level)
 
 !E_Level_Threshold = Central_E/Half_Decade_Table(Level)
 

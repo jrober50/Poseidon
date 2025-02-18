@@ -33,6 +33,13 @@ USE amrex_multifab_module, &
                     amrex_mfiter_build,     &
                     amrex_mfiter_destroy
 
+!USE amrex_boxarray_module, &
+!            ONLY :  amrex_boxarray_issame
+!
+!USE amrex_distromap_module, &
+!            ONLY : amrex_distromap_issame
+
+
 USE Variables_AMReX_Core, &
             ONLY :  MF_Source,          &
                     AMReX_Num_Levels,   &
@@ -240,7 +247,8 @@ TYPE(amrex_multifab),                   INTENT(IN)  ::  MF_Src_Input(0:)
 
 INTEGER                                             ::  level
 LOGICAL                                             ::  All_Flag
-LOGICAL,  DIMENSION(0:AMReX_Num_Levels-1)           ::  Remesh_Flag
+LOGICAL, ALLOCATABLE, DIMENSION(:)                  ::  Remesh_Flag
+INTEGER                                             ::  AMReX_New_Levels
 CHARACTER(LEN=300)                                  ::  MessageBox
 
 IF ( Verbose_Flag ) THEN
@@ -292,11 +300,15 @@ ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
         ! and will preform a remeshing.
     
 
+    AMReX_New_Levels = amrex_get_numlevels()
+    ALLOCATE( Remesh_Flag(0:AMReX_New_Levels-1) )
     Remesh_Flag = .FALSE.
-    DO level = 0,AMReX_Num_Levels-1
-        Remesh_Flag(level) = Multifab_Issame( MF_Source(level),   &
-                                              MF_Src_Input(level) )
-    END DO
+    IF ( AMReX_New_Levels == AMReX_Num_Levels) THEN
+        DO level = 0,AMReX_New_Levels-1
+            Remesh_Flag(level) = Multifab_Issame( MF_Source(level),   &
+                                                  MF_Src_Input(level) )
+        END DO
+    END IF
 
     IF ( .NOT. ALL(Remesh_Flag) ) THEN
 
@@ -381,7 +393,8 @@ LOGICAL,                    OPTIONAL,   INTENT(IN)  ::  Remesh_Flag_Option
 
 INTEGER                                             ::  level
 LOGICAL                                             ::  All_Flag
-LOGICAL,    DIMENSION(0:AMReX_Num_Levels-1)         ::  Remesh_Flag
+LOGICAL, ALLOCATABLE, DIMENSION(:)                  ::  Remesh_Flag
+INTEGER                                             ::  AMReX_New_Levels
 CHARACTER(LEN=300)                                  ::  MessageBox
 
 IF ( Verbose_Flag ) THEN
@@ -509,11 +522,12 @@ ELSE    ! Check if MF_Source has the same domain decomop as MF_Src_Input.
     AMReX_New_Levels = amrex_get_numlevels()
     ALLOCATE( Remesh_Flag(0:AMReX_New_Levels-1) )
     Remesh_Flag = .FALSE.
-    DO level = 0,AMReX_New_Levels-1
-        Remesh_Flag(level) = Multifab_Issame( MF_Source(level),   &
-                                              MF_Src_Input(level) )
-    END DO
-
+    IF ( AMReX_New_Levels == AMReX_Num_Levels) THEN
+        DO level = 0,AMReX_New_Levels-1
+            Remesh_Flag(level) = Multifab_Issame( MF_Source(level),   &
+                                                  MF_Src_Input(level) )
+        END DO
+    END IF
 
     IF ( .NOT. ALL(Remesh_Flag) ) THEN
         ! Destroy the Old
@@ -593,9 +607,11 @@ INTEGER                                             ::  Here
 INTEGER                                             ::  There
 INTEGER                                             ::  Local_Here
 
-DO level = 0,AMReX_Num_Levels-1
-    CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
 
+DO level = 0,AMReX_Num_Levels-1
+!    CALL amrex_mfiter_build(mfi, MF_Source(level), tiling = .true. )
+    CALL amrex_mfiter_build(mfi, MF_Src_Input(level), tiling = .true. )
+    
     DO WHILE(mfi%next())
         Their_PTR => MF_Src_Input(level)%dataPtr(mfi)
         My_PTR    => MF_Source(level)%dataPtr(mfi)
@@ -685,8 +701,7 @@ LOGICAL                                 ::  Flag
 
 Flag = .FALSE.
 IF (MFA%owner .AND. MFB%owner) THEN
-    IF (amrex_boxarray_issame(MFA%BA,MFB%BA) .AND.      &
-        amrex_distromap_issame(MFA%DM,MFB%DM) ) THEN
+    IF ( (MFA%BA==MFB%BA) .AND. (MFA%DM==MFB%DM) ) THEN
         Flag = .TRUE.
     END IF
 END IF

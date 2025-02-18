@@ -460,8 +460,7 @@ DO i = 0,Num_Samples
 
     Potential = Calc_Var_At_Location(r,theta,phi,iU_CF)
     
-    Yahil_Sol = Potential_Solution(r,theta,phi)
-
+    Yahil_Sol = 1.0_idp - 0.5_idp*Potential_Solution(r*Centimeter, 0.0_idp, 0.0_idp)/C_Square
     Yahil_Error = abs(Yahil_Sol - Potential)/MAXVAL([abs(Yahil_Sol),abs(Potential)])
 
     WRITE(*,111) r/Centimeter,      &
@@ -470,7 +469,6 @@ DO i = 0,Num_Samples
                  Yahil_Error
 
 END DO
-
 
 END SUBROUTINE Print_Yahil_Error
 

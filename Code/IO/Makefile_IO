@@ -8,5 +8,6 @@ POSEIDON_IO = \
   IO_Linear_System.f90           \
   IO_Fixed_Point_Diagnostics.f90 \
   IO_Condition_Number_Output.f90 \
+  IO_AMReX_Plotfile_Module.F90   \
   Parameter_Reader_Poseidon.f90  \
 

@@ -132,6 +132,10 @@ USE External_Yahil_Profile_Module, &
 
 USE Driver_Variables, &
             ONLY :  Driver_NQ
+            
+USE Flags_IO_Module, &
+            ONLY :  lPF_IO_Flags,           &
+                    iPF_IO_Print_Setup
 
 USE MPI
 
@@ -172,8 +176,8 @@ Kappa_wUnits = SelfSim_Kappa*((Erg/Centimeter**3)/(Gram/Centimeter**3)**SelfSim_
 
 Central_E = Calc_Yahil_Central_E(SelfSim_T, SelfSim_Kappa, SelfSim_Gamma)
 
-
-IF ( Verbose_Flag ) THEN
+IF (.TRUE.) THEN
+!IF ( Verbose_Flag .OR. lPF_IO_Flags(iPF_IO_Print_Setup)) THEN
     WRITE(*,'(A)')'------------- Test Parameters ----------------'
     WRITE(*,'(A)')' Source Configuration : Yahil Self-Similar Collapse Profile'
     WRITE(*,'(A,ES12.5,A)') ' - Yahil Time      : ', SelfSim_T,' ms'
@@ -197,8 +201,9 @@ nVars_Source    = 5
 MF_Src_nComps   = nVars_Source*Driver_NQ(1)*Driver_NQ(2)*Driver_NQ(3)
 MF_Src_nGhost   = 0
 
-
-ALLOCATE( MF_Driver_Source(0:amrex_max_level) )
+IF ( .NOT. Allocated(MF_Driver_Source) ) THEN
+    ALLOCATE( MF_Driver_Source(0:amrex_max_level) )
+END IF
 CALL amrex_init_from_scratch( 0.0_idp )
 CALL TimerStop( Timer_Driver_SetSource_InitTest )
 

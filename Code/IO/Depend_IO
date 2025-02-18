@@ -25,6 +25,9 @@ IO_Fixed_Point_Diagnostics.o:        \
 IO_Condition_Number_Output.o:   \
   IO_Condition_Number_Output.f90\
 
+IO_AMReX_Plotfile_Module.o:     \
+  IO_AMReX_Plotfile_Module.F90  \
+
 Parameter_Reader_Poseidon.o:    \
   Parameter_Reader_Poseidon.f90 \
 

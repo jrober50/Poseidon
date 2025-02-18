@@ -99,9 +99,7 @@ DO m = -l,l
                                 FP_Iter_Matrix_Storage(:,l),    &
                                 dVA_Coeff_Vector(:,lm_loc,iU),  &
                                 Work_Vec                        )
-           
-!    PRINT*,"Work_Vec"
-!    PRINT*,Work_Vec
+
 
     CALL Matrix_CCS_MVMult( NUM_R_NODES,                    &
                             Factored_NNz,                   &
@@ -111,10 +109,6 @@ DO m = -l,l
                             Work_Vec,                       &
                             FP_Laplace_Vector(:,lm_loc,iU)  )
 
-!    PRINT*,"After MVMult"
-!    print*,FP_Laplace_Vector(:,lm_loc,iU)
-!    print*,"Load Storage"
-!    Print*,FP_Iter_Load_Storage(:,lm_loc)
     
     IF ( ANY( abs(FP_Iter_Load_Storage(:,lm_loc)) == 0.0_idp ) ) THEN
         DO i = 1,Num_R_Nodes
@@ -135,15 +129,6 @@ DO m = -l,l
                                         / FP_Iter_Load_Storage(:,lm_loc)
     END IF
 
-!    PRINT*,"Residual Vector"
-!    PRINT*,FP_Residual_Vector(:,lm_loc,iU)
-!    CALL sleep(1)
-    
-!    PRINT*,"Laplace Vector"
-!    PRINT*,FP_Laplace_Vector(:,lm_loc,iU)
-!    CALL sleep(1)
-!    PRINT*,"Load Vector"
-!    PRINT*,FP_Iter_Load_Storage(:,lm_loc)
 
 
     Resid_Norms(1,lm_loc,iter,iU) = SUM(ABS(FP_Residual_Vector(:,lm_loc,iU) ) )
@@ -152,10 +137,7 @@ DO m = -l,l
                                     FP_Residual_Vector(:,lm_loc,iU) ), idp) )
 
     Resid_Norms(3,lm_loc,iter,iU) = MAXVAL( (/ Resid_Norms(3,lm_loc,iter,iU), ABS(FP_Residual_Vector(:,lm_loc,iU) ) /) )
-!
-!    PRINT*,"Residuals : ",Resid_Norms(1,lm_loc,iter,iU), &
-!                          Resid_Norms(2,lm_loc,iter,iU), &
-!                          Resid_Norms(3,lm_loc,iter,iU)
+
 
 END DO ! m Loop
 END DO ! l Loop

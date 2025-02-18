@@ -666,6 +666,10 @@ ALLOCATE( kVar_Holder(1:P_Dim,1:T_Dim,1:R_Dim,kNum_Files) )
 xVar_Holder=0.0_idp
 xDrv_Holder=0.0_idp
 
+
+PRINT*,R_Dim,T_Dim,P_Dim
+STOP
+
 ! Calculate Output
 DO k = 1,P_Dim
 DO j = 1,T_Dim

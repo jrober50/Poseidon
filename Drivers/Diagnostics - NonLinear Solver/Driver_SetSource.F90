@@ -206,8 +206,7 @@ CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
 
 
-CALL Poseidon_Input_Sources(MF_Driver_Source,    &   ! Source Multifab
-                            MF_Src_nComps        )   ! AMReX Levels
+CALL Poseidon_Input_Sources(MF_Driver_Source )   ! AMReX Levels
 
 
 
@@ -282,8 +281,7 @@ CALL amrex_init_from_scratch( 0.0_idp )
 CALL TimerStop( Timer_Driver_SetSource_InitTest )
 
 
-CALL Poseidon_Input_Sources(MF_Driver_Source,    &   ! Source Multifab
-                            MF_Src_nComps        )   ! AMReX Levels
+CALL Poseidon_Input_Sources(MF_Driver_Source )   ! AMReX Levels
 
 END SUBROUTINE Driver_CreateSource
 

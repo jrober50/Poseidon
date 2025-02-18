@@ -155,7 +155,9 @@ INTEGER                 ::  iU_K13 = 8
 INTEGER                 ::  iU_K22 = 9
 INTEGER                 ::  iU_K23 = 10
 INTEGER                 ::  iU_K33 = 11
-
+INTEGER                 ::  iU_XV1 = 12
+INTEGER                 ::  iU_XV2 = 13
+INTEGER                 ::  iU_XV3 = 14
 
 
 CONTAINS
@@ -338,7 +340,8 @@ SUBROUTINE Poseidon_Return_All_AMReX( NQ,                       &
                                       Right_Limit,              &
                                       nLevels,                  &
                                       MF_Results,               &
-                                      FillGhostCells_Option     )
+                                      FillGhostCells_Option,    &
+                                      ReturnX_Option            )
 
 
 INTEGER,    DIMENSION(3),                   INTENT(IN)      ::  NQ
@@ -352,6 +355,7 @@ INTEGER,                                    INTENT(IN)      ::  nLevels
 TYPE(amrex_multifab),                       INTENT(INOUT)   ::  MF_Results(0:nLevels-1)
 
 LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  FillGhostCells_Option
+LOGICAL,                        OPTIONAL,   INTENT(IN)      ::  ReturnX_Option
 
 INTEGER                                                     ::  iRE
 INTEGER                                                     ::  re, te, pe
@@ -372,6 +376,7 @@ INTEGER,    CONTIGUOUS, POINTER                             ::  Mask_PTR(:,:,:,:
 REAL(idp),  CONTIGUOUS, POINTER                             ::  Results_PTR(:,:,:,:)
 
 LOGICAL                                                     ::  FillGhostCells
+LOGICAL                                                     ::  ReturnX
 
 REAL(idp)                                                   ::  Quad_Span
 REAL(idp),      DIMENSION(0:DEGREE)                                  ::  LagP
@@ -390,12 +395,12 @@ REAL(idp)                                                   ::  DPOT
 REAL(idp),      DIMENSION(3)                                ::  gamma
 REAL(idp),      DIMENSION(3,3,3)                            ::  Christoffel
 
-REAL(idp),   DIMENSION(1:2)                              ::  TMP_Val_A
-REAL(idp),   DIMENSION(1:3,1:2)                          ::  TMP_Val_B
-REAL(idp),   DIMENSION(1:3,1:3)                          ::  TMP_Drv_B
+REAL(idp),   DIMENSION(1:2)                                 ::  TMP_Val_A
+REAL(idp),   DIMENSION(1:3,1:2)                             ::  TMP_Val_B
+REAL(idp),   DIMENSION(1:3,1:3)                             ::  TMP_Drv_B
 
-REAL(idp),   DIMENSION(1:4)                              ::  Reusable_Vals
-REAL(idp),   DIMENSION(1:6)                              ::  Tmp_A
+REAL(idp),   DIMENSION(1:4)                                 ::  Reusable_Vals
+REAL(idp),   DIMENSION(1:6)                                 ::  Tmp_A
 
 INTEGER                                                     ::  Current_Location
 INTEGER                                                     ::  Num_DOF
@@ -427,10 +432,14 @@ REAL(idp),  DIMENSION(1:LM_Length, 1:NQ(2)*NQ(3) )                          ::  
 
 Slm_Elem_Table = 0.0_idp
 
+FillGhostCells = .FALSE.
 IF ( PRESENT(FillGhostCells_Option) ) THEN
     FillGhostCells = FillGhostCells_Option
-ELSE
-    FillGhostCells = .FALSE.
+END IF
+
+ReturnX = .FALSE.
+IF ( PRESENT(ReturnX_Option) ) THEN
+    ReturnX = ReturnX_Option
 END IF
 
 Quad_Span = Right_Limit - Left_Limit
@@ -799,6 +808,18 @@ DO lvl = 0,nLevels-1
 
                     Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_K33, rd, td, pd, NQ ))                         &
                             = REAL(Tmp_A(6)/(Gamma(3)*Gamma(3)*Tmp_Val_A(iU_CF)*Tmp_Val_A(iU_CF)),KIND = idp)
+
+
+                    IF ( ReturnX ) THEN
+                        Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_XV1, rd, td, pd, NQ ))                     &
+                                    = REAL(Tmp_Val_B(1,iVB_X), KIND = idp)
+                            
+                        Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_XV2, rd, td, pd, NQ ))                     &
+                                    = REAL(Tmp_Val_B(1,iVB_X), KIND = idp)
+
+                        Results_PTR(re,te,pe,AMReX_nCOMP_Map( iU_XV3, rd, td, pd, NQ ))                     &
+                                    = REAL(Tmp_Val_B(1,iVB_X), KIND = idp)
+                    END IF ! ReturnX
 
 
                 END IF ! Not Newtonian Mode

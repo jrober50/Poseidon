@@ -178,7 +178,7 @@ END IF
  CALL XCFC_Method_Part1()
 
 
-
+!IF (.TRUE.) THEN
  IF ( lPF_IO_Flags(iPF_IO_Print_Results) ) THEN
  DO i = 0,nPROCs_Poseidon
      IF (myID_Poseidon == MasterID_Poseidon) THEN
@@ -190,7 +190,7 @@ END IF
  END IF
 
 
-
+!STOP
 
 ! IF ( lPF_IO_Flags(iPF_IO_Write_Results) ) THEN
 ! IF ( myID_Poseidon == MasterID_Poseidon ) THEN
