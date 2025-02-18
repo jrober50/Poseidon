@@ -315,12 +315,15 @@ NE_Old(3)         = Num_P_Elements
 
 ALLOCATE( rlocs_old(0:Num_R_Elements) )
 ALLOCATE( dVA_Coeff_Old(1:Num_R_Nodes_Old,1:LM_Length,1:2) )
-ALLOCATE( dVB_Coeff_Old(1:iVB_Prob_Dim_Old,1:2) )
 
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+    ALLOCATE( dVB_Coeff_Old(1:iVB_Prob_Dim_Old,1:2) )
+    dVB_Coeff_Old = dVB_Coeff_Vector
+END IF
 
 rlocs_Old = rlocs
 dVA_Coeff_Old = dVA_Coeff_Vector
-dVB_Coeff_Old = dVB_Coeff_Vector
+
 
 CALL TimerStop(Timer_Remesh_MakeCopies)
 
@@ -340,7 +343,10 @@ CALL TimerStart(Timer_Remesh_DestroyCopies)
 
 DEALLOCATE( rlocs_old )
 DEALLOCATE( dVA_Coeff_Old )
-DEALLOCATE( dVB_Coeff_Old )
+
+IF ( iPF_Core_Flags(iPF_Core_Method_Mode) == iPF_Core_Method_Newtonian ) THEN
+    DEALLOCATE( dVB_Coeff_Old )
+END IF
 
 CALL TimerStop(Timer_Remesh_DestroyCopies)
 
