@@ -1,13 +1,13 @@
-name: Compile thornado on Ubuntu 20.04 with gnu compilers
+name: Compile thornado on Ubuntu (latest) with gnu compilers
 
 on: [ push, pull_request ]
 
 jobs:
   thornado-compile-with-amrex_gnu:
-    name: Compile thornado on Ubuntu 20.04 with gnu compilers
-    runs-on: ubuntu-20.04
+    name: Compile thornado on Ubuntu (latest) with gnu compilers
+    runs-on: ubuntu-latest
     env:
-      THORNADO_MACHINE: gh-runner_ubuntu-20.04_gnu
+      THORNADO_MACHINE: gh-runner_ubuntu-latest_gnu
     steps:
       - name: Checkout Poseidon
         uses: actions/checkout@v3
@@ -15,29 +15,29 @@ jobs:
       - name: Checkout amrex
         uses: actions/checkout@v3
         with:
-          repository: dunhamsj/amrex
+          repository: AMReX-Codes/amrex
           path: amrex
-          ref: MeshRefinement_DG
-          
+          ref: development
+
       - name: Checkout thornado
         uses: actions/checkout@v3
         with:
           repository: endeve/thornado
           path: thornado
           ref:  InterfaceWithPoseidon
-          
+
       - name: Checkout weaklib
         uses: actions/checkout@v3
         with:
           repository: starkiller-astro/weaklib
           path: weaklib
-    
+
       - name: Update Ubuntu
         run: |
           sudo apt-get -y install libhdf5-dev
           sudo apt-get -y install mpich
           sudo apt-get -y update
-    
+
       - name: Set Environment Variables
         run: |
           echo "THORNADO_DIR=${GITHUB_WORKSPACE}/thornado"      >> ${GITHUB_ENV}
