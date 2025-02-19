@@ -116,9 +116,6 @@ USE Poseidon_Return_Routines_All, &
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
             
-USE External_MLS_Solution_Module, &
-            ONLY :  MacLaurin_Potential
-            
 USE External_Yahil_Profile_Module, &
             ONLY :  Yahil_Potential_Solution,   &
                     Yahil_Potential_Solution_Sub
@@ -913,8 +910,7 @@ DO WHILE( mfi % next() )
         DO pd = 1,NUM_P_QUAD_POINTS
            Here = Quad_Map(rd,td,pd)
            Potential = Yahil_Potential_Solution(Cur_R_Locs(rd)*Centimeter,Cur_T_Locs(td),Cur_P_Locs(pd))
-!           Potential = MacLaurin_Potential(Cur_R_Locs(rd),Cur_T_Locs(td),Cur_P_Locs(pd))
-!           PsiSol(Here) = sqrt(sqrt(1.0_idp - 2.0_idp*Potential/C_Square))
+
             PsiSol(Here) = 1.0_idp - Potential/(2.0_idp*C_Square)
         END DO
         END DO
