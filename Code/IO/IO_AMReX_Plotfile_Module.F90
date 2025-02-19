@@ -116,9 +116,9 @@ USE Poseidon_Return_Routines_All, &
 USE Maps_Quadrature, &
             ONLY :  Quad_Map
             
-USE External_Yahil_Profile_Module, &
-            ONLY :  Yahil_Potential_Solution,   &
-                    Yahil_Potential_Solution_Sub
+!USE External_Yahil_Profile_Module, &
+!            ONLY :  Yahil_Potential_Solution,   &
+!                    Yahil_Potential_Solution_Sub
                     
 #ifdef POSEIDON_AMREX_FLAG
 use amrex_base_module
@@ -336,7 +336,7 @@ DO lvl = 0, AMReX_Num_Levels-1
 
     CALL FillSolutionVariables( lvl, WriteX, NumVars_Sol, MF_plt(lvl), MF_Sol(lvl), MF_Mask )
     
-    CALL FillErrorVariables( lvl, NumVars_Sol, MF_plt(lvl), MF_Sol(lvl), MF_Mask, iErr, GlobalError )
+!    CALL FillErrorVariables( lvl, NumVars_Sol, MF_plt(lvl), MF_Sol(lvl), MF_Mask, iErr, GlobalError )
 
 END DO
 
@@ -909,7 +909,7 @@ DO WHILE( mfi % next() )
         DO td = 1,NUM_T_QUAD_POINTS
         DO pd = 1,NUM_P_QUAD_POINTS
            Here = Quad_Map(rd,td,pd)
-           Potential = Yahil_Potential_Solution(Cur_R_Locs(rd)*Centimeter,Cur_T_Locs(td),Cur_P_Locs(pd))
+!           Potential = Yahil_Potential_Solution(Cur_R_Locs(rd)*Centimeter,Cur_T_Locs(td),Cur_P_Locs(pd))
 
             PsiSol(Here) = 1.0_idp - Potential/(2.0_idp*C_Square)
         END DO
